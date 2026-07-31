@@ -526,7 +526,7 @@ namespace Tests.DataProvider
 				var dataTypeName = reader.GetDataTypeName(0);
 				var value        = providerSpecific ? reader.GetProviderSpecificValue(0) : reader.GetValue(0);
 
-				return new ReadResult(value.GetType(), value.GetType().FullName, QueryValueFormatter.Format(value, dataTypeName), null);
+				return new ReadResult(value.GetType(), value.GetType().FullName, QueryValueFormatter.ForProvider(conn.DataProvider.Name).Format(value, dataTypeName), null);
 			}
 			catch (Exception exception)
 			{
@@ -548,7 +548,7 @@ namespace Tests.DataProvider
 					?? throw new InvalidOperationException($"Reader method '{methodName}' is not available.");
 				var value        = method.Invoke(reader, [0]) ?? throw new InvalidOperationException($"Reader method '{methodName}' returned null.");
 
-				return new ReadResult(value.GetType(), value.GetType().FullName, QueryValueFormatter.Format(value, dataTypeName), null);
+				return new ReadResult(value.GetType(), value.GetType().FullName, QueryValueFormatter.ForProvider(conn.DataProvider.Name).Format(value, dataTypeName), null);
 			}
 			catch (Exception exception)
 			{

@@ -304,6 +304,14 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			if (string.Equals(user, FormatMarker, StringComparison.Ordinal))
 			{
+				var storedTarget = Marshal.PtrToStringUni(credential.TargetName);
+
+				if (storedTarget == null)
+				{
+					error = $"Credential target '{target}' doesn't contain a target name.";
+					return false;
+				}
+
 				var protectedPayload = new byte[credential.CredentialBlobSize];
 
 				try
@@ -311,7 +319,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					if (protectedPayload.Length > 0)
 						Marshal.Copy(credential.CredentialBlob, protectedPayload, 0, protectedPayload.Length);
 
-					if (!TryTransformData(target, protectedPayload, false, out var unprotectedPayload, out error))
+					// Generic Credential target lookup is case-insensitive. Use the stored target spelling,
+					// which is the exact value used to derive entropy when the credential was written.
+					//
+					if (!TryTransformData(storedTarget, protectedPayload, false, out var unprotectedPayload, out error))
 						return false;
 
 					var payload = unprotectedPayload!;

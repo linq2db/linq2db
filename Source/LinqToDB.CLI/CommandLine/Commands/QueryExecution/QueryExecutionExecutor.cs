@@ -50,7 +50,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			public abstract ValueTask<QueryRowReadResult> ReadRow(DbDataReader reader, QueryOutputColumn[] columns, CancellationToken cancellationToken);
 		}
 
-		sealed class StreamingQueryRowReader : QueryRowReader
+		sealed class StreamingQueryRowReader(QueryValueFormatter valueFormatter) : QueryRowReader
 		{
 			public override async ValueTask<QueryRowReadResult> ReadRow(DbDataReader reader, QueryOutputColumn[] columns, CancellationToken cancellationToken)
 			{
@@ -71,21 +71,21 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						// The native GetMySqlDecimal path does its own best-effort null handling.
 						//
 						case QueryActualFieldType.MySqlDecimal:
-							row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+							row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i, valueFormatter);
 							continue;
 					}
 
 					if (await reader.IsDBNullAsync(i, cancellationToken))
 						continue;
 
-					row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i);
+					row[i] = ReadFieldAsString(reader, columns[i].ActualFieldType, i, valueFormatter);
 				}
 
 				return new QueryRowReadResult(row);
 			}
 		}
 
-		sealed class BoundedQueryRowReader(int maxOutputBytes) : QueryRowReader
+		sealed class BoundedQueryRowReader(int maxOutputBytes, QueryValueFormatter valueFormatter) : QueryRowReader
 		{
 			const int BufferSize = 8192;
 
@@ -117,7 +117,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 								if (binary == null)
 									return default;
 
-								row[i] = QueryValueFormatter.Format(binary, column.DataTypeName, column.ActualFieldType);
+								row[i] = valueFormatter.Format(binary, column.DataTypeName, column.ActualFieldType);
 							}
 							else if (IsTextField(column))
 							{
@@ -130,7 +130,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 							{
 								var value = ReadFieldValue(reader, i);
 
-								if (!QueryValueFormatter.TryFormat(value, column.DataTypeName, column.ActualFieldType, remainingBytes, out row[i]))
+								if (!valueFormatter.TryFormat(value, column.DataTypeName, column.ActualFieldType, remainingBytes, out row[i]))
 									return default;
 							}
 
@@ -483,9 +483,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				QueryTruncationReason? truncationReason = null;
 
 				var footerReserveBytes = 0;
+				var valueFormatter     = QueryValueFormatter.ForProvider(_settings.Provider);
 				var rowReader          = _settings.MaxOutputBytes is { } maxOutputBytes
-					? (QueryRowReader)new BoundedQueryRowReader(maxOutputBytes)
-					: new StreamingQueryRowReader();
+					? (QueryRowReader)new BoundedQueryRowReader(maxOutputBytes, valueFormatter)
+					: new StreamingQueryRowReader(valueFormatter);
 				var segmentWriter      = _settings.MaxOutputBytes is { } outputLimit
 					? (QueryOutputSegmentWriter)new BoundedQueryOutputSegmentWriter(outputWriter, outputLimit)
 					: new StreamingQueryOutputSegmentWriter(outputWriter);
@@ -890,6 +891,11 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		/// <returns>Formatted field value, or <see langword="null"/> for a database null.</returns>
 		public static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal)
 		{
+			return ReadFieldAsString(reader, actualFieldType, ordinal, QueryValueFormatter.Default);
+		}
+
+		static string? ReadFieldAsString(DbDataReader reader, QueryActualFieldType actualFieldType, int ordinal, QueryValueFormatter valueFormatter)
+		{
 			switch (actualFieldType)
 			{
 				case QueryActualFieldType.OracleBFile : return QueryValueFormatter.OracleBFilePlaceholder;
@@ -898,7 +904,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			var value = ReadFieldValue(reader, ordinal);
 
-			return QueryValueFormatter.Format(value, reader.GetDataTypeName(ordinal), actualFieldType);
+			return valueFormatter.Format(value, reader.GetDataTypeName(ordinal), actualFieldType);
 		}
 
 		static object ReadFieldValue(DbDataReader reader, int ordinal)

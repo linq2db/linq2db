@@ -65,7 +65,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			var enumerated = 0;
 
-			var formatted = QueryValueFormatter.TryFormat(
+			var formatted = QueryValueFormatter.Default.TryFormat(
 				GetValues(),
 				"Array(String)",
 				QueryValueFormatter.QueryActualFieldType.None,
@@ -106,7 +106,7 @@ namespace Tests.LinqToDB.CLI
 			(reader.Read()).ShouldBe(true);
 
 			var unbounded = ReadFieldAsString(reader, "None", 0);
-			var bounded   = QueryValueFormatter.TryFormat(sequence, "Array", QueryValueFormatter.QueryActualFieldType.None, 64, out var boundedValue);
+			var bounded   = QueryValueFormatter.Default.TryFormat(sequence, "Array", QueryValueFormatter.QueryActualFieldType.None, 64, out var boundedValue);
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -142,7 +142,7 @@ namespace Tests.LinqToDB.CLI
 			(reader.Read()).ShouldBe(true);
 
 			var unbounded = ReadFieldAsString(reader, "None", 0);
-			var bounded   = QueryValueFormatter.TryFormat(sequence, "Array", QueryValueFormatter.QueryActualFieldType.None, 128, out var boundedValue);
+			var bounded   = QueryValueFormatter.Default.TryFormat(sequence, "Array", QueryValueFormatter.QueryActualFieldType.None, 128, out var boundedValue);
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -155,7 +155,7 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void BoundedFormatterFormatsNestedValuesWithinUtf8Limit()
 		{
-			var formatted = QueryValueFormatter.TryFormat(
+			var formatted = QueryValueFormatter.Default.TryFormat(
 				new object[] { new[] { 1, 2 }, (3, 4), "é" },
 				"Array",
 				QueryValueFormatter.QueryActualFieldType.None,

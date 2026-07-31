@@ -24,8 +24,37 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 	/// <summary>
 	/// Formats provider-specific values for query output.
 	/// </summary>
-	public static class QueryValueFormatter
+	public abstract class QueryValueFormatter
 	{
+		static readonly QueryValueFormatter _default    = new DefaultValueFormatter();
+		static readonly QueryValueFormatter _sqlServer  = new SqlServerValueFormatter();
+		static readonly QueryValueFormatter _oracle     = new OracleValueFormatter();
+		static readonly QueryValueFormatter _firebird   = new FirebirdValueFormatter();
+		static readonly QueryValueFormatter _duckDb     = new DuckDbValueFormatter();
+		static readonly QueryValueFormatter _postgreSql = new PostgreSqlValueFormatter();
+		static readonly QueryValueFormatter _db2        = new Db2ValueFormatter();
+
+		public static QueryValueFormatter Default => _default;
+
+		public static QueryValueFormatter ForProvider(string provider)
+		{
+			if (IsProvider(provider, "SqlServer"))  return _sqlServer;
+			if (IsProvider(provider, "Oracle"))     return _oracle;
+			if (IsProvider(provider, "Firebird"))   return _firebird;
+			if (IsProvider(provider, "DuckDB"))     return _duckDb;
+			if (IsProvider(provider, "PostgreSQL")) return _postgreSql;
+			if (IsProvider(provider, "DB2"))        return _db2;
+			if (IsProvider(provider, "Informix"))   return _db2;
+
+			return _default;
+
+			static bool IsProvider(string provider, string name)
+			{
+				return string.Equals(provider, name, StringComparison.OrdinalIgnoreCase)
+					|| provider.StartsWith(name + ".", StringComparison.OrdinalIgnoreCase);
+			}
+		}
+
 		sealed class BoundedValueWriter(int maxUtf8Bytes)
 		{
 			readonly StringBuilder _output = new();
@@ -41,6 +70,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				_output.Append(value);
 				_remainingBytes -= bytes;
+
 				return true;
 			}
 
@@ -56,6 +86,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 				_output.Append(value);
 				_remainingBytes -= bytes;
+
 				return true;
 			}
 
@@ -114,8 +145,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			NpgsqlRange,
 		}
 
-		internal const string OracleBFilePlaceholder = "<BFILE>";
-
 		/// <summary>
 		/// Formats a provider-specific value without producing a string larger than the specified UTF-8 byte limit.
 		/// </summary>
@@ -125,7 +154,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		/// <param name="maxUtf8Bytes">Maximum formatted UTF-8 byte count.</param>
 		/// <param name="formattedValue">Formatted value, or <see langword="null"/> for a database null.</param>
 		/// <returns><see langword="true"/> when the complete value fits within the limit; otherwise, <see langword="false"/>.</returns>
-		public static bool TryFormat(
+		public bool TryFormat(
 			object?              value,
 			string               dataTypeName,
 			QueryActualFieldType actualFieldType,
@@ -146,11 +175,16 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return true;
 		}
 
-		internal static string? Format(object? value, string dataTypeName, QueryActualFieldType actualFieldType = QueryActualFieldType.None)
+		public string? Format(object? value, string dataTypeName, QueryActualFieldType actualFieldType = QueryActualFieldType.None)
 		{
-			if (actualFieldType == QueryActualFieldType.Date)
-				return FormatDate(value);
+			if (value is null or DBNull)
+				return null;
 
+			return FormatValue(value, dataTypeName, actualFieldType);
+		}
+
+		protected virtual string? FormatValue(object value, string dataTypeName, QueryActualFieldType actualFieldType)
+		{
 			if (value is byte[] bytes)
 			{
 				return actualFieldType == QueryActualFieldType.ByteArray
@@ -161,54 +195,23 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			return value switch
 			{
-				null                          => null,
-				DBNull                        => null,
-				SqlBoolean sqlBoolean         => sqlBoolean.Value ? "true" : "false",
-				bool boolValue                => boolValue ? "true" : "false",
-				SqlSingle sqlSingle           => sqlSingle.Value.ToString("R", CultureInfo.InvariantCulture),
-				float singleValue             => singleValue.ToString("R", CultureInfo.InvariantCulture),
-				SqlDouble sqlDouble           => sqlDouble.Value.ToString("R", CultureInfo.InvariantCulture),
-				double doubleValue            => doubleValue.ToString("R", CultureInfo.InvariantCulture),
-				string stringValue            => stringValue,
-				SqlDateTime sqlDateTime       => sqlDateTime.Value.ToString("O", CultureInfo.InvariantCulture),
-				DateOnly dateOnly             => dateOnly.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-				TimeOnly timeOnly             => timeOnly.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
-				DateTime dateTime             => IsDateDataType(dataTypeName) ? FormatDate(dateTime) : dateTime.ToString("O", CultureInfo.InvariantCulture),
+				bool           boolValue      => boolValue ? "true" : "false",
+				float          singleValue    => singleValue.   ToString("R", CultureInfo.InvariantCulture),
+				double         doubleValue    => doubleValue.   ToString("R", CultureInfo.InvariantCulture),
+				string         stringValue    => stringValue,
+				DateOnly       dateOnly       => dateOnly.      ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				TimeOnly       timeOnly       => timeOnly.      ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
+				DateTime       dateTime
+					when actualFieldType == QueryActualFieldType.Date || IsDateDataType(dataTypeName)
+				                              => FormatDate(dateTime),
+				DateTime       dateTime       => dateTime.      ToString("O", CultureInfo.InvariantCulture),
 				DateTimeOffset dateTimeOffset => dateTimeOffset.ToString("O", CultureInfo.InvariantCulture),
-				TimeSpan timeSpan             => timeSpan.ToString("c", CultureInfo.InvariantCulture),
-				SqlGuid sqlGuid               => sqlGuid.Value.ToString("D"),
-				Guid guid                     => guid.ToString("D"),
-				SqlBinary sqlBinary           => ConvertBytesToString(sqlBinary.Value),
-				SqlBytes sqlBytes             => ConvertBytesToString(sqlBytes.Value),
-				SqlChars sqlChars             => new string(sqlChars.Value),
-				SqlString sqlString           => sqlString.Value,
-				SqlXml sqlXml                 => sqlXml.Value,
-				SqlVector<float> vector       => ConvertVectorToString(vector.Memory.ToArray()),
-				SqlVector<Half> vector        => ConvertVectorToString(vector.Memory.ToArray()),
-				SqlHierarchyId hierarchyId    => hierarchyId.ToString(),
-				SqlGeometry geometry          => geometry.ToString(),
-				SqlGeography geography        => geography.ToString(),
-				OracleBinary oracleBinary     => ConvertBytesToString(oracleBinary.Value),
-				OracleBlob oracleBlob         => ConvertBytesToString(oracleBlob.Value),
-				OracleBFile                   => OracleBFilePlaceholder,
-				OracleClob oracleClob         => oracleClob.Value,
-				OracleXmlType oracleXmlType   => oracleXmlType.Value,
-				OracleDate oracleDate         => FormatDate(oracleDate.Value),
-				OracleTimeStamp timestamp     => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
-				OracleTimeStampTZ timestamp   => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond) + timestamp.TimeZone,
-				OracleTimeStampLTZ timestamp  => FormatOracleTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
-				FbDecFloat decFloat           => FormatFirebirdDecFloat(decFloat),
-				FbZonedDateTime zonedDateTime => FormatFirebirdZonedDateTime(zonedDateTime),
-				FbZonedTime zonedTime         => FormatFirebirdZonedTime(zonedTime),
-				DuckDBDateOnly date           => FormatDuckDBDateOnly(date),
-				DuckDBTimeOnly time           => FormatDuckDBTimeOnly(time),
-				DuckDBTimestamp timestamp     => FormatDuckDBTimestamp(timestamp),
-				_ when IsNpgsqlRange(value)   => FormatNpgsqlRange(value),
-				_ when IsDB2Value(value)      => FormatDB2Value(value),
-				Stream stream                 => ConvertStreamToString(stream),
-				ITuple tuple                  => ConvertTupleToString(tuple),
-				IEnumerable sequence          => ConvertSequenceToString(sequence),
-				_                             => Convert.ToString(value, CultureInfo.InvariantCulture),
+				TimeSpan       timeSpan       => timeSpan.      ToString("c", CultureInfo.InvariantCulture),
+				Guid           guid           => guid.          ToString("D"),
+				Stream         stream         => ConvertStreamToString(stream),
+				ITuple         tuple          => ConvertTupleToString(tuple),
+				IEnumerable    sequence       => ConvertSequenceToString(sequence),
+				_                             => Convert.       ToString(value, CultureInfo.InvariantCulture),
 			};
 
 			static bool IsDateDataType(string dataTypeName)
@@ -217,158 +220,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					|| string.Equals(dataTypeName, "Date32",           StringComparison.OrdinalIgnoreCase)
 					|| string.Equals(dataTypeName, "Nullable(Date)",   StringComparison.OrdinalIgnoreCase)
 					|| string.Equals(dataTypeName, "Nullable(Date32)", StringComparison.OrdinalIgnoreCase);
-			}
-
-			static string? FormatDate(object? value)
-			{
-				return value switch
-				{
-					null              => null,
-					DateOnly date     => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-					DateTime dateTime => dateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-					_                 => Convert.ToString(value, CultureInfo.InvariantCulture),
-				};
-			}
-
-			static string FormatOracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond)
-			{
-				return string.Create(CultureInfo.InvariantCulture, $"{year:D4}-{month:D2}-{day:D2}T{hour:D2}:{minute:D2}:{second:D2}.{nanosecond:D9}");
-			}
-
-			static string FormatFirebirdDecFloat(FbDecFloat value)
-			{
-				return string.Create(CultureInfo.InvariantCulture, $"{value.Coefficient}E{value.Exponent}");
-			}
-
-			static string FormatFirebirdZonedDateTime(FbZonedDateTime value)
-			{
-				return value.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
-			}
-
-			static string FormatFirebirdZonedTime(FbZonedTime value)
-			{
-				return value.Time.ToString("c", CultureInfo.InvariantCulture) + " " + FormatFirebirdTimeZone(value.TimeZone, value.Offset);
-			}
-
-			static string FormatFirebirdTimeZone(string timeZone, TimeSpan? offset)
-			{
-				return offset?.ToString("c", CultureInfo.InvariantCulture) ?? timeZone;
-			}
-
-			static string FormatDuckDBDateOnly(DuckDBDateOnly value)
-			{
-				if (value.IsPositiveInfinity)
-					return "infinity";
-				if (value.IsNegativeInfinity)
-					return "-infinity";
-
-				return string.Create(CultureInfo.InvariantCulture, $"{value.Year:D4}-{value.Month:D2}-{value.Day:D2}");
-			}
-
-			static string FormatDuckDBTimeOnly(DuckDBTimeOnly value)
-			{
-				return string.Create(CultureInfo.InvariantCulture, $"{value.Hour:D2}:{value.Min:D2}:{value.Sec:D2}.{value.Microsecond:D6}0");
-			}
-
-			static string FormatDuckDBTimestamp(DuckDBTimestamp value)
-			{
-				if (value.IsPositiveInfinity)
-					return "infinity";
-				if (value.IsNegativeInfinity)
-					return "-infinity";
-
-				return FormatDuckDBDateOnly(value.Date) + "T" + FormatDuckDBTimeOnly(value.Time);
-			}
-
-			static bool IsNpgsqlRange(object value)
-			{
-				var type = value.GetType();
-
-				return type.IsGenericType
-					&& string.Equals(type.GetGenericTypeDefinition().FullName, "NpgsqlTypes.NpgsqlRange`1", StringComparison.Ordinal);
-			}
-
-			static string FormatNpgsqlRange(object value)
-			{
-				if ((bool)GetPropertyValue(value, "IsEmpty"))
-					return "empty";
-
-				var output = new StringBuilder();
-
-				var lowerBoundInfinite    = (bool)GetPropertyValue(value, "LowerBoundInfinite");
-				var upperBoundInfinite    = (bool)GetPropertyValue(value, "UpperBoundInfinite");
-				var lowerBoundIsInclusive = (bool)GetPropertyValue(value, "LowerBoundIsInclusive");
-				var upperBoundIsInclusive = (bool)GetPropertyValue(value, "UpperBoundIsInclusive");
-
-				output.Append(lowerBoundIsInclusive ? '[' : '(');
-
-				if (!lowerBoundInfinite)
-					output.Append(ConvertRangeBoundToString(GetPropertyValue(value, "LowerBound")));
-
-				output.Append(',');
-
-				if (!upperBoundInfinite)
-					output.Append(ConvertRangeBoundToString(GetPropertyValue(value, "UpperBound")));
-
-				output.Append(upperBoundIsInclusive ? ']' : ')');
-				return output.ToString();
-			}
-
-			static string? ConvertRangeBoundToString(object? value)
-			{
-				return value switch
-				{
-					null                    => null,
-					DateOnly date           => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-					DateTime dateTime       => dateTime.ToString("O", CultureInfo.InvariantCulture),
-					DateTimeOffset dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
-					TimeOnly time           => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
-					TimeSpan time           => time.ToString("c", CultureInfo.InvariantCulture),
-					_                       => Convert.ToString(value, CultureInfo.InvariantCulture),
-				};
-			}
-
-			static bool IsDB2Value(object value)
-			{
-				return value.GetType().FullName?.StartsWith("IBM.Data.DB2Types.DB2", StringComparison.Ordinal) == true;
-			}
-
-			static string? FormatDB2Value(object value)
-			{
-				return value.GetType().Name switch
-				{
-					"DB2Binary"    => ConvertBytesToString((byte[])GetPropertyValue(value, "Value")),
-					"DB2Blob"      => ConvertBytesToString((byte[])GetPropertyValue(value, "Value")),
-					"DB2Clob"      => (string)GetPropertyValue(value, "Value"),
-					"DB2Date"      => FormatDate((DateTime)GetPropertyValue(value, "Value")),
-					"DB2Time"      => ((TimeSpan)GetPropertyValue(value, "Value")).ToString("c", CultureInfo.InvariantCulture),
-					"DB2TimeStamp" => ((DateTime)GetPropertyValue(value, "Value")).ToString("O", CultureInfo.InvariantCulture),
-					"DB2Xml"       => (string)GetMethodValue(value, "GetString"),
-					_              => Convert.ToString(value, CultureInfo.InvariantCulture),
-				};
-			}
-
-			static object GetPropertyValue(object value, string propertyName)
-			{
-				var property = value.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
-					?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' doesn't contain '{propertyName}' property.");
-
-				return property.GetValue(value)
-					?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' property '{propertyName}' returned null.");
-			}
-
-			static object GetMethodValue(object value, string methodName)
-			{
-				var method = value.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: Type.EmptyTypes, modifiers: null)
-					?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' doesn't contain '{methodName}' method.");
-
-				return method.InvokeExt(value, null)
-					?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' method '{methodName}' returned null.");
-			}
-
-			static string ConvertBytesToString(byte[] bytes)
-			{
-				return "0x" + Convert.ToHexString(bytes);
 			}
 
 			static string ConvertStreamToString(Stream stream)
@@ -399,7 +250,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return output.ToString();
 			}
 
-			static string ConvertTupleToString(ITuple tuple)
+			string ConvertTupleToString(ITuple tuple)
 			{
 				var output = new StringBuilder();
 
@@ -416,7 +267,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return output.ToString();
 			}
 
-			static string ConvertSequenceToString(IEnumerable sequence)
+			string ConvertSequenceToString(IEnumerable sequence)
 			{
 				var output       = new StringBuilder();
 				var itemIndex    = 0;
@@ -454,25 +305,25 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				return output.ToString();
 			}
 
-			static string? ConvertNestedValueToString(object? value)
+			string? ConvertNestedValueToString(object? value)
 			{
 				return value switch
 				{
-					null               => null,
-					string stringValue => stringValue,
-					byte[] bytes       => ConvertBytesToString(bytes),
-					ITuple tuple       => ConvertTupleToString(tuple),
-					IEnumerable items  => ConvertSequenceToString(items),
+					null                    => null,
+					string      stringValue => stringValue,
+					byte[]      bytes       => ConvertBytesToString(bytes),
+					ITuple      tuple       => ConvertTupleToString(tuple),
+					IEnumerable items       => ConvertSequenceToString(items),
 					// Scalars must go through the main formatter. Convert.ToString uses each type's general
 					// format, which renders a time[] element as "03:04" instead of "03:04:05.1234560", a
 					// timestamp[] element as "01/02/2024 03:04:05", a date[] element as "01/02/2024", and a
 					// bool as "True" - so the same value formatted nested disagreed with the top-level column.
 					// Sequences and tuples are matched above, so this cannot recurse.
-					_                  => Format(value, string.Empty),
+					_                       => Format(value, string.Empty),
 				};
 			}
 
-			static void AppendKeyValuePair(StringBuilder output, object? value)
+			void AppendKeyValuePair(StringBuilder output, object? value)
 			{
 				if (value == null)
 				{
@@ -488,26 +339,243 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				output.Append(':');
 				output.Append(ConvertNestedValueToString(item));
 			}
+		}
 
-			static string ConvertVectorToString<T>(T[] vector)
+		static string? FormatDate(object? value)
+		{
+			return value switch
 			{
-				var output = new StringBuilder();
+				null              => null,
+				DateOnly date     => date.    ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				DateTime dateTime => dateTime.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+				_                 => Convert. ToString(value,        CultureInfo.InvariantCulture),
+			};
+		}
 
-				output.Append('[');
-				for (var i = 0; i < vector.Length; i++)
+		static string ConvertBytesToString(byte[] bytes)
+		{
+			return "0x" + Convert.ToHexString(bytes);
+		}
+
+		static object GetPropertyValue(object value, string propertyName)
+		{
+			var property = value.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' doesn't contain '{propertyName}' property.");
+
+			return property.GetValue(value)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' property '{propertyName}' returned null.");
+		}
+
+		static object GetMethodValue(object value, string methodName)
+		{
+			var method = value.GetType().GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, binder: null, types: Type.EmptyTypes, modifiers: null)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' doesn't contain '{methodName}' method.");
+
+			return method.InvokeExt(value, null)
+				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' method '{methodName}' returned null.");
+		}
+
+		sealed class DefaultValueFormatter : QueryValueFormatter
+		{
+		}
+
+		sealed class SqlServerValueFormatter : QueryValueFormatter
+		{
+			protected override string? FormatValue(object value, string dataTypeName, QueryActualFieldType actualFieldType)
+			{
+				return value switch
 				{
-					if (i > 0)
-						output.Append(',');
+					SqlBoolean       sqlBoolean  => sqlBoolean.Value ? "true" : "false",
+					SqlSingle        sqlSingle   => sqlSingle.Value.ToString("R", CultureInfo.InvariantCulture),
+					SqlDouble        sqlDouble   => sqlDouble.Value.ToString("R", CultureInfo.InvariantCulture),
+					SqlDateTime      sqlDateTime => sqlDateTime.Value.ToString("O", CultureInfo.InvariantCulture),
+					SqlGuid          sqlGuid     => sqlGuid.Value.ToString("D"),
+					SqlBinary        sqlBinary   => ConvertBytesToString(sqlBinary.Value),
+					SqlBytes         sqlBytes    => ConvertBytesToString(sqlBytes.Value),
+					SqlChars         sqlChars    => new string(sqlChars.Value),
+					SqlString        sqlString   => sqlString.Value,
+					SqlXml           sqlXml      => sqlXml.Value,
+					SqlVector<float> vector      => ConvertVectorToString(vector.Memory.Span),
+					SqlVector<Half>  vector      => ConvertVectorToString(vector.Memory.Span),
+					SqlHierarchyId   hierarchyId => hierarchyId.ToString(),
+					SqlGeometry      geometry    => geometry.ToString(),
+					SqlGeography     geography   => geography.ToString(),
+					_                            => base.FormatValue(value, dataTypeName, actualFieldType),
+				};
 
-					output.Append(Convert.ToString(vector[i], CultureInfo.InvariantCulture));
+				static string ConvertVectorToString<T>(ReadOnlySpan<T> vector)
+				{
+					var output = new StringBuilder();
+
+					output.Append('[');
+
+					for (var i = 0; i < vector.Length; i++)
+					{
+						if (i > 0)
+							output.Append(',');
+
+						output.Append(Convert.ToString(vector[i], CultureInfo.InvariantCulture));
+					}
+
+					output.Append(']');
+
+					return output.ToString();
 				}
-
-				output.Append(']');
-				return output.ToString();
 			}
 		}
 
-		static bool TryAppendValue(
+		internal const string OracleBFilePlaceholder = "<BFILE>";
+
+		sealed class OracleValueFormatter : QueryValueFormatter
+		{
+			protected override string? FormatValue(object value, string dataTypeName, QueryActualFieldType actualFieldType)
+			{
+				return value switch
+				{
+					OracleBinary       oracleBinary  => ConvertBytesToString(oracleBinary.Value),
+					OracleBlob         oracleBlob    => ConvertBytesToString(oracleBlob.Value),
+					OracleBFile                      => OracleBFilePlaceholder,
+					OracleClob         oracleClob    => oracleClob.Value,
+					OracleXmlType      oracleXmlType => oracleXmlType.Value,
+					OracleDate         oracleDate    => FormatDate(oracleDate.Value),
+					OracleTimeStamp    timestamp     => FormatTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
+					OracleTimeStampTZ  timestamp     => FormatTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond) + timestamp.TimeZone,
+					OracleTimeStampLTZ timestamp     => FormatTimeStamp(timestamp.Year, timestamp.Month, timestamp.Day, timestamp.Hour, timestamp.Minute, timestamp.Second, timestamp.Nanosecond),
+					_                                => base.FormatValue(value, dataTypeName, actualFieldType),
+				};
+
+				static string FormatTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond)
+				{
+					return string.Create(CultureInfo.InvariantCulture, $"{year:D4}-{month:D2}-{day:D2}T{hour:D2}:{minute:D2}:{second:D2}.{nanosecond:D9}");
+				}
+			}
+		}
+
+		sealed class FirebirdValueFormatter : QueryValueFormatter
+		{
+			protected override string? FormatValue(object value, string dataTypeName, QueryActualFieldType actualFieldType)
+			{
+				return value switch
+				{
+					FbDecFloat      decFloat      => string.Create(CultureInfo.InvariantCulture, $"{decFloat.Coefficient}E{decFloat.Exponent}"),
+					FbZonedDateTime zonedDateTime => zonedDateTime.DateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffff", CultureInfo.InvariantCulture) + " " + FormatTimeZone(zonedDateTime.TimeZone, zonedDateTime.Offset),
+					FbZonedTime     zonedTime     => zonedTime.Time.ToString("c", CultureInfo.InvariantCulture) + " " + FormatTimeZone(zonedTime.TimeZone, zonedTime.Offset),
+					_                             => base.FormatValue(value, dataTypeName, actualFieldType),
+				};
+
+				static string FormatTimeZone(string timeZone, TimeSpan? offset)
+				{
+					return offset?.ToString("c", CultureInfo.InvariantCulture) ?? timeZone;
+				}
+			}
+		}
+
+		sealed class DuckDbValueFormatter : QueryValueFormatter
+		{
+			protected override string? FormatValue(object value, string dataTypeName, QueryActualFieldType actualFieldType)
+			{
+				return value switch
+				{
+					DuckDBDateOnly  date      => FormatDateOnly(date),
+					DuckDBTimeOnly  time      => FormatTimeOnly(time),
+					DuckDBTimestamp timestamp => FormatTimestamp(timestamp),
+					_                         => base.FormatValue(value, dataTypeName, actualFieldType),
+				};
+
+				static string FormatDateOnly(DuckDBDateOnly value)
+				{
+					if (value.IsPositiveInfinity) return "infinity";
+					if (value.IsNegativeInfinity) return "-infinity";
+
+					return string.Create(CultureInfo.InvariantCulture, $"{value.Year:D4}-{value.Month:D2}-{value.Day:D2}");
+				}
+
+				static string FormatTimeOnly(DuckDBTimeOnly value)
+				{
+					return string.Create(CultureInfo.InvariantCulture, $"{value.Hour:D2}:{value.Min:D2}:{value.Sec:D2}.{value.Microsecond:D6}0");
+				}
+
+				static string FormatTimestamp(DuckDBTimestamp value)
+				{
+					if (value.IsPositiveInfinity) return "infinity";
+					if (value.IsNegativeInfinity) return "-infinity";
+
+					return FormatDateOnly(value.Date) + "T" + FormatTimeOnly(value.Time);
+				}
+			}
+		}
+
+		sealed class PostgreSqlValueFormatter : QueryValueFormatter
+		{
+			protected override string? FormatValue(object value, string dataTypeName, QueryActualFieldType actualFieldType)
+			{
+				var type = value.GetType();
+
+				if (!type.IsGenericType || !string.Equals(type.GetGenericTypeDefinition().FullName, "NpgsqlTypes.NpgsqlRange`1", StringComparison.Ordinal))
+					return base.FormatValue(value, dataTypeName, actualFieldType);
+
+				if ((bool)GetPropertyValue(value, "IsEmpty"))
+					return "empty";
+
+				var output = new StringBuilder();
+
+				var lowerBoundInfinite    = (bool)GetPropertyValue(value!, "LowerBoundInfinite");
+				var upperBoundInfinite    = (bool)GetPropertyValue(value!, "UpperBoundInfinite");
+				var lowerBoundIsInclusive = (bool)GetPropertyValue(value!, "LowerBoundIsInclusive");
+				var upperBoundIsInclusive = (bool)GetPropertyValue(value!, "UpperBoundIsInclusive");
+
+				output.Append(lowerBoundIsInclusive ? '[' : '(');
+
+				if (!lowerBoundInfinite)
+					output.Append(FormatBound(GetPropertyValue(value, "LowerBound")));
+
+				output.Append(',');
+
+				if (!upperBoundInfinite)
+					output.Append(FormatBound(GetPropertyValue(value, "UpperBound")));
+
+				output.Append(upperBoundIsInclusive ? ']' : ')');
+
+				return output.ToString();
+
+				static string? FormatBound(object? value)
+				{
+					return value switch
+					{
+						null                    => null,
+						DateOnly       date     => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+						DateTime       dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
+						DateTimeOffset dateTime => dateTime.ToString("O", CultureInfo.InvariantCulture),
+						TimeOnly       time     => time.ToString("HH:mm:ss.fffffff", CultureInfo.InvariantCulture),
+						TimeSpan       time     => time.ToString("c", CultureInfo.InvariantCulture),
+						_                       => Convert.ToString(value, CultureInfo.InvariantCulture),
+					};
+				}
+			}
+		}
+
+		sealed class Db2ValueFormatter : QueryValueFormatter
+		{
+			protected override string? FormatValue(object value, string dataTypeName, QueryActualFieldType actualFieldType)
+			{
+				if (value.GetType().FullName?.StartsWith("IBM.Data.DB2Types.DB2", StringComparison.Ordinal) != true)
+					return base.FormatValue(value, dataTypeName, actualFieldType);
+
+				return value.GetType().Name switch
+				{
+					"DB2Binary"    => ConvertBytesToString((byte[])GetPropertyValue(value, "Value")),
+					"DB2Blob"      => ConvertBytesToString((byte[])GetPropertyValue(value, "Value")),
+					"DB2Clob"      => (string)GetPropertyValue(value, "Value"),
+					"DB2Date"      => FormatDate((DateTime)GetPropertyValue(value, "Value")),
+					"DB2Time"      => ((TimeSpan)GetPropertyValue(value, "Value")).ToString("c", CultureInfo.InvariantCulture),
+					"DB2TimeStamp" => ((DateTime)GetPropertyValue(value, "Value")).ToString("O", CultureInfo.InvariantCulture),
+					"DB2Xml"       => (string)GetMethodValue(value, "GetString"),
+					_              => Convert.ToString(value, CultureInfo.InvariantCulture),
+				};
+			}
+		}
+
+		bool TryAppendValue(
 			BoundedValueWriter   output,
 			object?              value,
 			string               dataTypeName,
@@ -543,7 +611,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return output.TryAppend(Format(value, dataTypeName, actualFieldType));
 		}
 
-		static bool TryAppendNestedValue(BoundedValueWriter output, object? value)
+		bool TryAppendNestedValue(BoundedValueWriter output, object? value)
 		{
 			return value switch
 			{
@@ -558,7 +626,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			};
 		}
 
-		static bool TryAppendTuple(BoundedValueWriter output, ITuple tuple)
+		bool TryAppendTuple(BoundedValueWriter output, ITuple tuple)
 		{
 			if (!output.TryAppend('('))
 				return false;
@@ -575,7 +643,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return output.TryAppend(')');
 		}
 
-		static bool TryAppendSequence(BoundedValueWriter output, IEnumerable sequence)
+		bool TryAppendSequence(BoundedValueWriter output, IEnumerable sequence)
 		{
 			var itemIndex    = 0;
 			var map          = false;
@@ -613,7 +681,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			return output.TryAppend(closeBracket);
 		}
 
-		static bool TryAppendKeyValuePair(BoundedValueWriter output, object? value)
+		bool TryAppendKeyValuePair(BoundedValueWriter output, object? value)
 		{
 			if (value == null)
 				return output.TryAppend(':');
