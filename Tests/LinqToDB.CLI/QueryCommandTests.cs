@@ -143,7 +143,7 @@ namespace Tests.LinqToDB.CLI
 			using (Assert.EnterMultipleScope())
 			{
 				result.ExitCode.ShouldBe(-3);
-				result.Error.   ShouldContain("Cannot locate IBM.Data.Db2.dll provider assembly.");
+				result.Error.   ShouldContain("Cannot locate IBM.Data.Informix.dll provider assembly.");
 				result.Error.   ShouldContain("--provider-location <path_to_assembly>");
 			}
 		}

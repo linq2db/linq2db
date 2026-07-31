@@ -30,7 +30,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			if (providerLocation == null)
 			{
-				if (IsDB2FamilyProvider(provider))
+				if (IsDB2Provider(provider))
 				{
 					error = """
 						Cannot locate IBM.Data.Db2.dll provider assembly.
@@ -40,6 +40,15 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
 						- for Linux:   https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
 						- for macOS:   https://www.nuget.org/packages/Net.IBM.Data.Db2-osx
+						""";
+					return false;
+				}
+
+				if (IsInformixProvider(provider))
+				{
+					error = """
+						Cannot locate IBM.Data.Informix.dll provider assembly.
+						You need to install the IBM Informix provider manually and specify provider path using '--provider-location <path_to_assembly>' option.
 						""";
 					return false;
 				}
@@ -63,7 +72,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					_loadedAssemblies.Add(providerLocationPath, assembly);
 				}
 
-				if (IsDB2FamilyProvider(provider))
+				if (IsDB2Provider(provider))
 				{
 					DB2Tools.AutoDetectProvider = true;
 
@@ -76,6 +85,18 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					}
 
 					DbProviderFactories.RegisterFactory("IBM.Data.DB2", factory);
+				}
+				else if (IsInformixProvider(provider))
+				{
+					var factory = FindProviderFactory(assembly, "IfxFactory");
+
+					if (factory == null)
+					{
+						error = $"Provider assembly '{providerLocation}' doesn't contain IfxFactory type.";
+						return false;
+					}
+
+					DbProviderFactories.RegisterFactory("IBM.Data.Informix", factory);
 				}
 			}
 
@@ -102,13 +123,17 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 			}
 		}
 
-		static bool IsDB2FamilyProvider(string provider)
+		static bool IsDB2Provider(string provider)
 		{
 			return string.Equals(provider, ProviderName.DB2,         StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.DB2LUW,      StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.DB2zOS,      StringComparison.OrdinalIgnoreCase)
-				|| string.Equals(provider, ProviderName.Informix,    StringComparison.OrdinalIgnoreCase)
 				|| string.Equals(provider, ProviderName.InformixDB2, StringComparison.OrdinalIgnoreCase);
+		}
+
+		static bool IsInformixProvider(string provider)
+		{
+			return string.Equals(provider, ProviderName.Informix, StringComparison.OrdinalIgnoreCase);
 		}
 
 		sealed class ExternalProviderLoadContext : AssemblyLoadContext

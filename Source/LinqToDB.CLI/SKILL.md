@@ -128,7 +128,7 @@ The CLI can use provider/runtime dependencies bundled with the CLI package and s
 - SAP HANA, ODBC driver on the host or external native provider assembly required
 - SQL Server Compact, provider assembly must be resolvable on the host
 - IBM DB2, external provider assembly required
-- IBM Informix, external provider assembly required
+- IBM Informix, external IBM.Data.Informix or DB2 provider assembly required
 
 ### Bundled provider families
 
@@ -156,7 +156,8 @@ Use `--provider-location` or `providerLocation` to load an external ADO.NET prov
 
 Known external-provider scenario:
 
-- DB2 / Informix through `IBM.Data.Db2.dll`
+- DB2 and `Informix.DB2` through `IBM.Data.Db2.dll`
+- `Informix` through `IBM.Data.Informix.dll`
 
 Example:
 
@@ -287,7 +288,7 @@ Typical dialect families:
 | Oracle Managed | Oracle SQL |
 | Firebird | Firebird SQL |
 | DB2 | IBM DB2 SQL |
-| Informix | Informix SQL |
+| Informix / Informix.DB2 | Informix SQL |
 | ClickHouse | ClickHouse SQL |
 | DuckDB | DuckDB SQL |
 | Sybase ASE | Sybase ASE T-SQL |
