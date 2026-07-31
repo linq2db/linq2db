@@ -36,15 +36,12 @@
 		     NOT ReferenceOutputAssembly="false": that drops the dependency from linq2db.nuspec entirely, leaving
 		     the analyzers with no delivery path at all. And NOT a narrower PrivateAssets that also hides `compile`
 		     / `runtime`: excluding those from a ProjectReference breaks the build ordering, so a clean build fails
-		     with CS0006 on the code-fix ref assembly. The cost of the supported shape is that the Roslyn-4.8-built
-		     code-fix assembly enters consuming projects' reference closure, which is where the MSB3277
-		     System.Collections.Immutable conflict on LinqToDB.EntityFrameworkCore.EF3's net462 / netstandard2.0
-		     legs comes from - a warning about an assembly EF3 never loads. `runtime` staying public also makes the
-		     code-fix assembly copy-local downstream, so it lands in each linq2db.cli.<rid> sub-package's
-		     tools/<tfm>/<rid> payload (measured: 6 files per RID across net8.0/9.0/10.0, a few hundred KB against
-		     packages that are already 64-164 MB, and nothing there ever loads Roslyn). No lib/ of any library
-		     package is affected, and linq2db.LINQPad is not either - its packaging target packs an explicit file
-		     list rather than the build output.
+		     with CS0006 on the code-fix ref assembly. Keeping `compile` / `runtime` public does mean the SDK
+		     injects this reference into every downstream project's closure as a compile + copy-local item,
+		     which produced an MSB3277 System.Collections.Immutable conflict on LinqToDB.EntityFrameworkCore.EF3
+		     and put the code-fix assembly in every linq2db.cli.<rid> tools/ payload; Source/Directory.Build.props
+		     drops the SDK-injected item - leaving the direct reference here, and with it the nuspec dependency,
+		     untouched - so neither happens. See the comment there.
 		     Deliberately NO OutputItemType="Analyzer" (unlike CodeGenerators) so the user-facing rules don't run
 		     against linq2db's own source.
 		     Every satellite package (Tools, Remote.*, Extensions, Compat, Scaffold, EntityFrameworkCore) keeps
