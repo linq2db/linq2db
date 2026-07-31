@@ -97,6 +97,7 @@
     <File Path=".agents/scripts/azp-build-failures.ps1" />
     <File Path=".agents/scripts/azp-run.ps1" />
     <File Path=".agents/scripts/baselines-diff.ps1" />
+    <File Path=".agents/scripts/baselines-pr-scan.ps1" />
     <File Path=".agents/scripts/carry-curation.ps1" />
     <File Path=".agents/scripts/close-stale-baselines.ps1" />
     <File Path=".agents/scripts/diff-baselines.ps1" />
