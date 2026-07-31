@@ -20,7 +20,7 @@ namespace Tests
 	/// <c>&lt;repoRoot&gt;/.build/.agents/test-progress.&lt;tfm&gt;.&lt;pid&gt;.json</c>; <c>--test-progress &lt;dir|*.json&gt;</c>
 	/// uses that path instead.
 	/// </para>
-	/// See <c>.agents/docs/testing.md</c> → "Monitoring a long run".
+	/// See <c>.claude/docs/testing.md</c> → "Monitoring a long run".
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public sealed class TestProgressReporterAttribute : NUnitAttribute, ITestAction
