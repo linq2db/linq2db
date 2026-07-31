@@ -12,8 +12,9 @@
        git submodule update --init
        git -C .claude switch master          # init leaves a detached HEAD
        git config core.hooksPath .githooks   # corpus auto-refresh + gitlink/trampoline guards
-     ...and then start a NEW session: imports and skills resolve once, at session start, so
-     populating the submodule does not repair the session that found it empty. -->
+     ...and then start a NEW session: these imports resolve once, at session start, and are not
+     re-read when .claude/ appears, so populating the submodule does not repair the session that
+     found it empty (skill discovery may refresh on its own; the instruction set does not). -->
 
 @.claude/AGENTS.md
 @.claude/CLAUDE.md
