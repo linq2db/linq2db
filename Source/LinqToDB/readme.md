@@ -705,6 +705,12 @@ Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
 dotnet_diagnostic.L2DB1001.severity = warning
 ```
 
+Every rule shipped by linq2db is in the `LinqToDB` analyzer category, so one line sets them all:
+
+```ini
+dotnet_analyzer_diagnostic.category-LinqToDB.severity = warning
+```
+
 Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from the legacy `ToValue<TR>()` slot (default `false`; when enabled you resolve any resulting type change, e.g. widening `int` to `long`, by hand):
 
 ```ini

@@ -51,6 +51,12 @@ Adjust severity in `.editorconfig`:
 dotnet_diagnostic.L2DB1001.severity = warning
 ```
 
+Every rule in this package is in the `LinqToDB` analyzer category, so one line sets them all:
+
+```ini
+dotnet_analyzer_diagnostic.category-LinqToDB.severity = warning
+```
+
 Apply the L2DB1001 fix even when the `Sql.Window` return type diverges from the legacy slot (default
 `false`; when enabled you resolve any resulting type change, e.g. widening `int` to `long`, by hand):
 
