@@ -383,10 +383,14 @@ namespace Tests.DataProvider
 		{
 			using var conn = GetDataConnection(context);
 
+			// MariaDB narrows CAST(x AS SIGNED) to INT when the operand fits into 32 bits; MySQL always reports BIGINT.
+			var signedType = context.IsAnyOf(TestProvName.AllMariaDB) ? typeof(int) : typeof(long);
+
 			using (Assert.EnterMultipleScope())
 			{
-				AssertReadMatrix(conn, "CAST(1000000 AS SIGNED)"                                      , typeof(long)    , typeof(long)    , "1000000");
-				AssertReadMatrix(conn, "CAST(7777777 AS SIGNED)"                                      , typeof(long)    , typeof(long)    , "7777777");
+				AssertReadMatrix(conn, "CAST(1000000 AS SIGNED)"                                      , signedType      , signedType      , "1000000");
+				AssertReadMatrix(conn, "CAST(7777777 AS SIGNED)"                                      , signedType      , signedType      , "7777777");
+				AssertReadMatrix(conn, "CAST(9223372036854775807 AS SIGNED)"                          , typeof(long)    , typeof(long)    , "9223372036854775807");
 				AssertReadMatrix(conn, "CAST(9999999 AS DECIMAL(31,0))"                               , typeof(decimal) , typeof(decimal) , "9999999");
 				AssertReadMatrix(conn, "CAST(20.31 AS DOUBLE)"                                        , typeof(double)  , typeof(double)  , "20.31");
 				AssertReadMatrix(conn, "CAST(16.2 AS FLOAT)"                                          , typeof(float)   , typeof(float)   , "16.2");
