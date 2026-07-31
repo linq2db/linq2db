@@ -28,39 +28,22 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			OpenWorld   = true,
 			Destructive = true)]
 		[Description("""
-			Executes one write-capable SQL statement against a database configured by linq2db CLI MCP startup options or query configuration profiles.
+			Executes one write-capable SQL statement using a configured linq2db profile.
 
-			This tool is available only when the MCP server was started with --enable-execute-tool. The selected profile must also set enableExecute to true.
-
-			Use this tool only after explicit user approval for the exact SQL operation. Multiple SQL statements are always rejected.
-
-			The tool cannot accept provider names, connection strings, passwords, provider assembly paths, or impersonation credentials. Those are configured only at MCP server startup or in trusted configuration profiles.
+			Requires server startup with --enable-execute-tool and enableExecute=true in the selected profile. Use only after explicit user approval for the exact operation. Multiple statements are rejected.
 			""")]
 		public async Task<CallToolResult> Execute(
 			[Description("""
-				Single SQL statement to execute.
-
-				Use provider-appropriate SQL syntax based on the selected profile's dialect. Multiple statements are rejected.
+				One provider-appropriate write-capable SQL statement. Multiple statements are rejected.
 				""")] string sql,
 			[Description("""
-				Optional configuration profile override.
-
-				Use only a profile name returned by linq2db_info or explicitly provided by the user. Do not invent profile names.
-
-				If omitted, the MCP server startup profile or default profile is used.
-				Requires MCP server startup with --config.
+				Optional profile returned by linq2db_info or explicitly provided by the user. If omitted, the server startup/default profile is used. Requires server startup with --config.
 				""")] string? profile = null,
 			[Description("""
-				Optional maximum number of result rows to read when the statement returns rows.
-
-				Use a small value for write statements that return data. Use 0 only when the user explicitly needs the full result set.
+				Optional row limit for returned data. Prefer a small value; use 0 only when the full result set is explicitly needed.
 				""")] int? maxRows = null,
 			[Description("""
-				Optional output format override.
-
-				Allowed values: json, json-table.
-
-				recordsAffected is reported only in json-table output, and only when the provider returns it; json output never includes it. Use json-table by default for this reason.
+				Optional output: json or json-table. Prefer json-table because it includes recordsAffected when the provider returns it.
 				""")] string? output = null,
 			CancellationToken cancellationToken = default)
 		{

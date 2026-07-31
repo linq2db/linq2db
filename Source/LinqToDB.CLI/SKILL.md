@@ -309,7 +309,8 @@ Configuration profiles:
 ## Config Init Command
 
 Use `dotnet linq2db config-init` to create or update a query/MCP configuration file.
-It is an onboarding helper, not a general JSON editor.
+Use it both for initial configuration and to add or replace named database profiles with `--profile` and `--if-exists`.
+It is not a general JSON editor.
 When it writes a file, it emits normalized pretty JSON and does not preserve existing formatting or comments.
 
 Defaults:
@@ -354,9 +355,9 @@ If the selected profile has `output: "csv"`, MCP calls must pass `output: "json-
 Examples:
 
 ```bash
-dotnet linq2db config-init --provider SQLite --connection-string "Data Source=data.db"
 dotnet linq2db config-init --config query.json --profile dev --description "Development database" --provider SqlServer --connection-string-env LINQ2DB_DEV_CONNECTION
 dotnet linq2db config-init --config query.json --profile db2-dev --provider DB2 --provider-location "C:\providers\IBM.Data.Db2.dll" --connection-string-env LINQ2DB_DB2_CONNECTION
+dotnet linq2db config-init --provider SQLite --connection-string "Data Source=data.db"
 ```
 
 Parameter surface:
@@ -557,7 +558,7 @@ dotnet linq2db execute --config query.json --profile dev --sql "update Person se
 ## MCP STDIO Command
 
 Use `dotnet linq2db mcp` to run a STDIO Model Context Protocol server exposing shared schema and query tools.
-This is the preferred integration mode for MCP-capable agent hosts because it keeps server configuration at startup and exposes query execution through a typed tool call.
+This is the preferred integration mode for MCP-capable agent hosts because it keeps trusted connection configuration outside model-controlled tool input and exposes query execution through typed calls.
 
 The MCP server exposes these tools:
 
@@ -577,7 +578,7 @@ Recommended model workflow:
 6. Use `linq2db_execute` only after explicit user approval for a write-capable operation.
 7. Call `linq2db_skill` when detailed usage guidance is needed.
 
-Do not pass provider names, connection strings, passwords, provider assembly paths, or impersonation credentials to `linq2db_schema`, `linq2db_query`, or `linq2db_execute`. Those values are configured at MCP server startup or in trusted configuration profiles.
+Do not pass provider names, connection strings, passwords, provider assembly paths, or impersonation credentials to `linq2db_schema`, `linq2db_query`, or `linq2db_execute`. Those values come from trusted server arguments or configuration profiles.
 
 `linq2db_schema` reads database metadata only. It does not accept SQL text, does not read table data, does not modify schema, and does not return procedures or functions.
 
@@ -610,10 +611,12 @@ MCP transport rules:
 The `mcp` command uses the same connection/configuration option model as `query`, but SQL input is supplied through the MCP tool call instead of startup CLI arguments.
 When the configuration contains a top-level `mcp` section, its `title`, `description`, and `instructions` identify the purpose of this specific server instance in the MCP initialization response. This allows multiple registered linq2db MCP servers to describe different application or database domains.
 
-Startup/config boundary:
+Trusted configuration boundary:
 
 - `--config <file>` and `--profile <name>` select the configuration profile used by default.
-- `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are startup/config settings.
+- The configuration file is re-read for every tool call. Profile additions and edits take effect on the next call without restarting the MCP server.
+- Write access to the configuration file is a trust boundary: its profiles control reachable databases, credentials, provider assemblies, impersonation, timeouts, and execute permission.
+- `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are trusted server argument/configuration settings and are never tool-call inputs.
 - `--max-rows` and `--output` can set startup defaults for tool calls.
 - `--max-response-bytes` sets the trusted server-wide schema/query/execute response limit. It overrides top-level `mcp.maxResponseBytes` and is not available as a tool-call argument.
 - `--enable-execute-tool` registers the write-capable `linq2db_execute` tool. It is off by default.

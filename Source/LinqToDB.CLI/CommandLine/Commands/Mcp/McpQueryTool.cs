@@ -34,11 +34,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		[Description("""
 			Returns non-secret linq2db MCP query configuration information.
 
-			Use this tool before generating SQL when supported database providers, available profiles, selected providers, SQL dialects, default output format, row limits, or execute availability are unknown.
-
-			Use linq2db_schema to inspect database objects for a selected profile.
-
-			Use linq2db_skill for the full linq2db CLI/MCP usage guide, including supported providers and external provider loading instructions.
+			Call this tool first when available profiles, providers, SQL dialects, output defaults, row limits, or execute availability are unknown. Use linq2db_schema to inspect database objects. Use linq2db_skill for the full usage guide.
 
 			This tool never returns connection strings, passwords, provider assembly paths, impersonation credentials, or environment variable values.
 			""")]
@@ -57,9 +53,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		[Description("""
 			Returns the full embedded linq2db CLI agent skill as Markdown.
 
-			Use this tool when detailed guidance is needed for linq2db query execution, MCP usage, schema inspection, configuration profiles, supported database providers, provider names, external provider loading, SQL safety rules, output formats, row limits, timeouts, impersonation, or agent responsibilities.
-
-			This tool returns documentation only. It does not access a database, read configuration, read environment variables, or return secrets.
+			Use it for detailed configuration, provider loading, SQL safety, output, timeout, impersonation, and workflow guidance. This documentation-only tool does not access a database or return secrets.
 			""")]
 		public CallToolResult Skill(CancellationToken cancellationToken = default)
 		{
@@ -81,20 +75,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 			Use this tool before generating SQL when table names, column names, keys, relationships, schemas, or catalogs are unknown.
 
-			This tool reads database metadata only. It does not read table data, execute user-provided SQL, modify schema, or return secrets.
-
-			Procedures and functions are not supported.
-
-			Provider, connection string, credentials, impersonation, provider assembly location, and timeout setup are configured only at MCP server startup or in trusted configuration profiles.
+			It reads metadata only, does not read table data or execute SQL, and does not return secrets. Procedures and functions are not supported.
 			""")]
 		public async Task<CallToolResult> Schema(
 			[Description("""
-				Optional configuration profile override.
-
-				Use only a profile name returned by linq2db_info or explicitly provided by the user. Do not invent profile names.
-
-				If omitted, the MCP server startup profile or default profile is used.
-				Requires MCP server startup with --config.
+				Optional profile returned by linq2db_info or explicitly provided by the user. If omitted, the server startup/default profile is used. Requires server startup with --config.
 				""")]                                                                             string?   profile                     = null,
 			[Description("Schema detail level. Allowed values: full, names. Use names for compact object discovery, then request full metadata with filters.")] string? detailLevel = null,
 			[Description("Prefer provider-specific .NET types in schema metadata.")]              bool?     preferProviderSpecificTypes = null,
@@ -160,48 +145,26 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			OpenWorld   = true,
 			Destructive = false)]
 		[Description("""
-			Executes one read-only SQL statement against a database configured by linq2db CLI MCP startup options or query configuration profiles.
+			Executes one read-only SQL statement using a configured linq2db profile.
 
-			The SQL dialect is determined by the selected profile/provider. Call linq2db_info first if available profiles, providers, or SQL dialects are unknown. Call linq2db_schema before generating SQL when table names, column names, keys, or relationships are unknown. Call linq2db_skill when detailed linq2db CLI/MCP usage guidance is needed.
+			Call linq2db_info first when the profile or SQL dialect is unknown. Call linq2db_schema when database objects are unknown and call linq2db_skill for detailed guidance.
 
-			Use this tool for read-oriented database inspection, diagnostics, schema/data exploration, row counts, sample records, data-quality checks, and investigation workflows that require live database facts.
+			Multiple statements and SQL that cannot be classified as read-only are rejected.
 
-			Multiple SQL statements are always rejected. If the SQL guard cannot classify a statement as read-only, the tool rejects it.
-
-			The tool cannot accept provider names, connection strings, passwords, provider assembly paths, or impersonation credentials. Those are configured only at MCP server startup or in trusted configuration profiles.
-
-			Do not use this tool for INSERT, UPDATE, DELETE, MERGE, DDL, stored procedure execution, administrative commands, or other write/destructive operations. Use linq2db_execute only when it is available and the user explicitly approved the exact write-capable operation.
+			Do not use it for write-capable SQL. Use linq2db_execute only when available and after explicit user approval for the exact operation.
 			""")]
 		public async Task<CallToolResult> Query(
 			[Description("""
-				Single SQL statement to execute.
-
-				Use provider-appropriate SQL syntax based on the selected profile's dialect. Call linq2db_info first if the dialect is unknown.
-
-				Prefer SELECT or WITH queries for inspection. Multiple statements are rejected.
-
-				Use explicit column aliases for expressions and joins because json output requires unique column names.
+				One provider-appropriate read-only SQL statement. Prefer SELECT or WITH. Use explicit aliases for expressions and joins because json output requires unique column names.
 				""")] string sql,
 			[Description("""
-				Optional configuration profile override.
-
-				Use only a profile name returned by linq2db_info or explicitly provided by the user. Do not invent profile names.
-
-				If omitted, the MCP server startup profile or default profile is used.
-				Requires MCP server startup with --config.
+				Optional profile returned by linq2db_info or explicitly provided by the user. If omitted, the server startup/default profile is used. Requires server startup with --config.
 				""")] string? profile = null,
 			[Description("""
-				Optional maximum number of result rows to read.
-
-				Use a small value for exploratory queries. Use 0 only when the user explicitly needs the full result set.
+				Optional row limit. Prefer a small value for exploration; use 0 only when the full result set is explicitly needed.
 				""")] int? maxRows = null,
 			[Description("""
-				Optional output format override.
-
-				Allowed values: json, json-table.
-
-				Use json-table by default when column metadata, duplicate column names, expressions, or joins are involved.
-				Use json only when object-shaped rows with unique column names are preferred.
+				Optional output: json or json-table. Prefer json-table for metadata, duplicate column names, expressions, or joins; use json for object-shaped rows with unique names.
 				""")] string? output = null,
 			CancellationToken cancellationToken = default)
 		{
