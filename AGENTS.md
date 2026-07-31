@@ -10,8 +10,8 @@ detail docs under `.claude/docs/`.
 
 If `.claude/` is empty, the submodule isn't populated — run `git submodule update --init`, then
 `git config core.hooksPath .githooks` to enable the corpus auto-refresh and guard hooks. **Then start a
-new agent session:** skills and the instruction set are resolved once at session start, so the session
-that found `.claude/` empty will keep behaving as if it still were.
+new agent session:** the always-loaded instruction set is resolved once at session start and is not
+re-read when `.claude/` appears, so the session that found it empty keeps running with no project rules.
 
 Corpus changes are committed **inside** `.claude/` and pushed to the agents repo — never onto a
 linq2db branch, and never by editing this file.
