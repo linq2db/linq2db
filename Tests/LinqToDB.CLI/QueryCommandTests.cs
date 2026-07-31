@@ -1353,6 +1353,51 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task QueryAcceptsNamedConfigProfileWithoutDefaultProfile()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"standalone": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--profile", "standalone", "--sql", "select 2 as Value");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0);
+				result.Output.  ShouldContain("\"Value\":\"2\"");
+				result.Error.   ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryRequiresDefaultProfileWhenProfileNotSpecified()
+		{
+			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"standalone": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""");
+
+			var result = await RunCli(environment, "query", "--config", config, "--sql", "select 1");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-1);
+				result.Error.   ShouldContain($"Configuration file '{config}' doesn't contain 'default' profile.");
+			}
+		}
+
+		[Test]
 		public async Task QueryUsesDefaultValuesForMissingProfileValues()
 		{
 			var environment = new TestCliEnvironment();

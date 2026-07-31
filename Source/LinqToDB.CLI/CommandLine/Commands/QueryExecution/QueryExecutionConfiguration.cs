@@ -11,8 +11,8 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 {
 	/// <summary>
 	/// Query command configuration loaded from JSON profile file.
-	/// The root object contains a required profile named "default" and optional named profiles.
-	/// Named profiles inherit values from the "default" profile because it is applied first.
+	/// The root object contains optional "default" and named profiles.
+	/// Named profiles inherit values from the "default" profile when it exists because it is applied first.
 	/// </summary>
 	internal sealed class QueryExecutionConfiguration
 	{
@@ -154,16 +154,18 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					return false;
 				}
 
-				if (!json.RootElement.TryGetProperty(QueryExecutionDefaults.DefaultProfileName, out var defaultProfile))
+				var result = new QueryExecutionConfiguration();
+
+				if (json.RootElement.TryGetProperty(QueryExecutionDefaults.DefaultProfileName, out var defaultProfile))
+				{
+					if (!result.ApplyProfile(fileName, QueryExecutionDefaults.DefaultProfileName, defaultProfile, out error))
+						return false;
+				}
+				else if (string.Equals(profileName, QueryExecutionDefaults.DefaultProfileName, StringComparison.Ordinal))
 				{
 					error = $"Configuration file '{fileName}' doesn't contain '{QueryExecutionDefaults.DefaultProfileName}' profile.";
 					return false;
 				}
-
-				var result = new QueryExecutionConfiguration();
-
-				if (!result.ApplyProfile(fileName, QueryExecutionDefaults.DefaultProfileName, defaultProfile, out error))
-					return false;
 
 				if (!string.Equals(profileName, QueryExecutionDefaults.DefaultProfileName, StringComparison.Ordinal))
 				{
@@ -193,12 +195,6 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 			using (json)
 			{
-				if (!json.RootElement.TryGetProperty(QueryExecutionDefaults.DefaultProfileName, out _))
-				{
-					error = $"Configuration file '{fileName}' doesn't contain '{QueryExecutionDefaults.DefaultProfileName}' profile.";
-					return false;
-				}
-
 				var names = new List<string>();
 
 				foreach (var profile in json.RootElement.EnumerateObject())

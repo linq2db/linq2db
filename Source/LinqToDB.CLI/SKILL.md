@@ -301,8 +301,9 @@ Configuration profiles:
 
 - Use `--config <file>` to load query settings from a JSON configuration file.
 - Use `--profile <name>` to select a named profile from that file.
-- If `--profile` is omitted, the `default` profile is used.
-- Named profiles inherit missing values from the `default` profile.
+- If `--profile` is omitted, the `default` profile is used and must exist.
+- Named profiles inherit missing values from the `default` profile when it exists.
+- A configuration can omit `default` when every caller explicitly selects a named profile.
 - Command-line values override profile values.
 - `enableExecute` can be set only in configuration profiles and defaults to `false`.
 
@@ -322,7 +323,7 @@ Defaults:
 - Initialized profiles include editable default values for `maxRows`, `output`, and `enableExecute`.
 - The default initialized output is `json-table`, which is suitable for MCP and duplicate-safe query output.
 - `config-init` writes common editable settings (`maxRows`, `output`, and `enableExecute`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually.
-- Named profiles still inherit missing values from `default` when those values are removed manually.
+- Named profiles still inherit missing values from `default` when a `default` profile exists and those values are removed manually.
 
 Required input:
 

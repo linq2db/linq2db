@@ -174,6 +174,37 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task McpInfoReturnsNamedProfilesWithoutDefaultProfile()
+		{
+			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");
+
+			await File.WriteAllTextAsync(config, """
+				{
+					"sqlite": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=:memory:"
+					}
+				}
+				""").ConfigureAwait(false);
+
+			await using var server = await McpServerProcess.Start("--config", config);
+
+			await server.Initialize();
+
+			var response = await server.CallTool("linq2db_info", new JsonObject());
+			var info     = ReadToolResult<McpTestInfoResult>(response);
+
+			using (Assert.EnterMultipleScope())
+			{
+				info.DefaultProfile.      ShouldBe("default");
+				info.DefaultProfileUsable.ShouldBe(false);
+				info.Profiles.Count.      ShouldBe(1);
+				info.Profiles[0].Name.    ShouldBe("sqlite");
+				info.Profiles[0].Provider.ShouldBe("SQLite");
+			}
+		}
+
+		[Test]
 		public async Task McpInfoWarnsForNamedProfileWithoutProvider()
 		{
 			var config = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"mcp-query-{Guid.NewGuid():N}.json");

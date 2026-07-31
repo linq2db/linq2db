@@ -85,7 +85,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 
 				defaultProfile = _startupOptions.Profile ?? QueryExecutionDefaults.DefaultProfileName;
 
-				if (!profileNames.Any(item => string.Equals(item, defaultProfile, StringComparison.Ordinal)))
+				if (_startupOptions.Profile != null && !profileNames.Any(item => string.Equals(item, defaultProfile, StringComparison.Ordinal)))
 					return CreateErrorResult($"Cannot load linq2db query configuration: profile '{defaultProfile}' not found.");
 
 				foreach (var profileName in profileNames)
