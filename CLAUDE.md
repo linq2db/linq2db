@@ -1,12 +1,20 @@
 # CLAUDE.md
 
-Entry point for **Claude Code** working on linq2db. The canonical, agent-agnostic contributor rules live in `AGENTS.md` — this file imports them, then layers Claude-Code-specific mechanics on top.
+<!-- Trampoline: do not edit. The instruction corpus is the .claude/ submodule
+     (github.com/linq2db/agents) - edit the files there, not this pointer.
 
-@AGENTS.md
+     The import list below is the always-loaded set declared by .claude/CLAUDE.md. It lives
+     here, at the project root, because a nested import's resolution root (importing file vs.
+     project root) is unspecified; at the root both readings coincide. Adding an always-loaded
+     corpus file is therefore the one corpus change that also needs a linq2db commit.
 
-## Claude Code specifics
+     If these imports don't load, .claude/ is an empty submodule directory:
+       git submodule update --init
+       git -C .claude switch master          # init leaves a detached HEAD
+       git config core.hooksPath .githooks   # corpus auto-refresh + gitlink/trampoline guards
+     ...and then start a NEW session: imports and skills resolve once, at session start, so
+     populating the submodule does not repair the session that found it empty. -->
 
-- `.claude/` is a **symlink to `.agents/`**. Skills, subagents, hooks, scripts, docs, and the knowledge base all live under `.agents/` and are discovered through the symlink — so `.claude/...` and `.agents/...` paths both resolve. Layout, settings precedence, and skill discovery: [.agents/docs/claude-setup.md](.agents/docs/claude-setup.md).
-- The operational overlay imported below is Claude-Code-specific (shell/tool rules, permission-friendly Bash patterns, dedicated-tools-over-CLI, worktree mechanics, `.claude/` curation carry-over, subagent verification, skill-based workflows). It complements — never overrides — the rules in `AGENTS.md`.
-
-@.agents/docs/agent-rules.md
+@.claude/AGENTS.md
+@.claude/CLAUDE.md
+@.claude/docs/agent-rules.md
