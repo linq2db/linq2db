@@ -57,3 +57,12 @@ Apply the L2DB1001 fix even when the `Sql.Window` return type diverges from the 
 ```ini
 linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
 ```
+
+Disable every rule of this package for a project — including when it arrives as a dependency of
+`linq2db` rather than as a direct reference:
+
+```xml
+<PropertyGroup>
+	<EnableLinqToDBAnalyzers>false</EnableLinqToDBAnalyzers>
+</PropertyGroup>
+```

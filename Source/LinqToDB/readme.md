@@ -711,6 +711,14 @@ Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from
 linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
 ```
 
+Turn all of them off for a project:
+
+```xml
+<PropertyGroup>
+	<EnableLinqToDBAnalyzers>false</EnableLinqToDBAnalyzers>
+</PropertyGroup>
+```
+
 To run the rules against an older linq2db — sizing and applying a migration before upgrading — reference `linq2db.Analyzers` directly; it carries no `linq2db` dependency, so it composes with any version. See its [readme](https://www.nuget.org/packages/linq2db.Analyzers).
 
 ## MiniProfiler

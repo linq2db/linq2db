@@ -42,6 +42,10 @@
 		<None Include="readme.md"                                  Pack="true" PackagePath="\" />
 		<None Include="$(OutputPath)LinqToDB.Analyzers.dll"        Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
 		<None Include="$(OutputPath)$(AssemblyName).dll"           Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
+
+		<!-- EnableLinqToDBAnalyzers opt-out. Packed to both folders: build/ serves a direct reference to
+		     this package, buildTransitive/ the normal delivery path through linq2db. -->
+		<None Include="build\linq2db.Analyzers.targets"             Pack="true" PackagePath="build;buildTransitive" />
 	</ItemGroup>
 
 </Project>
