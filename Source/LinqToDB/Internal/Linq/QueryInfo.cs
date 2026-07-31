@@ -29,10 +29,12 @@ namespace LinqToDB.Internal.Linq
 		public bool            IsContinuousRun { get; set; }
 		public DataOptions?    DataOptions     { get; set; }
 
-		// Render caches. Prepared is the main query's rendered commands (DML / the single SELECT) as a statement-free
-		// PreparedQuery (BakedQuery). EagerCommandCache is the SEPARATE combined eager-loading scenario (detail + main),
-		// still a PreparedScenario until the eager path migrates: a LoadWith query uses BOTH on the same QueryInfo — the
-		// eager executor for its data and GetCommand for ToString/GetSqlText — so they must not share one slot.
+		// Render caches, both built from the same PreparedCommand templates. Prepared is the main query's rendered commands
+		// (DML / the single SELECT) as a statement-free PreparedQuery (BakedQuery). EagerCommandCache is the SEPARATE
+		// combined eager-loading scenario (detail + main) as a PreparedScenario, which additionally carries that scenario's
+		// step facts and group list, so a warm eager execution rebuilds nothing structural. Two slots and not one because a
+		// LoadWith query uses BOTH on the same QueryInfo — the eager executor for its data, GetCommand for
+		// ToString/GetSqlText.
 		internal PreparedQuery?    Prepared          { get; set; }
 		internal PreparedScenario? EagerCommandCache { get; set; }
 	}
