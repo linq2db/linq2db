@@ -108,6 +108,44 @@ namespace Tests.Linq
 			sql.Parameters.Count.ShouldBe(1);
 		}
 
+		[Test]
+		public void ParameterReuse_ImpureExpression_EachOccurrenceFiltersItsOwnValue([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Enumerable.Range(0, 20)
+				.Select(v => new ParameterDeduplication { Id = v + 1, Int1 = v, Int2 = v })
+				.ToArray());
+
+			var counter = new ReuseCounter();
+
+			// Every row repeats its value in both columns, so a predicate that binds two different values
+			// selects two rows while one that reuses a single value for both sides selects one - whatever
+			// the counter happens to stand at. Binding one value to both predicates is what the shared
+			// parameter did, and no assertion on the generated SQL alone would catch the wrong rows.
+			var ids = table
+				.Where(t => t.Int1 == counter.Next() || t.Int2 == counter.Next())
+				.Select(t => t.Id)
+				.ToArray();
+
+			ids.Distinct().Count().ShouldBe(2);
+		}
+
+		[Test]
+		public void ParameterReuse_ThrowingExpression_KeepsOriginalException([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var empty = new List<int>();
+
+			// Comparing both occurrences means evaluating them at build time, which runs the user's own
+			// code. When that throws, the exception must reach the caller as-is: ParametersContext
+			// .BuildParameter treats any throw as "not a parameter", which would otherwise turn this into
+			// "the LINQ expression could not be converted to SQL" and hide the real cause.
+			Shouldly.Should.Throw<InvalidOperationException>(() => db.GetTable<ParameterDeduplication>()
+				.Where(t => t.Int1 == empty.First() || t.Int2 == empty.First())
+				.ToSqlQuery());
+		}
+
 		#endregion
 
 		#region Captured member access keeps being reused
@@ -249,6 +287,7 @@ namespace Tests.Linq
 			var sql = WhereInt2(db.GetTable<ParameterDeduplication>(), 1).ToSqlQuery();
 
 			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters[0].Value.ShouldBe(1);
 		}
 
 		[Test]
@@ -259,6 +298,7 @@ namespace Tests.Linq
 			var sql = WhereIntN2(db.GetTable<ParameterDeduplication>(), 1).ToSqlQuery();
 
 			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters[0].Value.ShouldBe(1);
 		}
 
 		[Test]
@@ -339,6 +379,7 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery();
 
 			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters[0].Value.ShouldBe(value);
 		}
 
 		[Test]
@@ -361,6 +402,7 @@ namespace Tests.Linq
 			var sql = query.ToSqlQuery();
 
 			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters[0].Value.ShouldBe(value);
 		}
 
 		[Test]
@@ -385,6 +427,7 @@ namespace Tests.Linq
 			var sql = filtered.ToSqlQuery();
 
 			sql.Parameters.Count.ShouldBe(1);
+			sql.Parameters[0].Value.ShouldBe(value);
 		}
 
 		#endregion
