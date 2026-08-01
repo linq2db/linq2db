@@ -70,13 +70,28 @@ namespace LinqToDB.Internal.SqlProvider
 	/// </summary>
 	abstract record PreparedQuery(ExecutionStep[] Steps, IReadOnlyList<int> OutcomeSteps, PreparedCommand[] Commands, bool WasBatch)
 	{
+		SqlCommandGroup[]? _groups;
+
 		/// <summary>
-		/// The physical grouping the scenario interpreter walks, projected from <see cref="Commands"/> at construction (each
-		/// command covers one contiguous run of steps — the grouping folded into <see cref="PreparedCommand"/> replaces the
-		/// separate <see cref="SqlCommandGroupPlan"/>). Built with the prepared query rather than per execution, so a cached
+		/// The physical grouping the scenario interpreter walks, projected from <see cref="Commands"/> (each command covers
+		/// one contiguous run of steps — the grouping folded into <see cref="PreparedCommand"/> replaces the separate
+		/// <see cref="SqlCommandGroupPlan"/>). Built once per prepared query rather than per execution, so a cached
 		/// (non-parameter-dependent) query reuses it on every run.
+		/// <para>
+		/// Built <b>on demand</b>, not at construction: the great majority of queries are a single simple command and take
+		/// <c>IsSingleSimpleCommand</c>'s fast path, which never walks groups — so building eagerly spent an array plus a
+		/// record per prepare on nothing. It showed up as a measurable allocation increase on the prepare-heavy benchmarks
+		/// (<c>Render_ValueDependent</c>, whose parameter-dependent query is rebuilt every run, and <c>Prepare_Cold</c>).
+		/// The <c>??=</c> race is benign: concurrent readers produce equivalent arrays.
+		/// </para>
+		/// <para>
+		/// The backing field participates in the record's synthesized equality, so two otherwise-identical prepared queries
+		/// compare unequal once only one of them has materialized its groups. Nothing compares these records today (the
+		/// <see cref="Steps"/> / <see cref="Commands"/> arrays already made equality reference-based); if that ever changes,
+		/// this field has to be excluded.
+		/// </para>
 		/// </summary>
-		public SqlCommandGroup[] Groups { get; } = BuildGroups(Commands);
+		public SqlCommandGroup[] Groups => _groups ??= BuildGroups(Commands);
 
 		static SqlCommandGroup[] BuildGroups(PreparedCommand[] commands)
 		{
