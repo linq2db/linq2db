@@ -615,6 +615,10 @@ dotnet_diagnostic.AsyncFixer06.severity = error # Task<T> to Task implicit conve
 resharper_csharp_allow_far_alignment = true
 resharper_int_align_switch_sections = true
 
+[Source/LinqToDB.CLI/**.cs]
+dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
+dotnet_diagnostic.MA0004.severity = none # MA0004: Use Task.ConfigureAwait
+
 [Tests/**.{cs,vb}]
 # generate messages mostly for Test*<T> methods, which we don't want to change
 dotnet_diagnostic.ide0001.severity = none # IDE0001: Simplify name

@@ -1,15 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands.Scaffold
 {
 	partial class ScaffoldCommand : CliCommand
 	{
@@ -1220,13 +1222,13 @@ static class CustomFluentExtensions
 					/*lang=json,strict*/
 					new[] { "{ \"schema\": { \"objects\": [\"table\", \"view\", \"table-function\"] } }" },
 					false,
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.View             ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.View             ) != 0, "view"              , "load views"                     ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ForeignKey       ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.ForeignKey       ) != 0, "foreign-key"       , "load foreign key constrains"    ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.StoredProcedure  ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.StoredProcedure  ) != 0, "stored-procedure"  , "load stored procedures"         ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.ScalarFunction   ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.ScalarFunction   ) != 0, "scalar-function"   , "load scalar functions"          ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.TableFunction    ) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.TableFunction    ) != 0, "table-function"    , "load table functions"           ),
-					new ((_defaultOptions.Schema.LoadedObjects & Schema.SchemaObjects.AggregateFunction) != 0, (_t4ModeOptions.Schema.LoadedObjects & Schema.SchemaObjects.AggregateFunction) != 0, "aggregate-function", "load aggregate/window functions"));
+					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.Table            ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),
+					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.View             ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.View             ) != 0, "view"              , "load views"                     ),
+					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ForeignKey       ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ForeignKey       ) != 0, "foreign-key"       , "load foreign key constraints"   ),
+					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.StoredProcedure  ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.StoredProcedure  ) != 0, "stored-procedure"  , "load stored procedures"         ),
+					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ScalarFunction   ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ScalarFunction   ) != 0, "scalar-function"   , "load scalar functions"          ),
+					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.TableFunction    ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.TableFunction    ) != 0, "table-function"    , "load table functions"           ),
+					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.AggregateFunction) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.AggregateFunction) != 0, "aggregate-function", "load aggregate/window functions"));
 
 			/// <summary>
 			/// Prefer provider-specific types over general .net types for columns and parameters option.
