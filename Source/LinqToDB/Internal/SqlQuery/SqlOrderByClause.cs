@@ -17,11 +17,13 @@ namespace LinqToDB.Internal.SqlQuery
 			Items.AddRange(items);
 		}
 
-		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending, bool isPositioned)
+		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending, bool isPositioned, Sql.NullsPosition nullsPosition)
 		{
-			Add(expr, isDescending, isPositioned);
+			Add(expr, isDescending, isPositioned, nullsPosition);
 			return this;
 		}
+
+		public SqlOrderByClause Expr(ISqlExpression expr, bool isDescending, bool isPositioned) => Expr(expr, isDescending, isPositioned, Sql.NullsPosition.None);
 
 		public SqlOrderByClause Expr     (ISqlExpression expr, bool isPositioned = false) => Expr(expr, false, isPositioned);
 		public SqlOrderByClause ExprAsc  (ISqlExpression expr, bool isPositioned = false) => Expr(expr, false, isPositioned);
@@ -32,13 +34,13 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlOrderByClause FieldAsc (SqlField field, bool isPositioned = false) => Expr(field, false, isPositioned);
 		public SqlOrderByClause FieldDesc(SqlField field, bool isPositioned = false) => Expr(field, true, isPositioned);
 
-		void Add(ISqlExpression expr, bool isDescending, bool isPositioned)
+		void Add(ISqlExpression expr, bool isDescending, bool isPositioned, Sql.NullsPosition nullsPosition)
 		{
 			foreach (var item in Items)
 				if (item.Expression.Equals(expr, (x, y) => x is not SqlColumn col || !col.Parent!.HasSetOperators || x == y))
 					return;
 
-			Items.Add(new SqlOrderByItem(expr, isDescending, isPositioned));
+			Items.Add(new SqlOrderByItem(expr, isDescending, isPositioned, nullsPosition));
 		}
 
 		public List<SqlOrderByItem> Items { get; } = [];

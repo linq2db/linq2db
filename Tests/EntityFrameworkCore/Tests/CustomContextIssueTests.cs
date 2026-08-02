@@ -231,6 +231,58 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 		#endregion
 
+		#region Issue 5296
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5296")]
+		public async ValueTask Issue5296Test([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
+			optionsBuilder = provider switch
+			{
+				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => optionsBuilder.UseNpgsql(connectionString),
+				_ when provider.IsAnyOf(TestProvName.AllSqlServer)  => optionsBuilder.UseSqlServer(connectionString),
+				_                                                   => throw new InvalidOperationException($"ProviderSetup is not implemented for provider {provider}")
+			};
+
+			using var ctx = new Issue5296Context(optionsBuilder.Options);
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+
+				// creating the linq2db connection triggers provider version auto-detection,
+				// which opens EF's shared DbConnection and (before the fix) leaves it open
+				using (var db = ctx.CreateLinqToDBConnection())
+				{
+					await db.GetTable<Issue5296Entity>().ToListAsyncLinqToDB();
+				}
+
+				// must not throw: a leaked-open connection bound to the dropped database
+				// breaks EF's drop/recreate cycle (SocketException / broken-connection recovery)
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+		}
+
+		public sealed class Issue5296Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue5296Entity> Entities { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<Issue5296Entity>();
+			}
+		}
+
+		public record Issue5296Entity(int Id, string Name);
+
+		#endregion
+
 		#region Issue 4783
 
 #if NET9_0_OR_GREATER

@@ -354,7 +354,8 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllYdb)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -367,7 +368,7 @@ namespace Tests.Linq
 
 			db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql, TestProvName.AllDuckDB))
 				dt = dt.AddTicks(-dt.Ticks % 10);
 
 			Assert.That(dt2, Is.EqualTo(dt));
@@ -387,7 +388,8 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllYdb)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -403,7 +405,7 @@ namespace Tests.Linq
 
 			db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql, TestProvName.AllDuckDB))
 				dt = dt.AddTicks(-dt.Ticks % 10);
 
 			Assert.That(dt2, Is.EqualTo(dt));
@@ -423,7 +425,8 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllMySql,
 				TestProvName.AllSybase,
-				TestProvName.AllSapHana)]
+				TestProvName.AllSapHana,
+				TestProvName.AllYdb)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -439,14 +442,15 @@ namespace Tests.Linq
 
 			db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
+			if (context.IsAnyOf(ProviderName.ClickHouseMySql, TestProvName.AllDuckDB))
 				dt = dt.AddTicks(-dt.Ticks % 10);
 
 			Assert.That(dt2, Is.EqualTo(dt));
 		}
 
 		[Test]
-		public void DateTimeArray1([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void DateTimeArray1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

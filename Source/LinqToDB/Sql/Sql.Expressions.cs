@@ -349,6 +349,8 @@ namespace LinqToDB
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
+					var tableOptions = (sqlTable as SqlTable)?.TableOptions ?? TableOptions.NotSet;
+
 					builder.DataContext.CreateSqlBuilder().BuildObjectName(
 						sb.Value,
 						new SqlObjectName(
@@ -358,7 +360,7 @@ namespace LinqToDB
 							Schema  : (qualified & TableQualification.SchemaName)   != 0 ? sqlTable.TableName.Schema       : null),
 						sqlTable.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable,
 						true,
-						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
+						(qualified & TableQualification.TableOptions) != 0 ? tableOptions : TableOptions.NotSet);
 
 					name = sb.Value.ToString();
 				}
@@ -564,8 +566,8 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[SqlQueryDependent]              RawSqlString sql,
-			[SqlQueryDependentParams] params object[]     parameters
+			[SqlQueryDependent] RawSqlString sql,
+			params object[]     parameters
 			)
 			=> throw new ServerSideOnlyException(nameof(Expr));
 

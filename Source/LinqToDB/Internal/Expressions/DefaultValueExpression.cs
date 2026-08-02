@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Mapping;
@@ -42,7 +43,7 @@ namespace LinqToDB.Internal.Expressions
 			return Equals(MappingSchema, other.MappingSchema) && _type.Equals(other._type);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{

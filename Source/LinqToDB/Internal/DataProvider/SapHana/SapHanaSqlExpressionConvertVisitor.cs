@@ -11,6 +11,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		}
 
 		protected override bool SupportsDistinctAsExistsIntersect => true;
+		protected override bool ConcatRequiresExplicitStringCast  => false;
 
 		#region LIKE
 
@@ -49,9 +50,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
 						element.SystemType
 					),
-
-				"+" when element.SystemType == typeof(string) =>
-					new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 
 				_ => base.ConvertSqlBinaryExpression(element),
 			};

@@ -60,13 +60,27 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			InitDefaultTranslators();
 
-			Registration.RegisterMethod(() => Sql.NewGuid(),  TranslateNewGuidMethod);
-			Registration.RegisterMethod(() => Guid.NewGuid(), TranslateNewGuidMethod);
+			Registration.RegisterMethod(() => Sql.NewGuid(),   TranslateNewGuidMethod);
+			Registration.RegisterMethod(() => Guid.NewGuid(),  TranslateNewGuidMethod);
+
+			Registration.RegisterMethod(() => Sql.NewGuid7(),       TranslateNewGuid7Method);
+#if NET9_0_OR_GREATER
+			Registration.RegisterMethod(() => Guid.CreateVersion7(), TranslateNewGuid7Method);
+#endif
 		}
 
 		Expression? TranslateNewGuidMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var translated = TranslateNewGuidMethod(translationContext, translationFlags);
+			if (translated == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
+		}
+
+		Expression? TranslateNewGuid7Method(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var translated = TranslateNewGuid7Method(translationContext, translationFlags);
 			if (translated == null)
 				return null;
 
@@ -134,11 +148,95 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return true;
 		}
 
+		static Expression UnwrapEnumBoxing(Expression expression)
+		{
+			// Enum.HasFlag is declared on System.Enum, so call sites carry a Convert(x, typeof(Enum))
+			// wrapper around an enum-typed receiver/argument. The SQL translator can't lower that
+			// abstract-type boxing for parameter/closure-captured locals, so strip it.
+			while (expression is UnaryExpression { NodeType: ExpressionType.Convert } unary
+				&& unary.Type == typeof(Enum)
+				&& unary.Operand.Type.IsEnum)
+			{
+				expression = unary.Operand;
+			}
+
+			return expression;
+		}
+
+		protected bool ProcessHasFlag(ITranslationContext translationContext, MethodCallExpression methodCall, out Expression? translated)
+		{
+			translated = null;
+
+			if (methodCall.Method.DeclaringType != typeof(Enum) ||
+				!string.Equals(methodCall.Method.Name, nameof(Enum.HasFlag), StringComparison.Ordinal) ||
+				methodCall.Arguments.Count != 1 ||
+				methodCall.Object == null)
+			{
+				return false;
+			}
+
+			var valueExpr = UnwrapEnumBoxing(methodCall.Object);
+			var flagExpr  = UnwrapEnumBoxing(methodCall.Arguments[0]);
+
+			// Bitwise-AND translation is only valid when the enum is stored as an integer.
+			// Enums mapped to non-integer types (e.g. [MapValue("foo")] → NVarChar) must fall through.
+			var enumType = valueExpr.Type.UnwrapNullableType();
+			if (!enumType.IsEnum)
+				return false;
+
+			var underlyingDataType = translationContext.MappingSchema.GetUnderlyingDataType(enumType, out _);
+			if (!underlyingDataType.Type.SystemType.IsIntegerType)
+				return false;
+
+			if (!translationContext.TranslateToSqlExpression(valueExpr, out var valueSql))
+			{
+				translated = translationContext.CreateErrorExpression(valueExpr, type: methodCall.Type);
+				return true;
+			}
+
+			// Column-level guard — catches [Column(DataType=…)] / [ValueConverter] overrides
+			// on the property. The type-level check above only sees [MapValue] mappings, which
+			// are keyed on Type; a column whose property has no [MapValue] but is stored via
+			// NVarChar+ValueConverter must also fall through. ColumnDescriptor.GetConvertedDbDataType()
+			// returns the post-conversion SystemType (the converter's target type when one is
+			// attached, otherwise the enum's default-from-enum mapping when present).
+			if (QueryHelper.GetColumnDescriptor(valueSql)?.GetConvertedDbDataType().SystemType.IsIntegerType == false)
+			{
+				return false;
+			}
+
+			if (!translationContext.TranslateToSqlExpression(flagExpr, out var flagSql))
+			{
+				translated = translationContext.CreateErrorExpression(flagExpr, type: methodCall.Type);
+				return true;
+			}
+
+			// Column-level guard for case when flag comes from column
+			if (QueryHelper.GetColumnDescriptor(flagSql)?.GetConvertedDbDataType().SystemType.IsIntegerType == false)
+			{
+				return false;
+			}
+
+			var factory   = translationContext.ExpressionFactory;
+			var dbType    = factory.GetDbDataType(valueSql);
+			var andExpr   = factory.BitAnd(dbType, valueSql, flagSql);
+			var equalPred = factory.Equal(andExpr, flagSql);
+
+			var sc = factory.SearchCondition();
+			sc.Add(equalPred);
+
+			translated = translationContext.CreatePlaceholder(sc, methodCall);
+			return true;
+		}
+
 		public virtual Expression? TranslateMethodCall(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			Expression? translated;
 
 			if (ProcessGetValueOrDefault(translationContext, methodCall, out translated))
+				return translated;
+
+			if (ProcessHasFlag(translationContext, methodCall, out translated))
 				return translated;
 
 			return null;
@@ -174,7 +272,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			return null;
 		}
-		
+
+		protected virtual ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			return null;
+		}
+
 		#endregion
 	}
 }

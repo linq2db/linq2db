@@ -100,6 +100,7 @@ namespace Tests.xUpdate
 			[Column(IsColumn = false, Configuration = ProviderName.SQLite)]
 			[Column(Configuration = ProviderName.Sybase    , DataType = DataType.Time)]
 			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.DuckDB    , DataType = DataType.Time)]
 			[Column("FieldTime")]
 			public TimeSpan? FieldTime;
 
@@ -122,6 +123,7 @@ namespace Tests.xUpdate
 			[MapValue("\b", Configuration = ProviderName.DB2)]
 			[MapValue("\b", Configuration = ProviderName.OracleDevart)]
 			[MapValue("\b", Configuration = ProviderName.Oracle11Devart)]
+			[MapValue("\b", Configuration = ProviderName.DuckDB)]
 			[MapValue("\0")]
 			Value2,
 			[MapValue("_", Configuration = ProviderName.Oracle)]
@@ -339,7 +341,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect })]
+		[ActiveIssue(Configurations = new[] { TestProvName.Oracle21DevartDirect, TestProvName.AllYdb }, Details = "YDB: strict-decimal facet mismatch (Decimal(22,9)) plus Date/Time conversion gaps (Timestamp->Date, Interval->Int64). (YDB: linq2db #5591, #5593)")]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{
@@ -476,7 +478,7 @@ namespace Tests.xUpdate
 		{
 			if (expected != null)
 			{
-				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql))
+				if (provider.IsAnyOf(TestProvName.AllPostgreSQL, ProviderName.ClickHouseMySql, TestProvName.AllDuckDB))
 					expected = expected.Value.AddTicks(-expected.Value.Ticks % 10);
 			}
 
@@ -621,7 +623,7 @@ namespace Tests.xUpdate
 					case string when provider.IsAnyOf(TestProvName.AllInformix):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 100) * 100);
 						break;
-					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB):
+					case string when provider.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMariaDB, TestProvName.AllDuckDB):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 10) * 10);
 						break;
 					case string when provider.IsAnyOf(ProviderName.DB2, TestProvName.AllAccess, TestProvName.AllSapHana):
@@ -645,7 +647,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - PostgreSQL remote/direct MERGE-source parameter dedup/naming divergence (value_2/value_3 vs value/value_2)") : null;
 
 			var isIDS = IsIDSProvider(context);
 

@@ -19,9 +19,9 @@ namespace Tests.Linq
 	[TestFixture]
 	public class AllAnyTests : TestBase
 	{
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -29,9 +29,9 @@ namespace Tests.Linq
 				db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID).Any(c => c.ParentID > 3)));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -39,9 +39,9 @@ namespace Tests.Linq
 				db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID).Any()));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -49,9 +49,9 @@ namespace Tests.Linq
 				db.Parent.Where(p => p.Children.Any(c => c.ParentID > 3)));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any31([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any31([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -70,9 +70,9 @@ namespace Tests.Linq
 			return p => p.Children.Any(c => c.ParentID > 0 && c.ParentID > 3);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any32([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any32([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -80,9 +80,9 @@ namespace Tests.Linq
 				db.Parent.Where(p => p.ParentID > 0 && SelectAny(p)));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any4([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any4([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -90,9 +90,9 @@ namespace Tests.Linq
 				db.Parent.Where(p => p.Children.Any()));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any5([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any5([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -115,9 +115,9 @@ namespace Tests.Linq
 			Assert.That(db.Child.Any(), Is.EqualTo(Child.Any()));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any8([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any8([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -125,9 +125,9 @@ namespace Tests.Linq
 				from p in db.Parent select db.Child.Select(c => c.Parent).Any(c => c == p));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any9([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any9([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -147,9 +147,9 @@ namespace Tests.Linq
 				select p);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any10([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any10([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -169,9 +169,9 @@ namespace Tests.Linq
 				select p);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any11([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any11([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -193,9 +193,9 @@ namespace Tests.Linq
 				select p);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Any12([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Any12([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -203,9 +203,9 @@ namespace Tests.Linq
 				from p in db.GetTable<Parent>() where db.GetTable<Child>().Any(c => p.ParentID == c.ParentID && c.ChildID > 3) select p);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void All1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void All1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -213,9 +213,9 @@ namespace Tests.Linq
 				db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID).All(c => c.ParentID > 3)));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void All2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void All2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -223,9 +223,9 @@ namespace Tests.Linq
 				db.Parent.Where(p => p.Children.All(c => c.ParentID > 3)));
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void All3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void All3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -260,8 +260,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
-		public void SubQueryAllAny([DataSources(TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		public void SubQueryAllAny([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -317,7 +317,7 @@ namespace Tests.Linq
 
 		sealed record Filter(string[]? NamesProp);
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		// Access: unsupported syntax for enumerable subquery
 		[ActiveIssue(Configuration = TestProvName.AllAccess)]
 		[Test]
@@ -334,6 +334,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2156")]
 		public void Issue2156Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{

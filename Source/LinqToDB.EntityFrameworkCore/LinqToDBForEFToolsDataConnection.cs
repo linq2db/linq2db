@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -114,7 +115,7 @@ namespace LinqToDB.EntityFrameworkCore
 				return EntityType.Equals(other.EntityType) && Equals(Model, other.Model);
 			}
 
-			public override bool Equals(object? obj)
+			public override bool Equals([NotNullWhen(true)] object? obj)
 			{
 				if (ReferenceEquals(null, obj))
 				{

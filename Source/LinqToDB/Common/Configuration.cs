@@ -50,9 +50,22 @@ namespace LinqToDB.Common
 		/// Enables mapping expression to be compatible with <see cref="CommandBehavior.SequentialAccess"/> behavior.
 		/// Note that it doesn't switch linq2db to use <see cref="CommandBehavior.SequentialAccess"/> behavior for
 		/// queries, so this optimization could be used for <see cref="CommandBehavior.Default"/> too.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
-		public static bool OptimizeForSequentialAccess;
+		/// <remarks>
+		/// This is a process-global default for the <see cref="LinqOptions.OptimizeForSequentialAccess"/> context option;
+		/// prefer setting it per-context via <see cref="DataOptionsExtensions.UseOptimizeForSequentialAccess"/> when
+		/// different contexts (e.g. parallel test lanes) need different values.
+		/// </remarks>
+		public static bool OptimizeForSequentialAccess
+		{
+			get => Linq.Options.OptimizeForSequentialAccess;
+			set
+			{
+				if (Linq.Options.OptimizeForSequentialAccess != value)
+					Linq.Options = Linq.Options with { OptimizeForSequentialAccess = value };
+			}
+		}
 
 		/// <summary>
 		/// Determines the length after which logging of binary data in SQL will be truncated.
@@ -448,6 +461,28 @@ namespace LinqToDB.Common
 						Options = Options with { EnableContextSchemaEdit = value };
 				}
 			}
+
+			/// <summary>
+			/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
+			/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
+			/// materialization instead of being translated into additional SQL columns. Expressions that prefer or require
+			/// server-side evaluation are still translated to SQL.
+			/// Default value: <see langword="false"/>.
+			/// </summary>
+			/// <remarks>
+			/// This is a process-global default for the <see cref="LinqOptions.PreferClientCalculation"/> context option;
+			/// prefer setting it per-context via <see cref="DataOptionsExtensions.UsePreferClientCalculation"/> when
+			/// different contexts (e.g. parallel test lanes) need different values.
+			/// </remarks>
+			public static bool PreferClientCalculation
+			{
+				get => Options.PreferClientCalculation;
+				set
+				{
+					if (Options.PreferClientCalculation != value)
+						Options = Options with { PreferClientCalculation = value };
+				}
+			}
 		}
 
 		/// <summary>
@@ -687,6 +722,17 @@ namespace LinqToDB.Common
 			{
 				get => Options.EnableConstantExpressionInOrderBy;
 				set => Options = Options with { EnableConstantExpressionInOrderBy = value };
+			}
+
+			/// <summary>
+			/// Default position of <c>NULL</c> values in an <c>ORDER BY</c> clause for ordering keys that do not
+			/// specify a <see cref="LinqToDB.Sql.NullsPosition"/> explicitly.
+			/// Default value: <see cref="LinqToDB.Sql.NullsPosition.None"/>.
+			/// </summary>
+			public static LinqToDB.Sql.NullsPosition DefaultNullsPosition
+			{
+				get => Options.DefaultNullsPosition;
+				set => Options = Options with { DefaultNullsPosition = value };
 			}
 		}
 

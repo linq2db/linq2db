@@ -1,1 +1,7 @@
 ﻿#nullable enable
+LinqToDB.Scaffold.DataModelOptions.GenerateSqlServerDecimalOverflowProtection.get -> bool
+LinqToDB.Scaffold.DataModelOptions.GenerateSqlServerDecimalOverflowProtection.set -> void
+LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateSqlServerDecimalOverflowProtection.get -> bool
+LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateSqlServerDecimalOverflowProtection.set -> void
+LinqToDB.Metadata.ColumnMetadata.UseGetSqlDecimal.get -> bool
+LinqToDB.Metadata.ColumnMetadata.UseGetSqlDecimal.set -> void

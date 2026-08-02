@@ -28,6 +28,11 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			if (row == -1)
 				return true;
 
+			// DB2 rejects untyped parameter markers inside VALUES (SQL0418N) — wrap any parameter
+			// cell in CAST(... AS <type>) so it has explicit type information.
+			if (rows[row][column] is SqlParameter)
+				return true;
+
 			if (row != 0)
 				return false;
 

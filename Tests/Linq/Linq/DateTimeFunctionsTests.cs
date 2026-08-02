@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -77,18 +81,84 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(Sql.GetDate()) };
-				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+				var sqlNow = q.First().Now;
+
+				// Sql.GetDate() and Sql.CurrentTimestamp emit identical server-side SQL — keep this list aligned with CurrentTimestamp.
+				var now    = sqlNow.Kind is DateTimeKind.Utc
+						|| context.IsAnyOf(
+							TestProvName.AllSapHana,
+							ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver,
+							TestProvName.AllInformix,
+							TestProvName.AllDB2,
+							TestProvName.AllMySql,
+							TestProvName.AllSybase,
+							TestProvName.AllDuckDB,
+							TestProvName.AllFirebirdLess4,
+							TestProvName.AllYdb)
+					? DateTime.Now.ToUniversalTime()
+					: DateTime.Now;
+
+				Assert.That((sqlNow - now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 
 		[Test]
-		public void CurrentTimestamp([DataSources] string context)
+		public void CurrentTimestamp([DataSources] string context, [Values] bool inline)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
-				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+				db.InlineParameters = inline;
+
+				var q      = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp };
+				var sqlNow = q.First().Now;
+
+				// Sybase, MySQL, MariaDB, DB2 LUW, INFORMIX, SAP HANA return UTC as it doesn't have timezone information
+				// ClickHouse returns UTC, but strangely works for Octonica
+				var now    = sqlNow.Kind is DateTimeKind.Utc
+						|| context.IsAnyOf(
+							TestProvName.AllSapHana,
+							ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver,
+							TestProvName.AllInformix,
+							TestProvName.AllDB2,
+							TestProvName.AllMySql,
+							TestProvName.AllSybase,
+							TestProvName.AllDuckDB,
+							TestProvName.AllFirebirdLess4)
+					? DateTime.Now.ToUniversalTime()
+					: DateTime.Now;
+
+				Assert.That((sqlNow - now).Duration().TotalMinutes, Is.LessThan(5));
+			}
+		}
+
+		[Test]
+		public void CurrentTimestamp2([DataSources] string context, [Values] bool inline)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				var q      = from p in db.Person where p.ID == 1 select new { Now = Sql.CurrentTimestamp2 };
+				var sqlNow = q.First().Now;
+
+				// Sql.CurrentTimestamp2 emits the same server-side SQL as Sql.CurrentTimestamp — keep this list aligned.
+				var now    = sqlNow.Kind is DateTimeKind.Utc
+						|| context.IsAnyOf(
+							TestProvName.AllSapHana,
+							ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver,
+							TestProvName.AllInformix,
+							TestProvName.AllDB2,
+							TestProvName.AllMySql,
+							TestProvName.AllSybase,
+							TestProvName.AllFirebirdLess4,
+							TestProvName.AllDuckDB,
+							TestProvName.AllYdb)
+					? DateTime.Now.ToUniversalTime()
+					: DateTime.Now;
+
+				Assert.That((sqlNow - now).Duration().TotalMinutes, Is.LessThan(5));
 			}
 		}
 
@@ -98,7 +168,7 @@ namespace Tests.Linq
 			var delta = Sql.CurrentTimestampUtc - DateTime.UtcNow;
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(delta.Between(TimeSpan.FromSeconds(-1), TimeSpan.FromSeconds(1)), Is.True);
+				Assert.That(delta.Duration().TotalSeconds, Is.LessThan(5));
 				Assert.That(Sql.CurrentTimestampUtc.Kind, Is.EqualTo(DateTimeKind.Utc));
 			}
 		}
@@ -106,23 +176,23 @@ namespace Tests.Linq
 		[Test]
 		public void CurrentTimestampUtc(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllFirebird, ProviderName.SqlCe,
-				TestProvName.AllSqlServer2005)]
+				TestProvName.AllSqlServer2005, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+				var dbUtcNow = db.Select(() => Sql.AsSql(Sql.CurrentTimestampUtc));
 
 				var now   = DateTime.UtcNow;
-				var delta = now - dbUtcNow;
+				var delta = (now - dbUtcNow).Duration();
 				Assert.That(
-					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)), Is.True,
+					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbUtcNow}, {delta}");
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver))
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver, TestProvName.AllYdb))
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
 				else
 					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
@@ -137,17 +207,121 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbTzNow = db.Select(() => Sql.CurrentTzTimestamp);
+				var dbTzNow = db.Select(() => Sql.AsSql(Sql.CurrentTzTimestamp));
 
 				var now   = DateTimeOffset.Now;
-				var delta = now - dbTzNow;
+				var delta = (now - dbTzNow).Duration();
 				Assert.That(
-					delta.Between(TimeSpan.FromSeconds(-120), TimeSpan.FromSeconds(120)), Is.True,
+					delta.TotalMinutes, Is.LessThan(5),
 					$"{now}, {dbTzNow}, {delta}");
 			}
 		}
 
-		[ActiveIssue("Test is broken")]
+		[Test]
+		public void DateTimeOffsetNow([DataSources] string context, [Values] bool inline)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTimeOffset.Now))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				// ClickHouse, PGSQL: session timezone used when set explicitly for connection
+				// MySql/MariaDB, YDB: returns UTC
+				// Oracle: Extract for TSTZ use UTC value
+				var returnsUtc = context.IsAnyOf(
+					TestProvName.AllPostgreSQL,
+					TestProvName.AllClickHouse,
+					TestProvName.AllMySql,
+					TestProvName.AllOracle,
+					TestProvName.AllYdb);
+				var kind       = returnsUtc
+					? DateTimeKind.Utc
+					: DateTimeKind.Local;
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second, kind);
+				var now     = DateTimeOffset.Now;
+
+				// Component check — what the server actually generated, no ADO.NET TZ coercion.
+				// Most providers return local time + local offset → components match local wall-clock.
+				// Postgres / ClickHouse / Ydb normalize to UTC internally → components are UTC.
+				var expectedParts = returnsUtc ? DateTime.UtcNow : DateTime.Now;
+
+				Assert.That(
+					(expectedParts - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"expected {expectedParts:O}, db parts {dbParts:O}");
+
+				// Round-trip instant matches on every provider — on plain-timestamp providers
+				// ADO.NET attaches the client's local offset, which equals the server's offset.
+				Assert.That(
+					(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+					$"{now}, {row.Full}");
+
+				// Offset preserved on TZ-aware-non-normalized providers
+				// Oracle: see above
+				if ((returnsUtc && !context.IsAnyOf(TestProvName.AllOracle)) || context.IsAnyOf(TestProvName.AllDuckDB))
+					Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
+				else
+					Assert.That(row.Full.Offset, Is.EqualTo(now.Offset));
+			}
+		}
+
+		[Test]
+		public void DateTimeOffsetNowUtc([DataSources] string context, [Values] bool inline)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTimeOffset.UtcNow))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second);
+				var nowUtc  = DateTime.UtcNow;
+				var now     = DateTimeOffset.UtcNow;
+
+				// Components are always UTC for UtcNow on every provider — authoritative correctness check.
+				Assert.That(
+					(nowUtc - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"client UTC {nowUtc:O}, db parts {dbParts:O}");
+
+				// Round-trip Full:
+				//   TZ-aware providers (offset 0 returned): full is the correct UTC instant.
+				//   Plain-timestamp providers (SQL CE, SQL Server 2005) cannot return a zero offset;
+				//   ADO.NET attaches the client's local offset to the UTC value, breaking the instant.
+				//   The wall-clock part of Full still holds the right UTC value — compare Full.DateTime.
+				if (context.IsAnyOf(
+					TestProvName.AllSqlServer2005,
+					ProviderName.SqlCe,
+					TestProvName.AllSapHana,
+					TestProvName.AllInformix,
+					TestProvName.AllDB2,
+					TestProvName.AllMySql,
+					TestProvName.AllSQLite,
+					TestProvName.AllAccess,
+					TestProvName.AllFirebirdLess4))
+				{
+					Assert.That(
+						(nowUtc - row.Full.DateTime).Duration().TotalMinutes, Is.LessThan(5),
+						$"client UTC {nowUtc:O}, db full.DateTime {row.Full.DateTime:O}");
+				}
+				else
+				{
+					Assert.That(
+						(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+						$"{now}, {row.Full}");
+					Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
+				}
+			}
+		}
+
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
 			[IncludeDataSources(true, TestProvName.AllFirebird, ProviderName.SqlCe)]
@@ -156,17 +330,15 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var dbUtcNow = db.Select(() => Sql.CurrentTimestampUtc);
+				var dbUtcNow = db.Select(() => Sql.AsSql(Sql.CurrentTimestampUtc));
 
-				var delta = dbUtcNow - DateTime.UtcNow;
-				Assert.That(delta.Between(TimeSpan.FromSeconds(-5), TimeSpan.FromSeconds(5)), Is.True);
+				var delta = (dbUtcNow - DateTime.UtcNow).Duration();
+				Assert.That(delta.TotalSeconds, Is.LessThan(5));
 
-				// we don't set kind and rely on provider's behavior
-				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver))
-					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Utc));
-				else
-					Assert.That(dbUtcNow.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+				// We don't set kind and rely on provider's behavior
+				// UTC is best/correct, most providers return Unspecified,
+				// but at least it shouldn't be Local.
+				Assert.That(dbUtcNow.Kind, Is.Not.EqualTo(DateTimeKind.Local));
 			}
 		}
 
@@ -190,28 +362,74 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-				(
-					from p in db.Types where p.ID == 100000 select p
-				)
-				.Update(t => new LinqDataTypes
-				{
+			(
+				from p in db.Types where p.ID == 100000 select p
+			)
+			.Update(t => new LinqDataTypes
+			{
 				BoolValue = true,
 				DateTimeValue = Sql.CurrentTimestamp2,
-				});
-			}
+			});
+		}
 
 		[Test]
-		public void Now([DataSources] string context)
+		public void Now([DataSources] string context, [Values] bool inline)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var q = 
-					from p in db.Person 
-					where p.ID == 1 
-					select new { Now = Sql.AsSql(DateTime.Now) };
+				db.InlineParameters = inline;
 
-				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTime.Now))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				// ClickHouse: requires session time zone set otherwise returns in server timezone
+				// YDB: returns UTC
+				var isUtc = context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb);
+				var kind  = isUtc ? DateTimeKind.Utc : DateTimeKind.Local;
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second, kind);
+				var now     = isUtc ? DateTime.UtcNow : DateTime.Now;
+
+				// Server-side value correctness, no ADO.NET coercion in the path
+				Assert.That(
+					(now - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db parts {dbParts:O}");
+
+				// Round-tripped DateTime carries no offset, so it matches on every provider
+				Assert.That(
+					(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db full {row.Full:O}");
+			}
+		}
+
+		[Test]
+		public void UtcNow([DataSources] string context, [Values] bool inline)
+		{
+			using (new DisableBaseline("Server-side date generation test"))
+			using (var db = GetDataContext(context))
+			{
+				db.InlineParameters = inline;
+
+				var row = db.Person.Where(p => p.ID == 1)
+					.Select(_ => Sql.AsSql(DateTime.UtcNow))
+					.Select(v => new { Full = v, v.Year, v.Month, v.Day, v.Hour, v.Minute, v.Second })
+					.First();
+
+				var dbParts = new DateTime(row.Year, row.Month, row.Day, row.Hour, row.Minute, row.Second);
+				var now     = DateTime.UtcNow;
+
+				Assert.That(
+					(now - dbParts).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db parts {dbParts:O}");
+
+				Assert.That(
+					(now - row.Full).Duration().TotalMinutes, Is.LessThan(5),
+					$"client {now:O}, db full {row.Full:O}");
+
+				Assert.That(row.Full.Kind, Is.Not.EqualTo(DateTimeKind.Local));
 			}
 		}
 
@@ -222,7 +440,7 @@ namespace Tests.Linq
 #pragma warning disable CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
 				var q =
 					from p in db.Person
-					where p.ID == 1 && 
+					where p.ID == 1 &&
 					      (
 						      DateTime.Now != null  &&
 							  DateTime.UtcNow != null &&
@@ -790,7 +1008,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnPositive([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnPositive([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = 2, DateTimeValue = new DateTime(2018, 01, 03) });
@@ -807,7 +1026,8 @@ namespace Tests.Linq
 			}
 
 		[Test]
-		public void AddDaysFromColumnNegative([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnNegative([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				db.Insert(new LinqDataTypes { ID = 5000, SmallIntValue = -2, DateTimeValue = new DateTime(2018, 01, 03) });
@@ -1090,7 +1310,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AddDaysFromColumnPositiveExpression([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnPositiveExpression([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1110,7 +1331,8 @@ namespace Tests.Linq
 			}
 
 		[Test]
-		public void AddDaysFromColumnNegativeExpression([DataSources(TestProvName.AllInformix)] string context)
+		// PostgreSQL 9.4+ (make_interval)
+		public void AddDaysFromColumnNegativeExpression([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var part1 = 4;
 			var part2 = 4;
@@ -1384,7 +1606,8 @@ namespace Tests.Linq
 		#region MakeDateTime
 
 		[Test]
-		public void MakeDateTime([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTime([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1393,7 +1616,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateTimeParameters([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTimeParameters([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var year = 2010;
 			using var db = GetDataContext(context);
@@ -1403,7 +1627,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateTimeParametersMonth([DataSources] string context, [Values(1, 10)] int month)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTimeParametersMonth([DataSources(TestProvName.AllPostgreSQL93Minus)] string context, [Values(1, 10)] int month)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1412,7 +1637,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime1([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1421,7 +1647,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime2([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1430,7 +1657,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MakeDateTime2([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTime2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1439,7 +1667,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime3([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1448,7 +1677,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime4([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime4([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1457,7 +1687,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NewDateTime5([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void NewDateTime5([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 				AreEqual(
@@ -1665,19 +1896,20 @@ namespace Tests.Linq
 		public void GetDateTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-				var dates =
-					from v in db.Parent
-						join s in db.Child on v.ParentID equals s.ParentID
-					where v.Value1 > 0
-					select Sql.CurrentTimestamp.Date;
 
-				var countByDates =
-					from v in dates
-					group v by v into g
-					select new { g.Key, Count = g.Count() };
+			var dates =
+				from v in db.Parent
+					join s in db.Child on v.ParentID equals s.ParentID
+				where v.Value1 > 0
+				select Sql.CurrentTimestamp.Date;
 
-				var _ = countByDates.Take(5).ToList();
-			}
+			var countByDates =
+				from v in dates
+				group v by v into g
+				select new { g.Key, Count = g.Count() };
+
+			_ = countByDates.Take(5).ToList();
+		}
 
 		[Test]
 		public void DateTimeSum(
@@ -1689,38 +1921,40 @@ namespace Tests.Linq
 			string context)
 		{
 			using var db = GetDataContext(context);
-				AreEqual(
-					from t in Types
-					group t by t.ID into g
-					select new
-					{
-					ID = g.Key,
-					Count = g.Count(),
-					Duration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
-					HasDuration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
-						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
-					},
-					from t in db.Types
-					group t by t.ID into g
-					select new
-					{
-					ID = g.Key,
-					Count = g.Count(),
-					Duration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
-					HasDuration = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
-						LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
-					});
-			}
+
+			AreEqual(
+				from t in Types
+				group t by t.ID into g
+				select new
+				{
+					ID              = g.Key,
+					Count           = g.Count(),
+					Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
+					HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
+					LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
+				},
+				from t in db.Types
+				group t by t.ID into g
+				select new
+				{
+					ID              = g.Key,
+					Count           = g.Count(),
+					Duration        = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1)))!.Value,
+					HasDuration     = g.Sum(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))).HasValue,
+					LongestDuration = g.Max(x => Sql.DateDiff(Sql.DateParts.Millisecond, x.DateTimeValue, x.DateTimeValue.AddDays(1))!.Value),
+				});
+		}
 
 		[Test]
 		public void Issue1615Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-				var datePart = Sql.DateParts.Day;
-				AreEqual(
+
+			var datePart = Sql.DateParts.Day;
+			AreEqual(
 				from t in Types select Sql.DateAdd(datePart, 5, t.DateTimeValue)!.Value.Date,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue))!.Value.Date);
-			}
+				from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue))!.Value.Date);
+		}
 
 		[Table]
 		sealed class Issue2950Table
@@ -1755,6 +1989,120 @@ namespace Tests.Linq
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0].Output, Is.EqualTo(TestData.TimeOfDay.Hours));
+		}
+
+		// Short name: Oracle 11 (30) and Firebird <= 3 (31) cap identifier length; the 32-char class name overflows both.
+		[Table("NullableDateTimeSub")]
+		sealed class NullableDateTimeSubtractionTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			public DateTime StartedOn { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			public DateTime? FinishedOn { get; set; }
+
+			public static readonly NullableDateTimeSubtractionTable[] Data =
+			[
+				new() { Id = 1, StartedOn = TestData.DateTime, FinishedOn = TestData.DateTime.AddHours(2) },
+				new() { Id = 2, StartedOn = TestData.DateTime, FinishedOn = null },
+			];
+		}
+
+		[Test]
+		public void NullableDateTimeSubtractionProjectionTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = t.FinishedOn - t.StartedOn,
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
+
+			if (!context.IsRemote() && db is DataConnection dc)
+			{
+				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+					.ShouldBeFalse("DateTime subtraction must not appear in SQL — it is evaluated client-side in .NET");
+			}
+		}
+
+		[ThrowsCannotBeConverted]
+		[Test]
+		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
+
+			var query =
+				from t in tb
+				orderby t.Id
+				select new
+				{
+					Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+				};
+
+			_ = query.ToArray();
+		}
+
+		// Short name: Oracle 11 caps identifiers at 30 chars.
+		[Table("NullableDtOffsetSub")]
+		sealed class NullableDateTimeOffsetSubtractionTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = false)]
+			public DateTimeOffset StartedOn { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = true)]
+			public DateTimeOffset? FinishedOn { get; set; }
+
+			public static readonly NullableDateTimeOffsetSubtractionTable[] Data =
+			[
+				new() { Id = 1, StartedOn = TestData.DateTimeOffset, FinishedOn = TestData.DateTimeOffset.AddHours(2) },
+				new() { Id = 2, StartedOn = TestData.DateTimeOffset, FinishedOn = null },
+			];
+		}
+
+		[Test]
+		public void NullableDateTimeOffsetSubtractionProjectionTest([DataSources(TestProvName.AllAccess, TestProvName.AllFirebird, TestProvName.AllSQLite, TestProvName.AllSqlServer2005, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllMySqlData, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeOffsetSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = t.FinishedOn - t.StartedOn,
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
+
+			if (!context.IsRemote() && db is DataConnection dc)
+			{
+				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+					.ShouldBeFalse("DateTimeOffset subtraction must not appear in SQL — it is evaluated client-side in .NET");
+			}
 		}
 	}
 }

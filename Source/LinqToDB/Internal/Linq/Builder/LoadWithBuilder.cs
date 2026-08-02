@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal")]
+	[BuildsMethodCall("LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal", "WithEagerLoadingStrategy")]
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
@@ -21,11 +21,14 @@ namespace LinqToDB.Internal.Linq.Builder
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
 		{
 			var propType = expectedType;
+
 			if (mappingSchema.IsCollectionType(expectedType))
 				propType = EagerLoading.GetEnumerableElementType(expectedType, mappingSchema);
+
 			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ?
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
+
 			if (propType != itemType)
 				throw new LinqToDBException("Invalid filter function usage.");
 		}

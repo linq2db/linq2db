@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -161,6 +164,76 @@ namespace Tests.Linq
 				};
 
 			AssertQuery(query);
+		}
+
+		[Test]
+		public void ClosureListCountTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var someList = new List<int>();
+
+			using var db    = GetDataConnection(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var rows = items.Where(i => i.Id == someList.Count).ToArray();
+
+			db.LastQuery!.ShouldNotContain("COUNT(");
+			rows.ShouldBeEmpty();
+		}
+
+		[Test]
+		public void ClosureListSumTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var someList = new List<int>();
+
+			using var db    = GetDataConnection(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var rows = items.Where(i => i.Id == someList.Sum()).ToArray();
+
+			db.LastQuery!.ShouldNotContain("SUM(");
+			rows.ShouldBeEmpty();
+		}
+
+		[Test]
+		public void ClosureListMinTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var someList = new List<int> { 0 };
+
+			using var db    = GetDataConnection(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var rows = items.Where(i => i.Id == someList.Min()).ToArray();
+
+			db.LastQuery!.ShouldNotContain("MIN(");
+			rows.ShouldBeEmpty();
+		}
+
+		[Test]
+		public void ClosureListMaxTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var someList = new List<int> { 0 };
+
+			using var db    = GetDataConnection(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var rows = items.Where(i => i.Id == someList.Max()).ToArray();
+
+			db.LastQuery!.ShouldNotContain("MAX(");
+			rows.ShouldBeEmpty();
+		}
+
+		[Test]
+		public void ClosureListAverageTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var someList = new List<int> { 0 };
+
+			using var db    = GetDataConnection(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var rows = items.Where(i => i.Id == (int)someList.Average()).ToArray();
+
+			db.LastQuery!.ShouldNotContain("AVG(");
+			rows.ShouldBeEmpty();
 		}
 
 	}

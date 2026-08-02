@@ -4,6 +4,25 @@ uid: contributing
 
 # Contributing guide
 
+## Cloning: the `.claude/` agent-instruction submodule
+
+AI coding-agent instructions (shared by Claude Code, GitHub Copilot and OpenAI Codex) live in their own repository, [linq2db/agents](https://github.com/linq2db/agents), mounted here as a git submodule at **`.claude/`**. Keeping them out of this repo keeps instruction churn out of linq2db's history. The root `AGENTS.md` and `CLAUDE.md` are one-screen pointers into it.
+
+Nothing about building or testing linq2db depends on the submodule — clone it only if you use an AI agent on this codebase:
+
+```
+git clone --recurse-submodules https://github.com/linq2db/linq2db.git
+git config core.hooksPath .githooks
+```
+
+Already cloned? `git submodule update --init`, then `git -C .claude switch master` (init checks out a detached HEAD, and a corpus commit made there would go nowhere useful), then the same `core.hooksPath` line. Note that a plain `git clone` leaves `.claude/` as an **empty directory** and `git status` still reads clean — an unpopulated submodule is not a deletion — so the only symptom is that your agent loads no instructions.
+
+**Restart your agent after populating the submodule.** Claude Code resolves the `CLAUDE.md` import set — the always-loaded project instructions — **once, at session start**, and does not re-read it when `.claude/` appears. A session that was already open while the submodule was empty keeps running with no project instructions however many files land on disk afterwards. Skill discovery *may* refresh mid-session, but it isn't guaranteed to, so don't rely on either: restart is the only way to be sure the session matches what's on disk.
+
+`core.hooksPath .githooks` is what keeps the corpus current and safe: `post-checkout` / `post-merge` / `post-rewrite` fast-forward `.claude/` to the agents repo's tip (skipping any checkout with uncommitted corpus edits), and `pre-commit` refuses two things that would otherwise slip in unnoticed — a `.claude` submodule-pointer bump, and edits to the root `AGENTS.md` / `CLAUDE.md` pointers. Both are overridable with `git commit --no-verify` when deliberate.
+
+**Editing the instructions:** commit inside `.claude/` and push to the agents repo (`git -C .claude commit`, `git -C .claude push`). Corpus changes never land on a linq2db branch.
+
 ## Project structure
 
 ### Solution and folder structure
@@ -76,12 +95,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produce HTML report. Parameters supported to change build configuration, logger type and executed TFMs
+* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produces a `trx` report. Parameters supported to change build configuration and executed TFMs, plus extra arguments forwarded to the test runner
 
-Example of running `Release` build tests for `net9.0` only with `trx` as output:
+Example of running `Release` build tests for `net9.0` only:
 
 ```cmd
-test.cmd Release 0 0 1 0 trx
+test.cmd Release 0 0 1 0
 ```
 
 ### Different platforms support
@@ -98,7 +117,7 @@ Because we target different TFMs, we use:
 
 ## Run tests
 
-NUnit3 is used as unit-testing framework. Most of tests are run for all supported databases and written in same pattern:
+NUnit3 is used as the unit-testing framework, running on [Microsoft.Testing.Platform](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro) (MTP) rather than VSTest. The test projects build as executables, so you run them directly (e.g. `linq2db.Tests.exe --filter ...`); `dotnet test` also works. Most of tests are run for all supported databases and written in same pattern:
 
 ```cs
 // TestBase - base class for all our tests

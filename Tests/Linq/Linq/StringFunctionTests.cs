@@ -307,7 +307,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 
 			var result = table.Select(t =>
-				new 
+				new
 				{
 					Str = t.Str,
 					Len = t.Str.Length,
@@ -317,8 +317,8 @@ namespace Tests.Linq
 				Assert.That(result.Str, Is.EqualTo(stringValue));
 				Assert.That(result.Len, Is.EqualTo(stringValue.Length));
 			}
-		}		
-		
+		}
+
 
 		static string CorrectValue(string value)
 		{
@@ -881,6 +881,7 @@ namespace Tests.Linq
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
 				TestProvName.AllSQLite,
+				TestProvName.AllDuckDB,
 			])]
 		[Test]
 		public void IndexOf3([DataSources(
@@ -915,6 +916,12 @@ namespace Tests.Linq
 			string context)
 		{
 			using var db = GetDataContext(context);
+			// YDB: the remote (LinqService) path renders the mandatory same-type CAST(Unicode::GetLength(...) AS Int32)
+			// as bare Unicode::GetLength(...), while direct access emits Unwrap(CAST(... AS Int32)). The result is
+			// identical; the cast node is dropped before the server-side builder only on the remote path. To investigate.
+			using var _ = context.IsAnyOf(TestProvName.AllYdb)
+				? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - YDB remote/direct CAST(Unicode::GetLength AS Int32) elision divergence (result-neutral)")
+				: null;
 			var q = from p in db.Person where p.ID == 1 select new { p.ID, FirstName = "123" + p.FirstName + "012345" };
 			q = q.Where(p => p.FirstName.LastIndexOf("123", 5) == 8);
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));

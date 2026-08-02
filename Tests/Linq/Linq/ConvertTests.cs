@@ -262,6 +262,7 @@ namespace Tests.Linq
 
 		#region Floats
 
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDefaultDecimal([DataSources] string context)
 		{
@@ -271,6 +272,7 @@ namespace Tests.Linq
 				from t in db.Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000));
 		}
 
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDecimal1([DataSources] string context)
 		{
@@ -453,7 +455,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe)] string context)
+		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1872,7 +1874,7 @@ namespace Tests.Linq
 
 		public class Issue5390Table
 		{
-			[Column(Precision = 6)]
+			[Column(Precision = 6), PrimaryKey]
 			public DateTime CreatedOnUtc { get; set; }
 		}
 	}

@@ -8,6 +8,7 @@
 > See [this page](https://linq2db.github.io/articles/CLI.html) for more detailed help.
 
 - [Installation](#installation)
+  - [Choosing 32-bit vs 64-bit (Windows)](#choosing-32-bit-vs-64-bit-windows)
 - [Use](#use)
   - [Usage Examples](#usage-examples)
     - [Generate SQLite database model in current folder](#generate-sqlite-database-model-in-current-folder)
@@ -15,7 +16,9 @@
 
 ## Installation
 
-> Requires .NET 8 or higher.
+> **Install requires .NET 10 SDK or higher** — `linq2db.cli` ships as per-RID tool packages (a .NET 10 SDK feature; older `dotnet tool install` clients don't understand the pointer-package selection and would install an empty shell).
+>
+> **Runtime: .NET 8 or higher** — once installed, the tool runs on .NET 8 / 9 / 10.
 
 Install as global tool:
 
@@ -27,6 +30,44 @@ Update:
 
 General information on .NET Tools could be found [here](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools)
 
+### Choosing 32-bit vs 64-bit (Windows)
+
+The tool ships as per-RID packages (`win-x64`, `win-x86`, `win-arm64`, plus Linux + macOS variants). A bare `dotnet tool install -g linq2db.cli` picks one based on your SDK architecture (usually **x64**).
+
+The default x64 install works for most providers; you need a specific variant only when a database driver constrains the bitness:
+
+**Always 32-bit** (must install `win-x86`):
+
+- `Microsoft.Jet.OLEDB` (legacy Access `.mdb` databases — Jet has no 64-bit build)
+
+**Bitness must match the installed driver** (install the matching variant of `linq2db.cli`):
+
+- `Microsoft.ACE.OLEDB.12.0` / `.16.0` — must match the installed Office bitness
+- SQL Server Compact Edition — must match the installed SQL CE runtime bitness
+- SAP HANA — must match the installed HANA driver bitness; the HANA ODBC driver ships under different names for x86 vs x64, and the native dotnet client is also bitness-specific
+
+Install the x86 variant explicitly:
+
+```
+dotnet tool install -g linq2db.cli --arch x86
+```
+
+A single tool ID can only have one architecture installed under `-g`. To switch architectures, either use `dotnet tool update -g linq2db.cli --arch <x86|x64>`, or uninstall first:
+
+```
+dotnet tool uninstall -g linq2db.cli
+dotnet tool install -g linq2db.cli --arch x86
+```
+
+To keep both x86 and x64 available, install each to a separate path and manage `PATH` order yourself:
+
+```
+dotnet tool install linq2db.cli --tool-path C:\tools\linq2db-x64 --arch x64
+dotnet tool install linq2db.cli --tool-path C:\tools\linq2db-x86 --arch x86
+```
+
+Use any paths you like; if the path contains spaces, quote it (PowerShell: `"C:\My Tools\linq2db-x86"`; cmd: `"%USERPROFILE%\tools\x86"`).
+
 ## Use
 
 To invoke tool use `dotnet-linq2db <PARAMETERS>` or `dotnet linq2db <PARAMETERS>` command.
@@ -34,11 +75,81 @@ To invoke tool use `dotnet-linq2db <PARAMETERS>` or `dotnet linq2db <PARAMETERS>
 Available commands:
 
 - `dotnet linq2db help`: prints general help
-- `dotnet linq2db help scaffold`: prints help for `scaffold` command
+- `dotnet linq2db help <command>`: prints help for a specific command
 - `dotnet linq2db scaffold <options>`: performs database model scaffolding
 - `dotnet linq2db template [-o template_path]`: creates base T4 template file for scaffolding customization code
+- `dotnet linq2db query <options>`: executes a single read-only SQL query and writes JSON, JSON table, or CSV output
+- `dotnet linq2db execute <options>`: executes a single write-capable SQL statement when the selected trusted profile has `enableExecute` set to `true`
+- `dotnet linq2db schema <options>`: reads provider-aware database object metadata and writes JSON output
+- `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile
+- `dotnet linq2db credentials <set|list|remove|clear> <options>`: manages encrypted credential profiles for connection configuration
+- `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, `linq2db_execute`, and `linq2db_skill`
+- `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 
-For list of available options, use `dotnet linq2db help scaffold` command.
+For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
+
+The MCP server exposes `linq2db_info` for non-secret runtime discovery of available profiles, providers, SQL dialects, defaults, safety rules, and the effective response-size limit. Use `linq2db_schema` to inspect tables, views, columns, keys, relationships, schemas, and catalogs before generating SQL. Use `linq2db_query` to execute one concrete read-only SQL statement. Use `linq2db_execute` only after explicit approval for write-capable SQL; it is disabled by default and requires MCP startup with `--enable-execute-tool` plus profile `enableExecute: true`. Use `linq2db_skill` when detailed CLI/MCP guidance, supported provider notes, or safety rules are needed.
+
+`schema` returns database object metadata through linq2db schema providers. It does not accept SQL text, does not read table data, does not modify the database, and does not return procedures or functions. Use `--detail-level names` or MCP `detailLevel: "names"` for compact object discovery, then request the default `full` detail level with table filters for the relevant objects. Use `--filter-schema`, `--filter-catalog`, and `--filter-table` to narrow large schema output. Filter options accept comma-separated values or repeated CLI options; MCP uses `filterSchemas`, `filterCatalogs`, and `filterTables` arrays. Table filters are exact by default and support `regex:`/`rx:` prefixes for regular expressions; regex matches use a bounded timeout and report an expected error on timeout.
+
+`config-init` writes common editable settings (`maxRows`, `output`, and `enableExecute`) into every created profile intentionally. This makes generated profiles self-explanatory and easier to edit manually. Named profiles still inherit missing values from `default` when those values are removed manually.
+
+When `config-init` writes an existing configuration file, it rewrites it as normalized JSON and does not preserve comments or custom formatting.
+
+Prefer `--connection-string-env` when the connection string contains credentials. A literal `--connection-string` is stored in the generated JSON and produces a warning on `stderr`; ensure that configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. Generated files use owner-only permissions on Linux and macOS. On Windows, prefer environment variables or Windows Credential Manager because Unix file permissions do not provide Windows ACL protection.
+
+Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
+
+On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password without echo and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
+
+```powershell
+dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
+dotnet linq2db credentials list
+dotnet linq2db credentials remove --profile project-a/production
+```
+
+Reference the generated target using `"credentials": "linq2db/project-a/production"` or `--credentials linq2db/project-a/production`. Credential entries are scoped to the Windows account that created them, so an MCP process running under another account cannot read them.
+
+Ordinary generic Credential Manager entries remain supported. Create one without placing the password in command-line arguments:
+
+```powershell
+cmdkey /generic:"linq2db/project-a/production" `
+       /user:"DOMAIN\ServiceAccount" `
+       /pass
+```
+
+With `/pass` and no value, `cmdkey` prompts for the password interactively. `--credentials` accepts the exact target name and detects both linq2db-managed and ordinary username/password entries. Do not combine `credentials` with `user`, `userEnv`, `password`, or `passwordEnv` in the same effective profile.
+
+CSV output preserves database values without spreadsheet-specific escaping and is intended for machine processing. Do not open CSV containing untrusted values directly in spreadsheet applications, which can interpret values beginning with characters such as `=`, `+`, `-`, or `@` as formulas. Use `json` or `json-table` instead when the data is untrusted or intended for interactive inspection.
+
+An optional top-level `mcp` section can set instance-specific `title`, `description`, and `instructions` returned during MCP initialization. It can also set `maxResponseBytes`, the server-wide UTF-8 size limit for primary buffered schema, query, and execute output content; protocol framing and the short truncation warning are not counted. For schema inspection, this limits the serialized MCP response, not the provider's in-memory `DatabaseSchema` acquisition. Use schema filters and `detailLevel: "names"` to reduce response construction for large databases. Use the `mcp` section to distinguish servers registered for different application or database domains. The `mcp` section is not a connection profile; `config-init` preserves it but does not create or modify it.
+
+MCP query and execute responses are limited to `8388608` bytes (8 MiB) by default. Configure any positive 32-bit integer through top-level `mcp.maxResponseBytes`, or override it for a specific server registration with `--max-response-bytes`. This setting is intentionally unavailable to MCP tool calls. When the limit is reached, the server stops before a row that would overflow the response, returns valid JSON for the rows that fit, marks `json-table` output as truncated, and adds a content warning recommending pagination. Direct `query` and `execute` CLI output remains streaming and is not subject to this MCP limit.
+
+MCP schema output uses the same response limit. If the serialized schema exceeds it, the tool returns an error and recommends narrowing the request with schema, catalog, or table filters instead of returning partial JSON. Direct `schema` CLI output is not subject to this MCP limit.
+
+When the section is omitted, the server uses a default title and description for linq2db database tools. It also supplies built-in instructions for the `linq2db_info` → `linq2db_schema` → `linq2db_query` workflow, points agents to `linq2db_skill` for the full guide, and limits `linq2db_execute` guidance to explicitly approved operations. Configured `instructions` are appended to those built-in instructions; configured `title` and `description` replace their defaults.
+
+The MCP host configuration and linq2db configuration have different roles. The host registration defines the visible registration name, executable, arguments, and environment variables. The file passed using `--config` defines the server identity returned during initialization and the database profiles available through that server.
+
+```json
+{
+  "mcp": {
+    "title": "Audiobooks Database",
+    "description": "Application database containing audiobooks, authors, narrators, users, and listening history.",
+    "instructions": "Use this server for Audiobooks application data analysis. Inspect the schema before writing queries.",
+    "maxResponseBytes": 8388608
+  },
+  "default": {
+    "provider": "PostgreSQL",
+    "connectionStringEnv": "AUDIOBOOKS_CONNECTION_STRING"
+  }
+}
+```
+
+For multiple projects or database groups, register the same CLI executable more than once and pass a different config file to each process. For example, an enterprise environment could register `ERP Databases` with `--config C:\mcp\erp.json` and `Analytics Databases` with `--config C:\mcp\analytics.json`. Each file should have its own top-level `mcp` metadata and only the profiles relevant to that project. This gives agents a clear project boundary while reusing the same linq2db CLI installation.
+
+For list of available options, use `dotnet linq2db help <command>` command.
 
 ### Usage Examples
 

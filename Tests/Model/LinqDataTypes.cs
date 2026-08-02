@@ -10,6 +10,7 @@ namespace Tests.Model
 	public class LinqDataTypes : IEquatable<LinqDataTypes>, IComparable
 	{
 		[PrimaryKey(Configuration = ProviderName.ClickHouse)]
+		[PrimaryKey(Configuration = ProviderName.Ydb)]
 		public int       ID;
 		[Column(Precision = 6, Scale = 2, Configuration = ProviderName.Ydb)]
 		[Column(DataType = DataType.Decimal64, Scale = 4, Configuration = ProviderName.ClickHouse)]

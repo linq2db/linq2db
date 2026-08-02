@@ -17,6 +17,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override bool SupportsNullInColumn              => false;
 		protected override bool SupportsDistinctAsExistsIntersect => true;
+		protected override bool ConcatRequiresExplicitStringCast  => false;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -51,7 +52,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				"&"                                           => new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2),
 				"|"                                           => new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2),
 				"^"                                           => new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2),
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 				_                                             => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -63,11 +63,16 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			return element.SystemType switch
-			{
-				null => element,
-				_ => ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters: false),
-			};
+			if (element.SystemType == null)
+				return element;
+
+			// Strip NULL-literal operands before folding to Nvl, matching base ConvertCoalesce —
+			// otherwise a no-op guard like Coalesce(x, NULL) folds to Nvl(x, NULL) (issue #5531).
+			var reduced = RemoveNullValues(element);
+			if (reduced is not SqlCoalesceExpression coalesce)
+				return reduced;
+
+			return ConvertCoalesceToBinaryFunc(coalesce, "Nvl", supportsParameters: false);
 		}
 
 		//TODO: Move everything to SQLBuilder
@@ -251,7 +256,13 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
 		{
-			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate));
+			// The INTERSECT emulation is a new tree, but its leaf expressions still belong to the statement
+			// this visitor was handed, which on a Transform pass is the cached one. The wrap therefore runs
+			// in the traversal's own mode rather than the Modify default the FinalizeStatement callers use,
+			// so that a cast copy is rebuilt into a new parent instead of written into a shared one.
+			return InformixSqlOptimizer.WrapParameters(
+				base.ConvertIsDistinctPredicateAsIntersect(predicate),
+				VisitMode);
 		}
 
 		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
@@ -282,11 +293,16 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		{
 			var newElement = base.VisitExprPredicate(predicate);
 
-			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, NeedsCast: false, Type.DataType: DataType.Boolean } p })
-				p.NeedsCast = true;
+			if (newElement is SqlPredicate.Expr { Expr1: SqlParameter { IsQueryParameter: true, Type.DataType: DataType.Boolean } p })
+			{
+				// The cast marks this usage only - the parameter instance is shared by every reference to it,
+				// and on a Transform pass belongs to the cached statement. `p` is reached by navigating into
+				// the predicate, so the predicate's own visit mode says nothing about who owns it.
+				return new SqlPredicate.Expr(QueryHelper.EnsureParameterCast(p));
+			}
 
 			return newElement;
-	}
+		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
@@ -300,9 +316,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 					var value     = func.Parameters[0];
 					var valueType = Factory.GetDbDataType(value);
-					var funcType  = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(typeof(int));
 
-					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueString = Factory.Concat(value, Factory.Value(valueType, "."));
 					var valueLength = Factory.Function(funcType, "CHAR_LENGTH", valueString);
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));

@@ -30,6 +30,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override bool IsValuesSyntaxSupported         => false;
 		protected override bool SupportsColumnAliasesInSource   => false;
 
+		protected override ConcatBuildStyle ConcatStyle         => ConcatBuildStyle.Function;
+
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
 			if (statement.SelectQuery != null)

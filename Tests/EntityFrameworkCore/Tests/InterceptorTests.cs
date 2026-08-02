@@ -70,9 +70,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(_testConnectionInterceptor.HasInterceptorBeenInvoked, Is.True);
 				Assert.That(_testEntityServiceInterceptor.HasInterceptorBeenInvoked, Is.True);
 
-				//the following check is false because linq2db context is never closed together
-				//with the EF core context
-				Assert.That(_testDataContextInterceptor.HasInterceptorBeenInvoked, Is.False);
+				//#5364: the implicit ToLinqToDB() context now closes its connection after each
+				//command (CloseAfterUse), so the data-context close interceptor is invoked
+				Assert.That(_testDataContextInterceptor.HasInterceptorBeenInvoked, Is.True);
 			}
 		}
 

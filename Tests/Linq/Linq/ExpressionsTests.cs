@@ -40,8 +40,6 @@ namespace Tests.Linq
 			Expressions.MapBinary((long v, int s) => v >> s, (v, s) => Shr(v, s));
 			Expressions.MapBinary((int  v, int s) => v << s, (v, s) => Shl(v, s));
 			Expressions.MapBinary((int  v, int s) => v >> s, (v, s) => Shr(v, s));
-			Expressions.MapMember((Enum e, Enum e2) => e.HasFlag(e2),
-				(t, flag) => (Sql.ConvertTo<int>.From(t) & Sql.ConvertTo<int>.From(flag)) != 0);
 		}
 
 		[Test]
@@ -74,13 +72,13 @@ namespace Tests.Linq
 		[Table]
 		sealed class MappingTestClass
 		{
-			[Column] public int       Id    { get; set; }
+			[PrimaryKey] public int   Id    { get; set; }
 			[Column] public int       Value { get; set; }
 			[Column] public FlagsEnum Flags { get; set; }
 		}
 
 		[Test]
-		public void MapHasFlag([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values (FlagsEnum.Flag1, FlagsEnum.Flag3)] FlagsEnum flag)
+		public void MapHasFlag([DataSources] string context, [Values(FlagsEnum.Flag1, FlagsEnum.Flag3, FlagsEnum.All)] FlagsEnum flag)
 		{
 			var data = Enumerable.Range(1, 10).Select(i => new MappingTestClass
 				{
@@ -103,38 +101,126 @@ namespace Tests.Linq
 			AreEqualWithComparer(expected, query);
 		}
 
+		[Flags]
+		public enum StringMappedFlagsEnum
+		{
+			[MapValue("F1")] Flag1 = 0x1,
+			[MapValue("F2")] Flag2 = 0x2,
+			[MapValue("F3")] Flag3 = 0x4,
+		}
+
+		[Table]
+		sealed class StringMappedFlagsTable
+		{
+			[Column] public int                   Id    { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 10)]
+			public StringMappedFlagsEnum          Flags { get; set; }
+		}
+
+		[Test]
+		public void HasFlag_OnStringMappedEnum_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<StringMappedFlagsTable>();
+
+			var query = from t in table
+						where t.Flags.HasFlag(StringMappedFlagsEnum.Flag1)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
+		[Flags]
+		public enum ConverterMappedFlagsEnum
+		{
+			Flag1 = 0x1,
+			Flag2 = 0x2,
+			Flag3 = 0x4,
+		}
+
+		sealed class FlagsEnumToStringConverter : ValueConverter<ConverterMappedFlagsEnum, string>
+		{
+			public FlagsEnumToStringConverter() : base(
+				v => v.ToString(),
+				s => Enum.Parse<ConverterMappedFlagsEnum>(s),
+				handlesNulls: true)
+			{
+			}
+		}
+
+		[Table]
+		sealed class ConverterMappedFlagsTable
+		{
+			[Column] public int Id { get; set; }
+
+			[Column(DataType = DataType.NVarChar, Length = 30)]
+			[ValueConverter(ConverterType = typeof(FlagsEnumToStringConverter))]
+			public ConverterMappedFlagsEnum Flags { get; set; }
+		}
+
+		[Test]
+		public void HasFlag_OnConverterMappedEnum_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ConverterMappedFlagsTable>();
+
+			var query = from t in table
+						where t.Flags.HasFlag(ConverterMappedFlagsEnum.Flag1)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
+		[Test]
+		public void HasFlag_OnConverterMappedEnum_ByColumn_FailsToTranslate([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<ConverterMappedFlagsTable>();
+
+			var value = ConverterMappedFlagsEnum.Flag1;
+
+			var query = from t in table
+						where value.HasFlag(t.Flags)
+						select t;
+
+			Assert.Throws<LinqToDBException>(() => query.ToArray());
+		}
+
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
+			Expressions.MapMember<Parent,int>(nameof(MapMember1), p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember1)));
 			AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
 		}
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
+			Expressions.MapMember<Parent,int,int>(nameof(MapMember2), (p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember2)));
 			AreEqual(Parent.Select(p => Count2(p, 1)), db.Parent.Select(p => Count2(p, 1)));
 		}
 
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void MapMember3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			Expressions.MapMember<Parent,int,int>((p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
+			Expressions.MapMember<Parent,int,int>(nameof(MapMember3), (p,id) => Count3(p, id), (p, id) => p.Children.Count(c => c.ChildID > id) + 2);
 
 			var n = 2;
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(MapMember3)));
 			AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
@@ -487,9 +573,9 @@ namespace Tests.Linq
 			var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LeftJoinTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var _ = (
@@ -502,9 +588,9 @@ namespace Tests.Linq
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
-			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
+			Expressions.MapMember(nameof(ToLowerInvariantTest), (string s) => s.ToLowerInvariant(), s => s.ToLower());
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, new MappingSchema(nameof(ToLowerInvariantTest)));
 			AreEqual(
 				   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
 				db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
@@ -1032,7 +1118,6 @@ namespace Tests.Linq
 		#endregion
 
 		#region Regression: query comparison
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
@@ -1053,7 +1138,6 @@ namespace Tests.Linq
 				db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{

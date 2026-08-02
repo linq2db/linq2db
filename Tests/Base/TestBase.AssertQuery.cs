@@ -309,7 +309,71 @@ namespace Tests
 				return SetOperationRemap(MemberHelper.MethodOfGeneric<IQueryable<object>>(q => UnionImpl(q, q, null!)));
 			}
 
+			// linq2db OrderBy/OrderByDescending/ThenBy/ThenByDescending overloads that take a Sql.NullsPosition.
+			// Translate to the equivalent in-memory ordering: a leading null-grouping key that reproduces the
+			// requested NULLS FIRST/LAST placement, then the actual value ordering.
+			if (mc.Method.DeclaringType == typeof(LinqExtensions)
+				&& mc.Arguments.Count == 3
+				&& mc.Method.GetParameters()[2].ParameterType == typeof(Sql.NullsPosition))
+			{
+				return RemapNullsOrdering(mc);
+			}
+
 			return mc;
+		}
+
+		static readonly MethodInfo _queryableOrderBy           = GetOrderingMethod(nameof(Queryable.OrderBy));
+		static readonly MethodInfo _queryableOrderByDescending = GetOrderingMethod(nameof(Queryable.OrderByDescending));
+		static readonly MethodInfo _queryableThenBy            = GetOrderingMethod(nameof(Queryable.ThenBy));
+		static readonly MethodInfo _queryableThenByDescending  = GetOrderingMethod(nameof(Queryable.ThenByDescending));
+
+		static MethodInfo GetOrderingMethod(string name) =>
+			typeof(Queryable).GetMethods().Single(m => m.Name == name && m.GetParameters().Length == 2);
+
+		static Expression RemapNullsOrdering(MethodCallExpression mc)
+		{
+			var genArgs = mc.Method.GetGenericArguments();
+			var tSource = genArgs[0];
+			var tKey    = genArgs[1];
+
+			var keyQuote   = mc.Arguments[1];
+			var keyLambda  = (LambdaExpression)(keyQuote is UnaryExpression { NodeType: ExpressionType.Quote } q ? q.Operand : keyQuote);
+			var nulls      = (Sql.NullsPosition)((ConstantExpression)mc.Arguments[2]).Value!;
+			var descending = mc.Method.Name is nameof(LinqExtensions.OrderByDescending) or nameof(LinqExtensions.ThenByDescending);
+			var isThen     = mc.Method.Name is nameof(LinqExtensions.ThenBy)             or nameof(LinqExtensions.ThenByDescending);
+
+			var source    = mc.Arguments[0];
+			var canBeNull = !tKey.IsValueType || Nullable.GetUnderlyingType(tKey) != null;
+
+			if (canBeNull && nulls != Sql.NullsPosition.None)
+			{
+				var whenNull    = nulls == Sql.NullsPosition.Last ? 1 : 0;
+				var nullKeyBody = Expression.Condition(
+					Expression.Equal(keyLambda.Body, Expression.Constant(null, tKey)),
+					Expression.Constant(whenNull),
+					Expression.Constant(whenNull == 1 ? 0 : 1));
+				var nullKeyLambda = Expression.Lambda(nullKeyBody, keyLambda.Parameters[0]);
+
+				// group nulls first/last (ascending key), preserving the existing ordering level
+				var primary = Expression.Call(
+					(isThen ? _queryableThenBy : _queryableOrderBy).MakeGenericMethod(tSource, typeof(int)),
+					source, Expression.Quote(nullKeyLambda));
+
+				// then order by the actual value
+				return Expression.Call(
+					(descending ? _queryableThenByDescending : _queryableThenBy).MakeGenericMethod(tSource, tKey),
+					primary, keyQuote);
+			}
+
+			var plain = (isThen, descending) switch
+			{
+				(false, false) => _queryableOrderBy,
+				(false, true ) => _queryableOrderByDescending,
+				(true , false) => _queryableThenBy,
+				(true , true ) => _queryableThenByDescending,
+			};
+
+			return Expression.Call(plain.MakeGenericMethod(tSource, tKey), source, keyQuote);
 		}
 
 		protected T[] AssertQuery<T>(IQueryable<T> query, IEqualityComparer<T>? comparer = null)

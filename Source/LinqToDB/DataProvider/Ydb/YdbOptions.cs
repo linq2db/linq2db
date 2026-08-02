@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -36,7 +38,7 @@ namespace LinqToDB.DataProvider.Ydb
 
 		#region IEquatable implementation
 
-		public bool Equals(YdbOptions? other)
+		public bool Equals([NotNullWhen(true)] YdbOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

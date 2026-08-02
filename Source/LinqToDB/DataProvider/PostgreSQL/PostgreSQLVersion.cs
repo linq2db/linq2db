@@ -22,6 +22,14 @@
 		/// </summary>
 		v95,
 		/// <summary>
+		/// PostgreSQL 11+ SQL dialect (window-frame GROUPS mode, frame EXCLUDE, RANGE value-offset).
+		/// </summary>
+		v11,
+		/// <summary>
+		/// PostgreSQL 12+ SQL dialect (CTE AS [NOT] MATERIALIZED).
+		/// </summary>
+		v12,
+		/// <summary>
 		/// PostgreSQL 13+ SQL dialect.
 		/// </summary>
 		v13,
@@ -33,5 +41,9 @@
 		/// PostgreSQL 18+ SQL dialect.
 		/// </summary>
 		v18,
+		/// <summary>
+		/// PostgreSQL 19+ SQL dialect.
+		/// </summary>
+		v19,
 	}
 }

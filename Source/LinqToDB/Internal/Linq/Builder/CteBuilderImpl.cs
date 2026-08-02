@@ -1,0 +1,27 @@
+using LinqToDB.Internal.Infrastructure;
+
+namespace LinqToDB.Internal.Linq.Builder
+{
+	/// <summary>
+	/// Default implementation of <see cref="ICteBuilder"/> used during expression translation.
+	/// Captures configuration chosen by the user so it can be copied onto the emitted <see cref="SqlQuery.CteClause"/>.
+	/// </summary>
+	/// <remarks>
+	/// Extension methods that live under <c>LinqToDB</c> set provider-specific state by casting to
+	/// <see cref="IAnnotatableBuilderInternal"/> and calling its members.
+	/// </remarks>
+	public sealed class CteBuilderImpl : ICteBuilder, IAnnotatableBuilderInternal
+	{
+		internal string?     Name        { get; private set; }
+		internal Annotatable Annotations { get; } = new();
+
+		ICteBuilder ICteBuilder.HasName(string? name)
+		{
+			Name = name;
+			return this;
+		}
+
+		void IAnnotatableBuilderInternal.SetAnnotation(string name, object? value)
+			=> Annotations.SetAnnotation(name, value);
+	}
+}

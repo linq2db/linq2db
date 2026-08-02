@@ -43,6 +43,7 @@ namespace Tests.xUpdate
 		[Table("TestMergeIdentity", Configuration = ProviderName.Sybase)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.SqlServer)]
 		[Table("TestMergeIdentity", Configuration = ProviderName.PostgreSQL)]
+		[Table("TestMergeIdentity", Configuration = ProviderName.DuckDB)]
 		sealed class TestMappingWithIdentity
 		{
 			[Column("Id", SkipOnInsert = true, IsIdentity = true)]

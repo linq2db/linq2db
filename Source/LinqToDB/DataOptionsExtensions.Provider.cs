@@ -14,7 +14,9 @@ using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.DuckDB;
 using LinqToDB.DataProvider.Sybase;
+using LinqToDB.DataProvider.Ydb;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
@@ -978,6 +980,76 @@ namespace LinqToDB
 			     Func<ClickHouseOptions, ClickHouseOptions>? optionSetter = null)
 		{
 			return options.UseConnectionString(connectionString).UseClickHouse(provider, optionSetter);
+		}
+
+		#endregion
+
+		#region UseDuckDB
+
+		/// <summary>
+		/// Configure DuckDB connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="DuckDBOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseDuckDB(
+			this DataOptions                          options,
+			     Func<DuckDBOptions, DuckDBOptions>? optionSetter = null)
+		{
+			options = options.UseDataProvider(DuckDBTools.GetDataProvider());
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure DuckDB connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="connectionString">DuckDB connection string.</param>
+		/// <param name="optionSetter">Optional <see cref="DuckDBOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseDuckDB(
+			this DataOptions                          options,
+			     string                               connectionString,
+			     Func<DuckDBOptions, DuckDBOptions>? optionSetter = null)
+		{
+			return options.UseConnectionString(connectionString).UseDuckDB(optionSetter);
+		}
+
+		#endregion
+
+		#region UseYdb
+
+		/// <summary>
+		/// Configure YDB connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="YdbOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseYdb(
+			this DataOptions                   options,
+			     Func<YdbOptions, YdbOptions>? optionSetter = null)
+		{
+			options = options.UseDataProvider(YdbTools.GetDataProvider());
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure YDB connection.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="connectionString">YDB connection string.</param>
+		/// <param name="optionSetter">Optional <see cref="YdbOptions"/> configuration callback.</param>
+		/// <returns>New options instance with applied changes.</returns>
+		[Pure]
+		public static DataOptions UseYdb(
+			this DataOptions                   options,
+			     string                        connectionString,
+			     Func<YdbOptions, YdbOptions>? optionSetter = null)
+		{
+			return options.UseConnectionString(connectionString).UseYdb(optionSetter);
 		}
 
 		#endregion

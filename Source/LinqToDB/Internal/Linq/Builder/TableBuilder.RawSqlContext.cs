@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (IsScalar && flags.IsSqlOrExpression() && SequenceHelper.IsSameContext(path, this))
 				{
-					var table = (SqlRawSqlTable)SqlTable;
+					var table = (SqlRawSqlTable)NamedTable;
 
 					//TODO: It is strictly coupled with SQLBuilder logic. Maybe we can unify. Feels like we should refactor this logic
 

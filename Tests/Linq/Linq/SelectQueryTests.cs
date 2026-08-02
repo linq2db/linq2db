@@ -289,7 +289,6 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
-		[YdbCteAsSource]
 		public void Issue2779Test4([DataSources(false,
 			TestProvName.AllAccess,
 			TestProvName.AllFirebird,
@@ -308,5 +307,6 @@ namespace Tests.Linq
 			Assert.That(res[0].ID, Is.EqualTo(1));
 		}
 		#endregion
+
 	}
 }

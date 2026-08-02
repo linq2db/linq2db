@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
@@ -37,7 +38,7 @@ namespace LinqToDB.Internal.Expressions
 			return IsNot ? $"IsNotDbNull({Placeholder})" : $"IsDbNull({Placeholder})";
 		}
 
-		public bool Equals(SqlReaderIsNullExpression? other)
+		public bool Equals([NotNullWhen(true)] SqlReaderIsNullExpression? other)
 		{
 			if (ReferenceEquals(null, other))
 			{
@@ -52,7 +53,7 @@ namespace LinqToDB.Internal.Expressions
 			return ExpressionEqualityComparer.Instance.Equals(Placeholder, other.Placeholder) && IsNot == other.IsNot;
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{

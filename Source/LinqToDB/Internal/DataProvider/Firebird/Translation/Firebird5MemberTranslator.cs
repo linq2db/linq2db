@@ -4,7 +4,7 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 {
-	public class Firebird5MemberTranslator : FirebirdMemberTranslator
+	public class Firebird5MemberTranslator : Firebird4MemberTranslator
 	{
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			return new Firebird5StringMemberTranslator();
 		}
 
-		protected class Firebird5DateFunctionsTranslator : FirebirdDateFunctionsTranslator
+		protected class Firebird5DateFunctionsTranslator : Firebird4DateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
@@ -86,5 +86,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected override bool IsDistinctSupported    => true;
 		}
 
+		protected class Firebird5WindowFunctionsMemberTranslator : Firebird4WindowFunctionsMemberTranslator
+		{
+			// PERCENT_RANK / CUME_DIST / NTILE inherited from Firebird 4; NTH_VALUE from Firebird 3.
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new Firebird5WindowFunctionsMemberTranslator();
+		}
 	}
 }

@@ -556,7 +556,10 @@ namespace Tests.Linq
 					from c in db.FromSql<int>($"select {1} {Sql.AliasExpr()}")
 					select c;
 
-			Assert.Throws<InvalidOperationException>(() => query.ToArray());
+			// Sql.AliasExpr() placed where it cannot become a table alias produces invalid SQL that the
+			// database rejects (there is no build-time validation for placeholder position in raw SQL).
+			// Fully-qualified: the test-local Tests.Should type shadows Shouldly.Should here.
+			Shouldly.Should.Throw<Npgsql.PostgresException>(() => query.ToArray());
 		}
 
 		[Test]
@@ -1023,10 +1026,12 @@ namespace Tests.Linq
 
 			tableName = QuoteTableName(tableName, context);
 
-			var sql            = $"SELECT 1 AS \"value\" FROM {tableName}";
+			// YDB uses backtick identifier quoting; ANSI double-quote is read as a string literal there.
+			var alias          = context.IsAnyOf(TestProvName.AllYdb) ? "`value`" : "\"value\"";
+			var sql            = $"SELECT 1 AS {alias} FROM {tableName}";
 			var formattableSql = FormattableStringFactory.Create(sql);
 
-			var query = 
+			var query =
 				from p in db.Person
 				from s in db.FromSqlScalar<int>(formattableSql)
 					.Where(s => s == p.ID)
@@ -1045,7 +1050,8 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSapHana,
-			TestProvName.AllOracle
+			TestProvName.AllOracle,
+			TestProvName.AllYdb
 			)] string context)
 		{
 			using var db = GetDataContext(context);

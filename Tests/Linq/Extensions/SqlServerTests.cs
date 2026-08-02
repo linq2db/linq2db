@@ -35,7 +35,9 @@ namespace Tests.Extensions
 				SqlServerHints.Table.PagLock,
 				SqlServerHints.Table.ReadCommitted,
 				SqlServerHints.Table.ReadCommittedLock,
-				SqlServerHints.Table.ReadPast,
+				// ReadPast is covered by WithReadPastTableTest, which pins an explicit READ COMMITTED
+				// transaction (READPAST is invalid under SNAPSHOT/SERIALIZABLE, which a pooled connection
+				// may carry over under parallel execution).
 				SqlServerHints.Table.ReadUncommitted,
 				SqlServerHints.Table.RepeatableRead,
 				SqlServerHints.Table.RowLock,

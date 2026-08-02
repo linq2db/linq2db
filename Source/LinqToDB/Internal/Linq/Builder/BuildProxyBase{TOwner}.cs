@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -232,6 +233,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					return defaultIfEmptyExpression.Update(processed, notNull.AsReadOnly());
 				}
+
+				case ConditionalExpression { IfTrue: SqlGenericConstructorExpression, IfFalse: SqlGenericConstructorExpression } conditional:
+				{
+					// A set operation merges its two projections into `test ? proj1 : proj2` (both
+					// constructors). Propagate toPath into each branch (as with a plain constructor's
+					// assignments) so a member surviving as a conditional keeps its tracking path and
+					// resolves against the owner's fields. Restricted to constructor branches so scalar /
+					// DefaultIfEmpty conditionals (e.g. in eager-load key queries) are left to the generic
+					// visitor. The test is a predicate, not a projected value. See issue #5457.
+					var test    = ProcessTranslated(conditional.Test, null);
+					var ifTrue  = ProcessTranslated(conditional.IfTrue, toPath);
+					var ifFalse = ProcessTranslated(conditional.IfFalse, toPath);
+
+					return conditional.Update(test, ifTrue, ifFalse);
+				}
 			}
 
 			var visitor = new BuildProxyVisitor(this);
@@ -259,7 +275,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			       && ExpressionEqualityComparer.Instance.Equals(InnerExpression, other.InnerExpression);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (obj is null)
 			{

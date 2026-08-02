@@ -17,7 +17,7 @@ namespace Tests.Linq
 		[Table]
 		public class TestTable
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public int TestId { get; set; }
 		}
 

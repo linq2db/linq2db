@@ -1,22 +1,18 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void DenseRankWithMultiplePartitions([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void DenseRankWithMultiplePartitions([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -34,21 +30,11 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void DenseRankWithMultiplePartitionsWithDefineWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void DenseRankWithMultiplePartitionsWithDefineWindow([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -75,16 +61,11 @@ namespace Tests.Linq
 				orderby s.Entity.Id
 				select s;
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void DenseRankWithNulls([IncludeDataSources(
-			true,
-			TestProvName.AllOracle12Plus)] string context)
+		public void DenseRankWithNulls([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -98,21 +79,29 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
+			var result = query.ToList();
+
+			// Timestamp is nullable and row Id=9 (CategoryId=1) has a NULL Timestamp, so the requested NULLS
+			// position is observable: rn7 places NULLS FIRST (ASC), rn8 places NULLS LAST (DESC). Timestamps
+			// are distinct within each CategoryId, so DENSE_RANK has no ties. A provider whose NULLS emulation
+			// (or native NULLS ordering) is wrong produces a different rank for the NULL row and fails here.
+			var byId = result.ToDictionary(r => r.Entity.Id);
+
+			(int Id, long Rn7, long Rn8)[] expected =
+			[
+				(1, 2, 4), (2, 3, 3), (3, 1, 2), (4, 2, 1), (5, 4, 2),
+				(6, 1, 2), (7, 2, 1), (8, 5, 1), (9, 1, 5)
+			];
+
+			foreach (var e in expected)
 			{
-				_ = query.ToList();
-			});
+				byId[e.Id].rn7.ShouldBe(e.Rn7, $"rn7 (ASC NULLS FIRST) mismatch for Id={e.Id}");
+				byId[e.Id].rn8.ShouldBe(e.Rn8, $"rn8 (DESC NULLS LAST) mismatch for Id={e.Id}");
+			}
 		}
 
 		[Test]
-		public void DenseRankWithoutPartition([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		public void DenseRankWithoutPartition([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -130,10 +119,7 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 	}
 }

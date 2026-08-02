@@ -11,6 +11,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.DataProvider.Oracle.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -37,6 +38,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SqlProviderFlags.IsIdentityParameterRequired                           = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported                            = true;
+			SqlProviderFlags.IsNullsOrderingSupported                              = true;
+			SqlProviderFlags.DefaultNullsOrdering                                  = NullsDefaultOrdering.Largest; // Oracle sorts NULL as the largest value
 			SqlProviderFlags.IsUnionAllOrderBySupported                            = true;
 			SqlProviderFlags.IsUpdateFromSupported                                 = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.ReadCommitted;
@@ -44,7 +47,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
-			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
+			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = version < OracleVersion.v12;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
 			SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull                   = true;
@@ -57,7 +60,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			if (version >= OracleVersion.v12)
 				SqlProviderFlags.IsApplyJoinSupported          = true;
 
-			SqlProviderFlags.MaxInListValuesCount              = 1000;
+			SqlProviderFlags.MaxInListValuesCount = 1000;
+			SqlProviderFlags.MaxColumnCount       = 1000;
 
 			SetCharField            ("Char",  (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField            ("NChar", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -262,9 +266,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 #endif
 			}
 
-			if (dataType.DataType == DataType.Undefined && value is string @string && @string.Length >= 4000)
-				dataType = dataType.WithDataType(DataType.NText);
-
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
@@ -351,6 +352,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 				default: base.SetParameterType(dataConnection, parameter, dataType); break;
 			}
+		}
+
+		protected override DbDataType InferParameterDataType(DataConnection dataConnection, DbDataType dbDataType, object? paramValue)
+		{
+			if (dbDataType.DataType == DataType.Undefined &&
+			    paramValue is string value                &&
+			    dataConnection.Options.FindOrDefault(OracleOptions.Default).MaxStringParameterLength is { } maxStringParameterLength &&
+			    value.Length >= maxStringParameterLength)
+			{
+				return dbDataType.WithDataType(DataType.NText);
+			}
+
+			return base.InferParameterDataType(dataConnection, dbDataType, paramValue);
 		}
 
 		#region BulkCopy

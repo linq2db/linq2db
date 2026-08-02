@@ -83,7 +83,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 					{
 						string logFragment = string.Empty;
 
-						if (Extension.Options.DataContextOptions.Interceptors?.Any() == true)
+						if (Extension.Options.DataContextOptions.Interceptors?.Count > 0)
 						{
 							logFragment += $"Interceptors count: {Extension.Options.DataContextOptions.Interceptors.Count}";
 						}

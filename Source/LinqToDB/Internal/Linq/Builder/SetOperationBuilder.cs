@@ -21,11 +21,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var buildResult1 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			// Both set sides are independent of any post-set-operation OrderBy. Isolate so
+			// per-side OrderBys don't leak into the outer state consumed by CteUnion.
+			BuildSequenceResult buildResult1;
+			using (builder.IsolateOrderBy())
+				buildResult1 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			if (buildResult1.BuildContext == null)
 				return buildResult1;
 
-			var buildResult2 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			BuildSequenceResult buildResult2;
+			using (builder.IsolateOrderBy())
+				buildResult2 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 			if (buildResult2.BuildContext == null)
 				return buildResult2;
 
@@ -117,7 +123,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot() || flags.IsTable())
+				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsSubquery())
 					return path;
 
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using Newtonsoft.Json.Linq;
@@ -18,7 +19,7 @@ using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture, NonParallelizable]
+	[TestFixture]
 	public class AnalyticTests : TestBase
 	{
 		[Test]
@@ -30,7 +31,8 @@ namespace Tests.Linq
 				TestProvName.AllOracleDevart,
 				TestProvName.AllSqlServer2012Plus,
 				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -85,7 +87,8 @@ namespace Tests.Linq
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
 				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -114,7 +117,8 @@ namespace Tests.Linq
 				TestProvName.AllOracle,
 				TestProvName.AllSqlServer2012Plus,
 				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -135,7 +139,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -160,7 +164,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAvgOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestAvgOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -279,7 +283,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -306,7 +310,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -333,7 +337,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -368,7 +372,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -472,7 +476,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 			var q =
@@ -486,14 +490,14 @@ namespace Tests.Linq
 
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
-			else if (context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+			else if (context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllDuckDB))
+				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER (ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
 			else
 				Assert.Fail("Missing assertion");
 		}
 
 		[Test]
-		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
+		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -516,7 +520,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -534,7 +538,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -551,7 +555,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -591,7 +595,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -627,7 +631,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -652,7 +656,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMedianOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void TestMedianOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -683,7 +687,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -709,7 +713,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -758,8 +762,27 @@ namespace Tests.Linq
 			Assert.That(res, Is.Not.Empty);
 		}
 
+		// Regression: a legacy Sql.Ext NthValue FROM LAST modifier must survive conversion to the Sql.Window
+		// pipeline. It was previously discarded (the converter skipped Sql.From), so NTH_VALUE(...) FROM LAST
+		// silently emitted without FROM LAST and returned the value counted from the first row instead of the last.
 		[Test]
-		public void TestNTileOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestNthValueOracleFromLast([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select Sql.Ext.NthValue(c.ChildID, p.ParentID, Sql.From.Last, Sql.Nulls.Ignore).Over().PartitionBy(p.Value1, c.ChildID).ToValue();
+
+			var sql = q.ToSqlQuery().Sql;
+			sql.ShouldContain("FROM LAST");
+			sql.ShouldContain("IGNORE NULLS");
+
+			q.ToArray();
+		}
+
+		[Test]
+		public void TestNTileOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -873,7 +896,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -940,7 +963,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -967,7 +990,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			var qg =
@@ -992,7 +1015,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1026,7 +1049,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
+		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1060,7 +1083,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1089,7 +1112,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1123,7 +1146,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1238,7 +1261,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllDuckDB)]string context)
 		{
 			using var db = GetDataContext(context);
 			var q1 =
@@ -1285,7 +1308,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1330,7 +1353,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1370,7 +1393,8 @@ namespace Tests.Linq
 		[Test]
 		public void FirstLastValueIgnoreNulls([IncludeDataSources(
 			TestProvName.AllSqlServer2022Plus,
-			TestProvName.AllOracle)] string context)
+			TestProvName.AllOracle, TestProvName.AllDuckDB,
+			TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Position.TestData);
@@ -1416,6 +1440,63 @@ namespace Tests.Linq
 				Assert.That(res[3].FirstIgnore, Is.Null);
 				Assert.That(res[3].LastRespect, Is.Null);
 				Assert.That(res[3].LastIgnore, Is.EqualTo(6));
+			}
+		}
+
+		[Test]
+		public void LagLeadIgnoreNulls([IncludeDataSources(
+			TestProvName.AllOracle, TestProvName.AllDuckDB,
+			TestProvName.AllPostgreSQL19Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
+
+			var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					orderby p.Order
+					select new
+					{
+						Id          = p.Id,
+						LagRespect  = (int?)Sql.Ext.Lag (p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+						LagIgnore   = (int?)Sql.Ext.Lag (p.Id, Sql.Nulls.Ignore ).Over().OrderBy(p.Order).ToValue(),
+						LeadRespect = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						LeadIgnore  = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Ignore ).Over().OrderByDesc(p.Order).ToValue(),
+					};
+
+			var res = q.ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				// Order 10, Id 5
+				Assert.That(res[0].Id,          Is.EqualTo(5));
+				Assert.That(res[0].LagRespect,  Is.Null);
+				Assert.That(res[0].LagIgnore,   Is.Null);
+				Assert.That(res[0].LeadRespect, Is.Null);
+				Assert.That(res[0].LeadIgnore,  Is.Null);
+
+				// Order 20, Id 6
+				Assert.That(res[1].Id,          Is.EqualTo(6));
+				Assert.That(res[1].LagRespect,  Is.EqualTo(5));
+				Assert.That(res[1].LagIgnore,   Is.EqualTo(5));
+				Assert.That(res[1].LeadRespect, Is.EqualTo(5));
+				Assert.That(res[1].LeadIgnore,  Is.EqualTo(5));
+
+				// Order 30, Id null
+				Assert.That(res[2].Id,          Is.Null);
+				Assert.That(res[2].LagRespect,  Is.EqualTo(6));
+				Assert.That(res[2].LagIgnore,   Is.EqualTo(6));
+				Assert.That(res[2].LeadRespect, Is.EqualTo(6));
+				Assert.That(res[2].LeadIgnore,  Is.EqualTo(6));
+
+				// Order 40, Id null — RESPECT sees the trailing null, IGNORE skips back/forward to 6
+				Assert.That(res[3].Id,          Is.Null);
+				Assert.That(res[3].LagRespect,  Is.Null);
+				Assert.That(res[3].LagIgnore,   Is.EqualTo(6));
+				Assert.That(res[3].LeadRespect, Is.Null);
+				Assert.That(res[3].LeadIgnore,  Is.EqualTo(6));
 			}
 		}
 
@@ -1505,13 +1586,14 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
 			TestProvName.AllMySql57,
-			TestProvName.AllMariaDB)] string context)
+			TestProvName.AllMariaDB,
+			TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Position.TestData);
@@ -1725,7 +1807,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1803,7 +1885,7 @@ namespace Tests.Linq
 		private static int Count2(IGrouping<int, Child> group, int windowCount) => windowCount;
 
 		[Test]
-		public void WindowFunctionWithAggregate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
+		public void WindowFunctionWithAggregate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1825,7 +1907,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WindowFunctionWithAggregate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
+		public void WindowFunctionWithAggregate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1847,7 +1929,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WindowFunctionWithAggregate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle)] string context)
+		public void WindowFunctionWithAggregate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2087,5 +2169,76 @@ namespace Tests.Linq
 			documentCombinedJson.ToArray();
 		}
 		#endregion
+
+		// These legacy-analytic NULLS tests run on the full analytic provider set (SupportsAnalyticFunctionsContext),
+		// excluding SQL Server 2005/2008 which have no aggregate window functions (SUM() OVER (ORDER BY ...)). A
+		// requested NULLS FIRST surfaces differently per provider, so the assertion is gated on the provider's
+		// capability flags, mirroring the builder's own emission rule (BuildWindowOrderByItem): the position is emitted
+		// only when it is NOT already the provider's natural NULL placement (QueryHelper.MatchesNaturalNullsPosition) —
+		// then natively as a NULLS FIRST token, or as a CASE-WHEN sort key on providers without native support.
+		static void AssertNullsFirstHonored(TestDataConnection db)
+		{
+			var flags = db.DataProvider.SqlProviderFlags;
+
+			if (QueryHelper.MatchesNaturalNullsPosition(flags.DefaultNullsOrdering, Sql.NullsPosition.First, descending: false))
+				// NULLS FIRST already matches the provider's natural ASC ordering — emitted implicitly, must not be inverted.
+				Assert.That(db.LastQuery, Does.Not.Contain("NULLS LAST"));
+			else if (flags.IsNullsOrderingSupported)
+				Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+			else
+				Assert.That(db.LastQuery, Does.Contain("CASE").And.Contains("IS NULL"));
+		}
+
+		[Test]
+		public void LegacyAnalytic_DefaultNullsPosition_AppliedToOrderBy(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.First));
+
+			// A legacy Sql.Ext analytic chain (converted to the new Sql.Window pipeline) must pick up the
+			// configured DefaultNullsPosition for its ORDER BY, just like a plain query OrderBy would.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_AppliedToOrderBy(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// A legacy Sql.Ext analytic chain with an explicit NULLS position on its ORDER BY (the OrderBy(expr, nulls)
+			// overload) must carry that position through the conversion to the new Sql.Window pipeline rather than dropping it.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_OverridesConfiguredDefault(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			// An explicit NULLS position on a legacy analytic ORDER BY must win over the configured default: the configured
+			// default is Last while the explicit position is First. Seeing the First position honored (per provider) proves
+			// the explicit value survives the conversion; had the configured default wrongly overridden it, it would be Last.
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
 	}
 }

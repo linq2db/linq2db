@@ -61,9 +61,9 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 					var value     = func.Parameters[0];
 					var valueType = Factory.GetDbDataType(value);
-					var funcType  = Factory.GetDbDataType(value);
+					var funcType  = Factory.GetDbDataType(typeof(int));
 
-					var valueString = Factory.Add(valueType, value, Factory.Value(valueType, "."));
+					var valueString = Factory.Concat(value, Factory.Value(valueType, "."));
 					var valueLength = Factory.Function(funcType, "LEN", valueString);
 
 					return Factory.Sub(func.Type, valueLength, Factory.Value(func.Type, 1));

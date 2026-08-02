@@ -27,6 +27,8 @@ using IBM.Data.DB2Types;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -49,6 +51,83 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<int>("SELECT Cast(@p1 as int) + Cast(@p2 as int) FROM SYSIBM.SYSDUMMY1", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
 				Assert.That(conn.Execute<int>("SELECT Cast(@p2 as int) + Cast(@p1 as int) FROM SYSIBM.SYSDUMMY1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
 			}
+		}
+
+		public enum DecFloatSpecial
+		{
+			PositiveInfinity,
+			NegativeInfinity,
+			NaN,
+		}
+
+		static string DecFloatSpecialSql(DecFloatSpecial special) => special switch
+		{
+			DecFloatSpecial.PositiveInfinity => "SELECT (CAST(1 AS DECFLOAT)/CAST(0 AS DECFLOAT))  FROM SYSIBM.SYSDUMMY1",
+			DecFloatSpecial.NegativeInfinity => "SELECT (CAST(-1 AS DECFLOAT)/CAST(0 AS DECFLOAT)) FROM SYSIBM.SYSDUMMY1",
+			_                                => "SELECT (CAST(0 AS DECFLOAT)/CAST(0 AS DECFLOAT))  FROM SYSIBM.SYSDUMMY1",
+		};
+
+		// DECFLOAT special values mapped to floating-point targets keep the value. See issue #5663.
+		[Test]
+		public void DecFloatSpecialToFloatingPoint([IncludeDataSources(CurrentProvider)] string context, [Values] DecFloatSpecial special)
+		{
+			using var db = GetDataContext(context);
+			var sql = DecFloatSpecialSql(special);
+
+			var d  = db.Execute<double> (sql);
+			var f  = db.Execute<float>  (sql);
+			var dn = db.Execute<double?>(sql);
+			var fn = db.Execute<float?> (sql);
+
+			switch (special)
+			{
+				case DecFloatSpecial.PositiveInfinity:
+					double.IsPositiveInfinity(d).ShouldBeTrue();
+					float .IsPositiveInfinity(f).ShouldBeTrue();
+					double.IsPositiveInfinity(dn!.Value).ShouldBeTrue();
+					float .IsPositiveInfinity(fn!.Value).ShouldBeTrue();
+					break;
+				case DecFloatSpecial.NegativeInfinity:
+					double.IsNegativeInfinity(d).ShouldBeTrue();
+					float .IsNegativeInfinity(f).ShouldBeTrue();
+					double.IsNegativeInfinity(dn!.Value).ShouldBeTrue();
+					float .IsNegativeInfinity(fn!.Value).ShouldBeTrue();
+					break;
+				default:
+					double.IsNaN(d).ShouldBeTrue();
+					float .IsNaN(f).ShouldBeTrue();
+					double.IsNaN(dn!.Value).ShouldBeTrue();
+					float .IsNaN(fn!.Value).ShouldBeTrue();
+					break;
+			}
+		}
+
+		// DECFLOAT special values can't be represented as decimal/integral: nullable -> null, non-nullable -> default. See issue #5663.
+		[Test]
+		public void DecFloatSpecialToDecimalAndIntegral([IncludeDataSources(CurrentProvider)] string context, [Values] DecFloatSpecial special)
+		{
+			using var db = GetDataContext(context);
+			var sql = DecFloatSpecialSql(special);
+
+			db.Execute<decimal?>(sql).ShouldBeNull();
+			db.Execute<int?>    (sql).ShouldBeNull();
+			db.Execute<long?>   (sql).ShouldBeNull();
+
+			db.Execute<decimal>(sql).ShouldBe(0m);
+			db.Execute<int>    (sql).ShouldBe(0);
+			db.Execute<long>   (sql).ShouldBe(0L);
+		}
+
+		// finite DECFLOAT values still round-trip exactly after the special-value handling. See issue #5663.
+		[Test]
+		public void DecFloatFiniteValue([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using var db = GetDataContext(context);
+			var sql = "SELECT (CAST(123.45 AS DECFLOAT)) FROM SYSIBM.SYSDUMMY1";
+
+			db.Execute<decimal> (sql).ShouldBe(123.45m);
+			db.Execute<double>  (sql).ShouldBe(123.45d);
+			db.Execute<decimal?>(sql).ShouldBe(123.45m);
 		}
 
 		[Test]

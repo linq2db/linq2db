@@ -1,0 +1,101 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+
+using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Linq;
+
+namespace LinqToDB.Internal.Linq.Builder
+{
+	/// <summary>
+	/// Walks an entity-builder configure-lambda body and populates an
+	/// <see cref="EntityBuilderConfig"/>. Dispatch is by method-name string so the parser handles
+	/// every variant of <c>I*Builder&lt;T&gt;</c> uniformly.
+	/// </summary>
+	static class EntityBuilderParser
+	{
+		/// <summary>
+		/// Parse the body of a configure-lambda. Recognises
+		/// <c>Set</c> / <c>Ignore</c> / <c>When</c> / <c>DoNothing</c>; throws on any other method
+		/// name. Standalone callers ignore the <c>When</c> / <c>DoNothing</c> fields on the result
+		/// since the standalone interfaces don't expose those at compile time.
+		/// </summary>
+		public static EntityBuilderConfig Parse(LambdaExpression configureLambda, ParameterExpression entityParameter)
+		{
+			var cfg  = new EntityBuilderConfig(entityParameter);
+			var expr = configureLambda.Body;
+
+			// Collect calls outermost-first, then process in fluent order (deepest = first call,
+			// outermost = last call). This way duplicate Set/Ignore on the same column end up in
+			// chain order in the cfg lists, and EntitySetterBuilder.FindOverride's last-match-wins
+			// behavior matches user expectation (later .Set call overrides earlier one).
+			var chain = new List<MethodCallExpression>();
+			while (expr is MethodCallExpression mc)
+			{
+				chain.Add(mc);
+				expr = mc.Object!;
+			}
+
+			if (expr is not ParameterExpression)
+				throw new LinqToDBException(
+					"Entity-builder configure expression chain must start with the builder parameter; got " + expr.GetType().Name);
+
+			for (var i = chain.Count - 1; i >= 0; i--)
+			{
+				var mc = chain[i];
+				switch (mc.Method.Name)
+				{
+					case nameof(IEntityInsertSpec<,>.Set):
+						cfg.Set.Add((Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParameter), mc.Arguments[1].UnwrapLambda()));
+						break;
+					case nameof(IEntityInsertSpec<,>.Ignore):
+						cfg.Ignore.Add(Canonicalise(mc.Arguments[0].UnwrapLambda(), entityParameter));
+						break;
+					case nameof(IUpsertInsertSpec<>.When):
+						cfg.When = mc.Arguments[0].UnwrapLambda();
+						break;
+					case nameof(IUpsertInsertSpec<>.DoNothing):
+						cfg.DoNothing = true;
+						break;
+					default:
+						throw new LinqToDBException(
+							$"Unexpected method '{mc.Method.Name}' inside entity-builder configure expression.");
+				}
+			}
+
+			return cfg;
+		}
+
+		/// <summary>
+		/// Rewrite a field-selector lambda <c>x =&gt; x.Col</c> so its body references the shared
+		/// <paramref name="entityParameter"/>. Two field selectors that referred to different source
+		/// parameters now produce structurally-equal expressions, so
+		/// <see cref="ExpressionEqualityComparer"/> can match them.
+		/// </summary>
+		public static Expression Canonicalise(LambdaExpression fieldLambda, ParameterExpression entityParameter)
+			=> fieldLambda.GetBody(entityParameter);
+
+		/// <summary>
+		/// True when <paramref name="call"/> is the entity-builder 3-arg shape
+		/// <c>(ITable&lt;T&gt;, T, Expression&lt;Func&lt;TBuilder, TBuilder&gt;&gt;)</c> where
+		/// <c>TBuilder</c>'s open generic is <paramref name="expectedReceiverDef"/>.
+		/// </summary>
+		public static bool IsEntityBuilderShape(MethodCallExpression call, Type expectedReceiverDef)
+		{
+			if (call.Arguments.Count != 3)
+				return false;
+
+			var configureArg = call.Arguments[2];
+			if (!configureArg.Type.IsGenericType || configureArg.Type.GetGenericTypeDefinition() != typeof(Expression<>))
+				return false;
+
+			var funcType = configureArg.Type.GetGenericArguments()[0];
+			if (!funcType.IsGenericType || funcType.GetGenericTypeDefinition() != typeof(Func<,>))
+				return false;
+
+			var receiverType = funcType.GetGenericArguments()[0];
+			return receiverType.IsGenericType && receiverType.GetGenericTypeDefinition() == expectedReceiverDef;
+		}
+	}
+}

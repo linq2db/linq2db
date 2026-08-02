@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -40,7 +41,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		#region IEquatable implementation
 
-		public bool Equals(DB2Options? other)
+		public bool Equals([NotNullWhen(true)] DB2Options? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

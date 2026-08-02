@@ -1,5 +1,8 @@
 ﻿using System;
 
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -9,25 +12,34 @@ namespace Tests.Linq
 	{
 		public class WindowFunctionTestEntity
 		{
-			public int Id { get; set; }
-			public string? Name { get; set; }
-			public int CategoryId { get; set; }
-			public double? Value { get; set; }
-			public DateTime? Timestamp { get; set; }
-			public int IntValue { get; set; }
-			public int? NullableIntValue { get; set; }
-			public long LongValue { get; set; }
-			public long? NullableLongValue { get; set; }
-			public double DoubleValue { get; set; }
-			public double? NullableDoubleValue { get; set; }
-			public decimal DecimalValue { get; set; }
-			public decimal? NullableDecimalValue { get; set; }
-			public float FloatValue { get; set; }
-			public float? NullableFloatValue { get; set; }
-			public short ShortValue { get; set; }
-			public short? NullableShortValue { get; set; }
-			public byte ByteValue { get; set; }
-			public byte? NullableByteValue { get; set; }
+			[PrimaryKey]
+			public int       Id                    { get; set; }
+			public string?   Name                  { get; set; }
+			public int       CategoryId            { get; set; }
+			public double?   Value                 { get; set; }
+			public DateTime? Timestamp             { get; set; }
+			public int       IntValue              { get; set; }
+			public int?      NullableIntValue      { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public long      LongValue             { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public long?     NullableLongValue     { get; set; }
+			public double    DoubleValue           { get; set; }
+			public double?   NullableDoubleValue   { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Double)]
+			public decimal   DecimalValue          { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Double)]
+			public decimal?  NullableDecimalValue  { get; set; }
+			public float     FloatValue            { get; set; }
+			public float?    NullableFloatValue    { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public short     ShortValue            { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public short?    NullableShortValue    { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public byte      ByteValue             { get; set; }
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
+			public byte?     NullableByteValue     { get; set; }
 
 			public override string ToString()
 			{
@@ -238,6 +250,149 @@ namespace Tests.Linq
 					}
 				];
 			}
+		}
+
+		// Expected running (cumulative) population/sample variance over a window PARTITION BY CategoryId
+		// ORDER BY Id (default RANGE UNBOUNDED PRECEDING .. CURRENT ROW): the set is every row in the same
+		// category with Id <= the current row's Id. Sample variance is undefined (NULL) for a single row.
+		internal static double? ExpectedRunningVariance(WindowFunctionTestEntity[] data, int id, bool population)
+		{
+			var current = System.Array.Find(data, d => d.Id == id)!;
+			var values  = new System.Collections.Generic.List<double>();
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId && d.Id <= id)
+					values.Add(d.IntValue);
+
+			var n = values.Count;
+
+			if (!population && n < 2)
+				return null;
+
+			var mean = 0d;
+			foreach (var v in values)
+				mean += v;
+			mean /= n;
+
+			var sumSq = 0d;
+			foreach (var v in values)
+				sumSq += (v - mean) * (v - mean);
+
+			return sumSq / (population ? n : n - 1);
+		}
+
+		// Asserts a windowed stddev/variance result against the expected running value. The single-row window case
+		// (sample variance undefined) is intentionally relaxed: engines disagree on the result — NULL (PostgreSQL,
+		// DuckDB), 0 (Oracle, MySQL, SAP HANA, Informix), or NaN (ClickHouse) — and it is not a sample-vs-population
+		// discriminator. For windows of 2+ rows the assertion is strict, so a provider that computes a population
+		// statistic where the API promises a sample one (e.g. bare STDDEV = STDDEV_POP on MySQL/DB2) fails here.
+		internal static void AssertRunningStat(double? actual, double? expectedVariance, bool stdDev)
+		{
+			if (expectedVariance is null)
+			{
+				Assert.That(actual is null || double.IsNaN(actual.Value) || System.Math.Abs(actual.Value) < 0.1, Is.True);
+				return;
+			}
+
+			var expected = stdDev ? System.Math.Sqrt(expectedVariance.Value) : expectedVariance.Value;
+
+			Assert.That(actual, Is.Not.Null);
+			Assert.That(actual!.Value, Is.EqualTo(expected).Within(0.1));
+		}
+
+		// Expected running FILTERed aggregate over a window PARTITION BY CategoryId ORDER BY Id (default
+		// RANGE UNBOUNDED PRECEDING .. CURRENT ROW): the set is every row in the same category with Id <= the
+		// current row's Id that also satisfies the FILTER predicate (CategoryId == 1). Because the partition key
+		// IS the filter column, the filter is all-true inside the CategoryId==1 partition and all-false elsewhere,
+		// so categories 2/3 aggregate over an empty set and the window function returns NULL — a dropped/mangled
+		// FILTER (or its CASE-WHEN emulation) would instead return the unfiltered running value here.
+		internal static int? ExpectedRunningFilteredSum(WindowFunctionTestEntity[] data, int id)
+		{
+			var current = System.Array.Find(data, d => d.Id == id)!;
+			var sum     = 0;
+			var any     = false;
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId && d.Id <= id && d.CategoryId == 1)
+				{
+					sum += d.IntValue;
+					any  = true;
+				}
+
+			return any ? sum : (int?)null;
+		}
+
+		internal static double? ExpectedRunningFilteredAvg(WindowFunctionTestEntity[] data, int id)
+		{
+			var current = System.Array.Find(data, d => d.Id == id)!;
+			var sum     = 0d;
+			var n       = 0;
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId && d.Id <= id && d.CategoryId == 1)
+				{
+					sum += d.DoubleValue;
+					n++;
+				}
+
+			return n == 0 ? (double?)null : sum / n;
+		}
+
+		// Expected windowed SUM(IntValue) over an explicit frame within a partition (PARTITION BY CategoryId
+		// ORDER BY Id). The seed uses unique Id values, so every ORDER BY peer group is a single row: ROWS and
+		// GROUPS frames are therefore equivalent, and RANGE frames select by Id value. An empty frame produces
+		// SQL NULL, which linq2db materializes into the non-nullable int projection as 0 (verified on the FILTER
+		// tests), so the empty case returns 0 here. Boundary kinds: "UP" unbounded preceding, "UF" unbounded
+		// following, "CR" current row, "P" <offset> preceding, "F" <offset> following. exclude: "none" | "current"
+		// | "group" | "ties" (with unique keys, "group" == "current" and "ties" removes nothing).
+		internal static int ExpectedFrameSum(
+			WindowFunctionTestEntity[] data, int id, bool range,
+			string startKind, int startOffset, string endKind, int endOffset,
+			string exclude = "none")
+		{
+			var current   = System.Array.Find(data, d => d.Id == id)!;
+			var partition = new System.Collections.Generic.List<WindowFunctionTestEntity>();
+
+			foreach (var d in data)
+				if (d.CategoryId == current.CategoryId)
+					partition.Add(d);
+
+			partition.Sort((a, b) => a.Id.CompareTo(b.Id));
+
+			var included = new System.Collections.Generic.List<WindowFunctionTestEntity>();
+
+			if (!range)
+			{
+				var i  = partition.FindIndex(d => d.Id == id);
+				var lo = startKind switch { "UP" => 0, "CR" => i, "P" => i - startOffset, "F" => i + startOffset, _ => 0 };
+				var hi = endKind   switch { "UF" => partition.Count - 1, "CR" => i, "P" => i - endOffset, "F" => i + endOffset, _ => partition.Count - 1 };
+
+				if (lo < 0)
+					lo = 0;
+				if (hi > partition.Count - 1)
+					hi = partition.Count - 1;
+
+				for (var k = lo; k <= hi; k++)
+					included.Add(partition[k]);
+			}
+			else
+			{
+				var loVal = startKind switch { "UP" => int.MinValue, "CR" => id, "P" => id - startOffset, "F" => id + startOffset, _ => int.MinValue };
+				var hiVal = endKind   switch { "UF" => int.MaxValue, "CR" => id, "P" => id - endOffset, "F" => id + endOffset, _ => int.MaxValue };
+
+				foreach (var d in partition)
+					if (d.Id >= loVal && d.Id <= hiVal)
+						included.Add(d);
+			}
+
+			if (exclude is "current" or "group")
+				included.RemoveAll(d => d.Id == id);
+
+			var sum = 0;
+			foreach (var d in included)
+				sum += d.IntValue;
+
+			return sum;
 		}
 	}
 }

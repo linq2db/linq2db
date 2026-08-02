@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Concurrency;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -998,6 +1003,84 @@ namespace Tests.Linq
 
 				record.Stamp = data[0].Stamp;
 			}
+		}
+
+		// Regression for the shared-statement alias race surfaced by concurrent query execution:
+		// a parameter-dependent query is cached and re-aliased on every execution. The aliasing pass
+		// used to MUTATE the shared statement in place, so concurrent executions corrupted each other's
+		// aliases - yielding a wrong column->value mapping or invalid SQL. Aliasing is now non-mutating
+		// (finalized names live in AliasesContext), so the same cached query rendered from many threads
+		// stays correct. Light load on purpose: a sometimes-red CI signal, not a 100% reproducer.
+		sealed class AliasRaceRow
+		{
+			public int V00; public int V01; public int V02; public int V03;
+			public int V04; public int V05; public int V06; public int V07;
+			public int V08; public int V09; public int V10; public int V11;
+			public int V12; public int V13; public int V14; public int V15;
+		}
+
+		[Test]
+		public void ParallelExecutionDoesNotCorruptAliases([IncludeDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+		{
+			// CA1846: net462 has no span-based int.Parse overload, so Substring is required (the rule fires only on the modern TFMs).
+			// MA0173: the Interlocked.CompareExchange below captures the first thrown exception; it is not lazy initialization.
+#pragma warning disable CA1846 // Prefer 'AsSpan' over 'Substring'
+#pragma warning disable MA0173 // Use LazyInitializer.EnsureInitialize
+			using var _ = new DisableBaseline("raw SQL + concurrency stress");
+
+			var fields = typeof(AliasRaceRow).GetFields();
+
+			// SELECT {0} + 0 as "V00", {0} + 1 as "V01", ... - a distinct value per (quoted) column,
+			// so a raced alias surfaces either as invalid SQL or as a wrong column -> value mapping.
+			var sql = "SELECT " + string.Join(", ", fields.Select(f =>
+			{
+				var n = int.Parse(f.Name.Substring(1), CultureInfo.InvariantCulture);
+				return FormattableString.Invariant($"{{0}} + {n} as \"{f.Name}\"");
+			}));
+
+			static DataParameter NewParam() => new() { Name = "p", Value = 0, DataType = DataType.Int32 };
+
+			// prime once so subsequent executions hit the cached (re-alias) path
+			using (var prime = GetDataContext(context))
+				prime.FromSql<AliasRaceRow>(sql, NewParam()).Single();
+
+			Exception? error = null;
+			var        bad   = 0;
+
+			void Worker()
+			{
+				for (var i = 0; i < 64 && Volatile.Read(ref error) == null && Volatile.Read(ref bad) == 0; i++)
+				{
+					try
+					{
+						using var db  = GetDataContext(context);
+						var       row = db.FromSql<AliasRaceRow>(sql, NewParam()).Single();
+
+						foreach (var f in fields)
+						{
+							var expected = int.Parse(f.Name.Substring(1), CultureInfo.InvariantCulture);
+							if ((int)f.GetValue(row)! != expected)
+							{
+								Interlocked.Increment(ref bad);
+								break;
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						Interlocked.CompareExchange(ref error, ex, null);
+					}
+				}
+			}
+
+			var threads = Enumerable.Range(0, 4).Select(_ => new Thread(Worker)).ToArray();
+			foreach (var t in threads) t.Start();
+			foreach (var t in threads) t.Join();
+
+			error.ShouldBeNull($"concurrent execution threw: {error}");
+			bad.ShouldBe(0, "a concurrent execution returned a corrupted alias mapping (wrong column value)");
+#pragma warning restore MA0173
+#pragma warning restore CA1846
 		}
 	}
 }

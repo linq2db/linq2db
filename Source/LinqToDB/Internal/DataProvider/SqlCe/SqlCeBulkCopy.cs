@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			var helper = new MultipleRowsHelper<T>(table, options);
+			var helper = new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter);
 			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var helper = new MultipleRowsHelper<T>(table, options);
+			var helper = new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter);
 			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var helper = new MultipleRowsHelper<T>(table, options);
+			var helper = new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter);
 			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)

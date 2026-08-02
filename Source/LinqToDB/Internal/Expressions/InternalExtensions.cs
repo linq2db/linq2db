@@ -18,46 +18,6 @@ namespace LinqToDB.Internal.Expressions
 {
 	static class InternalExtensions
 	{
-		#region IsConstant
-
-		public static bool IsConstantable(this Type type, bool includingArrays)
-		{
-			if (
-				type.IsEnum
-				|| type.TypeCode
-					is TypeCode.Int16
-					or TypeCode.Int32
-					or TypeCode.Int64
-					or TypeCode.UInt16
-					or TypeCode.UInt32
-					or TypeCode.UInt64
-					or TypeCode.SByte
-					or TypeCode.Byte
-					or TypeCode.Decimal
-					or TypeCode.Double
-					or TypeCode.Single
-					or TypeCode.Boolean
-					or TypeCode.String
-					or TypeCode.Char
-			)
-			{
-				return true;
-			}
-
-			if (type.IsNullableType)
-				return type.GetGenericArguments()[0].IsConstantable(includingArrays);
-
-			if (includingArrays && type.IsArray)
-				return type.GetElementType()!.IsConstantable(includingArrays);
-
-			if (type == typeof(Sql.SqlID))
-				return true;
-
-			return false;
-		}
-
-		#endregion
-
 		#region Path
 		public static void Path<TContext>(this Expression expr, Expression path, TContext context, Action<TContext, Expression, Expression> func)
 		{

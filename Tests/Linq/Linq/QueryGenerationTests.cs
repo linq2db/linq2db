@@ -10,6 +10,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 using Tests.xUpdate;
 
@@ -73,7 +75,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void ToSqlQuery_SimpleQuery([DataSources] string context)
 		{
@@ -100,7 +101,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void ToSqlQuery_WithParameters([DataSources] string context, [Values] bool inlineParameters)
 		{
@@ -134,7 +134,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void ToSqlQuery_WithParametersDeduplication([DataSources] string context, [Values] bool inlineParameters)
 		{
@@ -171,7 +170,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
 		[Test]
 		public void ToSqlQuery_WithNullableParameters([DataSources] string context)
 		{
@@ -251,9 +249,10 @@ namespace Tests.Linq
 			}
 		}
 
+		// YDB cannot update a primary-key column (the client-side identity update targets the PK Id).
 		[Test]
 		public void ToSqlQuery_IUpdatable_ClientIdentiy(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase)] string context,
+			[DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllYdb)] string context,
 			[Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
@@ -413,6 +412,75 @@ namespace Tests.Linq
 				Assert.That(command.Parameters, Has.Count.Zero);
 				Assert.That(parent[0].ParentID, Is.EqualTo(expected.ParentID));
 			}
+		}
+
+		[Test]
+		public void ToSqlQuery_MultiTableSamePhysicalName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from p in db.Person
+			            join d in db.Doctor on p.ID equals d.PersonID
+			            select new { p.ID, d.PersonID };
+
+			var command = query.ToSqlQuery();
+
+			using var dc = GetDataContext(context.StripRemote());
+			var results  = dc.Query<DoctorPersonPair>(command.Sql).ToArray();
+			var expected = query.ToArray();
+
+			results.Length.ShouldBe(expected.Length);
+			command.Sql.ShouldContain("SELECT");
+			command.Parameters.Count.ShouldBe(0);
+			// The by-name Query<T> round-trip above is the cross-provider probe: it fails for any provider
+			// whose reader can't disambiguate two same-named result columns (Access OLE DB returned 0).
+			// Providers that force final aliases for the collision (SqlCe / YDB always, Access on duplicate
+			// column names) emit the uniquified PersonID_1; the rest keep the duplicate name (#5599 / #5657).
+			if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllYdb, TestProvName.AllAccess))
+				command.Sql.ShouldContain("PersonID_1");
+			results.Select(r => r.PersonID).ShouldBe(expected.Select(e => e.PersonID), ignoreOrder: true);
+		}
+
+		sealed class DoctorPersonPair { public int PersonID { get; set; } }
+
+		// #5657/#5599: an explicit member rename of a bare entity field at the root select normalizes to the
+		// field's physical column name (the AST cannot distinguish an explicit rename from an implicit member
+		// alias). Safe because result materialization is ordinal - the dropped member alias never affects typed
+		// or anonymous results, and providers that force root aliases keep the physical name for by-name mapping.
+		[Test]
+		public void ToSqlQuery_ExplicitRootRenameUsesPhysicalName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from p in db.Person
+			            select new { Renamed = p.FirstName };
+
+			var command = query.ToSqlQuery();
+
+			command.Sql.ShouldNotContain("Renamed");
+			command.Sql.ShouldContain("FirstName");
+		}
+
+		// #5657: RootSelectHasDuplicateColumnNames only counted columns whose Expression is a SqlField, so a
+		// root collision between a derived-subquery column (SqlColumn) and a real-table field of the same
+		// physical name slipped through - providers that force unique root column names (SqlCe / Access) then
+		// emitted two bare same-named result columns (server error / by-name mapping breakage). The detector
+		// now also resolves the derived column's rendered name, so a disambiguating alias is forced.
+		[Test]
+		public void ToSqlQuery_MixedDerivedFieldSamePhysicalName([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from p in db.Person
+			            join d in db.Doctor.Select(x => new { x.PersonID }).AsSubQuery() on p.ID equals d.PersonID
+			            select new { d.PersonID, p.ID };
+
+			var command = query.ToSqlQuery();
+
+			// The collision on physical name "PersonID" between the derived column and the real-table field
+			// must be disambiguated by a forced alias, so the root SELECT has no two same-named result columns.
+			if (context.IsAnyOf(ProviderName.SqlCe, TestProvName.AllAccess))
+				command.Sql.ShouldContain("PersonID] as [");
 		}
 
 		[Test]

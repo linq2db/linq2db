@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions.Types;
 using System.Runtime.InteropServices;
 
@@ -49,10 +49,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var protosAsembly = Common.Tools.TryLoadAssembly(ProtosAssemblyName, null)
 				?? throw new InvalidOperationException($"Cannot load assembly {ProtosAssemblyName}.");
 
-			ConnectionType = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;
-			CommandType = assembly.GetType($"{ClientNamespace}.YdbCommand", true)!;
-			ParameterType = assembly.GetType($"{ClientNamespace}.YdbParameter", true)!;
-			DataReaderType = assembly.GetType($"{ClientNamespace}.YdbDataReader", true)!;
+			ConnectionType  = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;
+			CommandType     = assembly.GetType($"{ClientNamespace}.YdbCommand", true)!;
+			ParameterType   = assembly.GetType($"{ClientNamespace}.YdbParameter", true)!;
+			DataReaderType  = assembly.GetType($"{ClientNamespace}.YdbDataReader", true)!;
 			TransactionType = assembly.GetType($"{ClientNamespace}.YdbTransaction", true)!;
 
 			var parameterType = assembly.GetType($"{ClientNamespace}.YdbParameter"           , true)!;
@@ -75,6 +75,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			typeMapper.RegisterTypeWrapper<IBulkUpsertImporter>(bulkCopy);
 			typeMapper.RegisterTypeWrapper<YdbParameter>(parameterType);
 			typeMapper.RegisterTypeWrapper<YdbDbType>(dbType);
+
+			// schema-provider primary-key support (read from the open connection's gRPC table description)
+			var sessionType   = assembly.GetType("Ydb.Sdk.Ado.Session.ISession",            true)!;
+			var driverType    = assembly.GetType("Ydb.Sdk.IDriver",                          true)!;
+			var ydbSchemaType = assembly.GetType("Ydb.Sdk.Ado.YdbSchema",                    true)!;
+			var tableDescType = assembly.GetType("Ydb.Sdk.Ado.Schema.YdbTableDescription",   true)!;
+			var settingsType  = assembly.GetType("Ydb.Sdk.Ado.Schema.DescribeTableSettings", true)!;
+
+			typeMapper.RegisterTypeWrapper<ISession>(sessionType);
+			typeMapper.RegisterTypeWrapper<IDriver>(driverType);
+			typeMapper.RegisterTypeWrapper<YdbSchema>(ydbSchemaType);
+			typeMapper.RegisterTypeWrapper<YdbTableDescription>(tableDescType);
+			typeMapper.RegisterTypeWrapper<DescribeTableSettings>(settingsType);
 
 			typeMapper.FinalizeMappings();
 
@@ -114,6 +127,24 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				typeMapper.MapExpression((DbConnection conn, string name, IReadOnlyList<string> columns, CancellationToken cancellationToken) => typeMapper.Wrap<IBulkUpsertImporter>(((YdbConnection)(object)conn).BeginBulkUpsertImport(name, columns, cancellationToken)), pConnection, pName, pColumns, pToken),
 				pConnection, pName, pColumns, pToken)
 				.CompileExpression();
+
+			// Primary-key fetch for the schema provider. YDB exposes no PK metadata via SQL or the public ADO
+			// surface (GetSchema "Columns" omits PK); the only source is the gRPC describe, reached through the
+			// OPEN connection's internal driver (a connection string may be absent for factory-configured
+			// connections, so the public YdbDataSource.DescribeTable isn't usable). The whole chain is mapped
+			// type-safely via the wrappers below; the internal-static YdbSchema.DescribeTable is resolved via the
+			// [WrappedBindingFlags] opt-in. Only the default `DescribeTableSettings` value (a ctor-less struct the
+			// TypeMapper can't construct) is created reflectively, then passed in as a boxed argument.
+			// Re-verify the wrapper member signatures on every Ydb.Sdk bump.
+			_getDriver = typeMapper.BuildFunc<DbConnection, object>(
+				typeMapper.MapLambda((DbConnection conn) => ((YdbConnection)(object)conn).Session.Driver));
+
+			_describePrimaryKey = typeMapper.BuildFunc<object, string, object, IReadOnlyList<string>>(
+				typeMapper.MapLambda((object driver, string tableName, object settings) =>
+					YdbSchema.DescribeTable((IDriver)driver, tableName, (DescribeTableSettings)settings, default(CancellationToken))
+						.GetAwaiter().GetResult().PrimaryKey));
+
+			_defaultDescribeSettings = ActivatorExt.CreateInstance(settingsType);
 		}
 
 		[StructLayout(LayoutKind.Auto)]
@@ -121,7 +152,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		private static DecimalValue MakeDecimalValue(string value, int precision, int scale)
 		{
-			var valuePrecision = value.Count(char.IsDigit);
 			var dot = value.IndexOf('.', StringComparison.Ordinal);
 			var valueScale = dot == -1 ? 0 : value.Length - dot - 1;
 
@@ -131,7 +161,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					value += ".";
 
 				value += new string('0', scale - valueScale);
-				valuePrecision += scale - valueScale;
 			}
 
 #if SUPPORTS_INT128
@@ -163,10 +192,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#region IDynamicProviderAdapter
 
-		public Type ConnectionType { get; }
-		public Type DataReaderType { get; }
-		public Type ParameterType { get; }
-		public Type CommandType { get; }
+		public Type ConnectionType  { get; }
+		public Type DataReaderType  { get; }
+		public Type ParameterType   { get; }
+		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
 		readonly Func<string, DbConnection> _connectionFactory;
@@ -184,6 +213,26 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		internal Func<DbConnection, string, IReadOnlyList<string>, CancellationToken, IBulkUpsertImporter> BeginBulkCopy { get; }
 
+		readonly Func<DbConnection, object>                       _getDriver;
+		readonly Func<object, string, object, IReadOnlyList<string>> _describePrimaryKey;
+		readonly object                                           _defaultDescribeSettings;
+
+		/// <summary>
+		/// Returns the ordered primary-key column names per table, read from the open connection's gRPC table
+		/// description. The driver is resolved once for the whole batch. Used by <see cref="YdbSchemaProvider"/>
+		/// (YDB exposes no PK metadata via SQL or the ADO schema collections).
+		/// </summary>
+		internal IReadOnlyDictionary<string, IReadOnlyList<string>> GetPrimaryKeys(DbConnection connection, IEnumerable<string> tableNames)
+		{
+			var driver = _getDriver(connection);
+			var result = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+
+			foreach (var tableName in tableNames)
+				result[tableName] = _describePrimaryKey(driver, tableName, _defaultDescribeSettings);
+
+			return result;
+		}
+
 		#region wrappers
 		[Wrapper]
 		internal sealed class YdbConnection
@@ -191,6 +240,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			public YdbConnection(string connectionString) => throw new NotSupportedException();
 
 			public IBulkUpsertImporter BeginBulkUpsertImport(string name, IReadOnlyList<string> columns, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+			// internal property on the real connection (resolved via the MemberAccess NonPublic lookup)
+			public ISession Session => throw new NotSupportedException();
 
 			public static Task ClearAllPools() => throw new NotSupportedException();
 
@@ -319,6 +371,38 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			// TzDate
 			// TzDateTime
 			// TzTimestamp
+		}
+
+		// schema-provider primary-key wrappers (read from the open connection's gRPC table description)
+		[Wrapper]
+		internal sealed class ISession
+		{
+			// public member on the internal ISession interface
+			public IDriver Driver => throw new NotSupportedException();
+		}
+
+		[Wrapper]
+		internal sealed class IDriver
+		{
+		}
+
+		[Wrapper]
+		internal sealed class YdbSchema
+		{
+			// internal-static on the SDK; resolved via the [WrappedBindingFlags] opt-in in TypeMapper
+			[WrappedBindingFlags(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)]
+			public static Task<YdbTableDescription> DescribeTable(IDriver driver, string tableName, DescribeTableSettings settings, CancellationToken cancellationToken) => throw new NotSupportedException();
+		}
+
+		[Wrapper]
+		internal sealed class YdbTableDescription
+		{
+			public IReadOnlyList<string> PrimaryKey => throw new NotSupportedException();
+		}
+
+		[Wrapper]
+		internal struct DescribeTableSettings
+		{
 		}
 
 		#endregion

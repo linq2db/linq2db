@@ -275,6 +275,40 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class DatePartBuilderDuckDB : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				string? partStr = null;
+				var part = builder.GetValue<Sql.DateParts>("part");
+				switch (part)
+				{
+					case Sql.DateParts.Year        : partStr = "year";        break;
+					case Sql.DateParts.Quarter     : partStr = "quarter";     break;
+					case Sql.DateParts.Month       : partStr = "month";       break;
+					case Sql.DateParts.DayOfYear   : partStr = "dayofyear";   break;
+					case Sql.DateParts.Day         : partStr = "day";         break;
+					case Sql.DateParts.Week        : partStr = "week";        break;
+					case Sql.DateParts.WeekDay     :
+						builder.Expression = "Extract(dow from {date})";
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary)!);
+						break;
+					case Sql.DateParts.Hour        : partStr = "hour";        break;
+					case Sql.DateParts.Minute      : partStr = "minute";      break;
+					case Sql.DateParts.Second      : partStr = "second";      break;
+					case Sql.DateParts.Millisecond :
+						builder.Expression = "Extract(millisecond from {date}) % 1000";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				if (partStr != null)
+					builder.AddFragment("part", partStr);
+			}
+		}
+
 		sealed class DatePartBuilderDB2 : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqlExtensionBuilder builder)
@@ -337,7 +371,38 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class DatePartBuilderYdb : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>("part");
+				switch (part)
+				{
+					case Sql.DateParts.Year        : builder.Expression = "DateTime::GetYear({date})";              break;
+					case Sql.DateParts.Month       : builder.Expression = "DateTime::GetMonth({date})";             break;
+					case Sql.DateParts.Day         : builder.Expression = "DateTime::GetDayOfMonth({date})";        break;
+					case Sql.DateParts.DayOfYear   : builder.Expression = "DateTime::GetDayOfYear({date})";         break;
+					case Sql.DateParts.Hour        : builder.Expression = "DateTime::GetHour({date})";              break;
+					case Sql.DateParts.Minute      : builder.Expression = "DateTime::GetMinute({date})";            break;
+					case Sql.DateParts.Second      : builder.Expression = "DateTime::GetSecond({date})";            break;
+					case Sql.DateParts.Millisecond : builder.Expression = "DateTime::GetMillisecondOfSecond({date})"; break;
+					case Sql.DateParts.Week        : builder.Expression = "DateTime::GetWeekOfYearIso8601({date})"; break;
+					case Sql.DateParts.Quarter:
+						builder.Expression           = "(DateTime::GetMonth({date}) + 2) / 3";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						break;
+					case Sql.DateParts.WeekDay:
+						builder.Expression           = "DateTime::GetDayOfWeek({date}) % 7 + 1";
+						builder.Extension.Precedence = Precedence.Additive;
+						break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+			}
+		}
+
 		[Sql.Extension(               "DatePart({part}, {date})",                 ServerSideOnly = false, BuilderType = typeof(DatePartBuilder))]
+		[Sql.Extension(PN.Ydb,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderYdb))]
 		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
 		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderInformix))] // TODO: Not checked
 		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderMySql))]
@@ -348,6 +413,7 @@ namespace Tests.Linq
 		[Sql.Extension(PN.SapHana,    "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderSapHana))]
 		[Sql.Extension(PN.Oracle,     "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderOracle))]
 		[Sql.Extension(PN.ClickHouse, "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderClickHouse))]
+		[Sql.Extension(PN.DuckDB,     "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderDuckDB))]
 		public static int? DatePart(this Sql.ISqlExtension? ext, Sql.DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)

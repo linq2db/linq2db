@@ -139,12 +139,15 @@ namespace Tests.UserTests.Test4415
 				});
 
 			var p = db.GetTable<LanguageDTO>();
-			// use complex column
+			// use complex column. `string + string` translation now wraps each operand in
+			// `Coalesce(..., '')` (C# null-as-empty); `Max(null) + "test"` evaluates to
+			// `"test"` rather than NULL, so the null-LanguageID row no longer matches the
+			// IN-list (was Count=1 under SQL null-propagation).
 			var qry = p.GroupBy(x => x.Name).Select(x => x.Max(y => y.LanguageID) + "test");
 			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
 			var lst = qry2.ToList();
 
-			Assert.That(lst, Has.Count.EqualTo(1));
+			Assert.That(lst, Has.Count.EqualTo(0));
 		}
 
 		[Test]

@@ -137,7 +137,7 @@ namespace LinqToDB
 			public bool           IsAggregate      { get; set; }
 			/// <summary>
 			/// If <see langword="true"/>, this expression represents a Window Function
-			/// Examples would be SUM() OVER(), COUNT() OVER().
+			/// Examples would be SUM() OVER (), COUNT() OVER ().
 			/// </summary>
 			public bool           IsWindowFunction { get; set; }
 			/// <summary>

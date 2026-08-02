@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -55,7 +56,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region IEquatable implementation
 
-		public bool Equals(PostgreSQLOptions? other)
+		public bool Equals([NotNullWhen(true)] PostgreSQLOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

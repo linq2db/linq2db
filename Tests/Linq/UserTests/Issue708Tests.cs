@@ -8,7 +8,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue708Tests : TestBase
 	{
-		[YdbCteAsSource]
 		[Test]
 		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -567,37 +567,42 @@ namespace LinqToDB
 					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 
+				var longType     = builder.Mapping.GetDbDataType(typeof(long));
+				var intervalType = builder.Mapping.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+				// endDate - startDate yields a YQL Interval; CAST(... AS Int64) converts it to its integer
+				// microsecond count, which integer-divides by the per-unit microseconds. Dividing the raw
+				// Interval would keep it an Interval (not the scalar count linq2db's DateDiff expects). The
+				// subtraction must be typed Interval (not Int64) so the cast isn't pruned as a no-op long→long.
+				var microseconds = new SqlCastExpression(
+					new SqlBinaryExpression(intervalType, endDate, "-", startDate),
+					longType,
+					null,
+					isMandatory: true);
+
 				builder.ResultExpression = new SqlBinaryExpression(
-					builder.Mapping.GetDbDataType(typeof(long)),
-					new SqlBinaryExpression(
-						builder.Mapping.GetDbDataType(typeof(int)),
-						startDate,
-						"-",
-						endDate),
+					longType,
+					microseconds,
 					"/",
 					new SqlValue(divisor));
 			}
 		}
 
 		[CLSCompliant(false)]
-		[Extension(                  "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer,     "DateDiff_Big" , BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2005, "DateDiff"     , BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2008, "DateDiff"     , BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2012, "DateDiff"     , BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2014, "DateDiff"     , BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.MySql,         "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.DB2,           "",              BuilderType = typeof(DateDiffBuilderDB2))]
-		[Extension(PN.SapHana,       "",              BuilderType = typeof(DateDiffBuilderSapHana))]
-		[Extension(PN.Firebird25,    "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
-		[Extension(PN.Firebird3,     "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
-		[Extension(PN.Firebird,      "",              BuilderType = typeof(DateDiffBuilderFirebird))]
-		[Extension(PN.SQLite,        "",              BuilderType = typeof(DateDiffBuilderSQLite))]
-		[Extension(PN.Oracle,        "",              BuilderType = typeof(DateDiffBuilderOracle))]
-		[Extension(PN.PostgreSQL,    "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
-		[Extension(PN.Access,        "",              BuilderType = typeof(DateDiffBuilderAccess))]
-		[Extension(PN.ClickHouse,    "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
-		[Extension(PN.Ydb,           "",              BuilderType = typeof(DateDiffBuilderYdb))]
+		[Extension(               "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.DB2,        "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Extension(PN.SapHana,    "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Extension(PN.Firebird25, "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird3,  "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird,   "",              BuilderType = typeof(DateDiffBuilderFirebird))]
+		[Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
+		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
+		[Extension(PN.ClickHouse, "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
+		[Extension(PN.Ydb,        "",              BuilderType = typeof(DateDiffBuilderYdb))]
+		[Extension(PN.DuckDB,     "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

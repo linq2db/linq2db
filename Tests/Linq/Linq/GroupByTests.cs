@@ -754,7 +754,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates3([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Aggregates3([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -784,7 +785,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates4([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Aggregates4([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -806,7 +808,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Aggregates5([DataSources(ProviderName.SqlCe)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Aggregates5([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -860,9 +863,42 @@ namespace Tests.Linq
 			};
 		}
 
+		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
+		[Test]
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void AggregateOnGroupReachedThroughLet([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(AggregationData.Data);
+
+			// Two `let`s put the grouping behind nested transparent identifiers, so an aggregate written against
+			// `g` itself reaches the aggregation builder as `Ref(anon).<ti1>.<ti0>.g.Count()` — `g`'s context is
+			// reachable only through the projection, never as a literal sub-expression. Coverage for that shape.
+			//
+			// COUNT(DISTINCT x) ignores NULLs while LINQ-to-Objects counts null as a distinct value, so the nulls
+			// are filtered out up front — this test is about the projection shape, not that divergence.
+			var query =
+				from t in table
+				where t.DataValue != null
+				group t by t.GroupId
+				into g
+				let evens    = g.Where(x => x.DataValue % 2 == 0)
+				let distinct = g.Select(x => x.DataValue).Distinct()
+				select new
+				{
+					GroupId    = g.Key,
+					Direct     = g.Count(),
+					FromEvens  = evens.Count(),
+					FromValues = distinct.Count(),
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void CountInGroup([DataSources] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void CountInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -898,7 +934,8 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void SumInGroup([DataSources] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void SumInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -925,7 +962,8 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void MinInGroup([DataSources] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void MinInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -952,7 +990,8 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void MaxInGroup([DataSources] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void MaxInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -979,7 +1018,8 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void AverageInGroup([DataSources] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void AverageInGroup([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			var data = AggregationData.Data;
 
@@ -1219,7 +1259,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation102([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupByAssociation102([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1239,7 +1280,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1022([DataSources(ProviderName.SqlCe)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupByAssociation1022([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1257,7 +1299,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1023([DataSources(ProviderName.SqlCe)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupByAssociation1023([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1280,7 +1323,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByAssociation1024([DataSources(ProviderName.SqlCe)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void GroupByAssociation1024([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1449,6 +1493,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1549,7 +1594,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Scalar3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1563,7 +1609,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar4([DataSources(ProviderName.SqlCe)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Scalar4([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1579,7 +1626,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar41([DataSources(ProviderName.SqlCe)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Scalar41([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1627,7 +1675,8 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		public void Scalar6([DataSources(ProviderName.SqlCe)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Scalar6([DataSources(ProviderName.SqlCe, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1671,7 +1720,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar9([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Scalar9([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1684,7 +1734,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Scalar10([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Scalar10([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1983,7 +2034,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByDate3([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void GroupByDate3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var query = from t in db.Types2
@@ -2344,7 +2396,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		// Sybase is not listed: DataSources excludes it below, so it never runs this test.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
@@ -2375,7 +2428,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue680Test([DataSources(false)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Issue680Test([DataSources(false, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var table = db.CreateLocalTable<Issue680Table>();
@@ -2490,7 +2544,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1078Test([DataSources(TestProvName.AllClickHouse)] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Issue1078Test([DataSources(TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Issue1078Table.TestData);
@@ -2535,7 +2590,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1198Test([DataSources] string context)
+		// PostgreSQL 9.4+ (FILTER clause)
+		public void Issue1198Test([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue1192Table>();
@@ -2668,7 +2724,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test1([DataSources(ProviderName.Ydb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void Issue3761Test1([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();
@@ -2692,7 +2749,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3761Test2([DataSources(ProviderName.Ydb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		// PostgreSQL 9.4+ (make_timestamp); GROUPING SETS 9.5+
+		public void Issue3761Test2([DataSources(TestProvName.AllYdb, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Issue3761Table>();

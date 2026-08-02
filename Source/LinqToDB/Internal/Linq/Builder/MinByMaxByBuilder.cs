@@ -25,7 +25,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceExpression = methodCall.Arguments[0];
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 			var isMinBy = methodCall.Method.Name is nameof(Queryable.MinBy);
-			var sourceOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sourceExpression, out var nonOrderedSource);
+			var extractedOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sourceExpression, out var nonOrderedSource);
+
+			// The preceding OrderBy is extracted here and bypasses OrderByBuilder, so resolve the configured default
+			// NULLS position for keys that did not specify one (null), matching OrderByBuilder behavior. An explicit
+			// position (including Sql.NullsPosition.None) is kept as-is so it can opt out of the configured default.
+			var defaultNulls  = builder.DataOptions.SqlOptions.DefaultNullsPosition;
+			var sourceOrderBy = extractedOrderBy
+				.Select(o => (o.lambda, o.isDescending, nulls: o.nulls ?? defaultNulls))
+				.ToArray();
 
 			// Transform MinBy(selector) -> OrderBy(selector).FirstOrDefault()
 			// Transform MaxBy(selector) -> OrderByDescending(selector).FirstOrDefault()
@@ -45,14 +53,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				nonOrderedSource,
 				methodCall.Arguments[1]);
 
-			foreach (var (orderByLambda, isDescending) in sourceOrderBy)
+			foreach (var (orderByLambda, isDescending, nulls) in sourceOrderBy)
 			{
+				// The position is already resolved (default applied above), so re-emit via the linq2db NULLS-aware
+				// overload — including Sql.NullsPosition.None — so OrderByBuilder does not re-apply the default.
 				orderedExpression = Expression.Call(
-					typeof(Queryable),
-					isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy),
+					typeof(LinqExtensions),
+					isDescending ? nameof(LinqExtensions.ThenByDescending) : nameof(LinqExtensions.ThenBy),
 					[elementType, orderByLambda.ReturnType],
 					orderedExpression,
-					Expression.Quote(orderByLambda));
+					Expression.Quote(orderByLambda),
+					Expression.Constant(nulls));
 			}
 
 			// Create FirstOrDefault() or First() call

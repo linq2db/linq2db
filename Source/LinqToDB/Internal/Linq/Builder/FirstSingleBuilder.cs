@@ -203,6 +203,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				QueryRunner.SetRunQuery(query, mapper);
 
+				SetElementSelection(query);
+			}
+
+			public override void SetElementSelection<T>(Query<T> query)
+			{
 				switch (_methodKind)
 				{
 					case MethodKind.First           : GetFirstElement          (query); break;

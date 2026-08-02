@@ -34,6 +34,21 @@ namespace LinqToDB.Internal.Linq.Builder
 		IBuildContext Clone(CloningContext context);
 
 		void           SetRunQuery<T>(Query<T> query,      Expression expr);
+
+		/// <summary>
+		/// Configures element-selection delegates (<c>Query&lt;T&gt;.GetElement</c> and
+		/// <c>Query&lt;T&gt;.GetElementAsync</c>) on the query so that scalar operators
+		/// (First/FirstOrDefault/Single/SingleOrDefault, sync and async) get the correct
+		/// cardinality semantics on top of <c>query.GetResultEnumerable</c>. Default
+		/// implementation is a no-op — only contexts that produce scalar results override it.
+		/// </summary>
+		/// <remarks>
+		/// Called by code paths that install their own <c>GetResultEnumerable</c>
+		/// (the eager-loading buffer / CteUnion strategies) so the cardinality rules stay
+		/// shared between normal and eager-loading execution.
+		/// </remarks>
+		void           SetElementSelection<T>(Query<T> query);
+
 		IBuildContext? GetContext(Expression   expression, BuildInfo  buildInfo);
 		void           SetAlias(string?        alias);
 		SqlStatement   GetResultStatement();

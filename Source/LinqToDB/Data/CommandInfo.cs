@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
+using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
@@ -1581,24 +1582,17 @@ namespace LinqToDB.Data
 		{
 			foreach (var parameter in parameters)
 			{
-				var p          = dataConnection.CurrentCommand!.CreateParameter();
-				var dbDataType = parameter.DbDataType;
-				var value      = parameter.Value;
-
-				if (dbDataType.DataType == DataType.Undefined && value != null)
-					dbDataType = dbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(value.GetType()).Type.DataType);
-
-				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
-				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
-				if (parameter.Precision != null) p.Precision = (byte)parameter.Precision.Value;
-				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;
-
 				// we don't normalize parameter names here as they are passed from user code and it is user's responsibility
 				// to pass correct names. And we cannot add normalization as it will be breaking change for existing users
-				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, value);
+				var p = dataConnection.DataProvider.CreateParameter(
+					dataConnection,
+					dataConnection.CurrentCommand!,
+					new DataProviderParameterContext(parameter.Name!, parameter.DbDataType, parameter.Value, parameter.Direction, isDbDataTypeExplicit: true));
+
 				// some providers (e.g. managed sybase provider) could change parameter name
 				// which breaks parameters rebind logic
 				parameter.Name = p.ParameterName;
+
 				dataConnection.CurrentCommand!.Parameters.Add(p);
 			}
 		}
@@ -1907,71 +1901,11 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var td = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-
-				if (td.InheritanceMapping.Count > 0 || td.HasComplexColumns)
-				{
-					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader, converterExpr);
-					return readerBuilder.BuildReaderFunction<T>();
-				}
-
-				var names = new string[dataReader.FieldCount];
-
-				for (var i = 0; i < dataReader.FieldCount; i++)
-					names[i] = dataReader.GetName(i);
-
-				expr = null;
-
-				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
-
-				if (ctors.Count > 0 && ctors.TrueForAll(c => c.ps.Length > 0))
-				{
-					var q =
-						from c in ctors
-						let count = c.ps.Count(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer))
-						orderby count descending
-						select c;
-
-					var ctor = q.FirstOrDefault();
-
-					if (ctor != null)
-					{
-						expr = Expression.New(
-							ctor.c,
-							ctor.ps.Select(p => names.Contains(p.Name, dataConnection.MappingSchema.ColumnNameComparer) ?
-								getMemberExpression(
-									dataConnection,
-									dataReader,
-									p.ParameterType,
-									(names
-										.Select((n,i) => new { n, i })
-										.FirstOrDefault(n => dataConnection.MappingSchema.ColumnNameComparer.Compare(n.n, p.Name) == 0) ?? new { n="", i=-1 }).i,
-									ctxParameter,
-									dataReaderExpr,
-									null) :
-								Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
-					}
-				}
-
-				if (expr == null)
-				{
-					var members =
-					(
-						from n in names.Select((name,idx) => new { name, idx })
-						let   member = td.Columns.FirstOrDefault(m =>
-							dataConnection.MappingSchema.ColumnNameComparer.Compare(m.ColumnName, n.name) == 0)
-						where member != null
-						select new
-						{
-							Member = member,
-							Expr   = getMemberExpression(dataConnection, dataReader, member.MemberType, n.idx, ctxParameter, dataReaderExpr, member.ValueConverter),
-						}
-					).ToList();
-
-					expr = Expression.MemberInit(
-						Expression.New(typeof(T)),
-						members.Select(m => Expression.Bind(m.Member.MemberInfo, m.Expr)));
-				}
+				// Entity / record / constructor materialization goes through the same builder as the LINQ path
+				// (RecordReaderBuilder -> EntityConstructorBase), so raw SQL honors [Column] name mapping,
+				// [ValueConverter], constructor selection and member binding identically to GetTable<T>() (#4437).
+				var readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader, converterExpr);
+				return readerBuilder.BuildReaderFunction<T>();
 			}
 
 			if (expr.GetCount(dataReaderExpr, static (dataReaderExpr, e) => e == dataReaderExpr) > 1)
@@ -1982,7 +1916,7 @@ namespace LinqToDB.Data
 				expr = expr.Replace(dataReaderExpr, dataReaderVar);
 				expr = Expression.Block(new[] { dataReaderVar }, assignment, expr);
 
-				if (Common.Configuration.OptimizeForSequentialAccess)
+				if (dataConnection.Options.LinqOptions.OptimizeForSequentialAccess)
 					expr = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expr, dataReader.FieldCount, reduce: false);
 			}
 

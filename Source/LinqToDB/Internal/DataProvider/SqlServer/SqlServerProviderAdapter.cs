@@ -145,6 +145,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		readonly Func<string, DbConnection> _connectionFactory;
 		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
+		/// <summary>
+		/// True when the loaded SqlClient driver dropped <c>SqlBulkCopy</c> support for SQL Server 2005
+		/// (Microsoft.Data.SqlClient 7.0+). The destination-table inspection statement <c>SqlBulkCopy</c> issues
+		/// on 7.0+ uses T-SQL syntax 2005 doesn't accept, so callers should fall back to a non-SqlBulkCopy path
+		/// for 2005 targets. False for System.Data.SqlClient regardless of version.
+		/// </summary>
+		public bool SqlServer2005BulkCopyUnsupported
+			=> Provider == SqlServerProvider.MicrosoftDataSqlClient
+				&& ConnectionType.Assembly.GetName().Version?.Major >= 7;
+
 		#endregion
 
 		public Type SqlDataRecordType { get; }

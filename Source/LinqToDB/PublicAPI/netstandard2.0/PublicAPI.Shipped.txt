@@ -1,9 +1,20 @@
 ﻿#nullable enable
+LinqToDB.CreateTempTableOptions.Deconstruct(out string? TableName, out string? DatabaseName, out string? SchemaName, out string? ServerName, out string? StatementHeader, out string? StatementFooter, out LinqToDB.TableOptions TableOptions, out LinqToDB.SqlQuery.DefaultNullable DefaultNullable) -> void
+LinqToDB.CreateTempTableOptions.Equals(LinqToDB.CreateTempTableOptions? other) -> bool
+LinqToDB.DataProvider.Ydb.YdbOptions.Deconstruct(out LinqToDB.Data.BulkCopyType BulkCopyType, out bool UseParametrizedDecimal) -> void
+LinqToDB.Internal.DataProvider.BulkCopyReader<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+System.Data.Linq.Binary
+System.Data.Linq.Binary.Binary(byte[]? value) -> void
+System.Data.Linq.Binary.Equals(System.Data.Linq.Binary? other) -> bool
+System.Data.Linq.Binary.Length.get -> int
+System.Data.Linq.Binary.ToArray() -> byte[]!
 const LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.AssemblyName = "IBM.Data.Db2" -> string!
 const LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = "IBM.Data.DB2.Core" -> string!
 const LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.ClientNamespace = "IBM.Data.Db2" -> string!
 const LinqToDB.Internal.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = "IBM.Data.DB2.Core" -> string!
-LinqToDB.Internal.DataProvider.BulkCopyReader<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+override LinqToDB.CreateTempTableOptions.<Clone>$() -> LinqToDB.CreateTableOptions!
+override LinqToDB.CreateTempTableOptions.GetHashCode() -> int
+override LinqToDB.CreateTempTableOptions.ToString() -> string!
 override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Access.AccessOptions!>!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>!
 override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DB2.DB2Options!>!
@@ -12,33 +23,22 @@ override LinqToDB.DataProvider.Informix.InformixOptions.<Clone>$() -> LinqToDB.I
 override LinqToDB.DataProvider.MySql.MySqlOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.MySql.MySqlOptions!>!
 override LinqToDB.DataProvider.Oracle.OracleOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Oracle.OracleOptions!>!
 override LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions!>!
+override LinqToDB.DataProvider.SQLite.SQLiteOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SQLite.SQLiteOptions!>!
 override LinqToDB.DataProvider.SapHana.SapHanaOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SapHana.SapHanaOptions!>!
 override LinqToDB.DataProvider.SqlCe.SqlCeOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlCe.SqlCeOptions!>!
-override LinqToDB.DataProvider.SQLite.SQLiteOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SQLite.SQLiteOptions!>!
 override LinqToDB.DataProvider.SqlServer.SqlServerOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlServer.SqlServerOptions!>!
 override LinqToDB.DataProvider.Sybase.SybaseOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Sybase.SybaseOptions!>!
+override LinqToDB.DataProvider.Ydb.YdbOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Ydb.YdbOptions!>!
+override LinqToDB.DataProvider.Ydb.YdbOptions.ToString() -> string!
 override System.Data.Linq.Binary.Equals(object? obj) -> bool
 override System.Data.Linq.Binary.GetHashCode() -> int
 override System.Data.Linq.Binary.ToString() -> string!
-static System.Data.Linq.Binary.implicit operator System.Data.Linq.Binary!(byte[]? value) -> System.Data.Linq.Binary!
-static System.Data.Linq.Binary.operator !=(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool
-static System.Data.Linq.Binary.operator ==(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool
-System.Data.Linq.Binary
-System.Data.Linq.Binary.Binary(byte[]? value) -> void
-System.Data.Linq.Binary.Equals(System.Data.Linq.Binary? other) -> bool
-System.Data.Linq.Binary.Length.get -> int
-System.Data.Linq.Binary.ToArray() -> byte[]!
-LinqToDB.CreateTempTableOptions.Deconstruct(out string? TableName, out string? DatabaseName, out string? SchemaName, out string? ServerName, out string? StatementHeader, out string? StatementFooter, out LinqToDB.TableOptions TableOptions, out LinqToDB.SqlQuery.DefaultNullable DefaultNullable) -> void
-LinqToDB.CreateTempTableOptions.Equals(LinqToDB.CreateTempTableOptions? other) -> bool
-LinqToDB.DataProvider.Ydb.YdbOptions.Deconstruct(out LinqToDB.Data.BulkCopyType BulkCopyType, out bool UseParametrizedDecimal) -> void
-override LinqToDB.CreateTempTableOptions.<Clone>$() -> LinqToDB.CreateTableOptions!
-override LinqToDB.CreateTempTableOptions.GetHashCode() -> int
-override LinqToDB.DataProvider.Ydb.YdbOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Ydb.YdbOptions!>!
-override LinqToDB.DataProvider.Ydb.YdbOptions.ToString() -> string!
 override sealed LinqToDB.CreateTempTableOptions.Equals(LinqToDB.CreateTableOptions? other) -> bool
 override sealed LinqToDB.DataProvider.Ydb.YdbOptions.Equals(LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Ydb.YdbOptions!>? other) -> bool
 static LinqToDB.CreateTempTableOptions.operator !=(LinqToDB.CreateTempTableOptions? left, LinqToDB.CreateTempTableOptions? right) -> bool
 static LinqToDB.CreateTempTableOptions.operator ==(LinqToDB.CreateTempTableOptions? left, LinqToDB.CreateTempTableOptions? right) -> bool
 static LinqToDB.DataProvider.Ydb.YdbOptions.operator !=(LinqToDB.DataProvider.Ydb.YdbOptions? left, LinqToDB.DataProvider.Ydb.YdbOptions? right) -> bool
 static LinqToDB.DataProvider.Ydb.YdbOptions.operator ==(LinqToDB.DataProvider.Ydb.YdbOptions? left, LinqToDB.DataProvider.Ydb.YdbOptions? right) -> bool
-override LinqToDB.CreateTempTableOptions.ToString() -> string!
+static System.Data.Linq.Binary.implicit operator System.Data.Linq.Binary!(byte[]? value) -> System.Data.Linq.Binary!
+static System.Data.Linq.Binary.operator !=(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool
+static System.Data.Linq.Binary.operator ==(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool

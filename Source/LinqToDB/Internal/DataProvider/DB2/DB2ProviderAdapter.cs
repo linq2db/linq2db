@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
@@ -91,6 +92,11 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			DB2TimeSpanType     = LoadType("DB2TimeSpan"    , DataType.Timestamp, true, true);
 			// not mapped currently: DB2MonthSpan, DB2SmartLOB, DB2TimeStampOffset, DB2XsrObjectId
 
+			// DECFLOAT special values (Infinity/-Infinity/NaN) can't be converted to decimal. Map the raw
+			// DB2DecimalFloat per target type: the value itself for double/float, null (nullable) / default
+			// (non-nullable) for decimal & integral targets. See issue #5663.
+			RegisterDecimalFloatConverters(MappingSchema, DB2DecimalFloatType);
+
 			var typeMapper = new TypeMapper();
 
 			typeMapper.RegisterTypeWrapper<DB2ServerTypes>(serverTypesType);
@@ -144,6 +150,80 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 				return type;
 			}
+		}
+
+		static void RegisterDecimalFloatConverters(MappingSchema mappingSchema, Type decimalFloatType)
+		{
+			void Register(Type toType, string method)
+			{
+				var v    = Expression.Parameter(decimalFloatType, "v");
+				var body = Expression.Call(typeof(DecimalFloatConverters), method, null, Expression.Call(v, "ToString", Type.EmptyTypes));
+
+				mappingSchema.SetConvertExpression(decimalFloatType, toType, Expression.Lambda(body, v), addNullCheck: false, ConversionType.FromDatabase);
+			}
+
+			// double/float keep the special value (Infinity/-Infinity/NaN parse natively)
+			Register(typeof(double),   nameof(DecimalFloatConverters.ToDouble));
+			Register(typeof(double?),  nameof(DecimalFloatConverters.ToDoubleNullable));
+			Register(typeof(float),    nameof(DecimalFloatConverters.ToSingle));
+			Register(typeof(float?),   nameof(DecimalFloatConverters.ToSingleNullable));
+
+			// decimal & integral targets can't represent special values: default for non-nullable
+			Register(typeof(decimal),  nameof(DecimalFloatConverters.ToDecimal));
+			Register(typeof(byte),     nameof(DecimalFloatConverters.ToByte));
+			Register(typeof(sbyte),    nameof(DecimalFloatConverters.ToSByte));
+			Register(typeof(short),    nameof(DecimalFloatConverters.ToInt16));
+			Register(typeof(ushort),   nameof(DecimalFloatConverters.ToUInt16));
+			Register(typeof(int),      nameof(DecimalFloatConverters.ToInt32));
+			Register(typeof(uint),     nameof(DecimalFloatConverters.ToUInt32));
+			Register(typeof(long),     nameof(DecimalFloatConverters.ToInt64));
+			Register(typeof(ulong),    nameof(DecimalFloatConverters.ToUInt64));
+
+			// ... and null for nullable
+			Register(typeof(decimal?), nameof(DecimalFloatConverters.ToDecimalNullable));
+			Register(typeof(byte?),    nameof(DecimalFloatConverters.ToByteNullable));
+			Register(typeof(sbyte?),   nameof(DecimalFloatConverters.ToSByteNullable));
+			Register(typeof(short?),   nameof(DecimalFloatConverters.ToInt16Nullable));
+			Register(typeof(ushort?),  nameof(DecimalFloatConverters.ToUInt16Nullable));
+			Register(typeof(int?),     nameof(DecimalFloatConverters.ToInt32Nullable));
+			Register(typeof(uint?),    nameof(DecimalFloatConverters.ToUInt32Nullable));
+			Register(typeof(long?),    nameof(DecimalFloatConverters.ToInt64Nullable));
+			Register(typeof(ulong?),   nameof(DecimalFloatConverters.ToUInt64Nullable));
+		}
+
+		// Converts DB2DecimalFloat.ToString() output to a target CLR type, handling IEEE special values.
+		static class DecimalFloatConverters
+		{
+			// "NaN"/"Infinity"/"-Infinity" parse natively; "sNaN" (signaling NaN) does not, so map it to NaN.
+			public static double  ToDouble        (string s) => s is "sNaN" ? double.NaN : double.Parse(s, CultureInfo.InvariantCulture);
+			public static float   ToSingle        (string s) => s is "sNaN" ? float .NaN : float .Parse(s, CultureInfo.InvariantCulture);
+			public static double? ToDoubleNullable(string s) => s is "sNaN" ? double.NaN : double.Parse(s, CultureInfo.InvariantCulture);
+			public static float?  ToSingleNullable(string s) => s is "sNaN" ? float .NaN : float .Parse(s, CultureInfo.InvariantCulture);
+
+			public static decimal ToDecimal(string s) => IsSpecial(s) ? default : Parse(s);
+			public static byte    ToByte   (string s) => IsSpecial(s) ? default : (byte)  Parse(s);
+			public static sbyte   ToSByte  (string s) => IsSpecial(s) ? default : (sbyte) Parse(s);
+			public static short   ToInt16  (string s) => IsSpecial(s) ? default : (short) Parse(s);
+			public static ushort  ToUInt16 (string s) => IsSpecial(s) ? default : (ushort)Parse(s);
+			public static int     ToInt32  (string s) => IsSpecial(s) ? default : (int)   Parse(s);
+			public static uint    ToUInt32 (string s) => IsSpecial(s) ? default : (uint)  Parse(s);
+			public static long    ToInt64  (string s) => IsSpecial(s) ? default : (long)  Parse(s);
+			public static ulong   ToUInt64 (string s) => IsSpecial(s) ? default : (ulong) Parse(s);
+
+			public static decimal? ToDecimalNullable(string s) => IsSpecial(s) ? null : Parse(s);
+			public static byte?    ToByteNullable   (string s) => IsSpecial(s) ? null : (byte)  Parse(s);
+			public static sbyte?   ToSByteNullable  (string s) => IsSpecial(s) ? null : (sbyte) Parse(s);
+			public static short?   ToInt16Nullable  (string s) => IsSpecial(s) ? null : (short) Parse(s);
+			public static ushort?  ToUInt16Nullable (string s) => IsSpecial(s) ? null : (ushort)Parse(s);
+			public static int?     ToInt32Nullable  (string s) => IsSpecial(s) ? null : (int)   Parse(s);
+			public static uint?    ToUInt32Nullable (string s) => IsSpecial(s) ? null : (uint)  Parse(s);
+			public static long?    ToInt64Nullable  (string s) => IsSpecial(s) ? null : (long)  Parse(s);
+			public static ulong?   ToUInt64Nullable (string s) => IsSpecial(s) ? null : (ulong) Parse(s);
+
+			static decimal Parse(string s) => decimal.Parse(s, NumberStyles.Float, CultureInfo.InvariantCulture);
+
+			// DB2DecimalFloat.ToString() yields these IEEE tokens for special values; any other text is a finite numeric literal.
+			static bool IsSpecial(string s) => s is "NaN" or "Infinity" or "-Infinity" or "sNaN";
 		}
 
 		static readonly Lazy<DB2ProviderAdapter> _lazy = new (() => new ());

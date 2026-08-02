@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.Common
 	/// Rationale:
 	///    If there is no intent for reusing the object, do not use pool - just use "new".
 	/// </summary>
-	internal sealed class ObjectPool<T> where T : class
+	public sealed class ObjectPool<T> where T : class
 	{
 		private struct Element
 		{
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Common
 		public readonly struct RentedElement : IDisposable
 		{
 			private readonly ObjectPool<T> Pool;
-			internal readonly T Value;
+			public readonly T Value;
 
 			public RentedElement(ObjectPool<T> pool, T value)
 			{
@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.Common
 		private readonly Func<T> _factory;
 		private readonly Action<T> _cleanup;
 
-		internal ObjectPool(Func<T> factory, Action<T> cleanup, int size)
+		public ObjectPool(Func<T> factory, Action<T> cleanup, int size)
 		{
 			_factory = factory;
 			_cleanup = cleanup;
@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.Common
 		/// Note that Free will try to store recycled objects close to the start thus statistically
 		/// reducing how far we will typically search.
 		/// </remarks>
-		internal RentedElement Allocate()
+		public RentedElement Allocate()
 		{
 			var items = _items;
 			T? inst;

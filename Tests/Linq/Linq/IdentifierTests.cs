@@ -57,6 +57,10 @@ namespace Tests.Linq
 					.Build();
 
 			using var db = GetDataContext(context, ms);
+
+			if (context.IsAnyOf(TestProvName.AllYdb) && identifier.Any(c => c > 127))
+				Assert.Ignore("YDB does not support non-ASCII column identifiers.");
+
 			using var tb = db.CreateLocalTable<Table>();
 
 			tb

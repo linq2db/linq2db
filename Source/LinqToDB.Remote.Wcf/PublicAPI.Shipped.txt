@@ -7,10 +7,10 @@ LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteScalarAsync(string? configuration, st
 LinqToDB.Remote.Wcf.IWcfLinqService.GetInfoAsync(string? configuration) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
 LinqToDB.Remote.Wcf.WcfDataContext
 LinqToDB.Remote.Wcf.WcfDataContext.Binding.get -> System.ServiceModel.Channels.Binding?
-LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(string! endpointConfigurationName) -> void
-LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(string! endpointConfigurationName, string! remoteAddress) -> void
-LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(string! endpointConfigurationName, System.ServiceModel.EndpointAddress! endpointAddress) -> void
 LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(System.ServiceModel.Channels.Binding! binding, System.ServiceModel.EndpointAddress! endpointAddress, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(string! endpointConfigurationName) -> void
+LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(string! endpointConfigurationName, System.ServiceModel.EndpointAddress! endpointAddress) -> void
+LinqToDB.Remote.Wcf.WcfDataContext.WcfDataContext(string! endpointConfigurationName, string! remoteAddress) -> void
 LinqToDB.Remote.Wcf.WcfLinqService
 LinqToDB.Remote.Wcf.WcfLinqService.WcfLinqService(LinqToDB.Remote.ILinqService! linqService, bool transferInternalExceptionToClient) -> void
 override LinqToDB.Remote.Wcf.WcfDataContext.ContextIDPrefix.get -> string!

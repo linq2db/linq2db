@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static string GetContextInfo(IBuildContext context)
 		{
 #if DEBUG
-			var contextId = FormattableString.Invariant($"[ID:{context.ContextId}]");
+			var contextId = string.Create(CultureInfo.InvariantCulture, $"[ID:{context.ContextId}]");
 #else
 			var contextId = string.Empty;
 #endif
@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (context is TableBuilder.TableContext tc)
 			{
-				result += string.Create(CultureInfo.InvariantCulture, $"(T: {tc.SqlTable.SourceID})");
+				result += string.Create(CultureInfo.InvariantCulture, $"(T: {tc.NamedTable.SourceID})");
 			}
 
 			if (context is ScopeContext scope)
