@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
 					Sql.DateParts.Microsecond => "microsecond",
-					Sql.DateParts.Tick => "microsecond",
+					Sql.DateParts.Tick => "nanosecond",
 					Sql.DateParts.Nanosecond => "nanosecond",
 					_ => null,
 				};
@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var partStr = DatePartToStr(datepart, false);
 
 				if (partStr == null)
-					throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+					return null;
 
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				if (datepart == Sql.DateParts.Tick)
 				{
-					resultExpression = factory.Div(resultExpression, 10);
+					resultExpression = factory.Div(resultExpression, 100);
 				}
 
 				return resultExpression;
@@ -103,14 +103,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				if (partStr == null)
 				{
-					throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+					return null;
 				}
 
 				var fragment = factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr);
 
 				if (datepart == Sql.DateParts.Tick)
 				{
-					increment = factory.Div(increment, 10);
+					increment = factory.Multiply(increment, 100);
 				}
 
 				var resultExpression = factory.Function(dateType, "DateAdd", fragment, increment, dateTimeExpression);

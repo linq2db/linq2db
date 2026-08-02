@@ -175,7 +175,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 						return resultExpression;
 					}
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				var result = factory.Function(dateType, function, dateTimeExpression, increment);

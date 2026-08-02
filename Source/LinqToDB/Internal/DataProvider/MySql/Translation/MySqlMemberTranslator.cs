@@ -116,7 +116,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 						return factory.Function(intDataType, "Microsecond", dateTimeExpression);
 					}
 					default:
-						throw new NotImplementedException($"TranslateDateTimePart for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				var extractDbType = intDataType;
@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				var dateType      = factory.GetDbDataType(dateTimeExpression);
 				var intDbType     = factory.GetDbDataType(typeof(int));
 				var intervalType  = intDbType.WithDataType(DataType.Interval);
-				var expStr = datepart switch
+				string? expStr = datepart switch
 				{
 					Sql.DateParts.Year        => "Interval {0} Year",
 					Sql.DateParts.Quarter     => "Interval {0} Quarter",
@@ -149,8 +149,11 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 					Sql.DateParts.Minute      => "Interval {0} Minute",
 					Sql.DateParts.Second      => "Interval {0} Second",
 					Sql.DateParts.Millisecond => "Interval {0} Millisecond",
-					_ => throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented"),
+					_ => null,
 				};
+
+				if (expStr == null)
+					return null;
 				var resultExpression = factory.Function(dateType, "Date_Add", dateTimeExpression, factory.Expression(intervalType, expStr, increment));
 
 				return resultExpression;

@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				});
 
 				if (expr.Type != node.Type)
-					expr = new ChangeTypeExpression(expr, node.Type);
+					expr = Expression.Convert(expr, node.Type);
 
 				return expr;
 			}
@@ -346,7 +346,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				});
 
 				if (expr.Type != node.Type)
-					expr = new ChangeTypeExpression(expr, node.Type);
+					expr = Expression.Convert(expr, node.Type);
 
 				return expr;
 			}
@@ -826,13 +826,10 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 			}
 
-			if (_includeConvert)
+			var mappedUnary = ConvertUnary(node);
+			if (mappedUnary != null)
 			{
-				var converted = ConvertUnary(node);
-				if (converted != null)
-				{
-					return Visit(converted);
-				}
+				return Visit(mappedUnary);
 			}
 
 			return base.VisitUnary(node);

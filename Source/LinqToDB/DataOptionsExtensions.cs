@@ -1287,6 +1287,16 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Removes <see cref="IMemberTranslator" /> instance from the context.
+		/// </summary>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions RemoveTranslator(this DataOptions options, IMemberTranslator translator)
+		{
+			return RemoveMemberTranslator(options, translator);
+		}
+
+		/// <summary>
 		/// <para>
 		/// Adds <see cref="IUnaryTranslator" /> instance to those registered on the context.
 		/// </para>

@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					case Sql.DateParts.Second:      extractStr = "SECOND"; break;
 					case Sql.DateParts.Millisecond: partStr    = "FF"; break;
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				var extractDbType = intDataType;
@@ -129,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				var factory      = translationContext.ExpressionFactory;
 				var dateType     = factory.GetDbDataType(dateTimeExpression);
 				var intervalType = factory.GetDbDataType(increment).WithDataType(DataType.Interval);
-				var expStr = datepart switch
+				string? expStr = datepart switch
 				{
 					Sql.DateParts.Year        => "INTERVAL '1' YEAR",
 					Sql.DateParts.Quarter     => "INTERVAL '3' MONTH",
@@ -140,8 +140,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					Sql.DateParts.Minute      => "INTERVAL '1' MINUTE",
 					Sql.DateParts.Second      => "INTERVAL '1' SECOND",
 					Sql.DateParts.Millisecond => "INTERVAL '0.001' SECOND",
-					_ => throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented"),
+					_ => null,
 				};
+
+				if (expStr == null)
+					return null;
 				var intervalExpression = factory.Multiply(intervalType, increment, factory.NotNullExpression(intervalType, expStr));
 				var resultExpression   = factory.Add(dateType, dateTimeExpression, intervalExpression);
 

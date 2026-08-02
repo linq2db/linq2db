@@ -71,7 +71,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 				var partStr = DatePartToStr(datepart, false);
 
 				if (partStr == null)
-					throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+					return null;
 
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 				if (partStr == null)
 				{
-					throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+					return null;
 				}
 
 				var resultExpression = factory.Function(dateType, "DateAdd",

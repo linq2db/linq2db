@@ -319,16 +319,19 @@ namespace LinqToDB.Internal.SqlQuery
 
 				case SqlBinaryExpression binary:
 				{
-					var found = GetColumnDescriptor(binary.Expr1, alreadyVisitedElements, includeCast) ??
-					            GetColumnDescriptor(binary.Expr2, alreadyVisitedElements, includeCast);
-					if (binary.SystemType == typeof(TimeSpan)) //TODO: special case when TimeSpan is Mapped to Int, then the check below returns false.
-					{
-						return found;
-					}
+					var left  = GetColumnDescriptor(binary.Expr1, alreadyVisitedElements, includeCast);
+					var right = GetColumnDescriptor(binary.Expr2, alreadyVisitedElements, includeCast);
 
-					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
+					if (left == null)
+						return right;
+
+					if (right == null)
+						return left;
+
+					if (!Equals(left.GetDbDataType(true), right.GetDbDataType(true)))
 						return null;
-					return found;
+
+					return left;
 				}
 
 				case SqlNullabilityExpression nullability:

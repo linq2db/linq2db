@@ -55,10 +55,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			var days = 0;
 #if NETSTANDARD2_1
 			var parts = raw.AsSpan();
+			var idx   = parts.IndexOf(' ');
 #else
 			var parts = raw;
+			var idx   = parts.IndexOf(" ", StringComparison.InvariantCulture);
 #endif
-			var idx = parts.IndexOf(' ', StringComparison.InvariantCulture);
 			if (idx > 0)
 			{
 				days = int.Parse(parts[0..idx], NumberStyles.None, CultureInfo.InvariantCulture);

@@ -93,15 +93,9 @@ namespace LinqToDB
 				DateParts.Minute        => date.Value.Minute,
 				DateParts.Second        => date.Value.Second,
 				DateParts.Millisecond   => date.Value.Millisecond,
-#if NET7_0_OR_GREATER
-				DateParts.Microsecond   => date.Value.Microsecond,
-				DateParts.Nanosecond    => date.Value.Nanosecond,
-				DateParts.Tick          => date.Value.Ticks,
-#else
-				DateParts.Microsecond   => date.Value.Ticks / 10,
-				DateParts.Nanosecond    => date.Value.Ticks * 100,
-				DateParts.Tick          => date.Value.Ticks,
-#endif
+				DateParts.Microsecond   => date.Value.Ticks % TimeSpan.TicksPerSecond / 10,
+				DateParts.Nanosecond    => date.Value.Ticks % TimeSpan.TicksPerSecond * 100,
+				DateParts.Tick          => date.Value.Ticks % TimeSpan.TicksPerSecond,
 				_                           => throw new InvalidOperationException(),
 			};
 		}
@@ -158,7 +152,7 @@ namespace LinqToDB
 					DateParts.Minute      => "minute",
 					DateParts.Second      => "second",
 					DateParts.Millisecond => "millisecond",
-                          DateParts.Microsecond => "microsecond",
+					DateParts.Microsecond => "microsecond",
 					DateParts.Nanosecond  => "nanosecond",
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
@@ -669,7 +663,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + "(nanosecond, {0}, {1}) / 100", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), builder.Expression + "(nanosecond, {0}, {1}) / 100", startdate!, endDate!);
 			}
 		}
 
@@ -680,7 +674,7 @@ namespace LinqToDB
 				var startdate  = builder.GetExpression(0);
 				var endDate    = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(long)), "Nano100_Between", startdate!, endDate!);
+				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(TimeSpan)), "Nano100_Between", startdate!, endDate!);
 			}
 		}
 
@@ -691,7 +685,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + "(MICROSECOND, {0}, {1}) * 10", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), builder.Expression + "(MICROSECOND, {0}, {1}) * 10", startdate!, endDate!);
 			}
 		}
 
@@ -702,7 +696,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + "(microsecond, {0}, {1}) * 10", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), builder.Expression + "(microsecond, {0}, {1}) * 10", startdate!, endDate!);
 			}
 		}
 
@@ -713,7 +707,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), "Cast(DateDiff(millisecond, {0}, {1}) * 10000 as BIGINT)", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), "Cast(DateDiff(millisecond, {0}, {1}) * 10000 as BIGINT)", startdate!, endDate!);
 			}
 		}
 
@@ -755,7 +749,7 @@ namespace LinqToDB
 				var endDate = builder.GetExpression(1);
 
 				var expStr = "cast(round((julianday({1}) - julianday({0})) * 864000000000) as INTEGER)";
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), expStr, startDate!, endDate!);
 			}
 		}
 
@@ -766,7 +760,7 @@ namespace LinqToDB
 				var startDate = builder.GetExpression(0);
 				var endDate = builder.GetExpression(1);
 				var expStr =  "({1}::timestamp - {0}::timestamp)";
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, Precedence.Multiplicative, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), expStr, Precedence.Multiplicative, startDate!, endDate!);
 			}
 		}
 
@@ -779,7 +773,7 @@ namespace LinqToDB
 
 				var expStr = "DATEDIFF('s', {0}, {1}) * 10000000";
 
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), expStr, startDate!, endDate!);
 			}
 		}
 
@@ -793,7 +787,7 @@ namespace LinqToDB
 				// Subtracting two TIMESTAMP returns an INTERVAL.
 				// Unfortunately, it's not possible to know based on C# type if an expression was mapped to `DATE` or `TIMESTAMP` in DB :(
 				var expStr = "(CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))";
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), expStr, startDate!, endDate!);
+				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(TimeSpan)), expStr, startDate!, endDate!);
 			}
 		}
 
@@ -805,7 +799,7 @@ namespace LinqToDB
 				var endDate    = builder.GetExpression(1);
 
 				builder.ResultExpression = new SqlExpression(
-					builder.Mapping.GetDbDataType(typeof(long?)),
+					builder.Mapping.GetDbDataType(typeof(TimeSpan)),
 					"toInt64((toUnixTimestamp64Nano(toDateTime64({1}, 3)) - toUnixTimestamp64Nano(toDateTime64({0}, 3))) / 100)",
 					Precedence.Subtraction,
 					startDate!,
@@ -830,7 +824,7 @@ namespace LinqToDB
 		[Extension(PN.PostgreSQL,   "",              BuilderType = typeof(DateDiffIntervalBuilderPostgreSql))]
 		[Extension(PN.Access,       "",              BuilderType = typeof(DateDiffIntervalBuilderAccess))]
 		[Extension(PN.ClickHouse,   "",              BuilderType = typeof(DateDiffIntervalBuilderClickHouse))]
-		/* Returns the Native Database Interval type, or the Timespan Ticks (100ns) */		
+		/* Returns the native database interval type, or the TimeSpan ticks (100ns). */
 		internal static TimeSpan? DateDiffInterval(DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 						return result;
 					}
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+						return null;
 				}
 			}
 
@@ -224,7 +224,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 						break;
 					}
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				var resultExpression = factory.Function(dateType, function, dateTimeExpression, number);

@@ -1,45 +1,34 @@
-﻿using System;
-using System.Linq;
+using System;
+using System.Linq.Expressions;
 
-using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Internal.Extensions;
 using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue5212Tests : TestBase
 	{
-		[Sql.Expression("unarytest", Precedence = Precedence.Primary)]
-		private static int UnaryTest(int v) => -v;
-
-		static Issue5212Tests()
+		readonly record struct UnaryOperand(int Value)
 		{
-			//Expressions.MapUnary<int, int>((v) => -v, (v) => UnaryTest(v));
+			public static UnaryOperand operator -(UnaryOperand value) => new(-value.Value);
 		}
 
-		//[Test]
-		//Test disabled, cause MapUnary/MapBinary calls could not be removed and could so break other tests.
-		public void MapUnary([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		[Test]
+		public void MapUnary()
 		{
-			using (var db = GetDataContext(context))
-			{
-				try
-				{
-					var query = from p in db.Parent
-								where -p.ParentID == 0
-								select p;
+			Expressions.MapUnary<UnaryOperand, UnaryOperand>(value => -value, value => new UnaryOperand(value.Value + 1));
 
-					var _ = query.ToList();
-				}
-				catch { }
+			Expression<Func<UnaryOperand, UnaryOperand>> expression = value => -value;
+			var unary  = (UnaryExpression)expression.Body;
+			var mapped = Expressions.ConvertUnary(MappingSchema.Default, unary);
 
-				Assert.That(((DataConnection)db).LastQuery, Does.Contain("unarytest"));
-			}
+			mapped.ShouldNotBeNull();
+			mapped.Body.ToString().ShouldContain("Value + 1");
 		}
 	}
 }

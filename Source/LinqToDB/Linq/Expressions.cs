@@ -147,7 +147,6 @@ namespace LinqToDB.Linq
 		/// <param name="nodeType">NodeType of UnaryExpression <see cref="ExpressionType"/> which needs mapping.</param>
 		/// <param name="operandType">Exact type of <see cref="UnaryExpression.Operand"/> member.</param>
 		/// <param name="expression">Lambda expression which has to replace <see cref="UnaryExpression"/></param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapUnary(
 			string providerName,
 			ExpressionType nodeType,
@@ -158,8 +157,7 @@ namespace LinqToDB.Linq
 			ArgumentNullException.ThrowIfNull(operandType);
 			ArgumentNullException.ThrowIfNull(expression);
 
-			if (!_unaries.Value.TryGetValue(providerName, out var dic))
-				_unaries.Value.Add(providerName, dic = []);
+			var dic = _unaries.Value.GetOrAdd(providerName, static _ => new());
 
 			var expr = new LazyExpressionInfo();
 
@@ -176,7 +174,6 @@ namespace LinqToDB.Linq
 		/// <param name="nodeType">NodeType of UnaryExpression <see cref="ExpressionType"/> which needs mapping.</param>
 		/// <param name="operandType">Exact type of <see cref="UnaryExpression.Operand"/> member.</param>
 		/// <param name="expression">Lambda expression which has to replace <see cref="UnaryExpression"/>.</param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapUnary(
 			ExpressionType nodeType,
 			Type operandType,
@@ -193,7 +190,6 @@ namespace LinqToDB.Linq
 		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
 		/// <param name="unaryExpression">Expression which has to be replaced.</param>
 		/// <param name="expression">Lambda expression which has to replace <paramref name="unaryExpression"/>.</param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapUnary<TOperand, TR>(
 			string providerName,
 			Expression<Func<TOperand, TR>> unaryExpression,
@@ -209,7 +205,6 @@ namespace LinqToDB.Linq
 		/// <typeparam name="TR">Result type of <paramref name="unaryExpression"/>.</typeparam>
 		/// <param name="unaryExpression">Expression which has to be replaced.</param>
 		/// <param name="expression">Lambda expression which has to replace <paramref name="unaryExpression"/>.</param>
-		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
 		public static void MapUnary<TOperand, TR>(
 			Expression<Func<TOperand, TR>> unaryExpression,
 			Expression<Func<TOperand, TR>> expression)
@@ -488,7 +483,7 @@ namespace LinqToDB.Linq
 				return null;
 
 			IExpressionInfo? expr;
-			Dictionary<(ExpressionType,Type),IExpressionInfo>? dic;
+			ConcurrentDictionary<(ExpressionType,Type),IExpressionInfo>? dic;
 
 			var unaries = _unaries.Value;
 			var key     = (unaryExpression.NodeType, unaryExpression.Operand.Type);
@@ -621,7 +616,7 @@ namespace LinqToDB.Linq
 
 		private static readonly Lock _memberSync = new();
 
-		static readonly Lazy<Dictionary<string,Dictionary<(ExpressionType,Type),IExpressionInfo>>> _unaries = new(() => new(StringComparer.Ordinal));
+		static readonly Lazy<ConcurrentDictionary<string,ConcurrentDictionary<(ExpressionType,Type),IExpressionInfo>>> _unaries = new(() => new(StringComparer.Ordinal));
 		static readonly Lazy<ConcurrentDictionary<string,ConcurrentDictionary<(ExpressionType,Type,Type),IExpressionInfo>>> _binaries = new(() => new(StringComparer.Ordinal));
 
 		#region Common
@@ -1129,8 +1124,9 @@ namespace LinqToDB.Linq
 		#endregion
 
 		/// <summary>
-		/// Enables TimespanMapping to an Interval Type (instead of the Time Type in the databases)
-		/// If you do so, you need to also add a mapping according the interval type of your database
+		/// Registers global TimeSpan mappings for interval types (instead of database time types).
+		/// Call this method during application initialization. You also need to add a mapping for the
+		/// interval representation used by your database
 		/// in your mapping schema, with
 		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
 		/// or
@@ -1138,7 +1134,6 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void AddTimeSpanMappings()
 		{
-			Common.Configuration.Sql.Options = Common.Configuration.Sql.Options with { DisableBuiltInTimeSpanConversion = true };
 			MapMember<TimeSpan>(p => p.Days,              (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Days,              p)!.Value));
 			MapMember<TimeSpan>(p => p.TotalDays,         (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalDays,         p)!.Value));
 			MapMember<TimeSpan>(p => p.Hours,             (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Hours,             p)!.Value));

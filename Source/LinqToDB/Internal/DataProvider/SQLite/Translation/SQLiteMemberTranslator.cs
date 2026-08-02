@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 						return result;
 					}	
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				var resultExpression = StrFTimeInt(factory, intDbType, stringDbType, partStr, dateTimeExpression);

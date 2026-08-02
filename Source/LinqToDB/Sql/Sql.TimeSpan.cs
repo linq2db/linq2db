@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Globalization;
 using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -54,7 +51,14 @@ namespace LinqToDB
 			{
 				return part switch
 				{
+					TimeSpanParts.Days             => "/ 864000000000",
 					TimeSpanParts.TotalNanoseconds	=> "* 100",
+					TimeSpanParts.Hours            => "/ 36000000000 % 24",
+					TimeSpanParts.Minutes          => "/ 600000000 % 60",
+					TimeSpanParts.Seconds          => "/ 10000000 % 60",
+					TimeSpanParts.Milliseconds     => "/ 10000 % 1000",
+					TimeSpanParts.Microseconds     => "/ 10 % 1000",
+					TimeSpanParts.Nanoseconds      => "* 100 % 1000",
 					TimeSpanParts.Ticks             => "",
 					TimeSpanParts.TotalMicroseconds => "/ 10",
 					TimeSpanParts.TotalMilliseconds => "/ 10000",
@@ -84,35 +88,41 @@ namespace LinqToDB
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part     = builder.GetValue<TimeSpanParts>("part");
-				var partStr  = TimeSpanPartToStr(part);
 				var timeSpan = builder.GetExpression("timeSpan");
 
 				var tp = timeSpan!.GetExpressionType(includeCast: true);
 				var dt = tp.DataType;
-					
+
 				if (dt == DataType.Int64)
 				{
-					partStr = TimeSpanPartBuilder.TimeSpanPartToStr(part);
+					var partStr = TimeSpanPartBuilder.TimeSpanPartToStr(part);
 					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), "{0} " + partStr, timeSpan!);
 				}
 				else
 				{
-					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression + partStr, timeSpan!);
+					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(long)), TimeSpanPartToExpression(part, builder.Expression), timeSpan!);
 				}
 			}
 
-			public static string TimeSpanPartToStr(TimeSpanParts part)
+			public static string TimeSpanPartToExpression(TimeSpanParts part, string totalSecondsExpression)
 			{
 				return part switch
 				{
-					TimeSpanParts.TotalNanoseconds	=> " * 1000000000",
-					TimeSpanParts.Ticks             => " * 10000000",
-					TimeSpanParts.TotalMicroseconds => " * 1000000",
-					TimeSpanParts.TotalMilliseconds => " * 1000",
-					TimeSpanParts.TotalSeconds		=> "",
-					TimeSpanParts.TotalMinutes		=> " / 60",
-					TimeSpanParts.TotalHours		=> " / 3600",
-					TimeSpanParts.TotalDays         => " / 86400",
+					TimeSpanParts.Days              => $"TRUNC(({totalSecondsExpression}) / 86400)",
+					TimeSpanParts.TotalNanoseconds  => $"({totalSecondsExpression}) * 1000000000",
+					TimeSpanParts.Hours             => $"MOD(TRUNC(({totalSecondsExpression}) / 3600), 24)",
+					TimeSpanParts.Minutes           => $"MOD(TRUNC(({totalSecondsExpression}) / 60), 60)",
+					TimeSpanParts.Seconds           => $"MOD(TRUNC({totalSecondsExpression}), 60)",
+					TimeSpanParts.Milliseconds      => $"MOD(TRUNC(({totalSecondsExpression}) * 1000), 1000)",
+					TimeSpanParts.Microseconds      => $"MOD(TRUNC(({totalSecondsExpression}) * 1000000), 1000)",
+					TimeSpanParts.Nanoseconds       => $"MOD(TRUNC(({totalSecondsExpression}) * 1000000000), 1000)",
+					TimeSpanParts.Ticks             => $"({totalSecondsExpression}) * 10000000",
+					TimeSpanParts.TotalMicroseconds => $"({totalSecondsExpression}) * 1000000",
+					TimeSpanParts.TotalMilliseconds => $"({totalSecondsExpression}) * 1000",
+					TimeSpanParts.TotalSeconds      => totalSecondsExpression,
+					TimeSpanParts.TotalMinutes      => $"({totalSecondsExpression}) / 60",
+					TimeSpanParts.TotalHours        => $"({totalSecondsExpression}) / 3600",
+					TimeSpanParts.TotalDays         => $"({totalSecondsExpression}) / 86400",
 					_ => throw new InvalidOperationException($"Unexpected timespanpart: {part}"),
 				};
 			}
@@ -171,7 +181,7 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(DateAdd, DateParts.Tick, (double?)0, (DateTime?)DateTime.MinValue),
 						Expression.Constant(DateParts.Tick),
-					 	Expression.Convert(p, typeof(double?)),
+						Expression.Convert(p, typeof(double?)),
 						builder.Arguments[0]
 					);
 
@@ -195,7 +205,7 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(DateAdd, DateParts.Millisecond, (double?)0, (DateTime?)DateTime.MinValue),
 						Expression.Constant(DateParts.Millisecond),
-					 	Expression.Convert(p, typeof(double?)),
+						Expression.Convert(p, typeof(double?)),
 						builder.Arguments[0]
 					);
 
@@ -220,7 +230,7 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(DateAdd, DateParts.Hour, (double?)0, (DateTime?)DateTime.MinValue),
 						Expression.Constant(DateParts.Hour),
-					 	Expression.Convert(Expression.Divide(Expression.Convert(p, typeof(long)), Expression.Constant(3600000L)), typeof(double?)),
+						Expression.Convert(Expression.Divide(Expression.Convert(p, typeof(long)), Expression.Constant(3600000L)), typeof(double?)),
 						builder.Arguments[0]
 					);
 
@@ -228,7 +238,7 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(DateAdd, DateParts.Millisecond, (double?)0, (DateTime?)DateTime.MinValue),
 						Expression.Constant(DateParts.Millisecond),
-					 	Expression.Convert(Expression.Modulo(Expression.Convert(p, typeof(long)), Expression.Constant(3600000L)), typeof(double?)),
+						Expression.Convert(Expression.Modulo(Expression.Convert(p, typeof(long)), Expression.Constant(3600000L)), typeof(double?)),
 						e
 					);
 
@@ -260,7 +270,7 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(DateAdd, DateParts.Millisecond, (double?)0, (DateTime?)DateTime.MinValue),
 						Expression.Constant(DateParts.Millisecond),
-					 	Expression.Convert(p, typeof(double?)),
+						Expression.Convert(p, typeof(double?)),
 						builder.Arguments[0]
 					);
 
@@ -297,7 +307,7 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(DateAdd, DateParts.Microsecond, (double?)0, (DateTime?)DateTime.MinValue),
 						Expression.Constant(DateParts.Microsecond),
-					 	Expression.Convert(p, typeof(double?)),
+						Expression.Convert(p, typeof(double?)),
 						builder.Arguments[0]
 					);
 
@@ -334,7 +344,7 @@ namespace LinqToDB
 						null,
 						MethodHelper.GetMethodInfo(DateAdd, DateParts.Millisecond, (double?)0, (DateTime?)DateTime.MinValue),
 						Expression.Constant(DateParts.Millisecond),
-					 	Expression.Convert(p, typeof(double?)),
+						Expression.Convert(p, typeof(double?)),
 						builder.Arguments[0]
 					);
 

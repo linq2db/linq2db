@@ -240,7 +240,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 					}
 
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+						return null;
 				}
 			}
 
@@ -291,7 +291,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 					}
 					*/
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				// interval literal cannot be dynamic so we should try to disable at least parameters

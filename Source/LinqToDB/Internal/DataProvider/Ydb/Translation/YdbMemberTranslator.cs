@@ -483,7 +483,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				};
 
 				if (fn == null)
-					throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+					return null;
 
 				var baseExpr = f.Function(intType, fn, dateTimeExpression);
 
@@ -546,7 +546,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				};
 
 				if (intervalFn == null)
-					throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+					return null;
 
 				// The IntervalFrom* UDFs take an integer arg (Int32 — Int64 for milliseconds). The .NET
 				// Add*(double) / Sql.DateAdd signature types a *floating* increment that must be converted to

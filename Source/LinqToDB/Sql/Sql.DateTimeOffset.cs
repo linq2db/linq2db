@@ -34,15 +34,9 @@ namespace LinqToDB
 				DateParts.Minute        => date.Value.Minute,
 				DateParts.Second        => date.Value.Second,
 				DateParts.Millisecond   => date.Value.Millisecond,
-#if NET7_0_OR_GREATER
-				DateParts.Microsecond   => date.Value.Microsecond,
-				DateParts.Nanosecond    => date.Value.Nanosecond,
-				DateParts.Tick          => date.Value.Ticks,
-#else
-				DateParts.Microsecond   => date.Value.Ticks / 10,
-				DateParts.Nanosecond    => date.Value.Ticks * 100,
-				DateParts.Tick          => date.Value.Ticks,
-#endif
+				DateParts.Microsecond   => date.Value.Ticks % TimeSpan.TicksPerSecond / 10,
+				DateParts.Nanosecond    => date.Value.Ticks % TimeSpan.TicksPerSecond * 100,
+				DateParts.Tick          => date.Value.Ticks % TimeSpan.TicksPerSecond,
 				_                       => throw new InvalidOperationException(),
 			};
 		}

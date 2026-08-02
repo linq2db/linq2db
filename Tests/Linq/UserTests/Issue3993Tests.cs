@@ -1,27 +1,36 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.Serialization;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
-using Newtonsoft.Json;
-
 using NUnit.Framework;
+
+using Shouldly;
 
 using DataType = LinqToDB.DataType;
 
 namespace Tests.UserTests.Test3993
 {
 	[TestFixture]
-	public class Test3993Tests : TestBase
-	{
-		public class Test
+		public class Test3993Tests : TestBase
+		{
+			[Test]
+			public void DatePartLongUsesSubsecondComponents()
+			{
+				var date       = new DateTime(2026, 1, 2, 3, 4, 5).AddTicks(1_234_567);
+				var dateOffset = new DateTimeOffset(date, TimeSpan.Zero);
+
+				Sql.DatePartLong(Sql.DateParts.Microsecond, date).ShouldBe(123_456);
+				Sql.DatePartLong(Sql.DateParts.Nanosecond,  date).ShouldBe(123_456_700);
+				Sql.DatePartLong(Sql.DateParts.Tick,        date).ShouldBe(1_234_567);
+				Sql.DatePartLong(Sql.DateParts.Microsecond, dateOffset).ShouldBe(123_456);
+				Sql.DatePartLong(Sql.DateParts.Nanosecond,  dateOffset).ShouldBe(123_456_700);
+				Sql.DatePartLong(Sql.DateParts.Tick,        dateOffset).ShouldBe(1_234_567);
+			}
+
+			public class Test
 		{
 			public virtual DateTime? StartDateTime { get; set; }
 			public virtual DateTime StartDateTime2 { get; set; }
@@ -32,6 +41,44 @@ namespace Tests.UserTests.Test3993
 			public virtual DateTime? StrField { get; set; }
 
 			public virtual string? Status { get; set; }
+		}
+
+		[Test]
+		public void TimeSpanComponentMappings([IncludeDataSources(TestProvName.AllSQLite)] string configuration)
+		{
+			var mappingSchema = new MappingSchema();
+			mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+			LinqToDB.Linq.Expressions.AddTimeSpanMappings();
+
+			var value = new TimeSpan(1, 2, 3, 4, 5).Add(TimeSpan.FromTicks(67));
+
+			using var db    = GetDataContext(configuration, mappingSchema);
+			using var table = db.CreateLocalTable(new[] { new Test { PreNotification3 = value } });
+
+			var result = table
+				.Select(row => new
+				{
+					row.PreNotification3.Days,
+					row.PreNotification3.Hours,
+					row.PreNotification3.Minutes,
+					row.PreNotification3.Seconds,
+					row.PreNotification3.Milliseconds,
+#if NET7_0_OR_GREATER
+					row.PreNotification3.Microseconds,
+					row.PreNotification3.Nanoseconds,
+#endif
+				})
+				.Single();
+
+			result.Days.ShouldBe(1);
+			result.Hours.ShouldBe(2);
+			result.Minutes.ShouldBe(3);
+			result.Seconds.ShouldBe(4);
+			result.Milliseconds.ShouldBe(5);
+#if NET7_0_OR_GREATER
+			result.Microseconds.ShouldBe(6);
+			result.Nanoseconds.ShouldBe(700);
+#endif
 		}
 
 		public enum AisleStatus
@@ -123,20 +170,20 @@ namespace Tests.UserTests.Test3993
 					}
 				});
 
-				var qryAA =
+				_ =
 				(from t in db.GetTable<Test>()
 				 select new
 				 {
 					 NotificationDateTime5 = t.StartDateTime - t.PreNotification,
 				 }).ToList();
 
-				var d = db.GetTable<Test>().ToList();
+				_ = db.GetTable<Test>().ToList();
 
-				var d2 = db.GetTable<Test>().Where(x=>x.StartDateTime2.Year == 2023).ToList();
-				var d3 = db.GetTable<Test>().Where(x=>x.StartDateTime2 + TimeSpan.FromMinutes(5) > DateTime.UtcNow).ToList();
-				var d4 = db.GetTable<Test>().Where(x=>x.StartDateTime2 + TimeSpan.FromDays(365 * 100) > DateTime.UtcNow).ToList();
+				_ = db.GetTable<Test>().Where(x=>x.StartDateTime2.Year == 2023).ToList();
+				_ = db.GetTable<Test>().Where(x=>x.StartDateTime2 + TimeSpan.FromMinutes(5) > DateTime.UtcNow).ToList();
+				_ = db.GetTable<Test>().Where(x=>x.StartDateTime2 + TimeSpan.FromDays(365 * 100) > DateTime.UtcNow).ToList();
 
-				var qry2 =
+				_ =
 				(from t in db.GetTable<Test>()
 				 select new
 				 {

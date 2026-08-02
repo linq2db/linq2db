@@ -182,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 					case Sql.DateParts.Second: extractStr = "second"; break;
 					case Sql.DateParts.Millisecond: partStr = "FF"; break;
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				var extractDbType = intDataType;
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 						break;
 					}
 					default:
-						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
+						return null;
 				}
 
 				var intervalExpression = factory.Expression(intervalType, "{0} " + expStr, incrementValueExpr);
