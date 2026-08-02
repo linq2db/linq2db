@@ -30,6 +30,24 @@ namespace Tests.UserTests.Test3993
 				Sql.DatePartLong(Sql.DateParts.Tick,        dateOffset).ShouldBe(1_234_567);
 			}
 
+			[Test]
+			public void DateDiffSupportsSubsecondParts()
+			{
+				var startDate       = new DateTime(2026, 1, 2, 3, 4, 5);
+				var endDate         = startDate.AddTicks(123_456);
+				var startDateOffset = new DateTimeOffset(startDate, TimeSpan.Zero);
+				var endDateOffset   = new DateTimeOffset(endDate,   TimeSpan.Zero);
+
+				Sql.DateDiff    (Sql.DateParts.Microsecond, startDate,       endDate)      .ShouldBe(12_345);
+				Sql.DateDiff    (Sql.DateParts.Nanosecond,  startDate,       endDate)      .ShouldBe(12_345_600);
+				Sql.DateDiffLong(Sql.DateParts.Microsecond, startDate,       endDate)      .ShouldBe(12_345L);
+				Sql.DateDiffLong(Sql.DateParts.Nanosecond,  startDate,       endDate)      .ShouldBe(12_345_600L);
+				Sql.DateDiff    (Sql.DateParts.Microsecond, startDateOffset, endDateOffset).ShouldBe(12_345);
+				Sql.DateDiff    (Sql.DateParts.Nanosecond,  startDateOffset, endDateOffset).ShouldBe(12_345_600);
+				Sql.DateDiffLong(Sql.DateParts.Microsecond, startDateOffset, endDateOffset).ShouldBe(12_345L);
+				Sql.DateDiffLong(Sql.DateParts.Nanosecond,  startDateOffset, endDateOffset).ShouldBe(12_345_600L);
+			}
+
 			public class Test
 		{
 			public virtual DateTime? StartDateTime { get; set; }

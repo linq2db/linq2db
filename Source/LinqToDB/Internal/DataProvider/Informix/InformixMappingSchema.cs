@@ -53,27 +53,18 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				return TimeSpan.FromTicks(ticks);
 
 			var days = 0;
-#if NETSTANDARD2_1
-			var parts = raw.AsSpan();
-			var idx   = parts.IndexOf(' ');
-#else
 			var parts = raw;
 			var idx   = parts.IndexOf(" ", StringComparison.InvariantCulture);
-#endif
 			if (idx > 0)
 			{
-				days = int.Parse(parts[0..idx], NumberStyles.None, CultureInfo.InvariantCulture);
-#if NETSTANDARD2_1
-				parts = parts.Slice(idx + 1);
-#else
+				days  = int.Parse(parts.Substring(0, idx), NumberStyles.None, CultureInfo.InvariantCulture);
 				parts = parts.Substring(idx + 1);
-#endif
 			}
 
-			var hours = int.Parse(parts[0..2], NumberStyles.None, CultureInfo.InvariantCulture);
-			var minutes = int.Parse(parts[3..5], NumberStyles.None, CultureInfo.InvariantCulture);
-			var seconds = int.Parse(parts[6..8], NumberStyles.None, CultureInfo.InvariantCulture);
-			var decimalPart = decimal.Parse(parts[8..], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+			var hours      = int.Parse(parts.Substring(0, 2), NumberStyles.None, CultureInfo.InvariantCulture);
+			var minutes    = int.Parse(parts.Substring(3, 2), NumberStyles.None, CultureInfo.InvariantCulture);
+			var seconds    = int.Parse(parts.Substring(6, 2), NumberStyles.None, CultureInfo.InvariantCulture);
+			var decimalPart = decimal.Parse(parts.Substring(8), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
 			var miliseconds = (int)(decimalPart * 1000);
 			ticks = (int)((decimalPart * 1000 - miliseconds) * 10000);
 

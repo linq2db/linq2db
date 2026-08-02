@@ -104,10 +104,8 @@ namespace LinqToDB
 				DateParts.Minute      => (int)(endDate - startDate).Value.TotalMinutes,
 				DateParts.Second      => (int)(endDate - startDate).Value.TotalSeconds,
 				DateParts.Millisecond => (int)(endDate - startDate).Value.TotalMilliseconds,
-#if NET7_0_OR_GREATER
-				DateParts.Microsecond => (int)(endDate - startDate).Value.TotalMicroseconds,
-				DateParts.Nanosecond  => (int)(endDate - startDate).Value.TotalNanoseconds,
-#endif
+				DateParts.Microsecond => (int)((endDate - startDate).Value.Ticks / 10),
+				DateParts.Nanosecond  => (int)((endDate - startDate).Value.Ticks * 100),
 				_                     => throw new InvalidOperationException(),
 			};
 		}
@@ -141,10 +139,8 @@ namespace LinqToDB
 				DateParts.Minute      => (long)(endDate - startDate).Value.TotalMinutes,
 				DateParts.Second      => (long)(endDate - startDate).Value.TotalSeconds,
 				DateParts.Millisecond => (long)(endDate - startDate).Value.TotalMilliseconds,
-#if NET7_0_OR_GREATER
-				DateParts.Microsecond => (long)(endDate - startDate).Value.TotalMicroseconds,
-				DateParts.Nanosecond  => (long)(endDate - startDate).Value.TotalNanoseconds,
-#endif
+				DateParts.Microsecond => (endDate - startDate).Value.Ticks / 10,
+				DateParts.Nanosecond  => (endDate - startDate).Value.Ticks * 100,
 				_ => throw new InvalidOperationException(),
 			};
 		}
