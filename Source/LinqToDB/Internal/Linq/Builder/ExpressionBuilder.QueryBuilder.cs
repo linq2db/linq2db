@@ -78,8 +78,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!_constructedAssignments.TryGetValue(node, out var assignmentPair))
 					{
 						var variable = _generator.AssignToVariable(Expression.Default(node.Type));
-						var assign   = Expression.Assign(variable, Expression.Coalesce(variable, constructed));
+						// Keep a single copy of a potentially large constructor tree while preserving lazy,
+						// branch-specific construction at each use site.
+						var factory  = _generator.AssignToVariable(Expression.Lambda(constructed));
+						var assign   = Expression.Assign(variable, Expression.Coalesce(variable, Expression.Invoke(factory)));
+
 						assignmentPair = (variable, assign);
+
 						_constructedAssignments.Add(node, assignmentPair);
 					}
 
