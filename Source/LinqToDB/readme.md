@@ -27,6 +27,7 @@
   - [Transactions](#transactions)
   - [Merge](#merge)
   - [Window (Analytic) Functions](#window-analytic-functions)
+- [Analyzers](#analyzers)
 - [MiniProfiler](#miniprofiler)
 - [More](#more)
 
@@ -689,6 +690,42 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 ### Window (Analytic) Functions
 
 [Here](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
+
+## Analyzers
+
+Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains.
+
+| Id | Severity | Description |
+|----|----------|-------------|
+| [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+
+Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
+
+```ini
+dotnet_diagnostic.L2DB1001.severity = warning
+```
+
+Every rule shipped by linq2db is in the `LinqToDB` analyzer category, so one line sets them all:
+
+```ini
+dotnet_analyzer_diagnostic.category-LinqToDB.severity = warning
+```
+
+Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from the legacy `ToValue<TR>()` slot (default `false`; when enabled you resolve any resulting type change, e.g. widening `int` to `long`, by hand):
+
+```ini
+linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
+
+Turn all of them off for a project:
+
+```xml
+<PropertyGroup>
+	<EnableLinqToDBAnalyzers>false</EnableLinqToDBAnalyzers>
+</PropertyGroup>
+```
+
+To run the rules against an older linq2db — sizing and applying a migration before upgrading — reference `linq2db.Analyzers` directly; it carries no `linq2db` dependency, so it composes with any version. See its [readme](https://www.nuget.org/packages/linq2db.Analyzers).
 
 ## MiniProfiler
 
