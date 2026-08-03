@@ -145,17 +145,53 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				if (result == null)
 					return null;
 
-				var seconds = factory.Function(decimalType, "Fix", factory.Div(decimalType, remainder, factory.Value(decimalType, (decimal)TimeSpan.TicksPerSecond)));
-				return isDateTimeOffset
-					? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, seconds, Sql.DateParts.Second)
-					: TranslateDateTimeDateAdd(translationContext, translationFlags, result, seconds, Sql.DateParts.Second);
+				// Access DateAdd rounds its increment to a whole number and doesn't support a
+				// millisecond datepart. Add the sub-day remainder using Access' OLE Automation
+				// date representation instead, where the fractional part represents time of day.
+				// Keep the numeric representation in the result because the ODBC driver truncates
+				// a computed Date value to whole seconds; the mapping schema converts it back.
+				var doubleType      = factory.GetDbDataType(typeof(double));
+				var serialDate      = factory.Function(doubleType, "CDbl", result);
+				var serialRemainder = factory.Div(
+					doubleType,
+					factory.Function(doubleType, "CDbl", remainder),
+					factory.Value(doubleType, (double)TimeSpan.TicksPerDay));
+				var serialResult     = factory.Add(doubleType, serialDate, serialRemainder);
+				var dateType         = factory.GetDbDataType(dateTimeExpression);
+				var resultType       = doubleType.WithSystemType(dateType.SystemType);
+				var translatedResult = factory.Expression(resultType, "{0}", serialResult);
+				var nullOperand      = factory.SearchCondition(isOr: true)
+					.Add(factory.IsNullPredicate(dateTimeExpression))
+					.Add(factory.IsNullPredicate(intervalExpression));
+
+				// CDbl(NULL) raises "Invalid use of Null" in Access instead of propagating it.
+				return factory.Condition(nullOperand, factory.Null(resultType), translatedResult);
 			}
 
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
-				var factory      = translationContext.ExpressionFactory;
-				var intervalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0).WithSystemType(typeof(TimeSpan));
-				return factory.Expression(intervalType, "CDec(DATEDIFF('s', {1}, {0})) * 10000000", leftExpression, rightExpression);
+				var factory       = translationContext.ExpressionFactory;
+				var intervalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0).WithSystemType(typeof(TimeSpan));
+				var doubleType    = factory.GetDbDataType(typeof(double));
+				var left          = factory.Function(doubleType, "CDbl", leftExpression);
+				var right         = factory.Function(doubleType, "CDbl", rightExpression);
+				var days          = factory.Sub(doubleType, left, right);
+				var ticks         = factory.Multiply(doubleType, days, (double)TimeSpan.TicksPerDay);
+				var integralTicks = factory.Function(doubleType, "Fix", ticks);
+				var nullOperand    = factory.SearchCondition(isOr: true)
+					.Add(factory.IsNullPredicate(leftExpression))
+					.Add(factory.IsNullPredicate(rightExpression));
+
+				// Date subtraction through the OLE Automation representation retains Access'
+				// sub-second precision; DateDiff("s", ...) discards it before tick scaling. Keep
+				// the expression typed as the decimal tick storage type for materialization, but
+				// don't emit CDec: the ACE/Jet SQL engine doesn't expose that VBA conversion.
+				// CDbl(NULL) raises "Invalid use of Null", so protect nullable operands before
+				// evaluating the tick calculation.
+				return factory.Condition(
+					nullOperand,
+					factory.Null(intervalType),
+					factory.Expression(intervalType, "{0}", integralTicks));
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)

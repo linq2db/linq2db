@@ -240,6 +240,14 @@ namespace Tests.UserTests.Issue4308
 				}
 			});
 
+			var stored = table.Single();
+			stored.StartDateTime.ShouldNotBeNull();
+			stored.EndDateTime.ShouldNotBeNull();
+
+			var storedStart    = stored.StartDateTime.Value;
+			var storedEnd      = stored.EndDateTime.Value;
+			var storedRequired = stored.RequiredDateTime;
+
 			var result = table
 				.Select(row => new
 				{
@@ -257,20 +265,67 @@ namespace Tests.UserTests.Issue4308
 
 			result.Added.ShouldNotBeNull();
 			result.Subtracted.ShouldNotBeNull();
-			result.Added.Value.ShouldBe(start + interval, tolerance);
-			result.AddedRequired.ShouldBe(start + interval, tolerance);
+			result.Added.Value.ShouldBe(storedStart + interval, tolerance);
+			result.AddedRequired.ShouldBe(storedRequired + interval, tolerance);
 			result.AddedNullableDate.ShouldNotBeNull();
 			result.AddedNullableInterval.ShouldNotBeNull();
-			result.AddedNullableDate.Value.ShouldBe(start + interval, tolerance);
-			result.AddedNullableInterval.Value.ShouldBe(start + interval, tolerance);
-			result.Subtracted.Value.ShouldBe(start - interval, tolerance);
+			result.AddedNullableDate.Value.ShouldBe(storedStart + interval, tolerance);
+			result.AddedNullableInterval.Value.ShouldBe(storedRequired + interval, tolerance);
+			result.Subtracted.Value.ShouldBe(storedStart - interval, tolerance);
 			result.Negated.ShouldBe(-interval);
 			result.Difference.ShouldNotBeNull();
-			result.Difference.Value.ShouldBe(interval, tolerance);
+			result.Difference.Value.ShouldBe(storedEnd - storedStart, tolerance);
 			result.DifferenceNullableLeft.ShouldNotBeNull();
 			result.DifferenceNullableRight.ShouldNotBeNull();
-			result.DifferenceNullableLeft.Value.ShouldBe(interval, tolerance);
-			result.DifferenceNullableRight.Value.ShouldBe(TimeSpan.Zero, tolerance);
+			result.DifferenceNullableLeft.Value.ShouldBe(storedEnd - storedRequired, tolerance);
+			result.DifferenceNullableRight.Value.ShouldBe(storedRequired - storedStart, tolerance);
+		}
+
+		[Test]
+		public void TimeSpanOperatorsWithNullOperands(
+			[IncludeDataSources(true, TestProvName.AllAccess)] string configuration)
+		{
+			var start    = new DateTime(2024, 2, 3, 4, 5, 6);
+			var interval = TimeSpan.FromMilliseconds(5);
+
+			using var db = GetDataContext(configuration, CreateMappingSchema(configuration));
+			using var table = db.CreateLocalTable(new[]
+			{
+				new Test
+				{
+					Id               = 1,
+					StartDateTime    = null,
+					EndDateTime      = null,
+					RequiredDateTime = start,
+					PreNotification  = null,
+					RequiredInterval = interval,
+				}
+			});
+
+			var result = table
+				.Select(row => new
+				{
+					Added                   = row.StartDateTime + row.PreNotification,
+					AddedRequired           = row.RequiredDateTime + row.RequiredInterval,
+					AddedNullableDate       = row.StartDateTime + row.RequiredInterval,
+					AddedNullableInterval   = row.RequiredDateTime + row.PreNotification,
+					Subtracted              = row.StartDateTime - row.PreNotification,
+					Negated                 = -row.PreNotification,
+					Difference              = row.EndDateTime - row.StartDateTime,
+					DifferenceNullableLeft  = row.EndDateTime - row.RequiredDateTime,
+					DifferenceNullableRight = row.RequiredDateTime - row.StartDateTime,
+				})
+				.Single();
+
+			result.Added.ShouldBeNull();
+			result.AddedRequired.ShouldBe(start + interval, TimeSpan.FromMilliseconds(1));
+			result.AddedNullableDate.ShouldBeNull();
+			result.AddedNullableInterval.ShouldBeNull();
+			result.Subtracted.ShouldBeNull();
+			result.Negated.ShouldBeNull();
+			result.Difference.ShouldBeNull();
+			result.DifferenceNullableLeft.ShouldBeNull();
+			result.DifferenceNullableRight.ShouldBeNull();
 		}
 
 		[Test]
@@ -320,7 +375,12 @@ namespace Tests.UserTests.Issue4308
 
 			if (configuration.Contains("Access", StringComparison.Ordinal))
 			{
-				sql.ShouldContain("CDec(DATEDIFF");
+				sql.ShouldContain("CDbl(DateAdd(");
+				sql.ShouldContain("Fix((CDbl(");
+				sql.ShouldContain("864000000000");
+				sql.ShouldNotContain("CDate(");
+				sql.ShouldNotContain("CDec(");
+				sql.ShouldNotContain("DATEDIFF");
 				sql.ShouldNotContain("BigInt");
 			}
 			else if (configuration.Contains("Firebird", StringComparison.Ordinal))

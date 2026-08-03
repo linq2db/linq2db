@@ -62,6 +62,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 #pragma warning restore CA1305 // CA1305: Specify IFormatProvider
 			SetConvertExpression((string v) => v == "-1",        conversionType: ConversionType.FromDatabase);
 			SetConvertExpression((decimal v) => TimeSpan.FromTicks(decimal.ToInt64(v)), conversionType: ConversionType.FromDatabase);
+			// Access exposes computed OLE Automation date differences as Double even when
+			// the SQL expression is typed as decimal tick storage by the translator.
+			SetConvertExpression((double v) => TimeSpan.FromTicks(Convert.ToInt64(v)), conversionType: ConversionType.FromDatabase);
+			// Keep computed date arithmetic as its Double serial until materialization so
+			// the ODBC driver doesn't truncate the result to whole seconds.
+			SetConvertExpression((double v) => DateTime.FromOADate(v), conversionType: ConversionType.FromDatabase);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
