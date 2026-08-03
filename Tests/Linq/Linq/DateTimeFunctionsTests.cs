@@ -1986,6 +1986,23 @@ namespace Tests.Linq
 			Sql.DateDiffLong(Sql.DateParts.Nanosecond,  startDateOffset, endDateOffset).ShouldBe(12_345_600);
 		}
 
+		[TestCase(Sql.DateParts.Microsecond)]
+		[TestCase(Sql.DateParts.Nanosecond)]
+		[TestCase(Sql.DateParts.Tick)]
+		public void DateDiffSubsecondOverflowThrows(Sql.DateParts part)
+		{
+			var startDate       = new DateTime(2026, 1, 2, 3, 4, 5);
+			var endDate         = startDate.AddHours(1);
+			var startDateOffset = new DateTimeOffset(startDate, TimeSpan.Zero);
+			var endDateOffset   = new DateTimeOffset(endDate, TimeSpan.Zero);
+
+			Action dateTime       = () => Sql.DateDiff(part, startDate,       endDate);
+			Action dateTimeOffset = () => Sql.DateDiff(part, startDateOffset, endDateOffset);
+
+			dateTime      .ShouldThrow<OverflowException>();
+			dateTimeOffset.ShouldThrow<OverflowException>();
+		}
+
 		[Test]
 		public void SubsecondDateFunctionsSql(
 			[IncludeDataSources(false,

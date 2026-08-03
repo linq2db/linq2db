@@ -650,21 +650,9 @@ namespace LinqToDB
 		[Extension(PN.DuckDB,     "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
-			if (startDate == null || endDate == null)
-				return null;
+			var result = DateDiffLong(part, startDate, endDate);
 
-			return part switch
-			{
-				DateParts.Day         => (int)(endDate - startDate).Value.TotalDays,
-				DateParts.Hour        => (int)(endDate - startDate).Value.TotalHours,
-				DateParts.Minute      => (int)(endDate - startDate).Value.TotalMinutes,
-				DateParts.Second      => (int)(endDate - startDate).Value.TotalSeconds,
-				DateParts.Millisecond => (int)(endDate - startDate).Value.TotalMilliseconds,
-				DateParts.Microsecond => (int)((endDate - startDate).Value.Ticks / 10),
-				DateParts.Nanosecond  => (int)((endDate - startDate).Value.Ticks * 100),
-				DateParts.Tick        => (int)(endDate - startDate).Value.Ticks,
-				_                     => throw new InvalidOperationException(),
-			};
+			return result == null ? null : checked((int)result.Value);
 		}
 
 		/// <summary>
