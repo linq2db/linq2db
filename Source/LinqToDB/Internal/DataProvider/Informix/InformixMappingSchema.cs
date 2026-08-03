@@ -44,21 +44,77 @@ namespace LinqToDB.Internal.DataProvider.Informix
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
+			SetConvertExpression((string value) => StringToTimeSpan(value));
+		}
+
+		private static TimeSpan StringToTimeSpan(string raw)
+		{
+			if (long.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ticks))
+				return TimeSpan.FromTicks(ticks);
+
+			var value = raw.Trim();
+			var sign  = 1;
+
+			if (value.Length > 0 && value[0] is '-' or '+')
+			{
+				sign  = value[0] == '-' ? -1 : 1;
+				value = value.Substring(1).TrimStart();
+			}
+
+			long days         = 0;
+			var  daySeparator = -1;
+			for (var i = 0; i < value.Length; i++)
+			{
+				if (value[i] == ' ')
+				{
+					daySeparator = i;
+					break;
+				}
+			}
+
+			if (daySeparator >= 0)
+			{
+				days  = long.Parse(value.AsSpan(0, daySeparator), NumberStyles.None, CultureInfo.InvariantCulture);
+				value = value.Substring(daySeparator + 1).TrimStart();
+			}
+
+			var timeParts = value.Split(':');
+			if (timeParts.Length != 3)
+				throw new FormatException($"Invalid Informix interval value: '{raw}'.");
+
+			var hours   = long.Parse(timeParts[0], NumberStyles.None, CultureInfo.InvariantCulture);
+			var minutes = long.Parse(timeParts[1], NumberStyles.None, CultureInfo.InvariantCulture);
+			var seconds = decimal.Parse(timeParts[2], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+			var totalTicks =
+				days    * (decimal)TimeSpan.TicksPerDay    +
+				hours   * (decimal)TimeSpan.TicksPerHour   +
+				minutes * (decimal)TimeSpan.TicksPerMinute +
+				seconds * (decimal)TimeSpan.TicksPerSecond;
+
+			return TimeSpan.FromTicks(decimal.ToInt64(decimal.Truncate(totalTicks) * sign));
 		}
 
 		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
 		{
 			// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
 			// and if he needs, it is easy to workaround by adding another one converter to mapping schema
-			var absoluteTs = interval < TimeSpan.Zero ? (TimeSpan.Zero - interval) : interval;
+			var absoluteTicks = interval.Ticks < 0
+				? unchecked((ulong)(-(interval.Ticks + 1))) + 1
+				: (ulong)interval.Ticks;
+			var days      = absoluteTicks / (ulong)TimeSpan.TicksPerDay;
+			var hours     = absoluteTicks / (ulong)TimeSpan.TicksPerHour        % 24;
+			var minutes   = absoluteTicks / (ulong)TimeSpan.TicksPerMinute      % 60;
+			var seconds   = absoluteTicks / (ulong)TimeSpan.TicksPerSecond      % 60;
+			var fractions = absoluteTicks / 100                                % 100000;
+			var dayPart   = (interval.Ticks < 0 ? "-" : string.Empty) + days.ToString(CultureInfo.InvariantCulture);
 			sb.AppendFormat(
 				CultureInfo.InvariantCulture,
 				INTERVAL5_FORMAT,
-				interval.Days,
-				absoluteTs.Hours,
-				absoluteTs.Minutes,
-				absoluteTs.Seconds,
-				(absoluteTs.Ticks / 100) % 100000);
+				dayPart,
+				hours,
+				minutes,
+				seconds,
+				fractions);
 		}
 
 		static readonly Action<StringBuilder,int> _appendConversionAction = AppendConversion;

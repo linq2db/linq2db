@@ -102,6 +102,7 @@ namespace Tests.UserTests.Test3993
 			[IncludeDataSources(false,
 				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
+				TestProvName.AllDB2,
 				TestProvName.AllFirebird3Plus,
 				TestProvName.AllInformix,
 				TestProvName.AllMariaDB,
@@ -110,7 +111,8 @@ namespace Tests.UserTests.Test3993
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSapHana,
 				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer2016Plus,
+				TestProvName.AllSqlCe,
+				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string configuration)
 		{
 			var mappingSchema = new MappingSchema();
@@ -139,6 +141,25 @@ namespace Tests.UserTests.Test3993
 				};
 
 			query.ToSqlQuery().Sql.ShouldNotBeNullOrWhiteSpace();
+		}
+
+		[Test]
+		public void SqlServerLargeIntervalAddSql([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string configuration)
+		{
+			var mappingSchema = new MappingSchema();
+			mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+
+			using var db = GetDataContext(configuration, mappingSchema);
+
+			var sql = db.GetTable<Test>()
+				.Select(row => row.StartDateTime2 + row.PreNotification3)
+				.ToSqlQuery()
+				.Sql;
+
+			sql.ShouldContain("DateAdd(day");
+			sql.ShouldContain("DateAdd(hour");
+			sql.ShouldContain("DateAdd(millisecond");
+			sql.ShouldContain("DateAdd(nanosecond");
 		}
 
 		public enum AisleStatus

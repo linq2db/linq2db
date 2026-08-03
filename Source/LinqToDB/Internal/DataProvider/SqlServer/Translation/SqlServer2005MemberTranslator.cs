@@ -27,6 +27,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServer2005DateFunctionsTranslator : SqlServerDateFunctionsTranslator
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				// SQL Server 2005 has no nanosecond DATEADD part, so it cannot preserve
+				// the 100ns remainder of an arbitrary TimeSpan value.
+				return null;
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				// DATEADD(dd, DATEDIFF(dd, 0, YourDateTimeColumn), 0)

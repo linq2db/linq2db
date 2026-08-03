@@ -69,9 +69,8 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					Sql.DateParts.WeekDay   => "w",
 					Sql.DateParts.Hour      => "h",
 					Sql.DateParts.Minute    => "n",
-					Sql.DateParts.Second      => "s",
-					Sql.DateParts.Millisecond => "s",
-					_                         => null,
+					Sql.DateParts.Second    => "s",
+					_                       => null,
 				};
 
 				if (partStr == null)
@@ -107,9 +106,6 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				if (partStr == null)
 					return null;
-
-				if (datepart == Sql.DateParts.Millisecond)
-					increment = factory.Div(factory.GetDbDataType(increment), increment, 1000);
 
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", factory.Value(partStr), increment, dateTimeExpression);
 				return resultExpression;

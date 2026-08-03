@@ -260,6 +260,18 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 				return resultExpression;
 			}
 
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+
+				return factory.Expression(
+					intervalType,
+					"(BIGINT(DAYS({0}) - DAYS({1})) * 86400 + (MIDNIGHT_SECONDS({0}) - MIDNIGHT_SECONDS({1}))) * 10000000 + (MICROSECOND({0}) - MICROSECOND({1})) * 10",
+					leftExpression,
+					rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var dateFunction = translationContext.ExpressionFactory.Function(QueryHelper.GetDbDataType(dateExpression, translationContext.MappingSchema), "DATE", dateExpression);

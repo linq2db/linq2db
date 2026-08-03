@@ -138,6 +138,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Length ?? 5})");
 					return;
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
+				case DataType.Interval   :
+					StringBuilder.Append("INTERVAL DAY(9) TO FRACTION(5)");
+					return;
 				case DataType.SByte      :
 				case DataType.Byte       : StringBuilder.Append("SmallInt");                  return;
 				case DataType.SmallMoney : StringBuilder.Append("Decimal(10, 4)");            return;

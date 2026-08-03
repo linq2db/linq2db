@@ -111,11 +111,62 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return resultExpression;
 			}
 
+			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(intervalExpression);
+
+				if (intervalType.DataType != DataType.Int64)
+					return base.TranslateDateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
+
+				return TranslateInt64DateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
+			}
+
+			private protected ISqlExpression? TranslateInt64DateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+				var ticks     = factory.Cast(intervalExpression, longType, true);
+
+				if (isSubtract)
+					ticks = factory.Negate(longType, ticks);
+
+				var dayRemainder         = factory.Mod(ticks, TimeSpan.TicksPerDay);
+				var days                 = factory.Div(longType, factory.Sub(longType, ticks, dayRemainder), TimeSpan.TicksPerDay);
+				var hourRemainder        = factory.Mod(dayRemainder, TimeSpan.TicksPerHour);
+				var hours                = factory.Div(longType, factory.Sub(longType, dayRemainder, hourRemainder), TimeSpan.TicksPerHour);
+				var millisecondRemainder = factory.Mod(hourRemainder, TimeSpan.TicksPerMillisecond);
+				var milliseconds         = factory.Div(longType, factory.Sub(longType, hourRemainder, millisecondRemainder), TimeSpan.TicksPerMillisecond);
+
+				ISqlExpression? Add(ISqlExpression date, ISqlExpression increment, Sql.DateParts part)
+				{
+					return isDateTimeOffset
+						? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, date, increment, part)
+						: TranslateDateTimeDateAdd(translationContext, translationFlags, date, increment, part);
+				}
+
+				var result = Add(dateTimeExpression, days, Sql.DateParts.Day);
+				if (result == null)
+					return null;
+
+				result = Add(result, hours, Sql.DateParts.Hour);
+				if (result == null)
+					return null;
+
+				result = Add(result, milliseconds, Sql.DateParts.Millisecond);
+				if (result == null)
+					return null;
+
+				// DATEADD accepts only Int32 increments before SQL Server 2025. At this point the
+				// remaining value is less than one millisecond, so ticks * 100 always fits.
+				return Add(result, millisecondRemainder, Sql.DateParts.Tick);
+			}
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "DATEDIFF_BIG(nanosecond, {1}, {0}) / 100", leftExpression, rightExpression);
+				return factory.Expression(intervalType, "CAST(DATEDIFF(millisecond, {1}, {0}) AS BIGINT) * 10000", leftExpression, rightExpression);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(

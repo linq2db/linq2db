@@ -28,6 +28,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServer2008DateFunctionsTranslator : SqlServer2005DateFunctionsTranslator
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var intervalType = translationContext.ExpressionFactory.GetDbDataType(intervalExpression);
+
+				if (intervalType.DataType != DataType.Int64)
+					return null;
+
+				return TranslateInt64DateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory    = translationContext.ExpressionFactory;

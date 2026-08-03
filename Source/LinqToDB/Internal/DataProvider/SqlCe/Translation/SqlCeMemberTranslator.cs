@@ -211,6 +211,14 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				return resultExpression;
 			}
 
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+
+				return factory.Expression(intervalType, "CAST(DATEDIFF(millisecond, {1}, {0}) AS BIGINT) * 10000", leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				// CAST(CONVERT(nvarchar(10), your_datetime_column, 101) AS datetime)
