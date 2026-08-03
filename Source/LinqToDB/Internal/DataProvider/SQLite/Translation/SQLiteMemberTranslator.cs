@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "CAST(ROUND((julianday({0}) - julianday({1})) * 864000000000) AS INTEGER)", leftExpression, rightExpression);
+				return factory.Expression(intervalType, "CAST(ROUND((julianday({0}) - julianday({1})) * 86400000) AS INTEGER) * 10000", leftExpression, rightExpression);
 			}
 
 			const string StrFTimeFuncName = "strftime";
