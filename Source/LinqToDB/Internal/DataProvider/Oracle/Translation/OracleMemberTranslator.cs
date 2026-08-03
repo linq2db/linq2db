@@ -57,6 +57,59 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var resultTypeDb = factory.GetDbDataType(resultType);
+				const string totalSeconds = "(EXTRACT(DAY FROM {0}) * 86400 + EXTRACT(HOUR FROM {0}) * 3600 + EXTRACT(MINUTE FROM {0}) * 60 + EXTRACT(SECOND FROM {0}))";
+
+				var expression = part switch
+				{
+					TimeSpanPart.Days              => $"TRUNC(({totalSeconds}) / 86400)",
+					TimeSpanPart.TotalDays         => $"({totalSeconds}) / 86400",
+					TimeSpanPart.Hours             => $"MOD(TRUNC(({totalSeconds}) / 3600), 24)",
+					TimeSpanPart.TotalHours        => $"({totalSeconds}) / 3600",
+					TimeSpanPart.Minutes           => $"MOD(TRUNC(({totalSeconds}) / 60), 60)",
+					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60",
+					TimeSpanPart.Seconds           => $"MOD(TRUNC({totalSeconds}), 60)",
+					TimeSpanPart.TotalSeconds      => totalSeconds,
+					TimeSpanPart.Milliseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000), 1000)",
+					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000",
+#if NET7_0_OR_GREATER
+					TimeSpanPart.Microseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000000), 1000)",
+					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000",
+					TimeSpanPart.Nanoseconds       => $"MOD(TRUNC(({totalSeconds}) * 1000000000), 1000)",
+					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000",
+#endif
+					TimeSpanPart.Ticks             => $"TRUNC(({totalSeconds}) * 10000000)",
+					_                              => null,
+				};
+
+				return expression == null ? null : factory.Expression(resultTypeDb, expression, timeSpanExpression);
+			}
+
+			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Negate(factory.GetDbDataType(timeSpanExpression), timeSpanExpression);
+			}
+
+			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var dateType = factory.GetDbDataType(dateTimeExpression);
+				return isSubtract
+					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
+					: factory.Add(dateType, dateTimeExpression, intervalExpression);
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+				return factory.Expression(intervalType, "CAST({0} AS TIMESTAMP) - CAST({1} AS TIMESTAMP)", leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -92,7 +145,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					case Sql.DateParts.Hour:        extractStr = "HOUR"; break;
 					case Sql.DateParts.Minute:      extractStr = "MINUTE"; break;
 					case Sql.DateParts.Second:      extractStr = "SECOND"; break;
-					case Sql.DateParts.Millisecond: partStr    = "FF"; break;
+					case Sql.DateParts.Millisecond: partStr    = "FF3"; break;
+					case Sql.DateParts.Microsecond: partStr    = "FF6"; break;
+					case Sql.DateParts.Tick:        partStr    = "FF7"; break;
+					case Sql.DateParts.Nanosecond:  partStr    = "FF9"; break;
 					default:
 						return null;
 				}
@@ -109,10 +165,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				{
 					resultExpression = factory.Function(intDataType, "TO_NUMBER", factory.Function(dataTimeType, "TO_CHAR", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(partStr)));
 
-					if (datepart == Sql.DateParts.Millisecond)
-					{
-						resultExpression = factory.Div(intDataType, resultExpression, factory.Value(intDataType, 1000));
-					}
 				}
 					
 				return resultExpression;
@@ -142,6 +194,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					case Sql.DateParts.Minute:      expStr = "INTERVAL '1' MINUTE"; break;
 					case Sql.DateParts.Second:      expStr = "INTERVAL '1' SECOND"; break;
 					case Sql.DateParts.Millisecond: expStr = "INTERVAL '0.001' SECOND"; break;
+					case Sql.DateParts.Microsecond: expStr = "INTERVAL '0.000001' SECOND"; break;
+					case Sql.DateParts.Tick:        expStr = "INTERVAL '0.0000001' SECOND"; break;
+					case Sql.DateParts.Nanosecond:  expStr = "INTERVAL '0.000000001' SECOND"; break;
 					default:
 						return null;
 				}

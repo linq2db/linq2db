@@ -40,6 +40,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Expression(intervalType, "CAST(ROUND((julianday({0}) - julianday({1})) * 864000000000) AS INTEGER)", leftExpression, rightExpression);
+			}
+
 			const string StrFTimeFuncName = "strftime";
 			const string DateFormat = "%Y-%m-%d %H:%M:%f";
 			const string TimeFormat = "%H:%M:%f";

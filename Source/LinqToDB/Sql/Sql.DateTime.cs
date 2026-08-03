@@ -64,11 +64,28 @@ namespace LinqToDB
 			Minute      =  8,
 			Second      =  9,
 			Millisecond = 10,
+			/// <summary>Microseconds within the current second.</summary>
+			Microsecond = 11,
+			/// <summary>Nanoseconds within the current second.</summary>
+			Nanosecond  = 12,
+			/// <summary>100-nanosecond ticks within the current second.</summary>
+			Tick        = 13,
 		}
 
 		#region DatePart
 
 		public static int? DatePart([SqlQueryDependent] DateParts part, [ExprParameter] DateTime? date)
+		{
+			return (int?)DatePartLong(part, date);
+		}
+
+		/// <summary>
+		/// Returns the requested component of <paramref name="date"/> without narrowing the result to 32 bits.
+		/// </summary>
+		/// <param name="part">Date component to return.</param>
+		/// <param name="date">Date value.</param>
+		/// <returns>Requested date component, or <see langword="null"/> when <paramref name="date"/> is <see langword="null"/>.</returns>
+		public static long? DatePartLong([SqlQueryDependent] DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
 				return null;
@@ -86,6 +103,9 @@ namespace LinqToDB
 				DateParts.Minute        => date.Value.Minute,
 				DateParts.Second        => date.Value.Second,
 				DateParts.Millisecond   => date.Value.Millisecond,
+				DateParts.Microsecond   => date.Value.Ticks % TimeSpan.TicksPerSecond / 10,
+				DateParts.Nanosecond    => date.Value.Ticks % TimeSpan.TicksPerSecond * 100,
+				DateParts.Tick          => date.Value.Ticks % TimeSpan.TicksPerSecond,
 				_                           => throw new InvalidOperationException(),
 			};
 		}
@@ -110,6 +130,13 @@ namespace LinqToDB
 				DateParts.Minute        => date.Value.AddMinutes(number.Value),
 				DateParts.Second        => date.Value.AddSeconds(number.Value),
 				DateParts.Millisecond   => date.Value.AddMilliseconds(number.Value),
+#if NET7_0_OR_GREATER
+				DateParts.Microsecond   => date.Value.AddMicroseconds(number.Value),
+#else
+				DateParts.Microsecond   => date.Value.AddTicks((long)(number.Value * 10)),
+#endif
+				DateParts.Nanosecond    => date.Value.AddTicks((long)(number.Value / 100)),
+				DateParts.Tick          => date.Value.AddTicks((long)number.Value),
 				_                       => throw new InvalidOperationException(),
 			};
 		}
@@ -120,6 +147,11 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilder : IExtensionCallBuilder
 		{
+			public static DbDataType GetResultType(ISqlExtensionBuilder builder)
+			{
+				return builder.Mapping.GetDbDataType(string.Equals(builder.Member.Name, nameof(DateDiffLong), StringComparison.Ordinal) ? typeof(long) : typeof(int));
+			}
+
 			public static string DatePartToStr(DateParts part)
 			{
 				return part switch
@@ -135,6 +167,9 @@ namespace LinqToDB
 					DateParts.Minute      => "minute",
 					DateParts.Second      => "second",
 					DateParts.Millisecond => "millisecond",
+					DateParts.Microsecond => "microsecond",
+					DateParts.Nanosecond  => "nanosecond",
+					DateParts.Tick        => "nanosecond",
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 			}
@@ -151,9 +186,17 @@ namespace LinqToDB
 					return;
 				}
 
-				var partSql   = new SqlFragment(DatePartToStr(part));
+				var isMySql  = string.Equals(builder.Expression, "TIMESTAMPDIFF", StringComparison.OrdinalIgnoreCase);
+				var sqlPart  = isMySql && part is DateParts.Nanosecond or DateParts.Tick ? DateParts.Microsecond : part;
+				var partSql  = new SqlFragment(DatePartToStr(sqlPart));
+				var result   = (ISqlExpression)new SqlFunction(GetResultType(builder), builder.Expression, partSql, startdate, endDate);
 
-				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(int)), builder.Expression, partSql, startdate, endDate);
+				if (part == DateParts.Tick)
+					result = isMySql ? builder.Mul(result, 10) : builder.Div(result, 100);
+				else if (part == DateParts.Nanosecond && isMySql)
+					result = builder.Mul(result, 1000);
+
+				builder.ResultExpression = result;
 			}
 		}
 
@@ -263,12 +306,18 @@ namespace LinqToDB
 					DateParts.Minute      => ("Seconds_Between",    60, builder.Mapping.GetDbDataType(typeof(long))),
 					DateParts.Second      => ("Seconds_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
 					DateParts.Millisecond => ("Nano100_Between", 10000, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Microsecond => ("Nano100_Between",    10, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Nanosecond  => ("Nano100_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Tick        => ("Nano100_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
 					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 
 				ISqlExpression func = new SqlFunction(dbType, funcName, startdate, endDate);
 				if (divider != 1)
 					func = builder.Div(func, divider);
+
+				if (part == DateParts.Nanosecond)
+					func = builder.Mul(func, 100);
 
 				builder.ResultExpression = func;
 			}
@@ -344,9 +393,12 @@ namespace LinqToDB
 					DateParts.Minute      => " * 1440)",
 					DateParts.Second      => " * 86400)",
 					DateParts.Millisecond => " * 86400000)",
+					DateParts.Microsecond => " * 86400000000)",
+					DateParts.Nanosecond  => " * 86400000000000)",
+					DateParts.Tick        => " * 864000000000)",
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, startDate, endDate );
+				builder.ResultExpression = new SqlExpression(DateDiffBuilder.GetResultType(builder), expStr, startDate, endDate );
 			}
 		}
 
@@ -371,6 +423,9 @@ namespace LinqToDB
 					DateParts.Minute      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60"                                                                          , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
 					DateParts.Second      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))"                                                                               , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Primary),
 					DateParts.Millisecond => ("ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)"                                                                 , builder.Mapping.GetDbDataType(typeof(int))    , Precedence.Multiplicative),
+					DateParts.Microsecond => ("TRUNC(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000000)"                                                              , DateDiffBuilder.GetResultType(builder)        , Precedence.Multiplicative),
+					DateParts.Nanosecond  => ("TRUNC(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000000000)"                                                           , DateDiffBuilder.GetResultType(builder)        , Precedence.Multiplicative),
+					DateParts.Tick        => ("TRUNC(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 10000000)"                                                             , DateDiffBuilder.GetResultType(builder)        , Precedence.Multiplicative),
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 
@@ -450,9 +505,21 @@ namespace LinqToDB
 					+ " + 60 * (EXTRACT(MINUTE FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
 					+ " + 60 * (EXTRACT(HOUR FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
 					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))", Precedence.Multiplicative),
+					DateParts.Microsecond => ("1000000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(MINUTE FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(HOUR FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))", Precedence.Multiplicative),
+					DateParts.Nanosecond => ("1000000000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(MINUTE FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(HOUR FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))", Precedence.Multiplicative),
+					DateParts.Tick => ("10000000 * (EXTRACT(SECOND FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(MINUTE FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 60 * (EXTRACT(HOUR FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))"
+					+ " + 24 * EXTRACT(DAY FROM CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP)))))", Precedence.Multiplicative),
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
-				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, precedence, startDate, endDate);
+				builder.ResultExpression = new SqlExpression(DateDiffBuilder.GetResultType(builder), expStr, precedence, startDate, endDate);
 			}
 		}
 
@@ -489,6 +556,26 @@ namespace LinqToDB
 							Precedence.Subtraction,
 							startDate,
 							endDate);
+						break;
+
+					case DateParts.Microsecond:
+						builder.ResultExpression = new SqlExpression(
+							DateDiffBuilder.GetResultType(builder),
+							"toUnixTimestamp64Micro(toDateTime64({1}, 6)) - toUnixTimestamp64Micro(toDateTime64({0}, 6))",
+							Precedence.Subtraction,
+							startDate,
+							endDate);
+						break;
+
+					case DateParts.Nanosecond:
+					case DateParts.Tick:
+						var nanos = new SqlExpression(
+							DateDiffBuilder.GetResultType(builder),
+							"toUnixTimestamp64Nano(toDateTime64({1}, 9)) - toUnixTimestamp64Nano(toDateTime64({0}, 9))",
+							Precedence.Subtraction,
+							startDate,
+							endDate);
+						builder.ResultExpression = part == DateParts.Tick ? builder.Div(nanos, 100) : nanos;
 						break;
 
 					default:
@@ -573,6 +660,55 @@ namespace LinqToDB
 				DateParts.Minute      => (int)(endDate - startDate).Value.TotalMinutes,
 				DateParts.Second      => (int)(endDate - startDate).Value.TotalSeconds,
 				DateParts.Millisecond => (int)(endDate - startDate).Value.TotalMilliseconds,
+				DateParts.Microsecond => (int)((endDate - startDate).Value.Ticks / 10),
+				DateParts.Nanosecond  => (int)((endDate - startDate).Value.Ticks * 100),
+				DateParts.Tick        => (int)(endDate - startDate).Value.Ticks,
+				_                     => throw new InvalidOperationException(),
+			};
+		}
+
+		/// <summary>
+		/// Returns the number of requested boundaries crossed between two date values using a 64-bit result.
+		/// </summary>
+		/// <param name="part">Date component used to measure the difference.</param>
+		/// <param name="startDate">Start date.</param>
+		/// <param name="endDate">End date.</param>
+		/// <returns>The difference, or <see langword="null"/> when either argument is <see langword="null"/>.</returns>
+		[CLSCompliant(false)]
+		[Extension(                  "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer,     "DateDiff_Big",  BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2005, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2008, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2012, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2014, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.MySql,         "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.DB2,           "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Extension(PN.SapHana,       "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Extension(PN.Firebird25,    "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird3,     "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird,      "",              BuilderType = typeof(DateDiffBuilderFirebird))]
+		[Extension(PN.SQLite,        "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Extension(PN.Oracle,        "",              BuilderType = typeof(DateDiffBuilderOracle))]
+		[Extension(PN.PostgreSQL,    "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Extension(PN.Access,        "",              BuilderType = typeof(DateDiffBuilderAccess))]
+		[Extension(PN.ClickHouse,    "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
+		[Extension(PN.Ydb,           "",              BuilderType = typeof(DateDiffBuilderYdb))]
+		[Extension(PN.DuckDB,        "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		public static long? DateDiffLong(DateParts part, DateTime? startDate, DateTime? endDate)
+		{
+			if (startDate == null || endDate == null)
+				return null;
+
+			return part switch
+			{
+				DateParts.Day         => (long)(endDate - startDate).Value.TotalDays,
+				DateParts.Hour        => (long)(endDate - startDate).Value.TotalHours,
+				DateParts.Minute      => (long)(endDate - startDate).Value.TotalMinutes,
+				DateParts.Second      => (long)(endDate - startDate).Value.TotalSeconds,
+				DateParts.Millisecond => (long)(endDate - startDate).Value.TotalMilliseconds,
+				DateParts.Microsecond => (endDate - startDate).Value.Ticks / 10,
+				DateParts.Nanosecond  => (endDate - startDate).Value.Ticks * 100,
+				DateParts.Tick        => (endDate - startDate).Value.Ticks,
 				_                     => throw new InvalidOperationException(),
 			};
 		}

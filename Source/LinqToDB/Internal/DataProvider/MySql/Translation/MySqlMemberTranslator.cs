@@ -72,6 +72,44 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var resultTypeDb = factory.GetDbDataType(resultType);
+				const string totalSeconds = "TIME_TO_SEC({0})";
+
+				var expression = part switch
+				{
+					TimeSpanPart.Days              => $"TRUNCATE(({totalSeconds}) / 86400, 0)",
+					TimeSpanPart.TotalDays         => $"({totalSeconds}) / 86400.0",
+					TimeSpanPart.Hours             => $"MOD(TRUNCATE(({totalSeconds}) / 3600, 0), 24)",
+					TimeSpanPart.TotalHours        => $"({totalSeconds}) / 3600.0",
+					TimeSpanPart.Minutes           => $"MOD(TRUNCATE(({totalSeconds}) / 60, 0), 60)",
+					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60.0",
+					TimeSpanPart.Seconds           => $"MOD(TRUNCATE({totalSeconds}, 0), 60)",
+					TimeSpanPart.TotalSeconds      => totalSeconds,
+					TimeSpanPart.Milliseconds      => "TRUNCATE(MICROSECOND({0}) / 1000, 0)",
+					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000.0",
+#if NET7_0_OR_GREATER
+					TimeSpanPart.Microseconds      => "MOD(MICROSECOND({0}), 1000)",
+					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000.0",
+					TimeSpanPart.Nanoseconds       => "MOD(MICROSECOND({0}) * 1000, 1000)",
+					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000.0",
+#endif
+					TimeSpanPart.Ticks             => $"TRUNCATE(({totalSeconds}) * 10000000, 0)",
+					_                              => null,
+				};
+
+				return expression == null ? null : factory.Expression(resultTypeDb, expression, timeSpanExpression);
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Expression(intervalType, "TIMESTAMPDIFF(MICROSECOND, {1}, {0}) * 10", leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory     = translationContext.ExpressionFactory;
@@ -111,6 +149,12 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 						var microsecondFunc = factory.Div(intDataType, factory.Function(intDataType, "Microsecond", dateTimeExpression), 1000);
 						return microsecondFunc;
 					}
+					case Sql.DateParts.Microsecond:
+						return factory.Function(intDataType, "Microsecond", dateTimeExpression);
+					case Sql.DateParts.Tick:
+						return factory.Multiply(intDataType, factory.Function(intDataType, "Microsecond", dateTimeExpression), 10);
+					case Sql.DateParts.Nanosecond:
+						return factory.Multiply(intDataType, factory.Function(intDataType, "Microsecond", dateTimeExpression), 1000);
 					default:
 						return null;
 				}
@@ -147,6 +191,15 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 					case Sql.DateParts.Minute:      expStr = "Interval {0} Minute"; break;
 					case Sql.DateParts.Second:      expStr = "Interval {0} Second"; break;
 					case Sql.DateParts.Millisecond: expStr = "Interval {0} Millisecond"; break;
+					case Sql.DateParts.Microsecond: expStr = "Interval {0} Microsecond"; break;
+					case Sql.DateParts.Tick:
+						increment = factory.Div(factory.GetDbDataType(increment), increment, 10);
+						expStr = "Interval {0} Microsecond";
+						break;
+					case Sql.DateParts.Nanosecond:
+						increment = factory.Div(factory.GetDbDataType(increment), increment, 1000);
+						expStr = "Interval {0} Microsecond";
+						break;
 					default:
 						return null;
 				}

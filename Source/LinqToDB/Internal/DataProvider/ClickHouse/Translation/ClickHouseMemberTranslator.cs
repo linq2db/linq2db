@@ -82,6 +82,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					Sql.DateParts.Second      => factory.Function(intDataType, "toSecond", dateTimeExpression),
 					Sql.DateParts.WeekDay     => factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1))),
 					Sql.DateParts.Millisecond => factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", dateTimeExpression), 1000),
+					Sql.DateParts.Microsecond => factory.Mod(factory.Function(longDataType, "toUnixTimestamp64Micro", dateTimeExpression), 1_000_000),
+					Sql.DateParts.Tick        => factory.Mod(factory.Div(longDataType, factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), 100), 10_000_000),
+					Sql.DateParts.Nanosecond  => factory.Mod(factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), 1_000_000_000),
 					_                         => null,
 				};
 			}
@@ -111,12 +114,22 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					case Sql.DateParts.Minute:  function = "addMinutes"; break;
 					case Sql.DateParts.Second:  function = "addSeconds"; break;
 					case Sql.DateParts.Millisecond:
+					case Sql.DateParts.Microsecond:
+					case Sql.DateParts.Tick:
+					case Sql.DateParts.Nanosecond:
 					{
+						var multiplier = datepart switch
+						{
+							Sql.DateParts.Millisecond => 1_000_000L,
+							Sql.DateParts.Microsecond => 1_000L,
+							Sql.DateParts.Tick        => 100L,
+							_                         => 1L,
+						};
 						var resultExpression = factory.Function(dateType, "fromUnixTimestamp64Nano",
 							factory.Add(
 								longDataType,
 								factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
-								factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, 1000000), longDataType)
+								factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, multiplier), longDataType)
 							)
 						);
 
@@ -128,6 +141,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 				var result = factory.Function(dateType, function, dateTimeExpression, increment);
 				return result;
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Expression(intervalType, "toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 9)) - toUnixTimestamp64Nano(toDateTime64({1}, 9))) / 100)", leftExpression, rightExpression);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(

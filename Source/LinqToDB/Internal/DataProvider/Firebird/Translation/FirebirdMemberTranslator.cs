@@ -64,6 +64,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class FirebirdDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Expression(intervalType, "CAST(DATEDIFF(millisecond, {1}, {0}) * 10000 AS BIGINT)", leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory          = translationContext.ExpressionFactory;

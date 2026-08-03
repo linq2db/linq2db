@@ -10,10 +10,32 @@ namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public abstract class DateFunctionsTranslatorBase : MemberTranslatorBase
 	{
+		private protected enum TimeSpanPart
+		{
+			Days,
+			TotalDays,
+			Hours,
+			TotalHours,
+			Minutes,
+			TotalMinutes,
+			Seconds,
+			TotalSeconds,
+			Milliseconds,
+			TotalMilliseconds,
+#if NET7_0_OR_GREATER
+			Microseconds,
+			TotalMicroseconds,
+			Nanoseconds,
+			TotalNanoseconds,
+#endif
+			Ticks,
+		}
+
 		protected DateFunctionsTranslatorBase()
 		{
 			RegisterDateTime();
 			RegisterDateTimeOffset();
+			RegisterTimeSpan();
 
 #if SUPPORTS_DATEONLY
 			RegisterDateOnly();
@@ -21,6 +43,55 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod((int? year, int? month, int? day) => Sql.MakeDateTime(year, month, day), TranslateMakeDateTime);
 			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second) => Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTime);
+		}
+
+		void RegisterTimeSpan()
+		{
+			Registration.RegisterMember((TimeSpan ts) => ts.Days,              (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Days));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalDays,         (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.TotalDays));
+			Registration.RegisterMember((TimeSpan ts) => ts.Hours,             (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Hours));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalHours,        (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.TotalHours));
+			Registration.RegisterMember((TimeSpan ts) => ts.Minutes,           (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Minutes));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMinutes,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.TotalMinutes));
+			Registration.RegisterMember((TimeSpan ts) => ts.Seconds,           (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Seconds));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalSeconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.TotalSeconds));
+			Registration.RegisterMember((TimeSpan ts) => ts.Milliseconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Milliseconds));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMilliseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.TotalMilliseconds));
+#if NET7_0_OR_GREATER
+			Registration.RegisterMember((TimeSpan ts) => ts.Microseconds,       (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Microseconds));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMicroseconds,  (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.TotalMicroseconds));
+			Registration.RegisterMember((TimeSpan ts) => ts.Nanoseconds,        (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Nanoseconds));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalNanoseconds,   (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.TotalNanoseconds));
+#endif
+			Registration.RegisterMember((TimeSpan ts) => ts.Ticks,             (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, TimeSpanPart.Ticks));
+
+			Registration.RegisterUnary((TimeSpan ts) => -ts, TranslateTimeSpanNegate);
+			Registration.RegisterUnary((TimeSpan? ts) => -ts, TranslateTimeSpanNegate);
+
+			Registration.RegisterBinary((DateTime dt, TimeSpan ts) => dt + ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTime dt, TimeSpan? ts) => dt + ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTime? dt, TimeSpan ts) => dt + ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTime? dt, TimeSpan? ts) => dt + ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTime dt, TimeSpan ts) => dt - ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTime dt, TimeSpan? ts) => dt - ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTime? dt, TimeSpan ts) => dt - ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTime? dt, TimeSpan? ts) => dt - ts, TranslateDateTimeIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset dt, TimeSpan ts) => dt + ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset dt, TimeSpan? ts) => dt + ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset? dt, TimeSpan ts) => dt + ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset? dt, TimeSpan? ts) => dt + ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset dt, TimeSpan ts) => dt - ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset dt, TimeSpan? ts) => dt - ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset? dt, TimeSpan ts) => dt - ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTimeOffset? dt, TimeSpan? ts) => dt - ts, TranslateDateTimeOffsetIntervalAdd);
+			Registration.RegisterBinary((DateTime left, DateTime right) => left - right, TranslateDateTimeIntervalDifference);
+			Registration.RegisterBinary((DateTime left, DateTime? right) => left - right, TranslateDateTimeIntervalDifference);
+			Registration.RegisterBinary((DateTime? left, DateTime right) => left - right, TranslateDateTimeIntervalDifference);
+			Registration.RegisterBinary((DateTime? left, DateTime? right) => left - right, TranslateDateTimeIntervalDifference);
+			Registration.RegisterBinary((DateTimeOffset left, DateTimeOffset right) => left - right, TranslateDateTimeOffsetIntervalDifference);
+			Registration.RegisterBinary((DateTimeOffset left, DateTimeOffset? right) => left - right, TranslateDateTimeOffsetIntervalDifference);
+			Registration.RegisterBinary((DateTimeOffset? left, DateTimeOffset right) => left - right, TranslateDateTimeOffsetIntervalDifference);
+			Registration.RegisterBinary((DateTimeOffset? left, DateTimeOffset? right) => left - right, TranslateDateTimeOffsetIntervalDifference);
 		}
 
 		void RegisterDateTime()
@@ -59,6 +130,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((DateTime dt) => dt.AddMilliseconds(0), (tc, mc, tf) => TranslateDateTimeAddMember(tc, mc, tf, Sql.DateParts.Millisecond));
 
 			Registration.RegisterMethod((DateTime dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeSqlDatepart);
+			Registration.RegisterMethod((DateTime dt) => Sql.DatePartLong(Sql.DateParts.Year, dt), TranslateDateTimeSqlDatepart);
 
 			Registration.RegisterMethod(() => Sql.GetDate(),           TranslateSqlGetDate);
 			Registration.RegisterMember(() => Sql.CurrentTimestamp,    TranslateServerNow);
@@ -97,6 +169,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((DateTimeOffset dt) => dt.AddMilliseconds(0), (tc, mc, tf) => TranslateDateTimeOffsetAddMember(tc, mc, tf, Sql.DateParts.Millisecond));
 
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeOffsetSqlDatepart);
+			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DatePartLong(Sql.DateParts.Year, dt), TranslateDateTimeOffsetSqlDatepart);
 		}
 
 #if SUPPORTS_DATEONLY
@@ -339,6 +412,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (converted == null)
 				return null;
 
+			if (methodCall.Type.UnwrapNullableType() == typeof(long))
+				converted = translationContext.ExpressionFactory.Cast(converted, translationContext.ExpressionFactory.GetDbDataType(methodCall.Type));
+
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
@@ -357,6 +433,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var converted = TranslateDateTimeOffsetDatePart(translationContext, translationFlags, datePlaceholder.Sql, datePart);
 			if (converted == null)
 				return null;
+
+			if (methodCall.Type.UnwrapNullableType() == typeof(long))
+				converted = translationContext.ExpressionFactory.Cast(converted, translationContext.ExpressionFactory.GetDbDataType(methodCall.Type));
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
@@ -647,7 +726,249 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
+		Expression? TranslateTimeSpanMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, TimeSpanPart part)
+		{
+			var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			var converted = TranslateTimeSpanPart(translationContext, translationFlags, placeholder.Sql, part, memberExpression.Type);
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, memberExpression);
+		}
+
+		Expression? TranslateTimeSpanNegate(ITranslationContext translationContext, UnaryExpression unaryExpression, TranslationFlags translationFlags)
+		{
+			var placeholder = TranslateNoRequiredExpression(translationContext, unaryExpression.Operand, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			var converted = TranslateTimeSpanNegate(translationContext, translationFlags, placeholder.Sql);
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, unaryExpression);
+		}
+
+		Expression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			return TranslateDateTimeIntervalAdd(translationContext, binaryExpression, translationFlags, false);
+		}
+
+		Expression? TranslateDateTimeOffsetIntervalAdd(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			return TranslateDateTimeIntervalAdd(translationContext, binaryExpression, translationFlags, true);
+		}
+
+		Expression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags, bool isDateTimeOffset)
+		{
+			var datePlaceholder = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags, false);
+			if (datePlaceholder == null)
+				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			var intervalPlaceholder = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, false);
+			if (intervalPlaceholder == null)
+				return null;
+
+			if (datePlaceholder.Sql is SqlParameter && intervalPlaceholder.Sql is SqlParameter)
+				return null;
+
+			var converted = TranslateDateTimeIntervalAdd(
+				translationContext,
+				translationFlags,
+				datePlaceholder.Sql,
+				intervalPlaceholder.Sql,
+				binaryExpression.NodeType == ExpressionType.Subtract,
+				isDateTimeOffset);
+
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, binaryExpression);
+		}
+
+		Expression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			return TranslateDateTimeIntervalDifference(translationContext, binaryExpression, translationFlags, false);
+		}
+
+		Expression? TranslateDateTimeOffsetIntervalDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			return TranslateDateTimeIntervalDifference(translationContext, binaryExpression, translationFlags, true);
+		}
+
+		Expression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags, bool isDateTimeOffset)
+		{
+			var leftPlaceholder = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags, false);
+			if (leftPlaceholder == null)
+				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			var rightPlaceholder = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, false);
+			if (rightPlaceholder == null)
+				return null;
+
+			if (leftPlaceholder.Sql is SqlParameter && rightPlaceholder.Sql is SqlParameter)
+				return null;
+
+			var converted = TranslateDateTimeIntervalDifference(
+				translationContext,
+				translationFlags,
+				leftPlaceholder.Sql,
+				rightPlaceholder.Sql,
+				isDateTimeOffset);
+
+			if (converted == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, binaryExpression);
+		}
+
 		#region Methods to override
+
+		private protected virtual ISqlExpression? TranslateTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+		{
+			var factory      = translationContext.ExpressionFactory;
+			var expressionType = factory.GetDbDataType(timeSpanExpression);
+
+			if (expressionType.DataType != DataType.Int64)
+				return TranslateNativeTimeSpanPart(translationContext, translationFlags, timeSpanExpression, part, resultType);
+
+			var longType   = factory.GetDbDataType(typeof(long));
+			var resultDbType = factory.GetDbDataType(resultType);
+			var ticks      = factory.Cast(timeSpanExpression, longType, true);
+
+			ISqlExpression Divide(long value)
+			{
+				var remainder = factory.Mod(ticks, factory.Value(longType, value));
+				return factory.Div(longType, factory.Sub(longType, ticks, remainder), factory.Value(longType, value));
+			}
+
+			ISqlExpression Component(long divisor, int modulo)
+			{
+				var value = Divide(divisor);
+				value = factory.Mod(value, factory.Value(longType, (long)modulo));
+				return factory.Cast(value, resultDbType);
+			}
+
+			ISqlExpression Total(double divisor)
+			{
+				var doubleType = factory.GetDbDataType(typeof(double));
+				var value      = factory.Cast(ticks, doubleType);
+				return factory.Div(doubleType, value, factory.Value(doubleType, divisor));
+			}
+
+			return part switch
+			{
+				TimeSpanPart.Days              => factory.Cast(Divide(TimeSpan.TicksPerDay), resultDbType),
+				TimeSpanPart.TotalDays         => Total(TimeSpan.TicksPerDay),
+				TimeSpanPart.Hours             => Component(TimeSpan.TicksPerHour, 24),
+				TimeSpanPart.TotalHours        => Total(TimeSpan.TicksPerHour),
+				TimeSpanPart.Minutes           => Component(TimeSpan.TicksPerMinute, 60),
+				TimeSpanPart.TotalMinutes      => Total(TimeSpan.TicksPerMinute),
+				TimeSpanPart.Seconds           => Component(TimeSpan.TicksPerSecond, 60),
+				TimeSpanPart.TotalSeconds      => Total(TimeSpan.TicksPerSecond),
+				TimeSpanPart.Milliseconds      => Component(TimeSpan.TicksPerMillisecond, 1000),
+				TimeSpanPart.TotalMilliseconds => Total(TimeSpan.TicksPerMillisecond),
+#if NET7_0_OR_GREATER
+				TimeSpanPart.Microseconds      => Component(TimeSpan.TicksPerMicrosecond, 1000),
+				TimeSpanPart.TotalMicroseconds => Total(TimeSpan.TicksPerMicrosecond),
+				TimeSpanPart.Nanoseconds       => factory.Cast(factory.Mod(factory.Multiply(longType, ticks, 100L), 1000L), resultDbType),
+				TimeSpanPart.TotalNanoseconds  => factory.Multiply(resultDbType, factory.Cast(ticks, resultDbType), 100D),
+#endif
+				TimeSpanPart.Ticks             => ticks,
+				_                              => null,
+			};
+		}
+
+		private protected virtual ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+		{
+			return null;
+		}
+
+		private protected virtual ISqlExpression? TranslateTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+		{
+			var factory        = translationContext.ExpressionFactory;
+			var expressionType = factory.GetDbDataType(timeSpanExpression);
+
+			if (expressionType.DataType != DataType.Int64)
+				return TranslateNativeTimeSpanNegate(translationContext, translationFlags, timeSpanExpression);
+
+			return factory.Negate(expressionType, timeSpanExpression);
+		}
+
+		private protected virtual ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+		{
+			return null;
+		}
+
+		private protected virtual ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+		{
+			var factory      = translationContext.ExpressionFactory;
+			var intervalType = factory.GetDbDataType(intervalExpression);
+
+			if (intervalType.DataType != DataType.Int64)
+				return TranslateNativeDateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
+
+			var longType = factory.GetDbDataType(typeof(long));
+			var ticks    = factory.Cast(intervalExpression, longType, true);
+			var remainder = factory.Mod(ticks, TimeSpan.TicksPerDay);
+			var days      = factory.Div(longType, factory.Sub(longType, ticks, remainder), TimeSpan.TicksPerDay);
+
+			if (isSubtract)
+			{
+				days      = factory.Negate(longType, days);
+				remainder = factory.Negate(longType, remainder);
+			}
+
+			var result = isDateTimeOffset
+				? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day)
+				: TranslateDateTimeDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day);
+
+			if (result == null)
+				return null;
+
+			var increment = remainder;
+			var part      = Sql.DateParts.Tick;
+			var withRemainder = isDateTimeOffset
+				? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, increment, part)
+				: TranslateDateTimeDateAdd(translationContext, translationFlags, result, increment, part);
+
+			if (withRemainder != null)
+				return withRemainder;
+
+			var subMicrosecondTicks = factory.Mod(remainder, 10L);
+			increment = factory.Div(longType, factory.Sub(longType, remainder, subMicrosecondTicks), 10L);
+			part      = Sql.DateParts.Microsecond;
+			withRemainder = isDateTimeOffset
+				? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, increment, part)
+				: TranslateDateTimeDateAdd(translationContext, translationFlags, result, increment, part);
+
+			if (withRemainder != null)
+				return withRemainder;
+
+			var subMillisecondTicks = factory.Mod(remainder, TimeSpan.TicksPerMillisecond);
+			increment = factory.Div(longType, factory.Sub(longType, remainder, subMillisecondTicks), TimeSpan.TicksPerMillisecond);
+			part      = Sql.DateParts.Millisecond;
+			return isDateTimeOffset
+				? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, increment, part)
+				: TranslateDateTimeDateAdd(translationContext, translationFlags, result, increment, part);
+		}
+
+		private protected virtual ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+		{
+			return null;
+		}
+
+		private protected virtual ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+		{
+			return null;
+		}
 
 		protected virtual ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 		{

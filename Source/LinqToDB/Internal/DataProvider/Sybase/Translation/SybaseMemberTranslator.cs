@@ -47,6 +47,13 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Expression(intervalType, "DATEDIFF(microsecond, {1}, {0}) * 10", leftExpression, rightExpression);
+			}
+
 			public static string? DatePartToStr(Sql.DateParts part, bool forDateAdd)
 			{
 				return part switch

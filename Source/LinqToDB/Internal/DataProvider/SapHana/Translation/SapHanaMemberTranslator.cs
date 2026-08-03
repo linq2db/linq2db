@@ -73,6 +73,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 			{
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
+				var longDbType = factory.GetDbDataType(typeof(long));
 
 				switch (datepart)
 				{
@@ -112,6 +113,21 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 						var result       = factory.Cast(factory.Function(stringDbType, "To_NVarchar", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(stringDbType, "FF3")), intDbType);
 
 						return result;
+					}
+					case Sql.DateParts.Microsecond:
+					{
+						var stringDbType = factory.GetDbDataType(typeof(string));
+						return factory.Cast(factory.Function(stringDbType, "To_NVarchar", dateTimeExpression, factory.Value(stringDbType, "FF6")), longDbType);
+					}
+					case Sql.DateParts.Tick:
+					{
+						var stringDbType = factory.GetDbDataType(typeof(string));
+						return factory.Cast(factory.Function(stringDbType, "To_NVarchar", dateTimeExpression, factory.Value(stringDbType, "FF7")), longDbType);
+					}
+					case Sql.DateParts.Nanosecond:
+					{
+						var stringDbType = factory.GetDbDataType(typeof(string));
+						return factory.Multiply(longDbType, factory.Cast(factory.Function(stringDbType, "To_NVarchar", dateTimeExpression, factory.Value(stringDbType, "FF7")), longDbType), 100L);
 					}
 					default:
 						return null;
@@ -177,8 +193,25 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 						break;
 					case Sql.DateParts.Millisecond:
 					{
-						function = "Add_Seconds";
-						number   = factory.Div(incrementType, number, 1000);
+						function = "Add_Nano100";
+						number   = factory.Multiply(incrementType, number, 10_000);
+						break;
+					}
+					case Sql.DateParts.Microsecond:
+					{
+						function = "Add_Nano100";
+						number   = factory.Multiply(incrementType, number, 10);
+						break;
+					}
+					case Sql.DateParts.Tick:
+					{
+						function = "Add_Nano100";
+						break;
+					}
+					case Sql.DateParts.Nanosecond:
+					{
+						function = "Add_Nano100";
+						number   = factory.Div(incrementType, number, 100);
 						break;
 					}
 					default:
@@ -187,6 +220,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 
 				var resultExpression = factory.Function(dateType, function, dateTimeExpression, number);
 				return resultExpression;
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Function(intervalType, "Nano100_Between", rightExpression, leftExpression);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(

@@ -49,6 +49,28 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Negate(factory.GetDbDataType(timeSpanExpression), timeSpanExpression);
+			}
+
+			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var dateType = factory.GetDbDataType(dateTimeExpression);
+				return isSubtract
+					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
+					: factory.Add(dateType, dateTimeExpression, intervalExpression);
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+				return factory.Sub(intervalType, leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateMakeDateTime(ITranslationContext translationContext, DbDataType      resulType, ISqlExpression  year, ISqlExpression month, ISqlExpression day, ISqlExpression? hour,
 				ISqlExpression?                                                          minute,             ISqlExpression? second,    ISqlExpression? millisecond)
 			{

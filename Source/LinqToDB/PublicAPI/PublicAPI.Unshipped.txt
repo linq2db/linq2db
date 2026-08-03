@@ -1181,3 +1181,10 @@ virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetParameterCastType(LinqT
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitInListValues(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate, System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>! values, LinqToDB.Internal.SqlQuery.Visitors.VisitMode mode) -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>?
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlParameterCastExpression(LinqToDB.Internal.SqlQuery.SqlParameterCastExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 static LinqToDB.Internal.SqlQuery.QueryHelper.EnsureParameterCast(LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Sql.DateParts.Microsecond = 11 -> LinqToDB.Sql.DateParts
+LinqToDB.Sql.DateParts.Nanosecond = 12 -> LinqToDB.Sql.DateParts
+LinqToDB.Sql.DateParts.Tick = 13 -> LinqToDB.Sql.DateParts
+static LinqToDB.Sql.DateDiffLong(LinqToDB.Sql.DateParts part, System.DateTime? startDate, System.DateTime? endDate) -> long?
+static LinqToDB.Sql.DateDiffLong(LinqToDB.Sql.DateParts part, System.DateTimeOffset? startDate, System.DateTimeOffset? endDate) -> long?
+static LinqToDB.Sql.DatePartLong(LinqToDB.Sql.DateParts part, System.DateTime? date) -> long?
+static LinqToDB.Sql.DatePartLong(LinqToDB.Sql.DateParts part, System.DateTimeOffset? date) -> long?

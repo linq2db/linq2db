@@ -81,6 +81,66 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+			{
+				var factory    = translationContext.ExpressionFactory;
+				var resultTypeDb = factory.GetDbDataType(resultType);
+				var totalSeconds = "EXTRACT(EPOCH FROM {0})";
+
+				var expression = part switch
+				{
+					TimeSpanPart.Days              => $"TRUNC(({totalSeconds}) / 86400)",
+					TimeSpanPart.TotalDays         => $"({totalSeconds}) / 86400.0",
+					TimeSpanPart.Hours             => $"MOD(TRUNC(({totalSeconds}) / 3600), 24)",
+					TimeSpanPart.TotalHours        => $"({totalSeconds}) / 3600.0",
+					TimeSpanPart.Minutes           => $"MOD(TRUNC(({totalSeconds}) / 60), 60)",
+					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60.0",
+					TimeSpanPart.Seconds           => $"MOD(TRUNC({totalSeconds}), 60)",
+					TimeSpanPart.TotalSeconds      => totalSeconds,
+					TimeSpanPart.Milliseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000), 1000)",
+					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000.0",
+#if NET7_0_OR_GREATER
+					TimeSpanPart.Microseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000000), 1000)",
+					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000.0",
+					TimeSpanPart.Nanoseconds       => $"MOD(TRUNC(({totalSeconds}) * 1000000000), 1000)",
+					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000.0",
+#endif
+					TimeSpanPart.Ticks             => $"TRUNC(({totalSeconds}) * 10000000)",
+					_                              => null,
+				};
+
+				return expression == null ? null : factory.Expression(resultTypeDb, expression, timeSpanExpression);
+			}
+
+			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var type    = factory.GetDbDataType(timeSpanExpression);
+
+				return type.DataType == DataType.Interval ? factory.Negate(type, timeSpanExpression) : null;
+			}
+
+			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(intervalExpression);
+
+				if (intervalType.DataType != DataType.Interval)
+					return null;
+
+				var dateType = factory.GetDbDataType(dateTimeExpression);
+				return isSubtract
+					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
+					: factory.Add(dateType, dateTimeExpression, intervalExpression);
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+				return factory.Sub(intervalType, leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -110,6 +170,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 						return castExpression;
 					}
+					case Sql.DateParts.Microsecond:
+						return factory.Expression(intDbType, "CAST(EXTRACT(MICROSECONDS FROM {0}) AS BIGINT) % 1000000", dateTimeExpression);
+					case Sql.DateParts.Tick:
+						return factory.Expression(intDbType, "(CAST(EXTRACT(MICROSECONDS FROM {0}) AS BIGINT) % 1000000) * 10", dateTimeExpression);
+					case Sql.DateParts.Nanosecond:
+						return factory.Expression(intDbType, "(CAST(EXTRACT(MICROSECONDS FROM {0}) AS BIGINT) % 1000000) * 1000", dateTimeExpression);
 					default:
 						return null;
 				}
@@ -190,6 +256,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 					case Sql.DateParts.Minute:      intervalExpr = ToInterval(increment, "1 Minute"); break;
 					case Sql.DateParts.Second:      intervalExpr = ToInterval(increment, "1 Second"); break;
 					case Sql.DateParts.Millisecond: intervalExpr = ToInterval(increment, "1 Millisecond"); break;
+					case Sql.DateParts.Microsecond: intervalExpr = ToInterval(increment, "1 Microsecond"); break;
+					case Sql.DateParts.Tick:        intervalExpr = ToInterval(factory.Div(factory.GetDbDataType(increment), increment, 10), "1 Microsecond"); break;
+					case Sql.DateParts.Nanosecond:  intervalExpr = ToInterval(factory.Div(factory.GetDbDataType(increment), increment, 1000), "1 Microsecond"); break;
 					case Sql.DateParts.Day: intervalExpr = ToInterval(increment, "1 Day"); break;
 					default:
 						return null;

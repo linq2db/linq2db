@@ -61,6 +61,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
+					Sql.DateParts.Microsecond => "microsecond",
+					Sql.DateParts.Tick => "nanosecond",
+					Sql.DateParts.Nanosecond => "nanosecond",
 					_ => null,
 				};
 			}
@@ -76,6 +79,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var intDbType = factory.GetDbDataType(typeof(int));
 
 				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullExpression(intDbType, partStr), dateTimeExpression);
+
+				if (datepart == Sql.DateParts.Tick)
+					resultExpression = factory.Div(intDbType, resultExpression, 100);
 
 				return resultExpression;
 			}
@@ -98,8 +104,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					return null;
 				}
 
+				if (datepart == Sql.DateParts.Tick)
+					increment = factory.Multiply(factory.GetDbDataType(increment), increment, 100);
+
 				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
 				return resultExpression;
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Expression(intervalType, "DATEDIFF_BIG(nanosecond, {1}, {0}) / 100", leftExpression, rightExpression);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(

@@ -47,6 +47,13 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				return factory.Expression(intervalType, "DATEDIFF('s', {1}, {0}) * 10000000", leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory = translationContext.ExpressionFactory;
@@ -62,8 +69,9 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					Sql.DateParts.WeekDay   => "w",
 					Sql.DateParts.Hour      => "h",
 					Sql.DateParts.Minute    => "n",
-					Sql.DateParts.Second    => "s",
-					_                       => null,
+					Sql.DateParts.Second      => "s",
+					Sql.DateParts.Millisecond => "s",
+					_                         => null,
 				};
 
 				if (partStr == null)
@@ -99,6 +107,9 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				if (partStr == null)
 					return null;
+
+				if (datepart == Sql.DateParts.Millisecond)
+					increment = factory.Div(factory.GetDbDataType(increment), increment, 1000);
 
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", factory.Value(partStr), increment, dateTimeExpression);
 				return resultExpression;

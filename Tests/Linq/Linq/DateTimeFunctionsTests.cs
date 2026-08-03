@@ -1956,6 +1956,62 @@ namespace Tests.Linq
 				from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue))!.Value.Date);
 		}
 
+		[Test]
+		public void DatePartLongSubsecondComponents()
+		{
+			var date       = new DateTime(2026, 1, 2, 3, 4, 5).AddTicks(1_234_567);
+			var dateOffset = new DateTimeOffset(date, TimeSpan.Zero);
+
+			Sql.DatePartLong(Sql.DateParts.Microsecond, date).ShouldBe(123_456);
+			Sql.DatePartLong(Sql.DateParts.Nanosecond,  date).ShouldBe(123_456_700);
+			Sql.DatePartLong(Sql.DateParts.Tick,        date).ShouldBe(1_234_567);
+			Sql.DatePartLong(Sql.DateParts.Microsecond, dateOffset).ShouldBe(123_456);
+			Sql.DatePartLong(Sql.DateParts.Nanosecond,  dateOffset).ShouldBe(123_456_700);
+			Sql.DatePartLong(Sql.DateParts.Tick,        dateOffset).ShouldBe(1_234_567);
+		}
+
+		[Test]
+		public void DateDiffLongSubsecondComponents()
+		{
+			var startDate       = new DateTime(2026, 1, 2, 3, 4, 5);
+			var endDate         = startDate.AddTicks(123_456);
+			var startDateOffset = new DateTimeOffset(startDate, TimeSpan.Zero);
+			var endDateOffset   = new DateTimeOffset(endDate, TimeSpan.Zero);
+
+			Sql.DateDiff    (Sql.DateParts.Microsecond, startDate,       endDate)      .ShouldBe(12_345);
+			Sql.DateDiff    (Sql.DateParts.Nanosecond,  startDate,       endDate)      .ShouldBe(12_345_600);
+			Sql.DateDiffLong(Sql.DateParts.Microsecond, startDate,       endDate)      .ShouldBe(12_345);
+			Sql.DateDiffLong(Sql.DateParts.Nanosecond,  startDate,       endDate)      .ShouldBe(12_345_600);
+			Sql.DateDiff    (Sql.DateParts.Microsecond, startDateOffset, endDateOffset).ShouldBe(12_345);
+			Sql.DateDiff    (Sql.DateParts.Nanosecond,  startDateOffset, endDateOffset).ShouldBe(12_345_600);
+			Sql.DateDiffLong(Sql.DateParts.Microsecond, startDateOffset, endDateOffset).ShouldBe(12_345);
+			Sql.DateDiffLong(Sql.DateParts.Nanosecond,  startDateOffset, endDateOffset).ShouldBe(12_345_600);
+		}
+
+		[Test]
+		public void SubsecondDateFunctionsSql(
+			[IncludeDataSources(false,
+				TestProvName.AllClickHouse,
+				TestProvName.AllMariaDB,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSapHana,
+				TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types.Select(row => new
+			{
+				Microsecond = Sql.DatePartLong(Sql.DateParts.Microsecond, row.DateTimeValue),
+				Nanosecond  = Sql.DatePartLong(Sql.DateParts.Nanosecond,  row.DateTimeValue),
+				Tick        = Sql.DatePartLong(Sql.DateParts.Tick,        row.DateTimeValue),
+				Difference  = Sql.DateDiffLong(Sql.DateParts.Microsecond, row.DateTimeValue, row.DateTimeValue.AddSeconds(1)),
+			});
+
+			query.ToSqlQuery().Sql.ShouldNotBeNullOrWhiteSpace();
+		}
+
 		[Table]
 		sealed class Issue2950Table
 		{
@@ -1971,7 +2027,6 @@ namespace Tests.Linq
 			];
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2950")]
 		public void Issue2950Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1989,6 +2044,24 @@ namespace Tests.Linq
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0].Output, Is.EqualTo(TestData.TimeOfDay.Hours));
+		}
+
+		[Test]
+		public void Issue2950SqlTest([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from x in db.GetTable<Issue2950Table>()
+				where x.Time!.Value.Hours >= 0
+				select new
+				{
+					Output = x.Time!.Value.Hours
+				};
+
+			var sql = query.ToSqlQuery().Sql;
+
+			sql.ShouldContain("EXTRACT(EPOCH FROM");
+			sql.ShouldContain("3600");
 		}
 
 		// Short name: Oracle 11 (30) and Firebird <= 3 (31) cap identifier length; the 32-char class name overflows both.
