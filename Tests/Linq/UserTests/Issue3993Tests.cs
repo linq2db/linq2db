@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -103,6 +104,7 @@ namespace Tests.UserTests.Test3993
 				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				TestProvName.AllDB2,
+				TestProvName.AllDuckDB,
 				TestProvName.AllFirebird3Plus,
 				TestProvName.AllInformix,
 				TestProvName.AllMariaDB,
@@ -113,7 +115,8 @@ namespace Tests.UserTests.Test3993
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlCe,
 				TestProvName.AllSqlServer,
-				TestProvName.AllSybase)] string configuration)
+				TestProvName.AllSybase,
+				TestProvName.AllYdb)] string configuration)
 		{
 			var mappingSchema = new MappingSchema();
 			var dataType = configuration.Contains("PostgreSQL") ||
@@ -140,7 +143,15 @@ namespace Tests.UserTests.Test3993
 					TotalMilliseconds = difference.Value.TotalMilliseconds,
 				};
 
-			query.ToSqlQuery().Sql.ShouldNotBeNullOrWhiteSpace();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldNotBeNullOrWhiteSpace();
+
+			if (configuration.Contains("DuckDB", StringComparison.Ordinal))
+				sql.ShouldContain("date_diff('microsecond'");
+			else if (configuration.Contains("Informix", StringComparison.Ordinal))
+				sql.ShouldContain("INTERVAL SECOND(9) TO FRACTION(5)");
+			else if (configuration.Contains("YDB", StringComparison.Ordinal))
+				sql.ShouldContain("DateTime::ToMicroseconds");
 		}
 
 		[Test]
@@ -189,7 +200,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test1([IncludeDataSources(TestProvName.AllSqlServer2019, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string configuration)
+		public void TestIssue3993_Test1([IncludeDataSources(TestProvName.AllSqlServer2019, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllSapHana)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -341,7 +352,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test2([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
+		public void TestIssue3993_Test2([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -427,7 +438,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test3([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
+		public void TestIssue3993_Test3([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -508,7 +519,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test4([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
+		public void TestIssue3993_Test4([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
@@ -551,7 +562,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_BulkCopy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllOracle)] string configuration)
+		public void TestIssue3993_BulkCopy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllDuckDB, TestProvName.AllOracle)] string configuration)
 		{
 			var ms = new FluentMappingBuilder()
 					.Entity<LanguageDTO>()
@@ -563,6 +574,11 @@ namespace Tests.UserTests.Test3993
 			if (configuration.Contains("PostgreSQL") || configuration.Contains("Oracle") || configuration.Contains("Informix"))
 			{
 				ms.AddScalarType(typeof(TimeSpan), DataType.Interval);
+			}
+			else if (configuration.Contains("Access"))
+			{
+				ms.AddScalarType(typeof(TimeSpan),  new SqlDataType(DataType.Decimal, typeof(TimeSpan),  18, 0));
+				ms.AddScalarType(typeof(TimeSpan?), new SqlDataType(DataType.Decimal, typeof(TimeSpan?), 18, 0));
 			}
 			else
 			{

@@ -413,6 +413,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+
+				// YDB Timestamp subtraction produces a native Interval measured with microsecond precision.
+				// Convert it to the Int64 tick representation expected by the common TimeSpan translator.
+				return factory.Expression(intervalType, "DateTime::ToMicroseconds({0} - {1}) * 10", leftExpression, rightExpression);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);

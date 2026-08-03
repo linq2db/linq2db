@@ -2060,6 +2060,9 @@ namespace Tests.Linq
 
 			sql.ShouldContain("EXTRACT(EPOCH FROM");
 			sql.ShouldContain("3600");
+			sql.ShouldContain("CAST(TRUNC(");
+			sql.ShouldContain("AS BIGINT");
+			sql.ShouldContain("AS INTEGER");
 		}
 
 		// Short name: Oracle 11 (30) and Firebird <= 3 (31) cap identifier length; the 32-char class name overflows both.
@@ -2069,10 +2072,10 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 
-			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			[Column(CanBeNull = false)]
 			public DateTime StartedOn { get; set; }
 
-			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			[Column(CanBeNull = true)]
 			public DateTime? FinishedOn { get; set; }
 
 			public static readonly NullableDateTimeSubtractionTable[] Data =

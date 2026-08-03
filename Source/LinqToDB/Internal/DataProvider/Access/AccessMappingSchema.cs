@@ -61,6 +61,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 #pragma warning restore MA0011 // MA0011: IFormatProvider is missing
 #pragma warning restore CA1305 // CA1305: Specify IFormatProvider
 			SetConvertExpression((string v) => v == "-1",        conversionType: ConversionType.FromDatabase);
+			SetConvertExpression((decimal v) => TimeSpan.FromTicks(decimal.ToInt64(v)), conversionType: ConversionType.FromDatabase);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

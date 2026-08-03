@@ -139,6 +139,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 			if (value is DateTimeOffset dto)
 				value = dto.DateTime;
 
+			if (value is TimeSpan timeSpan && dataType.DataType == DataType.Decimal)
+				value = (decimal)timeSpan.Ticks;
+
 			if (Provider == AccessProvider.ODBC)
 			{
 				switch (dataType.DataType)

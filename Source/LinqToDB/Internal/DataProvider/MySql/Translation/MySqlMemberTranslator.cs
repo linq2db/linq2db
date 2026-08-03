@@ -190,7 +190,10 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 					case Sql.DateParts.Hour:        expStr = "Interval {0} Hour"; break;
 					case Sql.DateParts.Minute:      expStr = "Interval {0} Minute"; break;
 					case Sql.DateParts.Second:      expStr = "Interval {0} Second"; break;
-					case Sql.DateParts.Millisecond: expStr = "Interval {0} Millisecond"; break;
+					case Sql.DateParts.Millisecond:
+						increment = factory.Multiply(factory.GetDbDataType(increment), increment, 1000);
+						expStr = "Interval {0} Microsecond";
+						break;
 					case Sql.DateParts.Microsecond: expStr = "Interval {0} Microsecond"; break;
 					case Sql.DateParts.Tick:
 						increment = factory.Div(factory.GetDbDataType(increment), increment, 10);

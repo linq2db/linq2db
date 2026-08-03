@@ -51,7 +51,10 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "DATEDIFF(microsecond, {1}, {0}) * 10", leftExpression, rightExpression);
+
+				// ASE datetime has 1/300-second precision and doesn't provide a usable microsecond
+				// DATEDIFF result. Widen before scaling so the tick conversion doesn't overflow.
+				return factory.Expression(intervalType, "CONVERT(BIGINT, DATEDIFF(millisecond, {1}, {0})) * 10000", leftExpression, rightExpression);
 			}
 
 			public static string? DatePartToStr(Sql.DateParts part, bool forDateAdd)

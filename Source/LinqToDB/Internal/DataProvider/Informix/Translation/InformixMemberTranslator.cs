@@ -49,6 +49,72 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+			{
+				var factory        = translationContext.ExpressionFactory;
+				var expressionType = factory.GetDbDataType(timeSpanExpression);
+
+				if (expressionType.DataType != DataType.Interval)
+					return null;
+
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval).WithDbType("INTERVAL SECOND(9) TO FRACTION(5)");
+				var stringType   = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(16);
+				var decimalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(23, 5);
+				var doubleType   = factory.GetDbDataType(typeof(double));
+				var seconds      = factory.Cast(factory.Cast(timeSpanExpression, intervalType, true), stringType, true);
+				seconds          = factory.Cast(seconds, decimalType, true);
+				var ticks        = factory.Multiply(decimalType, seconds, 10_000_000m);
+
+				ISqlExpression Truncate(ISqlExpression expression)
+				{
+					return factory.Function(decimalType, "Trunc", expression);
+				}
+
+				ISqlExpression Divide(long divisor)
+				{
+					return Truncate(factory.Div(decimalType, ticks, factory.Value(decimalType, (decimal)divisor)));
+				}
+
+				ISqlExpression Component(long divisor, int modulo)
+				{
+					var value    = Divide(divisor);
+					var quotient = Truncate(factory.Div(decimalType, value, factory.Value(decimalType, (decimal)modulo)));
+					return factory.Sub(decimalType, value, factory.Multiply(decimalType, quotient, (decimal)modulo));
+				}
+
+				ISqlExpression Total(double divisor)
+				{
+					return factory.Div(doubleType, factory.Cast(ticks, doubleType), factory.Value(doubleType, divisor));
+				}
+
+				ISqlExpression Retype(ISqlExpression expression)
+				{
+					return factory.Expression(factory.GetDbDataType(expression).WithSystemType(resultType), "{0}", expression);
+				}
+
+				return part switch
+				{
+					TimeSpanPart.Days              => Retype(Divide(TimeSpan.TicksPerDay)),
+					TimeSpanPart.TotalDays         => Total(TimeSpan.TicksPerDay),
+					TimeSpanPart.Hours             => Retype(Component(TimeSpan.TicksPerHour, 24)),
+					TimeSpanPart.TotalHours        => Total(TimeSpan.TicksPerHour),
+					TimeSpanPart.Minutes           => Retype(Component(TimeSpan.TicksPerMinute, 60)),
+					TimeSpanPart.TotalMinutes      => Total(TimeSpan.TicksPerMinute),
+					TimeSpanPart.Seconds           => Retype(Component(TimeSpan.TicksPerSecond, 60)),
+					TimeSpanPart.TotalSeconds      => Total(TimeSpan.TicksPerSecond),
+					TimeSpanPart.Milliseconds      => Retype(Component(TimeSpan.TicksPerMillisecond, 1000)),
+					TimeSpanPart.TotalMilliseconds => Total(TimeSpan.TicksPerMillisecond),
+#if NET7_0_OR_GREATER
+					TimeSpanPart.Microseconds      => Retype(Component(TimeSpan.TicksPerMicrosecond, 1000)),
+					TimeSpanPart.TotalMicroseconds => Total(TimeSpan.TicksPerMicrosecond),
+					TimeSpanPart.Nanoseconds       => Retype(factory.Sub(decimalType, factory.Multiply(decimalType, ticks, 100m), factory.Multiply(decimalType, Truncate(factory.Div(decimalType, factory.Multiply(decimalType, ticks, 100m), 1000m)), 1000m))),
+					TimeSpanPart.TotalNanoseconds  => factory.Multiply(doubleType, factory.Cast(ticks, doubleType), 100D),
+#endif
+					TimeSpanPart.Ticks             => Retype(ticks),
+					_                              => null,
+				};
+			}
+
 			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
 			{
 				var factory = translationContext.ExpressionFactory;

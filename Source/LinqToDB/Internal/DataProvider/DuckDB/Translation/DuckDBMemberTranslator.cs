@@ -70,6 +70,20 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var longType     = factory.GetDbDataType(typeof(long));
+				var microseconds = factory.Function(
+					longType,
+					"date_diff",
+					factory.Value("microsecond"),
+					rightExpression,
+					leftExpression);
+
+				return factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;

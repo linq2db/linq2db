@@ -193,10 +193,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					case Sql.DateParts.Hour:        expStr = "INTERVAL '1' HOUR"; break;
 					case Sql.DateParts.Minute:      expStr = "INTERVAL '1' MINUTE"; break;
 					case Sql.DateParts.Second:      expStr = "INTERVAL '1' SECOND"; break;
-					case Sql.DateParts.Millisecond: expStr = "INTERVAL '0.001' SECOND"; break;
-					case Sql.DateParts.Microsecond: expStr = "INTERVAL '0.000001' SECOND"; break;
-					case Sql.DateParts.Tick:        expStr = "INTERVAL '0.0000001' SECOND"; break;
-					case Sql.DateParts.Nanosecond:  expStr = "INTERVAL '0.000000001' SECOND"; break;
+					case Sql.DateParts.Millisecond: expStr = "INTERVAL '0.001' SECOND(1,3)"; break;
+					case Sql.DateParts.Microsecond: expStr = "INTERVAL '0.000001' SECOND(1,6)"; break;
+					case Sql.DateParts.Tick:        expStr = "INTERVAL '0.0000001' SECOND(1,7)"; break;
+					case Sql.DateParts.Nanosecond:  expStr = "INTERVAL '0.000000001' SECOND(1,9)"; break;
 					default:
 						return null;
 				}

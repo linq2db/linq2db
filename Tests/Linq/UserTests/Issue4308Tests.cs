@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -47,15 +48,24 @@ namespace Tests.UserTests.Issue4308
 #endif
 		}
 
-		static MappingSchema CreateMappingSchema()
+		static MappingSchema CreateMappingSchema(string configuration)
 		{
-			return new FluentMappingBuilder()
+			var builder = new FluentMappingBuilder();
+
+			if (configuration.Contains("Access", StringComparison.Ordinal))
+			{
+				builder.MappingSchema.AddScalarType(typeof(TimeSpan),  new SqlDataType(DataType.Decimal, typeof(TimeSpan),  18, 0));
+				builder.MappingSchema.AddScalarType(typeof(TimeSpan?), new SqlDataType(DataType.Decimal, typeof(TimeSpan?), 18, 0));
+			}
+			else
+			{
+				builder.MappingSchema.AddScalarType(typeof(TimeSpan),  DataType.Int64);
+				builder.MappingSchema.AddScalarType(typeof(TimeSpan?), DataType.Int64);
+			}
+
+			return builder
 				.Entity<Test>()
 					.HasTableName("Common_Topology_Locations")
-					.Property(e => e.PreNotification)
-						.HasDataType(DataType.Int64)
-					.Property(e => e.RequiredInterval)
-						.HasDataType(DataType.Int64)
 				.Build()
 				.MappingSchema;
 		}
@@ -64,7 +74,7 @@ namespace Tests.UserTests.Issue4308
 		public void TimeSpanPropertyAccessIsPreserved(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string configuration)
 		{
-			using var db = GetDataContext(configuration, CreateMappingSchema());
+			using var db = GetDataContext(configuration, CreateMappingSchema(configuration));
 			using var table = db.CreateLocalTable(new[]
 			{
 				new Test { Id = 1, PreNotification = TimeSpan.FromSeconds(2000) }
@@ -88,7 +98,7 @@ namespace Tests.UserTests.Issue4308
 		public void TimeSpanPropertyAccessSql(
 			[IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string configuration)
 		{
-			using var db = GetDataContext(configuration, CreateMappingSchema());
+			using var db = GetDataContext(configuration, CreateMappingSchema(configuration));
 
 			var query =
 				(from t in db.GetTable<Test>()
@@ -111,6 +121,7 @@ namespace Tests.UserTests.Issue4308
 			[IncludeDataSources(
 				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
+				TestProvName.AllDuckDB,
 				TestProvName.AllFirebird3Plus,
 				TestProvName.AllInformix,
 				TestProvName.AllMariaDB,
@@ -124,7 +135,7 @@ namespace Tests.UserTests.Issue4308
 		{
 			var value = new TimeSpan(1, 2, 3, 4, 5).Add(TimeSpan.FromTicks(67));
 
-			using var db = GetDataContext(configuration, CreateMappingSchema());
+			using var db = GetDataContext(configuration, CreateMappingSchema(configuration));
 			using var table = db.CreateLocalTable(new[]
 			{
 				new Test { Id = 1, PreNotification = value },
@@ -197,6 +208,7 @@ namespace Tests.UserTests.Issue4308
 			[IncludeDataSources(true,
 				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
+				TestProvName.AllDuckDB,
 				TestProvName.AllFirebird3Plus,
 				TestProvName.AllInformix,
 				TestProvName.AllMariaDB,
@@ -210,8 +222,11 @@ namespace Tests.UserTests.Issue4308
 		{
 			var start    = new DateTime(2024, 2, 3, 4, 5, 6, 789);
 			var interval = new TimeSpan(1, 2, 3, 4, 5);
+			var tolerance = configuration.Contains("Sybase", StringComparison.Ordinal)
+				? TimeSpan.FromMilliseconds(4)
+				: TimeSpan.FromMilliseconds(1);
 
-			using var db = GetDataContext(configuration, CreateMappingSchema());
+			using var db = GetDataContext(configuration, CreateMappingSchema(configuration));
 			using var table = db.CreateLocalTable(new[]
 			{
 				new Test
@@ -242,20 +257,20 @@ namespace Tests.UserTests.Issue4308
 
 			result.Added.ShouldNotBeNull();
 			result.Subtracted.ShouldNotBeNull();
-			result.Added.Value.ShouldBe(start + interval, TimeSpan.FromMilliseconds(1));
-			result.AddedRequired.ShouldBe(start + interval, TimeSpan.FromMilliseconds(1));
+			result.Added.Value.ShouldBe(start + interval, tolerance);
+			result.AddedRequired.ShouldBe(start + interval, tolerance);
 			result.AddedNullableDate.ShouldNotBeNull();
 			result.AddedNullableInterval.ShouldNotBeNull();
-			result.AddedNullableDate.Value.ShouldBe(start + interval, TimeSpan.FromMilliseconds(1));
-			result.AddedNullableInterval.Value.ShouldBe(start + interval, TimeSpan.FromMilliseconds(1));
-			result.Subtracted.Value.ShouldBe(start - interval, TimeSpan.FromMilliseconds(1));
+			result.AddedNullableDate.Value.ShouldBe(start + interval, tolerance);
+			result.AddedNullableInterval.Value.ShouldBe(start + interval, tolerance);
+			result.Subtracted.Value.ShouldBe(start - interval, tolerance);
 			result.Negated.ShouldBe(-interval);
 			result.Difference.ShouldNotBeNull();
-			result.Difference.Value.ShouldBe(interval, TimeSpan.FromMilliseconds(1));
+			result.Difference.Value.ShouldBe(interval, tolerance);
 			result.DifferenceNullableLeft.ShouldNotBeNull();
 			result.DifferenceNullableRight.ShouldNotBeNull();
-			result.DifferenceNullableLeft.Value.ShouldBe(interval, TimeSpan.FromMilliseconds(1));
-			result.DifferenceNullableRight.Value.ShouldBe(TimeSpan.Zero, TimeSpan.FromMilliseconds(1));
+			result.DifferenceNullableLeft.Value.ShouldBe(interval, tolerance);
+			result.DifferenceNullableRight.Value.ShouldBe(TimeSpan.Zero, tolerance);
 		}
 
 		[Test]
@@ -263,6 +278,7 @@ namespace Tests.UserTests.Issue4308
 			[IncludeDataSources(false,
 				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
+				TestProvName.AllDuckDB,
 				TestProvName.AllFirebird3Plus,
 				TestProvName.AllInformix,
 				TestProvName.AllMariaDB,
@@ -274,7 +290,16 @@ namespace Tests.UserTests.Issue4308
 				TestProvName.AllSqlServer2016Plus,
 				TestProvName.AllSybase)] string configuration)
 		{
-			using var db = GetDataContext(configuration, CreateMappingSchema());
+			var mappingSchema = CreateMappingSchema(configuration);
+			var expectedType  = configuration.Contains("Access", StringComparison.Ordinal) ? DataType.Decimal : DataType.Int64;
+			var descriptor    = mappingSchema.GetEntityDescriptor(typeof(Test));
+
+			descriptor.Columns.Single(column => column.MemberName == nameof(Test.PreNotification))
+				.GetDbDataType(true).DataType.ShouldBe(expectedType);
+			descriptor.Columns.Single(column => column.MemberName == nameof(Test.RequiredInterval))
+				.GetDbDataType(true).DataType.ShouldBe(expectedType);
+
+			using var db = GetDataContext(configuration, mappingSchema);
 
 			var query = db.GetTable<Test>()
 				.Select(row => new
@@ -290,7 +315,33 @@ namespace Tests.UserTests.Issue4308
 					DifferenceNullableRight = row.RequiredDateTime - row.StartDateTime,
 				});
 
-			query.ToSqlQuery().Sql.ShouldNotBeNullOrWhiteSpace();
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldNotBeNullOrWhiteSpace();
+
+			if (configuration.Contains("Access", StringComparison.Ordinal))
+			{
+				sql.ShouldContain("CDec(DATEDIFF");
+				sql.ShouldNotContain("BigInt");
+			}
+			else if (configuration.Contains("Firebird", StringComparison.Ordinal))
+			{
+				sql.ShouldContain("DateAdd(Millisecond");
+				sql.ShouldNotContain("DateAdd(Tick");
+			}
+			else if (!configuration.Contains("ClickHouse", StringComparison.Ordinal)
+				&& (configuration.Contains("MariaDB", StringComparison.Ordinal) || configuration.Contains("MySql", StringComparison.Ordinal)))
+			{
+				sql.ShouldContain("Microsecond");
+				sql.ShouldNotContain("Millisecond");
+			}
+			else if (configuration.Contains("Oracle", StringComparison.Ordinal))
+			{
+				sql.ShouldContain("SECOND(1,7)");
+			}
+			else if (configuration.Contains("Sybase", StringComparison.Ordinal))
+			{
+				sql.ShouldContain("CONVERT(BIGINT, DATEDIFF(millisecond");
+			}
 		}
 	}
 }

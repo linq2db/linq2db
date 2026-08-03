@@ -89,23 +89,23 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 				var expression = part switch
 				{
-					TimeSpanPart.Days              => $"TRUNC(({totalSeconds}) / 86400)",
+					TimeSpanPart.Days              => $"CAST(TRUNC(({totalSeconds}) / 86400) AS INTEGER)",
 					TimeSpanPart.TotalDays         => $"({totalSeconds}) / 86400.0",
-					TimeSpanPart.Hours             => $"MOD(TRUNC(({totalSeconds}) / 3600), 24)",
+					TimeSpanPart.Hours             => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) / 3600) AS BIGINT), 24) AS INTEGER)",
 					TimeSpanPart.TotalHours        => $"({totalSeconds}) / 3600.0",
-					TimeSpanPart.Minutes           => $"MOD(TRUNC(({totalSeconds}) / 60), 60)",
+					TimeSpanPart.Minutes           => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) / 60) AS BIGINT), 60) AS INTEGER)",
 					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60.0",
-					TimeSpanPart.Seconds           => $"MOD(TRUNC({totalSeconds}), 60)",
+					TimeSpanPart.Seconds           => $"CAST(MOD(CAST(TRUNC({totalSeconds}) AS BIGINT), 60) AS INTEGER)",
 					TimeSpanPart.TotalSeconds      => totalSeconds,
-					TimeSpanPart.Milliseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000), 1000)",
+					TimeSpanPart.Milliseconds      => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) * 1000) AS BIGINT), 1000) AS INTEGER)",
 					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000.0",
 #if NET7_0_OR_GREATER
-					TimeSpanPart.Microseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000000), 1000)",
+					TimeSpanPart.Microseconds      => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) * 1000000) AS BIGINT), 1000) AS INTEGER)",
 					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000.0",
-					TimeSpanPart.Nanoseconds       => $"MOD(TRUNC(({totalSeconds}) * 1000000000), 1000)",
+					TimeSpanPart.Nanoseconds       => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) * 1000000000) AS BIGINT), 1000) AS INTEGER)",
 					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000.0",
 #endif
-					TimeSpanPart.Ticks             => $"TRUNC(({totalSeconds}) * 10000000)",
+					TimeSpanPart.Ticks             => $"CAST(TRUNC(({totalSeconds}) * 10000000) AS BIGINT)",
 					_                              => null,
 				};
 

@@ -955,6 +955,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var subMillisecondTicks = factory.Mod(remainder, TimeSpan.TicksPerMillisecond);
 			increment = factory.Div(longType, factory.Sub(longType, remainder, subMillisecondTicks), TimeSpan.TicksPerMillisecond);
 			part      = Sql.DateParts.Millisecond;
+			withRemainder = isDateTimeOffset
+				? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, increment, part)
+				: TranslateDateTimeDateAdd(translationContext, translationFlags, result, increment, part);
+
+			if (withRemainder != null)
+				return withRemainder;
+
+			increment = factory.Div(longType, remainder, TimeSpan.TicksPerSecond);
+			part      = Sql.DateParts.Second;
 			return isDateTimeOffset
 				? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, increment, part)
 				: TranslateDateTimeDateAdd(translationContext, translationFlags, result, increment, part);

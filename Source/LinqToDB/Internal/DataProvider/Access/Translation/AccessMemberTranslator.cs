@@ -47,11 +47,115 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+			{
+				var factory        = translationContext.ExpressionFactory;
+				var expressionType = factory.GetDbDataType(timeSpanExpression);
+
+				if (expressionType.DataType != DataType.Decimal)
+					return null;
+
+				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0);
+				var doubleType  = factory.GetDbDataType(typeof(double));
+				var ticks       = factory.Expression(decimalType, "{0}", timeSpanExpression);
+
+				ISqlExpression Truncate(ISqlExpression expression)
+				{
+					return factory.Function(decimalType, "Fix", expression);
+				}
+
+				ISqlExpression Divide(long divisor)
+				{
+					return Truncate(factory.Div(decimalType, ticks, factory.Value(decimalType, (decimal)divisor)));
+				}
+
+				ISqlExpression Component(long divisor, int modulo)
+				{
+					var value    = Divide(divisor);
+					var quotient = Truncate(factory.Div(decimalType, value, factory.Value(decimalType, (decimal)modulo)));
+					return factory.Sub(decimalType, value, factory.Multiply(decimalType, quotient, (decimal)modulo));
+				}
+
+				ISqlExpression Total(double divisor)
+				{
+					var value = factory.Function(doubleType, "CDbl", ticks);
+					return factory.Div(doubleType, value, factory.Value(doubleType, divisor));
+				}
+
+				ISqlExpression Retype(ISqlExpression expression)
+				{
+					return factory.Expression(factory.GetDbDataType(expression).WithSystemType(resultType), "{0}", expression);
+				}
+
+				return part switch
+				{
+					TimeSpanPart.Days              => Retype(Divide(TimeSpan.TicksPerDay)),
+					TimeSpanPart.TotalDays         => Total(TimeSpan.TicksPerDay),
+					TimeSpanPart.Hours             => Retype(Component(TimeSpan.TicksPerHour, 24)),
+					TimeSpanPart.TotalHours        => Total(TimeSpan.TicksPerHour),
+					TimeSpanPart.Minutes           => Retype(Component(TimeSpan.TicksPerMinute, 60)),
+					TimeSpanPart.TotalMinutes      => Total(TimeSpan.TicksPerMinute),
+					TimeSpanPart.Seconds           => Retype(Component(TimeSpan.TicksPerSecond, 60)),
+					TimeSpanPart.TotalSeconds      => Total(TimeSpan.TicksPerSecond),
+					TimeSpanPart.Milliseconds      => Retype(Component(TimeSpan.TicksPerMillisecond, 1000)),
+					TimeSpanPart.TotalMilliseconds => Total(TimeSpan.TicksPerMillisecond),
+#if NET7_0_OR_GREATER
+					TimeSpanPart.Microseconds      => Retype(Component(TimeSpan.TicksPerMicrosecond, 1000)),
+					TimeSpanPart.TotalMicroseconds => Total(TimeSpan.TicksPerMicrosecond),
+					TimeSpanPart.Nanoseconds       => Retype(factory.Sub(decimalType, factory.Multiply(decimalType, ticks, 100m), factory.Multiply(decimalType, Truncate(factory.Div(decimalType, factory.Multiply(decimalType, ticks, 100m), 1000m)), 1000m))),
+					TimeSpanPart.TotalNanoseconds  => factory.Multiply(doubleType, factory.Function(doubleType, "CDbl", ticks), 100D),
+#endif
+					TimeSpanPart.Ticks             => Retype(ticks),
+					_                              => null,
+				};
+			}
+
+			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+			{
+				var factory        = translationContext.ExpressionFactory;
+				var expressionType = factory.GetDbDataType(timeSpanExpression);
+				return expressionType.DataType == DataType.Decimal
+					? factory.Negate(expressionType, timeSpanExpression)
+					: null;
+			}
+
+			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory        = translationContext.ExpressionFactory;
+				var expressionType = factory.GetDbDataType(intervalExpression);
+
+				if (expressionType.DataType != DataType.Decimal)
+					return null;
+
+				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0);
+				var ticks       = factory.Expression(decimalType, "{0}", intervalExpression);
+				var days        = factory.Function(decimalType, "Fix", factory.Div(decimalType, ticks, factory.Value(decimalType, (decimal)TimeSpan.TicksPerDay)));
+				var remainder   = factory.Sub(decimalType, ticks, factory.Multiply(decimalType, days, (decimal)TimeSpan.TicksPerDay));
+
+				if (isSubtract)
+				{
+					days      = factory.Negate(decimalType, days);
+					remainder = factory.Negate(decimalType, remainder);
+				}
+
+				var result = isDateTimeOffset
+					? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day)
+					: TranslateDateTimeDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day);
+
+				if (result == null)
+					return null;
+
+				var seconds = factory.Function(decimalType, "Fix", factory.Div(decimalType, remainder, factory.Value(decimalType, (decimal)TimeSpan.TicksPerSecond)));
+				return isDateTimeOffset
+					? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, seconds, Sql.DateParts.Second)
+					: TranslateDateTimeDateAdd(translationContext, translationFlags, result, seconds, Sql.DateParts.Second);
+			}
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
-				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "DATEDIFF('s', {1}, {0}) * 10000000", leftExpression, rightExpression);
+				var intervalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0).WithSystemType(typeof(TimeSpan));
+				return factory.Expression(intervalType, "CDec(DATEDIFF('s', {1}, {0})) * 10000000", leftExpression, rightExpression);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)

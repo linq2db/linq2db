@@ -129,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							factory.Add(
 								longDataType,
 								factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
-								factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, multiplier), longDataType)
+								factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, factory.Value(longDataType, multiplier)), longDataType)
 							)
 						);
 

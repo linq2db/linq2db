@@ -151,6 +151,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				var number = increment;
 				switch (datepart)
 				{
+					case Sql.DateParts.Tick:
+					case Sql.DateParts.Microsecond:
+					case Sql.DateParts.Nanosecond:
+						return null;
 					case Sql.DateParts.Quarter:
 					{
 						datepart = Sql.DateParts.Month;
