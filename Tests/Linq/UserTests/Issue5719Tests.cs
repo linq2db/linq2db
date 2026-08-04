@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -59,18 +61,29 @@ namespace Tests.UserTests
 		{
 		}
 
-		sealed class ConstructorFactoryVisitor : ExpressionVisitor
+		// Collects every place the mapper actually builds an Address, so the test can assert that no constructor
+		// body is emitted more than once. Counting occurrences (rather than distinct nodes) is the point: before
+		// the fix the same constructor was embedded at each use site, so Expression.Compile processed it N times.
+		sealed class EntityConstructionVisitor : ExpressionVisitor
 		{
-			public int Count { get; private set; }
+			public List<Expression> Constructions { get; } = new();
 
-			protected override Expression VisitInvocation(InvocationExpression node)
+			protected override Expression VisitMemberInit(MemberInitExpression node)
 			{
-				var invoke = node.Expression.Type.GetMethod(nameof(Action.Invoke));
+				if (typeof(Address).IsAssignableFrom(node.Type))
+					Constructions.Add(node);
 
-				if (invoke?.GetParameters().Length == 0 && typeof(Address).IsAssignableFrom(invoke.ReturnType))
-					Count++;
+				return base.VisitMemberInit(node);
+			}
 
-				return base.VisitInvocation(node);
+			protected override Expression VisitNew(NewExpression node)
+			{
+				// bare parameterless New is shared by every MemberInit of the same type — only a parameterized
+				// New identifies a distinct construction on its own.
+				if (node.Arguments.Count > 0 && typeof(Address).IsAssignableFrom(node.Type))
+					Constructions.Add(node);
+
+				return base.VisitNew(node);
 			}
 		}
 
@@ -106,10 +119,21 @@ namespace Tests.UserTests
 
 			mapperExpression.ShouldNotBeNull();
 
-			var visitor = new ConstructorFactoryVisitor();
+			var visitor = new EntityConstructionVisitor();
 
 			visitor.Visit(mapperExpression);
-			visitor.Count.ShouldBeGreaterThan(0);
+
+			// sanity: the TPH branches are in there at all, otherwise the assertion below is vacuous
+			visitor.Constructions.Count.ShouldBeGreaterThan(0);
+
+			// the actual guard: a constructor duplicated across branches must be stored once and reused, so no
+			// two occurrences in the mapper may be structurally equal
+			visitor.Constructions
+				.GroupBy(c => c, ExpressionEqualityComparer.Instance)
+				.Where(g => g.Count() > 1)
+				.Select(g => $"{g.Key.Type.Name} emitted {g.Count()} times")
+				.ToArray()
+				.ShouldBeEmpty();
 		}
 	}
 }

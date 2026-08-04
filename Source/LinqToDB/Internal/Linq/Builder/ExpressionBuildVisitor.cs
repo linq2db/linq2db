@@ -1966,20 +1966,22 @@ namespace LinqToDB.Internal.Linq.Builder
 				using (UsingAlias(null))
 				{
 					test = Visit(node.Test);
-				}
 
-				if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
-				{
-					var binary = (BinaryExpression)test;
-					if (HandleDefaultIfEmptyInBinary(binary.Left,  binary.Right, out var newTest) ||
-					    HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
+					// The rewritten test has to be visited in the same scope as the original one: the descriptor/alias
+					// suppression is what keeps a conditional from picking up the enclosing column's type (#5216).
+					if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
-						if (binary.NodeType == ExpressionType.Equal)
+						var binary = (BinaryExpression)test;
+						if (HandleDefaultIfEmptyInBinary(binary.Left,  binary.Right, out var newTest) ||
+						    HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
 						{
-							newTest = Expression.Not(newTest);
-						}
+							if (binary.NodeType == ExpressionType.Equal)
+							{
+								newTest = Expression.Not(newTest);
+							}
 
-						test = Visit(newTest);
+							test = Visit(newTest);
+						}
 					}
 				}
 
@@ -2004,10 +2006,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var newNode = node.Update(test, ifTrue, ifFalse);
 
-				if (_buildPurpose is BuildPurpose.Expression    &&
-				    MappingSchema.IsScalarType(newNode.Type)    &&
-				    TryConvertToSql(newNode, out var sqlResult) &&
-				    sqlResult is SqlPlaceholderExpression)
+				// Whole-expression conversion is attempted only after the fast path above failed, so a conditional that
+				// is already made of placeholders never pays for it. It must run on the original node: the visited
+				// children may have been materialized client-side, and such a tree no longer converts to SQL.
+				if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
 				{
 					return sqlResult;
 				}
