@@ -33,6 +33,16 @@ namespace Tests.Linq
 			public ReuseHolder? Inner;
 		}
 
+		sealed class ReuseIdSource
+		{
+			public int Value;
+
+			public List<int> Next()
+			{
+				return new List<int> { Value++ };
+			}
+		}
+
 		#region A repeated expression is shared only when both occurrences produce the same value
 
 		[Test]
@@ -81,12 +91,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterReuse_PureMethodCall_Reused([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void ParameterReuse_MethodCallWithEqualValues_Reused([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			// Both calls return the same value, so one parameter is enough - this is the shape
-			// ParameterTests.Caching pins.
+			// The contract is about the values, not about the shape of the expression: both calls return the
+			// same value, so one parameter carries it. ParameterTests.Caching pins the same contract.
 			var sql = db.GetTable<ParameterDeduplication>()
 				.Where(t => t.String2 == ReuseHolder.Get().ValueProperty || t.String3 == ReuseHolder.Get().ValueProperty)
 				.ToSqlQuery();
@@ -95,7 +105,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterReuse_GetValueOrDefault_Reused([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void ParameterReuse_ConversionCallWithEqualValues_Reused([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -128,6 +138,47 @@ namespace Tests.Linq
 				.ToArray();
 
 			ids.Distinct().Count().ShouldBe(2);
+		}
+
+		[Test]
+		public void ParameterReuse_ImpureCollection_EachOccurrenceFiltersItsOwnValues([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Enumerable.Range(0, 20)
+				.Select(v => new ParameterDeduplication { Id = v + 1, Int1 = v, Int2 = v })
+				.ToArray());
+
+			var source = new ReuseIdSource();
+
+			// Collection parameters of an IN predicate take the same path: two calls return two different
+			// collections, so the predicates must not share one. Every row repeats its value in both columns,
+			// so two distinct collections select two rows while a shared one selects a single row.
+			var ids = table
+				.Where(t => source.Next().Contains(t.Int1) || source.Next().Contains(t.Int2))
+				.Select(t => t.Id)
+				.ToArray();
+
+			ids.Distinct().Count().ShouldBe(2);
+		}
+
+		[Test]
+		public void ParameterReuse_CapturedCollection_Reused([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var values = new List<int> { 1, 2, 3 };
+
+			// The same captured collection on both sides is one value, so it stays one occurrence.
+			var sql = db.GetTable<ParameterDeduplication>()
+				.Where(t => values.Contains(t.Int1) || values.Contains(t.Int2))
+				.ToSqlQuery();
+
+			var lists = System.Text.RegularExpressions.Regex.Matches(sql.Sql, @"IN \(([^)]*)\)")
+				.Select(m => m.Groups[1].Value)
+				.ToArray();
+
+			lists.Length.ShouldBe(2);
+			lists[0].ShouldBe(lists[1]);
 		}
 
 		[Test]
