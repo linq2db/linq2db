@@ -62,7 +62,11 @@ namespace Tests.Linq
 				.Where(t => t.Int1 == value.GetValueOrDefault(7))
 				.ToSqlQuery();
 
-			sql.Parameters.Select(p => p.Name).ShouldNotBe(["value"]);
+			// Checked as a prefix rather than an exact sequence: the target's name must not appear at all,
+			// including as "value_1" after uniquification or alongside a parameter added later. The
+			// non-empty check keeps ShouldAllBe from passing vacuously if the value stops being a parameter.
+			sql.Parameters.ShouldNotBeEmpty();
+			sql.Parameters.Select(p => p.Name).ShouldAllBe(n => !n!.StartsWith("value", StringComparison.Ordinal));
 		}
 
 		[Test]
