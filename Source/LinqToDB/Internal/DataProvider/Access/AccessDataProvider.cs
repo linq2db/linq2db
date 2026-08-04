@@ -83,7 +83,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 			}
 
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
-
 			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
 		}
 

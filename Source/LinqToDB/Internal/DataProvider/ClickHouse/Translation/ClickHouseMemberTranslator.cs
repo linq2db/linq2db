@@ -63,6 +63,29 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
+
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(1, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond | DateTimeIntervalUnits.Tick, long.MaxValue, !isDateTimeOffset || SupportsDateTimeOffsetIntervalArithmetic);
+			}
+
+			private protected override bool PreservesDateTimeOffsetInstant(DbDataType dataType)
+			{
+				// ClickHouse has no offset-bearing timestamp value, but its DateTime/DateTime64
+				// DateTimeOffset mappings normalize values to UTC and therefore retain the instant.
+				return dataType.DataType is DataType.DateTime or DataType.DateTime2 or DataType.DateTime64 or DataType.SmallDateTime or DataType.DateTimeOffset;
+			}
+
+			private protected override DateTimeIntervalCapabilities GetDateTimeIntervalCapabilities(ITranslationContext translationContext, ISqlExpression dateTimeExpression, bool isDateTimeOffset)
+			{
+				var capabilities = base.GetDateTimeIntervalCapabilities(translationContext, dateTimeExpression, isDateTimeOffset);
+				if (translationContext.ExpressionFactory.GetDbDataType(dateTimeExpression).DataType == DataType.DateTime)
+					return new DateTimeIntervalCapabilities(TimeSpan.TicksPerSecond, capabilities.SupportedUnits, capabilities.MaxIntervalTicks, capabilities.PreservesInstant);
+
+				return capabilities;
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -81,10 +104,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					Sql.DateParts.Minute      => factory.Function(intDataType, "toMinute", dateTimeExpression),
 					Sql.DateParts.Second      => factory.Function(intDataType, "toSecond", dateTimeExpression),
 					Sql.DateParts.WeekDay     => factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1))),
-					Sql.DateParts.Millisecond => factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", dateTimeExpression), 1000),
-					Sql.DateParts.Microsecond => factory.Mod(factory.Function(longDataType, "toUnixTimestamp64Micro", dateTimeExpression), 1_000_000),
-					Sql.DateParts.Tick        => factory.Mod(factory.Div(longDataType, factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), 100), 10_000_000),
-					Sql.DateParts.Nanosecond  => factory.Mod(factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), 1_000_000_000),
+					Sql.DateParts.Millisecond => factory.Function(intDataType,  "positiveModulo", factory.Function(longDataType, "toUnixTimestamp64Milli", dateTimeExpression), factory.Value(longDataType, 1_000L)),
+					Sql.DateParts.Microsecond => factory.Function(longDataType, "positiveModulo", factory.Function(longDataType, "toUnixTimestamp64Micro", dateTimeExpression), factory.Value(longDataType, 1_000_000L)),
+					Sql.DateParts.Tick        => factory.Function(longDataType, "positiveModulo", factory.Div(longDataType, factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), 100), factory.Value(longDataType, 10_000_000L)),
+					Sql.DateParts.Nanosecond  => factory.Function(longDataType, "positiveModulo", factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), factory.Value(longDataType, 1_000_000_000L)),
 					_                         => null,
 				};
 			}
@@ -118,22 +141,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					case Sql.DateParts.Tick:
 					case Sql.DateParts.Nanosecond:
 					{
-						var multiplier = datepart switch
+						var subsecondFunction = datepart switch
 						{
-							Sql.DateParts.Millisecond => 1_000_000L,
-							Sql.DateParts.Microsecond => 1_000L,
-							Sql.DateParts.Tick        => 100L,
-							_                         => 1L,
+							Sql.DateParts.Millisecond => "addMilliseconds",
+							Sql.DateParts.Microsecond => "addMicroseconds",
+							_                         => "addNanoseconds",
 						};
-						var resultExpression = factory.Function(dateType, "fromUnixTimestamp64Nano",
-							factory.Add(
-								longDataType,
-								factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
-								factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, factory.Value(longDataType, multiplier)), longDataType)
-							)
-						);
+						if (datepart == Sql.DateParts.Tick)
+							increment = factory.Multiply(longDataType, factory.Cast(increment, longDataType, true), 100L);
 
-						return resultExpression;
+						return factory.Function(dateType, subsecondFunction, dateTimeExpression, increment);
 					}
 					default:
 						return null;
@@ -146,8 +163,19 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
+				if (factory.GetDbDataType(leftExpression).DataType == DataType.DateTime2 || factory.GetDbDataType(rightExpression).DataType == DataType.DateTime2)
+					return null;
+
+				var longType     = factory.GetDbDataType(typeof(long));
+				var dateType     = factory.GetDbDataType(leftExpression);
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 9)) - toUnixTimestamp64Nano(toDateTime64({1}, 9))) / 100)", leftExpression, rightExpression);
+				var days         = factory.Function(longType, "date_diff", factory.Value("day"), rightExpression, leftExpression);
+				var anchor       = factory.Function(dateType, "addDays", rightExpression, days);
+				var subdayNanos  = factory.Function(longType, "date_diff", factory.Value("nanosecond"), anchor, leftExpression);
+				var subdayTicks  = factory.Div(longType, subdayNanos, 100);
+				var ticks        = factory.Add(longType, factory.Multiply(longType, days, TimeSpan.TicksPerDay), subdayTicks);
+
+				return factory.Expression(intervalType, "{0}", ticks);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(

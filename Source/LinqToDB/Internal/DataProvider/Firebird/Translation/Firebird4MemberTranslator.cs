@@ -20,6 +20,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class Firebird4DateFunctionsTranslator : FirebirdDateFunctionsTranslator
 		{
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
+
+			protected override ISqlExpression? TranslateDateTimeOffsetToUtc(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory    = translationContext.ExpressionFactory;
+				var resultType = factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Timestamp);
+
+				return factory.Expression(resultType, "({0} AT TIME ZONE 'UTC')", dateExpression);
+			}
+
 			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;

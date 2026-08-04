@@ -72,11 +72,19 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(10, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond, long.MaxValue, !isDateTimeOffset);
+			}
 			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var resultTypeDb = factory.GetDbDataType(resultType);
-				const string totalSeconds = "TIME_TO_SEC({0})";
+				const string totalSeconds      = "TIME_TO_SEC({0})";
+				const string totalMicroseconds = "TRUNCATE((TIME_TO_SEC({0})) * 1000000, 0)";
+				const string secondRemainder   = $"(({totalMicroseconds}) - TRUNCATE(({totalMicroseconds}) / 1000000, 0) * 1000000)";
+				const string millisecondPart   = $"TRUNCATE(({secondRemainder}) / 1000, 0)";
+				const string microsecondPart   = $"(({secondRemainder}) - ({millisecondPart}) * 1000)";
 
 				var expression = part switch
 				{
@@ -88,15 +96,15 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60.0",
 					TimeSpanPart.Seconds           => $"MOD(TRUNCATE({totalSeconds}, 0), 60)",
 					TimeSpanPart.TotalSeconds      => totalSeconds,
-					TimeSpanPart.Milliseconds      => "TRUNCATE(MICROSECOND({0}) / 1000, 0)",
+					TimeSpanPart.Milliseconds      => millisecondPart,
 					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000.0",
 #if NET7_0_OR_GREATER
-					TimeSpanPart.Microseconds      => "MOD(MICROSECOND({0}), 1000)",
+					TimeSpanPart.Microseconds      => microsecondPart,
 					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000.0",
-					TimeSpanPart.Nanoseconds       => "MOD(MICROSECOND({0}) * 1000, 1000)",
+					TimeSpanPart.Nanoseconds       => "0",
 					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000.0",
 #endif
-					TimeSpanPart.Ticks             => $"TRUNCATE(({totalSeconds}) * 10000000, 0)",
+					TimeSpanPart.Ticks             => $"({totalMicroseconds}) * 10",
 					_                              => null,
 				};
 

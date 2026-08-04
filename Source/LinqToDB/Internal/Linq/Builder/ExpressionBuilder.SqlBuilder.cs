@@ -331,7 +331,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public ISqlExpression PosProcessCustomExpression(ISqlExpression sqlExpression, NullabilityContext nullabilityContext)
 		{
-			if (sqlExpression is SqlExpression { Expr: "{0}", Parameters.Length: 1 } expr)
+			if (sqlExpression is SqlExpression { Expr: "{0}", Parameters.Length: 1, ResultConverter: null } expr)
 			{
 				var expressionNull = nullabilityContext.CanBeNull(sqlExpression);
 				var argNull        = nullabilityContext.CanBeNull(expr.Parameters[0]);

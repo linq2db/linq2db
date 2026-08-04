@@ -13,13 +13,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServer2016DateFunctionsTranslator : SqlServer2012DateFunctionsTranslator
 		{
-			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
-			{
-				var factory      = translationContext.ExpressionFactory;
-				var intervalType = factory.GetDbDataType(typeof(System.TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "DATEDIFF_BIG(nanosecond, {1}, {0}) / 100", leftExpression, rightExpression);
-			}
-
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;

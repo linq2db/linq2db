@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq.Expressions;
+using System.Reflection;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -64,19 +67,49 @@ namespace LinqToDB
 			Minute      =  8,
 			Second      =  9,
 			Millisecond = 10,
-			/// <summary>Microseconds within the current second.</summary>
+			/// <summary>Microseconds within the current second, from 0 through 999999.</summary>
 			Microsecond = 11,
-			/// <summary>Nanoseconds within the current second.</summary>
+			/// <summary>Nanoseconds within the current second, from 0 through 999999900 in 100-nanosecond increments.</summary>
 			Nanosecond  = 12,
-			/// <summary>100-nanosecond ticks within the current second.</summary>
+			/// <summary>100-nanosecond ticks within the current second, from 0 through 9999999.</summary>
 			Tick        = 13,
 		}
 
 		#region DatePart
 
+		/// <summary>
+		/// Returns the requested component of <paramref name="date"/>.
+		/// </summary>
+		/// <param name="part">Date component to return.</param>
+		/// <param name="date">Date value.</param>
+		/// <returns>Requested date component, or <see langword="null"/> when <paramref name="date"/> is <see langword="null"/>.</returns>
+		/// <remarks>
+		/// <see cref="DateParts.Tick"/> returns the 100-nanosecond component within the current second, from 0 through 9999999.
+		/// <see cref="DateParts.Nanosecond"/> returns the component in 100-nanosecond increments, from 0 through 999999900.
+		/// </remarks>
 		public static int? DatePart([SqlQueryDependent] DateParts part, [ExprParameter] DateTime? date)
 		{
-			return (int?)DatePartLong(part, date);
+			if (date == null)
+				return null;
+
+			return part switch
+			{
+				DateParts.Year          => date.Value.Year,
+				DateParts.Quarter       => (date.Value.Month - 1) / 3 + 1,
+				DateParts.Month         => date.Value.Month,
+				DateParts.DayOfYear     => date.Value.DayOfYear,
+				DateParts.Day           => date.Value.Day,
+				DateParts.Week          => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
+				DateParts.WeekDay       => ((int)date.Value.DayOfWeek + 1 + DateFirst + 6) % 7 + 1,
+				DateParts.Hour          => date.Value.Hour,
+				DateParts.Minute        => date.Value.Minute,
+				DateParts.Second        => date.Value.Second,
+				DateParts.Millisecond   => date.Value.Millisecond,
+				DateParts.Microsecond   => (int)(date.Value.Ticks % TimeSpan.TicksPerSecond / 10),
+				DateParts.Nanosecond    => (int)(date.Value.Ticks % TimeSpan.TicksPerSecond * 100),
+				DateParts.Tick          => (int)(date.Value.Ticks % TimeSpan.TicksPerSecond),
+				_                       => throw new InvalidOperationException(),
+			};
 		}
 
 		/// <summary>
@@ -85,6 +118,10 @@ namespace LinqToDB
 		/// <param name="part">Date component to return.</param>
 		/// <param name="date">Date value.</param>
 		/// <returns>Requested date component, or <see langword="null"/> when <paramref name="date"/> is <see langword="null"/>.</returns>
+		/// <remarks>
+		/// <see cref="DateParts.Tick"/> returns the 100-nanosecond component within the current second, from 0 through 9999999.
+		/// <see cref="DateParts.Nanosecond"/> returns the component in 100-nanosecond increments, from 0 through 999999900.
+		/// </remarks>
 		public static long? DatePartLong([SqlQueryDependent] DateParts part, [ExprParameter] DateTime? date)
 		{
 			if (date == null)
@@ -114,6 +151,17 @@ namespace LinqToDB
 
 		#region DateAdd
 
+		/// <summary>
+		/// Adds the requested number of date-part units to <paramref name="date"/>.
+		/// </summary>
+		/// <param name="part">Date-part unit to add.</param>
+		/// <param name="number">Number of units to add.</param>
+		/// <param name="date">Date value.</param>
+		/// <returns>Adjusted date, or <see langword="null"/> when an argument is <see langword="null"/>.</returns>
+		/// <remarks>
+		/// One <see cref="DateParts.Tick"/> is 100 nanoseconds. Nanosecond values are converted to whole ticks by truncating
+		/// toward zero: 99 and -99 add zero ticks, 100 adds one tick, and -101 adds negative one tick.
+		/// </remarks>
 		public static DateTime? DateAdd([SqlQueryDependent] DateParts part, double? number, DateTime? date)
 		{
 			if (number == null || date == null)
@@ -149,7 +197,7 @@ namespace LinqToDB
 		{
 			public static DbDataType GetResultType(ISqlExtensionBuilder builder)
 			{
-				return builder.Mapping.GetDbDataType(string.Equals(builder.Member.Name, nameof(DateDiffLong), StringComparison.Ordinal) ? typeof(long) : typeof(int));
+				return builder.Mapping.GetDbDataType(typeof(int));
 			}
 
 			public static string DatePartToStr(DateParts part)
@@ -200,8 +248,306 @@ namespace LinqToDB
 			}
 		}
 
+		sealed class DateDiffLongBuilder : IExtensionCallBuilder
+		{
+			private static readonly MethodInfo _datePartLongDateTime = MemberHelper.MethodOf(() => DatePartLong(DateParts.Year, (DateTime?)null));
+			private static readonly MethodInfo _duckDbDateDiffMicrosecond = MemberHelper.MethodOf(() => DuckDbDateDiffMicrosecond(null, null));
+			private static readonly MethodInfo _floorDecimal         = MemberHelper.MethodOf(() => Floor((decimal?)null));
+			private static readonly MethodInfo _accessDecimal        = MemberHelper.MethodOf(() => AccessDecimal(null));
+			private static readonly MethodInfo _accessMilliseconds   = MemberHelper.MethodOf(() => AccessMillisecondsSinceEpoch(null));
+			private static readonly MethodInfo _accessDate            = MemberHelper.MethodOf(() => AccessDateFromDayIndex(null));
+			private static readonly IValueConverter _checkedDecimalLongConverter = new ValueConverter<long, decimal>(
+				value => value,
+				value => checked((long)value),
+				handlesNulls: false);
+
+			[Expression(PN.Access, "CVar({0}) * 10000000000 / 10000000000", ServerSideOnly = true)]
+			private static decimal? AccessDecimal(decimal? value) => value;
+
+			// Access stores Date/Time as an OLE Automation double, while DateTime.FromOADate
+			// rounds that value to the nearest millisecond. Reproduce that conversion before
+			// counting boundaries: Access DatePart itself rounds values close to midnight and
+			// can otherwise report the following calendar day for 23:59:59.999.
+			[Expression(PN.Access,
+				"CVar(IIf(CDbl({0}) >= 0, " +
+					"Fix(CDbl({0}) * 86400000 + 0.5), " +
+					"Fix(CDbl({0}) * 86400000 - 0.5) - 2 * (Fix(CDbl({0}) * 86400000 - 0.5) - Fix(Fix(CDbl({0}) * 86400000 - 0.5) / 86400000) * 86400000)) + 59926435200000)",
+				ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+			private static decimal? AccessMillisecondsSinceEpoch(DateTime? value) => value?.Ticks / TimeSpan.TicksPerMillisecond;
+
+			[Expression(PN.Access, "CDate({0} - 693593)", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+			private static DateTime? AccessDateFromDayIndex(decimal? dayIndex) => dayIndex == null ? null : DateTime.MinValue.AddDays((double)dayIndex.Value);
+
+			[Expression(PN.DuckDB, "date_diff('microsecond', {0}, {1})", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+			private static long? DuckDbDateDiffMicrosecond(DateTime? startDate, DateTime? endDate)
+				=> startDate == null || endDate == null ? null : endDate.Value.Ticks / 10 - startDate.Value.Ticks / 10;
+
+			public void Build(ISqlExtensionBuilder builder)
+			{
+				var part       = builder.GetValue<DateParts>(0);
+				var startDate  = builder.Arguments[1];
+				var endDate    = builder.Arguments[2];
+				var dateType   = ((MethodInfo)builder.Member).GetParameters()[1].ParameterType;
+				var isOffset   = dateType == typeof(DateTimeOffset?);
+
+				if (isOffset && !SupportsDateTimeOffsetBoundaries(builder))
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				var normalizedStart = NormalizeDate(startDate, isOffset);
+				var normalizedEnd   = NormalizeDate(endDate,   isOffset);
+				var indexPart       = part == DateParts.Nanosecond ? DateParts.Tick : part;
+				var forceAccessDecimal = builder.Configuration?.Contains(PN.Access, StringComparison.Ordinal) == true;
+				ISqlExpression? result;
+				if (builder.Configuration?.Contains(PN.DuckDB, StringComparison.Ordinal) == true
+					&& indexPart is DateParts.Microsecond or DateParts.Tick)
+				{
+					// DuckDB's DECIMAL division produces DOUBLE. Building an absolute microsecond/tick
+					// index from calendar parts therefore loses low bits for modern dates (well above
+					// 2^53). date_diff counts microsecond boundaries using the timestamp's native
+					// integer representation, so scale that exact value for tick/nanosecond results.
+					var difference = Expression.Call(_duckDbDateDiffMicrosecond, normalizedStart, normalizedEnd);
+					result = builder.ConvertExpressionToSql(difference);
+
+					if (result != null && indexPart == DateParts.Tick)
+						result = builder.Mul(result, 10);
+				}
+				else
+				{
+					var startIndex = CreateBoundaryIndex(indexPart, normalizedStart, forceAccessDecimal);
+					var endIndex   = CreateBoundaryIndex(indexPart, normalizedEnd,   forceAccessDecimal);
+					var difference = Expression.Subtract(endIndex, startIndex);
+					result = builder.ConvertExpressionToSql(difference);
+				}
+
+				if (result == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				var longType = builder.Mapping.GetDbDataType(typeof(long));
+
+				if (forceAccessDecimal)
+				{
+					if (part == DateParts.Nanosecond)
+						result = builder.Mul(result, 100);
+
+					var decimalType = builder.Mapping.GetDbDataType(typeof(decimal)).WithSystemType(typeof(long));
+					builder.ResultExpression = new SqlExpression(decimalType, "{0}", result)
+						.WithResultConverter(_checkedDecimalLongConverter);
+					return;
+				}
+
+				if (part == DateParts.Nanosecond)
+				{
+					if (builder.Configuration?.Contains(PN.ClickHouse, StringComparison.Ordinal) == true)
+					{
+						builder.ResultExpression = new SqlExpression(
+							longType,
+							"accurateCast(CAST({0} AS Decimal(38, 0)) * 100, 'Int64')",
+							result);
+						return;
+					}
+
+					if (builder.Configuration?.Contains(PN.MySql, StringComparison.Ordinal) == true
+						|| builder.Configuration?.Contains("MariaDB", StringComparison.Ordinal) == true)
+					{
+						var decimalType = builder.Mapping.GetDbDataType(typeof(decimal)).WithPrecisionScale(38, 0);
+						var decimalTicks = new SqlCastExpression(result, decimalType, null, isMandatory: true);
+						var nanoseconds = new SqlBinaryExpression(
+							decimalType,
+							decimalTicks,
+							"*",
+							new SqlValue(decimalType, 100m));
+
+						builder.ResultExpression = new SqlExpression(decimalType.WithSystemType(typeof(long)), "{0}", nanoseconds)
+							.WithResultConverter(_checkedDecimalLongConverter);
+						return;
+					}
+
+					result = builder.Mul(result, 100);
+				}
+
+				var cast = new SqlCastExpression(result, longType, null, isMandatory: true);
+
+				// SQLite saturates an out-of-range REAL/NUMERIC-to-INTEGER cast instead of reporting
+				// overflow. DateDiffLong(Nanosecond) has a checked contract, so guard its decimal
+				// intermediate explicitly and execute an expression that SQLite reports as integer
+				// overflow only for an out-of-range result. CASE evaluation is lazy in SQLite.
+				if (part == DateParts.Nanosecond && builder.Configuration?.Contains(PN.SQLite, StringComparison.Ordinal) == true)
+				{
+					var decimalType = builder.Mapping.GetDbDataType(typeof(decimal));
+					var inRange     = new SqlSearchCondition(
+						false,
+						canBeUnknown: null,
+						new SqlPredicate.ExprExpr(result, SqlPredicate.Operator.GreaterOrEqual, new SqlValue(decimalType, (decimal)long.MinValue), unknownAsValue: null),
+						new SqlPredicate.ExprExpr(result, SqlPredicate.Operator.LessOrEqual,    new SqlValue(decimalType, (decimal)long.MaxValue), unknownAsValue: null));
+					var overflow = new SqlExpression(longType, "abs(-9223372036854775808)");
+
+					builder.ResultExpression = new SqlConditionExpression(inRange, cast, overflow);
+				}
+				else
+				{
+					builder.ResultExpression = cast;
+				}
+			}
+
+			private static bool SupportsDateTimeOffsetBoundaries(ISqlExtensionBuilder builder)
+			{
+				var configuration = builder.Configuration;
+				if (configuration == null)
+					return false;
+
+				var providerPreservesInstant = configuration.Contains(PN.PostgreSQL, StringComparison.Ordinal)
+					|| configuration.Contains(PN.Oracle,     StringComparison.Ordinal)
+					|| configuration.Contains(PN.ClickHouse, StringComparison.Ordinal)
+					|| configuration.Contains(PN.DuckDB,     StringComparison.Ordinal)
+					|| configuration.Contains(PN.SQLite,     StringComparison.Ordinal)
+					|| configuration.Contains(PN.Firebird4,  StringComparison.Ordinal)
+					|| configuration.Contains(PN.Firebird5,  StringComparison.Ordinal)
+					|| configuration.Contains(PN.SqlServer,  StringComparison.Ordinal)
+						&& !configuration.Contains(PN.SqlServer2005, StringComparison.Ordinal);
+
+				if (!providerPreservesInstant)
+					return false;
+
+				var startDate = builder.GetExpression(1);
+				var endDate   = builder.GetExpression(2);
+				if (startDate == null || endDate == null)
+					return false;
+
+				return PreservesInstant(QueryHelper.GetDbDataType(startDate, builder.Mapping))
+					&& PreservesInstant(QueryHelper.GetDbDataType(endDate, builder.Mapping));
+
+				bool PreservesInstant(DbDataType dataType)
+				{
+					if (configuration.Contains(PN.ClickHouse, StringComparison.Ordinal))
+						return dataType.DataType is DataType.DateTime or DataType.DateTime2 or DataType.DateTime64 or DataType.SmallDateTime or DataType.DateTimeOffset;
+
+					return dataType.DataType is DataType.DateTimeTz or DataType.DateTime2Tz or DataType.DateTimeOffset;
+				}
+			}
+
+			private static Expression NormalizeDate(Expression date, bool isOffset)
+			{
+				if (!isOffset)
+					return date.Type == typeof(DateTime?) ? date : Expression.Convert(date, typeof(DateTime?));
+
+				var nullableDate = date.Type == typeof(DateTimeOffset?) ? date : Expression.Convert(date, typeof(DateTimeOffset?));
+				var hasValue     = Expression.Property(nullableDate, nameof(Nullable<>.HasValue));
+				var value        = Expression.Property(nullableDate, nameof(Nullable<>.Value));
+				var utcDate      = Expression.Property(value, nameof(DateTimeOffset.UtcDateTime));
+
+				return Expression.Condition(hasValue, Expression.Convert(utcDate, typeof(DateTime?)), Expression.Default(typeof(DateTime?)));
+			}
+
+			private static Expression CreateBoundaryIndex(DateParts part, Expression date, bool forceAccessDecimal)
+			{
+				if (forceAccessDecimal)
+					return CreateAccessBoundaryIndex(part, date);
+
+				Expression Wrap(Expression value)
+				{
+					return value;
+				}
+
+				Expression Part(DateParts value) => Wrap(Expression.Call(_datePartLongDateTime, Expression.Constant(value), date));
+				Expression Number(long value) => Expression.Constant((long?)value, typeof(long?));
+				Expression Add(Expression left, Expression right) => Wrap(Expression.Add(left, right));
+				Expression Sub(Expression left, Expression right) => Wrap(Expression.Subtract(left, right));
+				Expression Mul(Expression left, long right) => Wrap(Expression.Multiply(left, Number(right)));
+				Expression Div(Expression left, long right)
+				{
+					var quotient = Expression.Divide(
+						Expression.Convert(left, typeof(decimal?)),
+						Expression.Constant((decimal?)right, typeof(decimal?)));
+					var floor = Expression.Call(_floorDecimal, quotient);
+					return Expression.Convert(floor, typeof(long?));
+				}
+
+				var year        = Part(DateParts.Year);
+				var yearIndex   = Sub(year, Number(1));
+				var dayIndex    = Add(
+					Add(
+						Sub(Add(Mul(yearIndex, 365), Div(yearIndex, 4)), Div(yearIndex, 100)),
+						Div(yearIndex, 400)),
+					Sub(Part(DateParts.DayOfYear), Number(1)));
+				var hourIndex   = Add(Mul(dayIndex, 24), Part(DateParts.Hour));
+				var minuteIndex = Add(Mul(hourIndex, 60), Part(DateParts.Minute));
+				var secondIndex = Add(Mul(minuteIndex, 60), Part(DateParts.Second));
+
+				return part switch
+				{
+					DateParts.Year        => yearIndex,
+					DateParts.Quarter     => Add(Mul(yearIndex, 4), Div(Sub(Part(DateParts.Month), Number(1)), 3)),
+					DateParts.Month       => Add(Mul(yearIndex, 12), Sub(Part(DateParts.Month), Number(1))),
+					DateParts.DayOfYear   => dayIndex,
+					DateParts.Day         => dayIndex,
+					DateParts.Week        => Div(Add(dayIndex, Number(1)), 7),
+					DateParts.WeekDay     => dayIndex,
+					DateParts.Hour        => hourIndex,
+					DateParts.Minute      => minuteIndex,
+					DateParts.Second      => secondIndex,
+					DateParts.Millisecond => Add(Mul(secondIndex, 1_000), Part(DateParts.Millisecond)),
+					DateParts.Microsecond => Add(Mul(secondIndex, 1_000_000), Part(DateParts.Microsecond)),
+					DateParts.Tick        => Add(Mul(secondIndex, TimeSpan.TicksPerSecond), Part(DateParts.Tick)),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
+			}
+
+			private static Expression CreateAccessBoundaryIndex(DateParts part, Expression date)
+			{
+				Expression Wrap(Expression value) => Expression.Call(
+					_accessDecimal,
+					value.Type == typeof(decimal?) ? value : Expression.Convert(value, typeof(decimal?)));
+				Expression Number(long value) => Wrap(Expression.Constant((decimal?)value, typeof(decimal?)));
+				Expression Add(Expression left, Expression right) => Wrap(Expression.Add(left, right));
+				Expression Sub(Expression left, Expression right) => Wrap(Expression.Subtract(left, right));
+				Expression Mul(Expression left, long right) => Wrap(Expression.Multiply(left, Number(right)));
+				Expression Div(Expression left, long right)
+				{
+					var quotient = Expression.Divide(
+						Expression.Convert(left, typeof(decimal?)),
+						Expression.Constant((decimal?)right, typeof(decimal?)));
+					return Wrap(Expression.Call(_floorDecimal, quotient));
+				}
+
+				var milliseconds = Wrap(Expression.Call(_accessMilliseconds, date));
+				var dayIndex      = Div(milliseconds, 86_400_000);
+				var calendarDate  = Expression.Call(_accessDate, dayIndex);
+				Expression Part(DateParts value) => Wrap(Expression.Call(_datePartLongDateTime, Expression.Constant(value), calendarDate));
+
+				var yearIndex = Sub(Part(DateParts.Year), Number(1));
+
+				return part switch
+				{
+					DateParts.Year        => yearIndex,
+					DateParts.Quarter     => Add(Mul(yearIndex, 4), Div(Sub(Part(DateParts.Month), Number(1)), 3)),
+					DateParts.Month       => Add(Mul(yearIndex, 12), Sub(Part(DateParts.Month), Number(1))),
+					DateParts.DayOfYear   => dayIndex,
+					DateParts.Day         => dayIndex,
+					DateParts.Week        => Div(Add(dayIndex, Number(1)), 7),
+					DateParts.WeekDay     => dayIndex,
+					DateParts.Hour        => Div(milliseconds, 3_600_000),
+					DateParts.Minute      => Div(milliseconds, 60_000),
+					DateParts.Second      => Div(milliseconds, 1_000),
+					DateParts.Millisecond => milliseconds,
+					DateParts.Microsecond => Mul(milliseconds, 1000),
+					DateParts.Tick        => Mul(milliseconds, TimeSpan.TicksPerMillisecond),
+					_                     => throw new InvalidOperationException($"Unsupported date part: {part}"),
+				};
+			}
+		}
+
 		sealed class DateDiffBuilderFirebird : IExtensionCallBuilder
 		{
+			public DateDiffBuilderFirebird()
+			{
+			}
+
 			public static string DatePartToStr(DateParts part)
 			{
 				return part switch
@@ -248,6 +594,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderFirebird3Minus : IExtensionCallBuilder
 		{
+			public DateDiffBuilderFirebird3Minus()
+			{
+			}
+
 			public static string DatePartToStr(DateParts part)
 			{
 				return part switch
@@ -287,6 +637,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderSapHana : IExtensionCallBuilder
 		{
+			public DateDiffBuilderSapHana()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
@@ -325,6 +679,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderDB2 : IExtensionCallBuilder
 		{
+			public DateDiffBuilderDB2()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
@@ -373,6 +731,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderSQLite : IExtensionCallBuilder
 		{
+			public DateDiffBuilderSQLite()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
@@ -404,6 +766,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderPostgreSql : IExtensionCallBuilder
 		{
+			public DateDiffBuilderPostgreSql()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
@@ -435,6 +801,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderAccess : IExtensionCallBuilder
 		{
+			public DateDiffBuilderAccess()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
@@ -475,6 +845,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderOracle : IExtensionCallBuilder
 		{
+			public DateDiffBuilderOracle()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
@@ -525,6 +899,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderClickHouse : IExtensionCallBuilder
 		{
+			public DateDiffBuilderClickHouse()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
@@ -589,6 +967,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderYdb : IExtensionCallBuilder
 		{
+			public DateDiffBuilderYdb()
+			{
+			}
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
@@ -633,6 +1015,19 @@ namespace LinqToDB
 			}
 		}
 
+		/// <summary>
+		/// Returns the difference between two date values in the requested units using the existing <c>DateDiff</c>
+		/// contract and a 32-bit result.
+		/// </summary>
+		/// <param name="part">Date-part unit used to measure the difference.</param>
+		/// <param name="startDate">Start date.</param>
+		/// <param name="endDate">End date.</param>
+		/// <returns>The difference, or <see langword="null"/> when either argument is <see langword="null"/>.</returns>
+		/// <remarks>
+		/// <see cref="DateParts.Tick"/> expresses the result in 100-nanosecond units. Nanosecond results are multiples of 100.
+		/// Use <see cref="DateDiffLong(DateParts, DateTime?, DateTime?)"/> for the provider-independent boundary-counting contract
+		/// and a 64-bit result.
+		/// </remarks>
 		[CLSCompliant(false)]
 		[Extension(               "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
@@ -650,9 +1045,21 @@ namespace LinqToDB
 		[Extension(PN.DuckDB,     "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
-			var result = DateDiffLong(part, startDate, endDate);
+			if (startDate == null || endDate == null)
+				return null;
 
-			return result == null ? null : checked((int)result.Value);
+			return part switch
+			{
+				DateParts.Day         => (int)(endDate - startDate).Value.TotalDays,
+				DateParts.Hour        => (int)(endDate - startDate).Value.TotalHours,
+				DateParts.Minute      => (int)(endDate - startDate).Value.TotalMinutes,
+				DateParts.Second      => (int)(endDate - startDate).Value.TotalSeconds,
+				DateParts.Millisecond => (int)(endDate - startDate).Value.TotalMilliseconds,
+				DateParts.Microsecond => checked((int)((endDate - startDate).Value.Ticks / 10)),
+				DateParts.Nanosecond  => checked((int)checked((endDate - startDate).Value.Ticks * 100)),
+				DateParts.Tick        => checked((int)(endDate - startDate).Value.Ticks),
+				_                     => throw new InvalidOperationException(),
+			};
 		}
 
 		/// <summary>
@@ -662,41 +1069,63 @@ namespace LinqToDB
 		/// <param name="startDate">Start date.</param>
 		/// <param name="endDate">End date.</param>
 		/// <returns>The difference, or <see langword="null"/> when either argument is <see langword="null"/>.</returns>
+		/// <remarks>
+		/// Counts calendar boundaries for year, quarter, month, week and day parts, and fixed-duration boundaries
+		/// for hour through tick. Weeks start on Sunday. One tick is 100 nanoseconds; nanosecond results are therefore
+		/// multiples of 100. An <see cref="OverflowException"/> is thrown when a nanosecond result doesn't fit into <see cref="long"/>.
+		/// </remarks>
 		[CLSCompliant(false)]
-		[Extension(                  "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer,     "DateDiff_Big",  BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2005, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2008, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2012, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer2014, "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.MySql,         "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.DB2,           "",              BuilderType = typeof(DateDiffBuilderDB2))]
-		[Extension(PN.SapHana,       "",              BuilderType = typeof(DateDiffBuilderSapHana))]
-		[Extension(PN.Firebird25,    "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
-		[Extension(PN.Firebird3,     "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
-		[Extension(PN.Firebird,      "",              BuilderType = typeof(DateDiffBuilderFirebird))]
-		[Extension(PN.SQLite,        "",              BuilderType = typeof(DateDiffBuilderSQLite))]
-		[Extension(PN.Oracle,        "",              BuilderType = typeof(DateDiffBuilderOracle))]
-		[Extension(PN.PostgreSQL,    "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
-		[Extension(PN.Access,        "",              BuilderType = typeof(DateDiffBuilderAccess))]
-		[Extension(PN.ClickHouse,    "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
-		[Extension(PN.Ydb,           "",              BuilderType = typeof(DateDiffBuilderYdb))]
-		[Extension(PN.DuckDB,        "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Extension(                  "DateDiff",      BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.SqlServer,     "DateDiff_Big",  BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.SqlServer2005, "DateDiff",      BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.SqlServer2008, "DateDiff",      BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.SqlServer2012, "DateDiff",      BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.SqlServer2014, "DateDiff",      BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.MySql,         "TIMESTAMPDIFF", BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.DB2,           "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.SapHana,       "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.Firebird25,    "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.Firebird3,     "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.Firebird,      "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.SQLite,        "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.Oracle,        "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.PostgreSQL,    "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.Access,        "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.ClickHouse,    "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.Ydb,           "",              BuilderType = typeof(DateDiffLongBuilder))]
+		[Extension(PN.DuckDB,        "",              BuilderType = typeof(DateDiffLongBuilder))]
 		public static long? DateDiffLong(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
 				return null;
 
+			return DateDiffLongCore(part, startDate.Value, endDate.Value);
+		}
+
+		private static long DateDiffLongCore(DateParts part, DateTime startDate, DateTime endDate)
+		{
+			static long SundayWeekIndex(DateTime value)
+			{
+				var sunday = value.Date.Ticks / TimeSpan.TicksPerDay - (int)value.DayOfWeek;
+				return sunday >= 0 ? sunday / 7 : (sunday - 6) / 7;
+			}
+
 			return part switch
 			{
-				DateParts.Day         => (long)(endDate - startDate).Value.TotalDays,
-				DateParts.Hour        => (long)(endDate - startDate).Value.TotalHours,
-				DateParts.Minute      => (long)(endDate - startDate).Value.TotalMinutes,
-				DateParts.Second      => (long)(endDate - startDate).Value.TotalSeconds,
-				DateParts.Millisecond => (long)(endDate - startDate).Value.TotalMilliseconds,
-				DateParts.Microsecond => (endDate - startDate).Value.Ticks / 10,
-				DateParts.Nanosecond  => (endDate - startDate).Value.Ticks * 100,
-				DateParts.Tick        => (endDate - startDate).Value.Ticks,
+				DateParts.Year        => endDate.Year - startDate.Year,
+				DateParts.Quarter     => endDate.Year * 4L + (endDate.Month - 1) / 3 - (startDate.Year * 4L + (startDate.Month - 1) / 3),
+				DateParts.Month       => endDate.Year * 12L + endDate.Month - (startDate.Year * 12L + startDate.Month),
+				DateParts.DayOfYear   => endDate.Ticks / TimeSpan.TicksPerDay - startDate.Ticks / TimeSpan.TicksPerDay,
+				DateParts.Day         => endDate.Ticks / TimeSpan.TicksPerDay - startDate.Ticks / TimeSpan.TicksPerDay,
+				DateParts.Week        => SundayWeekIndex(endDate) - SundayWeekIndex(startDate),
+				DateParts.WeekDay     => endDate.Ticks / TimeSpan.TicksPerDay - startDate.Ticks / TimeSpan.TicksPerDay,
+				DateParts.Hour        => endDate.Ticks / TimeSpan.TicksPerHour - startDate.Ticks / TimeSpan.TicksPerHour,
+				DateParts.Minute      => endDate.Ticks / TimeSpan.TicksPerMinute - startDate.Ticks / TimeSpan.TicksPerMinute,
+				DateParts.Second      => endDate.Ticks / TimeSpan.TicksPerSecond - startDate.Ticks / TimeSpan.TicksPerSecond,
+				DateParts.Millisecond => endDate.Ticks / TimeSpan.TicksPerMillisecond - startDate.Ticks / TimeSpan.TicksPerMillisecond,
+				DateParts.Microsecond => endDate.Ticks / 10 - startDate.Ticks / 10,
+				DateParts.Nanosecond  => checked((endDate.Ticks - startDate.Ticks) * 100),
+				DateParts.Tick        => endDate.Ticks - startDate.Ticks,
 				_                     => throw new InvalidOperationException(),
 			};
 		}

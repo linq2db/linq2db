@@ -4,8 +4,10 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Access.Translation
 {
@@ -47,6 +49,46 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			static readonly IValueConverter _oaDateConverter = new ValueConverter<DateTime, double>(
+				value => value.ToOADate(),
+				value => DateTime.FromOADate(value),
+				handlesNulls: false);
+
+			static readonly IValueConverter _timeSpanTicksConverter = new ValueConverter<TimeSpan, decimal>(
+				value => value.Ticks,
+				value => TimeSpan.FromTicks(decimal.ToInt64(value)),
+				handlesNulls: false);
+
+			private protected override Expression CreateDateTimeIntervalAddResult(ITranslationContext translationContext, ISqlExpression translatedExpression, BinaryExpression binaryExpression)
+			{
+				return translationContext.CreatePlaceholder(
+					translationContext.CurrentSelectQuery,
+					WithResultConverter(translationContext, translatedExpression, _oaDateConverter),
+					binaryExpression);
+			}
+
+			private protected override Expression CreateDateTimeIntervalDifferenceResult(ITranslationContext translationContext, ISqlExpression translatedExpression, BinaryExpression binaryExpression)
+			{
+				return translationContext.CreatePlaceholder(
+					translationContext.CurrentSelectQuery,
+					WithResultConverter(translationContext, translatedExpression, _timeSpanTicksConverter),
+					binaryExpression);
+			}
+
+			private protected override Expression CreateTimeSpanNegateResult(ITranslationContext translationContext, ISqlExpression translatedExpression, UnaryExpression unaryExpression)
+			{
+				return translationContext.CreatePlaceholder(
+					translationContext.CurrentSelectQuery,
+					WithResultConverter(translationContext, translatedExpression, _timeSpanTicksConverter),
+					unaryExpression);
+			}
+
+			static ISqlExpression WithResultConverter(ITranslationContext translationContext, ISqlExpression expression, IValueConverter converter)
+			{
+				var resultType = translationContext.ExpressionFactory.GetDbDataType(expression);
+				return new SqlExpression(resultType, "{0}", expression).WithResultConverter(converter);
+			}
+
 			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
 			{
 				var factory        = translationContext.ExpressionFactory;
@@ -78,13 +120,21 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				ISqlExpression Total(double divisor)
 				{
-					var value = factory.Function(doubleType, "CDbl", ticks);
-					return factory.Div(doubleType, value, factory.Value(doubleType, divisor));
+					var value  = factory.Function(doubleType, "CDbl", ticks);
+					var result = factory.Div(doubleType, value, factory.Value(doubleType, divisor));
+
+					// CDbl(NULL) raises "Invalid use of Null" in Access instead of propagating it.
+					return factory.Condition(
+						factory.IsNullPredicate(timeSpanExpression),
+						factory.Null(doubleType),
+						result);
 				}
 
 				ISqlExpression Retype(ISqlExpression expression)
 				{
-					return factory.Expression(factory.GetDbDataType(expression).WithSystemType(resultType), "{0}", expression);
+					var expressionType = factory.GetDbDataType(expression);
+					var detached       = factory.Add(expressionType, expression, factory.Value(expressionType, 0m));
+					return factory.Expression(expressionType.WithSystemType(resultType), "{0}", detached);
 				}
 
 				return part switch
@@ -102,8 +152,8 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 #if NET7_0_OR_GREATER
 					TimeSpanPart.Microseconds      => Retype(Component(TimeSpan.TicksPerMicrosecond, 1000)),
 					TimeSpanPart.TotalMicroseconds => Total(TimeSpan.TicksPerMicrosecond),
-					TimeSpanPart.Nanoseconds       => Retype(factory.Sub(decimalType, factory.Multiply(decimalType, ticks, 100m), factory.Multiply(decimalType, Truncate(factory.Div(decimalType, factory.Multiply(decimalType, ticks, 100m), 1000m)), 1000m))),
-					TimeSpanPart.TotalNanoseconds  => factory.Multiply(doubleType, factory.Function(doubleType, "CDbl", ticks), 100D),
+					TimeSpanPart.Nanoseconds       => Retype(factory.Multiply(decimalType, Component(1, 10), 100m)),
+					TimeSpanPart.TotalNanoseconds  => Total(0.01D),
 #endif
 					TimeSpanPart.Ticks             => Retype(ticks),
 					_                              => null,
@@ -157,46 +207,81 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					factory.Function(doubleType, "CDbl", remainder),
 					factory.Value(doubleType, (double)TimeSpan.TicksPerDay));
 				var serialResult     = factory.Add(doubleType, serialDate, serialRemainder);
-				var dateType         = factory.GetDbDataType(dateTimeExpression);
-				var resultType       = doubleType.WithSystemType(dateType.SystemType);
-				var translatedResult = factory.Expression(resultType, "{0}", serialResult);
+				var translatedResult = factory.Expression(doubleType, "{0}", serialResult);
 				var nullOperand      = factory.SearchCondition(isOr: true)
 					.Add(factory.IsNullPredicate(dateTimeExpression))
 					.Add(factory.IsNullPredicate(intervalExpression));
 
 				// CDbl(NULL) raises "Invalid use of Null" in Access instead of propagating it.
-				return factory.Condition(nullOperand, factory.Null(resultType), translatedResult);
+				return factory.Condition(nullOperand, factory.Null(doubleType), translatedResult);
 			}
 
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory       = translationContext.ExpressionFactory;
-				var intervalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0).WithSystemType(typeof(TimeSpan));
-				var doubleType    = factory.GetDbDataType(typeof(double));
-				var left          = factory.Function(doubleType, "CDbl", leftExpression);
-				var right         = factory.Function(doubleType, "CDbl", rightExpression);
-				var days          = factory.Sub(doubleType, left, right);
-				var ticks         = factory.Multiply(doubleType, days, (double)TimeSpan.TicksPerDay);
-				var integralTicks = factory.Function(doubleType, "Fix", ticks);
+				if (factory.GetDbDataType(leftExpression).DataType == DataType.DateTime2 || factory.GetDbDataType(rightExpression).DataType == DataType.DateTime2)
+					return null;
+
+				var decimalType   = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(28, 0);
+				var leftMs        = AccessMilliseconds(leftExpression);
+				var rightMs       = AccessMilliseconds(rightExpression);
+				var integralTicks = factory.Multiply(
+					decimalType,
+					factory.Sub(decimalType, leftMs, rightMs),
+					(decimal)TimeSpan.TicksPerMillisecond);
 				var nullOperand    = factory.SearchCondition(isOr: true)
 					.Add(factory.IsNullPredicate(leftExpression))
 					.Add(factory.IsNullPredicate(rightExpression));
 
-				// Date subtraction through the OLE Automation representation retains Access'
-				// sub-second precision; DateDiff("s", ...) discards it before tick scaling. Keep
-				// the expression typed as the decimal tick storage type for materialization, but
-				// don't emit CDec: the ACE/Jet SQL engine doesn't expose that VBA conversion.
+				// Reproduce DateTime.FromOADate's nearest-millisecond conversion before subtracting.
+				// Access DatePart and direct floating scaling both mis-handle values close to midnight.
+				// CVar keeps the integerized result exact without relying on the unavailable CDec SQL function.
 				// CDbl(NULL) raises "Invalid use of Null", so protect nullable operands before
 				// evaluating the tick calculation.
 				return factory.Condition(
 					nullOperand,
-					factory.Null(intervalType),
-					factory.Expression(intervalType, "{0}", integralTicks));
+					factory.Null(decimalType),
+					factory.Expression(decimalType, "{0}", integralTicks));
+
+				ISqlExpression AccessMilliseconds(ISqlExpression expression)
+				{
+					return factory.Expression(
+						decimalType,
+						"CVar(IIf(CDbl({0}) >= 0, " +
+							"Fix(CDbl({0}) * 86400000 + 0.5), " +
+							"Fix(CDbl({0}) * 86400000 - 0.5) - 2 * (Fix(CDbl({0}) * 86400000 - 0.5) - Fix(Fix(CDbl({0}) * 86400000 - 0.5) / 86400000) * 86400000)) + 59926435200000)",
+						expression);
+				}
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory = translationContext.ExpressionFactory;
+
+				var subsecondMultiplier = datepart switch
+				{
+					Sql.DateParts.Microsecond => 1_000m,
+					Sql.DateParts.Nanosecond  => 1_000_000m,
+					Sql.DateParts.Tick        => 10_000m,
+					_                         => 0m,
+				};
+
+				if (subsecondMultiplier != 0)
+				{
+					var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(28, 0);
+					var intType     = factory.GetDbDataType(typeof(int));
+					var milliseconds = factory.Expression(
+						decimalType,
+						"CVar(IIf(CDbl({0}) >= 0, " +
+							"Fix(CDbl({0}) * 86400000 + 0.5), " +
+							"Fix(CDbl({0}) * 86400000 - 0.5) - 2 * (Fix(CDbl({0}) * 86400000 - 0.5) - Fix(Fix(CDbl({0}) * 86400000 - 0.5) / 86400000) * 86400000)) + 59926435200000)",
+						dateTimeExpression);
+					var secondIndex = factory.Function(decimalType, "Fix", factory.Div(decimalType, milliseconds, factory.Value(decimalType, 1_000m)));
+					var component   = factory.Sub(decimalType, milliseconds, factory.Multiply(decimalType, secondIndex, 1_000m));
+					var scaled      = factory.Multiply(decimalType, component, subsecondMultiplier);
+
+					return factory.Function(intType, "CLng", scaled);
+				}
 
 				var partStr = datepart switch
 				{
@@ -230,6 +315,38 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				Sql.DateParts                                                       datepart)
 			{
 				var factory = translationContext.ExpressionFactory;
+
+				var subsecondDivisor = datepart switch
+				{
+					Sql.DateParts.Microsecond => 86_400_000_000D,
+					Sql.DateParts.Nanosecond  => 86_400_000_000_000D,
+					Sql.DateParts.Tick        => (double)TimeSpan.TicksPerDay,
+					_                         => 0D,
+				};
+
+				if (subsecondDivisor != 0)
+				{
+					var systemType = factory.GetDbDataType(dateTimeExpression).SystemType;
+					if ((Nullable.GetUnderlyingType(systemType) ?? systemType) == typeof(DateTimeOffset))
+						return null;
+
+					var doubleType   = factory.GetDbDataType(typeof(double));
+					var serialDate   = factory.Function(doubleType, "CDbl", dateTimeExpression);
+					var serialAmount = factory.Div(
+						doubleType,
+						factory.Function(doubleType, "CDbl", increment),
+						factory.Value(doubleType, subsecondDivisor));
+					var serialResult = factory.Add(doubleType, serialDate, serialAmount);
+					var nullOperand  = factory.SearchCondition(isOr: true)
+						.Add(factory.IsNullPredicate(dateTimeExpression))
+						.Add(factory.IsNullPredicate(increment));
+					var guarded = factory.Condition(nullOperand, factory.Null(doubleType), serialResult);
+
+					// Keep the OLE Automation number until materialization. Access ODBC truncates
+					// computed Date values to whole seconds, while the scoped converter reproduces
+					// DateTime.FromOADate's millisecond result without changing global mappings.
+					return WithResultConverter(translationContext, guarded, _oaDateConverter);
+				}
 
 				var partStr = datepart switch
 				{

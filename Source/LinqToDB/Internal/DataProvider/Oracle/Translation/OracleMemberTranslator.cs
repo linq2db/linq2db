@@ -57,6 +57,29 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				// Oracle TIMESTAMP defaults to fractional-second precision 6. Explicitly mapped
+				// higher precision is handled by GetDateTimeIntervalCapabilities in the base class.
+				return new DateTimeIntervalCapabilities(10, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond | DateTimeIntervalUnits.Tick, long.MaxValue, !isDateTimeOffset || SupportsDateTimeOffsetIntervalArithmetic);
+			}
+
+			private protected override DateTimeIntervalCapabilities GetDateTimeIntervalCapabilities(ITranslationContext translationContext, ISqlExpression dateTimeExpression, bool isDateTimeOffset)
+			{
+				var dataType = translationContext.ExpressionFactory.GetDbDataType(dateTimeExpression);
+				if (dataType.DataType == DataType.Date)
+					return new DateTimeIntervalCapabilities(TimeSpan.TicksPerSecond, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second, long.MaxValue, !isDateTimeOffset || SupportsDateTimeOffsetIntervalArithmetic);
+
+				return base.GetDateTimeIntervalCapabilities(translationContext, dateTimeExpression, isDateTimeOffset);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetToUtc(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var resultType = translationContext.ExpressionFactory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Timestamp);
+				return translationContext.ExpressionFactory.Expression(resultType, "CAST(SYS_EXTRACT_UTC({0}) AS TIMESTAMP)", dateExpression);
+			}
+
 			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -106,8 +129,26 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
-				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
-				return factory.Expression(intervalType, "CAST({0} AS TIMESTAMP) - CAST({1} AS TIMESTAMP)", leftExpression, rightExpression);
+				var precision     = Math.Max(GetPrecision(leftExpression), GetPrecision(rightExpression));
+				var intervalType  = factory.GetDbDataType(typeof(TimeSpan))
+					.WithDataType(DataType.Interval)
+					.WithDbType($"INTERVAL DAY(9) TO SECOND({precision.ToString(CultureInfo.InvariantCulture)})");
+				var differenceSql = isDateTimeOffset
+					? $"CAST(SYS_EXTRACT_UTC({{0}}) AS TIMESTAMP({precision.ToString(CultureInfo.InvariantCulture)})) - CAST(SYS_EXTRACT_UTC({{1}}) AS TIMESTAMP({precision.ToString(CultureInfo.InvariantCulture)}))"
+					: $"CAST({{0}} AS TIMESTAMP({precision.ToString(CultureInfo.InvariantCulture)})) - CAST({{1}} AS TIMESTAMP({precision.ToString(CultureInfo.InvariantCulture)}))";
+
+				return factory.Expression(intervalType, $"CAST({differenceSql} AS INTERVAL DAY(9) TO SECOND({precision.ToString(CultureInfo.InvariantCulture)}))", leftExpression, rightExpression);
+
+				int GetPrecision(ISqlExpression expression)
+				{
+					var dataType = factory.GetDbDataType(expression);
+					if (dataType.DataType == DataType.Date)
+						return 0;
+
+					// Oracle TIMESTAMP defaults to six fractional digits. .NET date/time values
+					// cannot preserve precision finer than one 100-nanosecond tick.
+					return Math.Min(dataType.Precision ?? 6, 7);
+				}
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)

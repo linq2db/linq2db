@@ -413,6 +413,15 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(
+					10,
+					DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond,
+					TimeSpan.FromDays(365 * 136).Ticks,
+					!isDateTimeOffset);
+			}
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -421,6 +430,31 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				// YDB Timestamp subtraction produces a native Interval measured with microsecond precision.
 				// Convert it to the Int64 tick representation expected by the common TimeSpan translator.
 				return factory.Expression(intervalType, "DateTime::ToMicroseconds({0} - {1}) * 10", leftExpression, rightExpression);
+			}
+
+			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+				var ticks     = factory.Multiply(longType, factory.Function(longType, "DateTime::ToMicroseconds", timeSpanExpression), 10L);
+
+				return base.TranslateTimeSpanPart(translationContext, translationFlags, ticks, part, resultType);
+			}
+
+			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Negate(factory.GetDbDataType(timeSpanExpression), timeSpanExpression);
+			}
+
+			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var dateType = factory.GetDbDataType(dateTimeExpression);
+
+				return isSubtract
+					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
+					: factory.Add(dateType, dateTimeExpression, intervalExpression);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
@@ -488,6 +522,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					Sql.DateParts.Minute      => "DateTime::GetMinute",
 					Sql.DateParts.Second      => "DateTime::GetSecond",
 					Sql.DateParts.Millisecond => "DateTime::GetMillisecondOfSecond",
+					Sql.DateParts.Microsecond => "DateTime::GetMicrosecondOfSecond",
 					Sql.DateParts.WeekDay     => "DateTime::GetDayOfWeek",
 					_                         => null,
 				};
@@ -552,13 +587,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					Sql.DateParts.Minute      => "DateTime::IntervalFromMinutes",
 					Sql.DateParts.Second      => "DateTime::IntervalFromSeconds",
 					Sql.DateParts.Millisecond => "DateTime::IntervalFromMilliseconds",
+					Sql.DateParts.Microsecond => "DateTime::IntervalFromMicroseconds",
 					_                         => null,
 				};
 
 				if (intervalFn == null)
 					return null;
 
-				// The IntervalFrom* UDFs take an integer arg (Int32 — Int64 for milliseconds). The .NET
+				// The IntervalFrom* UDFs take an integer arg (Int32 — Int64 for subsecond units). The .NET
 				// Add*(double) / Sql.DateAdd signature types a *floating* increment that must be converted to
 				// that width; an already-integer increment is passed through (YQL widens it to the UDF param).
 				// We cast ONLY the floating case on purpose: a no-op/widening SqlCastExpression survives the
@@ -566,8 +602,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				// serialization boundary — so an integer→integer cast is pruned only on the remote side and
 				// diverges direct/remote baselines. A floating→integer cast is a real narrowing and survives
 				// both paths; the YDB builder's BuildSqlCastExpression adds Unwrap() for a non-null source.
-				var isMs    = datepart == Sql.DateParts.Millisecond;
-				var incType = f.GetDbDataType(isMs ? typeof(long) : typeof(int));
+				var isSubsecond = datepart is Sql.DateParts.Millisecond or Sql.DateParts.Microsecond;
+				var incType     = f.GetDbDataType(isSubsecond ? typeof(long) : typeof(int));
 				var sysType = f.GetDbDataType(increment).SystemType.UnwrappedNullableType;
 
 				if (sysType == typeof(double) || sysType == typeof(float))

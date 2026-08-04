@@ -199,6 +199,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			{
 				var factory  = translationContext.ExpressionFactory;
 				var dateType = factory.GetDbDataType(dateTimeExpression);
+				var intType  = factory.GetDbDataType(typeof(int));
 
 				var partStr = DatePartToStr(datepart, true);
 
@@ -207,16 +208,28 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr), factory.Cast(increment, intType, true), dateTimeExpression);
 				return resultExpression;
 			}
 
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
+				var intType      = factory.GetDbDataType(typeof(int));
+				var longType     = factory.GetDbDataType(typeof(long));
+				var dateType     = factory.GetDbDataType(leftExpression);
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				var dayPart      = factory.Fragment("day");
+				var msPart       = factory.Fragment("millisecond");
+				var days         = factory.Function(intType, "DATEDIFF", dayPart, rightExpression, leftExpression);
+				var anchor       = factory.Function(dateType, "DATEADD", dayPart, days, rightExpression);
+				var milliseconds = factory.Function(intType, "DATEDIFF", msPart, anchor, leftExpression);
+				var ticks        = factory.Add(
+					longType,
+					factory.Multiply(longType, factory.Cast(days, longType, true), TimeSpan.TicksPerDay),
+					factory.Multiply(longType, factory.Cast(milliseconds, longType, true), TimeSpan.TicksPerMillisecond));
 
-				return factory.Expression(intervalType, "CAST(DATEDIFF(millisecond, {1}, {0}) AS BIGINT) * 10000", leftExpression, rightExpression);
+				return factory.Expression(intervalType, "{0}", factory.Cast(ticks, longType, true));
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)

@@ -237,7 +237,26 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <returns>Associated converter or <see langword="null"/>.</returns>
 		public static IValueConverter? GetValueConverter(ISqlExpression? expr)
 		{
-			return GetColumnDescriptor(expr)?.ValueConverter;
+			var columnConverter = GetColumnDescriptor(expr)?.ValueConverter;
+			var visited = new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+			while (expr != null && visited.Add(expr))
+			{
+				switch (expr)
+				{
+					case SqlExpression { ResultConverter: { } resultConverter }:
+						return resultConverter;
+					case SqlColumn column:
+						expr = column.Expression;
+						continue;
+					case SqlNullabilityExpression nullabilityExpression:
+						expr = nullabilityExpression.SqlExpression;
+						continue;
+				}
+
+				break;
+			}
+
+			return columnConverter;
 		}
 
 		/// <summary>

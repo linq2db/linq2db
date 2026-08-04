@@ -3,9 +3,12 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.DataProvider.Informix;
 using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix.Translation
@@ -49,6 +52,36 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(
+					100,
+					DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond | DateTimeIntervalUnits.Tick,
+					long.MaxValue,
+					!isDateTimeOffset);
+			}
+
+			private protected override Sql.DateParts? GetDateTimeIntervalAddPrecision(ITranslationContext translationContext, ISqlExpression dateTimeExpression, bool isDateTimeOffset)
+			{
+				// FRACTION(5) has a 10-microsecond storage quantum, which has no matching
+				// DateParts unit. Feed ticks to the provider-specific DATEADD lowering;
+				// it truncates them to whole FRACTION(5) units without losing a representable value.
+				return Sql.DateParts.Tick;
+			}
+
+			static readonly IValueConverter _intervalConverter = new ValueConverter<TimeSpan, string>(
+				value => value.ToString("c", CultureInfo.InvariantCulture),
+				value => InformixMappingSchema.StringToTimeSpan(value),
+				handlesNulls: false);
+
+			private protected override Expression CreateDateTimeIntervalDifferenceResult(ITranslationContext translationContext, ISqlExpression translatedExpression, BinaryExpression binaryExpression)
+			{
+				var resultType = translationContext.ExpressionFactory.GetDbDataType(translatedExpression);
+				var converted  = new SqlExpression(resultType, "{0}", translatedExpression).WithResultConverter(_intervalConverter);
+
+				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, binaryExpression);
+			}
+
 			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
 			{
 				var factory        = translationContext.ExpressionFactory;
@@ -57,13 +90,27 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				if (expressionType.DataType != DataType.Interval)
 					return null;
 
-				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval).WithDbType("INTERVAL SECOND(9) TO FRACTION(5)");
-				var stringType   = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(16);
-				var decimalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(23, 5);
+				var dayIntervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval).WithDbType("INTERVAL DAY(9) TO DAY");
+				var subdayType      = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval).WithDbType("INTERVAL SECOND(9) TO FRACTION(5)");
+				var dayStringType   = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(11);
+				var secondStringType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(16);
+				var decimalType     = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 5);
 				var doubleType   = factory.GetDbDataType(typeof(double));
-				var seconds      = factory.Cast(factory.Cast(timeSpanExpression, intervalType, true), stringType, true);
-				seconds          = factory.Cast(seconds, decimalType, true);
-				var ticks        = factory.Multiply(decimalType, seconds, 10_000_000m);
+
+				// Informix permits at most nine leading digits for an interval field. Casting the
+				// complete value to SECOND(9) therefore imposes an artificial ~31-year limit even
+				// though DAY(9) and TimeSpan both support much larger intervals. Split out whole
+				// days first; the remaining SECOND interval is then always smaller than one day.
+				// Casting to DAY follows the interval sign, so subtraction also preserves C#'s
+				// truncate-toward-zero component rules for negative values.
+				var dayInterval = factory.Cast(timeSpanExpression, dayIntervalType, true);
+				var days        = factory.Cast(factory.Cast(dayInterval, dayStringType, true), decimalType, true);
+				var subday      = factory.Sub(factory.GetDbDataType(timeSpanExpression), timeSpanExpression, dayInterval);
+				var seconds     = factory.Cast(factory.Cast(factory.Cast(subday, subdayType, true), secondStringType, true), decimalType, true);
+				var ticks       = factory.Add(
+					decimalType,
+					factory.Multiply(decimalType, days, (decimal)TimeSpan.TicksPerDay),
+					factory.Multiply(decimalType, seconds, 10_000_000m));
 
 				ISqlExpression Truncate(ISqlExpression expression)
 				{
@@ -107,7 +154,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 #if NET7_0_OR_GREATER
 					TimeSpanPart.Microseconds      => Retype(Component(TimeSpan.TicksPerMicrosecond, 1000)),
 					TimeSpanPart.TotalMicroseconds => Total(TimeSpan.TicksPerMicrosecond),
-					TimeSpanPart.Nanoseconds       => Retype(factory.Sub(decimalType, factory.Multiply(decimalType, ticks, 100m), factory.Multiply(decimalType, Truncate(factory.Div(decimalType, factory.Multiply(decimalType, ticks, 100m), 1000m)), 1000m))),
+					TimeSpanPart.Nanoseconds       => Retype(factory.Multiply(decimalType, Component(1, 10), 100m)),
 					TimeSpanPart.TotalNanoseconds  => factory.Multiply(doubleType, factory.Cast(ticks, doubleType), 100D),
 #endif
 					TimeSpanPart.Ticks             => Retype(ticks),
@@ -317,6 +364,27 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 					case Sql.DateParts.Millisecond:
 						return null;
 
+					case Sql.DateParts.Microsecond:
+					case Sql.DateParts.Nanosecond:
+					case Sql.DateParts.Tick:
+					{
+						// Informix DATETIME YEAR TO FRACTION(5) stores five fractional
+						// digits, i.e. one FRACTION(5) unit is 10 microseconds / 100 ticks.
+						var fraction = factory.Cast(
+							factory.Cast(
+								factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Fraction to Fraction(5)"), isMandatory: true),
+								factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(5)),
+							intDataType);
+						var multiplier = datepart switch
+						{
+							Sql.DateParts.Microsecond => 10,
+							Sql.DateParts.Nanosecond  => 10_000,
+							_                         => 100,
+						};
+
+						return factory.Multiply(intDataType, fraction, multiplier);
+					}
+
 					default:
 						return null;
 				}
@@ -325,6 +393,28 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeDatePartLong(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				if (datepart != Sql.DateParts.Millisecond)
+					return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+
+				var factory      = translationContext.ExpressionFactory;
+				var intDataType  = factory.GetDbDataType(typeof(int));
+				var intervalType = factory.GetDbDataType(typeof(TimeSpan));
+				var fraction = factory.Cast(
+					factory.Cast(
+						factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Fraction to Fraction(5)"), isMandatory: true),
+						factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(5)),
+					intDataType);
+
+				return factory.Div(intDataType, fraction, 100);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePartLong(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePartLong(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
@@ -358,6 +448,25 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 					case Sql.DateParts.Hour: fragmentStr = "Hour to Hour"; break;
 					case Sql.DateParts.Minute: fragmentStr = "Minute to Minute"; break;
 					case Sql.DateParts.Second: fragmentStr = "Second to Second"; break;
+					case Sql.DateParts.Microsecond:
+					case Sql.DateParts.Nanosecond:
+					case Sql.DateParts.Tick:
+					{
+						var divisor = datepart switch
+						{
+							Sql.DateParts.Microsecond => 10m,
+							Sql.DateParts.Nanosecond  => 10_000m,
+							_                         => 100m,
+						};
+						var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+						increment = factory.Function(
+							decimalType,
+							"Trunc",
+							factory.Div(decimalType, factory.Cast(increment, decimalType), factory.Value(decimalType, divisor)));
+						incrementType = decimalType;
+						fragmentStr   = "Fraction to Fraction(5)";
+						break;
+					}
 					case Sql.DateParts.Millisecond:
 					{
 						/*fragmentStr = "Second to Fraction (3)";

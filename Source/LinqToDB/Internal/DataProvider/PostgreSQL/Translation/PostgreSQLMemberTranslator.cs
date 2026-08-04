@@ -81,6 +81,20 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(10, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond, long.MaxValue, !isDateTimeOffset || SupportsDateTimeOffsetIntervalArithmetic);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetToUtc(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory    = translationContext.ExpressionFactory;
+				var resultType = factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Timestamp);
+
+				return factory.Expression(resultType, "({0} AT TIME ZONE 'UTC')", dateExpression);
+			}
+
 			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
 			{
 				var factory    = translationContext.ExpressionFactory;

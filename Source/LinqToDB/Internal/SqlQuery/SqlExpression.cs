@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -62,6 +63,26 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		public string Expr => ExprOrName;
+
+		internal IValueConverter? ResultConverter { get; private set; }
+
+		internal SqlExpression WithResultConverter(IValueConverter? resultConverter)
+		{
+			ResultConverter = resultConverter;
+			return this;
+		}
+
+		public override int GetElementHashCode()
+		{
+			return System.HashCode.Combine(base.GetElementHashCode(), ResultConverter);
+		}
+
+		public override bool Equals(ISqlExpression? other, System.Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			return other is SqlExpression sqlExpression
+				&& ReferenceEquals(ResultConverter, sqlExpression.ResultConverter)
+				&& base.Equals(other, comparer);
+		}
 
 		#region IQueryElement Members
 

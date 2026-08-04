@@ -568,10 +568,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (placeholder.Index == null)
 						throw new InvalidOperationException();
 
-					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
 					var sqlType          = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
+					var resultConverter  = QueryHelper.GetValueConverter(placeholder.Sql);
 
-					var valueType = sqlType.SystemType;
+					var valueType = resultConverter == null ? sqlType.SystemType : placeholder.Type;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 
@@ -587,7 +587,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
-						columnDescriptor?.ValueConverter, Expression.Property(QueryRunnerParam, QueryRunner.DataContextInfo), DataReaderParam, canBeNull);
+						resultConverter, Expression.Property(QueryRunnerParam, QueryRunner.DataContextInfo), DataReaderParam, canBeNull);
 
 					if (placeholder.Type != readerExpression.Type)
 					{

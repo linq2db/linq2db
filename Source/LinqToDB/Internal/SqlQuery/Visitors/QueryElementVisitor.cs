@@ -3249,7 +3249,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						return NotifyReplaced(new SqlExpression(
 							element.Type, element.Expr, element.Precedence,
-							element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray()),
+							element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray())
+							.WithResultConverter(element.ResultConverter),
 							element);
 					}
 

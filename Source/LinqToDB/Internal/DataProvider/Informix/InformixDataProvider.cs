@@ -56,7 +56,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			SetField<DbDataReader, float  >((r, i) => GetFloat  (r, i));
 			SetField<DbDataReader, double >((r, i) => GetDouble (r, i));
 			SetField<DbDataReader, decimal>((r, i) => GetDecimal(r, i));
-
 			_sqlOptimizer = new InformixSqlOptimizer(SqlProviderFlags);
 
 			if (Adapter.GetBigIntReaderMethod != null)

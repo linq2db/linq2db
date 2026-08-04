@@ -50,11 +50,21 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
+				var intType      = factory.GetDbDataType(typeof(int));
+				var longType     = factory.GetDbDataType(typeof(long));
+				var dateType     = factory.GetDbDataType(leftExpression);
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+				var dayPart      = factory.Fragment("day");
+				var msPart       = factory.Fragment("millisecond");
+				var days         = factory.Function(intType, "DATEDIFF", dayPart, rightExpression, leftExpression);
+				var anchor       = factory.Function(dateType, "DATEADD", dayPart, days, rightExpression);
+				var milliseconds = factory.Function(intType, "DATEDIFF", msPart, anchor, leftExpression);
+				var ticks        = factory.Add(
+					longType,
+					factory.Multiply(longType, factory.Cast(days, longType, true), TimeSpan.TicksPerDay),
+					factory.Multiply(longType, factory.Cast(milliseconds, longType, true), TimeSpan.TicksPerMillisecond));
 
-				// ASE datetime has 1/300-second precision and doesn't provide a usable microsecond
-				// DATEDIFF result. Widen before scaling so the tick conversion doesn't overflow.
-				return factory.Expression(intervalType, "CONVERT(BIGINT, DATEDIFF(millisecond, {1}, {0})) * 10000", leftExpression, rightExpression);
+				return factory.Expression(intervalType, "{0}", ticks);
 			}
 
 			public static string? DatePartToStr(Sql.DateParts part, bool forDateAdd)

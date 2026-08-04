@@ -64,11 +64,80 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class FirebirdDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+			{
+				var ticks = translationContext.ExpressionFactory.Expression(
+					translationContext.ExpressionFactory.GetDbDataType(typeof(long)), "{0}", timeSpanExpression);
+
+				return base.TranslateTimeSpanPart(translationContext, translationFlags, ticks, part, resultType);
+			}
+
+			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
+			{
+				var ticks = translationContext.ExpressionFactory.Expression(
+					translationContext.ExpressionFactory.GetDbDataType(typeof(long)), "{0}", timeSpanExpression);
+
+				return base.TranslateTimeSpanNegate(translationContext, translationFlags, ticks);
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var longType     = factory.GetDbDataType(typeof(long));
+				var decimalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
+				var doubleType   = factory.GetDbDataType(typeof(double));
+				var ticks        = factory.Cast(intervalExpression, longType, true);
+
+				// Firebird 3 and earlier cannot represent the full Int64 tick range in DECIMAL(18).
+				// Use floating point only to obtain a day candidate, then validate it against the
+				// original BIGINT. A double can be off only at a day boundary; the comparison
+				// corrects that without ever rounding or narrowing the original tick value.
+				var quotient = factory.Div(
+					doubleType,
+					factory.Cast(ticks, doubleType, true),
+					factory.Value(doubleType, (double)TimeSpan.TicksPerDay));
+				var candidateDays  = factory.Cast(factory.Function(doubleType, "TRUNC", quotient), longType, true);
+				var candidateTicks = factory.Multiply(longType, candidateDays, TimeSpan.TicksPerDay);
+				var days = factory.Condition(
+					factory.GreaterOrEqual(ticks, factory.Value(longType, 0L)),
+					factory.Condition(factory.Greater(candidateTicks, ticks), factory.Decrement(candidateDays), candidateDays),
+					factory.Condition(factory.Less(candidateTicks, ticks), factory.Increment(candidateDays), candidateDays));
+				var remainder    = factory.Sub(longType, ticks, factory.Multiply(longType, days, TimeSpan.TicksPerDay));
+				var milliseconds = factory.Div(decimalType, factory.Cast(remainder, decimalType), factory.Value(decimalType, (decimal)TimeSpan.TicksPerMillisecond));
+
+				if (isSubtract)
+				{
+					days         = factory.Negate(longType, days);
+					milliseconds = factory.Negate(decimalType, milliseconds);
+				}
+
+				var result = TranslateDateTimeDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day);
+				return result == null
+					? null
+					: TranslateDateTimeDateAdd(translationContext, translationFlags, result, milliseconds, Sql.DateParts.Millisecond);
+			}
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
+				var intType      = factory.GetDbDataType(typeof(int));
+				var longType     = factory.GetDbDataType(typeof(long));
+				var decimalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
+				var dateType     = factory.GetDbDataType(leftExpression);
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "CAST(DATEDIFF(millisecond, {1}, {0}) * 10000 AS BIGINT)", leftExpression, rightExpression);
+				var dayPart      = factory.Fragment("day");
+				var msPart       = factory.Fragment("millisecond");
+				var days         = factory.Function(intType, "DATEDIFF", dayPart, rightExpression, leftExpression);
+				var anchor       = factory.Function(dateType, "DATEADD", dayPart, days, rightExpression);
+				var milliseconds = factory.Function(decimalType, "DATEDIFF", msPart, anchor, leftExpression);
+				var dayTicks     = factory.Multiply(longType, factory.Cast(days, longType, true), TimeSpan.TicksPerDay);
+				var subdayTicks  = factory.Cast(
+					factory.Multiply(decimalType, milliseconds, (decimal)TimeSpan.TicksPerMillisecond),
+					longType,
+					true);
+				var ticks        = factory.Add(longType, dayTicks, subdayTicks);
+
+				return factory.Expression(intervalType, "{0}", ticks);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
@@ -97,7 +166,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 					case Sql.DateParts.Hour:        partStr = "hour"; break;
 					case Sql.DateParts.Minute:      partStr = "minute"; break;
 					case Sql.DateParts.Second:      partStr = "second"; break;
-					case Sql.DateParts.Millisecond: partStr = "millisecond"; break;
+					case Sql.DateParts.Millisecond:
+					case Sql.DateParts.Microsecond:
+					case Sql.DateParts.Nanosecond:
+					case Sql.DateParts.Tick:
+						partStr = "millisecond";
+						break;
 					default:
 						return null;
 				}
@@ -112,6 +186,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 						extractDbType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(9, 4);
 						break;
 					case Sql.DateParts.Millisecond:
+					case Sql.DateParts.Microsecond:
+					case Sql.DateParts.Nanosecond:
+					case Sql.DateParts.Tick:
 						extractDbType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(9, 1);
 						break;
 				}
@@ -128,8 +205,26 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 						break;
 					}
 					case Sql.DateParts.Second:
-					case Sql.DateParts.Millisecond:
 					{
+						resultExpression = factory.Cast(factory.Function(factory.GetDbDataType(typeof(long)), "Floor", resultExpression), intDataType);
+						break;
+					}
+					case Sql.DateParts.Millisecond:
+					case Sql.DateParts.Microsecond:
+					case Sql.DateParts.Nanosecond:
+					case Sql.DateParts.Tick:
+					{
+						var multiplier = datepart switch
+						{
+							Sql.DateParts.Millisecond => 1m,
+							Sql.DateParts.Microsecond => 1_000m,
+							Sql.DateParts.Nanosecond  => 1_000_000m,
+							_                             => 10_000m,
+						};
+
+						if (multiplier != 1m)
+							resultExpression = factory.Multiply(extractDbType, resultExpression, multiplier);
+
 						resultExpression = factory.Cast(factory.Function(factory.GetDbDataType(typeof(long)), "Floor", resultExpression), intDataType);
 						break;
 					}

@@ -87,6 +87,11 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(10, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond, long.MaxValue, !isDateTimeOffset);
+			}
+
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
 				DbDataType resulType,
@@ -181,6 +186,9 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 					case Sql.DateParts.Minute: extractStr = "minute"; break;
 					case Sql.DateParts.Second: extractStr = "second"; break;
 					case Sql.DateParts.Millisecond: partStr = "FF"; break;
+					case Sql.DateParts.Microsecond: partStr = "FF"; break;
+					case Sql.DateParts.Tick:        partStr = "FF"; break;
+					case Sql.DateParts.Nanosecond:  partStr = "FF"; break;
 					default:
 						return null;
 				}
@@ -201,6 +209,14 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 					if (datepart == Sql.DateParts.Millisecond)
 					{
 						resultExpression = factory.Div(intDataType, resultExpression, factory.Value(intDataType, 1000));
+					}
+					else if (datepart == Sql.DateParts.Tick)
+					{
+						resultExpression = factory.Multiply(intDataType, resultExpression, 10);
+					}
+					else if (datepart == Sql.DateParts.Nanosecond)
+					{
+						resultExpression = factory.Multiply(intDataType, resultExpression, 1000);
 					}
 				}
 
@@ -250,6 +266,7 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 						incrementValueExpr = factory.Multiply(doubleDataType, increment, 1000.0);
 						break;
 					}
+					case Sql.DateParts.Microsecond: expStr = "MICROSECONDS"; break;
 					default:
 						return null;
 				}

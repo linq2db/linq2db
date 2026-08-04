@@ -40,15 +40,23 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
-				return factory.Expression(intervalType, "CAST(ROUND((julianday({0}) - julianday({1})) * 86400000) AS INTEGER) * 10000", leftExpression, rightExpression);
+				return factory.Expression(
+					intervalType,
+					"((CAST(strftime('%s', {0}) AS INTEGER) * 1000 + CAST(substr(strftime('%f', {0}), 4, 3) AS INTEGER)) - " +
+					 "(CAST(strftime('%s', {1}) AS INTEGER) * 1000 + CAST(substr(strftime('%f', {1}), 4, 3) AS INTEGER))) * 10000",
+					leftExpression,
+					rightExpression);
 			}
 
 			const string StrFTimeFuncName = "strftime";
 			const string DateFormat = "%Y-%m-%d %H:%M:%f";
+			const string DateTimeOffsetFormat = "%Y-%m-%d %H:%M:%f+00:00";
 			const string TimeFormat = "%H:%M:%f";
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
@@ -120,6 +128,28 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				Sql.DateParts datepart
 			)
 			{
+				return TranslateDateTimeDateAdd(translationContext, dateTimeExpression, increment, datepart, DateFormat);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetDateAdd(
+				ITranslationContext translationContext,
+				TranslationFlags     translationFlag,
+				ISqlExpression       dateTimeExpression,
+				ISqlExpression       increment,
+				Sql.DateParts        datepart
+			)
+			{
+				return TranslateDateTimeDateAdd(translationContext, dateTimeExpression, increment, datepart, DateTimeOffsetFormat);
+			}
+
+			ISqlExpression? TranslateDateTimeDateAdd(
+				ITranslationContext translationContext,
+				ISqlExpression       dateTimeExpression,
+				ISqlExpression       increment,
+				Sql.DateParts        datepart,
+				string               resultFormat
+			)
+			{
 				var factory      = translationContext.ExpressionFactory;
 				var stringDbType = factory.GetDbDataType(typeof(string));
 				var intDbType    = factory.GetDbDataType(typeof(int));
@@ -143,11 +173,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 					case Sql.DateParts.Minute:      dateExpr = factory.Concat(CastToString(increment), " Minute"); break;
 					case Sql.DateParts.Second:      dateExpr = factory.Concat(CastToString(increment), " Second"); break;
 					case Sql.DateParts.Millisecond: dateExpr = factory.Concat(CastToString(factory.Div(doubleDbType, factory.Cast(increment, doubleDbType), 1000)), " Second"); break;
+					case Sql.DateParts.Microsecond: dateExpr = factory.Concat(CastToString(factory.Div(doubleDbType, factory.Cast(increment, doubleDbType), 1_000_000)), " Second"); break;
+					case Sql.DateParts.Nanosecond:  dateExpr = factory.Concat(CastToString(factory.Div(doubleDbType, factory.Cast(increment, doubleDbType), 1_000_000_000)), " Second"); break;
+					case Sql.DateParts.Tick:        dateExpr = factory.Concat(CastToString(factory.Div(doubleDbType, factory.Cast(increment, doubleDbType), TimeSpan.TicksPerSecond)), " Second"); break;
 					default:
 						return null;
 				}
 
-				var resultExpression = factory.Function(dateType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);
+				var resultExpression = factory.Function(dateType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDbType, resultFormat), dateTimeExpression, dateExpr);
 
 				return resultExpression;
 			}

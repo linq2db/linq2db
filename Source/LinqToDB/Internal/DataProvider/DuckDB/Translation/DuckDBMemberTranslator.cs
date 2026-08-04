@@ -70,6 +70,66 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(10, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond, long.MaxValue, !isDateTimeOffset || SupportsDateTimeOffsetIntervalArithmetic);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetToUtc(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var factory    = translationContext.ExpressionFactory;
+				var resultType = factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Timestamp);
+
+				return factory.Expression(resultType, "({0} AT TIME ZONE 'UTC')", dateExpression);
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory      = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(intervalExpression);
+
+				if (intervalType.DataType != DataType.Int64)
+					return base.TranslateDateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
+
+				var longType    = factory.GetDbDataType(typeof(long));
+				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+				var ticks       = factory.Cast(intervalExpression, longType, true);
+
+				ISqlExpression TruncateDivision(ISqlExpression value, long divisor)
+				{
+					var quotient = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
+					var truncated = factory.Condition(
+						factory.GreaterOrEqual(value, factory.Value(longType, 0L)),
+						factory.Function(decimalType, "FLOOR", quotient),
+						factory.Function(decimalType, "CEILING", quotient));
+
+					return factory.Cast(truncated, longType, true);
+				}
+
+				var days           = TruncateDivision(ticks, TimeSpan.TicksPerDay);
+				var subdayTicks     = factory.Sub(longType, ticks, factory.Multiply(longType, days, TimeSpan.TicksPerDay));
+				var seconds        = TruncateDivision(subdayTicks, TimeSpan.TicksPerSecond);
+				var subsecondTicks = factory.Sub(longType, subdayTicks, factory.Multiply(longType, seconds, TimeSpan.TicksPerSecond));
+				var microseconds   = TruncateDivision(subsecondTicks, 10);
+
+				if (isSubtract)
+				{
+					days         = factory.Negate(longType, days);
+					seconds      = factory.Negate(longType, seconds);
+					microseconds = factory.Negate(longType, microseconds);
+				}
+
+				var result = TranslateDateTimeDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day);
+				if (result == null)
+					return null;
+
+				result = TranslateDateTimeDateAdd(translationContext, translationFlags, result, seconds, Sql.DateParts.Second);
+				return result == null
+					? null
+					: TranslateDateTimeDateAdd(translationContext, translationFlags, result, microseconds, Sql.DateParts.Microsecond);
+			}
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -109,6 +169,21 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 						// Use modulo 1000 to get just the millisecond part
 						var extractExpr = new SqlExpression(intDataType, "EXTRACT(millisecond FROM {0})", Precedence.Primary, dateTimeExpression);
 						return factory.Mod(extractExpr, 1000);
+					}
+					case Sql.DateParts.Microsecond:
+					{
+						var extractExpr = new SqlExpression(intDataType, "EXTRACT(microsecond FROM {0})", Precedence.Primary, dateTimeExpression);
+						return factory.Mod(extractExpr, 1_000_000);
+					}
+					case Sql.DateParts.Tick:
+					{
+						var extractExpr = new SqlExpression(intDataType, "EXTRACT(microsecond FROM {0})", Precedence.Primary, dateTimeExpression);
+						return factory.Multiply(intDataType, factory.Mod(extractExpr, 1_000_000), 10);
+					}
+					case Sql.DateParts.Nanosecond:
+					{
+						var extractExpr = new SqlExpression(intDataType, "EXTRACT(microsecond FROM {0})", Precedence.Primary, dateTimeExpression);
+						return factory.Multiply(intDataType, factory.Mod(extractExpr, 1_000_000), 1000);
 					}
 					default:
 						return null;
@@ -150,13 +225,19 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 					Sql.DateParts.Minute      => ToInterval(increment, "1 Minute"),
 					Sql.DateParts.Second      => ToInterval(increment, "1 Second"),
 					Sql.DateParts.Millisecond => ToInterval(increment, "1 Millisecond"),
+					Sql.DateParts.Microsecond => ToInterval(increment, "1 Microsecond"),
 					_                         => null,
 				};
 
 				if (intervalExpr == null)
 					return null;
 
-				return factory.Add(factory.GetDbDataType(dateTimeExpression), dateTimeExpression, intervalExpr);
+				var dateType = factory.GetDbDataType(dateTimeExpression);
+				var date = dateTimeExpression is SqlParameter or SqlValue
+					? factory.Cast(dateTimeExpression, dateType, true)
+					: dateTimeExpression;
+
+				return factory.Add(dateType, date, intervalExpr);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(

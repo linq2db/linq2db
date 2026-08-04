@@ -28,6 +28,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServer2008DateFunctionsTranslator : SqlServer2005DateFunctionsTranslator
 		{
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
+
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(
+					1,
+					DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond | DateTimeIntervalUnits.Tick,
+					long.MaxValue,
+					true);
+			}
+
+			private protected override bool SupportsSubMillisecondDateParts => true;
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
 			{
 				var intervalType = translationContext.ExpressionFactory.GetDbDataType(intervalExpression);
@@ -35,7 +48,12 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				if (intervalType.DataType != DataType.Int64)
 					return null;
 
-				return TranslateInt64DateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
+				return TranslateInt64DateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset, Sql.DateParts.Tick);
+			}
+
+			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
+			{
+				return TranslateDateTimeIntervalDifference(translationContext, leftExpression, rightExpression, isDateTimeOffset, true);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)

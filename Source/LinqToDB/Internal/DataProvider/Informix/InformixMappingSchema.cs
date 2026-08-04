@@ -44,10 +44,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
-			SetConvertExpression((string value) => StringToTimeSpan(value));
 		}
 
-		private static TimeSpan StringToTimeSpan(string raw)
+		internal static TimeSpan StringToTimeSpan(string raw)
 		{
 			if (long.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var ticks))
 				return TimeSpan.FromTicks(ticks);

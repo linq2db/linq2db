@@ -27,11 +27,77 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServer2005DateFunctionsTranslator : SqlServerDateFunctionsTranslator
 		{
+			private protected virtual bool SupportsSubMillisecondDateParts => false;
+
+			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => false;
+			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
+			{
+				return new DateTimeIntervalCapabilities(System.TimeSpan.TicksPerMillisecond, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond, long.MaxValue, !isDateTimeOffset);
+			}
+
 			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
 			{
-				// SQL Server 2005 has no nanosecond DATEADD part, so it cannot preserve
-				// the 100ns remainder of an arbitrary TimeSpan value.
-				return null;
+				var intervalType = translationContext.ExpressionFactory.GetDbDataType(intervalExpression);
+
+				if (intervalType.DataType != DataType.Int64)
+					return null;
+
+				return TranslateInt64DateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, false, Sql.DateParts.Millisecond);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				if (SupportsSubMillisecondDateParts)
+					return base.TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+
+				var multiplier = datepart switch
+				{
+					Sql.DateParts.Microsecond => 1_000,
+					Sql.DateParts.Nanosecond  => 1_000_000,
+					Sql.DateParts.Tick        => 10_000,
+					_                         => 0,
+				};
+
+				if (multiplier == 0)
+					return base.TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+
+				var milliseconds = base.TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, Sql.DateParts.Millisecond);
+				if (milliseconds == null)
+					return null;
+
+				var factory = translationContext.ExpressionFactory;
+				var intType = factory.GetDbDataType(typeof(int));
+				return factory.Multiply(intType, milliseconds, multiplier);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+			{
+				if (SupportsSubMillisecondDateParts)
+					return base.TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
+
+				var divisor = datepart switch
+				{
+					Sql.DateParts.Microsecond => 1_000L,
+					Sql.DateParts.Nanosecond  => 1_000_000L,
+					Sql.DateParts.Tick        => 10_000L,
+					_                         => 0L,
+				};
+
+				if (divisor == 0)
+					return base.TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
+
+				var factory     = translationContext.ExpressionFactory;
+				var longType    = factory.GetDbDataType(typeof(long));
+				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+				var value       = factory.Cast(increment, longType, true);
+				var quotient    = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
+				var truncated   = factory.Condition(
+					factory.GreaterOrEqual(value, factory.Value(longType, 0L)),
+					factory.Function(decimalType, "FLOOR", quotient),
+					factory.Function(decimalType, "CEILING", quotient));
+				var milliseconds = factory.Cast(truncated, longType, true);
+
+				return base.TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, milliseconds, Sql.DateParts.Millisecond);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)

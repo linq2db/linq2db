@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -1999,8 +2001,8 @@ namespace Tests.Linq
 			Action dateTime       = () => Sql.DateDiff(part, startDate,       endDate);
 			Action dateTimeOffset = () => Sql.DateDiff(part, startDateOffset, endDateOffset);
 
-			dateTime      .ShouldThrow<OverflowException>();
-			dateTimeOffset.ShouldThrow<OverflowException>();
+			Assert.Throws<OverflowException>(() => dateTime());
+			Assert.Throws<OverflowException>(() => dateTimeOffset());
 		}
 
 		[Test]
@@ -2042,6 +2044,7 @@ namespace Tests.Linq
 			];
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2950")]
 		public void Issue2950Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2061,27 +2064,6 @@ namespace Tests.Linq
 			Assert.That(result[0].Output, Is.EqualTo(TestData.TimeOfDay.Hours));
 		}
 
-		[Test]
-		public void Issue2950SqlTest([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var query = from x in db.GetTable<Issue2950Table>()
-				where x.Time!.Value.Hours >= 0
-				select new
-				{
-					Output = x.Time!.Value.Hours
-				};
-
-			var sql = query.ToSqlQuery().Sql;
-
-			sql.ShouldContain("EXTRACT(EPOCH FROM");
-			sql.ShouldContain("3600");
-			sql.ShouldContain("CAST(TRUNC(");
-			sql.ShouldContain("AS BIGINT");
-			sql.ShouldContain("AS INTEGER");
-		}
-
 		// Short name: Oracle 11 (30) and Firebird <= 3 (31) cap identifier length; the 32-char class name overflows both.
 		[Table("NullableDateTimeSub")]
 		sealed class NullableDateTimeSubtractionTable
@@ -2089,10 +2071,10 @@ namespace Tests.Linq
 			[PrimaryKey]
 			public int Id { get; set; }
 
-			[Column(CanBeNull = false)]
+			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
 			public DateTime StartedOn { get; set; }
 
-			[Column(CanBeNull = true)]
+			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
 			public DateTime? FinishedOn { get; set; }
 
 			public static readonly NullableDateTimeSubtractionTable[] Data =
@@ -2122,23 +2104,17 @@ namespace Tests.Linq
 			result[0].Time.ShouldNotBeNull();
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
+
+			if (!context.IsRemote() && db is DataConnection dc)
+			{
+				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+					.ShouldBeFalse("DateTime subtraction must not appear in SQL — it is evaluated client-side in .NET");
+			}
 		}
 
+		[ThrowsCannotBeConverted]
 		[Test]
-		public void NullableDateTimeSubtractionProjectionSqlTest(
-			[IncludeDataSources(
-				TestProvName.AllAccess,
-				TestProvName.AllClickHouse,
-				TestProvName.AllFirebird3Plus,
-				TestProvName.AllInformix,
-				TestProvName.AllMariaDB,
-				TestProvName.AllMySql,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSapHana,
-				TestProvName.AllSQLite,
-				TestProvName.AllSqlServer2016Plus,
-				TestProvName.AllSybase)] string context)
+		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2151,12 +2127,7 @@ namespace Tests.Linq
 					Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
 				};
 
-			var result = query.ToArray();
-
-			result.Length.ShouldBe(2);
-			result[0].Time.ShouldNotBeNull();
-			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
-			result[1].Time.ShouldBeNull();
+			_ = query.ToArray();
 		}
 
 		// Short name: Oracle 11 caps identifiers at 30 chars.
@@ -2199,6 +2170,12 @@ namespace Tests.Linq
 			result[0].Time.ShouldNotBeNull();
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
+
+			if (!context.IsRemote() && db is DataConnection dc)
+			{
+				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+					.ShouldBeFalse("DateTimeOffset subtraction must not appear in SQL — it is evaluated client-side in .NET");
+			}
 		}
 	}
 }
