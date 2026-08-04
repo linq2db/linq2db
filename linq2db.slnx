@@ -286,6 +286,8 @@
     <File Path="Build/Azure/scripts/sybase.sh" />
     <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
+    <File Path="Build/Azure/scripts/verify-analyzer-delivery.ps1" />
+    <File Path="Build/Azure/scripts/verify-nuget-sizes.ps1" />
   </Folder>
   <Folder Name="/Build/Local/">
     <File Path="Data/Setup Scripts/all.cmd" />
