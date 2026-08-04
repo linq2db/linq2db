@@ -283,7 +283,19 @@ namespace LinqToDB.Internal.Linq
 
 			static bool IsValuePreservingCall(MethodCallExpression call)
 			{
-				return call.Method.Name is "get_Item" or nameof(Nullable<>.GetValueOrDefault);
+				var method = call.Method;
+
+				// An indexer read hands back an element the container already holds. IsSpecialName keeps this
+				// to real indexers rather than any method that happens to be called get_Item.
+				if (method is { IsSpecialName: true, Name: "get_Item" })
+					return true;
+
+				// Nullable<T>.GetValueOrDefault() returns the target's own value - but the overload taking a
+				// default can return that argument instead, so it must not lend the target's name.
+				return string.Equals(method.Name, nameof(Nullable<>.GetValueOrDefault), StringComparison.Ordinal)
+					&& call.Arguments.Count == 0
+					&& method.DeclaringType is { IsGenericType: true } declaringType
+					&& declaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
 			}
 		}
 

@@ -15,7 +15,8 @@ namespace Tests.Linq
 		// A parameter carries a value, so it reads better named after where that value comes from than
 		// after the column it is compared against. When the expression is not itself a member access, the
 		// nearest member access inside it is used - but only across calls that hand back a value the target
-		// already holds. A call that computes a new value keeps the column-name fallback.
+		// already holds. A call that computes a new value is named exactly as it was before, which may be
+		// the column name or the generic fallback depending on what the call site carries.
 		//
 		// Assertions go against DataParameter.Name rather than the SQL text: the name carries no provider
 		// prefix there, and a substring check over the SQL would match "@p" inside "@price".
@@ -49,6 +50,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ParameterName_NullableTargetWithExplicitDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int? value = null;
+
+			// This overload can return the argument rather than the target's value - naming the parameter
+			// after `value` would describe something it does not hold, so the target's name is not used.
+			var sql = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.Int1 == value.GetValueOrDefault(7))
+				.ToSqlQuery();
+
+			sql.Parameters.Select(p => p.Name).ShouldNotBe(["value"]);
+		}
+
+		[Test]
 		public void ParameterName_FromIndexedCollection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -63,7 +80,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterName_ComputingCallKeepsColumnName([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		public void ParameterName_ComputingCallIsNotNamedAfterTarget([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 
