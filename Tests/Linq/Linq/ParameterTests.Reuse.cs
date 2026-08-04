@@ -482,55 +482,5 @@ namespace Tests.Linq
 		}
 
 		#endregion
-
-		#region Parameter names come from the value's source member, not the target column
-
-		[Test]
-		public void ParameterName_FromArrayBeingIndexed([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var values = new[] { "str", "str1" };
-
-			var sql = db.GetTable<ParameterDeduplication>()
-				.Where(t => t.String2 == values[0] || t.String3 == values[1])
-				.ToSqlQuery();
-
-			sql.Parameters.Count.ShouldBe(2);
-			sql.Sql.ShouldContain("@values");
-			sql.Sql.ShouldNotContain("@p");
-		}
-
-		[Test]
-		public void ParameterName_FromMethodCallTarget([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			int? value = 1;
-
-			var sql = db.GetTable<ParameterDeduplication>()
-				.Where(t => t.Int1 == value.GetValueOrDefault())
-				.ToSqlQuery();
-
-			sql.Sql.ShouldContain("@value");
-			sql.Sql.ShouldNotContain("@p");
-		}
-
-		[Test]
-		public void ParameterName_FromCallTargetOfImpureMethod([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var counter = new ReuseCounter();
-
-			var sql = db.GetTable<ParameterDeduplication>()
-				.Where(t => t.Int1 == counter.Next() || t.Int2 == counter.Next())
-				.ToSqlQuery();
-
-			sql.Sql.ShouldContain("@counter");
-			sql.Sql.ShouldNotContain("@p");
-		}
-
-		#endregion
 	}
 }

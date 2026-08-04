@@ -281,14 +281,6 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		/// <summary>
-		/// Suggests a display name for a parameter built from <paramref name="expression"/>, taken from the
-		/// member the value is read from rather than from the column it is compared against - a parameter
-		/// carries a value, so it reads better named after that value's source. When the expression is not
-		/// itself a member access, the nearest member access inside it is used: the collection for an
-		/// element read, or the call target for an instance method call. Returns <see langword="null"/>
-		/// when the expression exposes no member to name after (e.g. a static method call).
-		/// </summary>
 		public static string? SuggestParameterDisplayName(Expression? expression)
 		{
 			return expression switch
@@ -300,17 +292,6 @@ namespace LinqToDB.Internal.Linq
 
 				UnaryExpression { Operand: var operand } =>
 					SuggestParameterDisplayName(operand),
-
-				// values[0] over an array - name after the array, not the target column
-				BinaryExpression { NodeType: ExpressionType.ArrayIndex, Left: var array } =>
-					SuggestParameterDisplayName(array),
-
-				// list[0], dict[key], nullable.GetValueOrDefault(), counter.Next() - name after the target
-				MethodCallExpression { Object: { } target } =>
-					SuggestParameterDisplayName(target),
-
-				IndexExpression { Object: { } target } =>
-					SuggestParameterDisplayName(target),
 
 				_ => null,
 			};
