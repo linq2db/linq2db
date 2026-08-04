@@ -249,9 +249,11 @@ namespace LinqToDB.Internal.Linq
 		/// Suggests a display name for a parameter built from <paramref name="expression"/>, taken from the
 		/// member the value is read from rather than from the column it is compared against - a parameter
 		/// carries a value, so it reads better named after that value's source. When the expression is not
-		/// itself a member access, the nearest member access inside it is used: the collection for an
-		/// element read, or the call target for an instance method call. Returns <see langword="null"/>
-		/// when the expression exposes no member to name after (e.g. a static method call).
+		/// itself a member access, the nearest member access inside it is used, but only across calls that
+		/// hand back a value already held by their target: an element read, or <c>GetValueOrDefault</c>.
+		/// A call that <i>computes</i> a new value would give a name that describes the wrong thing - the
+		/// parameter behind <c>today.AddDays(-7)</c> is not <c>today</c> - so those keep returning
+		/// <see langword="null"/> and are named the way they were before source-based naming existed.
 		/// </summary>
 		public static string? SuggestParameterDisplayName(Expression? expression)
 		{
@@ -269,8 +271,8 @@ namespace LinqToDB.Internal.Linq
 				BinaryExpression { NodeType: ExpressionType.ArrayIndex, Left: var array } =>
 					SuggestParameterDisplayName(array),
 
-				// list[0], dict[key], nullable.GetValueOrDefault(), counter.Next() - name after the target
-				MethodCallExpression { Object: { } target } =>
+				// list[0], dict[key], value.GetValueOrDefault() - the call returns what the target holds
+				MethodCallExpression { Object: { } target } call when IsValuePreservingCall(call) =>
 					SuggestParameterDisplayName(target),
 
 				IndexExpression { Object: { } target } =>
@@ -278,6 +280,11 @@ namespace LinqToDB.Internal.Linq
 
 				_ => null,
 			};
+
+			static bool IsValuePreservingCall(MethodCallExpression call)
+			{
+				return call.Method.Name is "get_Item" or nameof(Nullable<>.GetValueOrDefault);
+			}
 		}
 
 		static string? BuildParameterPath(Expression? expression)
