@@ -27,7 +27,7 @@ namespace LinqToDB.Analyzers
 			id:                 DiagnosticId,
 			title:              "Use the Sql.Window API instead of the legacy Sql.Ext window functions",
 			messageFormat:      "Legacy window-function API 'Sql.Ext.{0}(...)' is superseded by 'Sql.Window'; migrate to the Sql.Window API",
-			category:           "Usage",
+			category:           "LinqToDB",
 			defaultSeverity:    DiagnosticSeverity.Info,
 			isEnabledByDefault: true,
 			description:        "The Sql.Ext analytic / window-function API is superseded by the Sql.Window API and will be removed in a future major release. Where the call chain is mechanically convertible a code fix rewrites it to the equivalent Sql.Window call.",
