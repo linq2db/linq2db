@@ -1,3 +1,8 @@
+---
+name: linq2db
+description: Use when writing or reviewing C# code that uses linq2db APIs, including provider setup, mapping, queries, CRUD, Merge, temp tables, hints, raw SQL, interceptors, associations, concurrency, and exact package-version API lookup.
+---
+
 # linq2db Skill <!-- omit in toc -->
 
 > **This file is the mandatory entry point for AI agents.**
