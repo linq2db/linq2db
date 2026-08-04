@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
 
@@ -173,7 +174,10 @@ namespace Tests.Linq
 				.Where(t => values.Contains(t.Int1) || values.Contains(t.Int2))
 				.ToSqlQuery();
 
-			var lists = System.Text.RegularExpressions.Regex.Matches(sql.Sql, @"IN \(([^)]*)\)")
+			// Cast first: on net462 MatchCollection implements only the non-generic IEnumerable, so Select
+			// would not bind to Enumerable.Select there.
+			var lists = Regex.Matches(sql.Sql, @"IN \(([^)]*)\)")
+				.Cast<Match>()
 				.Select(m => m.Groups[1].Value)
 				.ToArray();
 
