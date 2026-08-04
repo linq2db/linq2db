@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\linq2db.TestProjects.props" />
 
 	<PropertyGroup>
@@ -63,5 +63,6 @@
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Remove="$(MSBuildThisFileDirectory)/../../Source/Shared/*.cs" />
 		<Compile Include="$(MSBuildThisFileDirectory)/../../Source/Shared/JetBrains.Annotations.cs" Link="JetBrains.Annotations.cs" />
+		<Compile Include="$(MSBuildThisFileDirectory)/../../Source/LinqToDB.CLI/CommandLine/Commands/QueryExecution/QueryValueFormatter.cs" Link="DataProvider/QueryValueFormatter.cs" Condition="'$(TargetFramework)' != 'net462'" />
 	</ItemGroup>
 </Project>

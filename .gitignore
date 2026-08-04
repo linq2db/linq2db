@@ -15,6 +15,8 @@ _ReSharper*/
 TestResults/
 linq2db.sln.docstates
 **/UserDataProviders.json
+/Tests/LinqToDB.CLI/linq2db-cli.json
+/.agents/linq2db-query.json
 /BuiltNuGet
 linq2db.sln.ide/
 !Redist/**
@@ -26,7 +28,6 @@ packages/
 .vscode/
 .build/
 **/launchSettings.json
-/notes/architect-ai-docs.md
-/.agents/settings.local.json
-/.claude/settings.local.json
+# .claude/ is the agent-instruction corpus submodule (github.com/linq2db/agents); files
+# inside it are ignored by ITS .gitignore - a superproject rule cannot reach into a submodule.
 Source/LinqToDB/.claude/

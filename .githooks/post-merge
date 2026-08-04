@@ -1,0 +1,4 @@
+#!/bin/sh
+# After a merge (including `git pull`), refresh .claude to the corpus tip.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+exec "$(dirname "$0")/_refresh-corpus.sh"

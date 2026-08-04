@@ -62,7 +62,7 @@ jobs:
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
 
-  # linq2db.Analyzers unit tests — Roslyn analyzer/code-fix tests. DB-free and provider-independent, so they
+  # Roslyn analyzer/code-fix unit tests for Source/LinqToDB.Analyzers*. DB-free and provider-independent, so they
   # run here on the build agent rather than in the provider test matrix. Fast (seconds); the MTP NUnit runner
   # is selected via global.json.
   - task: DotNetCoreCLI@2

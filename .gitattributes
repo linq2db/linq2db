@@ -4,6 +4,7 @@
 *.slnx     text      eol=crlf
 *.csproj   text      eol=crlf
 *.sh       text      eol=lf
+.githooks/** text    eol=lf
 "/Data/Setup Scripts/ase.sql" text eol=lf
 Source/Knowledge/linq2db-expert/[0-9][0-9]-*.md linguist-generated=true
 Source/Knowledge/linq2db-expert/manifest.json linguist-generated=true
