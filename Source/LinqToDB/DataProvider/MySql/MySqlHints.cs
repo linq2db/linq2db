@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.MySql;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -160,6 +161,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -180,6 +182,10 @@ namespace LinqToDB.DataProvider.MySql
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))))));
 		}
 
+		/// <summary>
+		/// Adds a MySQL <c>SEMIJOIN</c> join hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(SemiJoinHintWithQueryBlockImpl))]
 		public static IMySqlSpecificQueryable<TSource> SemiJoinHintWithQueryBlock<TSource>(this IMySqlSpecificQueryable<TSource> query, params string[] values)
 			where TSource : notnull
@@ -192,6 +198,10 @@ namespace LinqToDB.DataProvider.MySql
 			return (query, values) => QueryBlockHint(query, Query.SemiJoin, values);
 		}
 
+		/// <summary>
+		/// Adds a MySQL <c>NO_SEMIJOIN</c> join hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(NoSemiJoinHintWithQueryBlockImpl))]
 		public static IMySqlSpecificQueryable<TSource> NoSemiJoinHintWithQueryBlock<TSource>(this IMySqlSpecificQueryable<TSource> query, params string[] values)
 			where TSource : notnull
@@ -213,6 +223,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -238,6 +249,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -266,6 +278,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -298,6 +311,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with table hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -322,6 +336,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with table hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -348,6 +363,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with table hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -379,6 +395,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with index hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -404,6 +421,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with index hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -432,6 +450,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with index hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -464,6 +483,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -488,6 +508,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -517,6 +538,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -548,6 +570,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -572,6 +595,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -601,6 +625,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with hints.</returns>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -659,13 +684,19 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -687,14 +718,20 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -718,13 +755,19 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Table-like query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -747,14 +790,20 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		/// <summary>
-		/// Adds subquery hint to a generated query.
+		/// Adds a MySQL subquery row-locking hint to a generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint">MySQL row-locking hint, e.g. <c>FOR UPDATE</c> or <c>FOR SHARE</c>.</param>
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
-		/// <param name="tableIDs">Table IDs.</param>
-		/// <returns>Query source with join hints.</returns>
+		/// <param name="tableIDs">Optional table identifiers for the <c>OF</c> clause.</param>
+		/// <returns>Table-like query source with subquery hint.</returns>
+		/// <remarks>
+		/// The <c>tableIDs</c> values are created with <c>Sql.TableAlias</c>, <c>Sql.TableName</c>, or
+		/// <c>Sql.TableSpec</c> for table sources marked with <c>TableID</c>. They resolve to the
+		/// generated SQL identifiers for the selected table sources.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
@@ -778,6 +827,10 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
+		/// <summary>
+		/// Adds a MySQL subquery hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(LockInShareModeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> LockInShareModeHint<TSource>(
 			this   IMySqlSpecificQueryable<TSource> query)

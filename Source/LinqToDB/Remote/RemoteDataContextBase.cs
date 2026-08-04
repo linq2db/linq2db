@@ -525,7 +525,7 @@ namespace LinqToDB.Remote
 						return Expression
 							.Lambda<Func<DataOptions, ISqlOptimizer>>(
 								Expression.New(
-									key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
+									key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)})
 										?? throw new InvalidOperationException($"Constructor for type '{key.SqlOptimizerType.Name}' not found."),
 									Expression.Constant(key.SqlProviderFlags),
 									p
@@ -654,6 +654,15 @@ namespace LinqToDB.Remote
 #pragma warning restore CS0618 // Type or member is obsolete
 				}
 
+				// Mapping schema selection follows the same three-branch pattern everywhere:
+				// 1. If an explicit MappingSchema is supplied, use it for this context.
+				// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
+				//    per-context overlay over the provider/default schema. Context-local
+				//    mapping additions then reset only the overlay id and don't mutate shared
+				//    provider schemas used by other contexts.
+				// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
+				//    attempts to edit it should fail.
+				// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 				if (options.MappingSchema != null)
 				{
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -694,12 +703,23 @@ namespace LinqToDB.Remote
 					dataContext._mappingSchema = null;
 
 #pragma warning disable CS0618 // Type or member is obsolete
+					// Mapping schema selection follows the same three-branch pattern everywhere:
+					// 1. If an explicit MappingSchema is supplied, use it for this context.
+					// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
+					//    per-context overlay over the provider/default schema. Context-local
+					//    mapping additions then reset only the overlay id and don't mutate shared
+					//    provider schemas used by other contexts.
+					// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
+					//    attempts to edit it should fail.
+					// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 					if (options.MappingSchema != null)
 					{
 						dataContext.MappingSchema = options.MappingSchema;
 					}
 					else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
 					{
+						// The undo action restores both mapping and serialization schemas that
+						// belonged to the outer context.
 						dataContext.MappingSchema = new (dataContext.MappingSchema);
 					}
 #pragma warning restore CS0618 // Type or member is obsolete

@@ -93,10 +93,10 @@ namespace Tests.Linq
 				(6, 1, 2), (7, 2, 1), (8, 5, 1), (9, 1, 5)
 			];
 
-			foreach (var e in expected)
+			foreach (var (id, rn7, rn8) in expected)
 			{
-				byId[e.Id].rn7.ShouldBe(e.Rn7, $"rn7 (ASC NULLS FIRST) mismatch for Id={e.Id}");
-				byId[e.Id].rn8.ShouldBe(e.Rn8, $"rn8 (DESC NULLS LAST) mismatch for Id={e.Id}");
+				byId[id].rn7.ShouldBe(rn7, $"rn7 (ASC NULLS FIRST) mismatch for Id={id}");
+				byId[id].rn8.ShouldBe(rn8, $"rn8 (DESC NULLS LAST) mismatch for Id={id}");
 			}
 		}
 

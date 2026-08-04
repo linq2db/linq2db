@@ -1,0 +1,41 @@
+# LinqToDB CRUD Operations
+
+> ⚠️ **Stop. This document is incomplete by itself.**
+> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
+> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
+> Do not continue without reading it.
+
+> You are here if you need to:
+> - read data from a table (`SELECT`)
+> - insert rows into a table
+> - update existing rows
+> - delete rows
+> - perform upsert (insert-or-update)
+> - bulk-copy / batch insert multiple rows
+> - MERGE (provider-side insert-or-update via SQL MERGE statement)
+
+---
+
+## Choose by operation
+
+| What you need to do | Go to |
+|---|---|
+| Query / read data - filtering, projection, ordering, pagination, associations | [`docs/crud/crud-select.md`](crud-select.md) |
+| Insert from a C# object, expression, or fluent column-by-column builder | [`docs/crud/crud-insert-values.md`](crud-insert-values.md) |
+| `INSERT … SELECT` - copy or archive rows from a query, with JOINs or projections | [`docs/crud/crud-insert-select.md`](crud-insert-select.md) |
+| Upsert - insert-or-update semantics (`InsertOrReplace`, `InsertOrUpdate`) | [`docs/crud/crud-upsert.md`](crud-upsert.md) |
+| Update rows - full entity or partial expression-based update | [`docs/crud/crud-update.md`](crud-update.md) |
+| Delete rows - by entity or by predicate | [`docs/crud/crud-delete.md`](crud-delete.md) |
+| Bulk copy / batch insert - `BulkCopy` / `BulkCopyAsync` | [`docs/crud/crud-bulkcopy.md`](crud-bulkcopy.md) |
+| MERGE - SQL MERGE statement via `Merge` LINQ extension | [`docs/crud/crud-merge.md`](crud-merge.md) |
+
+---
+
+## Out of scope for this guide
+
+| Topic | See instead |
+|---|---|
+| Transactions | [`docs/configuration.md`](../configuration.md) - `BeginTransaction`, `TransactionScope` |
+| Schema creation (`CreateTable`) | [`docs/agent-antipatterns.md`](../agent-antipatterns.md) - anti-pattern #10 |
+| Custom SQL functions | [`docs/extensions.md`](../extensions.md) |
+| CTE, OUTPUT / RETURNING | [`docs/provider-capabilities.md`](../provider-capabilities.md) |

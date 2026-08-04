@@ -1,4 +1,4 @@
-﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ template debug="false" hostspecific="false" language="C#" #>
 <#@ assembly name="System.Core" #>
 <#@ import namespace="System.Linq" #>
 <#@ import namespace="System.Text" #>
@@ -10,6 +10,7 @@
 using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -17,59 +18,69 @@ namespace LinqToDB.DataProvider.SqlServer
 	public static partial class SqlServerHints
 	{
 <#
-	GenerateTableHint("ForceScan", "2012Plus");
-	GenerateTableHint("ForceSeek");
-	GenerateTableHint("HoldLock");
-	GenerateTableHint("NoLock");
-	GenerateTableHint("NoWait");
-	GenerateTableHint("PagLock");
-	GenerateTableHint("ReadCommitted");
-	GenerateTableHint("ReadCommittedLock");
-	GenerateTableHint("ReadPast");
-	GenerateTableHint("ReadUncommitted");
-	GenerateTableHint("RepeatableRead");
-	GenerateTableHint("RowLock");
-	GenerateTableHint("Serializable");
-	GenerateTableHint("Snapshot", "2014Plus");
-	GenerateTableHint("TabLock");
-	GenerateTableHint("TabLockX");
-	GenerateTableHint("UpdLock");
-	GenerateTableHint("XLock");
+	GenerateTableHint("ForceScan",                           "FORCESCAN",                             "2012Plus");
+	GenerateTableHint("ForceSeek",                           "FORCESEEK");
+	GenerateTableHint("HoldLock",                            "HOLDLOCK");
+	GenerateTableHint("NoLock",                              "NOLOCK");
+	GenerateTableHint("NoWait",                              "NOWAIT");
+	GenerateTableHint("PagLock",                             "PAGLOCK");
+	GenerateTableHint("ReadCommitted",                       "READCOMMITTED");
+	GenerateTableHint("ReadCommittedLock",                   "READCOMMITTEDLOCK");
+	GenerateTableHint("ReadPast",                            "READPAST");
+	GenerateTableHint("ReadUncommitted",                     "READUNCOMMITTED");
+	GenerateTableHint("RepeatableRead",                      "REPEATABLEREAD");
+	GenerateTableHint("RowLock",                             "ROWLOCK");
+	GenerateTableHint("Serializable",                        "SERIALIZABLE");
+	GenerateTableHint("Snapshot",                            "SNAPSHOT",                              "2014Plus");
+	GenerateTableHint("TabLock",                             "TABLOCK");
+	GenerateTableHint("TabLockX",                            "TABLOCKX");
+	GenerateTableHint("UpdLock",                             "UPDLOCK");
+	GenerateTableHint("XLock",                               "XLOCK");
 
-	GenerateJoinHint("Loop");
-	GenerateJoinHint("Hash");
-	GenerateJoinHint("Merge");
-	GenerateJoinHint("Remote");
+	GenerateJoinHint("Loop",                                 "LOOP");
+	GenerateJoinHint("Hash",                                 "HASH");
+	GenerateJoinHint("Merge",                                "MERGE");
+	GenerateJoinHint("Remote",                               "REMOTE");
 
-	GenerateQueryHint ("HashGroup");   GenerateQueryHint("OrderGroup");
-	GenerateQueryHint ("ConcatUnion"); GenerateQueryHint("HashUnion"); GenerateQueryHint("MergeUnion");
-	GenerateQueryHint ("LoopJoin");    GenerateQueryHint("HashJoin");  GenerateQueryHint("MergeJoin");
-	GenerateQueryHint ("ExpandViews");
-	GenerateQueryHint2("Fast");
-	GenerateQueryHint ("ForceOrder");
-	GenerateQueryHint ("ForceExternalPushDown");
-	GenerateQueryHint("DisableExternalPushDown");
-	GenerateQueryHint ("ForceScaleOutExecution",   "2019Plus");
-	GenerateQueryHint ("DisableScaleOutExecution", "2019Plus");
-	GenerateQueryHint ("IgnoreNonClusteredColumnStoreIndex", "2012Plus");
-	GenerateQueryHint ("KeepPlan");
-	GenerateQueryHint ("KeepFixedPlan");
-	GenerateQueryHint2("MaxGrantPercent", "2016Plus");
-	GenerateQueryHint2("MinGrantPercent", "2016Plus");
-	GenerateQueryHint2("MaxDop");
-	GenerateQueryHint2("MaxRecursion");
-	GenerateQueryHint ("NoPerformanceSpool", "2019Plus");
-	GenerateQueryHint ("OptimizeForUnknown", "2008Plus");
-	GenerateQueryHint2("QueryTraceOn");
-	GenerateQueryHint ("Recompile");
-	GenerateQueryHint ("RobustPlan");
+	GenerateQueryHint ("HashGroup",                          "HASH GROUP");
+	GenerateQueryHint ("OrderGroup",                         "ORDER GROUP");
+	GenerateQueryHint ("ConcatUnion",                        "CONCAT UNION");
+	GenerateQueryHint ("HashUnion",                          "HASH UNION");
+	GenerateQueryHint ("MergeUnion",                         "MERGE UNION");
+	GenerateQueryHint ("LoopJoin",                           "LOOP JOIN");
+	GenerateQueryHint ("HashJoin",                           "HASH JOIN");
+	GenerateQueryHint ("MergeJoin",                          "MERGE JOIN");
+	GenerateQueryHint ("ExpandViews",                        "EXPAND VIEWS");
+	GenerateQueryHint2("Fast",                               "FAST");
+	GenerateQueryHint ("ForceOrder",                         "FORCE ORDER");
+	GenerateQueryHint ("ForceExternalPushDown",              "FORCE EXTERNALPUSHDOWN");
+	GenerateQueryHint ("DisableExternalPushDown",            "DISABLE EXTERNALPUSHDOWN");
+	GenerateQueryHint ("ForceScaleOutExecution",             "FORCE SCALEOUTEXECUTION",               "2019Plus");
+	GenerateQueryHint ("DisableScaleOutExecution",           "DISABLE SCALEOUTEXECUTION",             "2019Plus");
+	GenerateQueryHint ("IgnoreNonClusteredColumnStoreIndex", "IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX", "2012Plus");
+	GenerateQueryHint ("KeepPlan",                           "KEEP PLAN");
+	GenerateQueryHint ("KeepFixedPlan",                      "KEEPFIXED PLAN");
+	GenerateQueryHint2("MaxGrantPercent",                    "MAX_GRANT_PERCENT",                     "2016Plus");
+	GenerateQueryHint2("MinGrantPercent",                    "MIN_GRANT_PERCENT",                     "2016Plus");
+	GenerateQueryHint2("MaxDop",                             "MAXDOP");
+	GenerateQueryHint2("MaxRecursion",                       "MAXRECURSION");
+	GenerateQueryHint ("NoPerformanceSpool",                 "NO_PERFORMANCE_SPOOL",                  "2019Plus");
+	GenerateQueryHint ("OptimizeForUnknown",                 "OPTIMIZE FOR UNKNOWN",                  "2008Plus");
+	GenerateQueryHint2("QueryTraceOn",                       "QUERYTRACEON");
+	GenerateQueryHint ("Recompile",                          "RECOMPILE");
+	GenerateQueryHint ("RobustPlan",                         "ROBUST PLAN");
 #>
 	}
 }
 <#+
-void GenerateTableHint(string hint, string version = "")
+void GenerateTableHint(string hint, string sqlHint = null, string version = "")
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server <c><#= sqlHint ?? hint #></c> table hint.
+		/// For all tables already present in the current query scope, use <c>With<#= hint #>InScope</c> on <c>ISqlServerSpecificQueryable&lt;TSource&gt;</c>.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(ProviderName.SqlServer, nameof(With<#= hint #>TableImpl))]
 		public static ISqlServerSpecificTable<TSource> With<#= hint #><TSource>(this ISqlServerSpecificTable<TSource> table)
 			where TSource : notnull
@@ -83,6 +94,10 @@ void GenerateTableHint(string hint, string version = "")
 			return table => table.TableHint<#= version #>(Table.<#= hint #>);
 		}
 
+		/// <summary>
+		/// Adds a SQL Server <c><#= sqlHint ?? hint #></c> table hint to tables in the current query scope.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(ProviderName.SqlServer, nameof(With<#= hint #>QueryImpl))]
 		public static ISqlServerSpecificQueryable<TSource> With<#= hint #>InScope<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -99,9 +114,13 @@ void GenerateTableHint(string hint, string version = "")
 <#+
 }
 
-void GenerateJoinHint(string hint)
+void GenerateJoinHint(string hint, string sqlHint = null)
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server <c><#= sqlHint ?? hint #></c> join hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
 		public static ISqlServerSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -115,6 +134,10 @@ void GenerateJoinHint(string hint)
 			return query => query.JoinHint(Join.<#= hint #>);
 		}
 
+		/// <summary>
+		/// Adds a SQL Server <c><#= sqlHint ?? hint #></c> join hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
 		public static ISqlServerSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this ISqlServerSpecificTable<TSource> table)
 			where TSource : notnull
@@ -131,9 +154,13 @@ void GenerateJoinHint(string hint)
 <#+
 }
 
-void GenerateQueryHint(string hint, string version = "")
+void GenerateQueryHint(string hint, string sqlHint = null, string version = "")
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server <c><#= sqlHint ?? hint #></c> query hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
 		public static ISqlServerSpecificQueryable<TSource> Option<#= hint #><TSource>(this ISqlServerSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -150,9 +177,13 @@ void GenerateQueryHint(string hint, string version = "")
 <#+
 }
 
-void GenerateQueryHint2(string hint, string version = "")
+void GenerateQueryHint2(string hint, string sqlHint = null, string version = "")
 {
 #>
+		/// <summary>
+		/// Adds a SQL Server <c><#= sqlHint ?? hint #></c> query hint.
+		/// </summary>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
 		public static ISqlServerSpecificQueryable<TSource> Option<#= hint #><TSource>(this ISqlServerSpecificQueryable<TSource> query, int value)
 			where TSource : notnull

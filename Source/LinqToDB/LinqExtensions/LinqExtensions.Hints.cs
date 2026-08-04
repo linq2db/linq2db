@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -16,12 +17,16 @@ namespace LinqToDB
 		#region TableHint
 
 		/// <summary>
-		/// Adds a table hint to a table in generated query.
+		/// Adds a table hint to a table in the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		/// <remarks>
+		/// See <see cref="TableHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
@@ -40,12 +45,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds a table hint to a table in generated query.
+		/// Adds a table hint to a table in the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// Hint syntax and interpretation are provider-defined.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
@@ -64,14 +75,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds a table hint to a table in generated query.
+		/// Adds a table hint to a table in the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		/// <remarks>
+		/// See <see cref="TableHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
@@ -93,14 +108,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds a table hint to a table in generated query.
+		/// Adds a table hint to a table in the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
+		/// <remarks>
+		/// See <see cref="TableHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
@@ -128,12 +147,18 @@ namespace LinqToDB
 		#region TablesInScopeHint
 
 		/// <summary>
-		/// Adds a table hint to all the tables in the method scope.
+		/// Adds a table hint to all tables in the method scope.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <returns>Query source with table hints.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// Hint syntax and interpretation are provider-defined.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
@@ -152,14 +177,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds a table hint to all the tables in the method scope.
+		/// Adds a table hint to all tables in the method scope.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with table hints.</returns>
+		/// <remarks>
+		/// See <see cref="TablesInScopeHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
@@ -181,13 +210,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds a table hint to all the tables in the method scope.
+		/// Adds a table hint to all tables in the method scope.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with table hints.</returns>
+		/// <remarks>
+		/// See <see cref="TablesInScopeHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
@@ -215,12 +248,18 @@ namespace LinqToDB
 		#region IndexHint
 
 		/// <summary>
-		/// Adds an index hint to a table in generated query.
+		/// Adds an index hint to a table in the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <returns>Table-like query source with index hints.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// Hint syntax and interpretation are provider-defined.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
@@ -239,14 +278,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds an index hint to a table in generated query.
+		/// Adds an index hint to a table in the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with index hints.</returns>
+		/// <remarks>
+		/// See <see cref="IndexHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
@@ -268,14 +311,18 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Adds an index hint to a table in generated query.
+		/// Adds an index hint to a table in the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with index hints.</returns>
+		/// <remarks>
+		/// See <see cref="IndexHint{TSource}(ITable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.IndexHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
@@ -303,12 +350,18 @@ namespace LinqToDB
 		#region JoinHint
 
 		/// <summary>
-		/// Adds a join hint to a generated query.
+		/// Adds a join hint to the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <returns>Query source with join hints.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// Hint syntax and interpretation are provider-defined.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Join, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		public static IQueryable<TSource> JoinHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -329,12 +382,18 @@ namespace LinqToDB
 		#region SubQueryHint
 
 		/// <summary>
-		/// Adds a query hint to a generated query.
+		/// Adds a query hint to the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <returns>Query source with hints.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// Hint syntax and interpretation are provider-defined.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -354,11 +413,15 @@ namespace LinqToDB
 		/// Adds a query hint to the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
-		/// <typeparam name="TParam">Hint parameter type</typeparam>
+		/// <typeparam name="TParam">Hint parameter type.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with hints.</returns>
+		/// <remarks>
+		/// See <see cref="SubQueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
@@ -385,9 +448,13 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Table-like query source with hints.</returns>
+		/// <returns>Query source with hints.</returns>
+		/// <remarks>
+		/// See <see cref="SubQueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.SubQuery, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]
 		public static IQueryable<TSource> SubQueryHint<TSource, TParam>(
@@ -413,12 +480,18 @@ namespace LinqToDB
 		#region QueryHint
 
 		/// <summary>
-		/// Adds a query hint to a generated query.
+		/// Adds a query hint to the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <returns>Query source with hints.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// Hint syntax and interpretation are provider-defined.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -438,11 +511,15 @@ namespace LinqToDB
 		/// Adds a query hint to the generated query.
 		/// </summary>
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
-		/// <typeparam name="TParam">Hint parameter type</typeparam>
+		/// <typeparam name="TParam">Hint parameter type.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with hints.</returns>
+		/// <remarks>
+		/// See <see cref="QueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		public static IQueryable<TSource> QueryHint<TSource, TParam>(
@@ -469,9 +546,13 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Table record mapping class.</typeparam>
 		/// <typeparam name="TParam">Table hint parameter type.</typeparam>
 		/// <param name="source">Query source.</param>
-		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to the generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
-		/// <returns>Table-like query source with hints.</returns>
+		/// <returns>Query source with hints.</returns>
+		/// <remarks>
+		/// See <see cref="QueryHint{TSource}(IQueryable{TSource},string)"/> for SQL semantics and provider contract.
+		/// </remarks>
+		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ")]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]

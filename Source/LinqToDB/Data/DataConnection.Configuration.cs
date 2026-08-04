@@ -514,6 +514,10 @@ namespace LinqToDB.Data
 					dataConnection.MappingSchema       = options.SavedMappingSchema!;
 					dataConnection.ConfigurationString = options.SavedConfigurationString;
 
+					// EnableContextSchemaEdit allows runtime code to add mappings through
+					// IDataContext.MappingSchema. Saved provider schemas are shared and can be
+					// locked/cached, so never expose the saved instance directly for editing.
+					// Each DataConnection gets its own writable overlay instead.
 					if (options.SavedEnableContextSchemaEdit)
 						dataConnection.MappingSchema = new(dataConnection.MappingSchema);
 
@@ -636,6 +640,15 @@ namespace LinqToDB.Data
 				//
 				dataConnection.ConfigurationString ??= options.ConfigurationString ?? dataConnection.DataProvider.Name;
 
+				// Mapping schema selection follows the same three-branch pattern everywhere:
+				// 1. If an explicit MappingSchema is supplied, use it for this context.
+				// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
+				//    per-context overlay over the provider/default schema. Context-local
+				//    mapping additions then reset only the overlay id and don't mutate shared
+				//    provider schemas used by other contexts.
+				// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
+				//    attempts to edit it should fail.
+				// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 				if (options.MappingSchema != null)
 				{
 					dataConnection.AddMappingSchema(options.MappingSchema);
@@ -653,6 +666,10 @@ namespace LinqToDB.Data
 					options.SavedConfigurationString = dataConnection.ConfigurationString;
 				}
 
+				// Create the editable context-local overlay after the shared provider schema
+				// has been saved in ConnectionOptions. We deliberately don't save the overlay:
+				// saved options should stay cheap and reusable for many short-lived
+				// DataConnection instances, with each instance getting its own editable schema.
 				if (options.SavedEnableContextSchemaEdit)
 					dataConnection.MappingSchema = new (dataConnection.MappingSchema);
 
@@ -732,12 +749,23 @@ namespace LinqToDB.Data
 
 					dataConnection.MappingSchema = dataConnection.DataProvider.MappingSchema;
 
+					// Mapping schema selection follows the same three-branch pattern everywhere:
+					// 1. If an explicit MappingSchema is supplied, use it for this context.
+					// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
+					//    per-context overlay over the provider/default schema. Context-local
+					//    mapping additions then reset only the overlay id and don't mutate shared
+					//    provider schemas used by other contexts.
+					// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
+					//    attempts to edit it should fail.
+					// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 					if (options.MappingSchema != null)
 					{
 						dataConnection.AddMappingSchema(options.MappingSchema);
 					}
 					else if (dataConnection.Options.LinqOptions.EnableContextSchemaEdit)
 					{
+						// The undo action below restores the previous schema, including any
+						// writable overlay that belonged to the outer context.
 						dataConnection.MappingSchema = new (dataConnection.MappingSchema);
 					}
 

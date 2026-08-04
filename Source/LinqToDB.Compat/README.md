@@ -1,4 +1,4 @@
-﻿# LINQ to DB Compat
+# LINQ to DB Compat
 
 **linq2db.Compat** is an additional package that ensures compatibility of **linq2db** with applications using configuration via `System.Configuration.ConfigurationManager` (classic `app.config`/`web.config`).
 

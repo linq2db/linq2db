@@ -10,14 +10,44 @@ using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
 	/// <summary>
-	/// Database connection abstraction interface.
+	/// Query translation and execution context abstraction.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="IDataContext"/> defines the minimal contract required to translate LINQ
+	/// <c>Expression Tree</c> queries into an internal SQL AST and execute them against a data source.
+	/// </para>
+	///
+	/// <para>
+	/// Use when you need a minimal abstraction for translating and executing LINQ queries
+	/// across local or remote providers.
+	/// </para>
+	///
+	/// <para>
+	/// The execution target may be a direct database provider (local execution)
+	/// or a remote execution endpoint. In remote mode, the translated SQL AST
+	/// (and parameters) is transferred for SQL text generation and execution on the remote side.
+	/// </para>
+	///
+	/// <para>
+	/// Implementations may own connection-related resources; callers must dispose the context
+	/// to release them.
+	/// </para>
+	///
+	/// <para>
+	/// This interface represents a translation/execution boundary
+	/// (Expression Tree → SQL AST → SQL text → execution → materialization)
+	/// and does not define implicit change tracking or unit-of-work semantics.
+	/// </para>
+	/// </remarks>
+	[AiTags(Groups = AiGroup.Connection, Affects = AiAffects.ExecutionContext, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public interface IDataContext : IConfigurationID, IDisposable, IAsyncDisposable
 	{
@@ -115,12 +145,20 @@ namespace LinqToDB
 		/// Adds interceptor instance to context.
 		/// </summary>
 		/// <param name="interceptor">Interceptor.</param>
+		/// <remarks>
+		/// Adds the interceptor to this context instance only. Use <see cref="DataOptionsExtensions.UseInterceptor(DataOptions, IInterceptor)"/>
+		/// to register interceptors as part of reusable <see cref="DataOptions"/> configuration.
+		/// A single interceptor object can implement multiple interceptor interfaces.
+		/// </remarks>
 		void AddInterceptor(IInterceptor interceptor);
 
 		/// <summary>
 		/// Removes interceptor instance from context.
 		/// </summary>
 		/// <param name="interceptor">Interceptor.</param>
+		/// <remarks>
+		/// Removes the same interceptor instance from this context instance.
+		/// </remarks>
 		void RemoveInterceptor(IInterceptor interceptor);
 
 		/// <summary>
@@ -135,6 +173,9 @@ namespace LinqToDB
 		/// </para>
 		/// </summary>
 		/// <remarks>
+		/// Options are immutable for the lifetime of the context; this method provides a temporary override
+		/// and restores previous options when the returned <see cref="IDisposable"/> is disposed.
+		/// Use with a <see langword="using"/> scope, e.g. wrap temporary option changes in a disposal scope.
 		/// For <see cref="ConnectionOptions"/> we update only mapping schema and connection interceptor. Connection string, configuration, data provider, etc. are not updatable.
 		/// </remarks>
 		/// <param name="optionsSetter">
