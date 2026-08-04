@@ -98,8 +98,7 @@ namespace Tests.Linq
 		}
 
 		[Table("TphDeepPerson")]
-		class TphDeepPersonLeaf : TphDeepPersonAbstract
-		{ }
+		class TphDeepPersonLeaf : TphDeepPersonAbstract;
 
 		[Test]
 		public void TPH_PropertiesWithSameNameMapped([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -1009,9 +1008,7 @@ namespace Tests.Linq
 			public TphRefCompany? Company { get; set; }
 		}
 
-		public class TphRefContractor : TphRefPerson
-		{
-		}
+		public class TphRefContractor : TphRefPerson;
 
 		[Test]
 		public void TPH_Assoc_OnDerived_NonNullFkForNonMatchingRow([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -1085,7 +1082,7 @@ namespace Tests.Linq
 			public TphMcCompany? Company { get; set; }
 		}
 
-		public class TphMcContractor : TphMcPerson { }
+		public class TphMcContractor : TphMcPerson;
 
 		[Table("TphMcPerson")]
 		public class TphMcRaw
@@ -1124,9 +1121,7 @@ namespace Tests.Linq
 			[Column, LinqToDB.Mapping.Nullable] public int Shared { get; set; }
 		}
 
-		public class TphMlLeaf2 : TphMlMid
-		{
-		}
+		public class TphMlLeaf2 : TphMlMid;
 
 		[Test]
 		public void TPH_MultiLevel_SharedAndInheritedColumns([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -1591,9 +1586,7 @@ namespace Tests.Linq
 			};
 		}
 
-		class TphThingAlpha : TphThingBase
-		{
-		}
+		class TphThingAlpha : TphThingBase;
 
 		class TphThingBeta : TphThingBase
 		{
@@ -1613,9 +1606,7 @@ namespace Tests.Linq
 			[LinqToDB.Mapping.Nullable] public int ConcreteField { get; set; }
 		}
 
-		class TphThingIntermediateTwo : TphThingIntermediate
-		{
-		}
+		class TphThingIntermediateTwo : TphThingIntermediate;
 
 		[Table(IsColumnAttributeRequired = false)]
 		class TphThingPerson

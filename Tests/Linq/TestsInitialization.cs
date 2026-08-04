@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
@@ -314,6 +314,7 @@ public class TestsInitialization
 			finally
 			{
 				try { File.Delete(work); } catch { /* best effort */ }
+
 				try { if (Directory.Exists(dump)) Directory.Delete(dump, true); } catch { /* best effort */ }
 			}
 		}

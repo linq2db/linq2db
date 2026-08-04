@@ -31,7 +31,7 @@ namespace Tests.Mapping
 		}
 
 		[Table]
-		public class MyClass2 : MyClass { }
+		public class MyClass2 : MyClass;
 
 		[Test]
 		public void HasAttribute1()

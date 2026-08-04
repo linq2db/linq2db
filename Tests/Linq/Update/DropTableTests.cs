@@ -129,10 +129,7 @@ namespace Tests.xUpdate
 		}
 
 #pragma warning disable CA1064 // Exceptions should be public
-		sealed class CustomException() : Exception("You shall not pass!")
-#pragma warning restore CA1064 // Exceptions should be public
-		{
-		}
+		sealed class CustomException() : Exception("You shall not pass!");
 
 		[Test]
 		public void DropTable_Existing([DataSources] string context)
