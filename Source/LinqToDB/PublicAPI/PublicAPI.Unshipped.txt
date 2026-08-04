@@ -107,6 +107,8 @@ LinqToDB.LinqOptions.PreferClientCalculation.get -> bool
 LinqToDB.LinqOptions.PreferClientCalculation.init -> void
 static LinqToDB.DataOptionsExtensions.WithPreferClientCalculation(this LinqToDB.LinqOptions! options, bool preferClientCalculation) -> LinqToDB.LinqOptions!
 static LinqToDB.DataOptionsExtensions.UsePreferClientCalculation(this LinqToDB.DataOptions! options, bool preferClientCalculation) -> LinqToDB.DataOptions!
+static LinqToDB.Common.Configuration.Linq.EnableQueryCacheMemoryPressureEviction.get -> bool
+static LinqToDB.Common.Configuration.Linq.EnableQueryCacheMemoryPressureEviction.set -> void
 static LinqToDB.Common.Configuration.Linq.PreferClientCalculation.get -> bool
 static LinqToDB.Common.Configuration.Linq.PreferClientCalculation.set -> void
 LinqToDB.UpsertEmulationPolicy
@@ -374,12 +376,19 @@ LinqToDB.Internal.Linq.Query<T>.Query(LinqToDB.IDataContext! dataContext) -> voi
 LinqToDB.Internal.Linq.QueryCache
 LinqToDB.Internal.Linq.QueryCache.ClearAll() -> void
 LinqToDB.Internal.Linq.QueryCache.ClearForType(System.Type! resultType) -> void
+LinqToDB.Internal.Linq.QueryCache.Compact(double percentage) -> void
 LinqToDB.Internal.Linq.QueryCache.GetMissCount(System.Type! resultType) -> long
 LinqToDB.Internal.Linq.QueryCache.IdleTimeoutOverride.get -> System.TimeSpan?
 LinqToDB.Internal.Linq.QueryCache.IdleTimeoutOverride.set -> void
 LinqToDB.Internal.Linq.QueryCache.IncrementMissCount(System.Type! resultType) -> void
 LinqToDB.Internal.Linq.QueryCache.MaxEntriesOverride.get -> int?
 LinqToDB.Internal.Linq.QueryCache.MaxEntriesOverride.set -> void
+LinqToDB.Internal.Linq.QueryCache.MemoryPressureEvictionEnabled.get -> bool
+LinqToDB.Internal.Linq.QueryCache.MemoryPressureEvictionEnabled.set -> void
+LinqToDB.Internal.Linq.QueryCache.MemoryPressureOverride.get -> System.Func<bool>?
+LinqToDB.Internal.Linq.QueryCache.MemoryPressureOverride.set -> void
+LinqToDB.Internal.Linq.QueryCache.MemoryPressureTrimFractionOverride.get -> double?
+LinqToDB.Internal.Linq.QueryCache.MemoryPressureTrimFractionOverride.set -> void
 LinqToDB.Internal.Linq.QueryCache.QueryCache() -> void
 LinqToDB.Internal.Linq.QueryCache.SweepIntervalOverride.get -> System.TimeSpan?
 LinqToDB.Internal.Linq.QueryCache.SweepIntervalOverride.set -> void

@@ -7,6 +7,8 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
+using LinqToDB.Internal.Cache;
+
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
@@ -51,6 +53,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			var cache = new QueryCache();
 			Query.CacheCleaners.Enqueue(cache.ClearAll);
+			Gen2GcCallback.Register(OnGen2Gc, cache);
 			return cache;
 		}
 
@@ -94,6 +97,57 @@ namespace LinqToDB.Internal.Linq
 		/// Set to <c>0</c> to prevent new entries from being cached.
 		/// </summary>
 		public int? MaxEntriesOverride { get; set; }
+
+		/// <summary>
+		/// When <see langword="true"/> (the default), the process-wide query cache purges its coldest
+		/// entries when the runtime reports high memory load, preserving the hot working set.
+		/// </summary>
+		/// <remarks>
+		/// Automatic memory-load detection differs by target framework:
+		/// <list type="bullet">
+		/// <item><description>
+		/// <c>net8.0</c> and later — detected automatically via <c>GC.GetGCMemoryInfo()</c> (a Gen2 GC
+		/// callback plus the periodic cache sweep).
+		/// </description></item>
+		/// <item><description>
+		/// <c>net462</c> / <c>netstandard2.0</c> — no built-in memory-load API is available, so automatic
+		/// eviction happens only when the application supplies <see cref="MemoryPressureOverride"/>.
+		/// Without it, the cache keeps its usual idle-timeout and entry-count eviction on these targets.
+		/// </description></item>
+		/// </list>
+		/// <see cref="Compact(double)"/> trims on demand on every target framework, regardless of this flag.
+		/// </remarks>
+		public bool MemoryPressureEvictionEnabled { get; set; } = true;
+
+		/// <summary>
+		/// Fraction in <c>(0,1]</c> of entries trimmed on each automatic memory-pressure event.
+		/// When <see langword="null"/> (or <c>NaN</c>), defaults to <c>0.50</c>. Values &lt;= 0 disable
+		/// the trim; values &gt;= 1 clear the cache.
+		/// </summary>
+		public double? MemoryPressureTrimFractionOverride { get; set; }
+
+		/// <summary>
+		/// Optional application-supplied "is memory high?" probe, honored by every trigger on every target
+		/// framework. This is the cross-platform way to obtain automatic eviction where no native GC memory
+		/// signal exists (net462 / netstandard2.0), e.g. <c>() =&gt; GC.GetTotalMemory(false) &gt; threshold</c>.
+		/// </summary>
+		/// <remarks>
+		/// The probe is invoked from the GC finalizer thread (after a Gen2 collection) and from the cache's
+		/// thread-pool maintenance sweep, so it must be cheap, non-blocking, and thread-safe — a blocking
+		/// probe (e.g. synchronous file I/O) stalls process-wide finalization. Exceptions thrown by the probe
+		/// are caught and treated as "not under memory pressure".
+		/// </remarks>
+		public Func<bool>? MemoryPressureOverride { get; set; }
+
+		/// <summary>
+		/// Manually trims the coldest <paramref name="percentage"/> of entries (<c>0.5</c> removes ~50%).
+		/// Callable on every target framework — wire it to a host low-memory event. Hot entries (recent
+		/// access / high hit rate / long deadline) are preserved. <c>&lt;= 0</c> and <c>NaN</c> are no-ops;
+		/// <c>&gt;= 1</c> clears. The count is rounded up, so a small percentage of a tiny cache may still
+		/// remove one entry. Runs immediately and is not coordinated with automatic trimming, so a call that
+		/// races an automatic memory-pressure trim can remove more than <paramref name="percentage"/>.
+		/// </summary>
+		public void Compact(double percentage) => TrimByFraction(percentage);
 
 		// Note: dataContext.InlineParameters and the IEntityServiceInterceptor presence are both
 		// encoded in QueryFlags by QueryFlagsHelper.GetQueryFlags, so we don't carry them as
@@ -567,6 +621,111 @@ namespace LinqToDB.Internal.Linq
 			return value < 0 ? 0 : value;
 		}
 
+		const double DefaultMemoryPressureTrimFraction = 0.50;
+
+		// Native "high memory load" probe. Returns false on target frameworks without GC memory info
+		// (net462 / netstandard2.0); those rely on MemoryPressureOverride instead. No platform-specific code.
+		static bool NativeMemoryHigh()
+		{
+#if SUPPORTS_GC_MEMORY_INFO
+			var info = GC.GetGCMemoryInfo();
+			return info.HighMemoryLoadThresholdBytes > 0
+				&& info.MemoryLoadBytes >= info.HighMemoryLoadThresholdBytes;
+#else
+			return false;
+#endif
+		}
+
+		double ResolveTrimFraction()
+		{
+			var f = MemoryPressureTrimFractionOverride ?? DefaultMemoryPressureTrimFraction;
+
+			// A NaN override would otherwise flow into the trim math; fall back to the default.
+			if (double.IsNaN(f))
+				return DefaultMemoryPressureTrimFraction;
+
+			return f <= 0 ? 0 : (f > 1 ? 1 : f);
+		}
+
+		bool IsUnderMemoryPressure() => IsUnderMemoryPressure(NativeMemoryHigh());
+
+		// Full pressure gate with an explicit native-signal value. Kept as an overload so the #if BUGCHECK
+		// test hook can inject a synthetic signal and still exercise the exact production gate.
+		bool IsUnderMemoryPressure(bool nativeHigh) => MemoryPressureEvictionEnabled && PressureDetected(nativeHigh);
+
+		// Shared pressure gate: the app-supplied probe (if any) OR the native signal. Invoked from the
+		// finalizer thread (OnGen2Gc) and the sweep thread-pool worker, so a throwing MemoryPressureOverride
+		// must never escape — a throwing probe is treated as "not under pressure".
+		bool PressureDetected(bool nativeHigh)
+		{
+			var probe = MemoryPressureOverride;
+
+			if (probe != null)
+			{
+				try
+				{
+					if (probe())
+						return true;
+				}
+				catch
+				{
+					// Never let a user probe crash the finalizer thread or the sweep's thread-pool worker.
+				}
+			}
+
+			return nativeHigh;
+		}
+
+		// Entry-count target for trimming the coldest `fraction` of the cache; -1 means "no trim".
+		// Guards NaN / non-positive fractions, so Compact(NaN) and a NaN override are no-ops, not a wipe.
+		int ComputeFractionTarget(double fraction)
+		{
+			if (!(fraction > 0))
+				return -1;
+
+			var count = Interlocked.Read(ref _entryCount);
+
+			if (count <= 0)
+				return -1;
+
+			var target = count - (long)Math.Ceiling(count * fraction);
+
+			if (target < 0)
+				target = 0;
+
+			return (int)Math.Min(int.MaxValue, target);
+		}
+
+		// Trims the coldest `fraction` of the current entries, reusing the capacity-trim victim order
+		// (earliest expiry, then oldest access, then lowest hit rate).
+		void TrimByFraction(double fraction)
+		{
+			var target = ComputeFractionTarget(fraction);
+
+			if (target >= 0)
+				TrimGlobalToCapacity(target);
+		}
+
+		// Runs on the finalizer thread after each Gen2 GC (via Gen2GcCallback). Must stay cheap and must
+		// not block; under pressure it queues a full maintenance sweep (which also applies the pressure
+		// backstop) through the shared single-flight guard, so the pressure trim never starves the sweep.
+		static bool OnGen2Gc(object state)
+		{
+			var cache = (QueryCache)state;
+
+			try
+			{
+				if (cache.IsUnderMemoryPressure())
+					cache.QueueGlobalMaintenance(Stopwatch.GetTimestamp());
+			}
+			catch
+			{
+				// Belt-and-suspenders: never let anything escape the finalizer thread.
+			}
+
+			return true; // Default lives for the whole process; keep listening for the next Gen2 GC.
+		}
+
 		void MaybeSweepGlobal(long now)
 		{
 			var interval = ResolveSweepIntervalStopwatchTicks();
@@ -697,7 +856,20 @@ namespace LinqToDB.Internal.Linq
 				}
 			}
 
-			TrimGlobalToCapacity(ResolveMaxEntries());
+			// Trim to the capacity cap, tightened to the memory-pressure fraction when under pressure —
+			// a single combined pass instead of two back-to-back bucket walks. The Gen2 callback also
+			// routes here (via QueueGlobalMaintenance), so spikes and the periodic cadence share one path.
+			var target = ResolveMaxEntries();
+
+			if (IsUnderMemoryPressure())
+			{
+				var fractionTarget = ComputeFractionTarget(ResolveTrimFraction());
+
+				if (fractionTarget >= 0 && fractionTarget < target)
+					target = fractionTarget;
+			}
+
+			TrimGlobalToCapacity(target);
 		}
 
 		void TrimGlobalToCapacity(int maxEntries)
@@ -1091,13 +1263,38 @@ namespace LinqToDB.Internal.Linq
 		/// <summary>
 		/// Synchronously sweep all buckets. Bypasses the thread-pool offload + the
 		/// sweep-interval CAS so tests are deterministic. Eviction uses each entry's
-		/// captured <c>BaseTimeoutTicks</c>.
+		/// captured <c>BaseTimeoutTicks</c>, and — when the cache is under memory pressure —
+		/// also applies the memory-pressure fraction trim (the same backstop the periodic sweep runs).
 		/// </summary>
 		public void RunSweepNow()
 		{
 			Interlocked.Exchange(ref _lastSweepTicks, Stopwatch.GetTimestamp());
 			SweepGlobal();
 		}
+
+		/// <summary>
+		/// Synchronously trims the coldest <paramref name="fraction"/>, bypassing the GC hook, the
+		/// pressure check, and the thread-pool offload. Shares <c>TrimByFraction</c> with production.
+		/// </summary>
+		public void TrimForMemoryPressureNow(double fraction) => TrimByFraction(fraction);
+
+		/// <summary>
+		/// Runs the real memory-pressure gate with an injected native-signal decision (no real GC), then
+		/// trims synchronously if it fires. Delegates to the production <c>IsUnderMemoryPressure(bool)</c>
+		/// gate so the test can't drift from shipped logic; only the native signal is substituted.
+		/// </summary>
+		public void RunMemoryPressureCheckNow(bool nativeHigh)
+		{
+			if (IsUnderMemoryPressure(nativeHigh))
+				TrimByFraction(ResolveTrimFraction());
+		}
+
+		/// <summary>
+		/// Fires the real Gen2 finalizer callback body (<c>OnGen2Gc</c>) against this instance, exercising
+		/// the full asynchronous path: pressure gate → <c>QueueGlobalMaintenance</c> → thread-pool sweep.
+		/// The trim completes asynchronously; poll <see cref="ApproximateEntryCount"/> to observe it.
+		/// </summary>
+		public void FireGen2CallbackNow() => OnGen2Gc(this);
 
 		/// <summary>Per-bucket entry count for the supplied lookup key shape.</summary>
 		public int CountEntriesInBucket(Type resultType, IDataContext dataContext, IQueryExpressions expressions, QueryFlags queryFlags)

@@ -414,6 +414,25 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
+			/// Enables or disables purging the process-wide default LINQ query cache
+			/// (<c>QueryCache.Default</c>) when the runtime reports high memory load.
+			/// Default value: <see langword="true"/>. Automatic detection requires net8.0+; on earlier
+			/// target frameworks eviction fires only when a probe is supplied via
+			/// <c>QueryCache.Default.MemoryPressureOverride</c>.
+			/// </summary>
+			/// <remarks>
+			/// Unlike the other <c>Configuration.Linq</c> settings, this is a process-global toggle on the
+			/// <c>QueryCache.Default</c> singleton, not a per-<c>DataOptions</c> option — it is not captured
+			/// in a <c>LinqOptions</c> snapshot. Other <c>QueryCache</c> instances carry their own
+			/// <c>MemoryPressureEvictionEnabled</c> flag (also defaulting to <see langword="true"/>).
+			/// </remarks>
+			public static bool EnableQueryCacheMemoryPressureEviction
+			{
+				get => LinqToDB.Internal.Linq.QueryCache.Default.MemoryPressureEvictionEnabled;
+				set => LinqToDB.Internal.Linq.QueryCache.Default.MemoryPressureEvictionEnabled = value;
+			}
+
+			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// Default value: <see langword="true"/>.
 			/// </summary>
