@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var variable = _generator.AssignToVariable(Expression.Default(node.Type));
 						Expression assign;
 
-						if (constructed.Find(static e => e is ContextRefExpression) != null)
+						if (SequenceHelper.HasContextRef(constructed))
 						{
 							// Keep unresolved context references visible to subsequent builder passes.
 							assign = Expression.Assign(variable, Expression.Coalesce(variable, constructed));
