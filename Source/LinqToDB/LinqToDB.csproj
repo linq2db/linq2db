@@ -44,7 +44,7 @@
 		     untouched - so neither happens. See the comment there.
 		     Deliberately NO OutputItemType="Analyzer" (unlike CodeGenerators) so the user-facing rules don't run
 		     against linq2db's own source.
-		     Every satellite package (Tools, Remote.*, Extensions, Compat, Scaffold, EntityFrameworkCore) keeps
+		     Every satellite package (Tools, Remote.*, Extensions, Compat, Scaffold, FSharp, EntityFrameworkCore) keeps
 		     `analyzers` out of PrivateAssets on its own linq2db / Tools reference for the same reason: an
 		     intermediate hop that excludes them is documented to suppress the linq2db.Analyzers subtree for that
 		     package's consumers. EF Core keeps the same chain unbroken - EFCore.SqlServer -> EFCore.Relational ->
