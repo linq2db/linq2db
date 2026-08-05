@@ -86,6 +86,42 @@ namespace Tests.Mapping
 		}
 
 		[Test]
+		public void DeclaringAUnitDerivesTheValueConverter()
+		{
+			// The unit is stated once. A separately hand-written converter could disagree with the declaration
+			// and produce silently wrong numbers, so the declaration supplies it.
+			var column = Column(new MappingSchema(), typeof(Attributed), nameof(Attributed.Seconds));
+
+			column.ValueConverter.ShouldNotBeNull();
+		}
+
+		[Test]
+		public void UndeclaredColumnGetsNoDerivedConverter()
+		{
+			Column(new MappingSchema(), typeof(Attributed), nameof(Attributed.Undeclared)).ValueConverter.ShouldBeNull();
+		}
+
+		[Test]
+		public void ExplicitConverterIsNotReplaced()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Fluent>()
+					.Property(e => e.Elapsed)
+						.HasConversion(ts => ts.Ticks, v => TimeSpan.FromTicks(v))
+						.HasDuration(DurationUnit.Second)
+				.Build();
+
+			var column = Column(ms, typeof(Fluent), nameof(Fluent.Elapsed));
+
+			// The user's converter wins; deriving one would silently change how existing data is read.
+			column.DurationUnit.ShouldBe(DurationUnit.Second);
+			column.ValueConverter.ShouldNotBeNull();
+			column.ValueConverter!.ToProviderExpression.Body.Type.ShouldBe(typeof(long));
+		}
+
+		[Test]
 		public void FluentDeclaresUnit()
 		{
 			var ms = new MappingSchema();

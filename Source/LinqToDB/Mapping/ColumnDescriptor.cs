@@ -11,6 +11,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
@@ -144,6 +145,11 @@ namespace LinqToDB.Mapping
 			if (duration != null)
 			{
 				DurationUnit = duration.Unit;
+
+				// Derive the value conversion from the declared unit unless the user wrote one. Stating the unit
+				// once is the point: a hand-written converter in seconds next to a declaration in ticks would
+				// disagree silently, which is exactly the failure this feature exists to prevent.
+				ValueConverter ??= CreateDurationConverter(MemberType, duration.Unit);
 			}
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
@@ -152,6 +158,39 @@ namespace LinqToDB.Mapping
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
+		}
+
+		/// <summary>
+		/// Builds the <see cref="TimeSpan"/> to integral conversion implied by a declared duration unit.
+		/// </summary>
+		/// <remarks>
+		/// Writing a duration whose precision is finer than the storage unit truncates - storing 1.5 seconds in a
+		/// column declared as seconds keeps 1. That is inherent to the storage the user chose, not something the
+		/// conversion can avoid.
+		/// </remarks>
+		static IValueConverter? CreateDurationConverter(Type memberType, DurationUnit unit)
+		{
+			if (!SqlIntervalUnits.TryGetTicksRatio(SqlIntervalType.ToIntervalUnit(unit), out var perUnit, out var perTick))
+				return null;
+
+			// ticks = amount * perUnit / perTick, so the stored amount is its inverse.
+			if (memberType == typeof(TimeSpan))
+			{
+				return new ValueConverter<TimeSpan, long>(
+					ts => ts.Ticks * perTick / perUnit,
+					v  => TimeSpan.FromTicks(v * perUnit / perTick),
+					handlesNulls: false);
+			}
+
+			if (memberType == typeof(TimeSpan?))
+			{
+				return new ValueConverter<TimeSpan?, long?>(
+					ts => ts == null ? null : ts.Value.Ticks * perTick / perUnit,
+					v  => v  == null ? null : TimeSpan.FromTicks(v.Value * perUnit / perTick),
+					handlesNulls: true);
+			}
+
+			return null;
 		}
 
 		private bool AnalyzeCanBeNull(ColumnAttribute? columnAttribute)

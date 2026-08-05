@@ -32,13 +32,13 @@ namespace Tests.Linq
 
 			new FluentMappingBuilder(ms)
 				.Entity<DurationRow>()
+					// One declaration per column. The value conversion is derived from the unit, so it cannot
+					// disagree with what the translator assumes.
 					.Property(e => e.InSeconds)
 						.HasDataType(DataType.Int64)
-						.HasConversion(ts => ts.Ticks / TimeSpan.TicksPerSecond, v => TimeSpan.FromTicks(v * TimeSpan.TicksPerSecond))
 						.HasDuration(DurationUnit.Second)
 					.Property(e => e.InTicks)
 						.HasDataType(DataType.Int64)
-						.HasConversion(ts => ts.Ticks, v => TimeSpan.FromTicks(v))
 						.HasDuration(DurationUnit.Tick)
 					.Property(e => e.Undeclared)
 						.HasDataType(DataType.Int64)
@@ -123,6 +123,23 @@ namespace Tests.Linq
 
 			t.Select(r => r.InSeconds.TotalHours).Single().ShouldBe(3d);
 			t.Select(r => r.InTicks.TotalHours).Single().ShouldBe(3d);
+		}
+
+		[Test]
+		public void ValueRoundTripsThroughTheDeclaredUnit([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// No HasConversion anywhere in this fixture for the declared columns - the conversion is derived from
+			// the unit, so writing and reading back has to work on the declaration alone.
+			var value = TimeSpan.FromSeconds(4567);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			var row = t.Single();
+
+			row.InSeconds.ShouldBe(value);
+			row.InTicks.ShouldBe(value);
 		}
 
 		[Test]
