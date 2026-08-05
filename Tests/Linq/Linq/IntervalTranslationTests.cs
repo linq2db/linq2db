@@ -13,42 +13,50 @@ namespace Tests.Linq
 	[TestFixture]
 	public class IntervalTranslationTests : TestBase
 	{
+		// Access has no 64-bit integer column type, so it stores the same durations as DECIMAL. Declaring that per
+		// configuration keeps one model and one set of tests: the storage type is a provider detail, and the
+		// feature under test - that the unit comes from the declaration - is exactly what should not vary with it.
+		const string Wide = ProviderName.Access;
+
 		[Table]
 		sealed class DurationRow
 		{
 			[Column] public int Id { get; set; }
 
-			// Same CLR type, same storage type, different units. Nothing about Int64 says which - only the
+			// Same CLR type, same storage type, different units. Nothing about the storage says which - only the
 			// declaration does, and getting it wrong is a silent factor-of-10000000 error.
-			[Column] public TimeSpan InSeconds { get; set; }
-			[Column] public TimeSpan InTicks   { get; set; }
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Duration(DurationUnit.Second)]
+			public TimeSpan InSeconds { get; set; }
 
-			[Column] public TimeSpan Undeclared { get; set; }
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Duration(DurationUnit.Tick)]
+			public TimeSpan InTicks { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			public TimeSpan Undeclared { get; set; }
 
 			// No duration declaration, and a converter that is NOT the identity in ticks - so reading it without
 			// the converter gives a visibly different value.
-			[Column] public TimeSpan UndeclaredSeconds { get; set; }
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			public TimeSpan UndeclaredSeconds { get; set; }
 		}
 
 		static MappingSchema BuildSchema()
 		{
 			var ms = new MappingSchema();
 
+			// The declared columns need nothing here - the value conversion is derived from their unit. Only the
+			// two undeclared ones carry hand-written converters, and that is the point of them.
 			new FluentMappingBuilder(ms)
 				.Entity<DurationRow>()
-					// One declaration per column. The value conversion is derived from the unit, so it cannot
-					// disagree with what the translator assumes.
-					.Property(e => e.InSeconds)
-						.HasDataType(DataType.Int64)
-						.HasDuration(DurationUnit.Second)
-					.Property(e => e.InTicks)
-						.HasDataType(DataType.Int64)
-						.HasDuration(DurationUnit.Tick)
 					.Property(e => e.Undeclared)
-						.HasDataType(DataType.Int64)
 						.HasConversion(ts => ts.Ticks, v => TimeSpan.FromTicks(v))
 					.Property(e => e.UndeclaredSeconds)
-						.HasDataType(DataType.Int64)
 						.HasConversion(ts => ts.Ticks / TimeSpan.TicksPerSecond, v => TimeSpan.FromTicks(v * TimeSpan.TicksPerSecond))
 				.Build();
 
@@ -214,7 +222,17 @@ namespace Tests.Linq
 
 			t.Select(r => Sql.AsSql(r.InSeconds.TotalHours)).Single().ShouldBe(value.TotalHours);
 			t.Select(r => Sql.AsSql(r.InSeconds.Hours)).Single().ShouldBe(value.Hours);
-			t.Select(r => Sql.AsSql(r.InTicks.TotalMinutes)).Single().ShouldBe(value.TotalMinutes);
+
+			// Access stores the tick count as DECIMAL - it has no 64-bit integer type - so dividing it happens in
+			// decimal arithmetic and the last bit of the resulting double need not match .NET's binary division.
+			// Every provider that holds the count in BIGINT does match exactly, so the tolerance is granted only
+			// where the storage makes exactness impossible, not everywhere.
+			var totalMinutes = t.Select(r => Sql.AsSql(r.InTicks.TotalMinutes)).Single();
+
+			if (context.IsAnyOf(TestProvName.AllAccess))
+				totalMinutes.ShouldBe(value.TotalMinutes, tolerance: 1e-9);
+			else
+				totalMinutes.ShouldBe(value.TotalMinutes);
 		}
 	}
 }

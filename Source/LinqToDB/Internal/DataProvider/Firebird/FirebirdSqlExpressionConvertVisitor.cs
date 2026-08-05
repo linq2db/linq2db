@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -146,6 +147,23 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
+		}
+
+		/// <summary>
+		/// Firebird integer division already truncates toward zero, so it needs none of the base's
+		/// <c>FLOOR</c>/<c>CEILING</c> composition.
+		/// </summary>
+		/// <remarks>
+		/// The base casts to a wide <c>DECIMAL</c> to force a fractional quotient. That cannot work here:
+		/// <see cref="FirebirdSqlBuilder"/> clamps a precision above 18 down to 10 while keeping the scale, so
+		/// <c>Decimal(29, 10)</c> is emitted as <c>Decimal(10, 10)</c> - no integer digits at all - and any value
+		/// of one or more overflows.
+		/// </remarks>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Div(longType, value, Factory.Value(longType, divisor));
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

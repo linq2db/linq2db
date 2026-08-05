@@ -1314,3 +1314,6 @@ static LinqToDB.Internal.SqlProvider.IntervalLowering.LowerPart(LinqToDB.Linq.Tr
 static LinqToDB.Internal.SqlProvider.IntervalLowering.ToTicks(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalExpression! interval) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalPart(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!

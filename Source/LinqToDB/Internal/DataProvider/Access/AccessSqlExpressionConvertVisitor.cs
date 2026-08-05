@@ -14,6 +14,21 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
+		/// <summary>
+		/// Access has no <c>FLOOR</c> or <c>CEILING</c>, but its <c>Fix</c> is exactly truncation toward zero -
+		/// the semantic the base composes those two functions to reach.
+		/// </summary>
+		/// <remarks>
+		/// <c>Int</c> would be wrong here: it rounds down, so <c>Int(-2.5)</c> is -3 where CLR integer division
+		/// gives -2. Access division is floating, so no cast is needed before <c>Fix</c>.
+		/// </remarks>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Function(longType, "Fix", Factory.Div(longType, value, Factory.Value(longType, divisor)));
+		}
+
 		static readonly string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
 
 		public override bool LikeIsEscapeSupported => false;
