@@ -884,9 +884,7 @@ namespace Tests.Linq
 #pragma warning disable CA2263 // Prefer generic overload when type is known
 					v => (EnumValue)Enum.Parse(typeof(EnumValue), v),
 #pragma warning restore CA2263 // Prefer generic overload when type is known
-					false)
-				{
-				}
+					false);
 
 				public static readonly Table[] Data =
 				[

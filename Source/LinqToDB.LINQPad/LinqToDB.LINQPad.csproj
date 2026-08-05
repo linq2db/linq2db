@@ -125,9 +125,20 @@
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x64\IBM.Data.DB2.dll" />
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x86\IBM.Data.DB2.dll" />
 
+		<!-- LINQPad 5 runs x86/x64 only, so ship just those natives.
+		     Two folders on purpose: runtimes/ is Microsoft.Data.Sqlite's default probing path, while
+		     sds/runtimes/ is where System.Data.SQLite looks via PreLoadSQLite_BaseDirectory (set in
+		     SQLiteProvider's static ctor) — see SQLite.Runtime.props for why they must stay separate.
+		     These copies live here, before Pack.cmd, because targets hooked on AfterTargets=
+		     "PostBuildEvent" have no guaranteed order relative to this one: the sds copy in
+		     SQLite.Runtime.props could otherwise land after the archive was already written. -->
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x86\native\e_sqlite3.dll" />
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-arm64\native\e_sqlite3.dll" />
+		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x86\native\e_sqlite3.dll" />
+		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x64\native\e_sqlite3.dll" />
+
+		<!-- Drop architectures LINQPad 5 can't run; the SDK copies the full win-* set automatically. -->
+		<RemoveDir Directories="$(TargetDir)\runtimes\win-arm;$(TargetDir)\runtimes\win-arm64" />
 
 		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" Condition="'$(GenerateLpxArtifacts)' != 'false'" />
 	</Target>
