@@ -1305,3 +1305,6 @@ virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlInterval
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+LinqToDB.Internal.SqlQuery.SqlIntervalUnits
+static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryGetTicksRatio(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, out long numerator, out long denominator) -> bool
+static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryToTicks(long amount, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, out long ticks) -> bool

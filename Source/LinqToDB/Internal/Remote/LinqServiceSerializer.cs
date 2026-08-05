@@ -1789,6 +1789,49 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlInterval:
+					{
+						var elem = (SqlIntervalExpression)e;
+						Append(elem.Type);
+						Append(elem.Value);
+						Append((int)elem.IntervalType.Domain);
+						Append((int)elem.IntervalType.Resolution);
+						Append(elem.IntervalType.IsSigned);
+						break;
+					}
+
+					case QueryElementType.SqlIntervalDifference:
+					{
+						var elem = (SqlIntervalDifferenceExpression)e;
+						Append(elem.Type);
+						Append(elem.Start);
+						Append(elem.End);
+						Append((int)elem.IntervalType.Domain);
+						Append((int)elem.IntervalType.Resolution);
+						Append(elem.IntervalType.IsSigned);
+						break;
+					}
+
+					case QueryElementType.SqlIntervalPart:
+					{
+						var elem = (SqlIntervalPartExpression)e;
+						Append(elem.Type);
+						Append(elem.Interval);
+						Append((int)elem.Unit);
+						Append((int)elem.Kind);
+						break;
+					}
+
+					case QueryElementType.SqlTemporalArithmetic:
+					{
+						var elem = (SqlTemporalArithmeticExpression)e;
+						Append(elem.Type);
+						Append(elem.Temporal);
+						Append(elem.Interval);
+						Append(elem.IsSubtract);
+						break;
+					}
+
 					case QueryElementType.SqlCondition:
 					{
 						var elem = (SqlConditionExpression)e;
@@ -3041,6 +3084,58 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					case QueryElementType.SqlParameterCast:
 					{
 						obj = new SqlParameterCastExpression(Read<SqlParameter>()!);
+
+						break;
+					}
+
+					// Field order here must mirror the writer's exactly - the stream carries no field names.
+					case QueryElementType.SqlInterval:
+					{
+						var dataType   = ReadDbDataType();
+						var value      = Read<ISqlExpression>();
+						var domain     = (SqlIntervalDomain)ReadInt();
+						var resolution = (SqlIntervalUnit)ReadInt();
+						var isSigned   = ReadBool();
+
+						obj = new SqlIntervalExpression(value!, dataType, new SqlIntervalType(domain, resolution, isSigned));
+
+						break;
+					}
+
+					case QueryElementType.SqlIntervalDifference:
+					{
+						var dataType   = ReadDbDataType();
+						var start      = Read<ISqlExpression>();
+						var end        = Read<ISqlExpression>();
+						var domain     = (SqlIntervalDomain)ReadInt();
+						var resolution = (SqlIntervalUnit)ReadInt();
+						var isSigned   = ReadBool();
+
+						obj = new SqlIntervalDifferenceExpression(start!, end!, dataType, new SqlIntervalType(domain, resolution, isSigned));
+
+						break;
+					}
+
+					case QueryElementType.SqlIntervalPart:
+					{
+						var dataType = ReadDbDataType();
+						var interval = Read<ISqlExpression>();
+						var unit     = (SqlIntervalUnit)ReadInt();
+						var kind     = (SqlIntervalPartKind)ReadInt();
+
+						obj = new SqlIntervalPartExpression(interval!, unit, kind, dataType);
+
+						break;
+					}
+
+					case QueryElementType.SqlTemporalArithmetic:
+					{
+						var dataType = ReadDbDataType();
+						var temporal = Read<ISqlExpression>();
+						var interval = Read<ISqlExpression>();
+						var subtract = ReadBool();
+
+						obj = new SqlTemporalArithmeticExpression(temporal!, interval!, subtract, dataType);
 
 						break;
 					}

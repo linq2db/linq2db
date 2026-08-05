@@ -130,6 +130,70 @@ namespace Tests.Mapping
 				new SqlIntervalType(SqlIntervalDomain.Duration, SqlIntervalUnit.Tick, true));
 		}
 
+		[TestCase(SqlIntervalUnit.Nanosecond,  1L,        100L)]
+		[TestCase(SqlIntervalUnit.Tick,        1L,          1L)]
+		[TestCase(SqlIntervalUnit.Microsecond, 10L,         1L)]
+		[TestCase(SqlIntervalUnit.Millisecond, 10_000L,     1L)]
+		[TestCase(SqlIntervalUnit.Second,      10_000_000L, 1L)]
+		public void TicksRatioIsExact(SqlIntervalUnit unit, long numerator, long denominator)
+		{
+			SqlIntervalUnits.TryGetTicksRatio(unit, out var num, out var den).ShouldBeTrue();
+
+			num.ShouldBe(numerator);
+			den.ShouldBe(denominator);
+		}
+
+		[TestCase(SqlIntervalUnit.Month)]
+		[TestCase(SqlIntervalUnit.Quarter)]
+		[TestCase(SqlIntervalUnit.Year)]
+		public void CalendarUnitsHaveNoTickCount(SqlIntervalUnit unit)
+		{
+			// Their elapsed length depends on when they are applied, so there is no honest answer - the caller
+			// must reject the translation rather than pick an average.
+			SqlIntervalUnits.TryGetTicksRatio(unit, out _, out _).ShouldBeFalse();
+			SqlIntervalUnits.TryToTicks(1, unit, out _).ShouldBeFalse();
+		}
+
+		[TestCase(SqlIntervalUnit.Tick,        1L, 1L)]
+		[TestCase(SqlIntervalUnit.Microsecond, 1L, 10L)]
+		[TestCase(SqlIntervalUnit.Millisecond, 1L, TimeSpan.TicksPerMillisecond)]
+		[TestCase(SqlIntervalUnit.Second,      1L, TimeSpan.TicksPerSecond)]
+		[TestCase(SqlIntervalUnit.Minute,      1L, TimeSpan.TicksPerMinute)]
+		[TestCase(SqlIntervalUnit.Hour,        1L, TimeSpan.TicksPerHour)]
+		[TestCase(SqlIntervalUnit.Day,         1L, TimeSpan.TicksPerDay)]
+		[TestCase(SqlIntervalUnit.Week,        1L, TimeSpan.TicksPerDay * 7)]
+		[TestCase(SqlIntervalUnit.Second,     -3L, -3 * TimeSpan.TicksPerSecond)]
+		public void ToTicksMatchesTimeSpan(SqlIntervalUnit unit, long amount, long expected)
+		{
+			SqlIntervalUnits.TryToTicks(amount, unit, out var ticks).ShouldBeTrue();
+
+			ticks.ShouldBe(expected);
+		}
+
+		[TestCase(  99L,  0L)]
+		[TestCase( 100L,  1L)]
+		[TestCase( 199L,  1L)]
+		[TestCase( -99L,  0L)]
+		[TestCase(-100L, -1L)]
+		[TestCase(-101L, -1L)]
+		public void NanosecondsTruncateTowardZero(long nanoseconds, long expectedTicks)
+		{
+			// A tick is 100ns, so sub-tick amounts cannot round - and they must truncate toward zero the way CLR
+			// integer division does, symmetrically for negatives, not floor.
+			SqlIntervalUnits.TryToTicks(nanoseconds, SqlIntervalUnit.Nanosecond, out var ticks).ShouldBeTrue();
+
+			ticks.ShouldBe(expectedTicks);
+		}
+
+		[Test]
+		public void OverflowFailsInsteadOfWrapping()
+		{
+			// Silent wrapping would turn a too-large duration into a plausible small one. Refusing is the only
+			// safe answer.
+			SqlIntervalUnits.TryToTicks(long.MaxValue, SqlIntervalUnit.Day, out _).ShouldBeFalse();
+			SqlIntervalUnits.TryToTicks(long.MinValue, SqlIntervalUnit.Hour, out _).ShouldBeFalse();
+		}
+
 		[Test]
 		public void UnitMappingIsInjective()
 		{
