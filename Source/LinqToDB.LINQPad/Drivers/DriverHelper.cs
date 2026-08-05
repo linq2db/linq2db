@@ -20,7 +20,8 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-//using System.Reflection.Metadata;
+using System.Threading.Channels;
+using System.Reflection.Metadata;
 
 using Microsoft.Extensions.Logging;
 #endif
@@ -71,9 +72,15 @@ internal static class DriverHelper
 		RegisterResolver("Microsoft.Bcl.AsyncInterfaces", static () => typeof(IAsyncDisposable).Assembly);
 		RegisterResolver("Microsoft.Extensions.Logging.Abstractions", static () => typeof(ILogger).Assembly);
 		RegisterResolver("System.Collections.Immutable", static () => typeof(ImmutableArray).Assembly);
+		// Npgsql 8.0.9 references System.Threading.Channels 8.0.0.0; the driver ships 10.0.0.3.
+		RegisterResolver("System.Threading.Channels", static () => typeof(Channel).Assembly);
 
-		// not needed anymore?
-		//RegisterResolver("System.Reflection.Metadata", static () => typeof(Blob).Assembly);
+		// Needed again as of the Roslyn 5.6 bump (6.4.0): Microsoft.CodeAnalysis 5.6 references
+		// System.Reflection.Metadata 10.0.0.0, but the driver ships 10.0.0.1, and .NET Framework binds
+		// by exact version — without this resolver LINQPad 5 fails at model build with
+		// "FileLoadException: Could not load file or assembly 'System.Reflection.Metadata,
+		// Version=10.0.0.0' ... manifest definition does not match the assembly reference".
+		RegisterResolver("System.Reflection.Metadata", static () => typeof(Blob).Assembly);
 
 		AppDomain.CurrentDomain.DomainUnload += static (_, _) => DatabaseProviders.Unload();
 
