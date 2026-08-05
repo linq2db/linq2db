@@ -81,6 +81,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Subtracting two timestamps produces a native <c>interval</c>, so the difference needs no emulation -
+			/// see <c>PostgreSQLSqlExpressionConvertVisitor.LowerIntervalPart</c>.
+			/// </summary>
+			private protected override bool CanTranslateDateDifference => true;
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;

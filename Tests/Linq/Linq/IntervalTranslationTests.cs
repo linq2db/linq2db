@@ -214,6 +214,36 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DateDifferenceComponentsMatchClr(
+			[IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context,
+			[Values(1, -1)] int direction)
+		{
+			// 2 days 3 hours 30 minutes, taken in both directions. The negative case is where a native interval
+			// type is most likely to disagree with the CLR - PostgreSQL reports it as "-2 days -03:30:00", so the
+			// components come back negative as .NET gives them, but that has to be verified, not assumed.
+			var earlier = new DateTime(2026, 1, 1, 10,  0, 0);
+			var later   = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var elapsed = end - start;
+
+			elapsed.Days.ShouldBe(2 * direction);
+			elapsed.Hours.ShouldBe(3 * direction);
+
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Days)).Single().ShouldBe(elapsed.Days);
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Hours)).Single().ShouldBe(elapsed.Hours);
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes)).Single().ShouldBe(elapsed.Minutes);
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours)).Single().ShouldBe(elapsed.TotalHours, 1e-9);
+		}
+
+		[Test]
 		public void DateDifferenceIsElapsedTime([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			// Elapsed, not a boundary count. 10:59 -> 11:01 is two minutes; Sql.DateDiff(hour, ...) would say one,

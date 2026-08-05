@@ -17,6 +17,73 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override bool SupportsNullInColumn               => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <summary>
+		/// Subtracting two timestamps in PostgreSQL yields a real <c>interval</c>, already split into days and a
+		/// time of day, so the components can be read straight out of it - no boundary counting, no anchoring.
+		/// </summary>
+		/// <remarks>
+		/// The split is what makes this match the CLR: <c>'2026-01-03 13:30' - '2026-01-01 10:00'</c> is
+		/// <c>2 days 03:30:00</c>, so <c>EXTRACT(HOUR ...)</c> is 3 - the hours within the day, exactly what
+		/// <c>TimeSpan.Hours</c> means - and negatives come back as <c>-2 days -03:30:00</c>, giving -3 as the CLR
+		/// does. A constructed interval is not normalised the same way, which is why this is applied only to a
+		/// difference of two timestamps.
+		/// <para>
+		/// Totals go through <c>EPOCH</c>, which is the whole interval in seconds and needs no decomposition -
+		/// PostgreSQL stores microseconds, so the double it returns carries the full stored precision.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
+		{
+			return base.LowerIntervalPart(element); //CONTROL-EXPERIMENT
+#pragma warning disable CS0162
+			if (QueryHelper.UnwrapNullablity(element.Interval) is not SqlIntervalDifferenceExpression difference)
+				return base.LowerIntervalPart(element);
+
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+			var elapsed      = Factory.Sub(intervalType, difference.End, difference.Start);
+
+			if (element.Kind == SqlIntervalPartKind.Total)
+			{
+				if (!SqlIntervalUnits.TryGetTicksRatio(element.Unit, out var ticksPerUnit, out var denominator) || denominator != 1)
+					return null;
+
+				var doubleType = Factory.GetDbDataType(typeof(double));
+				var seconds    = Extract("epoch", elapsed, doubleType);
+
+				return Factory.Cast(
+					Factory.Div(doubleType, seconds,
+						Factory.Value(doubleType, (double)ticksPerUnit / TimeSpan.TicksPerSecond)),
+					element.Type);
+			}
+
+			var part = element.Unit switch
+			{
+				SqlIntervalUnit.Day    => "day",
+				SqlIntervalUnit.Hour   => "hour",
+				SqlIntervalUnit.Minute => "minute",
+				SqlIntervalUnit.Second => "second",
+				_                      => null,
+			};
+
+			if (part == null)
+				return null;
+
+			// second carries the fractional part in PostgreSQL, so truncate it to match TimeSpan.Seconds.
+			var extracted = Extract(part, elapsed, Factory.GetDbDataType(typeof(double)));
+
+			return Factory.Cast(Factory.Function(Factory.GetDbDataType(typeof(long)), "Trunc", extracted), element.Type);
+		}
+
+		/// <summary>
+		/// <c>Extract</c> as a function node rather than raw text. Its argument uses the standard
+		/// <c>field FROM value</c> form, which is not a comma-separated argument list - the same shape the date
+		/// part translation already builds.
+		/// </summary>
+		ISqlExpression Extract(string part, ISqlExpression value, DbDataType resultType)
+		{
+			return Factory.Function(resultType, "Extract", Factory.Expression(resultType, $"{part} From {{0}}", value));
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);
