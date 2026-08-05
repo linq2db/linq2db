@@ -18,6 +18,7 @@ override LinqToDB.CreateTempTableOptions.ToString() -> string!
 override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Access.AccessOptions!>!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>!
 override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DB2.DB2Options!>!
+override LinqToDB.DataProvider.DuckDB.DuckDBOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DuckDB.DuckDBOptions!>!
 override LinqToDB.DataProvider.Firebird.FirebirdOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Firebird.FirebirdOptions!>!
 override LinqToDB.DataProvider.Informix.InformixOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Informix.InformixOptions!>!
 override LinqToDB.DataProvider.MySql.MySqlOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.MySql.MySqlOptions!>!

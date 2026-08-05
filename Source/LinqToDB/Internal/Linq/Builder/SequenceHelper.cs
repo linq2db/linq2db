@@ -937,7 +937,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!buildInfo.IsSubQuery)
 				return false;
 
-			if ((buildInfo.SourceCardinality & SourceCardinality.Zero) != 0)
+			if (buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
 				return true;
 
 			return false;

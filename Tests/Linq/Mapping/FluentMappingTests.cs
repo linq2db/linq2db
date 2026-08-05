@@ -74,13 +74,9 @@ namespace Tests.Mapping
 			int MarkedOnType { get; set; }
 		}
 
-		class MyInheritedClass : MyBaseClass
-		{
-		}
+		class MyInheritedClass : MyBaseClass;
 
-		sealed class MyInheritedClass2 : MyInheritedClass
-		{
-		}
+		sealed class MyInheritedClass2 : MyInheritedClass;
 
 		class MyInheritedClass3 : IInheritedInterface
 		{
@@ -411,9 +407,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		sealed class DescendantEntity : BaseEntity
-		{
-		}
+		sealed class DescendantEntity : BaseEntity;
 
 		[Test]
 		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)

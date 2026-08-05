@@ -13,9 +13,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 {
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-		}
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault;
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -132,9 +130,9 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				ISqlExpression Retype(ISqlExpression expression)
 				{
-					var expressionType = factory.GetDbDataType(expression);
-					var detached       = factory.Add(expressionType, expression, factory.Value(expressionType, 0m));
-					return factory.Expression(expressionType.WithSystemType(resultType), "{0}", detached);
+					var valueType = factory.GetDbDataType(expression);
+					var detached  = factory.Add(valueType, expression, factory.Value(valueType, 0m));
+					return factory.Expression(valueType.WithSystemType(resultType), "{0}", detached);
 				}
 
 				return part switch

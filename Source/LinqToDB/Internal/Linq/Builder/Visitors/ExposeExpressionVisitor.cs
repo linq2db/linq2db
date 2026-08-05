@@ -252,7 +252,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			Expression[]? TryEvaluateArguments(MethodCallExpression node)
 			{
-				Expression[]? newEvaluatedArguments = null;
+				Expression[]? evaluatedArgs = null;
 
 				for (var i = 0; i < node.Arguments.Count; i++)
 				{
@@ -265,17 +265,17 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							var evaluated = EvaluateExpression(argument);
 							if (evaluated is Expression evaluatedExpr)
 							{
-								if (newEvaluatedArguments == null)
+								if (evaluatedArgs == null)
 								{
-									newEvaluatedArguments ??= node.Arguments.ToArray();
-									newEvaluatedArguments[i] = evaluatedExpr;
+									evaluatedArgs ??= node.Arguments.ToArray();
+									evaluatedArgs[i] = evaluatedExpr;
 								}
 							}
 						}
 					}
 				}
 
-				return newEvaluatedArguments;
+				return evaluatedArgs;
 			}
 		}
 

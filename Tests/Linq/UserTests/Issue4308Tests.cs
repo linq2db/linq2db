@@ -790,10 +790,6 @@ namespace Tests.UserTests.Issue4308
 				row.RequiredDateTime,
 				RequiredIntervalTicks = row.RequiredInterval.Ticks,
 			}).Single();
-			// Round-trip the captured operand through the same parameter/inline mapping
-			// used by the arithmetic expression. Some providers map a DateTime constant
-			// at a different precision than a generated table column.
-			var mappedCapturedDate = table.Select(_ => Sql.ConvertTo<DateTime>.From(capturedDate)).Single();
 			var actual = table.Select(row => new
 			{
 				ColumnPlusCaptured       = row.RequiredDateTime + capturedInterval,
@@ -810,7 +806,7 @@ namespace Tests.UserTests.Issue4308
 			actual.ColumnMinusCaptured.ShouldBe(stored.RequiredDateTime - capturedInterval, resolution);
 			actual.ColumnMinusInline.ShouldBe(stored.RequiredDateTime - TimeSpan.FromTicks(1_234_567), resolution);
 			AssertTimeSpan(actual.ColumnMinusColumn, stored.EndDateTime - stored.StartDateTime, resolution);
-			actual.CapturedDatePlusColumn.ShouldBe(mappedCapturedDate + TimeSpan.FromTicks(stored.RequiredIntervalTicks), resolution);
+			actual.CapturedDatePlusColumn.ShouldBe(stored.EndDateTime!.Value + TimeSpan.FromTicks(stored.RequiredIntervalTicks), resolution);
 		}
 
 		[Test]

@@ -130,19 +130,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		#region Wrappers
 
 		[Wrapper]
-		private sealed class FbDecFloat
-		{
-		}
+		private sealed class FbDecFloat;
 
 		[Wrapper]
-		private sealed class FbZonedDateTime
-		{
-		}
+		private sealed class FbZonedDateTime;
 
 		[Wrapper]
-		private sealed class FbZonedTime
-		{
-		}
+		private sealed class FbZonedTime;
 
 		[Wrapper]
 		private sealed class FbConnection

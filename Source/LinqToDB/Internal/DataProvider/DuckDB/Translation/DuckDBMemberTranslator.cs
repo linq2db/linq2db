@@ -222,8 +222,8 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.NotNullExpression(intervalType, "Interval {0}", factory.Value(intervalKind));
-					return factory.Multiply(intervalType, numberExpression, intervalExpr);
+					var intervalUnit = factory.NotNullExpression(intervalType, "Interval {0}", factory.Value(intervalKind));
+					return factory.Multiply(intervalType, numberExpression, intervalUnit);
 				}
 
 				var intervalExpr = datepart switch

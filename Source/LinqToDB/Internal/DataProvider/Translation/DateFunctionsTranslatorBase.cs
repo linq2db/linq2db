@@ -1364,15 +1364,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			var capabilities = GetDateTimeIntervalCapabilities(translationContext, dateTimeExpression, isDateTimeOffset);
 
-			if (capabilities.StorageResolutionTicks <= 1 && (capabilities.SupportedUnits & DateTimeIntervalUnits.Tick) != 0)
+			if (capabilities.StorageResolutionTicks <= 1 && capabilities.SupportedUnits.HasFlag(DateTimeIntervalUnits.Tick))
 				return Sql.DateParts.Tick;
-			if (capabilities.StorageResolutionTicks <= 10 && (capabilities.SupportedUnits & DateTimeIntervalUnits.Microsecond) != 0)
+			if (capabilities.StorageResolutionTicks <= 10 && capabilities.SupportedUnits.HasFlag(DateTimeIntervalUnits.Microsecond))
 				return Sql.DateParts.Microsecond;
-			if (capabilities.StorageResolutionTicks <= TimeSpan.TicksPerMillisecond && (capabilities.SupportedUnits & DateTimeIntervalUnits.Millisecond) != 0)
+			if (capabilities.StorageResolutionTicks <= TimeSpan.TicksPerMillisecond && capabilities.SupportedUnits.HasFlag(DateTimeIntervalUnits.Millisecond))
 				return Sql.DateParts.Millisecond;
-			if (capabilities.StorageResolutionTicks <= TimeSpan.TicksPerSecond && (capabilities.SupportedUnits & DateTimeIntervalUnits.Second) != 0)
+			if (capabilities.StorageResolutionTicks <= TimeSpan.TicksPerSecond && capabilities.SupportedUnits.HasFlag(DateTimeIntervalUnits.Second))
 				return Sql.DateParts.Second;
-			if (capabilities.StorageResolutionTicks <= TimeSpan.TicksPerMinute && (capabilities.SupportedUnits & DateTimeIntervalUnits.Minute) != 0)
+			if (capabilities.StorageResolutionTicks <= TimeSpan.TicksPerMinute && capabilities.SupportedUnits.HasFlag(DateTimeIntervalUnits.Minute))
 				return Sql.DateParts.Minute;
 
 			return null;
