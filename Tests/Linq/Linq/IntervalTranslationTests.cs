@@ -205,6 +205,48 @@ namespace Tests.Linq
 			t.Select(r => Sql.AsSql(-r.UndeclaredSeconds)).Single().ShouldBe(-value);
 		}
 
+		[Table]
+		sealed class EventRow
+		{
+			[Column] public int      Id        { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime StartedOn  { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime FinishedOn { get; set; }
+		}
+
+		[Test]
+		public void DateDifferenceIsElapsedTime([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			// Elapsed, not a boundary count. 10:59 -> 11:01 is two minutes; Sql.DateDiff(hour, ...) would say one,
+			// and that difference is the whole reason this does not reuse the DateDiff builders.
+			var started  = new DateTime(2026, 1, 1, 10, 59, 0);
+			var finished = new DateTime(2026, 1, 1, 11,  1, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			var elapsed = finished - started;
+
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes)).Single().ShouldBe(elapsed.TotalMinutes);
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes)).Single().ShouldBe(elapsed.Minutes);
+		}
+
+		[Test]
+		public void DateDifferenceKeepsSubSecondPrecision([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			// datetime2 stores 100ns, so the difference must too - a millisecond-resolution DATEDIFF would report
+			// zero here. This is the case the review of #5739 called out as translator-induced precision loss.
+			var started = new DateTime(2026, 1, 1);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddTicks(9999) });
+
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).Single().ShouldBe(9999L);
+		}
+
 		[Test]
 		public void ArithmeticHappensOnTheServer([DataSources] string context)
 		{

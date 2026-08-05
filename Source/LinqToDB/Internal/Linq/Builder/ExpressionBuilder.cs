@@ -203,7 +203,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		public TranslationProviderFlags TranslationProviderFlags =>
 			_translationProviderFlags ??= new TranslationProviderFlags(
 				DataContext.SqlProviderFlags.DefaultNullsOrdering,
-				DataContext.SqlProviderFlags.IsNullsOrderingSupported);
+				DataContext.SqlProviderFlags.IsNullsOrderingSupported,
+				DataContext.SqlProviderFlags.IsIntervalDifferenceSupported);
 
 		#endregion
 

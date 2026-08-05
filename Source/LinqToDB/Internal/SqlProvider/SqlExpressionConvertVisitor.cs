@@ -1141,6 +1141,56 @@ namespace LinqToDB.Internal.SqlProvider
 			return Visit(element.Value);
 		}
 
+		protected internal override IQueryElement VisitSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
+		{
+			var lowered = LowerIntervalDifference(element);
+			if (lowered != null)
+				return Visit(lowered);
+
+			return base.VisitSqlIntervalDifferenceExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers <c>End - Start</c> into an exact tick count.
+		/// </summary>
+		/// <remarks>
+		/// There is no default: elapsed time between two date/time values has no portable SQL form, and the
+		/// per-provider <c>DateDiff</c> machinery answers the boundary-count question instead. A provider that
+		/// cannot produce the difference <em>exactly</em>, at the resolution its own date type stores, should
+		/// leave this alone rather than approximate - SQLite keeps timestamps as text and <c>julianday</c> returns
+		/// days as a float, which cannot carry ticks.
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
+		protected virtual ISqlExpression? LowerIntervalDifference(SqlIntervalDifferenceExpression element)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Shifts a date/time value by a whole number of units - the provider's <c>DATEADD</c>.
+		/// </summary>
+		/// <remarks>
+		/// Must be exact: the anchor correction in <see cref="IntervalLowering"/> shifts by a computed count and
+		/// compares the result against the original, so an approximate shift would produce an off-by-one count.
+		/// </remarks>
+		protected virtual ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Counts unit boundaries crossed between two date/time values - the provider's <c>DATEDIFF</c>.
+		/// </summary>
+		/// <remarks>
+		/// Boundary counting, not elapsed time. It is deliberately the wrong answer on its own: it is the cheap
+		/// starting estimate that the anchor correction turns into the elapsed count, and being a count of whole
+		/// units it cannot overflow the way a fine-grained difference over the same range would.
+		/// </remarks>
+		protected virtual ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			return null;
+		}
+
 		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
 			// Lower before visiting children: the child interval carries the unit this needs, and visiting it
@@ -1159,6 +1209,21 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <returns><see langword="null"/> when the part cannot be produced exactly, leaving it untranslated.</returns>
 		protected virtual ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
+
+			// A part taken from a computed difference: lower the difference to ticks first, then it is an ordinary
+			// tick-resolution interval and the rest of the path is unchanged.
+			// Unwrap first: the translator's placeholder may carry a nullability wrapper around the difference.
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
+			{
+				var ticks = LowerIntervalDifference(difference);
+				if (ticks == null)
+					return null;
+
+				element = new SqlIntervalPartExpression(
+					new SqlIntervalExpression(ticks, difference.Type, SqlIntervalType.ClrTimeSpan),
+					element.Unit, element.Kind, element.Type);
+			}
+
 			return IntervalLowering.LowerPart(Factory, element, TruncateDivide);
 		}
 

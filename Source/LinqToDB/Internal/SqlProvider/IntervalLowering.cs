@@ -42,6 +42,56 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
+		/// Elapsed whole units between two date/time values, reproducing <c>_ticks / TicksPerUnit</c> without ever
+		/// materialising the tick count.
+		/// </summary>
+		/// <param name="factory">Expression factory.</param>
+		/// <param name="difference">The difference whose elapsed units are wanted.</param>
+		/// <param name="unit">Unit to count in.</param>
+		/// <param name="countBoundaries">Provider's <c>DATEDIFF</c> - boundary counting.</param>
+		/// <param name="shiftDate">Provider's <c>DATEADD</c> - must be exact.</param>
+		/// <remarks>
+		/// The provider's own difference counts crossed boundaries, so 10:59:30 to 11:01:00 reports two minutes
+		/// where only one and a half elapsed. Shifting the start by that count and comparing against the end says
+		/// whether it overshot, and the correction is at most one unit either way.
+		/// <para>
+		/// Counting whole units cannot overflow the way a fine-grained difference over the same range does - that
+		/// limit is what caps <c>DATEDIFF(millisecond, ...)</c> at about 24 days.
+		/// </para>
+		/// </remarks>
+		public static ISqlExpression? ElapsedUnits(
+			ISqlExpressionFactory                                                     factory,
+			SqlIntervalDifferenceExpression                                           difference,
+			SqlIntervalUnit                                                           unit,
+			Func<SqlIntervalUnit, ISqlExpression, ISqlExpression, ISqlExpression?>     countBoundaries,
+			Func<SqlIntervalUnit, ISqlExpression, ISqlExpression, ISqlExpression?>     shiftDate)
+		{
+			var count = countBoundaries(unit, difference.Start, difference.End);
+			if (count == null)
+				return null;
+
+			var anchor = shiftDate(unit, count, difference.Start);
+			if (anchor == null)
+				return null;
+
+			var longType = factory.GetDbDataType(typeof(long));
+			var one      = factory.Value(longType, 1L);
+
+			// Forwards and the anchor landed past the end: one unit too many. Backwards and it landed before the
+			// end: one too few. The two cases are separate because the sign decides which way "too far" points.
+			var overshotForward = factory.SearchCondition()
+				.Add(factory.GreaterOrEqual(difference.End, difference.Start))
+				.Add(factory.Greater(anchor, difference.End));
+
+			var overshotBackward = factory.SearchCondition()
+				.Add(factory.Less(difference.End, difference.Start))
+				.Add(factory.Less(anchor, difference.End));
+
+			return factory.Condition(overshotForward, factory.Sub(longType, count, one),
+				factory.Condition(overshotBackward, factory.Add(longType, count, one), count));
+		}
+
+		/// <summary>
 		/// Converts an interval's stored amount to ticks, exactly.
 		/// </summary>
 		public static ISqlExpression? ToTicks(ISqlExpressionFactory factory, SqlIntervalExpression interval)

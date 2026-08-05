@@ -264,6 +264,41 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan),  TranslateTimeSpanNegate);
 			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan?), TranslateTimeSpanNegate);
+
+			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime),  typeof(DateTime),  TranslateDateTimeDifference);
+			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime?), typeof(DateTime?), TranslateDateTimeDifference);
+		}
+
+		/// <summary>
+		/// Translates <c>end - start</c> between two date/time values into an elapsed interval.
+		/// </summary>
+		/// <remarks>
+		/// Elapsed time, not a boundary count: <c>Sql.DateDiff</c> answers a different question and would report
+		/// one hour between 10:59 and 11:01, where this reports two minutes. The existing per-provider
+		/// <c>DateDiffBuilder</c> family implements the boundary contract and deliberately is not reused here.
+		/// </remarks>
+		Expression? TranslateDateTimeDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			// Asked before the node is created: translation is the last point at which the expression can still
+			// fall back to client-side evaluation. Once an interval node exists the query is committed to SQL, and
+			// a provider that cannot lower it has no way left to decline - it can only fail.
+			if (!translationContext.ProviderFlags.IsIntervalDifferenceSupported)
+				return null;
+
+			var left = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags);
+			if (left == null)
+				return null;
+
+			var right = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags);
+			if (right == null)
+				return null;
+
+			var factory = translationContext.ExpressionFactory;
+			var type    = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+
+			var difference = new SqlIntervalDifferenceExpression(right.Sql, left.Sql, type, SqlIntervalType.ClrTimeSpan);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, difference, binaryExpression);
 		}
 
 		Expression? TranslateTimeSpanNegate(ITranslationContext translationContext, UnaryExpression unaryExpression, TranslationFlags translationFlags)
@@ -272,20 +307,34 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (placeholder == null)
 				return null;
 
-			var interval = TryMakeInterval(translationContext, placeholder.Sql);
-			if (interval == null)
-				return null;
-
-			// Negating the stored amount negates the interval whatever the unit, as long as the storage is signed.
-			// An unsigned storage cannot hold the result, so leave it untranslated.
-			if (!interval.IntervalType.IsSigned)
-				return null;
-
 			var factory  = translationContext.ExpressionFactory;
-			var negated  = new SqlIntervalExpression(
-				factory.Negate(interval.Type, interval.Value),
-				interval.Type,
-				interval.IntervalType);
+			var interval = TryMakeInterval(translationContext, placeholder.Sql);
+
+			ISqlExpression negated;
+
+			switch (interval)
+			{
+				// Negating the stored amount negates the interval whatever the unit, as long as the storage is
+				// signed. An unsigned storage cannot hold the result, so leave it untranslated.
+				case SqlIntervalExpression stored when stored.IntervalType.IsSigned:
+					negated = new SqlIntervalExpression(
+						factory.Negate(stored.Type, stored.Value),
+						stored.Type,
+						stored.IntervalType);
+					break;
+
+				// -(End - Start) is Start - End exactly, with no arithmetic and so no chance of overflow.
+				case SqlIntervalDifferenceExpression difference:
+					negated = new SqlIntervalDifferenceExpression(
+						difference.End,
+						difference.Start,
+						difference.Type,
+						difference.IntervalType);
+					break;
+
+				default:
+					return null;
+			}
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, negated, unaryExpression);
 		}
@@ -298,10 +347,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// undeclared <see cref="TimeSpan"/> column falls back to whatever it means today rather than being
 		/// reinterpreted as a tick count.
 		/// </remarks>
-		private protected static SqlIntervalExpression? TryMakeInterval(ITranslationContext translationContext, ISqlExpression expression)
+		private protected static ISqlExpression? TryMakeInterval(ITranslationContext translationContext, ISqlExpression expression)
 		{
-			if (expression is SqlIntervalExpression alreadyInterval)
-				return alreadyInterval;
+			// Already an interval: a mapped duration wrapped earlier, or a computed difference, which is an
+			// interval by construction and needs no unit of its own - the provider lowers it to ticks.
+			if (expression is SqlIntervalExpression or SqlIntervalDifferenceExpression)
+				return expression;
 
 			var descriptor = QueryHelper.GetColumnDescriptor(expression);
 			var unit       = descriptor?.DurationUnit;

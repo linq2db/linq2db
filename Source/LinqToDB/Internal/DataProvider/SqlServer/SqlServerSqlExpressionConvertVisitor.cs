@@ -9,6 +9,31 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 	public class SqlServerSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
+		/// <summary>
+		/// Elapsed ticks between two date/time values, via <c>DATEDIFF_BIG</c> at nanosecond resolution.
+		/// </summary>
+		/// <remarks>
+		/// Nanoseconds rather than a coarser unit because <c>datetime2</c> stores 100ns and anything coarser would
+		/// silently drop the fraction. Every value SQL Server can store is a whole number of 100ns, so dividing by
+		/// 100 is exact. The nanosecond form overflows <c>bigint</c> beyond roughly 292 years, and SQL Server
+		/// raises an error there rather than returning a wrapped value - a loud failure, not a wrong duration.
+		/// <para>
+		/// <c>DATEDIFF_BIG</c> arrived in SQL Server 2016, so 2012 and earlier override this back to unsupported.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerIntervalDifference(SqlIntervalDifferenceExpression element)
+		{
+			// No version check here. SqlServer2016DateFunctionsTranslator decides whether the node is created at
+			// all, and it is the single place that states the capability - re-checking would let the two drift.
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var stringType = Factory.GetDbDataType(typeof(string));
+
+			var nanoseconds = Factory.Function(longType, "DateDiff_Big",
+				Factory.NotNullExpression(stringType, "nanosecond"), element.Start, element.End);
+
+			return Factory.Div(longType, nanoseconds, Factory.Value(longType, 100L));
+		}
+
 		readonly SqlServerVersion _sqlServerVersion;
 
 		public SqlServerSqlExpressionConvertVisitor(bool allowModify, SqlServerVersion sqlServerVersion) : base(allowModify)
