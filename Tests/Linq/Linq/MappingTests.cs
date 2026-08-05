@@ -365,7 +365,7 @@ namespace Tests.Linq
 
 		public class     Entity    { [PrimaryKey] public int Id { get; set; } }
 		public interface IDocument { int Id { get; set; } }
-		public class Document : Entity, IDocument;
+		public class     Document : Entity, IDocument;
 
 		[Test]
 		public void TestMethod([DataSources] string context)
