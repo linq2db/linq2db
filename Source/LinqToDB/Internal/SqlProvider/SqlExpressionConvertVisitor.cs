@@ -1191,6 +1191,17 @@ namespace LinqToDB.Internal.SqlProvider
 			return null;
 		}
 
+		/// <summary>
+		/// Finest unit this provider can count date boundaries in, used for the fractional part of a
+		/// <c>Total*</c> member. <see langword="null"/> means totals of a date difference are not supported.
+		/// </summary>
+		/// <remarks>
+		/// Only ever applied to a window shorter than one of the requested units, so it cannot overflow however
+		/// far apart the two dates are - which is what makes a total expressible at all. Taking the whole
+		/// difference in this unit would overflow: a century in ticks is more than <see cref="long"/> holds.
+		/// </remarks>
+		protected virtual SqlIntervalUnit? FinestDateUnit => null;
+
 		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
 			// Lower before visiting children: the child interval carries the unit this needs, and visiting it
@@ -1210,18 +1221,23 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
 
-			// A part taken from a computed difference: lower the difference to ticks first, then it is an ordinary
-			// tick-resolution interval and the rest of the path is unchanged.
+			// A part of a computed difference is answered by counting elapsed units directly. .NET defines the
+			// member as _ticks / TicksPerUnit, and the anchor count reproduces that quotient exactly - forming a
+			// tick count first would only reintroduce the overflow and precision limits it exists to avoid.
 			// Unwrap first: the translator's placeholder may carry a nullability wrapper around the difference.
 			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
 			{
-				var ticks = LowerIntervalDifference(difference);
-				if (ticks == null)
+				var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
+				if (whole == null)
 					return null;
 
-				element = new SqlIntervalPartExpression(
-					new SqlIntervalExpression(ticks, difference.Type, SqlIntervalType.ClrTimeSpan),
-					element.Unit, element.Kind, element.Type);
+				if (element.Kind == SqlIntervalPartKind.Component)
+					return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, TruncateDivide), element.Type);
+
+				var total = IntervalLowering.ElapsedTotal(
+					Factory, difference, element.Unit, whole, FinestDateUnit, CountDateBoundaries, ShiftDate);
+
+				return total == null ? null : Factory.Cast(total, element.Type);
 			}
 
 			return IntervalLowering.LowerPart(Factory, element, TruncateDivide);

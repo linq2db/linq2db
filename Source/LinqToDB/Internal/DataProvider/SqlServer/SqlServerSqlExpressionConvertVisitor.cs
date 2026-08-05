@@ -21,17 +21,66 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// <c>DATEDIFF_BIG</c> arrived in SQL Server 2016, so 2012 and earlier override this back to unsupported.
 		/// </para>
 		/// </remarks>
+		/// <summary>
+		/// <c>DATEDIFF_BIG</c> counts nanoseconds, and <c>datetime2</c> stores 100ns, so the leftover of a total
+		/// is exact. It is only ever applied to a sub-unit window, well inside the roughly 292 years at which the
+		/// nanosecond form would overflow.
+		/// </summary>
+		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Nanosecond;
+
+		/// <summary>
+		/// A difference used on its own, with no member taken from it, still has to become a value. Ticks are that
+		/// value - the read path turns them back into a <c>TimeSpan</c> - and nanoseconds divided by 100 are
+		/// exact for every instant <c>datetime2</c> can hold.
+		/// </summary>
+		/// <remarks>
+		/// This is the one place a whole-range fine difference is used, so it carries that form's roughly 292-year
+		/// limit. Members of a difference do not go through here; they are counted in their own unit and never
+		/// form a tick total.
+		/// </remarks>
 		protected override ISqlExpression? LowerIntervalDifference(SqlIntervalDifferenceExpression element)
 		{
-			// No version check here. SqlServer2016DateFunctionsTranslator decides whether the node is created at
-			// all, and it is the single place that states the capability - re-checking would let the two drift.
-			var longType   = Factory.GetDbDataType(typeof(long));
-			var stringType = Factory.GetDbDataType(typeof(string));
+			var longType    = Factory.GetDbDataType(typeof(long));
+			var nanoseconds = CountDateBoundaries(SqlIntervalUnit.Nanosecond, element.Start, element.End);
 
-			var nanoseconds = Factory.Function(longType, "DateDiff_Big",
-				Factory.NotNullExpression(stringType, "nanosecond"), element.Start, element.End);
+			return nanoseconds == null ? null : Factory.Div(longType, nanoseconds, Factory.Value(longType, 100L));
+		}
 
-			return Factory.Div(longType, nanoseconds, Factory.Value(longType, 100L));
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Nanosecond  => "nanosecond",
+				SqlIntervalUnit.Day         => "day",
+				SqlIntervalUnit.Hour        => "hour",
+				SqlIntervalUnit.Minute      => "minute",
+				SqlIntervalUnit.Second      => "second",
+				SqlIntervalUnit.Millisecond => "millisecond",
+				SqlIntervalUnit.Microsecond => "microsecond",
+				_                           => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+			if (part == null)
+				return null;
+
+			return Factory.Function(Factory.GetDbDataType(date), "DateAdd",
+				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), amount, date);
+		}
+
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+			if (part == null)
+				return null;
+
+			// DateDiff_Big, not DateDiff: the 32-bit form overflows at about 24 days in milliseconds. Counting
+			// whole units keeps the number small, but the caller may ask for a fine unit over a long range.
+			return Factory.Function(Factory.GetDbDataType(typeof(long)), "DateDiff_Big",
+				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end);
 		}
 
 		readonly SqlServerVersion _sqlServerVersion;

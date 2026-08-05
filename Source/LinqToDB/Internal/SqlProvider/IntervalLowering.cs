@@ -92,6 +92,77 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
+		/// The whole interval expressed in <paramref name="unit"/>, fraction included - <c>TotalHours</c> and
+		/// friends.
+		/// </summary>
+		/// <remarks>
+		/// Built as whole units plus the leftover, never as one division of a tick count: a century in ticks
+		/// exceeds <see cref="long"/>, so the undivided form is not representable at all. The leftover is measured
+		/// between the anchor and the end, a window shorter than one unit, so the fine count is always small.
+		/// </remarks>
+		public static ISqlExpression? ElapsedTotal(
+			ISqlExpressionFactory                                                 factory,
+			SqlIntervalDifferenceExpression                                       difference,
+			SqlIntervalUnit                                                       unit,
+			ISqlExpression                                                        wholeUnits,
+			SqlIntervalUnit?                                                      finestUnit,
+			Func<SqlIntervalUnit, ISqlExpression, ISqlExpression, ISqlExpression?> countBoundaries,
+			Func<SqlIntervalUnit, ISqlExpression, ISqlExpression, ISqlExpression?> shiftDate)
+		{
+			if (finestUnit == null)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(unit, out var ticksPerUnit, out var unitDenominator) || unitDenominator != 1)
+				return null;
+
+			// The fine unit may be finer than a tick - a nanosecond is a hundredth of one - so its ratio is taken
+			// whole rather than requiring a denominator of one.
+			if (!SqlIntervalUnits.TryGetTicksRatio(finestUnit.Value, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			var anchor = shiftDate(unit, wholeUnits, difference.Start);
+			if (anchor == null)
+				return null;
+
+			var leftover = countBoundaries(finestUnit.Value, anchor, difference.End);
+			if (leftover == null)
+				return null;
+
+			var doubleType = factory.GetDbDataType(typeof(double));
+			var finePerUnit = (double)ticksPerUnit * fineDenominator / ticksPerFine;
+
+			return factory.Add(doubleType,
+				factory.Cast(wholeUnits, doubleType, true),
+				factory.Div(doubleType, factory.Cast(leftover, doubleType, true), factory.Value(doubleType, finePerUnit)));
+		}
+
+		/// <summary>
+		/// Wraps a whole-unit count into its CLR component, mirroring <c>TimeSpan</c> term for term:
+		/// <c>Hours</c> is <c>(_ticks / TicksPerHour) % 24</c>, and this is the <c>% 24</c>.
+		/// </summary>
+		/// <remarks>
+		/// <c>Days</c> does not wrap - a duration may legitimately exceed a year, and .NET applies no modulo to it.
+		/// </remarks>
+		public static ISqlExpression WrapComponent(
+			ISqlExpressionFactory                     factory,
+			ISqlExpression                            wholeUnits,
+			SqlIntervalUnit                           unit,
+			Func<ISqlExpression, long, ISqlExpression> truncateDivide)
+		{
+			var wrap = unit switch
+			{
+				SqlIntervalUnit.Hour        => 24L,
+				SqlIntervalUnit.Minute      => 60L,
+				SqlIntervalUnit.Second      => 60L,
+				SqlIntervalUnit.Millisecond => 1000L,
+				SqlIntervalUnit.Microsecond => 1000L,
+				_                           => 0L,
+			};
+
+			return wrap == 0 ? wholeUnits : Remainder(factory, wholeUnits, wrap, truncateDivide);
+		}
+
+		/// <summary>
 		/// Converts an interval's stored amount to ticks, exactly.
 		/// </summary>
 		public static ISqlExpression? ToTicks(ISqlExpressionFactory factory, SqlIntervalExpression interval)

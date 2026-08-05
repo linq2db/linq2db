@@ -701,22 +701,6 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 75)]
 		public bool IsDistinctOnSupported { get; set; }
 
-		/// <summary>
-		/// Provider can lower an elapsed difference between two date/time values to SQL - the result of
-		/// <c>end - start</c>, exact at the resolution its date type stores.
-		/// </summary>
-		/// <remarks>
-		/// This is not <c>Sql.DateDiff</c>, which counts crossed boundaries and reports one hour between 10:59 and
-		/// 11:01 where the elapsed time is two minutes.
-		/// <para>
-		/// Consulted during translation, before the interval node is created, because that is the last point at
-		/// which the query can still fall back to client-side evaluation. When <see langword="false"/> (the
-		/// default), date subtraction is simply not translated.
-		/// </para>
-		/// </remarks>
-		[DataMember(Order = 77)]
-		public bool IsIntervalDifferenceSupported { get; set; }
-
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -816,7 +800,6 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
-				^ IsIntervalDifferenceSupported                        .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -898,7 +881,6 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
-				&& IsIntervalDifferenceSupported                         == other.IsIntervalDifferenceSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

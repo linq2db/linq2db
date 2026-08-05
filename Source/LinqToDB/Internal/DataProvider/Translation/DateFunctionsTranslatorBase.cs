@@ -265,8 +265,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan),  TranslateTimeSpanNegate);
 			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan?), TranslateTimeSpanNegate);
 
-			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime),  typeof(DateTime),  TranslateDateTimeDifference);
-			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime?), typeof(DateTime?), TranslateDateTimeDifference);
+			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime),        typeof(DateTime),        TranslateDateTimeDifference);
+			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime?),       typeof(DateTime?),       TranslateDateTimeDifference);
+			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTimeOffset),  typeof(DateTimeOffset),  TranslateDateTimeDifference);
+			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTimeOffset?), typeof(DateTimeOffset?), TranslateDateTimeDifference);
 		}
 
 		/// <summary>
@@ -277,12 +279,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// one hour between 10:59 and 11:01, where this reports two minutes. The existing per-provider
 		/// <c>DateDiffBuilder</c> family implements the boundary contract and deliberately is not reused here.
 		/// </remarks>
+		/// <summary>
+		/// Whether this provider can lower an elapsed date difference to SQL. Defaults to no.
+		/// </summary>
+		/// <remarks>
+		/// Asked before the node is created, and it is not merely cosmetic - measured on the SQLite suite, gating
+		/// here keeps four tests passing that otherwise fail. The reason is the shape of the expression:
+		/// <c>select a - b</c> projects the interval itself, so the builder can read both dates and subtract them
+		/// in .NET, while <c>select (a - b).TotalHours</c> has to be computed server-side and has nowhere to fall
+		/// back to. Creating the node unconditionally takes that choice away from the builder.
+		/// </remarks>
+		private protected virtual bool CanTranslateDateDifference => false;
+
 		Expression? TranslateDateTimeDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
-			// Asked before the node is created: translation is the last point at which the expression can still
-			// fall back to client-side evaluation. Once an interval node exists the query is committed to SQL, and
-			// a provider that cannot lower it has no way left to decline - it can only fail.
-			if (!translationContext.ProviderFlags.IsIntervalDifferenceSupported)
+			if (!CanTranslateDateDifference)
 				return null;
 
 			var left = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags);

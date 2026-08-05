@@ -3583,20 +3583,55 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlExtendedFunction((SqlExtendedFunction)expr);
 					break;
 
-				// Interval nodes carry semantics no single SQL dialect expresses, so they have no generic
-				// rendering by design - each provider lowers them in its SqlExpressionConvertVisitor while the
-				// operand mapping is still known. Reaching the builder means that lowering is missing.
 				case QueryElementType.SqlInterval:
+					BuildSqlIntervalExpression((SqlIntervalExpression)expr);
+					break;
+
 				case QueryElementType.SqlIntervalDifference:
+					BuildSqlIntervalDifferenceExpression((SqlIntervalDifferenceExpression)expr);
+					break;
+
 				case QueryElementType.SqlIntervalPart:
+					BuildSqlIntervalPartExpression((SqlIntervalPartExpression)expr);
+					break;
+
 				case QueryElementType.SqlTemporalArithmetic:
-					throw new LinqToDBException($"{expr.ElementType} reached the SQL builder un-lowered. This provider has no interval lowering for it - it should have been converted or rejected in SqlExpressionConvertVisitor.");
+					BuildSqlTemporalArithmeticExpression((SqlTemporalArithmeticExpression)expr);
+					break;
 
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
 
 			return StringBuilder;
+		}
+
+		/// <summary>
+		/// Renders an interval that survived to the builder. There is no portable form, so the default reports the
+		/// operation as unsupported; a provider with a native <c>INTERVAL</c> type overrides these to render it,
+		/// and a provider without one lowers the node away in its <c>SqlExpressionConvertVisitor</c> first.
+		/// </summary>
+		protected virtual void BuildSqlIntervalExpression(SqlIntervalExpression element)
+		{
+			throw new LinqToDBException($"{Name} does not support this TimeSpan operation in SQL.");
+		}
+
+		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
+		protected virtual void BuildSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
+		{
+			throw new LinqToDBException($"{Name} does not support subtracting one date/time value from another in SQL.");
+		}
+
+		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
+		protected virtual void BuildSqlIntervalPartExpression(SqlIntervalPartExpression element)
+		{
+			throw new LinqToDBException($"{Name} does not support this TimeSpan member in SQL.");
+		}
+
+		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
+		protected virtual void BuildSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			throw new LinqToDBException($"{Name} does not support adding a TimeSpan to a date/time value in SQL.");
 		}
 
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)

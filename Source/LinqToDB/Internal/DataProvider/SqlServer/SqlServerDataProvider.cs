@@ -75,9 +75,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlProviderFlags.IsCTESupportsOrdering              = false;
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
-			// DATEDIFF_BIG, which the elapsed difference needs: the 32-bit DATEDIFF overflows after about 24 days
-			// in milliseconds, so earlier versions leave date subtraction to client-side evaluation.
-			SqlProviderFlags.IsIntervalDifferenceSupported      = Version >= SqlServerVersion.v2016;
 			SqlProviderFlags.SupportsBooleanType                = false;
 			// SQL Server's per-SELECT column limit is 4096 (the CteUnion carrier is a SELECT body);
 			// 1024 is the per-table/view limit, which would abandon CteUnion for 1025-4096-column carriers.
