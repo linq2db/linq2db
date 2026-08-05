@@ -303,11 +303,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (expression is SqlIntervalExpression alreadyInterval)
 				return alreadyInterval;
 
-			var unit = QueryHelper.GetColumnDescriptor(expression)?.DurationUnit;
+			var descriptor = QueryHelper.GetColumnDescriptor(expression);
+			var unit       = descriptor?.DurationUnit;
 			if (unit == null)
 				return null;
 
-			var type = translationContext.ExpressionFactory.GetDbDataType(expression);
+			// The type comes from the same descriptor that supplies the unit, so the node carries the *model*
+			// type (TimeSpan) with the storage DataType. Carrying the storage system type instead would make
+			// QueryHelper.GetColumnDescriptor drop this expression when walking back to the column - its binary
+			// branch requires the expression's SystemType to still match the column's - and the read path would
+			// then miss the value converter and read the amount as raw ticks.
+			var type = descriptor!.GetDbDataType(true);
 
 			return new SqlIntervalExpression(expression, type, SqlIntervalType.ForDuration(unit.Value));
 		}

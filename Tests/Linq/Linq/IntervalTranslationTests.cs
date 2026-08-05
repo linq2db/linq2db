@@ -24,6 +24,10 @@ namespace Tests.Linq
 			[Column] public TimeSpan InTicks   { get; set; }
 
 			[Column] public TimeSpan Undeclared { get; set; }
+
+			// No duration declaration, and a converter that is NOT the identity in ticks - so reading it without
+			// the converter gives a visibly different value.
+			[Column] public TimeSpan UndeclaredSeconds { get; set; }
 		}
 
 		static MappingSchema BuildSchema()
@@ -43,6 +47,9 @@ namespace Tests.Linq
 					.Property(e => e.Undeclared)
 						.HasDataType(DataType.Int64)
 						.HasConversion(ts => ts.Ticks, v => TimeSpan.FromTicks(v))
+					.Property(e => e.UndeclaredSeconds)
+						.HasDataType(DataType.Int64)
+						.HasConversion(ts => ts.Ticks / TimeSpan.TicksPerSecond, v => TimeSpan.FromTicks(v * TimeSpan.TicksPerSecond))
 				.Build();
 
 			return ms;
@@ -55,15 +62,16 @@ namespace Tests.Linq
 				db.Insert(new DurationRow
 				{
 					Id         = i + 1,
-					InSeconds  = values[i],
-					InTicks    = values[i],
-					Undeclared = values[i],
+					InSeconds         = values[i],
+					InTicks           = values[i],
+					Undeclared        = values[i],
+					UndeclaredSeconds = values[i],
 				});
 			}
 		}
 
 		[Test]
-		public void TotalMatchesClr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TotalMatchesClr([DataSources] string context)
 		{
 			var value = TimeSpan.FromMinutes(90);
 
@@ -77,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ComponentMatchesClr([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ComponentMatchesClr([DataSources] string context)
 		{
 			var value = new TimeSpan(2, 3, 4, 5);
 
@@ -92,7 +100,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NegativeComponentsTruncateTowardZero([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NegativeComponentsTruncateTowardZero([DataSources] string context)
 		{
 			// The case provider division and modulo disagree on. CLR truncates toward zero, so -25h is
 			// Days == -1 and Hours == -1, not -2 / +23 as a flooring provider would give.
@@ -111,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnitIsTakenFromTheDeclarationNotTheStorageType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void UnitIsTakenFromTheDeclarationNotTheStorageType([DataSources] string context)
 		{
 			// Both columns are Int64 and hold the same duration, but in different units. If the unit were
 			// inferred from the storage type instead of the declaration, one of these would be wrong.
@@ -126,7 +134,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ValueRoundTripsThroughTheDeclaredUnit([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ValueRoundTripsThroughTheDeclaredUnit([DataSources] string context)
 		{
 			// No HasConversion anywhere in this fixture for the declared columns - the conversion is derived from
 			// the unit, so writing and reading back has to work on the declaration alone.
@@ -143,11 +151,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NegationIsTranslatedWhenConsumed([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NegationIsTranslatedWhenConsumed([DataSources] string context)
 		{
-			// Negation produces a computed interval. Consuming it through a member works; projecting the interval
-			// itself does not yet, because a computed interval has no column to carry its materialization -
-			// see IntervalProjectionIsNotSupportedYet.
 			var value = TimeSpan.FromMinutes(90);
 
 			using var db = GetDataContext(context, BuildSchema());
@@ -159,52 +164,57 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IntervalProjectionIsNotSupportedYet([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ComputedIntervalProjectsAndMaterializes([DataSources] string context)
 		{
-			// Pins the current boundary. Materializing this needs SqlIntervalExpression to carry the model type
-			// (TimeSpan) rather than the storage type: QueryHelper.GetColumnDescriptor's binary branch drops the
-			// descriptor when the expression's SystemType differs from the column's, so the value converter is
-			// never found and the amount is read as raw ticks. Failing loudly beats reading it wrong.
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			Assert.Throws<LinqToDBException>(() => t.Select(r => -r.InSeconds).ToArray());
-		}
-
-		[Test]
-		public void ArithmeticHappensOnTheServer([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			// Without this the whole fixture proves nothing: if translation returned null, linq2db would evaluate
-			// the members client-side and every value assertion would still pass.
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			var totalSql     = t.Select(r => r.InSeconds.TotalHours).ToSqlQuery().Sql;
-			var componentSql = t.Select(r => r.InSeconds.Hours).ToSqlQuery().Sql;
-
-			// seconds -> ticks -> hours
-			totalSql.ShouldContain("10000000");
-			totalSql.ShouldContain("36000000000");
-
-			// truncation toward zero is stated explicitly rather than left to the provider
-			componentSql.ShouldContain("FLOOR");
-			componentSql.ShouldContain("CEILING");
-		}
-
-		[Test]
-		public void UndeclaredColumnIsNotTranslated([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			// The opt-in rule. Without a declaration there is no unit, so the member cannot be translated -
-			// it must fall back to client-side evaluation rather than guess ticks.
-			var value = TimeSpan.FromHours(3);
+			// Nothing carries a converter on the expression. QueryHelper.GetColumnDescriptor looks through the
+			// interval node back to the operand's column, and ToReadExpression uses that column's converter -
+			// the same path an ordinary column projection takes.
+			//
+			// This only works because the interval node carries the model type: were it typed by its storage,
+			// the descriptor lookup would drop it and the amount would come back read as raw ticks.
+			var value = TimeSpan.FromMinutes(90);
 
 			using var db = GetDataContext(context, BuildSchema());
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			var sql = t.Select(r => r.Undeclared.TotalHours).ToSqlQuery().Sql;
+			t.Select(r => -r.InSeconds).Single().ShouldBe(-value);
+			t.Select(r => -r.InTicks).Single().ShouldBe(-value);
+		}
 
-			sql.ShouldNotContain("10000000");
+		[Test]
+		public void NegatedConvertedColumnKeepsItsConverter([DataSources] string context)
+		{
+			// Undeclared, so no interval node is involved - this exercises the plain converted-column path and
+			// answers whether GetColumnDescriptor's unary branch is fixing a pre-existing defect or only serving
+			// the interval path. Whatever the query does, negating must not change which converter applies.
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			t.Select(r => Sql.AsSql(-r.UndeclaredSeconds)).Single().ShouldBe(-value);
+		}
+
+		[Test]
+		public void ArithmeticHappensOnTheServer([DataSources] string context)
+		{
+			// Without this the fixture would prove much less: had translation returned null, linq2db would
+			// evaluate the members client-side and every value assertion above would still pass.
+			//
+			// Sql.AsSql forces server evaluation, so a provider that cannot translate the member fails here
+			// instead of quietly computing it in .NET. Matching the generated SQL text would not work across
+			// providers - the constants and the truncation function differ from one to the next.
+			var value = new TimeSpan(2, 3, 4, 5);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			t.Select(r => Sql.AsSql(r.InSeconds.TotalHours)).Single().ShouldBe(value.TotalHours);
+			t.Select(r => Sql.AsSql(r.InSeconds.Hours)).Single().ShouldBe(value.Hours);
+			t.Select(r => Sql.AsSql(r.InTicks.TotalMinutes)).Single().ShouldBe(value.TotalMinutes);
 		}
 	}
 }

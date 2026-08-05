@@ -1133,6 +1133,14 @@ namespace LinqToDB.Internal.SqlProvider
 			return WrapBooleanExpression(newItem, includeFields: false);
 		}
 
+		protected internal override IQueryElement VisitSqlIntervalExpression(SqlIntervalExpression element)
+		{
+			// Over integral storage an interval *is* its stored amount, so the node simply disappears here. The
+			// read path turns the amount back into a TimeSpan through the operand's column descriptor, which
+			// QueryHelper.GetColumnDescriptor reaches by looking through this node.
+			return Visit(element.Value);
+		}
+
 		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
 			// Lower before visiting children: the child interval carries the unit this needs, and visiting it

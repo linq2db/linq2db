@@ -325,6 +325,23 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlNullabilityExpression nullability:
 					return GetColumnDescriptor(nullability.SqlExpression, alreadyVisitedElements);
 
+				// Same rule as the binary branch above: the operand's descriptor still describes the result as
+				// long as the operation left the type alone. Without this, negating a column with a value
+				// converter loses the converter and the value is read as its raw provider representation.
+				case SqlUnaryExpression unary:
+				{
+					var found = GetColumnDescriptor(unary.Expr, alreadyVisitedElements);
+					if (found?.GetDbDataType(true).SystemType != unary.SystemType)
+						return null;
+					return found;
+				}
+
+				// An interval keeps its operand's storage, so the operand's descriptor - and with it the value
+				// converter the read path needs - still describes the result. This is why a computed interval
+				// needs no converter attached to the expression itself.
+				case SqlIntervalExpression interval:
+					return GetColumnDescriptor(interval.Value, alreadyVisitedElements);
+
 				case SqlCoalesceExpression coalesce:
 				{
 					foreach (var expression in coalesce.Expressions)
