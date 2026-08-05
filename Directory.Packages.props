@@ -245,9 +245,17 @@
 
 		<!--
 		CVE-2025-6965 / GHSA-2m69-gcr7-jv3q: SQLite before 3.50.2. The transitive native package
-		SQLitePCLRaw.lib.e_sqlite3 (<= 2.1.11, via Microsoft.Data.Sqlite / Microsoft.EntityFrameworkCore.Sqlite)
-		has no patched release. Tests and LINQPad reference SourceGear.sqlite3 (>= 3.50.2) for a patched native binary.
+		SQLitePCLRaw.lib.e_sqlite3 arrives at 2.1.11 (vulnerable) via Microsoft.Data.Sqlite /
+		Microsoft.EntityFrameworkCore.Sqlite. Patched releases DO now exist (2.1.12, 3.50.3, 3.53.3 —
+		the project renumbered to track SQLite versions), but Microsoft.Data.Sqlite still resolves
+		2.1.11, so the vulnerable package stays in a consumer's graph and tools such as LINQPad report
+		it. At runtime the patched binary wins: tests and LINQPad reference SourceGear.sqlite3
+		(>= 3.50.2, currently 3.53.4).
+		CentralPackageTransitivePinningEnabled is false here (see the Roslyn note above), so pinning
+		requires an explicit PackageReference on SQLitePCLRaw.lib.e_sqlite3 in each consuming project
+		rather than a PackageVersion entry alone.
 		-->
+		<PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
 		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />

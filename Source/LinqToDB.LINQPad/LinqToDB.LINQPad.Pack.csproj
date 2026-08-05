@@ -72,6 +72,10 @@
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
+		<!-- Pin the vulnerable transitive native package (GHSA-2m69-gcr7-jv3q) forward: Microsoft.Data.Sqlite
+		     still resolves SQLitePCLRaw.lib.e_sqlite3 2.1.11. CentralPackageTransitivePinningEnabled is false,
+		     so this needs an explicit reference, not just a PackageVersion entry. -->
+		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.SQLite" />
