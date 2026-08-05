@@ -392,6 +392,9 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			switch (expr.ElementType)
 			{
+				case QueryElementType.SqlDuration:
+					return GetUnderlyingFieldOrColumn(((SqlDurationExpression)expr).Expression);
+
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;

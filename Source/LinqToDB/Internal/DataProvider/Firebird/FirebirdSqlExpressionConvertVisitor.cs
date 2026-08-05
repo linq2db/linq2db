@@ -1,8 +1,10 @@
 ﻿using System;
 
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
@@ -14,6 +16,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		}
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		private protected override ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			// Firebird provider interval materialization uses its Int64 tick representation.
+			return Factory.Cast(expression, longType, true);
+		}
 
 		#region LIKE
 

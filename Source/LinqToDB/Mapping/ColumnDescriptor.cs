@@ -140,6 +140,32 @@ namespace LinqToDB.Mapping
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
+			Duration = mappingSchema.GetAttribute<DurationAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
+			if (Duration != null && MemberType.ToUnderlying() != typeof(TimeSpan))
+				throw new LinqToDBException($"Duration mapping can only be applied to TimeSpan columns. Member '{MemberInfo.Name}' has type '{MemberType}'.");
+			if (Duration != null)
+			{
+				if (!Enum.IsDefined(Duration.Unit))
+					throw new LinqToDBException($"Duration mapping for member '{MemberInfo.Name}' uses an unknown duration unit '{Duration.Unit}'.");
+
+				var storageType = GetDbDataType(true).DataType;
+				var isNumeric   = storageType is DataType.SByte or DataType.Int16 or DataType.Int32 or DataType.Int64
+					or DataType.Byte or DataType.UInt16 or DataType.UInt32 or DataType.UInt64
+					or DataType.Half or DataType.Single or DataType.Double or DataType.Decimal
+					or DataType.Money or DataType.SmallMoney;
+				var isNative = storageType is DataType.Interval or DataType.Time;
+
+				if (storageType != DataType.Undefined
+					&& (Duration.Unit == DurationUnit.Native ? !isNative : !isNumeric))
+				{
+					throw new LinqToDBException(
+						$"Duration unit '{Duration.Unit}' is incompatible with database type '{storageType}' for member '{MemberInfo.Name}'. " +
+						(Duration.Unit == DurationUnit.Native
+							? "Native duration mappings require an interval/time database type."
+							: "Explicit duration units require a numeric database type."));
+				}
+			}
+
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (skipValueAttributes.Length > 0)
 			{
@@ -398,6 +424,8 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
+
+		internal DurationAttribute? Duration { get; }
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;

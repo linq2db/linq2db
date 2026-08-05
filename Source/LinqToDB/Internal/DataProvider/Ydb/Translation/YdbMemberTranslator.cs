@@ -456,31 +456,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return factory.Expression(intervalType, "DateTime::ToMicroseconds({0} - {1}) * 10", leftExpression, rightExpression);
 			}
 
-			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
-			{
-				var factory  = translationContext.ExpressionFactory;
-				var longType = factory.GetDbDataType(typeof(long));
-				var ticks     = factory.Multiply(longType, factory.Function(longType, "DateTime::ToMicroseconds", timeSpanExpression), 10L);
-
-				return base.TranslateTimeSpanPart(translationContext, translationFlags, ticks, part, resultType);
-			}
-
-			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
-			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.Negate(factory.GetDbDataType(timeSpanExpression), timeSpanExpression);
-			}
-
-			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
-			{
-				var factory  = translationContext.ExpressionFactory;
-				var dateType = factory.GetDbDataType(dateTimeExpression);
-
-				return isSubtract
-					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
-					: factory.Add(dateType, dateTimeExpression, intervalExpression);
-			}
-
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);

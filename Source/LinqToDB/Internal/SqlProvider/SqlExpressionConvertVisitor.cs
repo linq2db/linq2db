@@ -1233,6 +1233,62 @@ namespace LinqToDB.Internal.SqlProvider
 			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, coalesce.Expressions);
 		}
 
+		internal override IQueryElement VisitSqlDurationExpression(SqlDurationExpression element)
+		{
+			var duration = (SqlDurationExpression)base.VisitSqlDurationExpression(element);
+
+			// Keep duration semantics in the SQL tree while query-shape optimization runs. Provider conversion is
+			// the boundary at which the marker becomes the already selected provider representation, just as a
+			// SqlCastExpression remains explicit until its provider conversion is processed.
+			return ConvertDuration(duration);
+		}
+
+		private protected virtual ISqlExpression ConvertDuration(SqlDurationExpression duration)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			if (duration.Unit == DurationUnit.Native)
+				return ConvertNativeDurationToTicks(duration.Expression, longType);
+
+			if (duration.Unit == DurationUnit.Tick)
+				return Factory.Cast(duration.Expression, longType, true);
+
+			var decimalType  = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+			var decimalValue = Factory.Cast(duration.Expression, decimalType, true);
+			var scaledValue = duration.Unit switch
+			{
+				DurationUnit.Nanosecond  => Factory.Div(decimalType, decimalValue, Factory.Value(decimalType, 100m)),
+				DurationUnit.Microsecond => Factory.Multiply(decimalType, decimalValue, 10m),
+				DurationUnit.Millisecond => Factory.Multiply(decimalType, decimalValue, (decimal)TimeSpan.TicksPerMillisecond),
+				DurationUnit.Second      => Factory.Multiply(decimalType, decimalValue, (decimal)TimeSpan.TicksPerSecond),
+				DurationUnit.Minute      => Factory.Multiply(decimalType, decimalValue, (decimal)TimeSpan.TicksPerMinute),
+				DurationUnit.Hour        => Factory.Multiply(decimalType, decimalValue, (decimal)TimeSpan.TicksPerHour),
+				DurationUnit.Day         => Factory.Multiply(decimalType, decimalValue, (decimal)TimeSpan.TicksPerDay),
+				_                        => throw new InvalidOperationException($"Unexpected duration unit: {duration.Unit}"),
+			};
+
+			// Numeric duration mappings can be fractional. C# conversion to ticks truncates towards zero,
+			// whereas provider integer casts and division disagree for negative values. Keep the rule in
+			// the semantic node until provider conversion and lower it explicitly here.
+			return TruncateDurationToInt64(scaledValue, decimalType, longType);
+		}
+
+		private protected virtual ISqlExpression TruncateDurationToInt64(ISqlExpression value, DbDataType decimalType, DbDataType longType)
+		{
+			var zero = Factory.Value(decimalType, 0m);
+			var truncated = Factory.Condition(
+				Factory.GreaterOrEqual(value, zero),
+				Factory.Function(decimalType, "FLOOR", value),
+				Factory.Function(decimalType, "CEILING", value));
+
+			return Factory.Cast(truncated, longType, true);
+		}
+
+		private protected virtual ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			throw new LinqToDBException($"Native duration type '{Factory.GetDbDataType(expression)}' is not supported by this provider.");
+		}
+
 		/// <summary>
 		/// Removes NULL-literal operands from a COALESCE operand list — a literal NULL can never be the
 		/// value COALESCE returns, so it is redundant. Returns the sole surviving operand when only one

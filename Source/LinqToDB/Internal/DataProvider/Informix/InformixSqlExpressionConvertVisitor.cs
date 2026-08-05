@@ -19,6 +19,35 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override bool SupportsDistinctAsExistsIntersect => true;
 		protected override bool ConcatRequiresExplicitStringCast  => false;
 
+		private protected override ISqlExpression TruncateDurationToInt64(ISqlExpression value, DbDataType decimalType, DbDataType longType)
+		{
+			return Factory.Cast(Factory.Function(decimalType, "Trunc", value), longType, true);
+		}
+
+		private protected override ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			var expressionType  = Factory.GetDbDataType(expression);
+			var dayIntervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval).WithDbType("INTERVAL DAY(9) TO DAY");
+			var subdayType      = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval).WithDbType("INTERVAL SECOND(9) TO FRACTION(5)");
+			var dayStringType   = Factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(11);
+			var secondStringType = Factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(16);
+			var decimalType     = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 5);
+
+			// Informix interval fields allow only nine leading digits. Split whole days before casting
+			// the sub-day remainder to SECOND so a large TimeSpan doesn't acquire an artificial
+			// roughly-31-year range limit.
+			var dayInterval = Factory.Cast(expression, dayIntervalType, true);
+			var days        = Factory.Cast(Factory.Cast(dayInterval, dayStringType, true), decimalType, true);
+			var subday      = Factory.Sub(expressionType, expression, dayInterval);
+			var seconds     = Factory.Cast(Factory.Cast(Factory.Cast(subday, subdayType, true), secondStringType, true), decimalType, true);
+			var ticks       = Factory.Add(
+				decimalType,
+				Factory.Multiply(decimalType, days, (decimal)TimeSpan.TicksPerDay),
+				Factory.Multiply(decimalType, seconds, (decimal)TimeSpan.TicksPerSecond));
+
+			return Factory.Cast(Factory.Function(decimalType, "Trunc", ticks), longType, true);
+		}
+
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
 			//Informix cannot process parameter in Like template (only Informix provider, not InformixDB2)

@@ -1,8 +1,10 @@
 ﻿using System;
 
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
@@ -21,6 +23,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// YQL's `||` auto-coerces non-string operands to text, so explicit CAST(x AS String) on
 		// concat operands is redundant. Omit it for cleaner SQL (like the other `||` providers).
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		private protected override ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			return Factory.Multiply(longType, Factory.Function(longType, "DateTime::ToMicroseconds", expression), 10L);
+		}
 
 		#region (I)LIKE https://ydb.tech/docs/en/yql/reference/syntax/expressions#check-match
 

@@ -95,59 +95,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return factory.Expression(resultType, "({0} AT TIME ZONE 'UTC')", dateExpression);
 			}
 
-			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
-			{
-				var factory    = translationContext.ExpressionFactory;
-				var resultTypeDb = factory.GetDbDataType(resultType);
-				var totalSeconds = "EXTRACT(EPOCH FROM {0})";
-
-				var expression = part switch
-				{
-					TimeSpanPart.Days              => $"CAST(TRUNC(({totalSeconds}) / 86400) AS INTEGER)",
-					TimeSpanPart.TotalDays         => $"({totalSeconds}) / 86400.0",
-					TimeSpanPart.Hours             => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) / 3600) AS BIGINT), 24) AS INTEGER)",
-					TimeSpanPart.TotalHours        => $"({totalSeconds}) / 3600.0",
-					TimeSpanPart.Minutes           => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) / 60) AS BIGINT), 60) AS INTEGER)",
-					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60.0",
-					TimeSpanPart.Seconds           => $"CAST(MOD(CAST(TRUNC({totalSeconds}) AS BIGINT), 60) AS INTEGER)",
-					TimeSpanPart.TotalSeconds      => totalSeconds,
-					TimeSpanPart.Milliseconds      => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) * 1000) AS BIGINT), 1000) AS INTEGER)",
-					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000.0",
-#if NET7_0_OR_GREATER
-					TimeSpanPart.Microseconds      => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) * 1000000) AS BIGINT), 1000) AS INTEGER)",
-					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000.0",
-					TimeSpanPart.Nanoseconds       => $"CAST(MOD(CAST(TRUNC(({totalSeconds}) * 1000000000) AS BIGINT), 1000) AS INTEGER)",
-					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000.0",
-#endif
-					TimeSpanPart.Ticks             => $"CAST(TRUNC(({totalSeconds}) * 10000000) AS BIGINT)",
-					_                              => null,
-				};
-
-				return expression == null ? null : factory.Expression(resultTypeDb, expression, timeSpanExpression);
-			}
-
-			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
-			{
-				var factory = translationContext.ExpressionFactory;
-				var type    = factory.GetDbDataType(timeSpanExpression);
-
-				return type.DataType == DataType.Interval ? factory.Negate(type, timeSpanExpression) : null;
-			}
-
-			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
-			{
-				var factory      = translationContext.ExpressionFactory;
-				var intervalType = factory.GetDbDataType(intervalExpression);
-
-				if (intervalType.DataType != DataType.Interval)
-					return null;
-
-				var dateType = factory.GetDbDataType(dateTimeExpression);
-				return isSubtract
-					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
-					: factory.Add(dateType, dateTimeExpression, intervalExpression);
-			}
-
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;

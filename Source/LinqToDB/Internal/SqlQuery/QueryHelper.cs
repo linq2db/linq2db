@@ -251,6 +251,9 @@ namespace LinqToDB.Internal.SqlQuery
 					case SqlNullabilityExpression nullabilityExpression:
 						expr = nullabilityExpression.SqlExpression;
 						continue;
+					case SqlDurationExpression durationExpression:
+						expr = durationExpression.Expression;
+						continue;
 				}
 
 				break;
@@ -343,6 +346,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 				case SqlNullabilityExpression nullability:
 					return GetColumnDescriptor(nullability.SqlExpression, alreadyVisitedElements);
+
+				case SqlDurationExpression duration:
+					return GetColumnDescriptor(duration.Expression, alreadyVisitedElements);
 
 				case SqlCoalesceExpression coalesce:
 				{
@@ -561,6 +567,7 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlDataType         { Type: var t } => t,
 				SqlCastExpression   { Type: var t } => t,
 				SqlBinaryExpression { Type: var t } => t,
+				SqlDurationExpression { Type: var t } => t,
 
 				// carries no type of its own - the provider picks one when rendering
 				SqlParameterCastExpression { Parameter: var p } => GetDbDataTypeImpl(p, visited),
@@ -774,6 +781,9 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlParameterCastExpression { ElementType: QueryElementType.SqlParameterCast } =>
 					true,
 
+				SqlDurationExpression { ElementType: QueryElementType.SqlDuration, Expression: var expression } =>
+					IsConstantFast(expression),
+
 				_ => false,
 			};
 		}
@@ -791,6 +801,9 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlParameter:
 				case QueryElementType.SqlParameterCast:
 					return true;
+
+				case QueryElementType.SqlDuration:
+					return IsConstant(((SqlDurationExpression)expr).Expression);
 
 				case QueryElementType.SqlCast:
 				{

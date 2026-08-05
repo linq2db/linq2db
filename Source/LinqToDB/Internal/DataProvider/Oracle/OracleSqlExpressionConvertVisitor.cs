@@ -5,9 +5,11 @@ using System.Linq;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -17,6 +19,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 	{
 		public OracleSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
+		}
+
+		private protected override ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			const string totalSeconds = "(EXTRACT(DAY FROM {0}) * 86400 + EXTRACT(HOUR FROM {0}) * 3600 + EXTRACT(MINUTE FROM {0}) * 60 + EXTRACT(SECOND FROM {0}))";
+			return Factory.Expression(longType, $"TRUNC(({totalSeconds}) * 10000000)", expression);
 		}
 
 		#region LIKE

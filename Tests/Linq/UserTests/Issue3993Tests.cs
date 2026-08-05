@@ -219,6 +219,20 @@ namespace Tests.UserTests.Test3993
 			return table;
 		}
 
+		static void ConfigureTestDurations(
+			MappingSchema ms,
+			DurationUnit  preNotification,
+			DurationUnit  preNotification2,
+			DurationUnit  preNotification3)
+		{
+			new FluentMappingBuilder(ms)
+				.Entity<Test>()
+					.Property(row => row.PreNotification).HasDuration(preNotification)
+					.Property(row => row.PreNotification2).HasDuration(preNotification2)
+					.Property(row => row.PreNotification3).HasDuration(preNotification3)
+				.Build();
+		}
+
 		[Test]
 		public void DateDiffLongRuntimeMatrix(
 			[IncludeDataSources(false,
@@ -475,8 +489,13 @@ namespace Tests.UserTests.Test3993
 		[Test]
 		public void TimeSpanComponentMappings([IncludeDataSources(TestProvName.AllSQLite)] string configuration)
 		{
-			var mappingSchema = new MappingSchema();
-			mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+			var mappingBuilder = new FluentMappingBuilder();
+			mappingBuilder.MappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+			var mappingSchema = mappingBuilder
+				.Entity<Test>()
+					.Property(row => row.PreNotification3).HasDuration(DurationUnit.Tick)
+				.Build()
+				.MappingSchema;
 			var value = new TimeSpan(1, 2, 3, 4, 5).Add(TimeSpan.FromTicks(67));
 
 			using var db    = GetDataContext(configuration, mappingSchema);
@@ -570,8 +589,13 @@ namespace Tests.UserTests.Test3993
 		[Test]
 		public void SqlServerLargeIntervalAddSql([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string configuration)
 		{
-			var mappingSchema = new MappingSchema();
-			mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+			var mappingBuilder = new FluentMappingBuilder();
+			mappingBuilder.MappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+			var mappingSchema = mappingBuilder
+				.Entity<Test>()
+					.Property(row => row.PreNotification3).HasDuration(DurationUnit.Tick)
+				.Build()
+				.MappingSchema;
 
 			using var db = GetDataContext(configuration, mappingSchema);
 
@@ -589,8 +613,13 @@ namespace Tests.UserTests.Test3993
 		public void FirebirdLargeIntervalArithmeticUsesBoundedPieces(
 			[IncludeDataSources(false, TestProvName.AllFirebird3Plus)] string configuration)
 		{
-			var mappingSchema = new MappingSchema();
-			mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+			var mappingBuilder = new FluentMappingBuilder();
+			mappingBuilder.MappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+			var mappingSchema = mappingBuilder
+				.Entity<Test>()
+					.Property(row => row.PreNotification3).HasDuration(DurationUnit.Tick)
+				.Build()
+				.MappingSchema;
 
 			using var db = GetDataContext(configuration, mappingSchema);
 
@@ -682,6 +711,13 @@ namespace Tests.UserTests.Test3993
 					ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 					ms.AddScalarType(typeof(TimeSpan?), DataType.Int64);
 				}
+
+				var usesNativeIntervals = configuration.Contains("PostgreSQL") || configuration.Contains("Oracle") || configuration.Contains("Informix");
+				ConfigureTestDurations(
+					ms,
+					DurationUnit.Tick,
+					usesNativeIntervals ? DurationUnit.Native : DurationUnit.Tick,
+					usesNativeIntervals ? DurationUnit.Native : DurationUnit.Tick);
 
 				db = GetDataContext(configuration, ms);
 
@@ -836,6 +872,13 @@ namespace Tests.UserTests.Test3993
 					ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 				}
 
+				var usesNativeIntervals = configuration.Contains("PostgreSQL") || configuration.Contains("Oracle");
+				ConfigureTestDurations(
+					ms,
+					DurationUnit.Tick,
+					usesNativeIntervals ? DurationUnit.Native : DurationUnit.Tick,
+					usesNativeIntervals ? DurationUnit.Native : DurationUnit.Tick);
+
 				db = GetDataContext(configuration, ms);
 
 				using var tbl = db.CreateLocalTable(new[]
@@ -921,6 +964,13 @@ namespace Tests.UserTests.Test3993
 						.MappingSchema;
 					ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 				}
+
+				var usesNativeIntervals = configuration.Contains("PostgreSQL") || configuration.Contains("Oracle");
+				ConfigureTestDurations(
+					ms,
+					DurationUnit.Tick,
+					usesNativeIntervals ? DurationUnit.Native : DurationUnit.Tick,
+					usesNativeIntervals ? DurationUnit.Native : DurationUnit.Tick);
 
 				db = GetDataContext(configuration, ms);
 
@@ -1076,6 +1126,15 @@ namespace Tests.UserTests.Test3993
 				ms.AddScalarType(typeof(TimeSpan), DataType.Int64);
 				ms.AddScalarType(typeof(TimeSpan?), DataType.Int64);
 			}
+
+			var durationUnit = configuration.Contains("PostgreSQL") || configuration.Contains("Oracle") || isInformix || configuration.Contains("Ydb") || isMySql
+				? DurationUnit.Native
+				: DurationUnit.Tick;
+			new FluentMappingBuilder(ms)
+				.Entity<LanguageDTO>()
+					.Property(row => row.TimeSpan).HasDuration(durationUnit)
+					.Property(row => row.TimeSpanNull).HasDuration(durationUnit)
+				.Build();
 
 			using var db = (DataConnection) GetDataContext(configuration, ms);
 

@@ -172,6 +172,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			QueryElementType.SqlBinaryExpression      or
 			QueryElementType.SqlUnaryExpression       or
 			QueryElementType.SqlNullabilityExpression or
+			QueryElementType.SqlDuration              or
 			QueryElementType.SqlCase                  or
 			QueryElementType.SqlCoalesce              or
 			QueryElementType.SqlCast                  or

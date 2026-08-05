@@ -517,6 +517,30 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
+		internal virtual IQueryElement VisitSqlDurationExpression(SqlDurationExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+					Visit(element.Expression);
+					break;
+				case VisitMode.Modify:
+					element.Modify((ISqlExpression)Visit(element.Expression));
+					break;
+				case VisitMode.Transform:
+				{
+					var expression = (ISqlExpression)Visit(element.Expression);
+					if (ShouldReplace(element) || !ReferenceEquals(expression, element.Expression))
+						return NotifyReplaced(new SqlDurationExpression(element.Type, expression, element.Unit, element.Kind), element);
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
 			switch (GetVisitMode(element))

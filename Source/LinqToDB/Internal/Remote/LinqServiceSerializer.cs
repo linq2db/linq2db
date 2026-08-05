@@ -879,6 +879,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.SqlFunction              : GetType(((SqlFunction)             e).SystemType)          ; break;
 					case QueryElementType.SqlExpression            : GetType(((SqlExpression)           e).SystemType)          ; break;
+					case QueryElementType.SqlDuration              : GetType(((SqlDurationExpression)   e).SystemType)          ; break;
 					case QueryElementType.SqlNullabilityExpression : GetType(((SqlNullabilityExpression)e).SystemType)          ; break;
 					case QueryElementType.SqlAnchor                : GetType(((SqlAnchor)e).SystemType)                         ; break;
 					case QueryElementType.SqlBinaryExpression      : GetType(((SqlBinaryExpression)     e).SystemType)          ; break;
@@ -1009,6 +1010,18 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append((int)elem.NullabilityType);
 							Append(elem.CanBeNullNullable);
 							Append(elem.Parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlDuration:
+						{
+							var elem = (SqlDurationExpression)e;
+
+							Append(elem.Type);
+							Append(elem.Expression);
+							Append((int)elem.Unit);
+							Append((int)elem.Kind);
 
 							break;
 						}
@@ -2164,6 +2177,18 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var parameters  = ReadArray<ISqlExpression>()!;
 
 							obj = new SqlExpression(dbDataType, expr, precedence, flags, nullability, canBeNull, parameters);
+
+							break;
+						}
+
+					case QueryElementType.SqlDuration:
+						{
+							var dbDataType = ReadDbDataType();
+							var expression = Read<ISqlExpression>()!;
+							var unit       = (DurationUnit)ReadInt();
+							var kind       = (SqlDurationKind)ReadInt();
+
+							obj = new SqlDurationExpression(dbDataType, expression, unit, kind);
 
 							break;
 						}

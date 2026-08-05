@@ -80,33 +80,59 @@ namespace Tests.UserTests.Issue4308
 			[Column(DataType = DataType.Interval)] public TimeSpan IntervalValue { get; set; }
 		}
 
+		sealed class DurationUnitRow
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			public DateTime StartDateTime     { get; set; }
+			public DateTime EndDateTime       { get; set; }
+			public TimeSpan TickDuration      { get; set; }
+			public TimeSpan SecondDuration    { get; set; }
+			public TimeSpan UndeclaredSeconds { get; set; }
+		}
+
+		sealed class InvalidDurationMappingRow
+		{
+			public TimeSpan Value { get; set; }
+		}
+
+		sealed class AttributeDurationMappingRow
+		{
+			[Column(DataType = DataType.Int64)]
+			[Duration(DurationUnit.Second)]
+			public TimeSpan Value { get; set; }
+		}
+
 		static MappingSchema CreateMappingSchema(string configuration)
 		{
-			var builder = new FluentMappingBuilder();
-			var storesTicks = false;
+			var builder          = new FluentMappingBuilder();
+			var storesTicks      = false;
+			var durationUnit     = DurationUnit.Native;
+			var durationDataType = DataType.Interval;
 
 			if (configuration.Contains("Access", StringComparison.Ordinal))
 			{
-				builder.MappingSchema.AddScalarType(typeof(TimeSpan),  new SqlDataType(DataType.Decimal, typeof(TimeSpan),  18, 0));
-				builder.MappingSchema.AddScalarType(typeof(TimeSpan?), new SqlDataType(DataType.Decimal, typeof(TimeSpan?), 18, 0));
+				durationUnit     = DurationUnit.Tick;
+				durationDataType = DataType.Decimal;
 			}
-			else if (configuration.Contains("Informix", StringComparison.Ordinal)
-				|| configuration.Contains("Oracle", StringComparison.Ordinal)
-				|| configuration.Contains("PostgreSQL", StringComparison.Ordinal)
-				|| configuration.Contains("Ydb", StringComparison.Ordinal))
+			else if (!configuration.Contains("Informix", StringComparison.Ordinal)
+				&& !configuration.Contains("Oracle", StringComparison.Ordinal)
+				&& !configuration.Contains("PostgreSQL", StringComparison.Ordinal)
+				&& !configuration.Contains("Ydb", StringComparison.Ordinal))
 			{
-				builder.MappingSchema.AddScalarType(typeof(TimeSpan),  DataType.Interval);
-				builder.MappingSchema.AddScalarType(typeof(TimeSpan?), DataType.Interval);
-			}
-			else
-			{
-				builder.MappingSchema.AddScalarType(typeof(TimeSpan),  DataType.Int64);
-				builder.MappingSchema.AddScalarType(typeof(TimeSpan?), DataType.Int64);
-				storesTicks = true;
+				storesTicks      = true;
+				durationUnit     = DurationUnit.Tick;
+				durationDataType = DataType.Int64;
 			}
 
 			var testMapping = builder.Entity<Test>()
-				.HasTableName("Common_Topology_Locations");
+				.HasTableName("Common_Topology_Locations")
+				.Property(row => row.PreNotification).HasDataType(durationDataType).HasDuration(durationUnit)
+				.Property(row => row.RequiredInterval).HasDataType(durationDataType).HasDuration(durationUnit);
+			var offsetMapping = builder.Entity<DateTimeOffsetTest>()
+				.Property(row => row.RequiredInterval).HasDataType(durationDataType).HasDuration(durationUnit)
+				.Property(row => row.NullableInterval).HasDataType(durationDataType).HasDuration(durationUnit);
 
 			if (configuration.Contains("Informix", StringComparison.Ordinal))
 			{
@@ -130,13 +156,41 @@ namespace Tests.UserTests.Issue4308
 					.Property(row => row.RequiredInterval)
 						.HasConversion(value => value.Ticks, value => TimeSpan.FromTicks(value));
 
-				builder.Entity<DateTimeOffsetTest>()
+				offsetMapping
 					.Property(row => row.RequiredInterval)
 						.HasConversion(value => value.Ticks, value => TimeSpan.FromTicks(value))
 					.Property(row => row.NullableInterval)
 						.HasConversion(
 							value => value == null ? (long?)null : value.Value.Ticks,
 							value => value == null ? (TimeSpan?)null : TimeSpan.FromTicks(value.Value),
+							handlesNulls: true);
+			}
+			else if (durationDataType == DataType.Decimal)
+			{
+				testMapping
+					.Property(row => row.PreNotification)
+						.HasPrecision(18)
+						.HasScale(0)
+						.HasConversion(
+							value => value == null ? (decimal?)null : value.Value.Ticks,
+							value => value == null ? (TimeSpan?)null : TimeSpan.FromTicks(decimal.ToInt64(value.Value)),
+							handlesNulls: true)
+					.Property(row => row.RequiredInterval)
+						.HasPrecision(18)
+						.HasScale(0)
+						.HasConversion(value => (decimal)value.Ticks, value => TimeSpan.FromTicks(decimal.ToInt64(value)));
+
+				offsetMapping
+					.Property(row => row.RequiredInterval)
+						.HasPrecision(18)
+						.HasScale(0)
+						.HasConversion(value => (decimal)value.Ticks, value => TimeSpan.FromTicks(decimal.ToInt64(value)))
+					.Property(row => row.NullableInterval)
+						.HasPrecision(18)
+						.HasScale(0)
+						.HasConversion(
+							value => value == null ? (decimal?)null : value.Value.Ticks,
+							value => value == null ? (TimeSpan?)null : TimeSpan.FromTicks(decimal.ToInt64(value.Value)),
 							handlesNulls: true);
 			}
 
@@ -244,6 +298,209 @@ namespace Tests.UserTests.Issue4308
 			result.TotalMicroseconds.Value.ShouldBe(expected.TotalMicroseconds, storageResolutionTicks / 10D);
 			result.TotalNanoseconds.Value.ShouldBe(expected.TotalNanoseconds, storageResolutionTicks * 100D);
 #endif
+		}
+
+		[Test]
+		public void DeclaredDurationUnitsNormalizeToTicks(
+			[IncludeDataSources(true, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string configuration)
+		{
+			var mappingSchema = new FluentMappingBuilder()
+				.Entity<DurationUnitRow>()
+					.Property(row => row.TickDuration)
+						.HasDataType(DataType.Int64)
+						.HasDuration(DurationUnit.Tick)
+						.HasConversion(value => value.Ticks, value => TimeSpan.FromTicks(value))
+					.Property(row => row.SecondDuration)
+						.HasDataType(DataType.Int64)
+						.HasDuration(DurationUnit.Second)
+						.HasConversion(
+							value => value.Ticks / TimeSpan.TicksPerSecond,
+							value => TimeSpan.FromTicks(value * TimeSpan.TicksPerSecond))
+					.Property(row => row.UndeclaredSeconds)
+						.HasDataType(DataType.Int64)
+						.HasConversion(
+							value => value.Ticks / TimeSpan.TicksPerSecond,
+							value => TimeSpan.FromTicks(value * TimeSpan.TicksPerSecond))
+				.Build()
+				.MappingSchema;
+			var duration = TimeSpan.FromSeconds(90);
+			var start    = new DateTime(2024, 2, 3, 4, 5, 6);
+
+			using var db = GetDataContext(configuration, mappingSchema);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new DurationUnitRow
+				{
+					Id                = 1,
+					StartDateTime     = start,
+					EndDateTime       = start + duration,
+					TickDuration      = duration,
+					SecondDuration    = duration,
+					UndeclaredSeconds = duration,
+				},
+			});
+
+			table.Select(row => row.TickDuration).Single().ShouldBe(duration);
+
+			var actual = table.Select(row => new
+			{
+				TickTicks         = row.TickDuration.Ticks,
+				SecondTicks       = row.SecondDuration.Ticks,
+				SecondTotal       = row.SecondDuration.TotalSeconds,
+				UnitsCompareEqual = row.TickDuration == row.SecondDuration,
+				MatchesElapsed     = row.SecondDuration == row.EndDateTime - row.StartDateTime,
+				Sum               = row.TickDuration + row.SecondDuration,
+				Added             = row.StartDateTime + row.SecondDuration,
+			}).Single();
+
+			actual.TickTicks.ShouldBe(duration.Ticks);
+			actual.SecondTicks.ShouldBe(duration.Ticks);
+			actual.SecondTotal.ShouldBe(duration.TotalSeconds);
+			actual.UnitsCompareEqual.ShouldBeTrue();
+			actual.MatchesElapsed.ShouldBeTrue();
+			actual.Sum.ShouldBe(duration + duration);
+			actual.Added.ShouldBe(start + duration);
+
+			var composed = table
+				.Select(row => new { Duration = row.TickDuration + row.SecondDuration })
+				.AsSubQuery()
+				.Select(row => new
+				{
+					row.Duration.Ticks,
+					row.Duration.TotalSeconds,
+				})
+				.Single();
+
+			composed.Ticks.ShouldBe((duration + duration).Ticks);
+			composed.TotalSeconds.ShouldBe((duration + duration).TotalSeconds);
+
+			var projected = table
+				.Select(row => new { row.SecondDuration })
+				.AsSubQuery()
+				.Select(row => new { row.SecondDuration.Ticks, row.SecondDuration.TotalSeconds })
+				.Single();
+			projected.Ticks.ShouldBe(duration.Ticks);
+			projected.TotalSeconds.ShouldBe(duration.TotalSeconds);
+
+			var cte = table
+				.Select(row => new { Duration = row.TickDuration + row.SecondDuration })
+				.AsCte("duration_cte");
+			var fromCte = cte
+				.Select(row => new { row.Duration.Ticks, row.Duration.TotalSeconds })
+				.Single();
+			fromCte.Ticks.ShouldBe((duration + duration).Ticks);
+			fromCte.TotalSeconds.ShouldBe((duration + duration).TotalSeconds);
+
+			var setDurations = table.Select(row => row.TickDuration)
+				.Concat(table.Select(row => row.SecondDuration));
+			var fromSet = setDurations
+				.Select(value => new { value.Ticks, value.TotalSeconds })
+				.ToArray();
+			fromSet.Length.ShouldBe(2);
+			fromSet.ShouldAllBe(value => value.Ticks == duration.Ticks && value.TotalSeconds == duration.TotalSeconds);
+
+			Assert.Throws<LinqToDBException>(() => table
+				.Where(row => row.UndeclaredSeconds.TotalSeconds > 0)
+				.ToArray());
+			Assert.Throws<LinqToDBException>(() => table
+				.Where(row => row.UndeclaredSeconds == duration)
+				.ToArray());
+		}
+
+		[Test]
+		public void NativeAndNumericDurationUnitsCompose(
+			[IncludeDataSources(true, TestProvName.AllDuckDB)] string configuration)
+		{
+			var mappingSchema = new FluentMappingBuilder()
+				.Entity<DurationUnitRow>()
+					.Property(row => row.TickDuration)
+						.HasDataType(DataType.Interval)
+						.HasDuration(DurationUnit.Native)
+					.Property(row => row.SecondDuration)
+						.HasDataType(DataType.Int64)
+						.HasDuration(DurationUnit.Second)
+						.HasConversion(
+							value => value.Ticks / TimeSpan.TicksPerSecond,
+							value => TimeSpan.FromTicks(value * TimeSpan.TicksPerSecond))
+				.Build()
+				.MappingSchema;
+			var duration = TimeSpan.FromSeconds(90);
+			var start    = new DateTime(2024, 2, 3, 4, 5, 6);
+
+			using var db = GetDataContext(configuration, mappingSchema);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new DurationUnitRow
+				{
+					Id             = 1,
+					StartDateTime  = start,
+					EndDateTime    = start + duration,
+					TickDuration   = duration,
+					SecondDuration = duration,
+				},
+			});
+
+			// Declaring Native affects only duration expressions; ordinary materialization keeps the
+			// provider's interval mapping and does not force the column through Int64 ticks.
+			table.Select(row => row.TickDuration).Single().ShouldBe(duration);
+
+			var actual = table.Select(row => new
+			{
+				NativeTicks       = row.TickDuration.Ticks,
+				NativeTotal       = row.TickDuration.TotalSeconds,
+				UnitsCompareEqual = row.TickDuration == row.SecondDuration,
+				Sum               = row.TickDuration + row.SecondDuration,
+				Added             = row.StartDateTime + row.TickDuration,
+			}).Single();
+
+			actual.NativeTicks.ShouldBe(duration.Ticks);
+			actual.NativeTotal.ShouldBe(duration.TotalSeconds);
+			actual.UnitsCompareEqual.ShouldBeTrue();
+			actual.Sum.ShouldBe(duration + duration);
+			actual.Added.ShouldBe(start + duration);
+
+			var sql = table.Select(row => row.TickDuration == row.SecondDuration).ToSqlQuery().Sql;
+			sql.ShouldContain("date_part");
+			sql.ShouldNotContain("epoch(");
+		}
+
+		[Test]
+		public void DurationMappingRejectsIncompatibleStorage()
+		{
+			var attributeMapping = new MappingSchema();
+			attributeMapping.GetEntityDescriptor(typeof(AttributeDurationMappingRow))
+				.Columns.Single()
+				.GetDbDataType(true).DataType.ShouldBe(DataType.Int64);
+
+			var nativeNumeric = new FluentMappingBuilder()
+				.Entity<InvalidDurationMappingRow>()
+					.Property(row => row.Value)
+						.HasDataType(DataType.Int64)
+						.HasDuration(DurationUnit.Native)
+				.Build()
+				.MappingSchema;
+			var nativeException = Assert.Throws<LinqToDBException>(() => nativeNumeric.GetEntityDescriptor(typeof(InvalidDurationMappingRow)));
+			nativeException!.Message.ShouldContain("Native duration mappings require an interval/time database type");
+
+			var unitInterval = new FluentMappingBuilder()
+				.Entity<InvalidDurationMappingRow>()
+					.Property(row => row.Value)
+						.HasDataType(DataType.Interval)
+						.HasDuration(DurationUnit.Second)
+				.Build()
+				.MappingSchema;
+			var unitException = Assert.Throws<LinqToDBException>(() => unitInterval.GetEntityDescriptor(typeof(InvalidDurationMappingRow)));
+			unitException!.Message.ShouldContain("Explicit duration units require a numeric database type");
+		}
+
+		[Test]
+		public void UndeclaredTimeSpanKeepsDefaultMapping()
+		{
+			var mappingSchema = new MappingSchema();
+			mappingSchema.GetDataType(typeof(TimeSpan)).Type.DataType.ShouldBe(DataType.Time);
+			mappingSchema.GetEntityDescriptor(typeof(DurationUnitRow))
+				.Columns.Single(column => column.MemberName == nameof(DurationUnitRow.UndeclaredSeconds))
+				.GetDbDataType(true).DataType.ShouldBe(DataType.Time);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4308")]
@@ -366,6 +623,7 @@ namespace Tests.UserTests.Issue4308
 			var mappingSchema = builder
 				.Entity<Test>()
 					.HasTableName("Common_Topology_Locations")
+					.Property(row => row.PreNotification).HasDuration(DurationUnit.Native)
 				.Build()
 				.MappingSchema;
 
@@ -1030,7 +1288,7 @@ namespace Tests.UserTests.Issue4308
 				.Entity<DateTimeOffsetTest>()
 					.Property(row => row.RequiredStart).HasDataType(DataType.DateTimeOffset)
 					.Property(row => row.RequiredEnd).HasDataType(offsetLosingType)
-					.Property(row => row.RequiredInterval).HasDataType(DataType.Int64)
+					.Property(row => row.RequiredInterval).HasDataType(DataType.Int64).HasDuration(DurationUnit.Tick)
 				.Build()
 				.MappingSchema;
 			var descriptor = mappingSchema.GetEntityDescriptor(typeof(DateTimeOffsetTest));

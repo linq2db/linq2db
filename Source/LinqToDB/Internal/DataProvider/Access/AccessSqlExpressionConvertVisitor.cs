@@ -22,6 +22,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override bool SupportsNullIf => false;
 
+		private protected override ISqlExpression TruncateDurationToInt64(ISqlExpression value, DbDataType decimalType, DbDataType longType)
+		{
+			// Access Fix() is explicitly truncate-towards-zero and, unlike CDbl(), propagates NULL.
+			return Factory.Cast(Factory.Function(decimalType, "Fix", value), longType, true);
+		}
+
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.Escape != null)

@@ -17,6 +17,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override bool SupportsNullInColumn               => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		private protected override ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			return Factory.Expression(longType, "CAST(TRUNC((EXTRACT(EPOCH FROM {0})) * 10000000) AS BIGINT)", expression);
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);

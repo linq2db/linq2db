@@ -75,22 +75,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				return factory.Cast(factory.Div(longType, factory.Sub(longType, dividend, remainder), divisorExpression), longType, true);
 			}
 
-			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
-			{
-				var ticks = translationContext.ExpressionFactory.Expression(
-					translationContext.ExpressionFactory.GetDbDataType(typeof(long)), "{0}", timeSpanExpression);
-
-				return base.TranslateTimeSpanPart(translationContext, translationFlags, ticks, part, resultType);
-			}
-
-			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
-			{
-				var ticks = translationContext.ExpressionFactory.Expression(
-					translationContext.ExpressionFactory.GetDbDataType(typeof(long)), "{0}", timeSpanExpression);
-
-				return base.TranslateTimeSpanNegate(translationContext, translationFlags, ticks);
-			}
-
 			private protected override ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;

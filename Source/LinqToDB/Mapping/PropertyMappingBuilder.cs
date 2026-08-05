@@ -272,6 +272,17 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Declares that the current <see cref="TimeSpan"/> column represents a duration stored using the specified unit.
+		/// This declaration doesn't change the column database type or value converter.
+		/// </summary>
+		/// <param name="unit">Unit used to store the duration.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> HasDuration(DurationUnit unit)
+		{
+			return HasAttribute(new DurationAttribute(unit) { Configuration = _entity.Configuration });
+		}
+
+		/// <summary>
 		/// Sets database type for current column.
 		/// </summary>
 		/// <param name="dbType">Column type.</param>

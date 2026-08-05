@@ -3571,6 +3571,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlParameterCastExpression((SqlParameterCastExpression)expr);
 					break;
 
+				case QueryElementType.SqlDuration:
+					BuildExpression(((SqlDurationExpression)expr).Expression);
+					break;
+
 				case QueryElementType.SqlCase:
 					BuildSqlCaseExpression((SqlCaseExpression)expr);
 					break;

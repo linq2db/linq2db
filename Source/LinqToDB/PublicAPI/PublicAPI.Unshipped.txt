@@ -1,4 +1,19 @@
 #nullable enable
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlDuration = 85 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Mapping.DurationAttribute
+LinqToDB.Mapping.DurationAttribute.DurationAttribute(LinqToDB.Mapping.DurationUnit unit) -> void
+LinqToDB.Mapping.DurationAttribute.Unit.get -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Day = 8 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Hour = 7 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Microsecond = 3 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Millisecond = 4 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Minute = 6 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Nanosecond = 2 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Native = 0 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Second = 5 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Tick = 1 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>.HasDuration(LinqToDB.Mapping.DurationUnit unit) -> LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>!
 LinqToDB.Sql.DateParts.Microsecond = 11 -> LinqToDB.Sql.DateParts
 LinqToDB.Sql.DateParts.Nanosecond = 12 -> LinqToDB.Sql.DateParts
 LinqToDB.Sql.DateParts.Tick = 13 -> LinqToDB.Sql.DateParts
@@ -6,3 +21,4 @@ static LinqToDB.Sql.DateDiffLong(LinqToDB.Sql.DateParts part, System.DateTime? s
 static LinqToDB.Sql.DateDiffLong(LinqToDB.Sql.DateParts part, System.DateTimeOffset? startDate, System.DateTimeOffset? endDate) -> long?
 static LinqToDB.Sql.DatePartLong(LinqToDB.Sql.DateParts part, System.DateTime? date) -> long?
 static LinqToDB.Sql.DatePartLong(LinqToDB.Sql.DateParts part, System.DateTimeOffset? date) -> long?
+override LinqToDB.Mapping.DurationAttribute.GetObjectID() -> string!

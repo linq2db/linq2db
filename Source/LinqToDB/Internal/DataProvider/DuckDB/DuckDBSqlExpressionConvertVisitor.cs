@@ -13,6 +13,18 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		private protected override ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			// DuckDB stores intervals as independent month, day and microsecond components. Its own
+			// comparison contract treats a month as 30 days; use the same rule when a native interval
+			// is explicitly mapped as a TimeSpan duration. Keep every term integral so large values do
+			// not pass through epoch(interval)'s DOUBLE result and lose microseconds.
+			const string months = "(date_part('year', {0}) * 12 + date_part('month', {0}))";
+			const string days   = $"(({months}) * 30 + date_part('day', {{0}}))";
+			const string ticks  = $"(({days}) * 864000000000 + date_part('hour', {{0}}) * 36000000000 + date_part('minute', {{0}}) * 600000000 + date_part('microsecond', {{0}}) * 10)";
+			return Factory.Expression(longType, ticks, expression);
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);

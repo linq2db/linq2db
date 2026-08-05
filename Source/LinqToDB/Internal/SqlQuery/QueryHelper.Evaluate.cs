@@ -292,6 +292,9 @@ namespace LinqToDB.Internal.SqlQuery
 					return ((SqlParameterCastExpression)expr).Parameter.TryEvaluateExpression(forServer, context, out result);
 				}
 
+				case QueryElementType.SqlDuration:
+					return ((SqlDurationExpression)expr).Expression.TryEvaluateExpression(forServer, context, out result);
+
 				case QueryElementType.SqlCast:
 				{
 					var cast = (SqlCastExpression)expr;

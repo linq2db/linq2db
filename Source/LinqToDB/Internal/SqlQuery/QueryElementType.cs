@@ -129,5 +129,9 @@
 		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
 		// later member and trips ApiCompat CP0011. In v7 move next to SqlCast where it belongs logically.
 		SqlParameterCast,
+
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 move next to the other scalar SQL expressions.
+		SqlDuration,
 	}
 }

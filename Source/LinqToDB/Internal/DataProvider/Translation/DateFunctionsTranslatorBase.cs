@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -107,6 +108,24 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterUnary((TimeSpan ts) => -ts, TranslateTimeSpanNegate);
 			Registration.RegisterUnary((TimeSpan? ts) => -ts, TranslateTimeSpanNegate);
+
+			Registration.RegisterBinary((TimeSpan left, TimeSpan right) => left + right, TranslateTimeSpanArithmetic);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan right) => left + right, TranslateTimeSpanArithmetic);
+			Registration.RegisterBinary((TimeSpan left, TimeSpan? right) => left + right, TranslateTimeSpanArithmetic);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan? right) => left + right, TranslateTimeSpanArithmetic);
+			Registration.RegisterBinary((TimeSpan left, TimeSpan right) => left - right, TranslateTimeSpanArithmetic);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan right) => left - right, TranslateTimeSpanArithmetic);
+			Registration.RegisterBinary((TimeSpan left, TimeSpan? right) => left - right, TranslateTimeSpanArithmetic);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan? right) => left - right, TranslateTimeSpanArithmetic);
+
+			Registration.RegisterBinary((TimeSpan left, TimeSpan right) => left == right, TranslateTimeSpanComparison);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan right) => left == right, TranslateTimeSpanComparison);
+			Registration.RegisterBinary((TimeSpan left, TimeSpan? right) => left == right, TranslateTimeSpanComparison);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan? right) => left == right, TranslateTimeSpanComparison);
+			Registration.RegisterBinary((TimeSpan left, TimeSpan right) => left != right, TranslateTimeSpanComparison);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan right) => left != right, TranslateTimeSpanComparison);
+			Registration.RegisterBinary((TimeSpan left, TimeSpan? right) => left != right, TranslateTimeSpanComparison);
+			Registration.RegisterBinary((TimeSpan? left, TimeSpan? right) => left != right, TranslateTimeSpanComparison);
 
 			Registration.RegisterBinary((TimeSpan left, TimeSpan right) => left < right, TranslateTimeSpanComparison);
 			Registration.RegisterBinary((TimeSpan? left, TimeSpan right) => left < right, TranslateTimeSpanComparison);
@@ -975,7 +994,42 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (converted == null)
 				return null;
 
+			converted = new SqlDurationExpression(
+				translationContext.ExpressionFactory.GetDbDataType(converted),
+				converted,
+				DurationUnit.Tick,
+				SqlDurationKind.Arithmetic);
+
 			return CreateTimeSpanNegateResult(translationContext, converted, unaryExpression);
+		}
+
+		Expression? TranslateTimeSpanArithmetic(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			var leftPlaceholder = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags, false);
+			if (leftPlaceholder == null)
+				return null;
+
+			var rightPlaceholder = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, false);
+			if (rightPlaceholder == null)
+				return null;
+
+			if (!TryNormalizeDurationToTicks(translationContext, leftPlaceholder.Sql, out var leftTicks)
+				|| !TryNormalizeDurationToTicks(translationContext, rightPlaceholder.Sql, out var rightTicks))
+				return SqlErrorExpression.EnsureError(binaryExpression);
+
+			var factory  = translationContext.ExpressionFactory;
+			var longType = factory.GetDbDataType(typeof(long));
+			var result = binaryExpression.NodeType switch
+			{
+				ExpressionType.Add      => factory.Add(longType, leftTicks, rightTicks),
+				ExpressionType.Subtract => factory.Sub(longType, leftTicks, rightTicks),
+				_                       => throw new InvalidOperationException($"Unexpected TimeSpan arithmetic: {binaryExpression.NodeType}"),
+			};
+			var durationResult = new SqlDurationExpression(longType, result, DurationUnit.Tick, SqlDurationKind.Arithmetic);
+			var converted = new SqlExpression(longType, "{0}", durationResult)
+				.WithResultConverter(_timeSpanTicksConverter);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, binaryExpression);
 		}
 
 		Expression? TranslateTimeSpanComparison(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
@@ -988,13 +1042,36 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (rightPlaceholder == null)
 				return null;
 
+			if (binaryExpression.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
+			{
+				var nonNullExpression = leftPlaceholder.Sql is SqlValue { Value: null }
+					? rightPlaceholder.Sql
+					: rightPlaceholder.Sql is SqlValue { Value: null }
+						? leftPlaceholder.Sql
+						: null;
+				if (nonNullExpression != null)
+				{
+					var nullPredicate = translationContext.ExpressionFactory.IsNull(
+						nonNullExpression,
+						binaryExpression.NodeType == ExpressionType.NotEqual);
+					var nullCondition = translationContext.ExpressionFactory.SearchCondition().Add(nullPredicate);
+					return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, nullCondition, binaryExpression);
+				}
+			}
+
+			if (!TryNormalizeDurationToTicks(translationContext, leftPlaceholder.Sql, out var leftTicks)
+				|| !TryNormalizeDurationToTicks(translationContext, rightPlaceholder.Sql, out var rightTicks))
+				return SqlErrorExpression.EnsureError(binaryExpression);
+
 			var factory = translationContext.ExpressionFactory;
 			var predicate = binaryExpression.NodeType switch
 			{
-				ExpressionType.LessThan             => factory.Less(leftPlaceholder.Sql, rightPlaceholder.Sql),
-				ExpressionType.LessThanOrEqual      => factory.LessOrEqual(leftPlaceholder.Sql, rightPlaceholder.Sql),
-				ExpressionType.GreaterThan          => factory.Greater(leftPlaceholder.Sql, rightPlaceholder.Sql),
-				ExpressionType.GreaterThanOrEqual   => factory.GreaterOrEqual(leftPlaceholder.Sql, rightPlaceholder.Sql),
+				ExpressionType.Equal                => factory.Equal(leftTicks, rightTicks),
+				ExpressionType.NotEqual             => factory.NotEqual(leftTicks, rightTicks),
+				ExpressionType.LessThan             => factory.Less(leftTicks, rightTicks),
+				ExpressionType.LessThanOrEqual      => factory.LessOrEqual(leftTicks, rightTicks),
+				ExpressionType.GreaterThan          => factory.Greater(leftTicks, rightTicks),
+				ExpressionType.GreaterThanOrEqual   => factory.GreaterOrEqual(leftTicks, rightTicks),
 				_                                  => throw new InvalidOperationException($"Unexpected TimeSpan comparison: {binaryExpression.NodeType}"),
 			};
 			var condition = factory.SearchCondition().Add(predicate);
@@ -1028,17 +1105,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (intervalPlaceholder == null)
 				return null;
 
-			if (!IsIntervalWithinRange(intervalPlaceholder.Sql, dateCapabilities.MaxIntervalTicks))
+			if (!TryNormalizeDurationToTicks(translationContext, intervalPlaceholder.Sql, out var intervalTicks))
 				return SqlErrorExpression.EnsureError(binaryExpression);
 
-			if (datePlaceholder.Sql is SqlParameter && intervalPlaceholder.Sql is SqlParameter)
+			if (!IsIntervalWithinRange(intervalTicks, dateCapabilities.MaxIntervalTicks))
+				return SqlErrorExpression.EnsureError(binaryExpression);
+
+			if (datePlaceholder.Sql is SqlParameter
+				&& intervalTicks is SqlParameter or SqlDurationExpression { Expression: SqlParameter })
 				return null;
 
 			var converted = TranslateDateTimeIntervalAdd(
 				translationContext,
 				translationFlags,
 				datePlaceholder.Sql,
-				intervalPlaceholder.Sql,
+				intervalTicks,
 				binaryExpression.NodeType == ExpressionType.Subtract,
 				isDateTimeOffset);
 
@@ -1052,6 +1133,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			if (maxIntervalTicks == long.MaxValue)
 				return true;
+
+			while (intervalExpression is SqlDurationExpression duration)
+				intervalExpression = duration.Expression;
 
 			var value = intervalExpression switch
 			{
@@ -1109,6 +1193,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			if (converted == null)
 				return SqlErrorExpression.EnsureError(binaryExpression);
+
+			var convertedType = translationContext.ExpressionFactory.GetDbDataType(converted);
+			converted = new SqlDurationExpression(
+				convertedType,
+				converted,
+				IsNumericDurationType(convertedType.DataType) ? DurationUnit.Tick : DurationUnit.Native,
+				SqlDurationKind.Elapsed);
 
 			return CreateDateTimeIntervalDifferenceResult(translationContext, converted, binaryExpression);
 		}
@@ -1226,17 +1317,216 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return TruncateToInt64(translationContext, quotient);
 		}
 
-		private protected virtual ISqlExpression? TranslateTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+		private static SqlDurationExpression? FindDurationExpression(ISqlExpression expression)
+		{
+			HashSet<ISqlExpression>? visited = null;
+
+			while (true)
+			{
+				if (expression is SqlDurationExpression duration)
+					return duration;
+
+				visited ??= new HashSet<ISqlExpression>();
+				if (!visited.Add(expression))
+					return null;
+
+				switch (expression)
+				{
+					case SqlColumn { Parent.HasSetOperators: false } column:
+						expression = column.Expression;
+						continue;
+					case SqlCteTableField { CteField.Column: { } cteColumn }:
+						expression = cteColumn.Expression;
+						continue;
+					case SqlCteField { Column: { } cteColumn }:
+						expression = cteColumn.Expression;
+						continue;
+					case SqlNullabilityExpression nullability:
+						expression = nullability.SqlExpression;
+						continue;
+					case SqlCastExpression cast:
+						expression = cast.Expression;
+						continue;
+					case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
+						expression = parameter;
+						continue;
+					default:
+						return null;
+				}
+			}
+		}
+
+		private protected bool TryNormalizeDurationToTicks(
+			ITranslationContext translationContext,
+			ISqlExpression       durationExpression,
+			out ISqlExpression   ticks)
 		{
 			var factory      = translationContext.ExpressionFactory;
-			var expressionType = factory.GetDbDataType(timeSpanExpression);
+			var longType     = factory.GetDbDataType(typeof(long));
 
-			if (expressionType.DataType != DataType.Int64)
-				return TranslateNativeTimeSpanPart(translationContext, translationFlags, timeSpanExpression, part, resultType);
+			if (durationExpression is SqlColumn { Parent: { HasSetOperators: true } setQuery } setColumn)
+			{
+				var columnIndex = setQuery.Select.Columns.IndexOf(setColumn);
+				if (columnIndex < 0)
+				{
+					ticks = null!;
+					return false;
+				}
+
+				var columns = new List<SqlColumn>(setQuery.SetOperators.Count + 1)
+				{
+					setQuery.Select.Columns[columnIndex],
+				};
+				foreach (var setOperator in setQuery.SetOperators)
+				{
+					if (setOperator.SelectQuery.Select.Columns.Count <= columnIndex)
+					{
+						ticks = null!;
+						return false;
+					}
+
+					columns.Add(setOperator.SelectQuery.Select.Columns[columnIndex]);
+				}
+
+				var normalized = new ISqlExpression[columns.Count];
+				for (var index = 0; index < columns.Count; index++)
+				{
+					if (!TryNormalizeDurationToTicks(translationContext, columns[index].Expression, out normalized[index]))
+					{
+						ticks = null!;
+						return false;
+					}
+				}
+
+				// UNION/INTERSECT/EXCEPT combine values before an outer expression can inspect them.
+				// Canonicalize every arm independently so mixed declared units cannot be interpreted as
+				// whichever descriptor QueryHelper happens to encounter first.
+				for (var index = 0; index < columns.Count; index++)
+					columns[index].Expression = normalized[index];
+
+				ticks = new SqlDurationExpression(longType, setColumn, DurationUnit.Tick, SqlDurationKind.Storage);
+				return true;
+			}
+
+			var durationMetadata = FindDurationExpression(durationExpression);
+			var expressionUnit   = durationMetadata?.Unit;
+			var durationKind     = durationMetadata?.Kind ?? SqlDurationKind.Storage;
+			DbDataType dataType;
+			if (durationExpression is SqlDurationExpression duration)
+			{
+				expressionUnit      = duration.Unit;
+				dataType            = duration.Type;
+				durationExpression  = duration.Expression;
+			}
+			else
+			{
+				dataType = factory.GetDbDataType(durationExpression);
+			}
+
+			if ((!IsNumericDurationType(dataType.DataType) || expressionUnit == null)
+				&& TryConvertTimeSpanValueToTicks(durationExpression, longType, out var valueTicks))
+			{
+				ticks = WrapTicks(valueTicks);
+				return true;
+			}
+
+			var descriptor = QueryHelper.GetColumnDescriptor(durationExpression);
+			DurationUnit unit;
+			if (expressionUnit != null)
+			{
+				unit = expressionUnit.Value;
+			}
+			else if (descriptor?.MemberType.ToUnderlying() == typeof(TimeSpan))
+			{
+				if (descriptor.Duration == null)
+				{
+					ticks = null!;
+					return false;
+				}
+
+				unit = descriptor.Duration.Unit;
+			}
+			else
+			{
+				ticks = null!;
+				return false;
+			}
+
+			if (unit == DurationUnit.Native)
+			{
+				// Keep native interval semantics in the SQL tree. Provider conversion lowers this node
+				// only after query-shape optimization, so projection/CTE rewrites cannot erase its unit.
+				ticks = new SqlDurationExpression(longType, durationExpression, unit, durationKind);
+				return true;
+			}
+
+			if (!IsNumericDurationType(dataType.DataType))
+			{
+				ticks = null!;
+				return false;
+			}
+
+			// Numeric units are also preserved until provider conversion. This is important for set
+			// operations and nested projections: every arm is normalized at its own storage boundary.
+			ticks = new SqlDurationExpression(longType, durationExpression, unit, durationKind);
+			return true;
+
+			ISqlExpression WrapTicks(ISqlExpression expression)
+			{
+				return new SqlDurationExpression(longType, expression, DurationUnit.Tick, durationKind);
+			}
+
+			static bool TryConvertTimeSpanValueToTicks(ISqlExpression expression, DbDataType longType, out ISqlExpression ticks)
+			{
+				switch (expression)
+				{
+					case SqlValue { Value: TimeSpan value }:
+						ticks = new SqlValue(longType, value.Ticks);
+						return true;
+					case SqlParameter parameter when parameter.Type.SystemType.ToUnderlying() == typeof(TimeSpan):
+					{
+						var valueConverter = parameter.ValueConverter;
+						var tickParameter = new SqlParameter(longType, parameter.Name, parameter.Value)
+						{
+							AccessorId       = parameter.AccessorId,
+							IsQueryParameter = parameter.IsQueryParameter,
+							ValueConverter   = value =>
+							{
+								if (value is TimeSpan timeSpanValue)
+									return timeSpanValue.Ticks;
+
+								var converted = valueConverter == null ? value : valueConverter(value);
+								return converted is TimeSpan timeSpan ? timeSpan.Ticks : converted;
+							},
+						};
+
+						ticks = tickParameter;
+						return true;
+					}
+					default:
+						ticks = null!;
+						return false;
+				}
+			}
+		}
+
+		private static bool IsNumericDurationType(DataType dataType)
+		{
+			return dataType is DataType.SByte or DataType.Int16 or DataType.Int32 or DataType.Int64
+				or DataType.Byte or DataType.UInt16 or DataType.UInt32 or DataType.UInt64
+				or DataType.Half or DataType.Single or DataType.Double or DataType.Decimal
+				or DataType.Money or DataType.SmallMoney;
+		}
+
+		private protected virtual ISqlExpression? TranslateTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
+		{
+			var factory = translationContext.ExpressionFactory;
+			if (!TryNormalizeDurationToTicks(translationContext, timeSpanExpression, out var normalizedTicks))
+				return null;
 
 			var longType   = factory.GetDbDataType(typeof(long));
 			var resultDbType = factory.GetDbDataType(resultType);
-			var ticks      = factory.Cast(timeSpanExpression, longType, true);
+			var ticks      = factory.Cast(normalizedTicks, longType, true);
 
 			ISqlExpression DivideTicks(long divisor)
 			{
@@ -1287,35 +1577,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			};
 		}
 
-		private protected virtual ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
-		{
-			return null;
-		}
-
 		private protected virtual ISqlExpression? TranslateTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
 		{
-			var factory        = translationContext.ExpressionFactory;
-			var expressionType = factory.GetDbDataType(timeSpanExpression);
+			var factory = translationContext.ExpressionFactory;
+			if (!TryNormalizeDurationToTicks(translationContext, timeSpanExpression, out var ticks))
+				return null;
 
-			if (expressionType.DataType != DataType.Int64)
-				return TranslateNativeTimeSpanNegate(translationContext, translationFlags, timeSpanExpression);
-
-			return factory.Negate(expressionType, timeSpanExpression);
-		}
-
-		private protected virtual ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
-		{
-			return null;
+			return factory.Negate(factory.GetDbDataType(typeof(long)), ticks);
 		}
 
 		private protected virtual ISqlExpression? TranslateDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
 		{
 			var factory      = translationContext.ExpressionFactory;
-			var intervalType = factory.GetDbDataType(intervalExpression);
-
-			if (intervalType.DataType != DataType.Int64)
-				return TranslateNativeDateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
-
 			var longType    = factory.GetDbDataType(typeof(long));
 			var ticks       = factory.Cast(intervalExpression, longType, true);
 
@@ -1389,11 +1662,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				Sql.DateParts.Minute      => DateTimeIntervalUnits.Minute,
 				_                         => DateTimeIntervalUnits.None,
 			})) != 0;
-		}
-
-		private protected virtual ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
-		{
-			return null;
 		}
 
 		private protected virtual ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)

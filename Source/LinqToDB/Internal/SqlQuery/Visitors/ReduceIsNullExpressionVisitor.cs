@@ -36,6 +36,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				QueryElementType.SqlConcat or
 				QueryElementType.SqlCondition or
 				QueryElementType.SqlCast or
+				QueryElementType.SqlDuration or
 				QueryElementType.SqlFunction or
 				QueryElementType.SqlExpression =>
 					base.Visit(element),
@@ -208,6 +209,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			ReduceOrAdd(element.Expression);
+
+			return element;
+		}
+
+		internal override IQueryElement VisitSqlDurationExpression(SqlDurationExpression element)
+		{
+			Visit(element.Expression);
 
 			return element;
 		}

@@ -91,65 +91,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return translationContext.ExpressionFactory.Expression(resultType, "CAST(SYS_EXTRACT_UTC({0}) AS TIMESTAMP)", dateExpression);
 			}
 
-			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
-			{
-				var factory      = translationContext.ExpressionFactory;
-				var resultTypeDb = factory.GetDbDataType(resultType);
-				const string totalSeconds = "(EXTRACT(DAY FROM {0}) * 86400 + EXTRACT(HOUR FROM {0}) * 3600 + EXTRACT(MINUTE FROM {0}) * 60 + EXTRACT(SECOND FROM {0}))";
-
-				var expression = part switch
-				{
-					TimeSpanPart.Days              => $"TRUNC(({totalSeconds}) / 86400)",
-					TimeSpanPart.TotalDays         => $"({totalSeconds}) / 86400",
-					TimeSpanPart.Hours             => $"MOD(TRUNC(({totalSeconds}) / 3600), 24)",
-					TimeSpanPart.TotalHours        => $"({totalSeconds}) / 3600",
-					TimeSpanPart.Minutes           => $"MOD(TRUNC(({totalSeconds}) / 60), 60)",
-					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60",
-					TimeSpanPart.Seconds           => $"MOD(TRUNC({totalSeconds}), 60)",
-					TimeSpanPart.TotalSeconds      => totalSeconds,
-					TimeSpanPart.Milliseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000), 1000)",
-					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000",
-#if NET7_0_OR_GREATER
-					TimeSpanPart.Microseconds      => $"MOD(TRUNC(({totalSeconds}) * 1000000), 1000)",
-					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000",
-					TimeSpanPart.Nanoseconds       => $"MOD(TRUNC(({totalSeconds}) * 1000000000), 1000)",
-					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000",
-#endif
-					TimeSpanPart.Ticks             => $"TRUNC(({totalSeconds}) * 10000000)",
-					_                              => null,
-				};
-
-				return expression == null ? null : factory.Expression(resultTypeDb, expression, timeSpanExpression);
-			}
-
-			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
-			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.Negate(factory.GetDbDataType(timeSpanExpression), timeSpanExpression);
-			}
-
-			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
-			{
-				var factory  = translationContext.ExpressionFactory;
-				var dateType = factory.GetDbDataType(dateTimeExpression);
-				var arithmeticDate = dateTimeExpression;
-				var arithmeticType = dateType;
-
-				// Oracle DATE arithmetic expects a numeric day count. Cast DATE to TIMESTAMP before
-				// applying a native interval, then restore the mapped DATE result resolution.
-				if (dateType.DataType is DataType.Date or DataType.DateTime)
-				{
-					arithmeticType = factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Timestamp).WithPrecision(0);
-					arithmeticDate = factory.Cast(dateTimeExpression, arithmeticType, true);
-				}
-
-				var result = isSubtract
-					? factory.Sub(arithmeticType, arithmeticDate, intervalExpression)
-					: factory.Add(arithmeticType, arithmeticDate, intervalExpression);
-
-				return arithmeticType == dateType ? result : factory.Cast(result, dateType, true);
-			}
-
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
 			{
 				var factory      = translationContext.ExpressionFactory;

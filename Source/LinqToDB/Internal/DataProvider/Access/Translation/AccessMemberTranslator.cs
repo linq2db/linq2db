@@ -75,6 +75,9 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 			private protected override Expression CreateTimeSpanNegateResult(ITranslationContext translationContext, ISqlExpression translatedExpression, UnaryExpression unaryExpression)
 			{
+				if (translationContext.ExpressionFactory.GetDbDataType(translatedExpression).DataType == DataType.Int64)
+					return base.CreateTimeSpanNegateResult(translationContext, translatedExpression, unaryExpression);
+
 				return translationContext.CreatePlaceholder(
 					translationContext.CurrentSelectQuery,
 					WithResultConverter(translationContext, translatedExpression, _timeSpanTicksConverter),
@@ -85,133 +88,6 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			{
 				var resultType = translationContext.ExpressionFactory.GetDbDataType(expression);
 				return new SqlExpression(resultType, "{0}", expression).WithResultConverter(converter);
-			}
-
-			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
-			{
-				var factory        = translationContext.ExpressionFactory;
-				var expressionType = factory.GetDbDataType(timeSpanExpression);
-
-				if (expressionType.DataType != DataType.Decimal)
-					return null;
-
-				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0);
-				var doubleType  = factory.GetDbDataType(typeof(double));
-				var ticks       = factory.Expression(decimalType, "{0}", timeSpanExpression);
-
-				ISqlExpression Truncate(ISqlExpression expression)
-				{
-					return factory.Function(decimalType, "Fix", expression);
-				}
-
-				ISqlExpression Divide(long divisor)
-				{
-					return Truncate(factory.Div(decimalType, ticks, factory.Value(decimalType, (decimal)divisor)));
-				}
-
-				ISqlExpression Component(long divisor, int modulo)
-				{
-					var value    = Divide(divisor);
-					var quotient = Truncate(factory.Div(decimalType, value, factory.Value(decimalType, (decimal)modulo)));
-					return factory.Sub(decimalType, value, factory.Multiply(decimalType, quotient, (decimal)modulo));
-				}
-
-				ISqlExpression Total(double divisor)
-				{
-					var value  = factory.Function(doubleType, "CDbl", ticks);
-					var result = factory.Div(doubleType, value, factory.Value(doubleType, divisor));
-
-					// CDbl(NULL) raises "Invalid use of Null" in Access instead of propagating it.
-					return factory.Condition(
-						factory.IsNullPredicate(timeSpanExpression),
-						factory.Null(doubleType),
-						result);
-				}
-
-				ISqlExpression Retype(ISqlExpression expression)
-				{
-					var valueType = factory.GetDbDataType(expression);
-					var detached  = factory.Add(valueType, expression, factory.Value(valueType, 0m));
-					return factory.Expression(valueType.WithSystemType(resultType), "{0}", detached);
-				}
-
-				return part switch
-				{
-					TimeSpanPart.Days              => Retype(Divide(TimeSpan.TicksPerDay)),
-					TimeSpanPart.TotalDays         => Total(TimeSpan.TicksPerDay),
-					TimeSpanPart.Hours             => Retype(Component(TimeSpan.TicksPerHour, 24)),
-					TimeSpanPart.TotalHours        => Total(TimeSpan.TicksPerHour),
-					TimeSpanPart.Minutes           => Retype(Component(TimeSpan.TicksPerMinute, 60)),
-					TimeSpanPart.TotalMinutes      => Total(TimeSpan.TicksPerMinute),
-					TimeSpanPart.Seconds           => Retype(Component(TimeSpan.TicksPerSecond, 60)),
-					TimeSpanPart.TotalSeconds      => Total(TimeSpan.TicksPerSecond),
-					TimeSpanPart.Milliseconds      => Retype(Component(TimeSpan.TicksPerMillisecond, 1000)),
-					TimeSpanPart.TotalMilliseconds => Total(TimeSpan.TicksPerMillisecond),
-#if NET7_0_OR_GREATER
-					TimeSpanPart.Microseconds      => Retype(Component(TimeSpan.TicksPerMicrosecond, 1000)),
-					TimeSpanPart.TotalMicroseconds => Total(TimeSpan.TicksPerMicrosecond),
-					TimeSpanPart.Nanoseconds       => Retype(factory.Multiply(decimalType, Component(1, 10), 100m)),
-					TimeSpanPart.TotalNanoseconds  => Total(0.01D),
-#endif
-					TimeSpanPart.Ticks             => Retype(ticks),
-					_                              => null,
-				};
-			}
-
-			private protected override ISqlExpression? TranslateNativeTimeSpanNegate(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression)
-			{
-				var factory        = translationContext.ExpressionFactory;
-				var expressionType = factory.GetDbDataType(timeSpanExpression);
-				return expressionType.DataType == DataType.Decimal
-					? factory.Negate(expressionType, timeSpanExpression)
-					: null;
-			}
-
-			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
-			{
-				var factory        = translationContext.ExpressionFactory;
-				var expressionType = factory.GetDbDataType(intervalExpression);
-
-				if (expressionType.DataType != DataType.Decimal)
-					return null;
-
-				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 0);
-				var ticks       = factory.Expression(decimalType, "{0}", intervalExpression);
-				var days        = factory.Function(decimalType, "Fix", factory.Div(decimalType, ticks, factory.Value(decimalType, (decimal)TimeSpan.TicksPerDay)));
-				var remainder   = factory.Sub(decimalType, ticks, factory.Multiply(decimalType, days, (decimal)TimeSpan.TicksPerDay));
-
-				if (isSubtract)
-				{
-					days      = factory.Negate(decimalType, days);
-					remainder = factory.Negate(decimalType, remainder);
-				}
-
-				var result = isDateTimeOffset
-					? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day)
-					: TranslateDateTimeDateAdd(translationContext, translationFlags, dateTimeExpression, days, Sql.DateParts.Day);
-
-				if (result == null)
-					return null;
-
-				// Access DateAdd rounds its increment to a whole number and doesn't support a
-				// millisecond datepart. Add the sub-day remainder using Access' OLE Automation
-				// date representation instead, where the fractional part represents time of day.
-				// Keep the numeric representation in the result because the ODBC driver truncates
-				// a computed Date value to whole seconds; the mapping schema converts it back.
-				var doubleType      = factory.GetDbDataType(typeof(double));
-				var serialDate      = factory.Function(doubleType, "CDbl", result);
-				var serialRemainder = factory.Div(
-					doubleType,
-					factory.Function(doubleType, "CDbl", remainder),
-					factory.Value(doubleType, (double)TimeSpan.TicksPerDay));
-				var serialResult     = factory.Add(doubleType, serialDate, serialRemainder);
-				var translatedResult = factory.Expression(doubleType, "{0}", serialResult);
-				var nullOperand      = factory.SearchCondition(isOr: true)
-					.Add(factory.IsNullPredicate(dateTimeExpression))
-					.Add(factory.IsNullPredicate(intervalExpression));
-
-				// CDbl(NULL) raises "Invalid use of Null" in Access instead of propagating it.
-				return factory.Condition(nullOperand, factory.Null(doubleType), translatedResult);
 			}
 
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)

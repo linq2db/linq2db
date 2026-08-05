@@ -1,6 +1,8 @@
 ﻿using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
@@ -12,6 +14,13 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		}
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		private protected override ISqlExpression ConvertNativeDurationToTicks(ISqlExpression expression, DbDataType longType)
+		{
+			// TIME_TO_SEC returns DECIMAL and preserves the TIME column's microseconds. Multiplying only
+			// after truncating to whole microseconds prevents binary floating-point drift.
+			return Factory.Expression(longType, "TRUNCATE((TIME_TO_SEC({0})) * 1000000, 0) * 10", expression);
+		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
