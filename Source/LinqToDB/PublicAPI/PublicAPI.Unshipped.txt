@@ -1181,3 +1181,54 @@ virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetParameterCastType(LinqT
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitInListValues(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate, System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>! values, LinqToDB.Internal.SqlQuery.Visitors.VisitMode mode) -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>?
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlParameterCastExpression(LinqToDB.Internal.SqlQuery.SqlParameterCastExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 static LinqToDB.Internal.SqlQuery.QueryHelper.EnsureParameterCast(LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Nanosecond = 0 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Tick = 1 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Microsecond = 2 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Millisecond = 3 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Second = 4 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Minute = 5 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Hour = 6 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Day = 7 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationAttribute
+LinqToDB.Mapping.DurationAttribute.DurationAttribute(LinqToDB.Mapping.DurationUnit unit) -> void
+LinqToDB.Mapping.DurationAttribute.Unit.get -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationAttribute.Unit.set -> void
+override LinqToDB.Mapping.DurationAttribute.GetObjectID() -> string!
+LinqToDB.Mapping.ColumnDescriptor.DurationUnit.get -> LinqToDB.Mapping.DurationUnit?
+LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>.HasDuration(LinqToDB.Mapping.DurationUnit unit) -> LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>!
+LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Duration = 0 -> LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Calendar = 1 -> LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Nanosecond = 0 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick = 1 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Microsecond = 2 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Millisecond = 3 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Second = 4 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Minute = 5 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Hour = 6 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Day = 7 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Week = 8 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Month = 9 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Quarter = 10 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Year = 11 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalType
+LinqToDB.Internal.SqlQuery.SqlIntervalType.SqlIntervalType() -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.SqlIntervalType(LinqToDB.Internal.SqlQuery.SqlIntervalDomain Domain, LinqToDB.Internal.SqlQuery.SqlIntervalUnit Resolution, bool IsSigned) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Domain.get -> LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Domain.init -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Resolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Resolution.init -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.IsSigned.get -> bool
+LinqToDB.Internal.SqlQuery.SqlIntervalType.IsSigned.init -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlIntervalDomain Domain, out LinqToDB.Internal.SqlQuery.SqlIntervalUnit Resolution, out bool IsSigned) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Equals(LinqToDB.Internal.SqlQuery.SqlIntervalType other) -> bool
+~override LinqToDB.Internal.SqlQuery.SqlIntervalType.Equals(object obj) -> bool
+override LinqToDB.Internal.SqlQuery.SqlIntervalType.GetHashCode() -> int
+~override LinqToDB.Internal.SqlQuery.SqlIntervalType.ToString() -> string
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.operator ==(LinqToDB.Internal.SqlQuery.SqlIntervalType left, LinqToDB.Internal.SqlQuery.SqlIntervalType right) -> bool
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.operator !=(LinqToDB.Internal.SqlQuery.SqlIntervalType left, LinqToDB.Internal.SqlQuery.SqlIntervalType right) -> bool
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.ForDuration(LinqToDB.Mapping.DurationUnit unit, bool isSigned = true) -> LinqToDB.Internal.SqlQuery.SqlIntervalType
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.ToIntervalUnit(LinqToDB.Mapping.DurationUnit unit) -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+static readonly LinqToDB.Internal.SqlQuery.SqlIntervalType.ClrTimeSpan -> LinqToDB.Internal.SqlQuery.SqlIntervalType

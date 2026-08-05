@@ -140,6 +140,12 @@ namespace LinqToDB.Mapping
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
+			var duration = mappingSchema.GetAttribute<DurationAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
+			if (duration != null)
+			{
+				DurationUnit = duration.Unit;
+			}
+
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (skipValueAttributes.Length > 0)
 			{
@@ -398,6 +404,17 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
+
+		/// <summary>
+		/// Gets the unit in which this column stores a duration, or <see langword="null"/> when the column was not
+		/// declared as a duration. See <see cref="DurationAttribute"/>.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="TimeSpan"/> column without this set keeps its existing, provider-defined meaning - notably a
+		/// time of day where <see cref="TimeSpan"/> maps to a <c>TIME</c> column. Duration semantics are opt-in so
+		/// that existing mappings are not silently reinterpreted.
+		/// </remarks>
+		public DurationUnit?    DurationUnit    { get; }
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;
