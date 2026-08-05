@@ -143,6 +143,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void NegationIsTranslatedWhenConsumed([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// Negation produces a computed interval. Consuming it through a member works; projecting the interval
+			// itself does not yet, because a computed interval has no column to carry its materialization -
+			// see IntervalProjectionIsNotSupportedYet.
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			t.Select(r => (-r.InSeconds).TotalHours).Single().ShouldBe((-value).TotalHours);
+			t.Select(r => (-r.InSeconds).Hours).Single().ShouldBe((-value).Hours);
+		}
+
+		[Test]
+		public void IntervalProjectionIsNotSupportedYet([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// Pins the current boundary: a computed interval reaching the SELECT list fails loudly rather than
+			// materializing something wrong. Lifting this needs the materialization side of the feature.
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Assert.Throws<LinqToDBException>(() => t.Select(r => -r.InSeconds).ToArray());
+		}
+
+		[Test]
 		public void ArithmeticHappensOnTheServer([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// Without this the whole fixture proves nothing: if translation returned null, linq2db would evaluate

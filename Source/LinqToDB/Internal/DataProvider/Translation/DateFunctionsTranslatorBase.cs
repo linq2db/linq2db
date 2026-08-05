@@ -261,6 +261,33 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMember((TimeSpan ts) => ts.TotalMicroseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Microsecond, SqlIntervalPartKind.Total));
 			Registration.RegisterMember((TimeSpan ts) => ts.TotalNanoseconds,  (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Nanosecond,  SqlIntervalPartKind.Total));
 #endif
+
+			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan),  TranslateTimeSpanNegate);
+			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan?), TranslateTimeSpanNegate);
+		}
+
+		Expression? TranslateTimeSpanNegate(ITranslationContext translationContext, UnaryExpression unaryExpression, TranslationFlags translationFlags)
+		{
+			var placeholder = TranslateNoRequiredExpression(translationContext, unaryExpression.Operand, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			var interval = TryMakeInterval(translationContext, placeholder.Sql);
+			if (interval == null)
+				return null;
+
+			// Negating the stored amount negates the interval whatever the unit, as long as the storage is signed.
+			// An unsigned storage cannot hold the result, so leave it untranslated.
+			if (!interval.IntervalType.IsSigned)
+				return null;
+
+			var factory  = translationContext.ExpressionFactory;
+			var negated  = new SqlIntervalExpression(
+				factory.Negate(interval.Type, interval.Value),
+				interval.Type,
+				interval.IntervalType);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, negated, unaryExpression);
 		}
 
 		/// <summary>
