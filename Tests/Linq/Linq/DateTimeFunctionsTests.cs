@@ -2032,16 +2032,19 @@ namespace Tests.Linq
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
 
-			if (!context.IsRemote() && db is DataConnection dc)
-			{
-				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
-					.ShouldBeFalse("DateTime subtraction must not appear in SQL — it is evaluated client-side in .NET");
-			}
+			// No assertion on where the subtraction happened. It used to require client-side evaluation, but that
+			// was a statement about the absence of a feature, not about the contract: a provider that can express
+			// the elapsed interval is free to compute it server-side, and SQL Server 2016+ now does. What the
+			// caller is owed is the value, which is what this checks. NullableDateTimeSubtractionProjectionSqlTest
+			// and its ServerSideTest counterpart pin the two paths explicitly.
 		}
 
+		// Forced server-side on a provider that has no lowering for date subtraction. The excluded set is the
+		// providers that do have one - one name to move as each gains support, rather than a list of the rest.
 		[ThrowsCannotBeConverted]
 		[Test]
-		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
+		public void NullableDateTimeSubtractionProjectionSqlTest(
+			[DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2055,6 +2058,31 @@ namespace Tests.Linq
 				};
 
 			_ = query.ToArray();
+		}
+
+		[Test]
+		public void NullableDateTimeSubtractionProjectionServerSideTest(
+			[IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			// The same query on a provider that does translate it. Sql.AsSql forces the server side, so this
+			// fails outright rather than quietly falling back if the lowering ever stops working.
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
 		}
 
 		// Short name: Oracle 11 caps identifiers at 30 chars.
