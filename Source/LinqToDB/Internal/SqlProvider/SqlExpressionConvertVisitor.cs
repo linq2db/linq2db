@@ -1135,12 +1135,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
-			var newElement = base.VisitSqlIntervalPartExpression(element);
+			// Lower before visiting children: the child interval carries the unit this needs, and visiting it
+			// first would unwrap it to a bare amount.
+			var lowered = LowerIntervalPart(element);
+			if (lowered != null)
+				return Visit(lowered);
 
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			return LowerIntervalPart(element) ?? newElement;
+			return base.VisitSqlIntervalPartExpression(element);
 		}
 
 		/// <summary>

@@ -161,8 +161,10 @@ namespace Tests.Linq
 		[Test]
 		public void IntervalProjectionIsNotSupportedYet([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			// Pins the current boundary: a computed interval reaching the SELECT list fails loudly rather than
-			// materializing something wrong. Lifting this needs the materialization side of the feature.
+			// Pins the current boundary. Materializing this needs SqlIntervalExpression to carry the model type
+			// (TimeSpan) rather than the storage type: QueryHelper.GetColumnDescriptor's binary branch drops the
+			// descriptor when the expression's SystemType differs from the column's, so the value converter is
+			// never found and the amount is read as raw ticks. Failing loudly beats reading it wrong.
 			using var db = GetDataContext(context, BuildSchema());
 			using var t  = db.CreateLocalTable<DurationRow>();
 
