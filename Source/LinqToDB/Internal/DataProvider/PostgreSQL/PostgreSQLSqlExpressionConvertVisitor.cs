@@ -34,8 +34,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		/// </remarks>
 		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
-			return base.LowerIntervalPart(element); //CONTROL-EXPERIMENT
-#pragma warning disable CS0162
 			if (QueryHelper.UnwrapNullablity(element.Interval) is not SqlIntervalDifferenceExpression difference)
 				return base.LowerIntervalPart(element);
 
