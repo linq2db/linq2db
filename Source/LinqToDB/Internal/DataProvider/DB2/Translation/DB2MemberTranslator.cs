@@ -87,6 +87,17 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+				var dividend = factory.Cast(value, longType, true);
+				var divisorExpression = factory.Value(longType, divisor);
+				var remainder = factory.Mod(dividend, divisorExpression);
+
+				return factory.Cast(factory.Div(longType, factory.Sub(longType, dividend, remainder), divisorExpression), longType, true);
+			}
+
 			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
 			{
 				return new DateTimeIntervalCapabilities(10, DateTimeIntervalUnits.Day | DateTimeIntervalUnits.Hour | DateTimeIntervalUnits.Minute | DateTimeIntervalUnits.Second | DateTimeIntervalUnits.Millisecond | DateTimeIntervalUnits.Microsecond, long.MaxValue, !isDateTimeOffset);

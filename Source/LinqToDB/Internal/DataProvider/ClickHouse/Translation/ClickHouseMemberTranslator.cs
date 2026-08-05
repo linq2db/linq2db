@@ -63,6 +63,25 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression TruncateToInt64(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+
+				return factory.Function(longType, "toInt64", value);
+			}
+
+			private protected override ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+				var dividend = factory.Cast(value, longType, true);
+				var divisorExpression = factory.Value(longType, divisor);
+				var remainder = factory.Function(longType, "modulo", dividend, divisorExpression);
+
+				return factory.Function(longType, "intDiv", factory.Sub(longType, dividend, remainder), divisorExpression);
+			}
+
 			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
 
 			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
@@ -106,7 +125,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					Sql.DateParts.WeekDay     => factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1))),
 					Sql.DateParts.Millisecond => factory.Function(intDataType,  "positiveModulo", factory.Function(longDataType, "toUnixTimestamp64Milli", dateTimeExpression), factory.Value(longDataType, 1_000L)),
 					Sql.DateParts.Microsecond => factory.Function(longDataType, "positiveModulo", factory.Function(longDataType, "toUnixTimestamp64Micro", dateTimeExpression), factory.Value(longDataType, 1_000_000L)),
-					Sql.DateParts.Tick        => factory.Function(longDataType, "positiveModulo", factory.Div(longDataType, factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), 100), factory.Value(longDataType, 10_000_000L)),
+					Sql.DateParts.Tick        => factory.Function(longDataType, "intDiv", factory.Function(longDataType, "positiveModulo", factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), factory.Value(longDataType, 1_000_000_000L)), factory.Value(longDataType, 100L)),
 					Sql.DateParts.Nanosecond  => factory.Function(longDataType, "positiveModulo", factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression), factory.Value(longDataType, 1_000_000_000L)),
 					_                         => null,
 				};
@@ -172,7 +191,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				var days         = factory.Function(longType, "date_diff", factory.Value("day"), rightExpression, leftExpression);
 				var anchor       = factory.Function(dateType, "addDays", rightExpression, days);
 				var subdayNanos  = factory.Function(longType, "date_diff", factory.Value("nanosecond"), anchor, leftExpression);
-				var subdayTicks  = factory.Div(longType, subdayNanos, 100);
+				var subdayTicks  = factory.Function(longType, "intDiv", subdayNanos, factory.Value(longType, 100L));
 				var ticks        = factory.Add(longType, factory.Multiply(longType, days, TimeSpan.TicksPerDay), subdayTicks);
 
 				return factory.Expression(intervalType, "{0}", ticks);

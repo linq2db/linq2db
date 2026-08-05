@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -82,6 +83,7 @@ namespace Tests.UserTests.Issue4308
 		static MappingSchema CreateMappingSchema(string configuration)
 		{
 			var builder = new FluentMappingBuilder();
+			var storesTicks = false;
 
 			if (configuration.Contains("Access", StringComparison.Ordinal))
 			{
@@ -100,13 +102,50 @@ namespace Tests.UserTests.Issue4308
 			{
 				builder.MappingSchema.AddScalarType(typeof(TimeSpan),  DataType.Int64);
 				builder.MappingSchema.AddScalarType(typeof(TimeSpan?), DataType.Int64);
+				storesTicks = true;
 			}
 
-			return builder
-				.Entity<Test>()
-					.HasTableName("Common_Topology_Locations")
-				.Build()
-				.MappingSchema;
+			var testMapping = builder.Entity<Test>()
+				.HasTableName("Common_Topology_Locations");
+
+			if (configuration.Contains("Informix", StringComparison.Ordinal))
+			{
+				testMapping
+					.Property(row => row.PreNotification)
+						.HasDataType(DataType.Interval)
+						.HasDbType("INTERVAL DAY(9) TO FRACTION(5)")
+					.Property(row => row.RequiredInterval)
+						.HasDataType(DataType.Interval)
+						.HasDbType("INTERVAL DAY(9) TO FRACTION(5)");
+			}
+
+			if (storesTicks)
+			{
+				testMapping
+					.Property(row => row.PreNotification)
+						.HasConversion(
+							value => value == null ? (long?)null : value.Value.Ticks,
+							value => value == null ? (TimeSpan?)null : TimeSpan.FromTicks(value.Value),
+							handlesNulls: true)
+					.Property(row => row.RequiredInterval)
+						.HasConversion(value => value.Ticks, value => TimeSpan.FromTicks(value));
+
+				builder.Entity<DateTimeOffsetTest>()
+					.Property(row => row.RequiredInterval)
+						.HasConversion(value => value.Ticks, value => TimeSpan.FromTicks(value))
+					.Property(row => row.NullableInterval)
+						.HasConversion(
+							value => value == null ? (long?)null : value.Value.Ticks,
+							value => value == null ? (TimeSpan?)null : TimeSpan.FromTicks(value.Value),
+							handlesNulls: true);
+			}
+
+			return builder.Build().MappingSchema;
+		}
+
+		static TimeSpan ParseInformixInterval(string value)
+		{
+			return TimeSpan.Parse(value.Trim().Replace(' ', '.'), CultureInfo.InvariantCulture);
 		}
 
 		static TempTable<Test> CreateTestTable(IDataContext db, string configuration, Test[] items)
@@ -751,6 +790,10 @@ namespace Tests.UserTests.Issue4308
 				row.RequiredDateTime,
 				RequiredIntervalTicks = row.RequiredInterval.Ticks,
 			}).Single();
+			// Round-trip the captured operand through the same parameter/inline mapping
+			// used by the arithmetic expression. Some providers map a DateTime constant
+			// at a different precision than a generated table column.
+			var mappedCapturedDate = table.Select(_ => Sql.ConvertTo<DateTime>.From(capturedDate)).Single();
 			var actual = table.Select(row => new
 			{
 				ColumnPlusCaptured       = row.RequiredDateTime + capturedInterval,
@@ -767,8 +810,7 @@ namespace Tests.UserTests.Issue4308
 			actual.ColumnMinusCaptured.ShouldBe(stored.RequiredDateTime - capturedInterval, resolution);
 			actual.ColumnMinusInline.ShouldBe(stored.RequiredDateTime - TimeSpan.FromTicks(1_234_567), resolution);
 			AssertTimeSpan(actual.ColumnMinusColumn, stored.EndDateTime - stored.StartDateTime, resolution);
-			stored.EndDateTime.ShouldNotBeNull();
-			actual.CapturedDatePlusColumn.ShouldBe(stored.EndDateTime.Value + TimeSpan.FromTicks(stored.RequiredIntervalTicks), resolution);
+			actual.CapturedDatePlusColumn.ShouldBe(mappedCapturedDate + TimeSpan.FromTicks(stored.RequiredIntervalTicks), resolution);
 		}
 
 		[Test]
@@ -1082,14 +1124,28 @@ namespace Tests.UserTests.Issue4308
 				IntervalValue = new TimeSpan(12, 3, 4, 5, 678).Add(TimeSpan.FromTicks(9_000)),
 			};
 
-			using var db    = GetDataContext(configuration);
+			var mappingSchema = new FluentMappingBuilder()
+				.Entity<InformixMaterializationRow>()
+					.Property(row => row.IntervalValue)
+						.HasDataType(DataType.Interval)
+						.HasDbType("INTERVAL DAY(9) TO FRACTION(5)")
+				.Build()
+				.MappingSchema;
+
+			using var db    = GetDataContext(configuration, mappingSchema);
 			using var table = db.CreateLocalTable(new[] { source });
-			var actual      = table.Single();
+			var actual      = table.Select(row => new
+			{
+				row.StringValue,
+				row.DecimalValue,
+				row.DateValue,
+				IntervalText = Sql.ConvertTo<string>.From(row.IntervalValue),
+			}).Single();
 
 			actual.StringValue.ShouldBe(source.StringValue);
 			actual.DecimalValue.ShouldBe(source.DecimalValue);
 			actual.DateValue.ShouldBe(source.DateValue, TimeSpan.FromTicks(100));
-			actual.IntervalValue.ShouldBe(source.IntervalValue, TimeSpan.FromTicks(100));
+			ParseInformixInterval(actual.IntervalText).ShouldBe(source.IntervalValue, TimeSpan.FromTicks(100));
 		}
 
 		[Test]

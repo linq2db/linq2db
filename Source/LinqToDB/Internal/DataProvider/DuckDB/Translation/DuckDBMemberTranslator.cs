@@ -70,6 +70,16 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+
+				// DuckDB's integer-division operator (emitted by its expression converter for this
+				// Int64 division) truncates toward zero and avoids rounding near tick boundaries.
+				return factory.Div(longType, factory.Cast(value, longType, true), factory.Value(longType, divisor));
+			}
+
 			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
 			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
 			{
@@ -93,25 +103,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 					return base.TranslateDateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
 
 				var longType    = factory.GetDbDataType(typeof(long));
-				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
 				var ticks       = factory.Cast(intervalExpression, longType, true);
 
-				ISqlExpression TruncateDivision(ISqlExpression value, long divisor)
-				{
-					var quotient = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
-					var truncated = factory.Condition(
-						factory.GreaterOrEqual(value, factory.Value(longType, 0L)),
-						factory.Function(decimalType, "FLOOR", quotient),
-						factory.Function(decimalType, "CEILING", quotient));
-
-					return factory.Cast(truncated, longType, true);
-				}
-
-				var days           = TruncateDivision(ticks, TimeSpan.TicksPerDay);
+				var days           = TruncateDivision(translationContext, ticks, TimeSpan.TicksPerDay);
 				var subdayTicks     = factory.Sub(longType, ticks, factory.Multiply(longType, days, TimeSpan.TicksPerDay));
-				var seconds        = TruncateDivision(subdayTicks, TimeSpan.TicksPerSecond);
+				var seconds        = TruncateDivision(translationContext, subdayTicks, TimeSpan.TicksPerSecond);
 				var subsecondTicks = factory.Sub(longType, subdayTicks, factory.Multiply(longType, seconds, TimeSpan.TicksPerSecond));
-				var microseconds   = TruncateDivision(subsecondTicks, 10);
+				var microseconds   = TruncateDivision(translationContext, subsecondTicks, 10);
 
 				if (isSubtract)
 				{
@@ -128,6 +126,20 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 				return result == null
 					? null
 					: TranslateDateTimeDateAdd(translationContext, translationFlags, result, microseconds, Sql.DateParts.Microsecond);
+			}
+
+			private protected override ISqlExpression? TranslateNativeDateTimeIntervalAdd(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateTimeExpression, ISqlExpression intervalExpression, bool isSubtract, bool isDateTimeOffset)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var intervalType = factory.GetDbDataType(intervalExpression);
+
+				if (intervalType.DataType != DataType.Interval)
+					return null;
+
+				var dateType = factory.GetDbDataType(dateTimeExpression);
+				return isSubtract
+					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
+					: factory.Add(dateType, dateTimeExpression, intervalExpression);
 			}
 
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)

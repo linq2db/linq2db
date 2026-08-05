@@ -413,6 +413,30 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression TruncateToInt64(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var longType  = factory.GetDbDataType(typeof(long));
+				var doubleType = factory.GetDbDataType(typeof(double));
+
+				// This path is used for the public floating DateAdd increment. YDB's Math::Trunc
+				// operates on Double and its Double-to-Int64 cast truncates toward zero.
+				return factory.Cast(factory.Function(doubleType, "Math::Trunc", factory.Cast(value, doubleType, true)), longType, true);
+			}
+
+			private protected override ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+				var dividend = factory.Cast(value, longType, true);
+				var divisorExpression = factory.Value(longType, divisor);
+				var remainder = factory.Function(longType, "Math::Rem", dividend, divisorExpression);
+
+				// Math::Rem keeps the dividend's sign. Removing that remainder before integer
+				// division gives an exact truncate-toward-zero quotient without a Double round-trip.
+				return factory.Div(longType, factory.Sub(longType, dividend, remainder), divisorExpression);
+			}
+
 			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
 			{
 				return new DateTimeIntervalCapabilities(

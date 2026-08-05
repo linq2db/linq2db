@@ -64,6 +64,17 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class FirebirdDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+				var dividend = factory.Cast(value, longType, true);
+				var divisorExpression = factory.Value(longType, divisor);
+				var remainder = factory.Mod(dividend, divisorExpression);
+
+				return factory.Cast(factory.Div(longType, factory.Sub(longType, dividend, remainder), divisorExpression), longType, true);
+			}
+
 			private protected override ISqlExpression? TranslateNativeTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
 			{
 				var ticks = translationContext.ExpressionFactory.Expression(
@@ -85,23 +96,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				var factory      = translationContext.ExpressionFactory;
 				var longType     = factory.GetDbDataType(typeof(long));
 				var decimalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
-				var doubleType   = factory.GetDbDataType(typeof(double));
 				var ticks        = factory.Cast(intervalExpression, longType, true);
-
-				// Firebird 3 and earlier cannot represent the full Int64 tick range in DECIMAL(18).
-				// Use floating point only to obtain a day candidate, then validate it against the
-				// original BIGINT. A double can be off only at a day boundary; the comparison
-				// corrects that without ever rounding or narrowing the original tick value.
-				var quotient = factory.Div(
-					doubleType,
-					factory.Cast(ticks, doubleType, true),
-					factory.Value(doubleType, (double)TimeSpan.TicksPerDay));
-				var candidateDays  = factory.Cast(factory.Function(doubleType, "TRUNC", quotient), longType, true);
-				var candidateTicks = factory.Multiply(longType, candidateDays, TimeSpan.TicksPerDay);
-				var days = factory.Condition(
-					factory.GreaterOrEqual(ticks, factory.Value(longType, 0L)),
-					factory.Condition(factory.Greater(candidateTicks, ticks), factory.Decrement(candidateDays), candidateDays),
-					factory.Condition(factory.Less(candidateTicks, ticks), factory.Increment(candidateDays), candidateDays));
+				var days          = TruncateDivision(translationContext, ticks, TimeSpan.TicksPerDay);
 				var remainder    = factory.Sub(longType, ticks, factory.Multiply(longType, days, TimeSpan.TicksPerDay));
 				var milliseconds = factory.Div(decimalType, factory.Cast(remainder, decimalType), factory.Value(decimalType, (decimal)TimeSpan.TicksPerMillisecond));
 

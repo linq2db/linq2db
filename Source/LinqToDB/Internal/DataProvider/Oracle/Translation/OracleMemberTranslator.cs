@@ -57,6 +57,17 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression TruncateToInt64(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var longType    = factory.GetDbDataType(typeof(long));
+				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+
+				// Oracle exposes TRUNC rather than CEILING/FLOOR under the generic names used by
+				// several providers. TRUNC also directly matches CLR's toward-zero conversion.
+				return factory.Cast(factory.Function(decimalType, "TRUNC", value), longType, true);
+			}
+
 			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
 			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
 			{
@@ -121,9 +132,22 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			{
 				var factory  = translationContext.ExpressionFactory;
 				var dateType = factory.GetDbDataType(dateTimeExpression);
-				return isSubtract
-					? factory.Sub(dateType, dateTimeExpression, intervalExpression)
-					: factory.Add(dateType, dateTimeExpression, intervalExpression);
+				var arithmeticDate = dateTimeExpression;
+				var arithmeticType = dateType;
+
+				// Oracle DATE arithmetic expects a numeric day count. Cast DATE to TIMESTAMP before
+				// applying a native interval, then restore the mapped DATE result resolution.
+				if (dateType.DataType is DataType.Date or DataType.DateTime)
+				{
+					arithmeticType = factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Timestamp).WithPrecision(0);
+					arithmeticDate = factory.Cast(dateTimeExpression, arithmeticType, true);
+				}
+
+				var result = isSubtract
+					? factory.Sub(arithmeticType, arithmeticDate, intervalExpression)
+					: factory.Add(arithmeticType, arithmeticDate, intervalExpression);
+
+				return arithmeticType == dateType ? result : factory.Cast(result, dateType, true);
 			}
 
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)
@@ -214,6 +238,25 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeDatePartLong(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				var result = TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+				if (result == null || datepart != Sql.DateParts.Second)
+					return result;
+
+				// EXTRACT(SECOND) includes the fractional second. Oracle rounds NUMBER when it is
+				// cast to an integer type, so truncate explicitly for boundary-index construction.
+				return translationContext.ExpressionFactory.Function(
+					translationContext.ExpressionFactory.GetDbDataType(result),
+					"TRUNC",
+					result);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetDatePartLong(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			{
+				return TranslateDateTimeDatePartLong(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,

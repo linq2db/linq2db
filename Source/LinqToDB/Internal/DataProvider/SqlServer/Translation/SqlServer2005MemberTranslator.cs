@@ -86,16 +86,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				if (divisor == 0)
 					return base.TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
 
-				var factory     = translationContext.ExpressionFactory;
-				var longType    = factory.GetDbDataType(typeof(long));
-				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
-				var value       = factory.Cast(increment, longType, true);
-				var quotient    = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
-				var truncated   = factory.Condition(
-					factory.GreaterOrEqual(value, factory.Value(longType, 0L)),
-					factory.Function(decimalType, "FLOOR", quotient),
-					factory.Function(decimalType, "CEILING", quotient));
-				var milliseconds = factory.Cast(truncated, longType, true);
+				var milliseconds = TruncateDivision(translationContext, increment, divisor);
 
 				return base.TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, milliseconds, Sql.DateParts.Millisecond);
 			}

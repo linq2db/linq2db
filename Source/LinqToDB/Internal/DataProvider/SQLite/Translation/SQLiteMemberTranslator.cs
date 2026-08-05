@@ -40,6 +40,15 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			private protected override ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+
+				// SQLite performs integer division when both operands are INTEGER and truncates toward zero.
+				return factory.Div(longType, factory.Cast(value, longType, true), factory.Value(longType, divisor));
+			}
+
 			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
 
 			private protected override ISqlExpression? TranslateDateTimeIntervalDifference(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression leftExpression, ISqlExpression rightExpression, bool isDateTimeOffset)

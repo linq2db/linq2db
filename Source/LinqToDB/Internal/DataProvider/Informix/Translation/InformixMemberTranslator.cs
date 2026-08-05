@@ -370,11 +370,16 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 					{
 						// Informix DATETIME YEAR TO FRACTION(5) stores five fractional
 						// digits, i.e. one FRACTION(5) unit is 10 microseconds / 100 ticks.
-						var fraction = factory.Cast(
+						// A fraction-only DATETIME renders as "0.12345" (or ".12345",
+						// depending on the driver/server combination). Do not squeeze that
+						// representation into CHAR(5): it either overflows or drops digits.
+						var fractionDecimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(6, 5);
+						var fractionUnitsType   = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(10, 0);
+						var fraction = factory.Cast(factory.Multiply(fractionUnitsType, factory.Cast(
 							factory.Cast(
 								factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Fraction to Fraction(5)"), isMandatory: true),
-								factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(5)),
-							intDataType);
+								factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(7)),
+							fractionDecimalType), 100_000m), intDataType, true);
 						var multiplier = datepart switch
 						{
 							Sql.DateParts.Microsecond => 10,
@@ -403,11 +408,13 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				var factory      = translationContext.ExpressionFactory;
 				var intDataType  = factory.GetDbDataType(typeof(int));
 				var intervalType = factory.GetDbDataType(typeof(TimeSpan));
-				var fraction = factory.Cast(
+				var fractionDecimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(6, 5);
+				var fractionUnitsType   = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(10, 0);
+				var fraction = factory.Cast(factory.Multiply(fractionUnitsType, factory.Cast(
 					factory.Cast(
 						factory.Cast(dateTimeExpression, intervalType.WithDbType("datetime Fraction to Fraction(5)"), isMandatory: true),
-						factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(5)),
-					intDataType);
+						factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(7)),
+					fractionDecimalType), 100_000m), intDataType, true);
 
 				return factory.Div(intDataType, fraction, 100);
 			}

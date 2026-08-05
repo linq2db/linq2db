@@ -252,9 +252,11 @@ namespace LinqToDB
 		{
 			private static readonly MethodInfo _datePartLongDateTime = MemberHelper.MethodOf(() => DatePartLong(DateParts.Year, (DateTime?)null));
 			private static readonly MethodInfo _duckDbDateDiffMicrosecond = MemberHelper.MethodOf(() => DuckDbDateDiffMicrosecond(null, null));
-			private static readonly MethodInfo _floorDecimal         = MemberHelper.MethodOf(() => Floor((decimal?)null));
-			private static readonly MethodInfo _accessDecimal        = MemberHelper.MethodOf(() => AccessDecimal(null));
-			private static readonly MethodInfo _accessMilliseconds   = MemberHelper.MethodOf(() => AccessMillisecondsSinceEpoch(null));
+			private static readonly MethodInfo _ydbIntegerDivide = MemberHelper.MethodOf(() => YdbIntegerDivide(null, 1));
+			private static readonly MethodInfo _firebirdDateTimeOffsetToUtc = MemberHelper.MethodOf(() => FirebirdDateTimeOffsetToUtc(null));
+			private static readonly MethodInfo _floorDecimal       = MemberHelper.MethodOf(() => Floor((decimal?)null));
+			private static readonly MethodInfo _accessDecimal      = MemberHelper.MethodOf(() => AccessDecimal(null));
+			private static readonly MethodInfo _accessMilliseconds = MemberHelper.MethodOf(() => AccessMillisecondsSinceEpoch(null));
 			private static readonly MethodInfo _accessDate            = MemberHelper.MethodOf(() => AccessDateFromDayIndex(null));
 			private static readonly IValueConverter _checkedDecimalLongConverter = new ValueConverter<long, decimal>(
 				value => value,
@@ -282,6 +284,12 @@ namespace LinqToDB
 			private static long? DuckDbDateDiffMicrosecond(DateTime? startDate, DateTime? endDate)
 				=> startDate == null || endDate == null ? null : endDate.Value.Ticks / 10 - startDate.Value.Ticks / 10;
 
+			[Expression(PN.Ydb, "({0} - Math::Rem({0}, {1})) / {1}", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+			private static long? YdbIntegerDivide(long? value, long divisor) => value / divisor;
+
+			[Expression(PN.Firebird, "CAST(({0} AT TIME ZONE 'UTC') AS TIMESTAMP)", ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+			private static DateTime? FirebirdDateTimeOffsetToUtc(DateTimeOffset? value) => value?.UtcDateTime;
+
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
@@ -296,8 +304,10 @@ namespace LinqToDB
 					return;
 				}
 
-				var normalizedStart = NormalizeDate(startDate, isOffset);
-				var normalizedEnd   = NormalizeDate(endDate,   isOffset);
+				var useFirebirdOffsetNormalization = isOffset
+					&& builder.Configuration?.Contains(PN.Firebird, StringComparison.Ordinal) == true;
+				var normalizedStart = NormalizeDate(startDate, isOffset, useFirebirdOffsetNormalization);
+				var normalizedEnd   = NormalizeDate(endDate,   isOffset, useFirebirdOffsetNormalization);
 				var indexPart       = part == DateParts.Nanosecond ? DateParts.Tick : part;
 				var forceAccessDecimal = builder.Configuration?.Contains(PN.Access, StringComparison.Ordinal) == true;
 				ISqlExpression? result;
@@ -316,8 +326,9 @@ namespace LinqToDB
 				}
 				else
 				{
-					var startIndex = CreateBoundaryIndex(indexPart, normalizedStart, forceAccessDecimal);
-					var endIndex   = CreateBoundaryIndex(indexPart, normalizedEnd,   forceAccessDecimal);
+					var useYdbIntegerDivision = builder.Configuration?.Contains(PN.Ydb, StringComparison.Ordinal) == true;
+					var startIndex = CreateBoundaryIndex(indexPart, normalizedStart, forceAccessDecimal, useYdbIntegerDivision);
+					var endIndex   = CreateBoundaryIndex(indexPart, normalizedEnd,   forceAccessDecimal, useYdbIntegerDivision);
 					var difference = Expression.Subtract(endIndex, startIndex);
 					result = builder.ConvertExpressionToSql(difference);
 				}
@@ -431,12 +442,15 @@ namespace LinqToDB
 				}
 			}
 
-			private static Expression NormalizeDate(Expression date, bool isOffset)
+			private static Expression NormalizeDate(Expression date, bool isOffset, bool useFirebirdOffsetNormalization)
 			{
 				if (!isOffset)
 					return date.Type == typeof(DateTime?) ? date : Expression.Convert(date, typeof(DateTime?));
 
 				var nullableDate = date.Type == typeof(DateTimeOffset?) ? date : Expression.Convert(date, typeof(DateTimeOffset?));
+				if (useFirebirdOffsetNormalization)
+					return Expression.Call(_firebirdDateTimeOffsetToUtc, nullableDate);
+
 				var hasValue     = Expression.Property(nullableDate, nameof(Nullable<>.HasValue));
 				var value        = Expression.Property(nullableDate, nameof(Nullable<>.Value));
 				var utcDate      = Expression.Property(value, nameof(DateTimeOffset.UtcDateTime));
@@ -444,7 +458,7 @@ namespace LinqToDB
 				return Expression.Condition(hasValue, Expression.Convert(utcDate, typeof(DateTime?)), Expression.Default(typeof(DateTime?)));
 			}
 
-			private static Expression CreateBoundaryIndex(DateParts part, Expression date, bool forceAccessDecimal)
+			private static Expression CreateBoundaryIndex(DateParts part, Expression date, bool forceAccessDecimal, bool useYdbIntegerDivision)
 			{
 				if (forceAccessDecimal)
 					return CreateAccessBoundaryIndex(part, date);
@@ -461,6 +475,9 @@ namespace LinqToDB
 				Expression Mul(Expression left, long right) => Wrap(Expression.Multiply(left, Number(right)));
 				Expression Div(Expression left, long right)
 				{
+					if (useYdbIntegerDivision)
+						return Expression.Call(_ydbIntegerDivide, left, Expression.Constant(right));
+
 					var quotient = Expression.Divide(
 						Expression.Convert(left, typeof(decimal?)),
 						Expression.Constant((decimal?)right, typeof(decimal?)));

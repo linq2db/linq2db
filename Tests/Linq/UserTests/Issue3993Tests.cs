@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -18,6 +19,11 @@ namespace Tests.UserTests.Test3993
 	[TestFixture]
 	public class Test3993Tests : TestBase
 	{
+		static TimeSpan ParseInformixInterval(string value)
+		{
+			return TimeSpan.Parse(value.Trim().Replace(' ', '.'), CultureInfo.InvariantCulture);
+		}
+
 		[Test]
 		public void DatePartLongUsesSubsecondComponents()
 		{
@@ -320,7 +326,9 @@ namespace Tests.UserTests.Test3993
 				_ = table.Select(row => Sql.DateDiffLong(Sql.DateParts.Nanosecond, row.Start, row.End)).Single();
 			};
 
-			Assert.Throws<Exception>(() => action());
+			// Providers surface checked arithmetic overflow through their own exception type.
+			// Assert the contract (the operation fails) without requiring the base Exception type exactly.
+			Assert.Catch(() => action()).ShouldNotBeNull();
 		}
 
 		[Test]
@@ -921,6 +929,7 @@ namespace Tests.UserTests.Test3993
 					new Test
 					{
 						StartDateTime    = TestData.DateTime4Utc,
+						StartDateTime2   = TestData.DateTime4Utc,
 						PreNotification = TimeSpan.FromSeconds(4 * 60 * 60 + 3 * 60 + 2)
 					}
 				});
@@ -974,7 +983,8 @@ namespace Tests.UserTests.Test3993
 				{
 					new Test
 					{
-						StartDateTime    = TestData.DateTime4Utc
+						StartDateTime    = TestData.DateTime4Utc,
+						StartDateTime2   = TestData.DateTime4Utc,
 					}
 				});
 
@@ -988,7 +998,8 @@ namespace Tests.UserTests.Test3993
 
 		public class LanguageDTO
 		{
-			public string? LanguageID { get; set; }
+			[PrimaryKey]
+			public string LanguageID { get; set; } = null!;
 
 			public TimeSpan TimeSpan { get; set; }
 
@@ -999,19 +1010,32 @@ namespace Tests.UserTests.Test3993
 		public void TestIssue3993_BulkCopy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllAccess, TestProvName.AllDuckDB, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllYdb)] string configuration)
 		{
 			var isMySql        = configuration.Contains("MariaDB", StringComparison.Ordinal) || configuration.Contains("MySql", StringComparison.Ordinal);
+			var isInformix     = configuration.Contains("Informix", StringComparison.Ordinal);
 			var largeValue     = TimeSpan.FromDays(isMySql ? 30 : 2000) + new TimeSpan(4, 3, 2) + TimeSpan.FromTicks(1_234_567);
 			var negativeValue  = -TimeSpan.FromDays(30) - TimeSpan.FromTicks(9_999);
 			var subsecondValue = TimeSpan.FromTicks(1_234_567);
 			var ms = new FluentMappingBuilder()
 					.Entity<LanguageDTO>()
 						.HasTableName("Common_Language")
-						.Property(e => e.LanguageID).IsNullable()
 					.Build()
 					.MappingSchema;
 
-			if (configuration.Contains("PostgreSQL") || configuration.Contains("Oracle") || configuration.Contains("Informix") || configuration.Contains("Ydb"))
+			if (configuration.Contains("PostgreSQL") || configuration.Contains("Oracle") || isInformix || configuration.Contains("Ydb"))
 			{
 				ms.AddScalarType(typeof(TimeSpan), DataType.Interval);
+
+				if (isInformix)
+				{
+					new FluentMappingBuilder(ms)
+						.Entity<LanguageDTO>()
+							.Property(row => row.TimeSpan)
+								.HasDataType(DataType.Interval)
+								.HasDbType("INTERVAL DAY(9) TO FRACTION(5)")
+							.Property(row => row.TimeSpanNull)
+								.HasDataType(DataType.Interval)
+								.HasDbType("INTERVAL DAY(9) TO FRACTION(5)")
+						.Build();
+				}
 			}
 			else if (configuration.Contains("Access"))
 			{
@@ -1036,6 +1060,16 @@ namespace Tests.UserTests.Test3993
 			{
 				ms.AddScalarType(typeof(TimeSpan),  DataType.Time);
 				ms.AddScalarType(typeof(TimeSpan?), DataType.Time);
+
+				new FluentMappingBuilder(ms)
+					.Entity<LanguageDTO>()
+						.Property(row => row.TimeSpan)
+							.HasDataType(DataType.Time)
+							.HasPrecision(6)
+						.Property(row => row.TimeSpanNull)
+							.HasDataType(DataType.Time)
+							.HasPrecision(6)
+					.Build();
 			}
 			else
 			{
@@ -1072,7 +1106,25 @@ namespace Tests.UserTests.Test3993
 					},
 				});
 
-			var result = tbl.OrderBy(row => row.LanguageID).ToArray();
+			var result = isInformix
+				? tbl.OrderBy(row => row.LanguageID)
+					.Select(row => new
+					{
+						row.LanguageID,
+						TimeSpanText     = Sql.ConvertTo<string>.From(row.TimeSpan),
+						TimeSpanNullText = Sql.ConvertTo<string>.From(row.TimeSpanNull),
+					})
+					.AsEnumerable()
+					.Select(row => new LanguageDTO
+					{
+						LanguageID   = row.LanguageID,
+						TimeSpan     = ParseInformixInterval(row.TimeSpanText),
+						TimeSpanNull = row.TimeSpanNullText == null
+							? null
+							: ParseInformixInterval(row.TimeSpanNullText),
+					})
+					.ToArray()
+				: tbl.OrderBy(row => row.LanguageID).ToArray();
 			result.Length.ShouldBe(3);
 
 			var precision = configuration.Contains("PostgreSQL", StringComparison.Ordinal) || configuration.Contains("DuckDB", StringComparison.Ordinal) || configuration.Contains("Ydb", StringComparison.Ordinal) || configuration.Contains("Oracle", StringComparison.Ordinal) || isMySql

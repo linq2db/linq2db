@@ -5,11 +5,17 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public abstract class DateFunctionsTranslatorBase : MemberTranslatorBase
 	{
+		static readonly IValueConverter _timeSpanTicksConverter = new ValueConverter<TimeSpan, long>(
+			value => value.Ticks,
+			value => TimeSpan.FromTicks(value),
+			handlesNulls: false);
+
 		[Flags]
 		private protected enum DateTimeIntervalUnits
 		{
@@ -520,7 +526,28 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		ISqlExpression? TranslateSubsecondDatePartFallback(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression dateExpression, Sql.DateParts datePart, bool isDateTimeOffset)
 		{
-			var multiplier = datePart switch
+			var microsecondMultiplier = datePart switch
+			{
+				Sql.DateParts.Nanosecond => 1_000L,
+				Sql.DateParts.Tick       => 10L,
+				_                         => 0L,
+			};
+
+			if (microsecondMultiplier != 0)
+			{
+				var microseconds = isDateTimeOffset
+					? TranslateDateTimeOffsetDatePart(translationContext, translationFlags, dateExpression, Sql.DateParts.Microsecond)
+					: TranslateDateTimeDatePart(translationContext, translationFlags, dateExpression, Sql.DateParts.Microsecond);
+
+				if (microseconds != null)
+				{
+					var microsecondFactory  = translationContext.ExpressionFactory;
+					var microsecondLongType = microsecondFactory.GetDbDataType(typeof(long));
+					return microsecondFactory.Multiply(microsecondLongType, microsecondFactory.Cast(microseconds, microsecondLongType, true), microsecondMultiplier);
+				}
+			}
+
+			var millisecondMultiplier = datePart switch
 			{
 				Sql.DateParts.Microsecond => 1_000L,
 				Sql.DateParts.Nanosecond  => 1_000_000L,
@@ -528,7 +555,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				_                         => 0L,
 			};
 
-			if (multiplier == 0)
+			if (millisecondMultiplier == 0)
 				return null;
 
 			var milliseconds = isDateTimeOffset
@@ -540,7 +567,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var factory  = translationContext.ExpressionFactory;
 			var longType = factory.GetDbDataType(typeof(long));
-			return factory.Multiply(longType, factory.Cast(milliseconds, longType, true), multiplier);
+			return factory.Multiply(longType, factory.Cast(milliseconds, longType, true), millisecondMultiplier);
 		}
 
 		Expression? TranslateDateTimeAddMember(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, Sql.DateParts datepart)
@@ -676,13 +703,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
 		}
 
-		private static ISqlExpression NormalizeSqlDateAddIncrement(ITranslationContext translationContext, ISqlExpression increment, ref Sql.DateParts datepart)
+		ISqlExpression NormalizeSqlDateAddIncrement(ITranslationContext translationContext, ISqlExpression increment, ref Sql.DateParts datepart)
 		{
 			if (datepart is not (Sql.DateParts.Microsecond or Sql.DateParts.Nanosecond or Sql.DateParts.Tick))
 				return increment;
 
 			var factory     = translationContext.ExpressionFactory;
-			var longType    = factory.GetDbDataType(typeof(long));
 			var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
 			var value       = factory.Cast(increment, decimalType, true);
 
@@ -696,13 +722,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				datepart = Sql.DateParts.Tick;
 			}
 
-			var zero      = factory.Value(decimalType, 0m);
-			var truncated = factory.Condition(
-				factory.GreaterOrEqual(value, zero),
-				factory.Function(decimalType, "FLOOR", value),
-				factory.Function(decimalType, "CEILING", value));
-
-			return factory.Cast(truncated, longType, true);
+			return TruncateToInt64(translationContext, value);
 		}
 
 		ISqlExpression? TranslateSubsecondDateAddFallback(
@@ -741,15 +761,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 				var factory     = translationContext.ExpressionFactory;
 				var longType    = factory.GetDbDataType(typeof(long));
-				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
 				var divisor     = ticks / sourceTicks;
 				var value       = factory.Cast(increment, longType, true);
-				var quotient    = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
-				var truncated   = factory.Condition(
-					factory.GreaterOrEqual(value, factory.Value(longType, 0L)),
-					factory.Function(decimalType, "FLOOR", quotient),
-					factory.Function(decimalType, "CEILING", quotient));
-				var convertedIncrement = factory.Cast(truncated, longType, true);
+				var convertedIncrement = TruncateDivision(translationContext, value, divisor);
 
 				var converted = isDateTimeOffset
 					? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, dateExpression, convertedIncrement, part)
@@ -1158,12 +1172,58 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		private protected virtual Expression CreateDateTimeIntervalDifferenceResult(ITranslationContext translationContext, ISqlExpression translatedExpression, BinaryExpression binaryExpression)
 		{
+			var factory    = translationContext.ExpressionFactory;
+			var resultType = factory.GetDbDataType(translatedExpression);
+
+			if (resultType.DataType == DataType.Int64)
+			{
+				var longType = factory.GetDbDataType(typeof(long));
+				var ticks     = factory.Cast(translatedExpression, longType, true);
+				translatedExpression = new SqlExpression(longType, "{0}", ticks)
+					.WithResultConverter(_timeSpanTicksConverter);
+			}
+
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translatedExpression, binaryExpression);
 		}
 
 		private protected virtual Expression CreateTimeSpanNegateResult(ITranslationContext translationContext, ISqlExpression translatedExpression, UnaryExpression unaryExpression)
 		{
+			var factory    = translationContext.ExpressionFactory;
+			var resultType = factory.GetDbDataType(translatedExpression);
+
+			if (resultType.DataType == DataType.Int64)
+			{
+				var longType = factory.GetDbDataType(typeof(long));
+				var ticks     = factory.Cast(translatedExpression, longType, true);
+				translatedExpression = new SqlExpression(longType, "{0}", ticks)
+					.WithResultConverter(_timeSpanTicksConverter);
+			}
+
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translatedExpression, unaryExpression);
+		}
+
+		private protected virtual ISqlExpression TruncateToInt64(ITranslationContext translationContext, ISqlExpression value)
+		{
+			var factory      = translationContext.ExpressionFactory;
+			var longType     = factory.GetDbDataType(typeof(long));
+			var decimalType  = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+			var decimalValue = factory.Cast(value, decimalType, true);
+			var zero        = factory.Value(decimalType, 0m);
+			var truncated   = factory.Condition(
+				factory.GreaterOrEqual(decimalValue, zero),
+				factory.Function(decimalType, "FLOOR", decimalValue),
+				factory.Function(decimalType, "CEILING", decimalValue));
+
+			return factory.Cast(truncated, longType, true);
+		}
+
+		private protected virtual ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+		{
+			var factory     = translationContext.ExpressionFactory;
+			var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+			var quotient    = factory.Div(decimalType, factory.Cast(value, decimalType, true), factory.Value(decimalType, (decimal)divisor));
+
+			return TruncateToInt64(translationContext, quotient);
 		}
 
 		private protected virtual ISqlExpression? TranslateTimeSpanPart(ITranslationContext translationContext, TranslationFlags translationFlags, ISqlExpression timeSpanExpression, TimeSpanPart part, Type resultType)
@@ -1178,27 +1238,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var resultDbType = factory.GetDbDataType(resultType);
 			var ticks      = factory.Cast(timeSpanExpression, longType, true);
 
-			ISqlExpression TruncateDivision(ISqlExpression value, long divisor)
-			{
-				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
-				var quotient    = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
-				var zero        = factory.Value(longType, 0L);
-				var truncated   = factory.Condition(
-					factory.GreaterOrEqual(value, zero),
-					factory.Function(decimalType, "FLOOR", quotient),
-					factory.Function(decimalType, "CEILING", quotient));
-
-				return factory.Cast(truncated, longType, true);
-			}
-
 			ISqlExpression DivideTicks(long divisor)
 			{
-				return TruncateDivision(ticks, divisor);
+				return TruncateDivision(translationContext, ticks, divisor);
 			}
 
 			ISqlExpression Remainder(ISqlExpression value, int modulo)
 			{
-				var quotient = TruncateDivision(value, modulo);
+				var quotient = TruncateDivision(translationContext, value, modulo);
 				return factory.Sub(
 					longType,
 					value,
@@ -1270,21 +1317,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return TranslateNativeDateTimeIntervalAdd(translationContext, translationFlags, dateTimeExpression, intervalExpression, isSubtract, isDateTimeOffset);
 
 			var longType    = factory.GetDbDataType(typeof(long));
-			var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
 			var ticks       = factory.Cast(intervalExpression, longType, true);
 
-			ISqlExpression TruncateDivision(ISqlExpression value, long divisor)
-			{
-				var quotient = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
-				var truncated = factory.Condition(
-					factory.GreaterOrEqual(value, factory.Value(longType, 0L)),
-					factory.Function(decimalType, "FLOOR", quotient),
-					factory.Function(decimalType, "CEILING", quotient));
-
-				return factory.Cast(truncated, longType, true);
-			}
-
-			var days      = TruncateDivision(ticks, TimeSpan.TicksPerDay);
+			var days      = TruncateDivision(translationContext, ticks, TimeSpan.TicksPerDay);
 			var remainder = factory.Sub(longType, ticks, factory.Multiply(longType, days, TimeSpan.TicksPerDay));
 
 			if (isSubtract)
@@ -1318,7 +1353,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (ticksPerUnit > capabilities.StorageResolutionTicks || !SupportsUnit(capabilities.SupportedUnits, precision.Value))
 				return null;
 
-			var increment = TruncateDivision(remainder, ticksPerUnit);
+			var increment = TruncateDivision(translationContext, remainder, ticksPerUnit);
 
 			return isDateTimeOffset
 				? TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, result, increment, precision.Value)

@@ -80,29 +80,45 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var resultTypeDb = factory.GetDbDataType(resultType);
+				var doubleType   = factory.GetDbDataType(typeof(double));
 				const string totalSeconds      = "TIME_TO_SEC({0})";
 				const string totalMicroseconds = "TRUNCATE((TIME_TO_SEC({0})) * 1000000, 0)";
 				const string secondRemainder   = $"(({totalMicroseconds}) - TRUNCATE(({totalMicroseconds}) / 1000000, 0) * 1000000)";
 				const string millisecondPart   = $"TRUNCATE(({secondRemainder}) / 1000, 0)";
 				const string microsecondPart   = $"(({secondRemainder}) - ({millisecondPart}) * 1000)";
 
+				// TIME_TO_SEC returns a DECIMAL value. MySQL derives an insufficient scale for
+				// divisions such as TIME_TO_SEC(value) / 86400.0, which rounds TotalDays to
+				// four fractional digits. Coerce it to DOUBLE before evaluating CLR total
+				// members so all microseconds preserved by TIME remain observable.
+				var floatingSeconds = factory.Expression(doubleType, "(TIME_TO_SEC({0}) + 0e0)", timeSpanExpression);
+				var totalExpression = part switch
+				{
+					TimeSpanPart.TotalDays         => factory.Div(doubleType, floatingSeconds, factory.Value(doubleType, 86400D)),
+					TimeSpanPart.TotalHours        => factory.Div(doubleType, floatingSeconds, factory.Value(doubleType, 3600D)),
+					TimeSpanPart.TotalMinutes      => factory.Div(doubleType, floatingSeconds, factory.Value(doubleType, 60D)),
+					TimeSpanPart.TotalSeconds      => floatingSeconds,
+					TimeSpanPart.TotalMilliseconds => factory.Multiply(doubleType, floatingSeconds, factory.Value(doubleType, 1000D)),
+#if NET7_0_OR_GREATER
+					TimeSpanPart.TotalMicroseconds => factory.Multiply(doubleType, floatingSeconds, factory.Value(doubleType, 1000000D)),
+					TimeSpanPart.TotalNanoseconds  => factory.Multiply(doubleType, floatingSeconds, factory.Value(doubleType, 1000000000D)),
+#endif
+					_                              => null,
+				};
+
+				if (totalExpression != null)
+					return totalExpression;
+
 				var expression = part switch
 				{
 					TimeSpanPart.Days              => $"TRUNCATE(({totalSeconds}) / 86400, 0)",
-					TimeSpanPart.TotalDays         => $"({totalSeconds}) / 86400.0",
 					TimeSpanPart.Hours             => $"MOD(TRUNCATE(({totalSeconds}) / 3600, 0), 24)",
-					TimeSpanPart.TotalHours        => $"({totalSeconds}) / 3600.0",
 					TimeSpanPart.Minutes           => $"MOD(TRUNCATE(({totalSeconds}) / 60, 0), 60)",
-					TimeSpanPart.TotalMinutes      => $"({totalSeconds}) / 60.0",
 					TimeSpanPart.Seconds           => $"MOD(TRUNCATE({totalSeconds}, 0), 60)",
-					TimeSpanPart.TotalSeconds      => totalSeconds,
 					TimeSpanPart.Milliseconds      => millisecondPart,
-					TimeSpanPart.TotalMilliseconds => $"({totalSeconds}) * 1000.0",
 #if NET7_0_OR_GREATER
 					TimeSpanPart.Microseconds      => microsecondPart,
-					TimeSpanPart.TotalMicroseconds => $"({totalSeconds}) * 1000000.0",
 					TimeSpanPart.Nanoseconds       => "0",
-					TimeSpanPart.TotalNanoseconds  => $"({totalSeconds}) * 1000000000.0",
 #endif
 					TimeSpanPart.Ticks             => $"({totalMicroseconds}) * 10",
 					_                              => null,

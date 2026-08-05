@@ -46,6 +46,34 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServerDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			static ISqlExpression LongConstant(ITranslationContext translationContext, long value)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var longType    = factory.GetDbDataType(typeof(long));
+				var decimalType = factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(20, 0);
+
+				// SQL Server parses literals larger than Int32 as decimal. Keep the CAST mandatory so
+				// multiplication and division stay in BIGINT instead of overflowing decimal(18, 10).
+				return factory.Cast(factory.Value(decimalType, (decimal)value), longType, true);
+			}
+
+			private protected override ISqlExpression TruncateToInt64(ITranslationContext translationContext, ISqlExpression value)
+			{
+				return translationContext.ExpressionFactory.Cast(
+					value,
+					translationContext.ExpressionFactory.GetDbDataType(typeof(long)),
+					true);
+			}
+
+			private protected override ISqlExpression TruncateDivision(ITranslationContext translationContext, ISqlExpression value, long divisor)
+			{
+				var factory  = translationContext.ExpressionFactory;
+				var longType = factory.GetDbDataType(typeof(long));
+
+				// T-SQL integer division truncates toward zero, matching TimeSpan component semantics.
+				return factory.Div(longType, factory.Cast(value, longType, true), LongConstant(translationContext, divisor));
+			}
+
 			private protected override bool SupportsDateTimeOffsetIntervalArithmetic => true;
 			private protected override DateTimeIntervalCapabilities GetDefaultDateTimeIntervalCapabilities(bool isDateTimeOffset)
 			{
@@ -157,26 +185,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var longType     = factory.GetDbDataType(typeof(long));
-				var decimalType  = factory.GetDbDataType(typeof(decimal));
 				var ticks        = factory.Cast(intervalExpression, longType, true);
 
 				if (isSubtract)
 					ticks = factory.Negate(longType, ticks);
 
-				ISqlExpression TruncateDivision(ISqlExpression value, long divisor)
-				{
-					var quotient = factory.Div(decimalType, factory.Cast(value, decimalType), factory.Value(decimalType, (decimal)divisor));
-					var truncated = factory.Condition(
-						factory.GreaterOrEqual(value, factory.Value(longType, 0L)),
-						factory.Function(decimalType, "FLOOR", quotient),
-						factory.Function(decimalType, "CEILING", quotient));
-
-					return factory.Cast(truncated, longType, true);
-				}
-
-				var days         = TruncateDivision(ticks, TimeSpan.TicksPerDay);
-				var dayRemainder = factory.Sub(longType, ticks, factory.Multiply(longType, days, TimeSpan.TicksPerDay));
-				var milliseconds = TruncateDivision(dayRemainder, TimeSpan.TicksPerMillisecond);
+				var days         = TruncateDivision(translationContext, ticks, TimeSpan.TicksPerDay);
+				var dayRemainder = factory.Sub(longType, ticks, factory.Multiply(longType, days, LongConstant(translationContext, TimeSpan.TicksPerDay)));
+				var milliseconds = TruncateDivision(translationContext, dayRemainder, TimeSpan.TicksPerMillisecond);
 
 				ISqlExpression? Add(ISqlExpression date, ISqlExpression increment, Sql.DateParts part)
 				{
@@ -196,7 +212,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				if (precision == Sql.DateParts.Millisecond)
 					return result;
 
-				var millisecondRemainder = factory.Sub(longType, dayRemainder, factory.Multiply(longType, milliseconds, TimeSpan.TicksPerMillisecond));
+				var millisecondRemainder = factory.Sub(longType, dayRemainder, factory.Multiply(longType, milliseconds, LongConstant(translationContext, TimeSpan.TicksPerMillisecond)));
 
 				// DATEADD accepts only Int32 increments before SQL Server 2025. At this point the
 				// remaining value is less than one millisecond, so ticks * 100 always fits.
@@ -231,11 +247,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var secondDifference = factory.Function(intType, "DATEDIFF", secondPart, dayAnchor, leftExpression);
 				var secondAnchor  = factory.Function(dateType, "DATEADD", secondPart, secondDifference, dayAnchor);
 				var subsecondDifference = factory.Function(intType, "DATEDIFF", subsecondPart, secondAnchor, leftExpression);
-				var dayTicks      = factory.Multiply(longType, factory.Cast(dayDifference, longType, true), TimeSpan.TicksPerDay);
-				var secondTicks   = factory.Multiply(longType, factory.Cast(secondDifference, longType, true), TimeSpan.TicksPerSecond);
+				var dayTicks      = factory.Multiply(longType, factory.Cast(dayDifference, longType, true), LongConstant(translationContext, TimeSpan.TicksPerDay));
+				var secondTicks   = factory.Multiply(longType, factory.Cast(secondDifference, longType, true), LongConstant(translationContext, TimeSpan.TicksPerSecond));
 				var subsecondTicks = supportsNanoseconds
-					? factory.Div(longType, factory.Cast(subsecondDifference, longType, true), 100)
-					: factory.Multiply(longType, factory.Cast(subsecondDifference, longType, true), TimeSpan.TicksPerMillisecond);
+					? factory.Div(longType, factory.Cast(subsecondDifference, longType, true), LongConstant(translationContext, 100))
+					: factory.Multiply(longType, factory.Cast(subsecondDifference, longType, true), LongConstant(translationContext, TimeSpan.TicksPerMillisecond));
 
 				return factory.Expression(intervalType, "{0}", factory.Add(longType, factory.Add(longType, dayTicks, secondTicks), subsecondTicks));
 			}
