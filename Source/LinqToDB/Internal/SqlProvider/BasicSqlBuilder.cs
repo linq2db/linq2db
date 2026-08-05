@@ -3583,6 +3583,15 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlExtendedFunction((SqlExtendedFunction)expr);
 					break;
 
+				// Interval nodes carry semantics no single SQL dialect expresses, so they have no generic
+				// rendering by design - each provider lowers them in its SqlExpressionConvertVisitor while the
+				// operand mapping is still known. Reaching the builder means that lowering is missing.
+				case QueryElementType.SqlInterval:
+				case QueryElementType.SqlIntervalDifference:
+				case QueryElementType.SqlIntervalPart:
+				case QueryElementType.SqlTemporalArithmetic:
+					throw new LinqToDBException($"{expr.ElementType} reached the SQL builder un-lowered. This provider has no interval lowering for it - it should have been converted or rejected in SqlExpressionConvertVisitor.");
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
