@@ -336,6 +336,18 @@ namespace LinqToDB.Internal.SqlQuery
 					return found;
 				}
 
+				// A single-argument function that keeps its operand's type is transparent for this purpose, the
+				// same way a unary operator is. Providers rewrite operators into functions - ClickHouse turns
+				// negation into negate(x) - and the remote path resolves the descriptor from the *lowered*
+				// statement, so without this the converter is found on the client and lost on the server.
+				case SqlFunction { Parameters: [var singleArgument] } function:
+				{
+					var found = GetColumnDescriptor(singleArgument, alreadyVisitedElements);
+					if (found?.GetDbDataType(true).SystemType != function.SystemType)
+						return null;
+					return found;
+				}
+
 				// An interval keeps its operand's storage, so the operand's descriptor - and with it the value
 				// converter the read path needs - still describes the result. This is why a computed interval
 				// needs no converter attached to the expression itself.
