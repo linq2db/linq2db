@@ -1308,3 +1308,9 @@ virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlTemporal
 LinqToDB.Internal.SqlQuery.SqlIntervalUnits
 static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryGetTicksRatio(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, out long numerator, out long denominator) -> bool
 static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryToTicks(long amount, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, out long ticks) -> bool
+LinqToDB.Internal.SqlProvider.IntervalLowering
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+static LinqToDB.Internal.SqlProvider.IntervalLowering.LowerPart(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateDivide) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.Internal.SqlProvider.IntervalLowering.ToTicks(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalExpression! interval) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalPart(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!

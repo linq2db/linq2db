@@ -14,6 +14,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			RegisterDateTime();
 			RegisterDateTimeOffset();
+			RegisterTimeSpan();
 
 #if SUPPORTS_DATEONLY
 			RegisterDateOnly();
@@ -235,6 +236,69 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
+		}
+
+		void RegisterTimeSpan()
+		{
+			// Component members truncate toward zero within the next coarser unit; Total* members keep the whole
+			// interval and its fraction. Ticks is the whole interval too - it is a Total, not a Component.
+			Registration.RegisterMember((TimeSpan ts) => ts.Days,              (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Day,         SqlIntervalPartKind.Component));
+			Registration.RegisterMember((TimeSpan ts) => ts.Hours,             (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Hour,        SqlIntervalPartKind.Component));
+			Registration.RegisterMember((TimeSpan ts) => ts.Minutes,           (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Minute,      SqlIntervalPartKind.Component));
+			Registration.RegisterMember((TimeSpan ts) => ts.Seconds,           (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Second,      SqlIntervalPartKind.Component));
+			Registration.RegisterMember((TimeSpan ts) => ts.Milliseconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Millisecond, SqlIntervalPartKind.Component));
+
+			Registration.RegisterMember((TimeSpan ts) => ts.Ticks,             (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Tick,        SqlIntervalPartKind.Total));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalDays,         (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Day,         SqlIntervalPartKind.Total));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalHours,        (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Hour,        SqlIntervalPartKind.Total));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMinutes,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Minute,      SqlIntervalPartKind.Total));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalSeconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Second,      SqlIntervalPartKind.Total));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMilliseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Millisecond, SqlIntervalPartKind.Total));
+
+#if NET8_0_OR_GREATER
+			Registration.RegisterMember((TimeSpan ts) => ts.Microseconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Microsecond, SqlIntervalPartKind.Component));
+			Registration.RegisterMember((TimeSpan ts) => ts.Nanoseconds,       (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Nanosecond,  SqlIntervalPartKind.Component));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMicroseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Microsecond, SqlIntervalPartKind.Total));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalNanoseconds,  (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Nanosecond,  SqlIntervalPartKind.Total));
+#endif
+		}
+
+		/// <summary>
+		/// Wraps a translated expression as an interval, provided the mapping says what unit it is stored in.
+		/// </summary>
+		/// <remarks>
+		/// Returning <see langword="null"/> when no unit is declared is what keeps duration support opt-in: an
+		/// undeclared <see cref="TimeSpan"/> column falls back to whatever it means today rather than being
+		/// reinterpreted as a tick count.
+		/// </remarks>
+		private protected static SqlIntervalExpression? TryMakeInterval(ITranslationContext translationContext, ISqlExpression expression)
+		{
+			if (expression is SqlIntervalExpression alreadyInterval)
+				return alreadyInterval;
+
+			var unit = QueryHelper.GetColumnDescriptor(expression)?.DurationUnit;
+			if (unit == null)
+				return null;
+
+			var type = translationContext.ExpressionFactory.GetDbDataType(expression);
+
+			return new SqlIntervalExpression(expression, type, SqlIntervalType.ForDuration(unit.Value));
+		}
+
+		Expression? TranslateTimeSpanMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, SqlIntervalUnit unit, SqlIntervalPartKind kind)
+		{
+			var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			var interval = TryMakeInterval(translationContext, placeholder.Sql);
+			if (interval == null)
+				return null;
+
+			var resultType = translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);
+			var part       = new SqlIntervalPartExpression(interval, unit, kind, resultType);
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, part, memberExpression);
 		}
 
 		Expression? TranslateDateTimeMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, Sql.DateParts datepart)

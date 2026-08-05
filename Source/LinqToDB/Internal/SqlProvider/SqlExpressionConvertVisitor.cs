@@ -1133,6 +1133,52 @@ namespace LinqToDB.Internal.SqlProvider
 			return WrapBooleanExpression(newItem, includeFields: false);
 		}
 
+		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
+		{
+			var newElement = base.VisitSqlIntervalPartExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			return LowerIntervalPart(element) ?? newElement;
+		}
+
+		/// <summary>
+		/// Lowers an interval part to SQL. The default uses <see cref="IntervalLowering"/>'s integral-storage
+		/// strategy; providers with a native interval type override this to use it instead.
+		/// </summary>
+		/// <returns><see langword="null"/> when the part cannot be produced exactly, leaving it untranslated.</returns>
+		protected virtual ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
+		{
+			return IntervalLowering.LowerPart(Factory, element, TruncateDivide);
+		}
+
+		/// <summary>
+		/// Integer division truncating toward zero.
+		/// </summary>
+		/// <remarks>
+		/// Provider division, <c>%</c> and <c>MOD</c> disagree on negative operands - some floor, some truncate -
+		/// so anything reproducing CLR integer division must spell the rule out rather than inherit the database's.
+		/// <para>
+		/// The default composes <c>FLOOR</c>/<c>CEILING</c>. Providers without them override this: the same
+		/// variation is already recorded on <see cref="Sql.Truncate(decimal?)"/>, which uses
+		/// <c>Round({0}, 0, 1)</c> on SQL CE and <c>Round({0}, 0, ROUND_DOWN)</c> on SAP HANA.
+		/// </para>
+		/// </remarks>
+		protected virtual ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType    = Factory.GetDbDataType(typeof(long));
+			var decimalType = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+
+			var quotient  = Factory.Div(decimalType, Factory.Cast(value, decimalType, true), Factory.Value(decimalType, (decimal)divisor));
+			var truncated = Factory.Condition(
+				Factory.GreaterOrEqual(value, Factory.Value(longType, 0L)),
+				Factory.Function(decimalType, "FLOOR", quotient),
+				Factory.Function(decimalType, "CEILING", quotient));
+
+			return Factory.Cast(truncated, longType, true);
+		}
+
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			var newElement = base.VisitSqlCastExpression(element);
