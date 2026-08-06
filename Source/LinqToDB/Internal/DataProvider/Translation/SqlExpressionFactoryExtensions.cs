@@ -289,7 +289,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Mod(this ISqlExpressionFactory factory, ISqlExpression x, ISqlExpression value)
 		{
-			return new SqlBinaryExpression(factory.GetDbDataType(x).SystemType, x, "%", value);
+			return new SqlBinaryExpression(factory.GetDbDataType(x).SystemType, x, "%", value, Precedence.Multiplicative);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
