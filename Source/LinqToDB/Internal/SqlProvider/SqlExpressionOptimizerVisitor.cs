@@ -1004,6 +1004,37 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
+		/// <summary>
+		/// Cancels a shift against the difference it was built from: <c>start + (end - start)</c> is <c>end</c>.
+		/// </summary>
+		/// <remarks>
+		/// Worth doing here rather than leaving to each provider, because it removes the arithmetic entirely - the
+		/// result needs no interval type, no date addition and no lowering at all, so it works even where the
+		/// provider could express none of those. Both operands have to be the same expression for the terms to
+		/// cancel, which is what the comparison checks.
+		/// </remarks>
+		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			var newElement = base.VisitSqlTemporalArithmeticExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
+			{
+				var temporal = QueryHelper.UnwrapNullablity(element.Temporal);
+
+				// start + (end - start) is end, and end - (end - start) is start.
+				if (!element.IsSubtract && difference.Start.Equals(temporal, SqlQuery.SqlExtensions.DefaultComparer))
+					return Visit(difference.End);
+
+				if (element.IsSubtract && difference.End.Equals(temporal, SqlQuery.SqlExtensions.DefaultComparer))
+					return Visit(difference.Start);
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			var newElement = base.VisitSqlBinaryExpression(element);

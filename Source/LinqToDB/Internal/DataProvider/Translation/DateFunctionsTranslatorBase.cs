@@ -269,6 +269,45 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime?),       typeof(DateTime?),       TranslateDateTimeDifference);
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTimeOffset),  typeof(DateTimeOffset),  TranslateDateTimeDifference);
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTimeOffset?), typeof(DateTimeOffset?), TranslateDateTimeDifference);
+
+			foreach (var temporal in new[] { typeof(DateTime), typeof(DateTime?), typeof(DateTimeOffset), typeof(DateTimeOffset?) })
+			{
+				foreach (var interval in new[] { typeof(TimeSpan), typeof(TimeSpan?) })
+				{
+					Registration.RegisterBinaryInternal(ExpressionType.Add,      temporal, interval, TranslateTemporalArithmetic);
+					Registration.RegisterBinaryInternal(ExpressionType.Subtract, temporal, interval, TranslateTemporalArithmetic);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Translates <c>date + interval</c> and <c>date - interval</c> into a node that keeps the shift visible.
+		/// </summary>
+		/// <remarks>
+		/// Registered so that it is not left to the generic binary handling, which builds a plain <c>+</c> between
+		/// the date and whatever the interval lowered to - a tick count on most providers - and a database
+		/// evaluates that without complaint: SQLite reads the date as text, coerces it to a number and answers
+		/// with something that still looks like a date. With the shift carried as a node the provider can lower it
+		/// properly, and the optimizer can cancel it against the difference it came from.
+		/// </remarks>
+		Expression? TranslateTemporalArithmetic(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			var temporal = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags);
+			if (temporal == null)
+				return null;
+
+			var interval = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags);
+			if (interval == null)
+				return null;
+
+			var factory = translationContext.ExpressionFactory;
+			var shifted = new SqlTemporalArithmeticExpression(
+				temporal.Sql,
+				interval.Sql,
+				binaryExpression.NodeType == ExpressionType.Subtract,
+				factory.GetDbDataType(binaryExpression.Type));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, shifted, binaryExpression);
 		}
 
 		/// <summary>
