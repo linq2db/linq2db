@@ -88,9 +88,18 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			t.Select(r => r.InSeconds.TotalHours).Single().ShouldBe(value.TotalHours);
-			t.Select(r => r.InSeconds.TotalMinutes).Single().ShouldBe(value.TotalMinutes);
-			t.Select(r => r.InTicks.TotalHours).Single().ShouldBe(value.TotalHours);
+			var row = t
+				.Select(r => new
+				{
+					SecondsHours   = r.InSeconds.TotalHours,
+					SecondsMinutes = r.InSeconds.TotalMinutes,
+					TicksHours     = r.InTicks.TotalHours,
+				})
+				.Single();
+
+			row.SecondsHours.ShouldBe(value.TotalHours);
+			row.SecondsMinutes.ShouldBe(value.TotalMinutes);
+			row.TicksHours.ShouldBe(value.TotalHours);
 		}
 
 		[Test]
@@ -102,10 +111,20 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			t.Select(r => r.InSeconds.Days).Single().ShouldBe(value.Days);
-			t.Select(r => r.InSeconds.Hours).Single().ShouldBe(value.Hours);
-			t.Select(r => r.InSeconds.Minutes).Single().ShouldBe(value.Minutes);
-			t.Select(r => r.InSeconds.Seconds).Single().ShouldBe(value.Seconds);
+			var row = t
+				.Select(r => new
+				{
+					r.InSeconds.Days,
+					r.InSeconds.Hours,
+					r.InSeconds.Minutes,
+					r.InSeconds.Seconds,
+				})
+				.Single();
+
+			row.Days.ShouldBe(value.Days);
+			row.Hours.ShouldBe(value.Hours);
+			row.Minutes.ShouldBe(value.Minutes);
+			row.Seconds.ShouldBe(value.Seconds);
 		}
 
 		[Test]
@@ -122,9 +141,18 @@ namespace Tests.Linq
 			value.Days.ShouldBe(-1);
 			value.Hours.ShouldBe(-1);
 
-			t.Select(r => r.InSeconds.Days).Single().ShouldBe(value.Days);
-			t.Select(r => r.InSeconds.Hours).Single().ShouldBe(value.Hours);
-			t.Select(r => r.InSeconds.TotalHours).Single().ShouldBe(value.TotalHours);
+			var row = t
+				.Select(r => new
+				{
+					r.InSeconds.Days,
+					r.InSeconds.Hours,
+					r.InSeconds.TotalHours,
+				})
+				.Single();
+
+			row.Days.ShouldBe(value.Days);
+			row.Hours.ShouldBe(value.Hours);
+			row.TotalHours.ShouldBe(value.TotalHours);
 		}
 
 		[Test]
@@ -138,8 +166,16 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			t.Select(r => r.InSeconds.TotalHours).Single().ShouldBe(3d);
-			t.Select(r => r.InTicks.TotalHours).Single().ShouldBe(3d);
+			var row = t
+				.Select(r => new
+				{
+					Seconds = r.InSeconds.TotalHours,
+					Ticks   = r.InTicks.TotalHours,
+				})
+				.Single();
+
+			row.Seconds.ShouldBe(3d);
+			row.Ticks.ShouldBe(3d);
 		}
 
 		[Test]
@@ -168,8 +204,16 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			t.Select(r => (-r.InSeconds).TotalHours).Single().ShouldBe((-value).TotalHours);
-			t.Select(r => (-r.InSeconds).Hours).Single().ShouldBe((-value).Hours);
+			var row = t
+				.Select(r => new
+				{
+					(-r.InSeconds).TotalHours,
+					(-r.InSeconds).Hours,
+				})
+				.Single();
+
+			row.TotalHours.ShouldBe((-value).TotalHours);
+			row.Hours.ShouldBe((-value).Hours);
 		}
 
 		[Test]
@@ -187,8 +231,16 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			t.Select(r => -r.InSeconds).Single().ShouldBe(-value);
-			t.Select(r => -r.InTicks).Single().ShouldBe(-value);
+			var row = t
+				.Select(r => new
+				{
+					Seconds = -r.InSeconds,
+					Ticks   = -r.InTicks,
+				})
+				.Single();
+
+			row.Seconds.ShouldBe(-value);
+			row.Ticks.ShouldBe(-value);
 		}
 
 		[Test]
@@ -203,7 +255,10 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			t.Select(r => Sql.AsSql(-r.UndeclaredSeconds)).Single().ShouldBe(-value);
+			t
+				.Select(r => Sql.AsSql(-r.UndeclaredSeconds))
+				.Single()
+				.ShouldBe(-value);
 		}
 
 		[Table]
@@ -211,8 +266,19 @@ namespace Tests.Linq
 		{
 			// Declared a key because YDB requires one on every table.
 			[PrimaryKey] public int Id { get; set; }
-			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime StartedOn  { get; set; }
-			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime FinishedOn { get; set; }
+
+			// The tick-precise type is asked for because one test measures a sub-millisecond difference, and it is
+			// asked for only where it exists: Access ODBC has no mapping for DateTime2 at all, and ClickHouse
+			// rejects it too, so those fall back to whatever the provider maps DateTime to.
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			[Column(Configuration = ProviderName.Access)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			[Column(Configuration = ProviderName.Access)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime FinishedOn { get; set; }
 		}
 
 		[Test]
@@ -239,10 +305,99 @@ namespace Tests.Linq
 			elapsed.Days.ShouldBe(2 * direction);
 			elapsed.Hours.ShouldBe(3 * direction);
 
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Days)).Single().ShouldBe(elapsed.Days);
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Hours)).Single().ShouldBe(elapsed.Hours);
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes)).Single().ShouldBe(elapsed.Minutes);
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours)).Single().ShouldBe(elapsed.TotalHours, 1e-9);
+			var row = t.Select(r => new
+			{
+				Days       = Sql.AsSql((r.FinishedOn - r.StartedOn).Days),
+				Hours      = Sql.AsSql((r.FinishedOn - r.StartedOn).Hours),
+				Minutes    = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
+				TotalHours = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours),
+			}).Single();
+
+			row.Days.ShouldBe(elapsed.Days);
+			row.Hours.ShouldBe(elapsed.Hours);
+			row.Minutes.ShouldBe(elapsed.Minutes);
+			row.TotalHours.ShouldBe(elapsed.TotalHours, 1e-9);
+		}
+
+		[Test]
+		public void DifferenceAddedBackToADate([DataSources] string context)
+		{
+			// A difference is not only read for its parts - it gets used. Adding it back to its own start must
+			// land on the end, and adding it to a third date must move that one by the same amount.
+			var started  = new DateTime(2026, 1, 1, 10,  0, 0);
+			var finished = new DateTime(2026, 1, 3, 13, 30, 0);
+			var other    = new DateTime(2026, 6, 15, 8, 45, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			var elapsed = finished - started;
+
+			var row = t
+				.Select(r => new
+				{
+					BackToEnd = r.StartedOn + (r.FinishedOn - r.StartedOn),
+					Shifted   = other + (r.FinishedOn - r.StartedOn),
+
+					// The shifted date is a date like any other, so a part of it still has to read.
+					Hour      = (r.StartedOn + (r.FinishedOn - r.StartedOn)).Hour,
+				})
+				.Single();
+
+			row.BackToEnd.ShouldBe(finished);
+			row.Shifted.ShouldBe(other + elapsed);
+			row.Hour.ShouldBe(finished.Hour);
+		}
+
+		[Test]
+		public void DifferenceFromASubqueryFiltersOnItsParts([DataSources] string context)
+		{
+			// The difference is computed in one query and a part of it is taken in the enclosing one, so the
+			// lowering meets a column reference where it usually meets the difference node itself.
+			var started  = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
+			db.Insert(new EventRow { Id = 2, StartedOn = started, FinishedOn = started.AddHours(1) });
+
+			var elapsed =
+				from r in t
+				select new { r.Id, Taken = r.FinishedOn - r.StartedOn };
+
+			elapsed
+				.Where(x => x.Taken.TotalHours > 3)
+				.Select(x => x.Id)
+				.ToArray()
+				.ShouldBe([1]);
+			elapsed
+				.Where(x => x.Taken.Hours == 1)
+				.Select(x => x.Id)
+				.ToArray()
+				.ShouldBe([2]);
+			elapsed
+				.OrderByDescending(x => x.Taken)
+				.Select(x => x.Id)
+				.ToArray()
+				.ShouldBe([1, 2]);
+
+			// And the interval itself comes back, not only the rows it selected: filtering on a part says nothing
+			// about whether the value survives the trip out of the subquery.
+			elapsed
+				.OrderBy(x => x.Id)
+				.Select(x => x.Taken)
+				.ToArray()
+				.ShouldBe([TimeSpan.FromHours(5), TimeSpan.FromHours(1)]);
+
+			var whole = elapsed
+				.OrderBy(x => x.Id)
+				.ToArray();
+
+			whole[0].Taken.ShouldBe(TimeSpan.FromHours(5));
+			whole[1].Taken.ShouldBe(TimeSpan.FromHours(1));
 		}
 
 		[Test]
@@ -260,8 +415,16 @@ namespace Tests.Linq
 
 			var elapsed = finished - started;
 
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes)).Single().ShouldBe(elapsed.TotalMinutes);
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes)).Single().ShouldBe(elapsed.Minutes);
+			var row = t
+				.Select(r => new
+				{
+					TotalMinutes = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes),
+					Minutes      = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
+				})
+				.Single();
+
+			row.TotalMinutes.ShouldBe(elapsed.TotalMinutes);
+			row.Minutes.ShouldBe(elapsed.Minutes);
 		}
 
 		[Test]
@@ -276,14 +439,20 @@ namespace Tests.Linq
 
 			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddTicks(9999) });
 
-			var ticks = t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).Single();
-
-			// Against the stored value, not against 9999: the difference cannot be finer than what the column
+			// Read against the stored value, not against 9999: the difference cannot be finer than what the column
 			// holds, and the storage quantum differs - datetime2 keeps 100ns where a PostgreSQL timestamp keeps a
 			// microsecond. What is being pinned is that the difference loses nothing beyond that.
-			var stored = t.Select(r => r.FinishedOn).Single();
+			var row = t
+				.Select(r => new
+				{
+					Ticks  = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+					Stored = r.FinishedOn,
+				})
+				.Single();
 
-			ticks.ShouldBe((stored - started).Ticks);
+			var ticks = row.Ticks;
+
+			ticks.ShouldBe((row.Stored - started).Ticks);
 
 			// And that what remains is genuinely sub-millisecond, so the assertion above cannot be satisfied by a
 			// provider that rounded the stored value to a whole millisecond in the first place.
@@ -305,19 +474,26 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			t.Select(r => Sql.AsSql(r.InSeconds.TotalHours)).Single().ShouldBe(value.TotalHours);
-			t.Select(r => Sql.AsSql(r.InSeconds.Hours)).Single().ShouldBe(value.Hours);
+			var row = t
+				.Select(r => new
+				{
+					TotalHours   = Sql.AsSql(r.InSeconds.TotalHours),
+					Hours        = Sql.AsSql(r.InSeconds.Hours),
+					TotalMinutes = Sql.AsSql(r.InTicks.TotalMinutes),
+				})
+				.Single();
+
+			row.TotalHours.ShouldBe(value.TotalHours);
+			row.Hours.ShouldBe(value.Hours);
 
 			// Access stores the tick count as DECIMAL - it has no 64-bit integer type - so dividing it happens in
 			// decimal arithmetic and the last bit of the resulting double need not match .NET's binary division.
 			// Every provider that holds the count in BIGINT does match exactly, so the tolerance is granted only
 			// where the storage makes exactness impossible, not everywhere.
-			var totalMinutes = t.Select(r => Sql.AsSql(r.InTicks.TotalMinutes)).Single();
-
 			if (context.IsAnyOf(TestProvName.AllAccess))
-				totalMinutes.ShouldBe(value.TotalMinutes, tolerance: 1e-9);
+				row.TotalMinutes.ShouldBe(value.TotalMinutes, tolerance: 1e-9);
 			else
-				totalMinutes.ShouldBe(value.TotalMinutes);
+				row.TotalMinutes.ShouldBe(value.TotalMinutes);
 		}
 	}
 }
