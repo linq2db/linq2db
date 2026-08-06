@@ -69,6 +69,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Elapsed time is <c>NANO100_BETWEEN</c>, which is already a tick count - see
+			/// <c>SapHanaSqlExpressionConvertVisitor.ElapsedTicks</c>.
+			/// </summary>
+			private protected override bool CanTranslateDateDifference => true;
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory   = translationContext.ExpressionFactory;

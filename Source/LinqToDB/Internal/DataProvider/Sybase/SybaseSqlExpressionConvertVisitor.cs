@@ -1,4 +1,5 @@
-﻿using LinqToDB.Internal.Extensions;
+﻿using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
@@ -12,6 +13,55 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		// could be enabled if we add SP03 version support (also IsDistinctFromSupported should be enabled)
 		//protected override bool SupportsDistinctAsExistsIntersect => true;
+
+		/// <summary>
+		/// <c>DATEDIFF</c> counts milliseconds, finer than the three-and-a-third that an ASE <c>datetime</c>
+		/// stores, so the remainder that completes an elapsed count is exact.
+		/// </summary>
+		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Millisecond;
+
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Day         => "day",
+				SqlIntervalUnit.Hour        => "hour",
+				SqlIntervalUnit.Minute      => "minute",
+				SqlIntervalUnit.Second      => "second",
+				SqlIntervalUnit.Millisecond => "millisecond",
+				_                           => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Function(Factory.GetDbDataType(date), "DateAdd",
+					Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), amount, date);
+		}
+
+		/// <summary>
+		/// Boundary counting through <c>DATEDIFF</c>, which the tick decomposition turns into elapsed time.
+		/// </summary>
+		/// <remarks>
+		/// The count is a 32-bit value, so asking it for milliseconds across more than about twenty-four days
+		/// overflows. Nothing does: the whole part is counted in seconds and the millisecond count only ever spans
+		/// the remainder of one.
+		/// </remarks>
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Cast(
+					Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff",
+						Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end),
+					Factory.GetDbDataType(typeof(long)), true);
+		}
 
 		#region LIKE
 

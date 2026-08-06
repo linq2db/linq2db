@@ -2003,8 +2003,10 @@ namespace Tests.Linq
 			TestProvName.AllMySql             + "," +
 			TestProvName.AllDuckDB            + "," +
 			ProviderName.SqlCe                + "," +
-			TestProvName.AllFirebird4Plus    + "," +
-			TestProvName.AllClickHouse;
+			TestProvName.AllFirebird         + "," +
+			TestProvName.AllClickHouse       + "," +
+			TestProvName.AllSapHana          + "," +
+			TestProvName.AllSybase;
 
 		[Table("NullableDateTimeSub")]
 		sealed class NullableDateTimeSubtractionTable

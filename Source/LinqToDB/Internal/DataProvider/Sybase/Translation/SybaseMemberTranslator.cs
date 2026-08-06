@@ -47,6 +47,12 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Elapsed time is counted in seconds and completed in milliseconds - see
+			/// <c>SybaseSqlExpressionConvertVisitor.CountDateBoundaries</c>.
+			/// </summary>
+			private protected override bool CanTranslateDateDifference => true;
+
 			public static string? DatePartToStr(Sql.DateParts part, bool forDateAdd)
 			{
 				return part switch

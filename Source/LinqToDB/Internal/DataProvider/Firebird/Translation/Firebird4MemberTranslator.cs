@@ -20,12 +20,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class Firebird4DateFunctionsTranslator : FirebirdDateFunctionsTranslator
 		{
-			/// <summary>
-			/// Firebird 4 is where <c>DATEDIFF</c> gained the fractional millisecond that makes an exact elapsed
-			/// count possible - see <c>FirebirdSqlExpressionConvertVisitor.ElapsedTicks</c>.
-			/// </summary>
-			private protected override bool CanTranslateDateDifference => true;
-
 			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
