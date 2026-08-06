@@ -598,6 +598,40 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DifferenceSurvivesAsASubqueryColumn([DataSources(TestProvName.AllAccess)] string context)
+		{
+			// Access is excluded because taking a member off a projected difference fails there for a reason that
+			// has nothing to do with nesting - the member translation looks for an operand that is syntactically a
+			// subtraction, and after a projection it is a reference through a transparent identifier.
+			// DifferenceFromASubqueryFiltersOnItsParts already pins that, so this would only repeat it.
+
+			// AsSubQuery keeps the nesting, so the difference really becomes a column of an inner SELECT and the
+			// outer query meets a column reference rather than the difference node itself. Without it the
+			// optimizer folds the projection away and the lowering never sees that shape at all.
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
+			db.Insert(new EventRow { Id = 2, StartedOn = started, FinishedOn = started.AddHours(1) });
+
+			var inner =
+				(from r in t
+				 select new { r.Id, Taken = r.FinishedOn - r.StartedOn })
+				.AsSubQuery();
+
+			var rows = inner
+				.Where(x => x.Taken.TotalHours > 3)
+				.OrderBy(x => x.Id)
+				.ToArray();
+
+			rows.Length.ShouldBe(1);
+			rows[0].Id.ShouldBe(1);
+			rows[0].Taken.ShouldBe(TimeSpan.FromHours(5));
+		}
+
+		[Test]
 		public void DifferenceFromASubqueryFiltersOnItsParts([DataSources] string context)
 		{
 			// The difference is computed in one query and a part of it is taken in the enclosing one, so the
