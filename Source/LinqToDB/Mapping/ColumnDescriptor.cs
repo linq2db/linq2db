@@ -340,12 +340,12 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
 		/// </summary>
-		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false;
+		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => s.Affects.HasFlag(SkipModification.Insert)) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on update.
 		/// </summary>
-		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false;
+		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => s.Affects.HasFlag(SkipModification.Update)) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.

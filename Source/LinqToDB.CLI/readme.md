@@ -9,6 +9,7 @@
 
 - [Installation](#installation)
   - [Choosing 32-bit vs 64-bit (Windows)](#choosing-32-bit-vs-64-bit-windows)
+  - [DB2 and Informix on Windows with UTF-8 codepage](#db2-and-informix-on-windows-with-utf-8-codepage)
 - [Use](#use)
   - [Usage Examples](#usage-examples)
     - [Generate SQLite database model in current folder](#generate-sqlite-database-model-in-current-folder)
@@ -67,6 +68,26 @@ dotnet tool install linq2db.cli --tool-path C:\tools\linq2db-x86 --arch x86
 ```
 
 Use any paths you like; if the path contains spaces, quote it (PowerShell: `"C:\My Tools\linq2db-x86"`; cmd: `"%USERPROFILE%\tools\x86"`).
+
+### DB2 and Informix on Windows with UTF-8 codepage
+
+If DB2 or Informix connections fail with `ERROR - no error information available` — no `SQLSTATE`, no inner exception, and nothing written to `db2diag.log` on either the client or the server — set the environment variable:
+
+```
+DB2CODEPAGE=1208
+```
+
+**Why:** when Windows is configured with *Use Unicode UTF-8 for worldwide language support*, the system ANSI and OEM codepages are both `65001`. IBM's native client cannot derive its codepage from `65001`, so it fails to allocate a CLI environment handle before any connection is attempted — which is why the error carries no detail. `1208` is DB2's codepage number for UTF-8.
+
+This affects **both DB2 and Informix**, because both go through `IBM.Data.Db2`. Set it machine- or user-wide rather than per-shell, and restart any already-running host (Visual Studio, LINQPad, an IDE terminal) — a process started before the change keeps the old environment.
+
+To confirm the diagnosis independently of linq2db, run IBM's own tool from the driver's `clidriver\bin`:
+
+```
+db2cli.exe validate -connect -connstring "DATABASE=mydb;HOSTNAME=localhost;PORT=50000;UID=user;PWD=password;"
+```
+
+`Failed to alloc env handle` is this problem; with `DB2CODEPAGE=1208` set, the same command reports `[SUCCESS]`.
 
 ## Use
 

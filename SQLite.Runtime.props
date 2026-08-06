@@ -30,7 +30,7 @@
 		<SystemDataSqliteRuntimeFolder>sds/runtimes</SystemDataSqliteRuntimeFolder>
 	</PropertyGroup>
 
-	<Target Name="CopySQLiteRuntimes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net462'">
+	<Target Name="CopySQLiteRuntimes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net472'">
 		<ItemGroup>
 			<SQLiteRuntimes Include="$(PkgSourceGear_sqlite3)\runtimes\**\*" />
 		</ItemGroup>
@@ -43,5 +43,14 @@
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x64\native\e_sqlite3.dll" />
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-arm64\native\e_sqlite3.dll" />
 	</Target>
+
+	<!--
+	net472 is excluded from the generic target above because it is the LINQPad 5 driver, which runs
+	x86/x64 only: the full SourceGear.sqlite3 runtimes tree (iOS, Android, Linux ppc64le/mips64,
+	macOS, maccatalyst) is ~52 MB the driver can never load, and it ends up inside the packed .lpx.
+	Note the net462 guard above does NOT cover it — LinqToDB.LINQPad targets net472, not net462.
+	The two Windows natives it does need are copied by LinqToDB.LINQPad.csproj's PostBuild2 target,
+	which also owns Pack.cmd and so can guarantee they exist before the archive is written.
+	-->
 
 </Project>

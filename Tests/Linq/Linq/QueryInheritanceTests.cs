@@ -237,9 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		sealed class PersonEx : Person
-		{
-		}
+		sealed class PersonEx : Person;
 
 		[Test]
 		public void SimpleTest()
@@ -302,8 +300,6 @@ namespace Tests.Linq
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;
 		}
 
-		public class InheritanceB : InheritanceBase
-		{
-		}
+		public class InheritanceB : InheritanceBase;
 	}
 }

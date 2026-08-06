@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
@@ -275,10 +275,13 @@ public class TestsInitialization
 		{
 			master.Open();
 		}
-		catch (DllNotFoundException)
+		catch (Exception ex) when (ex is DllNotFoundException || ex.InnerException is DllNotFoundException)
 		{
 			// no native duckdb on this leg (e.g. the x86 Access runs, where DuckDB isn't a tested
 			// provider) — skip the in-memory keep-alive rather than failing global OneTimeSetUp.
+			// The native load happens in DuckDBConnectionStringBuilder's static ctor, so the CLR hands
+			// us TypeInitializationException wrapping the DllNotFoundException; catching only the latter
+			// missed it and took down TestAssemblySetup, failing every test in the assembly.
 			master.Dispose();
 			return;
 		}
@@ -314,6 +317,7 @@ public class TestsInitialization
 			finally
 			{
 				try { File.Delete(work); } catch { /* best effort */ }
+
 				try { if (Directory.Exists(dump)) Directory.Delete(dump, true); } catch { /* best effort */ }
 			}
 		}

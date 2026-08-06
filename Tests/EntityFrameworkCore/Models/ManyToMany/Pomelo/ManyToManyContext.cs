@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Pomelo.Models.ManyToMany
 {
-	public class ManyToManyContext(DbContextOptions options) : ManyToManyContextBase(options)
-	{
-	}
+	public class ManyToManyContext(DbContextOptions options) : ManyToManyContextBase(options);
 }
 #endif
