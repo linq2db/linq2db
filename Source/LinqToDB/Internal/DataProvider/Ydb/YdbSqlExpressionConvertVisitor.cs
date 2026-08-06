@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -13,6 +14,40 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		/// <inheritdoc/>
 		protected override bool SupportsNullInColumn => false;
+
+		/// <summary>
+		/// YQL integer division already truncates toward zero, which is the semantic the base composes
+		/// <c>FLOOR</c> and <c>CEILING</c> to reach.
+		/// </summary>
+		/// <remarks>
+		/// Neither of those is a YQL builtin - the equivalents live in the <c>Math::</c> module and take only
+		/// doubles, which a tick count outgrows well inside the range a <see cref="TimeSpan"/> can hold.
+		/// </remarks>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Div(longType, value, Factory.Value(longType, divisor));
+		}
+
+		/// <summary>
+		/// Elapsed ticks from the microsecond count a YQL <c>Interval</c> casts to.
+		/// </summary>
+		/// <remarks>
+		/// Subtracting two temporal values yields an <c>Interval</c>, and casting one to <c>Int64</c> gives the
+		/// microseconds it holds - which is also the finest a YDB timestamp stores, so scaling to ticks loses
+		/// nothing. The subtraction has to carry the interval type, or the cast reads as a no-op between two
+		/// <c>Int64</c> values and is pruned.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+			var microseconds = Factory.Cast(Factory.Sub(intervalType, element.End, element.Start), longType, true);
+
+			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
 
 		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB
 		// supports) instead of folding it to NULLIF.

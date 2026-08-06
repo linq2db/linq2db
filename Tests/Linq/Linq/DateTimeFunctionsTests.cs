@@ -2007,7 +2007,9 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse       + "," +
 			TestProvName.AllSapHana          + "," +
 			TestProvName.AllSybase           + "," +
-			TestProvName.AllOracle;
+			TestProvName.AllOracle           + "," +
+			TestProvName.AllDB2              + "," +
+			TestProvName.AllYdb;
 
 		[Table("NullableDateTimeSub")]
 		sealed class NullableDateTimeSubtractionTable

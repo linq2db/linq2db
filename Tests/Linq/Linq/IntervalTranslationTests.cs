@@ -21,7 +21,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class DurationRow
 		{
-			[Column] public int Id { get; set; }
+			// Declared a key because YDB requires one on every table.
+			[PrimaryKey] public int Id { get; set; }
 
 			// Same CLR type, same storage type, different units. Nothing about the storage says which - only the
 			// declaration does, and getting it wrong is a silent factor-of-10000000 error.
@@ -208,7 +209,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class EventRow
 		{
-			[Column] public int      Id        { get; set; }
+			// Declared a key because YDB requires one on every table.
+			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime StartedOn  { get; set; }
 			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime FinishedOn { get; set; }
 		}
