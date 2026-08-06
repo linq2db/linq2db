@@ -14,6 +14,16 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		/// <summary>
+		/// <c>//</c>, DuckDB's integer division - its <c>/</c> produces a double even between two integers.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Expression(longType, Precedence.Multiplicative, "{0} // {1}", value, Factory.Value(longType, divisor));
+		}
+
+		/// <summary>
 		/// Elapsed ticks from <c>date_diff</c> at microsecond resolution.
 		/// </summary>
 		/// <remarks>

@@ -17,6 +17,16 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		/// <summary>
+		/// <c>DIV</c>, because MySQL's <c>/</c> is a decimal division even between two integers.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Expression(longType, Precedence.Multiplicative, "{0} DIV {1}", value, Factory.Value(longType, divisor));
+		}
+
+		/// <summary>
 		/// Elapsed ticks from <c>TIMESTAMPDIFF</c> at microsecond resolution.
 		/// </summary>
 		/// <remarks>

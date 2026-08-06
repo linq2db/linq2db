@@ -16,21 +16,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override bool SupportsNullInColumn => false;
 
 		/// <summary>
-		/// YQL integer division already truncates toward zero, which is the semantic the base composes
-		/// <c>FLOOR</c> and <c>CEILING</c> to reach.
-		/// </summary>
-		/// <remarks>
-		/// Neither of those is a YQL builtin - the equivalents live in the <c>Math::</c> module and take only
-		/// doubles, which a tick count outgrows well inside the range a <see cref="TimeSpan"/> can hold.
-		/// </remarks>
-		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
-		{
-			var longType = Factory.GetDbDataType(typeof(long));
-
-			return Factory.Div(longType, value, Factory.Value(longType, divisor));
-		}
-
-		/// <summary>
 		/// Elapsed ticks from the microsecond count a YQL <c>Interval</c> casts to.
 		/// </summary>
 		/// <remarks>

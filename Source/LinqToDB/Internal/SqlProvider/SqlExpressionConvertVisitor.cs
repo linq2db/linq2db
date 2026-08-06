@@ -1307,14 +1307,14 @@ namespace LinqToDB.Internal.SqlProvider
 				// Every member follows from the tick count, and .NET defines them that way, so where the count is
 				// fine enough this is both the shorter SQL and the closer reading of the CLR.
 				if (ElapsedTicksResolveMembers && ElapsedTicks(difference) is { } exact)
-					return IntervalLowering.FromTicks(Factory, exact, element, TruncateDivide);
+					return IntervalLowering.FromTicks(Factory, exact, element, TruncateDivide, TruncateRemainder);
 
 				var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
 
 				if (whole != null)
 				{
 					if (element.Kind == SqlIntervalPartKind.Component)
-						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, TruncateDivide), element.Type);
+						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, TruncateRemainder), element.Type);
 
 					var total = IntervalLowering.ElapsedTotal(
 						Factory, difference, element.Unit, whole, FinestDateUnit, CountDateBoundaries, ShiftDate);
@@ -1327,36 +1327,41 @@ namespace LinqToDB.Internal.SqlProvider
 				// untranslated, which is what it would have been before any of this existed.
 				var elapsed = ElapsedTicks(difference);
 
-				return elapsed == null ? null : IntervalLowering.FromTicks(Factory, elapsed, element, TruncateDivide);
+				return elapsed == null ? null : IntervalLowering.FromTicks(Factory, elapsed, element, TruncateDivide, TruncateRemainder);
 			}
 
-			return IntervalLowering.LowerPart(Factory, element, TruncateDivide);
+			return IntervalLowering.LowerPart(Factory, element, TruncateDivide, TruncateRemainder);
 		}
 
 		/// <summary>
 		/// Integer division truncating toward zero.
 		/// </summary>
 		/// <remarks>
-		/// Provider division, <c>%</c> and <c>MOD</c> disagree on negative operands - some floor, some truncate -
-		/// so anything reproducing CLR integer division must spell the rule out rather than inherit the database's.
-		/// <para>
-		/// The default composes <c>FLOOR</c>/<c>CEILING</c>. Providers without them override this: the same
-		/// variation is already recorded on <see cref="Sql.Truncate(decimal?)"/>, which uses
-		/// <c>Round({0}, 0, 1)</c> on SQL CE and <c>Round({0}, 0, ROUND_DOWN)</c> on SAP HANA.
-		/// </para>
+		/// The default is the division itself, which is what dividing two integers means in SQL and matches CLR
+		/// integer division on negatives. A provider whose division is not integral overrides it - MySQL and
+		/// DuckDB return a fraction, Access has no integer division at all - and so does one whose truncation is
+		/// spelled its own way.
 		/// </remarks>
 		protected virtual ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
 		{
-			var longType    = Factory.GetDbDataType(typeof(long));
-			var decimalType = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(29, 10);
+			var longType = Factory.GetDbDataType(typeof(long));
 
-			var quotient  = Factory.Div(decimalType, Factory.Cast(value, decimalType, true), Factory.Value(decimalType, (decimal)divisor));
-			var truncated = Factory.Condition(
-				Factory.GreaterOrEqual(value, Factory.Value(longType, 0L)),
-				Factory.Function(decimalType, "FLOOR", quotient),
-				Factory.Function(decimalType, "CEILING", quotient));
+			return Factory.Div(longType, value, Factory.Value(longType, divisor));
+		}
 
-			return Factory.Cast(truncated, longType, true);
+		/// <summary>
+		/// Remainder of the same truncating division, which is what <c>%</c> means on integers in most databases
+		/// and what the CLR operator means.
+		/// </summary>
+		/// <remarks>
+		/// Kept separate from <see cref="TruncateDivide"/> because composing it out of one - as
+		/// <c>value - trunc(value / divisor) * divisor</c> - repeats the value three times, and the components of
+		/// an interval nest two of these, so the repetition multiplies. A provider whose remainder disagrees on
+		/// negatives, or that spells it as a function, overrides this.
+		/// </remarks>
+		protected virtual ISqlExpression TruncateRemainder(ISqlExpression value, long divisor)
+		{
+			return Factory.Mod(value, divisor);
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)

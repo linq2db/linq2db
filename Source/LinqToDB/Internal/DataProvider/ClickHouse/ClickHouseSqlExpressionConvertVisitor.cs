@@ -23,6 +23,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		/// <summary>
+		/// <c>intDiv</c>, because ClickHouse's <c>/</c> produces a float even between two integers.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Function(longType, "intDiv", value, Factory.Value(longType, divisor));
+		}
+
+		/// <summary>
 		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
 		/// </summary>
 		/// <remarks>

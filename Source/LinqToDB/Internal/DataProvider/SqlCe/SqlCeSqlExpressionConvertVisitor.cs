@@ -17,6 +17,21 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		protected override bool SupportsNullIf => false;
 
 		/// <summary>
+		/// The divisor carries an explicit <c>BIGINT</c> cast.
+		/// </summary>
+		/// <remarks>
+		/// SQL CE types a literal past the <c>INT</c> range as <c>NUMERIC</c>, which would make the division
+		/// numeric as well - and its <c>%</c> rejects that type outright: "Modulo is not supported on real, float,
+		/// money, and numeric data types". Naming the type keeps the division integral.
+		/// </remarks>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Div(longType, value, Factory.Cast(Factory.Value(longType, divisor), longType, true));
+		}
+
+		/// <summary>
 		/// <c>DATEDIFF</c> counts milliseconds, which is what a SQL CE <c>datetime</c> stores, so the leftover of a
 		/// total is exact.
 		/// </summary>

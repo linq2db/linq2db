@@ -27,14 +27,15 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <param name="factory">Expression factory.</param>
 		/// <param name="element">Part to lower.</param>
 		/// <param name="truncateDivide">Integer division truncating toward zero, as the provider spells it.</param>
-		public static ISqlExpression? LowerPart(ISqlExpressionFactory factory, SqlIntervalPartExpression element, Func<ISqlExpression, long, ISqlExpression> truncateDivide)
+		/// <param name="truncateRemainder">Remainder of that same division.</param>
+		public static ISqlExpression? LowerPart(ISqlExpressionFactory factory, SqlIntervalPartExpression element, Func<ISqlExpression, long, ISqlExpression> truncateDivide, Func<ISqlExpression, long, ISqlExpression> truncateRemainder)
 		{
 			if (element.Interval is not SqlIntervalExpression interval || interval.IntervalType.Domain != SqlIntervalDomain.Duration)
 				return null;
 
 			var ticks = ToTicks(factory, interval);
 
-			return ticks == null ? null : FromTicks(factory, ticks, element, truncateDivide);
+			return ticks == null ? null : FromTicks(factory, ticks, element, truncateDivide, truncateRemainder);
 		}
 
 		/// <summary>
@@ -45,11 +46,11 @@ namespace LinqToDB.Internal.SqlProvider
 		/// which is both shorter and closer to what .NET does than counting each unit separately. It is the second
 		/// choice all the same: counting cannot overflow, and a fine-grained difference over a long range can.
 		/// </remarks>
-		public static ISqlExpression? FromTicks(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalPartExpression element, Func<ISqlExpression, long, ISqlExpression> truncateDivide)
+		public static ISqlExpression? FromTicks(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalPartExpression element, Func<ISqlExpression, long, ISqlExpression> truncateDivide, Func<ISqlExpression, long, ISqlExpression> truncateRemainder)
 		{
 			return element.Kind == SqlIntervalPartKind.Total
 				? Total(factory, ticks, element.Unit, element.Type)
-				: Component(factory, ticks, element.Unit, element.Type, truncateDivide);
+				: Component(factory, ticks, element.Unit, element.Type, truncateDivide, truncateRemainder);
 		}
 
 		/// <summary>
@@ -158,7 +159,7 @@ namespace LinqToDB.Internal.SqlProvider
 			ISqlExpressionFactory                     factory,
 			ISqlExpression                            wholeUnits,
 			SqlIntervalUnit                           unit,
-			Func<ISqlExpression, long, ISqlExpression> truncateDivide)
+			Func<ISqlExpression, long, ISqlExpression> truncateRemainder)
 		{
 			var wrap = unit switch
 			{
@@ -170,7 +171,7 @@ namespace LinqToDB.Internal.SqlProvider
 				_                           => 0L,
 			};
 
-			return wrap == 0 ? wholeUnits : Remainder(factory, wholeUnits, wrap, truncateDivide);
+			return wrap == 0 ? wholeUnits : truncateRemainder(wholeUnits, wrap);
 		}
 
 		/// <summary>
@@ -208,14 +209,14 @@ namespace LinqToDB.Internal.SqlProvider
 			return factory.Cast(total, resultType);
 		}
 
-		static ISqlExpression? Component(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalUnit unit, DbDataType resultType, Func<ISqlExpression, long, ISqlExpression> truncateDivide)
+		static ISqlExpression? Component(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalUnit unit, DbDataType resultType, Func<ISqlExpression, long, ISqlExpression> truncateDivide, Func<ISqlExpression, long, ISqlExpression> truncateRemainder)
 		{
 			var longType = factory.GetDbDataType(typeof(long));
 
 			// TimeSpan.Nanoseconds is the nanosecond part within the current microsecond, and a tick is 100ns, so
 			// it is the scaled tick remainder - not a division of the whole tick count.
 			if (unit == SqlIntervalUnit.Nanosecond)
-				return factory.Cast(factory.Multiply(longType, Remainder(factory, ticks, 10, truncateDivide), 100L), resultType);
+				return factory.Cast(factory.Multiply(longType, truncateRemainder(ticks, 10), 100L), resultType);
 
 			if (!SqlIntervalUnits.TryGetTicksRatio(unit, out var ticksPerUnit, out var denominator) || denominator != 1)
 				return null;
@@ -238,17 +239,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var whole = truncateDivide(ticks, ticksPerUnit);
 
-			return factory.Cast(wrap == null ? whole : Remainder(factory, whole, wrap.Value, truncateDivide), resultType);
-		}
-
-		/// <summary>
-		/// Remainder consistent with the supplied truncation: <c>value - trunc(value / divisor) * divisor</c>.
-		/// </summary>
-		static ISqlExpression Remainder(ISqlExpressionFactory factory, ISqlExpression value, long divisor, Func<ISqlExpression, long, ISqlExpression> truncateDivide)
-		{
-			var longType = factory.GetDbDataType(typeof(long));
-
-			return factory.Sub(longType, value, factory.Multiply(longType, truncateDivide(value, divisor), divisor));
+			return factory.Cast(wrap == null ? whole : truncateRemainder(whole, wrap.Value), resultType);
 		}
 	}
 }
