@@ -18,6 +18,76 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
 		/// <summary>
+		/// The elapsed time itself, as a native <c>interval</c>: PostgreSQL subtracts two date/time values into one
+		/// directly, and <c>TimeSpan</c> is already mapped to it, so the value needs no decomposition on either side.
+		/// </summary>
+		protected override ISqlExpression? LowerIntervalDifference(SqlIntervalDifferenceExpression element)
+		{
+			return Elapsed(element);
+		}
+
+		/// <summary>
+		/// Ticks summed field by field out of the interval, rather than from its epoch.
+		/// </summary>
+		/// <remarks>
+		/// <c>EXTRACT(EPOCH ...)</c> is the obvious form and the wrong one: it returns a double before PostgreSQL
+		/// 14, whose spacing grows past a tick over a range of decades. Every other field is bounded - seconds stay
+		/// below sixty - so a double carries them exactly however far apart the two timestamps are, and the day
+		/// count is whole. A timestamp difference never carries months, so days are the coarsest field there is.
+		/// <para>
+		/// Fields of a negative interval are all negative, so the sum needs no sign handling.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var elapsed    = Elapsed(element);
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var doubleType = Factory.GetDbDataType(typeof(double));
+
+			// PostgreSQL stores microseconds, so scaling the seconds field to ticks lands on a whole number.
+			var seconds = Factory.Cast(
+				Factory.Function(doubleType, "Round",
+					Factory.Multiply(doubleType, Extract("second", elapsed, doubleType), (double)TimeSpan.TicksPerSecond)),
+				longType, true);
+
+			return Factory.Add(longType, WholeField(elapsed, "day", TimeSpan.TicksPerDay),
+				Factory.Add(longType, WholeField(elapsed, "hour", TimeSpan.TicksPerHour),
+					Factory.Add(longType, WholeField(elapsed, "minute", TimeSpan.TicksPerMinute), seconds)));
+		}
+
+		ISqlExpression WholeField(ISqlExpression elapsed, string part, long ticksPerUnit)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Multiply(longType,
+				Factory.Cast(Extract(part, elapsed, Factory.GetDbDataType(typeof(double))), longType, true),
+				ticksPerUnit);
+		}
+
+		ISqlExpression Elapsed(SqlIntervalDifferenceExpression element)
+		{
+			return Factory.Sub(IntervalType, AsTimestamp(element.End), AsTimestamp(element.Start));
+		}
+
+		DbDataType IntervalType => Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+		/// <summary>
+		/// Widens a <c>date</c> operand to a <c>timestamp</c>.
+		/// </summary>
+		/// <remarks>
+		/// <c>date - date</c> is the one subtraction PostgreSQL answers with an integer count of days rather than an
+		/// interval. A date carries no time of day, so widening it is lossless and makes the operation uniform.
+		/// </remarks>
+		ISqlExpression AsTimestamp(ISqlExpression value)
+		{
+			var type = QueryHelper.GetDbDataType(value, MappingSchema);
+
+			return type.DataType == DataType.Date
+				? PseudoFunctions.MakeCast(value, type.WithDataType(DataType.DateTime2))
+				: value;
+		}
+
+		/// <summary>
 		/// Subtracting two timestamps in PostgreSQL yields a real <c>interval</c>, already split into days and a
 		/// time of day, so the components can be read straight out of it - no boundary counting, no anchoring.
 		/// </summary>
@@ -37,8 +107,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (QueryHelper.UnwrapNullablity(element.Interval) is not SqlIntervalDifferenceExpression difference)
 				return base.LowerIntervalPart(element);
 
-			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
-			var elapsed      = Factory.Sub(intervalType, difference.End, difference.Start);
+			var elapsed = Elapsed(difference);
 
 			if (element.Kind == SqlIntervalPartKind.Total)
 			{

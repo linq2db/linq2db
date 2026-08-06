@@ -33,9 +33,20 @@ namespace LinqToDB.Internal.SqlProvider
 				return null;
 
 			var ticks = ToTicks(factory, interval);
-			if (ticks == null)
-				return null;
 
+			return ticks == null ? null : FromTicks(factory, ticks, element, truncateDivide);
+		}
+
+		/// <summary>
+		/// The same member arithmetic as <see cref="LowerPart"/>, over a tick count the caller already has.
+		/// </summary>
+		/// <remarks>
+		/// Where a provider can produce elapsed ticks directly, this answers every member from that one value,
+		/// which is both shorter and closer to what .NET does than counting each unit separately. It is the second
+		/// choice all the same: counting cannot overflow, and a fine-grained difference over a long range can.
+		/// </remarks>
+		public static ISqlExpression? FromTicks(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalPartExpression element, Func<ISqlExpression, long, ISqlExpression> truncateDivide)
+		{
 			return element.Kind == SqlIntervalPartKind.Total
 				? Total(factory, ticks, element.Unit, element.Type)
 				: Component(factory, ticks, element.Unit, element.Type, truncateDivide);

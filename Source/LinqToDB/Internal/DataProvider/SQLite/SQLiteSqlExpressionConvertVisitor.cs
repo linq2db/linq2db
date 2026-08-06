@@ -16,6 +16,36 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <summary>
+		/// Elapsed ticks from the Julian day difference, resolved to the millisecond.
+		/// </summary>
+		/// <remarks>
+		/// SQLite has no date type: values are text, and <c>julianday</c> is the only way to do arithmetic on them.
+		/// It returns a double whose spacing at present-day dates is around fifty microseconds, so the millisecond
+		/// it is rounded to is the finest unit that comes back exact - and it is also the resolution SQLite date
+		/// arithmetic already works at, since <c>strftime</c>'s <c>%f</c> emits three fractional digits and
+		/// <c>AddTicks</c> has always lost anything below that.
+		/// <para>
+		/// Rounding rather than truncating for the same reason: the true value is a whole number of milliseconds,
+		/// and the error is far below half of one, so the nearest is the exact one.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var longType   = Factory.GetDbDataType(typeof(long));
+
+			var days         = Factory.Sub(doubleType, JulianDay(element.End), JulianDay(element.Start));
+			var milliseconds = Factory.Function(doubleType, "Round", Factory.Multiply(doubleType, days, (double)(TimeSpan.TicksPerDay / TimeSpan.TicksPerMillisecond)));
+
+			return Factory.Multiply(longType, Factory.Cast(milliseconds, longType, true), TimeSpan.TicksPerMillisecond);
+		}
+
+		ISqlExpression JulianDay(ISqlExpression date)
+		{
+			return Factory.Function(Factory.GetDbDataType(typeof(double)), "JulianDay", date);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			return element.Operation switch

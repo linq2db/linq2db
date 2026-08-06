@@ -263,10 +263,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateDifferenceKeepsSubSecondPrecision([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		public void DateDifferenceKeepsSubSecondPrecision([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context)
 		{
-			// datetime2 stores 100ns, so the difference must too - a millisecond-resolution DATEDIFF would report
-			// zero here. This is the case the review of #5739 called out as translator-induced precision loss.
+			// A millisecond-resolution DATEDIFF would report zero here. This is the case the review of #5739 called
+			// out as translator-induced precision loss.
 			var started = new DateTime(2026, 1, 1);
 
 			using var db = GetDataContext(context);
@@ -274,7 +274,18 @@ namespace Tests.Linq
 
 			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddTicks(9999) });
 
-			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).Single().ShouldBe(9999L);
+			var ticks = t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).Single();
+
+			// Against the stored value, not against 9999: the difference cannot be finer than what the column
+			// holds, and the storage quantum differs - datetime2 keeps 100ns where a PostgreSQL timestamp keeps a
+			// microsecond. What is being pinned is that the difference loses nothing beyond that.
+			var stored = t.Select(r => r.FinishedOn).Single();
+
+			ticks.ShouldBe((stored - started).Ticks);
+
+			// And that what remains is genuinely sub-millisecond, so the assertion above cannot be satisfied by a
+			// provider that rounded the stored value to a whole millisecond in the first place.
+			(ticks % TimeSpan.TicksPerMillisecond).ShouldNotBe(0L);
 		}
 
 		[Test]

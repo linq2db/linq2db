@@ -1151,17 +1151,37 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Lowers <c>End - Start</c> into an exact tick count.
+		/// Lowers <c>End - Start</c> into the elapsed time as a value, in whatever form the read path turns back
+		/// into a <see cref="TimeSpan"/>.
 		/// </summary>
 		/// <remarks>
-		/// There is no default: elapsed time between two date/time values has no portable SQL form, and the
-		/// per-provider <c>DateDiff</c> machinery answers the boundary-count question instead. A provider that
-		/// cannot produce the difference <em>exactly</em>, at the resolution its own date type stores, should
-		/// leave this alone rather than approximate - SQLite keeps timestamps as text and <c>julianday</c> returns
-		/// days as a float, which cannot carry ticks.
+		/// Over integral storage that form is the tick count, which is the default. A provider with a native
+		/// interval type overrides this to produce one instead - the value is the same duration either way, and
+		/// which representation is used is exactly the provider's business.
 		/// </remarks>
 		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
 		protected virtual ISqlExpression? LowerIntervalDifference(SqlIntervalDifferenceExpression element)
+		{
+			return ElapsedTicks(element);
+		}
+
+		/// <summary>
+		/// Elapsed ticks between two date/time values, exactly.
+		/// </summary>
+		/// <remarks>
+		/// The one quantity that has to be a tick count rather than any equivalent duration, because
+		/// <see cref="TimeSpan.Ticks"/> asks for it by name. Unlike the other members it is not a count of whole
+		/// units that anchoring can correct, so a provider answers it or does not.
+		/// <para>
+		/// There is no default: elapsed time between two date/time values has no portable SQL form, and the
+		/// per-provider <c>DateDiff</c> machinery answers the boundary-count question instead. A provider that
+		/// cannot produce it <em>exactly</em>, at the resolution its own date type stores, should leave this alone
+		/// rather than approximate - SQLite keeps timestamps as text and <c>julianday</c> returns days as a float,
+		/// which cannot carry ticks.
+		/// </para>
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
+		protected virtual ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
 			return null;
 		}
@@ -1220,24 +1240,41 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <returns><see langword="null"/> when the part cannot be produced exactly, leaving it untranslated.</returns>
 		protected virtual ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
-
 			// A part of a computed difference is answered by counting elapsed units directly. .NET defines the
 			// member as _ticks / TicksPerUnit, and the anchor count reproduces that quotient exactly - forming a
 			// tick count first would only reintroduce the overflow and precision limits it exists to avoid.
 			// Unwrap first: the translator's placeholder may carry a nullability wrapper around the difference.
 			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
 			{
+				// Ticks is the exception: it is the whole difference, not a count of units, so counting cannot
+				// answer it. It is the same quantity the provider produces for a bare difference over integral
+				// storage.
+				if (element is { Unit: SqlIntervalUnit.Tick, Kind: SqlIntervalPartKind.Total })
+				{
+					var ticks = ElapsedTicks(difference);
+
+					return ticks == null ? null : Factory.Cast(ticks, element.Type);
+				}
+
 				var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
-				if (whole == null)
-					return null;
 
-				if (element.Kind == SqlIntervalPartKind.Component)
-					return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, TruncateDivide), element.Type);
+				if (whole != null)
+				{
+					if (element.Kind == SqlIntervalPartKind.Component)
+						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, TruncateDivide), element.Type);
 
-				var total = IntervalLowering.ElapsedTotal(
-					Factory, difference, element.Unit, whole, FinestDateUnit, CountDateBoundaries, ShiftDate);
+					var total = IntervalLowering.ElapsedTotal(
+						Factory, difference, element.Unit, whole, FinestDateUnit, CountDateBoundaries, ShiftDate);
 
-				return total == null ? null : Factory.Cast(total, element.Type);
+					if (total != null)
+						return Factory.Cast(total, element.Type);
+				}
+
+				// Counting did not reach this unit. A provider that can produce elapsed ticks answers every member
+				// from that one value instead - the same arithmetic the integral-storage path uses.
+				var elapsed = ElapsedTicks(difference);
+
+				return elapsed == null ? null : IntervalLowering.FromTicks(Factory, elapsed, element, TruncateDivide);
 			}
 
 			return IntervalLowering.LowerPart(Factory, element, TruncateDivide);

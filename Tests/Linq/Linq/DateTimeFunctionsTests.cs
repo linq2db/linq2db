@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -2044,7 +2043,7 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted]
 		[Test]
 		public void NullableDateTimeSubtractionProjectionSqlTest(
-			[DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse, TestProvName.AllSqlServer2016Plus)] string context)
+			[DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2062,7 +2061,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NullableDateTimeSubtractionProjectionServerSideTest(
-			[IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
 			// The same query on a provider that does translate it. Sql.AsSql forces the server side, so this
 			// fails outright rather than quietly falling back if the lowering ever stops working.
@@ -2126,11 +2125,34 @@ namespace Tests.Linq
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
 
-			if (!context.IsRemote() && db is DataConnection dc)
-			{
-				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
-					.ShouldBeFalse("DateTimeOffset subtraction must not appear in SQL — it is evaluated client-side in .NET");
-			}
+			// As with the DateTime overload: no assertion on where the subtraction happened, only on the value.
+			// The counterpart below pins the server side for the providers that express it.
+		}
+
+		[Test]
+		public void NullableDateTimeOffsetSubtractionProjectionServerSideTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			// Sql.AsSql forces the server side, so this fails outright rather than quietly falling back if the
+			// lowering ever stops working. There is no Sql.AsSql counterpart for the providers that cannot express
+			// it, because the throw comes from the same builder method the DateTime overload already covers.
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeOffsetSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
 		}
 	}
 }
