@@ -29,6 +29,67 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return Factory.Function(longType, "Fix", Factory.Div(longType, value, Factory.Value(longType, divisor)));
 		}
 
+		/// <summary>
+		/// A second is as fine as Access counts - <c>DateDiff</c> has no millisecond part at all.
+		/// </summary>
+		/// <remarks>
+		/// The whole-unit members are still exact, because the anchor correction compares actual dates rather than
+		/// trusting the count. What this limits is the fraction of a <c>Total</c> and anything below a second,
+		/// which an OLE Automation date - a floating day number - could not carry reliably anyway.
+		/// </remarks>
+		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Second;
+
+		/// <summary>
+		/// Access counts seconds, and an OLE Automation date holds fractions of one, so a tick count derived from
+		/// it is only good to the second - which is why the members are counted instead.
+		/// </summary>
+		protected override bool ElapsedTicksResolveMembers => false;
+
+		/// <summary>
+		/// No tick count from Access at all.
+		/// </summary>
+		/// <remarks>
+		/// <c>DateDiff</c> hands back a 32-bit count, and scaling seconds to ticks overflows it after about three
+		/// and a half minutes - the driver answers <c>Numeric value out of range</c>. There is no wider integer to
+		/// reach for, so the interval never becomes a value here and its member translator says so.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			return null;
+		}
+
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Day    => "d",
+				SqlIntervalUnit.Hour   => "h",
+				SqlIntervalUnit.Minute => "n",
+				SqlIntervalUnit.Second => "s",
+				_                      => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Function(Factory.GetDbDataType(date), "DateAdd", Factory.Value(part), amount, date);
+		}
+
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Cast(
+					Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff", Factory.Value(part), start, end),
+					Factory.GetDbDataType(typeof(long)), true);
+		}
+
 		static readonly string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
 
 		public override bool LikeIsEscapeSupported => false;

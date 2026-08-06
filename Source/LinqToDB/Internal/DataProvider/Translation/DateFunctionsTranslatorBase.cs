@@ -284,6 +284,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		private protected virtual bool CanTranslateDateDifference => false;
 
 		/// <summary>
+		/// Whether this provider can lower a <em>member</em> of an elapsed date difference. Defaults to whatever
+		/// the difference itself can do.
+		/// </summary>
+		/// <remarks>
+		/// The two are separate capabilities and one provider has only the second: Access counts elapsed units
+		/// well enough to answer <c>TotalHours</c>, but its <c>DateDiff</c> is a 32-bit count, so scaling one to a
+		/// tick total overflows within minutes and the interval can never become a value. Asking for the value
+		/// there has to stay in .NET, which it can, while the member has nowhere else to go.
+		/// </remarks>
+		private protected virtual bool CanTranslateDateDifferenceMembers => CanTranslateDateDifference;
+
+		/// <summary>
 		/// Translates <c>end - start</c> between two date/time values into an elapsed interval.
 		/// </summary>
 		/// <remarks>
@@ -296,6 +308,45 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!CanTranslateDateDifference)
 				return null;
 
+			var difference = MakeDateDifference(translationContext, binaryExpression, translationFlags);
+
+			return difference == null
+				? null
+				: translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, difference, binaryExpression);
+		}
+
+		/// <summary>
+		/// The interval a member is taken from.
+		/// </summary>
+		/// <remarks>
+		/// A date difference is built here rather than left to the registered subtraction, because the member is
+		/// gated on <see cref="CanTranslateDateDifferenceMembers"/> while the bare difference is gated on
+		/// <see cref="CanTranslateDateDifference"/>, and a provider may have only the first.
+		/// </remarks>
+		ISqlExpression? TranslateIntervalOperand(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
+		{
+			if (operand == null)
+				return null;
+
+			if (CanTranslateDateDifferenceMembers
+				&& operand is BinaryExpression { NodeType: ExpressionType.Subtract } subtraction
+				&& subtraction.Left.Type.ToUnderlying()  is var leftType
+				&& subtraction.Right.Type.ToUnderlying() is var rightType
+				&& leftType == rightType
+				&& (leftType == typeof(DateTime) || leftType == typeof(DateTimeOffset)))
+			{
+				var difference = MakeDateDifference(translationContext, subtraction, translationFlags);
+				if (difference != null)
+					return difference;
+			}
+
+			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
+
+			return placeholder == null ? null : TryMakeInterval(translationContext, placeholder.Sql);
+		}
+
+		SqlIntervalDifferenceExpression? MakeDateDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
 			var left = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags);
 			if (left == null)
 				return null;
@@ -307,9 +358,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var factory = translationContext.ExpressionFactory;
 			var type    = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
 
-			var difference = new SqlIntervalDifferenceExpression(right.Sql, left.Sql, type, SqlIntervalType.ClrTimeSpan);
-
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, difference, binaryExpression);
+			return new SqlIntervalDifferenceExpression(right.Sql, left.Sql, type, SqlIntervalType.ClrTimeSpan);
 		}
 
 		Expression? TranslateTimeSpanNegate(ITranslationContext translationContext, UnaryExpression unaryExpression, TranslationFlags translationFlags)
@@ -382,11 +431,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateTimeSpanMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, SqlIntervalUnit unit, SqlIntervalPartKind kind)
 		{
-			var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
-			if (placeholder == null)
-				return null;
-
-			var interval = TryMakeInterval(translationContext, placeholder.Sql);
+			var interval = TranslateIntervalOperand(translationContext, memberExpression.Expression, translationFlags);
 			if (interval == null)
 				return null;
 

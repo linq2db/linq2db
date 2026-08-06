@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -20,6 +21,30 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		/// <summary>
+		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
+		/// </summary>
+		/// <remarks>
+		/// linq2db maps date/time values to <c>DateTime64(7)</c>, which is a tick exactly, so every nanosecond
+		/// value here is a whole multiple of a hundred and the division is exact. <c>date_diff</c> is not used
+		/// because its finest unit is the second.
+		/// <para>
+		/// Nanoseconds in an <see cref="long"/> reach from 1678 to 2262, narrower than what a
+		/// <c>DateTime64(7)</c> column itself holds. That is the same boundary the millisecond form of
+		/// <c>DateAdd</c> already works within on this provider.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			var nanoseconds = Factory.Sub(longType,
+				Factory.Function(longType, "toUnixTimestamp64Nano", element.End),
+				Factory.Function(longType, "toUnixTimestamp64Nano", element.Start));
+
+			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
+		}
 
 		#region LIKE
 

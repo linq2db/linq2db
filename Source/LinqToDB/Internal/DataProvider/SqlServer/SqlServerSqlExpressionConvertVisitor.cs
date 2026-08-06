@@ -16,32 +16,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// </summary>
 		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Nanosecond;
 
-		/// <summary>
-		/// Elapsed ticks via <c>DATEDIFF_BIG</c> at nanosecond resolution, divided by 100.
-		/// </summary>
-		/// <remarks>
-		/// Nanoseconds rather than a coarser unit because <c>datetime2</c> stores 100ns and anything coarser would
-		/// silently drop the fraction. Every value SQL Server can store is a whole number of 100ns, so the division
-		/// is exact.
-		/// <para>
-		/// This is the one place a whole-range fine difference is used, so it carries that form's limit: the
-		/// nanosecond count overflows <c>bigint</c> beyond roughly 292 years, and SQL Server raises an error there
-		/// rather than returning a wrapped value - a loud failure, not a wrong duration. Components and totals of a
-		/// difference do not go through here; they are counted in their own unit and never form a tick total.
-		/// </para>
-		/// <para>
-		/// <c>DATEDIFF_BIG</c> arrived in SQL Server 2016. Earlier versions never reach this, because the member
-		/// translator does not produce a difference node for them at all.
-		/// </para>
-		/// </remarks>
-		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
-		{
-			var longType    = Factory.GetDbDataType(typeof(long));
-			var nanoseconds = CountDateBoundaries(SqlIntervalUnit.Nanosecond, element.Start, element.End);
-
-			return nanoseconds == null ? null : Factory.Div(longType, nanoseconds, Factory.Value(longType, 100L));
-		}
-
 		static string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch

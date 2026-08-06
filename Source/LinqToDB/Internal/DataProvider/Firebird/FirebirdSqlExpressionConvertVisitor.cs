@@ -16,6 +16,28 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <summary>
+		/// Elapsed ticks from <c>DATEDIFF</c> at millisecond resolution, which Firebird answers with one decimal
+		/// place.
+		/// </summary>
+		/// <remarks>
+		/// That tenth of a millisecond is exactly what a Firebird timestamp stores - its resolution is a hundred
+		/// microseconds - so scaling the count to ticks loses nothing, and the scaled value is always whole.
+		/// <para>
+		/// The fractional form arrived in Firebird 4. Earlier versions never reach this, because their member
+		/// translator does not produce a difference node at all - which is also why the version is not tested here:
+		/// this visitor is shared from Firebird 3 up.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var tenthsType   = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
+			var milliseconds = Factory.Function(tenthsType, "DateDiff", Factory.Fragment("millisecond"), element.Start, element.End);
+
+			return Factory.Cast(Factory.Multiply(longType, milliseconds, TimeSpan.TicksPerMillisecond), longType, true);
+		}
+
 		#region LIKE
 
 		protected static string[] LikeFirebirdEscapeSymbols = { "_", "%" };

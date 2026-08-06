@@ -1192,11 +1192,14 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!SqlIntervalUnits.TryGetTicksRatio(finest, out var ticksPerFine, out var fineDenominator))
 				return null;
 
-			var whole = IntervalLowering.ElapsedUnits(Factory, element, SqlIntervalUnit.Second, CountDateBoundaries, ShiftDate);
-			if (whole == null)
+			// Deliberately the raw boundary count, uncorrected: whatever it lands on, the remainder is measured
+			// from that exact point, so an overshoot comes back as a negative remainder of the same size and the
+			// two telescope. Correcting it here would only duplicate the count through a CASE for no gain.
+			var seconds = CountDateBoundaries(SqlIntervalUnit.Second, element.Start, element.End);
+			if (seconds == null)
 				return null;
 
-			var anchor = ShiftDate(SqlIntervalUnit.Second, whole, element.Start);
+			var anchor = ShiftDate(SqlIntervalUnit.Second, seconds, element.Start);
 			if (anchor == null)
 				return null;
 
@@ -1207,15 +1210,15 @@ namespace LinqToDB.Internal.SqlProvider
 			var longType = Factory.GetDbDataType(typeof(long));
 
 			// A fine unit may be finer than a tick - a nanosecond is a hundredth of one - so the ratio is applied
-			// as a fraction. Every value the provider can store is a whole number of its own finest unit, so the
-			// division lands exactly.
+			// as a fraction. Plain division, not the truncating helper: the count is a whole number of ticks by
+			// construction, so no rounding rule can disagree about the result.
 			if (ticksPerFine != 1)
 				remainder = Factory.Multiply(longType, remainder, ticksPerFine);
 
 			if (fineDenominator != 1)
-				remainder = TruncateDivide(remainder, fineDenominator);
+				remainder = Factory.Div(longType, remainder, Factory.Value(longType, fineDenominator));
 
-			return Factory.Add(longType, Factory.Multiply(longType, whole, TimeSpan.TicksPerSecond), remainder);
+			return Factory.Add(longType, Factory.Multiply(longType, seconds, TimeSpan.TicksPerSecond), remainder);
 		}
 
 		/// <summary>
@@ -1254,6 +1257,19 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </remarks>
 		protected virtual SqlIntervalUnit? FinestDateUnit => null;
 
+		/// <summary>
+		/// Whether <see cref="ElapsedTicks"/> is fine enough to answer the individual members, or only the
+		/// difference taken as a whole. Defaults to yes.
+		/// </summary>
+		/// <remarks>
+		/// A tick count answers every member with far less SQL, but only where it resolves what the provider
+		/// stores. Access counts seconds while an OLE Automation date holds fractions of one, so its count can sit
+		/// a second from the truth - enough to move <c>Hours</c> across a boundary - and counting each unit with
+		/// the correction against the actual dates stays exact there. The tick count still answers the difference
+		/// itself, which has no other form.
+		/// </remarks>
+		protected virtual bool ElapsedTicksResolveMembers => true;
+
 		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
 			// Lower before visiting children: the child interval carries the unit this needs, and visiting it
@@ -1288,6 +1304,11 @@ namespace LinqToDB.Internal.SqlProvider
 					return ticks == null ? null : Factory.Cast(ticks, element.Type);
 				}
 
+				// Every member follows from the tick count, and .NET defines them that way, so where the count is
+				// fine enough this is both the shorter SQL and the closer reading of the CLR.
+				if (ElapsedTicksResolveMembers && ElapsedTicks(difference) is { } exact)
+					return IntervalLowering.FromTicks(Factory, exact, element, TruncateDivide);
+
 				var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
 
 				if (whole != null)
@@ -1302,8 +1323,8 @@ namespace LinqToDB.Internal.SqlProvider
 						return Factory.Cast(total, element.Type);
 				}
 
-				// Counting did not reach this unit. A provider that can produce elapsed ticks answers every member
-				// from that one value instead - the same arithmetic the integral-storage path uses.
+				// Counting could not reach this unit either. A coarse tick count still beats leaving the member
+				// untranslated, which is what it would have been before any of this existed.
 				var elapsed = ElapsedTicks(difference);
 
 				return elapsed == null ? null : IntervalLowering.FromTicks(Factory, elapsed, element, TruncateDivide);
