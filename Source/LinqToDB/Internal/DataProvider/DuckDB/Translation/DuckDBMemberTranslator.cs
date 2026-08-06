@@ -70,6 +70,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Elapsed time comes from <c>date_diff</c> - see
+			/// <c>DuckDBSqlExpressionConvertVisitor.ElapsedTicks</c>.
+			/// </summary>
+			private protected override bool CanTranslateDateDifference => true;
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;

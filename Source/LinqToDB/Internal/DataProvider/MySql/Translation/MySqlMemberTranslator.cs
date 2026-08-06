@@ -72,6 +72,12 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Elapsed time comes from <c>TIMESTAMPDIFF</c> - see
+			/// <c>MySqlSqlExpressionConvertVisitor.ElapsedTicks</c>.
+			/// </summary>
+			private protected override bool CanTranslateDateDifference => true;
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory     = translationContext.ExpressionFactory;

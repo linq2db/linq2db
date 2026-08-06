@@ -2043,7 +2043,7 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted]
 		[Test]
 		public void NullableDateTimeSubtractionProjectionSqlTest(
-			[DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+			[DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2061,7 +2061,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void NullableDateTimeSubtractionProjectionServerSideTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllDuckDB)] string context)
 		{
 			// The same query on a provider that does translate it. Sql.AsSql forces the server side, so this
 			// fails outright rather than quietly falling back if the lowering ever stops working.

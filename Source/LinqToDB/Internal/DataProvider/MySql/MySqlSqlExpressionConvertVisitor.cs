@@ -1,4 +1,7 @@
-﻿using LinqToDB.Internal.Extensions;
+﻿using System;
+
+using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -12,6 +15,22 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		}
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		/// <summary>
+		/// Elapsed ticks from <c>TIMESTAMPDIFF</c> at microsecond resolution.
+		/// </summary>
+		/// <remarks>
+		/// A microsecond is the finest unit MySQL stores, so the count is exact and scaling it to ticks - ten of
+		/// them to the microsecond - loses nothing. The result is a <c>BIGINT</c> of microseconds, which runs out
+		/// far beyond any range <see cref="TimeSpan"/> can hold.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var microseconds = Factory.Function(longType, "TimestampDiff", Factory.Fragment("Microsecond"), element.Start, element.End);
+
+			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{

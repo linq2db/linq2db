@@ -157,3 +157,5 @@ virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicks(L
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalDifference(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?

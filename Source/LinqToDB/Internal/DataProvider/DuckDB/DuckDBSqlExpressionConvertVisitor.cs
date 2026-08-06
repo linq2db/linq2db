@@ -13,6 +13,24 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <summary>
+		/// Elapsed ticks from <c>date_diff</c> at microsecond resolution.
+		/// </summary>
+		/// <remarks>
+		/// A DuckDB timestamp holds microseconds, so the count is exact and scaling it to ticks - ten of them to
+		/// the microsecond - loses nothing. Taken through the count rather than DuckDB's own <c>INTERVAL</c>,
+		/// because an interval carries months and days alongside the microseconds and only the count is a single
+		/// number.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var microseconds = Factory.Function(longType, "Date_Diff",
+				Factory.Value(Factory.GetDbDataType(typeof(string)), "microsecond"), element.Start, element.End);
+
+			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);
