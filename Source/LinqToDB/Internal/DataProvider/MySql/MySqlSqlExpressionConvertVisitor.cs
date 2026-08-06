@@ -42,6 +42,24 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
 		}
 
+		/// <summary>
+		/// Shifts through <c>DATE_ADD</c> at microsecond resolution - the interval's own unit here.
+		/// </summary>
+		/// <remarks>
+		/// The amount is an expression rather than a literal, and MySQL takes it as written, so the whole tick
+		/// count converts in one step with no decomposition into coarser units.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var microseconds = Factory.Div(longType, element.Interval, Factory.Value(longType, TimeSpan.TicksPerMillisecond / 1000));
+
+			return Factory.Function(Factory.GetDbDataType(element.Temporal),
+				element.IsSubtract ? "Date_Sub" : "Date_Add",
+				element.Temporal,
+				Factory.Expression(longType.WithDataType(DataType.Interval), "Interval {0} Microsecond", microseconds));
+		}
+
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			cast = FloorBeforeConvert(cast);

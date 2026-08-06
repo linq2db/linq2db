@@ -27,6 +27,18 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		}
 
 		/// <summary>
+		/// A timestamp takes an interval directly, so the shift is the operator itself.
+		/// </summary>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var type = Factory.GetDbDataType(element.Temporal);
+
+			return element.IsSubtract
+				? Factory.Sub(type, element.Temporal, element.Interval)
+				: Factory.Add(type, element.Temporal, element.Interval);
+		}
+
+		/// <summary>
 		/// Ticks summed field by field out of the interval, rather than from its epoch.
 		/// </summary>
 		/// <remarks>
@@ -64,9 +76,18 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				ticksPerUnit);
 		}
 
+		/// <summary>
+		/// The elapsed interval, built to stand on its own wherever it is embedded.
+		/// </summary>
+		/// <remarks>
+		/// Declared with no precedence, which the builder reads as "always parenthesise". A subtraction otherwise
+		/// binds tighter than an addition, so <c>base + end - start</c> would be emitted for
+		/// <c>base + (end - start)</c>: the same number, but a different grouping of types, and PostgreSQL has no
+		/// operator adding one timestamp to another.
+		/// </remarks>
 		ISqlExpression Elapsed(SqlIntervalDifferenceExpression element)
 		{
-			return Factory.Sub(IntervalType, AsTimestamp(element.End), AsTimestamp(element.Start));
+			return new SqlBinaryExpression(IntervalType, AsTimestamp(element.End), "-", AsTimestamp(element.Start), Precedence.Unknown);
 		}
 
 		DbDataType IntervalType => Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);

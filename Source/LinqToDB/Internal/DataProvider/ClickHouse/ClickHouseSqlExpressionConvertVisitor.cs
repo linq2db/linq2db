@@ -56,6 +56,24 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
 		}
 
+		/// <summary>
+		/// Shifts by the interval expressed in nanoseconds, the unit that matches what a tick is.
+		/// </summary>
+		/// <remarks>
+		/// <c>toIntervalNanosecond</c> takes an expression, so the count needs no decomposition. Scaling ticks up
+		/// by a hundred stays inside <see cref="long"/> for any range a <c>TimeSpan</c> holds.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+			var interval = Factory.Function(longType, "toIntervalNanosecond", Factory.Multiply(longType, element.Interval, 100L));
+			var type     = Factory.GetDbDataType(element.Temporal);
+
+			return element.IsSubtract
+				? Factory.Sub(type, element.Temporal, interval)
+				: Factory.Add(type, element.Temporal, interval);
+		}
+
 		#region LIKE
 
 		// https://clickhouse.com/docs/en/sql-reference/ansi/#feature-status E061-05

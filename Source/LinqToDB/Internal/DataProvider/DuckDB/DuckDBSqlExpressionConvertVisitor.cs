@@ -41,6 +41,25 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
 		}
 
+		/// <summary>
+		/// Shifts by an interval built from the microsecond count, which is what DuckDB stores.
+		/// </summary>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var microseconds = Factory.Div(longType, element.Interval, Factory.Value(longType, TimeSpan.TicksPerMillisecond / 1000));
+			var interval     = Factory.Function(longType.WithDataType(DataType.Interval), "To_Microseconds", microseconds);
+			var type         = Factory.GetDbDataType(element.Temporal);
+
+			// The date is cast rather than passed through: a parameter reaches DuckDB as an untyped literal, and
+			// it will not choose between the overloads of + for a string and an interval.
+			var temporal = Factory.Cast(element.Temporal, type.WithDataType(DataType.DateTime2), true);
+
+			return element.IsSubtract
+				? Factory.Sub(type, temporal, interval)
+				: Factory.Add(type, temporal, interval);
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);

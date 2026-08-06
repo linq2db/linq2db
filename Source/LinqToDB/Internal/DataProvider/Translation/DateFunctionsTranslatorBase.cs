@@ -292,11 +292,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </remarks>
 		Expression? TranslateTemporalArithmetic(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
-			var temporal = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags);
+			// Parameters are taken here, unlike most translations: shifting a fixed date by a computed interval is
+			// the ordinary case, and skipping it would hand the expression back to the generic binary handling -
+			// which is what produced a raw plus between a date and a tick count.
+			var temporal = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags, skipIfParameter: false);
 			if (temporal == null)
 				return null;
 
-			var interval = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags);
+			var interval = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, skipIfParameter: false);
 			if (interval == null)
 				return null;
 

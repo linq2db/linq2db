@@ -1141,6 +1141,34 @@ namespace LinqToDB.Internal.SqlProvider
 			return Visit(element.Value);
 		}
 
+		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			var lowered = LowerTemporalArithmetic(element);
+			if (lowered != null)
+				return Visit(lowered);
+
+			return base.VisitSqlTemporalArithmeticExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers a date/time value shifted by an interval.
+		/// </summary>
+		/// <remarks>
+		/// There is no default. A provider with a native interval type applies the operator directly; one that
+		/// lowered the interval to a tick count has to spend that count through its own <c>DATEADD</c>, whose
+		/// argument is usually a 32-bit integer and so cannot take ticks in one step.
+		/// <para>
+		/// Left alone, the node reaches the builder and is refused by name. That is the point of it existing: the
+		/// generic binary handling would otherwise put a plain operator between a date and a number, which a
+		/// database evaluates into something that still looks like a date.
+		/// </para>
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider cannot express the shift.</returns>
+		protected virtual ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			return null;
+		}
+
 		protected internal override IQueryElement VisitSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
 		{
 			var lowered = LowerIntervalDifference(element);

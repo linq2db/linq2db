@@ -326,29 +326,92 @@ namespace Tests.Linq
 			// land on the end, and adding it to a third date must move that one by the same amount.
 			var started  = new DateTime(2026, 1, 1, 10,  0, 0);
 			var finished = new DateTime(2026, 1, 3, 13, 30, 0);
-			var other    = new DateTime(2026, 6, 15, 8, 45, 0);
 
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable<EventRow>();
 
 			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
 
-			var elapsed = finished - started;
-
+			// Only the cancelling forms here, which the optimizer resolves before any provider is asked - so this
+			// runs everywhere. A shift off an unrelated base needs real lowering and is tested separately.
 			var row = t
 				.Select(r => new
 				{
 					BackToEnd = r.StartedOn + (r.FinishedOn - r.StartedOn),
-					Shifted   = other + (r.FinishedOn - r.StartedOn),
+					BackToStart = r.FinishedOn - (r.FinishedOn - r.StartedOn),
 
-					// The shifted date is a date like any other, so a part of it still has to read.
-					Hour      = (r.StartedOn + (r.FinishedOn - r.StartedOn)).Hour,
+					// The result is a date like any other, so a part of it still has to read.
+					Hour = (r.StartedOn + (r.FinishedOn - r.StartedOn)).Hour,
 				})
 				.Single();
 
 			row.BackToEnd.ShouldBe(finished);
-			row.Shifted.ShouldBe(other + elapsed);
+			row.BackToStart.ShouldBe(started);
 			row.Hour.ShouldBe(finished.Hour);
+		}
+
+		/// <summary>
+		/// Providers that can express a date shifted by an interval. One name to add as each gains support.
+		/// </summary>
+		const string TemporalShiftProviders =
+			TestProvName.AllPostgreSQL + "," +
+			TestProvName.AllMySql      + "," +
+			TestProvName.AllDuckDB     + "," +
+			TestProvName.AllClickHouse;
+
+		/// <summary>
+		/// The base is deliberately not the difference's own start: that form cancels in the optimizer and no
+		/// shift survives to test.
+		/// </summary>
+		static readonly DateTime ShiftOrigin = new(2026, 3, 1, 0, 0, 0);
+
+		static IQueryable<int> ShiftedInAPredicate(ITable<EventRow> t)
+		{
+			return t
+				.Where(r => ShiftOrigin + (r.FinishedOn - r.StartedOn) > ShiftOrigin.AddHours(4))
+				.Select(r => r.Id);
+		}
+
+		[Test]
+		public void ShiftIsExpressedInAPredicate([IncludeDataSources(true, TemporalShiftProviders)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
+
+			ShiftedInAPredicate(t)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Test]
+		public void ShiftIsRefusedWhileItIsNotTranslated([DataSources(false, TemporalShiftProviders)] string context)
+		{
+			// The contract pinned here is loudness, not incapability: most of these providers could shift a date
+			// perfectly well - SQL Server through DATEADD, SQLite through datetime modifiers, MySQL through
+			// DATE_ADD - and simply have no lowering yet. What matters is that until they do, the attempt fails by
+			// name instead of producing SQL the database accepts and answers wrongly, which is what a plain plus
+			// between a date and a tick count gives.
+			//
+			// So this shrinks as the lowering spreads: each provider that gains it moves into
+			// TemporalShiftProviders and out of here. A predicate is the right place to pin it, because there is
+			// no falling back to .NET for any provider - the rows have to be chosen by the database.
+			//
+			// Remote contexts are left out: they wrap the refusal in a transport exception, which says nothing
+			// about the translation.
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
+
+			var act = () => ShiftedInAPredicate(t).ToArray();
+
+			act.ShouldThrow<LinqToDBException>();
 		}
 
 		[Test]
