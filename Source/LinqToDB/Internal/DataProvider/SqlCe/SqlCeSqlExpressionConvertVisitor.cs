@@ -26,9 +26,22 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		/// </remarks>
 		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
 		{
+			return Factory.Div(Factory.GetDbDataType(typeof(long)), value, TypedDivisor(divisor));
+		}
+
+		/// <summary>
+		/// The same explicit <c>BIGINT</c> the division needs - SQL CE refuses a remainder on a numeric outright.
+		/// </summary>
+		protected override ISqlExpression TruncateRemainder(ISqlExpression value, long divisor)
+		{
+			return Factory.Mod(value, TypedDivisor(divisor));
+		}
+
+		ISqlExpression TypedDivisor(long divisor)
+		{
 			var longType = Factory.GetDbDataType(typeof(long));
 
-			return Factory.Div(longType, value, Factory.Cast(Factory.Value(longType, divisor), longType, true));
+			return Factory.Cast(Factory.Value(longType, divisor), longType, true);
 		}
 
 		/// <summary>

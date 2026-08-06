@@ -540,7 +540,10 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL + "," +
 			TestProvName.AllMySql      + "," +
 			TestProvName.AllDuckDB     + "," +
-			TestProvName.AllClickHouse;
+			TestProvName.AllClickHouse + "," +
+			TestProvName.AllSqlServer2016Plus + "," +
+			ProviderName.SqlCe + "," +
+			TestProvName.AllSybase;
 
 		/// <summary>
 		/// The base is deliberately not the difference's own start: that form cancels in the optimizer and no

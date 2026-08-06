@@ -1166,7 +1166,36 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <returns><see langword="null"/> when the provider cannot express the shift.</returns>
 		protected virtual ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			return null;
+			if (FinestDateUnit is not { } finest)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(finest, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+			var ticks    = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+
+			// Days, then seconds within the day, then the sub-second part in the finest unit the provider counts.
+			// Split this way because DATEADD and its equivalents take a 32-bit amount: a tick count overflows it
+			// within minutes, while a day count covers millennia and each remainder is bounded by its own unit.
+			var days      = TruncateDivide(ticks, TimeSpan.TicksPerDay);
+			var seconds   = TruncateDivide(TruncateRemainder(ticks, TimeSpan.TicksPerDay), TimeSpan.TicksPerSecond);
+			var remainder = TruncateRemainder(ticks, TimeSpan.TicksPerSecond);
+
+			// A fine unit may be finer than a tick, in which case the remainder scales up rather than divides.
+			var fine = fineDenominator != 1
+				? Factory.Multiply(longType, remainder, fineDenominator)
+				: TruncateDivide(remainder, ticksPerFine);
+
+			var shifted = ShiftDate(SqlIntervalUnit.Day, days, element.Temporal);
+			if (shifted == null)
+				return null;
+
+			shifted = ShiftDate(SqlIntervalUnit.Second, seconds, shifted);
+			if (shifted == null)
+				return null;
+
+			return ShiftDate(finest, fine, shifted);
 		}
 
 		protected internal override IQueryElement VisitSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)

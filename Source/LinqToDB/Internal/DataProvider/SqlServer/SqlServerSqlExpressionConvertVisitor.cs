@@ -37,8 +37,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (part == null)
 				return null;
 
+			// The amount is cast down: DATEADD takes a 32-bit number, and an amount computed from a tick count
+			// arrives here as BIGINT even when its value is small - which SQL Server rejects as an overflow rather
+			// than narrowing on its own.
 			return Factory.Function(Factory.GetDbDataType(date), "DateAdd",
-				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), amount, date);
+				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part),
+				Factory.Cast(amount, Factory.GetDbDataType(typeof(int)), true),
+				date);
 		}
 
 		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)

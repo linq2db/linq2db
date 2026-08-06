@@ -188,3 +188,4 @@ override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.L
 override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
