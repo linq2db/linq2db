@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		ISqlExpression AsTimestamp(ISqlExpression value)
 		{
-			return PseudoFunctions.MakeCast(value, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
+			return Factory.Cast(value, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
 		}
 
 		#region LIKE

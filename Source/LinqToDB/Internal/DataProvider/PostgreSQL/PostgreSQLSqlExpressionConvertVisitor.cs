@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var type = QueryHelper.GetDbDataType(value, MappingSchema);
 
 			return type.DataType == DataType.Date
-				? PseudoFunctions.MakeCast(value, type.WithDataType(DataType.DateTime2))
+				? Factory.Cast(value, type.WithDataType(DataType.DateTime2))
 				: value;
 		}
 
