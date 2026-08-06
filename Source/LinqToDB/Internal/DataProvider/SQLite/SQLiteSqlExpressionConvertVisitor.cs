@@ -16,6 +16,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks from the Julian day difference, resolved to the millisecond.
 		/// </summary>

@@ -32,6 +32,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return Factory.Function(longType, "intDiv", value, Factory.Value(longType, divisor));
 		}
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
 		/// </summary>

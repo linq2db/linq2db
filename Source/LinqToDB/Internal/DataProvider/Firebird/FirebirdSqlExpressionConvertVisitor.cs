@@ -16,6 +16,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks from <c>DATEDIFF</c> at millisecond resolution, which Firebird answers with one decimal
 		/// place.

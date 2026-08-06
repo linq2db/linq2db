@@ -14,6 +14,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		protected override bool SupportsDistinctAsExistsIntersect => true;
 		protected override bool ConcatRequiresExplicitStringCast  => false;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// <c>NANO100_BETWEEN</c> counts hundred-nanosecond units, which is a tick and is also what a SAP HANA
 		/// timestamp stores, so the elapsed count needs no scaling and loses nothing.

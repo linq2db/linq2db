@@ -601,13 +601,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DifferenceSurvivesAsASubqueryColumn([DataSources(TestProvName.AllAccess)] string context)
+		public void DifferenceSurvivesAsASubqueryColumn([DataSources] string context)
 		{
-			// Access is excluded because taking a member off a projected difference fails there for a reason that
-			// has nothing to do with nesting - the member translation looks for an operand that is syntactically a
-			// subtraction, and after a projection it is a reference through a transparent identifier.
-			// DifferenceFromASubqueryFiltersOnItsParts already pins that, so this would only repeat it.
-
 			// AsSubQuery keeps the nesting, so the difference really becomes a column of an inner SELECT and the
 			// outer query meets a column reference rather than the difference node itself. Without it the
 			// optimizer folds the projection away and the lowering never sees that shape at all.

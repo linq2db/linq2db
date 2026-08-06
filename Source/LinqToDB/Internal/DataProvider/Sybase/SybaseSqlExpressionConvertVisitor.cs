@@ -14,6 +14,9 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		// could be enabled if we add SP03 version support (also IsDistinctFromSupported should be enabled)
 		//protected override bool SupportsDistinctAsExistsIntersect => true;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// <c>DATEDIFF</c> counts milliseconds, finer than the three-and-a-third that an ASE <c>datetime</c>
 		/// stores, so the remainder that completes an elapsed count is exact.

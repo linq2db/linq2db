@@ -45,6 +45,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </summary>
 		protected override bool ElapsedTicksResolveMembers => false;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalPart => true;
+
 		/// <summary>
 		/// No tick count from Access at all.
 		/// </summary>

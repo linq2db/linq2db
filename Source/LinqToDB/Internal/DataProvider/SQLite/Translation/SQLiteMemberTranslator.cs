@@ -42,12 +42,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			const string DateFormat = "%Y-%m-%d %H:%M:%f";
 			const string TimeFormat = "%H:%M:%f";
 
-			/// <summary>
-			/// Elapsed time comes from the Julian day difference - see
-			/// <c>SQLiteSqlExpressionConvertVisitor.ElapsedTicks</c>.
-			/// </summary>
-			private protected override bool CanTranslateDateDifference => true;
-
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;

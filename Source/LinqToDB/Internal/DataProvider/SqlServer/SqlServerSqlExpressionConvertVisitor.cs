@@ -58,6 +58,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end);
 		}
 
+		/// <summary>
+		/// <c>DATEDIFF_BIG</c> arrived in 2016; earlier versions leave date subtraction to .NET.
+		/// </summary>
+		public override bool CanLowerIntervalDifference => _sqlServerVersion >= SqlServerVersion.v2016;
+
 		readonly SqlServerVersion _sqlServerVersion;
 
 		public SqlServerSqlExpressionConvertVisitor(bool allowModify, SqlServerVersion sqlServerVersion) : base(allowModify)

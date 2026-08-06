@@ -73,8 +73,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			/// a fractional millisecond, which is its hundred-microsecond storage quantum exactly, while earlier
 			/// versions answer with a whole one.
 			/// </remarks>
-			private protected override bool CanTranslateDateDifference => true;
-
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory          = translationContext.ExpressionFactory;

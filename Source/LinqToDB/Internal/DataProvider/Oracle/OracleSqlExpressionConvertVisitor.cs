@@ -32,6 +32,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return Factory.Function(longType, "Trunc", Factory.Div(longType, value, Factory.Value(longType, divisor)));
 		}
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks summed field by field out of the interval two timestamps subtract to.
 		/// </summary>

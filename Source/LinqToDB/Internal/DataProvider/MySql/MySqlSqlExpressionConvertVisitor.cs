@@ -26,6 +26,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return Factory.Expression(longType, Precedence.Multiplicative, "{0} DIV {1}", value, Factory.Value(longType, divisor));
 		}
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks from <c>TIMESTAMPDIFF</c> at microsecond resolution.
 		/// </summary>

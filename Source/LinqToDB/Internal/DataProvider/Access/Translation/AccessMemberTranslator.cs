@@ -45,14 +45,6 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			/// <summary>
-			/// Members only: elapsed units are counted and anchor-corrected - see
-			/// <c>AccessSqlExpressionConvertVisitor.CountDateBoundaries</c> - but the interval itself never becomes
-			/// a value, because <c>DateDiff</c> returns a 32-bit count and scaling one to ticks overflows within
-			/// minutes. A bare difference is left to .NET, which is where it was before.
-			/// </summary>
-			private protected override bool CanTranslateDateDifferenceMembers => true;
-
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory = translationContext.ExpressionFactory;

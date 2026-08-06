@@ -15,6 +15,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// <inheritdoc/>
 		protected override bool SupportsNullInColumn => false;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks from the microsecond count a YQL <c>Interval</c> casts to.
 		/// </summary>

@@ -38,6 +38,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				: Factory.Add(type, element.Temporal, element.Interval);
 		}
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Ticks summed field by field out of the interval, rather than from its epoch.
 		/// </summary>

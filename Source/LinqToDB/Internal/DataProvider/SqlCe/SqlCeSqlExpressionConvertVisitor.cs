@@ -44,6 +44,9 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return Factory.Cast(Factory.Value(longType, divisor), longType, true);
 		}
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// <c>DATEDIFF</c> counts milliseconds, which is what a SQL CE <c>datetime</c> stores, so the leftover of a
 		/// total is exact.

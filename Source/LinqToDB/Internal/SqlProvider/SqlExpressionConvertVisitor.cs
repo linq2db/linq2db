@@ -1141,6 +1141,29 @@ namespace LinqToDB.Internal.SqlProvider
 			return Visit(element.Value);
 		}
 
+		/// <summary>
+		/// Whether an elapsed date difference can be lowered to a value here.
+		/// </summary>
+		/// <remarks>
+		/// Declared beside the lowering it describes, and read by the member translator through
+		/// <c>ITranslationContext.ProviderFlags</c>. The translator has to ask before it builds anything, because
+		/// a difference it does not build stays an ordinary .NET subtraction and is computed on materialisation -
+		/// and by the time this visitor runs, the read expression is already bound to its columns, so there is no
+		/// going back.
+		/// </remarks>
+		public virtual bool CanLowerIntervalDifference => false;
+
+		/// <summary>
+		/// Whether a member of an elapsed date difference can be lowered. Defaults to whatever the difference
+		/// itself can do.
+		/// </summary>
+		/// <remarks>
+		/// Separate because one provider has only this half: Access counts elapsed units well enough to answer
+		/// <c>TotalHours</c>, but its <c>DateDiff</c> is a 32-bit count that overflows once scaled to ticks, so
+		/// the interval never becomes a value there.
+		/// </remarks>
+		public virtual bool CanLowerIntervalPart => CanLowerIntervalDifference;
+
 		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
 		{
 			var lowered = LowerTemporalArithmetic(element);

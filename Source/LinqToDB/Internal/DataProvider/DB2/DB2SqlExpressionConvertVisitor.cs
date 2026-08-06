@@ -16,6 +16,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks summed from the three fields a DB2 timestamp decomposes into.
 		/// </summary>

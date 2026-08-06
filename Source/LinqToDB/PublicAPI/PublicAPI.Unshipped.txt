@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 LinqToDB.Mapping.DurationUnit
 LinqToDB.Mapping.DurationUnit.Nanosecond = 0 -> LinqToDB.Mapping.DurationUnit
 LinqToDB.Mapping.DurationUnit.Tick = 1 -> LinqToDB.Mapping.DurationUnit
@@ -189,3 +189,22 @@ override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConver
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart) -> void
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool

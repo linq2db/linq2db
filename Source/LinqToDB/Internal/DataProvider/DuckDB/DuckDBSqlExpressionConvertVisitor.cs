@@ -23,6 +23,9 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return Factory.Expression(longType, Precedence.Multiplicative, "{0} // {1}", value, Factory.Value(longType, divisor));
 		}
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
 		/// <summary>
 		/// Elapsed ticks from <c>date_diff</c> at microsecond resolution.
 		/// </summary>

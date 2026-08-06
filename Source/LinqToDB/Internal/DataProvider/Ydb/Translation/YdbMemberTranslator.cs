@@ -413,12 +413,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			/// <summary>
-			/// Elapsed time is the microsecond count of a YQL <c>Interval</c> - see
-			/// <c>YdbSqlExpressionConvertVisitor.ElapsedTicks</c>.
-			/// </summary>
-			private protected override bool CanTranslateDateDifference => true;
-
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);

@@ -87,12 +87,6 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			/// <summary>
-			/// Elapsed time is summed from the timestamp fields, not from the estimating
-			/// <c>TIMESTAMPDIFF</c> - see <c>DB2SqlExpressionConvertVisitor.ElapsedTicks</c>.
-			/// </summary>
-			private protected override bool CanTranslateDateDifference => true;
-
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
 				DbDataType resulType,

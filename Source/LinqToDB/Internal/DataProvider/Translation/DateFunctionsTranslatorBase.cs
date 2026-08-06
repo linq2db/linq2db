@@ -299,43 +299,36 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (temporal == null)
 				return null;
 
-			var interval = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, skipIfParameter: false);
+			// Without dropping the ambient descriptor the interval is built against the column the whole shift is
+			// assigned to, which is a date - and a TimeSpan parameter typed as a DateTime throws outright rather
+			// than producing a wrong value.
+			SqlPlaceholderExpression? interval;
+
+			using (translationContext.UsingColumnDescriptor(null))
+			{
+				interval = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, skipIfParameter: false);
+			}
+
 			if (interval == null)
+				return null;
+
+			// Only a declared duration - or a computed difference, which is one by construction - becomes a shift
+			// node, because only then is the amount a number whose unit is known. A bare CLR TimeSpan has no
+			// declaration and keeps the handling it had: providers with a native interval type map it to one and
+			// add it directly, which is why this test passes there and is gated everywhere else.
+			var amount = TryMakeInterval(translationContext, interval.Sql);
+			if (amount == null)
 				return null;
 
 			var factory = translationContext.ExpressionFactory;
 			var shifted = new SqlTemporalArithmeticExpression(
 				temporal.Sql,
-				interval.Sql,
+				amount,
 				binaryExpression.NodeType == ExpressionType.Subtract,
 				factory.GetDbDataType(binaryExpression.Type));
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, shifted, binaryExpression);
 		}
-
-		/// <summary>
-		/// Whether this provider can lower an elapsed date difference to SQL. Defaults to no.
-		/// </summary>
-		/// <remarks>
-		/// Asked before the node is created, and it is not merely cosmetic - measured on the SQLite suite, gating
-		/// here keeps four tests passing that otherwise fail. The reason is the shape of the expression:
-		/// <c>select a - b</c> projects the interval itself, so the builder can read both dates and subtract them
-		/// in .NET, while <c>select (a - b).TotalHours</c> has to be computed server-side and has nowhere to fall
-		/// back to. Creating the node unconditionally takes that choice away from the builder.
-		/// </remarks>
-		private protected virtual bool CanTranslateDateDifference => false;
-
-		/// <summary>
-		/// Whether this provider can lower a <em>member</em> of an elapsed date difference. Defaults to whatever
-		/// the difference itself can do.
-		/// </summary>
-		/// <remarks>
-		/// The two are separate capabilities and one provider has only the second: Access counts elapsed units
-		/// well enough to answer <c>TotalHours</c>, but its <c>DateDiff</c> is a 32-bit count, so scaling one to a
-		/// tick total overflows within minutes and the interval can never become a value. Asking for the value
-		/// there has to stay in .NET, which it can, while the member has nowhere else to go.
-		/// </remarks>
-		private protected virtual bool CanTranslateDateDifferenceMembers => CanTranslateDateDifference;
 
 		/// <summary>
 		/// Translates <c>end - start</c> between two date/time values into an elapsed interval.
@@ -347,7 +340,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </remarks>
 		Expression? TranslateDateTimeDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
-			if (!CanTranslateDateDifference)
+			if (!translationContext.ProviderFlags.CanLowerIntervalDifference)
 				return null;
 
 			var difference = MakeDateDifference(translationContext, binaryExpression, translationFlags);
@@ -361,30 +354,46 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// The interval a member is taken from.
 		/// </summary>
 		/// <remarks>
-		/// A date difference is built here rather than left to the registered subtraction, because the member is
-		/// gated on <see cref="CanTranslateDateDifferenceMembers"/> while the bare difference is gated on
-		/// <see cref="CanTranslateDateDifference"/>, and a provider may have only the first.
+		/// A date difference is built here rather than left to the registered subtraction, because a provider may
+		/// be able to lower a member without being able to lower the bare difference.
 		/// </remarks>
 		ISqlExpression? TranslateIntervalOperand(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
 		{
 			if (operand == null)
 				return null;
 
-			if (CanTranslateDateDifferenceMembers
-				&& operand is BinaryExpression { NodeType: ExpressionType.Subtract } subtraction
-				&& subtraction.Left.Type.ToUnderlying()  is var leftType
-				&& subtraction.Right.Type.ToUnderlying() is var rightType
-				&& leftType == rightType
-				&& (leftType == typeof(DateTime) || leftType == typeof(DateTimeOffset)))
+			if (translationContext.ProviderFlags.CanLowerIntervalPart)
 			{
-				var difference = MakeDateDifference(translationContext, subtraction, translationFlags);
-				if (difference != null)
-					return difference;
+				// A difference that went through a projection arrives as a reference into the anonymous type the
+				// projection built, so the shape has to be expanded before it can be recognised at all.
+				var subtraction = AsDateDifference(operand)
+					?? AsDateDifference(translationContext.Translate(operand, TranslationFlags.Expand));
+
+				if (subtraction != null)
+				{
+					var difference = MakeDateDifference(translationContext, subtraction, translationFlags);
+					if (difference != null)
+						return difference;
+				}
 			}
 
 			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
 
 			return placeholder == null ? null : TryMakeInterval(translationContext, placeholder.Sql);
+		}
+
+		/// <summary>
+		/// The expression as a subtraction of two date/time values of the same type, or <see langword="null"/>.
+		/// </summary>
+		static BinaryExpression? AsDateDifference(Expression? expression)
+		{
+			if (expression is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction)
+				return null;
+
+			var left  = subtraction.Left.Type.ToUnderlying();
+			var right = subtraction.Right.Type.ToUnderlying();
+
+			return left == right && (left == typeof(DateTime) || left == typeof(DateTimeOffset)) ? subtraction : null;
 		}
 
 		SqlIntervalDifferenceExpression? MakeDateDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
