@@ -6,6 +6,7 @@ using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Scaffold.Internal;
 using LinqToDB.SqlQuery;
 
 #pragma warning disable CA1861
@@ -26,32 +27,41 @@ namespace LinqToDB.Tools.ModelGeneration
 		public Func<ITable,MemberBase?> GenerateProviderSpecificTable { get; set; } = _ => null;
 		public Func<Parameter,bool>     GenerateProcedureDbType       { get; set; } = _ => false;
 
-		public bool   GenerateDataOptionsConstructors     { get; set; } = true;
-		public bool   GenerateObsoleteAttributeForAliases { get; set; }
-		public bool   GenerateFindExtensions              { get; set; } = true;
-		public bool   IsCompactColumns                    { get; set; } = true;
-		public bool   IsCompactColumnAliases              { get; set; } = true;
-		public bool   GenerateDataTypes                   { get; set; }
-		public bool?  GenerateLengthProperty              { get; set; }
-		public bool?  GeneratePrecisionProperty           { get; set; }
-		public bool?  GenerateScaleProperty               { get; set; }
-		public bool   GenerateDbTypes                     { get; set; }
-		public bool   GenerateSchemaAsType                { get; set; }
-		public bool   GenerateViews                       { get; set; } = true;
-		public bool   GenerateProcedureResultAsList       { get; set; }
-		public bool   GenerateProceduresOnTypedContext    { get; set; } = true;
-		public bool   PrefixTableMappingWithSchema        { get; set; } = true;
-		public bool   PrefixTableMappingForDefaultSchema  { get; set; }
-		public string SchemaNameSuffix                    { get; set; } = "Schema";
-		public string SchemaDataContextTypeName           { get; set; } = "DataContext";
-		public bool   GenerateNameOf                      { get; set; } = true;
-		public bool   GenerateTableRegion                 { get; set; } = true;
+		public bool   GenerateDataOptionsConstructors            { get; set; } = true;
+		public bool   GenerateObsoleteAttributeForAliases        { get; set; }
+		public bool   GenerateFindExtensions                     { get; set; } = true;
+		public bool   IsCompactColumns                           { get; set; } = true;
+		public bool   IsCompactColumnAliases                     { get; set; } = true;
+		public bool   GenerateDataTypes                          { get; set; }
+		/// <summary>
+		/// Enables generation of the SQL Server-specific <c>GetSqlDecimalAttribute</c> on <see cref="decimal"/> columns
+		/// whose precision or scale can exceed CLR <see cref="decimal"/> limits.
+		/// Reads through the attribute reduce scale to fit and can round least-significant digits; values above <see cref="decimal.MaxValue"/> still throw.
+		/// </summary>
+		public bool   GenerateSqlServerDecimalOverflowProtection { get; set; }
+		public bool?  GenerateLengthProperty                     { get; set; }
+		public bool?  GeneratePrecisionProperty                  { get; set; }
+		public bool?  GenerateScaleProperty                      { get; set; }
+		public bool   GenerateDbTypes                            { get; set; }
+		public bool   GenerateSchemaAsType                       { get; set; }
+		public bool   GenerateViews                              { get; set; } = true;
+		public bool   GenerateProcedureResultAsList              { get; set; }
+		public bool   GenerateProceduresOnTypedContext           { get; set; } = true;
+		public bool   PrefixTableMappingWithSchema               { get; set; } = true;
+		public bool   PrefixTableMappingForDefaultSchema         { get; set; }
+		public string SchemaNameSuffix                           { get; set; } = "Schema";
+		public string SchemaDataContextTypeName                  { get; set; } = "DataContext";
+		public bool   GenerateNameOf                             { get; set; } = true;
+		public bool   GenerateTableRegion                        { get; set; } = true;
 
 		public Dictionary<string,string> SchemaNameMapping = new(StringComparer.Ordinal);
 
 		public Func<string?,string,Func<IMethod>,IEnumerable<IMethod>> GetConstructors;
 
 		public Func<IColumn,string,string,bool,string> BuildColumnComparison = (c, padding1, padding2, last) => $"\tt.{c.MemberName}{padding1} == {c.MemberName}{(last ? "" : padding2)}{(last ? ");" : " &&")}";
+
+		private protected bool IsSqlServerBuilder()
+			=> DataProviderName?.StartsWith(ProviderName.SqlServer, StringComparison.Ordinal) == true;
 
 		IEnumerable<IMethod> GetConstructorsImpl(string? defaultConfiguration, string name, Func<IMethod> methodFactory)
 		{
@@ -554,6 +564,19 @@ namespace LinqToDB.Tools.ModelGeneration
 					}
 
 					c.Attributes.Insert(0, ca);
+
+					if (GenerateSqlServerDecimalOverflowProtection && IsSqlServerBuilder() && ShouldUseGetSqlDecimal(c))
+					{
+						Model.Usings.Add("LinqToDB.DataProvider.SqlServer");
+						c.Attributes.Add(new TAttribute { Name = "GetSqlDecimal" });
+					}
+
+					static bool ShouldUseGetSqlDecimal(IColumn column)
+					{
+						return
+							column.BuildType() is "decimal" or "decimal?" &&
+							SqlServerDecimalOverflow.ExceedsClrLimits(column.Precision, column.Scale);
+					}
 
 					// PK.
 					//

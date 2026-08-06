@@ -1,0 +1,98 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+// Generated.
+//
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.DataProvider.ClickHouse;
+
+using NUnit.Framework;
+
+namespace Tests.Extensions
+{
+	public partial class ClickHouseTests
+	{
+<#
+	GenerateLeftJoinHint("Outer",       "LEFT OUTER");
+	GenerateLeftJoinHint("Semi",        "LEFT SEMI");
+	GenerateLeftJoinHint("Anti",        "LEFT ANTI");
+	GenerateLeftJoinHint("Any",         "LEFT ANY");
+	GenerateLeftJoinHint("All",         "LEFT ALL");
+
+	GenerateLeftJoinHint("Global",      "GLOBAL LEFT");
+	GenerateLeftJoinHint("GlobalOuter", "GLOBAL LEFT OUTER");
+	GenerateLeftJoinHint("GlobalSemi",  "GLOBAL LEFT SEMI");
+	GenerateLeftJoinHint("GlobalAnti",  "GLOBAL LEFT ANTI");
+	GenerateLeftJoinHint("GlobalAny",   "GLOBAL LEFT ANY");
+	GenerateLeftJoinHint("GlobalAll",   "GLOBAL LEFT ALL");
+
+	GenerateLeftJoinHint("AllOuter",    "LEFT OUTER", true);
+	GenerateLeftJoinHint("AllSemi",     "LEFT SEMI",  true);
+	GenerateLeftJoinHint("AllAnti",     "LEFT ANTI",  true);
+	GenerateLeftJoinHint("AllAny",      "LEFT ANY",   true);
+
+	GenerateInnerJoinHint("Any",        "INNER ANY");
+	GenerateInnerJoinHint("All",        "INNER ALL");
+	GenerateInnerJoinHint("Global",     "GLOBAL INNER");
+	GenerateInnerJoinHint("GlobalAny",  "GLOBAL INNER ANY");
+	GenerateInnerJoinHint("GlobalAll",  "GLOBAL INNER ALL");
+#>
+	}
+}
+<#+
+void GenerateLeftJoinHint(string test, string hint, bool obsolete = false)
+{
+#>
+<#+ if (obsolete) { #>
+#pragma warning disable CS0618 // Type or member is obsolete
+<#+ } #>
+		[Test]
+		public void LeftJoin<#= test #>HintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().Join<#= test #>Hint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"<#= hint #> JOIN"));
+		}
+<#+ if (obsolete) { #>
+#pragma warning restore CS0618 // Type or member is obsolete
+<#+ } #>
+
+<#+
+}
+
+void GenerateInnerJoinHint(string test, string hint)
+{
+#>
+		[Test]
+		public void InnerJoin<#= test #>HintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().Join<#= test #>Hint() on c.ParentID equals p.ParentID
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"<#= hint #> JOIN"));
+		}
+
+<#+
+}
+#>

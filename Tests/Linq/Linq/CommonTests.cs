@@ -477,9 +477,9 @@ namespace Tests.Linq
 			AreEqual(groups1, groups2);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void ParameterTest1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ParameterTest1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			ProcessItem(db, 1);

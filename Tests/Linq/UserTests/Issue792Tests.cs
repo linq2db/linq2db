@@ -40,13 +40,13 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[YdbNotImplementedYet]
 		public void TestWithoutTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllClickHouse,
 			TestProvName.AllDuckDB,
+			TestProvName.AllYdb,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix)]
 			string context)
@@ -62,7 +62,7 @@ namespace Tests.UserTests
 				var schema     = sp.GetSchema(db, new GetSchemaOptions()
 				{
 					GetTables       = false,
-					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+					IncludedSchemas = !string.IsNullOrEmpty(schemaName) && schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 				});
 
 				var recordsAfter = db.GetTable<AllTypes>().Count();
@@ -83,13 +83,13 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[YdbNotImplementedYet]
 		public void TestWithTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllClickHouse,
 			TestProvName.AllDuckDB,
+			TestProvName.AllYdb,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction
@@ -112,7 +112,7 @@ namespace Tests.UserTests
 				var schema     = sp.GetSchema(db, new GetSchemaOptions()
 				{
 					GetTables       = false,
-					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+					IncludedSchemas = !string.IsNullOrEmpty(schemaName) && schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
 				});
 
 				var recordsAfter = db.GetTable<AllTypes>().Count();

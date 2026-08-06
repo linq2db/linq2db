@@ -326,7 +326,7 @@ namespace Tests.DataProvider
 					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 				// no idea how/why it works that way. In any case it is not a good idea to map TS to DT
-				var expected = 
+				var expected =
 #if !NETFRAMEWORK
 					context.IsAnyOf(TestProvName.AllOracleManaged)
 						? new DateTime(2012, 12, 12, 17, 12, 12, 12)
@@ -433,6 +433,97 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<string>(PathThroughSql, DataParameter.Create("p", (string?)null)), Is.Null);
 				Assert.That(conn.Execute<string>(PathThroughSql, new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
+		}
+
+		[Test]
+		public void LongStringParameterTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var conn  = GetDataContext(context);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+			var value     = "LongString".PadRight(50000, '1');
+
+			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, TO_NCLOB(:p))", DataParameter.NText("p", value));
+			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (2, TO_NCLOB(:p))", new DataParameter { Name = "p", DbType = "NClob", Value = value });
+			conn.Execute($"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (3, :p)",           new DataParameter { Name = "p", Value = value });
+
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 1").ShouldBe(value.Length);
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 2").ShouldBe(value.Length);
+			conn.Execute<int>($"SELECT LENGTH(\"NClob\") FROM {tableName} WHERE \"Id\" = 3").ShouldBe(value.Length);
+		}
+
+		[Test]
+		public void LongStringParameterCustomThresholdTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new SaveCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o
+				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = 10 })
+				.UseInterceptor(parameterInterceptor)
+			);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue"; // length >= 10
+
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", Value = value });
+
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
+
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.NClob);
+		}
+
+		[Test]
+		public void LongStringParameterNClobInferenceDisabledTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new SaveAndSkipCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o
+				.WithOptions<OracleOptions>(oo => oo with { MaxStringParameterLength = null })
+				.UseInterceptor(parameterInterceptor)
+			);
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue".PadRight(50000, '1');
+
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", Value = value });
+
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
+
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
+		}
+
+		[Test]
+		public void LongStringParameterExplicitTypeNotPromotedTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			var parameterInterceptor = new SaveAndSkipCommandInterceptor();
+
+			using var conn  = GetDataContext(context, o => o.UseInterceptor(parameterInterceptor));
+			using var table = conn.CreateLocalTable<BlobsTable>();
+
+			var tableName = table.GetTableName();
+
+			var value = "LongStringValue".PadRight(50000, '1');
+
+			// explicit non-NCLOB type must not be promoted to NCLOB even past the default threshold
+			conn.Execute(
+				$"INSERT INTO {tableName} (\"Id\", \"NClob\") VALUES (1, :p)",
+				new DataParameter { Name = "p", DataType = DataType.VarChar, Value = value });
+
+			parameterInterceptor.Parameters.Length.ShouldBe(1);
+
+			if (parameterInterceptor.Parameters[0] is OracleParameter p)
+				p.OracleDbType.ShouldBe(OracleDbType.Varchar2);
 		}
 
 		[Test]
@@ -1919,6 +2010,35 @@ namespace Tests.DataProvider
 			Assert.That(list[0].ParentID, Is.EqualTo(2));
 		}
 
+		class RegTestData
+		{
+			[Column(DataType = DataType.VarChar, Length = 30), NotNull] public required string  ID1  { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 30)]          public          string? ID2  { get; set; }
+			[Column, NotNull]                                           public          int     Type { get; set; }
+		}
+
+		[Test]
+		public void XmlTestRegressionTest([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = Enumerable.Range(0, 5000)
+				.Select(i => new RegTestData { ID1 = i.ToString(), Type = i })
+				.ToList();
+
+			var xml = OracleTools.GetXmlData(
+				db.Options,
+				db.MappingSchema,
+				data);
+
+			using var tmp = db.CreateLocalTable<RegTestData>();
+
+			var id2 = "123";
+
+			db.OracleXmlTable<RegTestData>(() => xml)
+				.Insert(tmp, i => new RegTestData { ID1 = i.ID1, ID2 = id2, Type = i.Type });
+		}
+
 #endregion
 
 		[Test]
@@ -3302,16 +3422,16 @@ namespace Tests.DataProvider
 			assert("TIMESTAMP '2020-01-03 04:05:06.7891234'");
 
 			results = table.Where(r => r.DateTimeOffset_ == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.789123 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.789123 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_0 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_1 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.7 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.7 +00:45'");
 
 			results = table.Where(r => r.DateTimeOffset_9 == pDateTimeOffset).ToArray();
-			assert("TIMESTAMP '2020-01-03 03:20:06.7891234 +00:00'");
+			assert("TIMESTAMP '2020-01-03 04:05:06.7891234 +00:45'");
 
 			void assert(string function)
 			{
@@ -3334,6 +3454,21 @@ namespace Tests.DataProvider
 				if (inlineParameters)
 					Assert.That(db.LastQuery, Does.Contain(function));
 			}
+		}
+
+		[Test]
+		public void TestDateTimeOffsetToTimestampLiteral([IncludeDataSources(false, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var value = new DateTimeOffset(2020, 1, 3, 4, 5, 6, 789, TimeSpan.FromMinutes(45)).AddTicks(1234);
+
+			var sb = new StringBuilder();
+			db.MappingSchema.ValueToSqlConverter.TryConvert(sb, db.MappingSchema, new DbDataType(typeof(DateTimeOffset), DataType.DateTime2), db.Options, value);
+
+			// DateTimeOffset bound to a zone-less TIMESTAMP column.
+			// UTC-normalized form (value.UtcDateTime = 2020-01-03 03:20:06.789123 UTC):
+			Assert.That(sb.ToString(), Is.EqualTo("TIMESTAMP '2020-01-03 03:20:06.789123'"));
 		}
 
 #endregion
@@ -4375,5 +4510,44 @@ END convert_bool;");
 
 			}
 		}
+
+		#region Coalesce charset
+
+		[Table]
+		sealed class CoalesceCharsetTable
+		{
+			[PrimaryKey]                                        public int     Id     { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 50)]  public string? NValue { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 50)]  public string? VValue { get; set; }
+		}
+
+		// OracleSqlExpressionConvertVisitor.ConvertCoalesce unifies the charset of a COALESCE mixing
+		// VARCHAR2 and NVARCHAR2 operands (To_NChar around the VARCHAR2 side). That rule runs on a
+		// Transform pass over the query's cached statement. The second execution below re-renders that
+		// cached statement; a write reaching it changes neither the results nor the SQL, and is caught
+		// instead by the Transform-mutation guard in OptimizationContext.OptimizeAndConvertAll, which is
+		// compiled in for the Debug/Testing/Azure configurations the test legs are built with.
+		[Test]
+		public void CoalesceWithInconsistentCharset([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<CoalesceCharsetTable>();
+
+			db.Insert(new CoalesceCharsetTable { Id = 1, NValue = null,       VValue = "varchar" });
+			db.Insert(new CoalesceCharsetTable { Id = 2, NValue = "nvarchar", VValue = "varchar" });
+
+			string?[] Execute() => table.OrderBy(x => x.Id).Select(x => x.NValue ?? x.VValue).ToArray();
+
+			Execute().ShouldBe(new string?[] { "varchar", "nvarchar" });
+
+			if (db is DataConnection dc)
+				dc.LastQuery!.ShouldContain("To_NChar");
+
+			// Second render of the same cached statement - this is what the Transform-mutation guard in
+			// OptimizeAndConvertAll checks, so keep it.
+			Execute().ShouldBe(new string?[] { "varchar", "nvarchar" });
+		}
+
+		#endregion
 	}
 }

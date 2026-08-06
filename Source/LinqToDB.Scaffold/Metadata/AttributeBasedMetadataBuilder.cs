@@ -86,6 +86,9 @@ namespace LinqToDB.Metadata
 			if (metadata.CreateFormat != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_CreateFormat     , context.AST.Constant(metadata.CreateFormat, true));
 			if (metadata.IsDiscriminator     ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_IsDiscriminator  , context.AST.Constant(true                 , true));
 			if (metadata.Order != null       ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Order            , context.AST.Constant(metadata.Order.Value , true));
+
+			if (metadata.UseGetSqlDecimal)
+				propertyBuilder.AddAttribute(WellKnownTypes.LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute);
 		}
 
 		void IMetadataBuilder.BuildEntityMetadata(IDataModelGenerationContext context, EntityModel entity)

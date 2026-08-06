@@ -112,7 +112,7 @@ namespace Tests.xUpdate
 			if (database != TestUtils.NO_DATABASE_NAME)
 				Assert.That(sql, Does.Contain(database));
 
-			if (schema != TestUtils.NO_SCHEMA_NAME)
+			if (!string.IsNullOrEmpty(schema) && schema != TestUtils.NO_SCHEMA_NAME)
 				Assert.That(sql, Does.Contain(schema));
 		}
 
@@ -129,10 +129,8 @@ namespace Tests.xUpdate
 		}
 
 #pragma warning disable CA1064 // Exceptions should be public
-		sealed class CustomException() : Exception("You shall not pass!")
+		sealed class CustomException() : Exception("You shall not pass!");
 #pragma warning restore CA1064 // Exceptions should be public
-		{
-		}
 
 		[Test]
 		public void DropTable_Existing([DataSources] string context)

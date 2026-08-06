@@ -184,6 +184,8 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
+			var orderNullability = NullabilityContext.GetContext(raw.SelectQuery);
+
 			var orderSql = new (ISqlExpression expr, bool desc, Sql.NullsPosition nulls)[raw.OrderBy.Length];
 			for (var i = 0; i < raw.OrderBy.Length; i++)
 			{
@@ -193,7 +195,12 @@ namespace LinqToDB.Linq.Translation
 					return BuildAggregationFunctionResult.Error(obErr);
 				}
 
-				orderSql[i] = (obSql!, obInfo.IsDescending, obInfo.Nulls);
+				// NULLS positioning is a no-op for an ordering key that cannot be null — drop it (SQL-level check).
+				var nulls = obInfo.Nulls != Sql.NullsPosition.None && obSql!.CanBeNullable(orderNullability)
+					? obInfo.Nulls
+					: Sql.NullsPosition.None;
+
+				orderSql[i] = (obSql!, obInfo.IsDescending, nulls);
 			}
 
 			SqlSearchCondition? filterSql         = null;

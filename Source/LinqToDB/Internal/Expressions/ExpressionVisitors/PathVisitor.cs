@@ -256,6 +256,11 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 						break;
 					}
 
+				case ChangeTypeExpression.ChangeTypeType:
+					path = ConvertPathTo(typeof(ChangeTypeExpression));
+					Path(((ChangeTypeExpression)expr).Expression, ReflectionHelper.ChangeType.Expression);
+					break;
+
 				default:
 					throw new NotSupportedException($"Unhandled expression type: {expr.NodeType}");
 			}

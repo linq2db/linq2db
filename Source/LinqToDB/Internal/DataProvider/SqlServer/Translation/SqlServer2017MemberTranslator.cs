@@ -112,6 +112,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR TRIM(N'WHITESPACES' FROM {value}) = ''
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory    = translationContext.ExpressionFactory;
+				var stringType = factory.GetDbDataType(value);
+				var chars      = factory.Value(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES);
+
+				var trimmed   = factory.Expression(stringType, "TRIM({1} FROM {0})", value, chars);
+				var predicate = factory.Equal(trimmed, factory.Value(stringType, string.Empty));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 	}
 }

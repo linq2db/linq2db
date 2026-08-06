@@ -54,7 +54,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, NonParallelizable]
+		[Test]
 		public void TestNullConfiguration_Unset([Values] bool cleanDefault)
 		{
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
@@ -66,7 +66,7 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test, NonParallelizable]
+		[Test]
 		public void TestNullConfiguration_UnsetRemote([Values] bool cleanDefault)
 		{
 			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
@@ -82,7 +82,7 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test, NonParallelizable]
+		[Test]
 		public void TestNullConfiguration_SetNull([Values] bool cleanDefault)
 		{
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
@@ -94,7 +94,7 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test, NonParallelizable]
+		[Test]
 		public void TestNullConfiguration_SetNullRemote([Values] bool cleanDefault)
 		{
 			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");

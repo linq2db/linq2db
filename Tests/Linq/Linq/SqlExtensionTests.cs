@@ -371,7 +371,38 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class DatePartBuilderYdb : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var part = builder.GetValue<Sql.DateParts>("part");
+				switch (part)
+				{
+					case Sql.DateParts.Year        : builder.Expression = "DateTime::GetYear({date})";              break;
+					case Sql.DateParts.Month       : builder.Expression = "DateTime::GetMonth({date})";             break;
+					case Sql.DateParts.Day         : builder.Expression = "DateTime::GetDayOfMonth({date})";        break;
+					case Sql.DateParts.DayOfYear   : builder.Expression = "DateTime::GetDayOfYear({date})";         break;
+					case Sql.DateParts.Hour        : builder.Expression = "DateTime::GetHour({date})";              break;
+					case Sql.DateParts.Minute      : builder.Expression = "DateTime::GetMinute({date})";            break;
+					case Sql.DateParts.Second      : builder.Expression = "DateTime::GetSecond({date})";            break;
+					case Sql.DateParts.Millisecond : builder.Expression = "DateTime::GetMillisecondOfSecond({date})"; break;
+					case Sql.DateParts.Week        : builder.Expression = "DateTime::GetWeekOfYearIso8601({date})"; break;
+					case Sql.DateParts.Quarter:
+						builder.Expression           = "(DateTime::GetMonth({date}) + 2) / 3";
+						builder.Extension.Precedence = Precedence.Multiplicative;
+						break;
+					case Sql.DateParts.WeekDay:
+						builder.Expression           = "DateTime::GetDayOfWeek({date}) % 7 + 1";
+						builder.Extension.Precedence = Precedence.Additive;
+						break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+			}
+		}
+
 		[Sql.Extension(               "DatePart({part}, {date})",                 ServerSideOnly = false, BuilderType = typeof(DatePartBuilder))]
+		[Sql.Extension(PN.Ydb,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderYdb))]
 		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
 		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderInformix))] // TODO: Not checked
 		[Sql.Extension(PN.MySql,      "Extract({part} from {date})",              ServerSideOnly = false, BuilderType = typeof(DatePartBuilderMySql))]

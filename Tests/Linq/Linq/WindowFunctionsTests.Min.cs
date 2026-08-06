@@ -1,6 +1,7 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -9,14 +10,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void MinOverloads([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void MinOverloads([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -43,21 +38,12 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Min(t.NullableByteValue,    w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
 		}
 
 		[Test]
-		public void MinOverloadsViaWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void MinOverloadsViaWindow([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -84,10 +70,31 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Min(t.NullableByteValue,    w => w.UseWindow(wnd))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				query.ToList();
-			});
+		}
+
+		// DISTINCT in a window aggregate is supported by Oracle, ClickHouse and DuckDB; on the providers below it is
+		// rejected and gated with a descriptive error.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
+			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllDB2, TestProvName.AllInformix, ProviderName.Ydb,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateDistinct)]
+		public void MinDistinct([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id  = t.Id,
+					Min = Sql.Window.Min(t.IntValue, w => w.Distinct().PartitionBy(t.CategoryId)),
+				};
+
+				query.ToList();
 		}
 
 	}

@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.SqlQuery
 {
 	public abstract class SqlExpressionBase : QueryElement, ISqlExpression
 	{
-		public virtual bool Equals(ISqlExpression? other)
+		public virtual bool Equals([NotNullWhen(true)] ISqlExpression? other)
 		{
 			if (ReferenceEquals(this, other))
 				return true;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -98,24 +99,45 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var testEd = mappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
-			if (testEd.QueryFilterLambda == null && testEd.QueryFilterFunc == null)
+			var allFilters = testEd.QueryFilters;
+			if (allFilters.Count == 0)
+				return tableExpression;
+
+			// Filter out entries disabled at translation time (per-key scope check). When every entry is disabled we
+			// keep the bare table expression — no Where/func wrapping needed.
+			List<EntityQueryFilter>? activeFilters = null;
+			var hasFunc = false;
+
+			for (var i = 0; i < allFilters.Count; i++)
+			{
+				var entry = allFilters[i];
+				if (builder.IsFilterDisabled(entityType, entry.FilterKey))
+					continue;
+
+				activeFilters ??= new List<EntityQueryFilter>(allFilters.Count);
+				activeFilters.Add(entry);
+
+				if (entry.FilterFunc != null)
+					hasFunc = true;
+			}
+
+			if (activeFilters == null)
 				return tableExpression;
 
 			Expression filteredExpression;
 
-			if (testEd.QueryFilterFunc == null)
+			if (!hasFunc)
 			{
-				// shortcut for simple case. We know that MappingSchema is read only and can be sure that comparing cache will not require complex logic.
-
-				var dcParam = testEd.QueryFilterLambda!.Parameters[1];
-				var dcExpr  = SqlQueryRootExpression.Create(mappingSchema, dcParam.Type);
-
-				var filterLambda = Expression.Lambda(testEd.QueryFilterLambda.Body.Replace(dcParam, dcExpr), testEd.QueryFilterLambda.Parameters[0]);
-
-				// to avoid recursion
+				// shortcut for simple lambda-only case. We know that MappingSchema is read only and can be sure that comparing cache will not require complex logic.
 				filteredExpression = Expression.Call(Methods.LinqToDB.DisableFilterInternal.MakeGenericMethod(entityType), tableExpression);
 
-				filteredExpression = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), filteredExpression, Expression.Quote(filterLambda));
+				foreach (var entry in activeFilters)
+				{
+					var filterLambda = BuildFilterLambda(mappingSchema, entityType, entry.FilterLambda!);
+
+					filteredExpression = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), filteredExpression, Expression.Quote(filterLambda));
+				}
+
 				filteredExpression = ExpressionBuilder.ExposeExpression(filteredExpression, builder.DataContext, builder.OptimizationContext, builder.ParameterValues, optimizeConditions: true, compactBinary: true);
 
 				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
@@ -123,33 +145,44 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
+				// Snapshot the keys of the currently-active filter set; the dynamic accessor re-resolves entries
+				// against the live mapping schema (which may have been swapped on the context) but only applies
+				// those whose key was active at translation time.
+				var activeKeys = new HashSet<string>(StringComparer.Ordinal);
+				foreach (var entry in activeFilters)
+					activeKeys.Add(entry.FilterKey);
+
 				// Closure should capture mappingSchema, entityType and tableExpression only. Used in EqualsToVisitor
 				filteredExpression = builder.ParametersContext.RegisterDynamicExpressionAccessor(tableExpression, builder.DataContext, mappingSchema, (dc, ms) =>
 				{
 					var ed = ms.GetEntityDescriptor(entityType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
-					var filterLambdaExpr = ed.QueryFilterLambda;
-					var filterFunc       = ed.QueryFilterFunc;
-
 					// to avoid recursion
 					Expression sequenceExpr = Expression.Call(Methods.LinqToDB.DisableFilterInternal.MakeGenericMethod(entityType), tableExpression);
 
-					if (filterLambdaExpr != null)
+					for (var i = 0; i < ed.QueryFilters.Count; i++)
 					{
-						var dcParam = filterLambdaExpr.Parameters[1];
-						var dcExpr  = SqlQueryRootExpression.Create(ms, dcParam.Type);
+						var entry = ed.QueryFilters[i];
+						if (!activeKeys.Contains(entry.FilterKey))
+							continue;
 
-						var filterLambda = Expression.Lambda(filterLambdaExpr.Body.Replace(dcParam, dcExpr), filterLambdaExpr.Parameters[0]);
+						var filterLambdaExpr = entry.FilterLambda;
+						var filterFunc       = entry.FilterFunc;
 
-						sequenceExpr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), sequenceExpr, Expression.Quote(filterLambda));
-					}
+						if (filterLambdaExpr != null)
+						{
+							var filterLambda = BuildFilterLambda(ms, entityType, filterLambdaExpr);
 
-					if (filterFunc != null)
-					{
-						var query    = ExpressionQueryImpl.CreateQuery(entityType, dc, sequenceExpr);
-						var filtered = filterFunc.DynamicInvokeExt<IQueryable>(query, dc);
+							sequenceExpr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), sequenceExpr, Expression.Quote(filterLambda));
+						}
 
-						sequenceExpr = filtered.Expression;
+						if (filterFunc != null)
+						{
+							var query    = ExpressionQueryImpl.CreateQuery(entityType, dc, sequenceExpr);
+							var filtered = filterFunc.DynamicInvokeExt<IQueryable>(query, dc);
+
+							sequenceExpr = filtered.Expression;
+						}
 					}
 
 					if (dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
@@ -163,6 +196,32 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return filteredExpression;
+		}
+
+		// Builds the Where-lambda for a single query filter: substitutes the data-context parameter with the
+		// SqlQueryRootExpression and adapts the entity parameter to the concrete entityType. The adaptation is
+		// required for filter lambdas typed against an interface/base type (e.g. a QueryFilterAttribute subclass
+		// whose FilterLambda is Expression<Func<ISoftDelete, IDataContext, bool>> applied to a concrete entity);
+		// without it Queryable.Where<entityType> rejects the interface-typed lambda parameter.
+		static LambdaExpression BuildFilterLambda(MappingSchema mappingSchema, Type entityType, LambdaExpression filterLambdaExpr)
+		{
+			var entityParam = filterLambdaExpr.Parameters[0];
+			var dcParam     = filterLambdaExpr.Parameters[1];
+			var dcExpr      = SqlQueryRootExpression.Create(mappingSchema, dcParam.Type);
+
+			var body        = filterLambdaExpr.Body.Replace(dcParam, dcExpr);
+			var lambdaParam = entityParam;
+
+			if (entityParam.Type != entityType)
+			{
+				if (!entityParam.Type.IsAssignableFrom(entityType))
+					throw new LinqToDBException($"Query filter parameter type '{entityParam.Type}' is not assignable from entity type '{entityType}'.");
+
+				lambdaParam = Expression.Parameter(entityType, entityParam.Name);
+				body        = body.Replace(entityParam, Expression.Convert(lambdaParam, entityParam.Type));
+			}
+
+			return Expression.Lambda(body, lambdaParam);
 		}
 
 		static MappingSchema GetRootMappingSchema(ExpressionBuilder builder, Expression expression)

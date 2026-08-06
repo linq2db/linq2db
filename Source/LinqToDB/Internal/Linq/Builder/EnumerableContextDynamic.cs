@@ -237,11 +237,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			var isSpecial  = memberExpression != null && SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "item");
 			var isRowIndex = memberExpression != null && SequenceHelper.IsSpecialProperty(memberExpression, memberExpression.Type, "index");
 
-			var checkDescriptor = currentDescriptor != null && !isSpecial && !isRowIndex;
+			// Identify VALUES columns by the projected member's OWN column descriptor (mapped, or inferred from the
+			// rowset element type), not by currentDescriptor. currentDescriptor here is only ambient context inherited
+			// from the surrounding expression — e.g. the string descriptor of "... + Sql.ToNullable(it.ColorId).ToString()".
+			// Two references to the same it.ColorId share the same own descriptor (same instance) but differ in ambient
+			// context, so keying the dedup on the ambient descriptor splits one column into a duplicate.
+			var ownColumnDescriptor = memberExpression == null || isSpecial || isRowIndex || memberExpression.Expression?.Type == null
+				? null
+				: MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type).FindColumnDescriptor(memberExpression.Member);
+
+			var keyDescriptor = memberExpression != null ? ownColumnDescriptor : currentDescriptor;
+
+			var checkDescriptor = keyDescriptor != null && !isSpecial && !isRowIndex;
 
 			foreach (var (path, descriptor, placeholder) in _fieldsMap)
 			{
-				if ((!checkDescriptor || descriptor == currentDescriptor) && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression) || ExpressionEqualityComparer.Instance.Equals(path, pathExpression)))
+				if ((!checkDescriptor || descriptor == keyDescriptor) && (ExpressionEqualityComparer.Instance.Equals(path, memberExpression) || ExpressionEqualityComparer.Instance.Equals(path, pathExpression)))
 				{
 					foundPlaceholder = placeholder;
 					break;
@@ -257,11 +268,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (memberExpression != null)
 			{
-				var columDescriptor = isSpecial || isRowIndex || memberExpression.Expression?.Type == null
-					? null
-					: MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type).FindColumnDescriptor(memberExpression.Member);
-
-				var descriptor = columDescriptor ?? currentDescriptor;
+				var descriptor = ownColumnDescriptor ?? currentDescriptor;
 
 				for (var index = 0; index < _expressionRows.Length; index++)
 				{
@@ -315,7 +322,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var field = new SqlField(dbDataType, fieldName, true);
 			var fieldPlaceholder = ExpressionBuilder.CreatePlaceholder(this, field, currentPath);
 
-			_fieldsMap.Add((currentPath, currentDescriptor, fieldPlaceholder));
+			_fieldsMap.Add((currentPath, keyDescriptor, fieldPlaceholder));
 
 			Table.AddField(field);
 

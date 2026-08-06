@@ -46,19 +46,25 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			if (table.TryGetDataConnection(out var dataConnection))
+			// YDB's BulkUpsert API cannot run inside an active transaction (and takes no transaction
+			// object), so fall back to row-by-row INSERT when one is open - mirrors InformixBulkCopy.
+			if (table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
 				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.OpenDbConnection());
 
 				if (connection != null)
 				{
-					return SafeAwaiter.Run(() => ProviderSpecificCopyImplAsync(
+					var ret = SafeAwaiter.Run(() => ProviderSpecificCopyImplAsync(
 						dataConnection,
 						connection,
 						table,
 						options,
 						columns => new BulkCopyReader<T>(dataConnection, columns, source),
 						default));
+
+					CloseConnectionIfNecessary(table.DataContext);
+
+					return ret;
 				}
 			}
 
@@ -67,13 +73,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (table.TryGetDataConnection(out var dataConnection))
+			if (table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
 				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				if (connection != null)
 				{
-					return await ProviderSpecificCopyImplAsync(
+					var ret = await ProviderSpecificCopyImplAsync(
 						dataConnection,
 						connection,
 						table,
@@ -81,6 +87,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 						columns => new BulkCopyReader<T>(dataConnection, columns, source, cancellationToken),
 						cancellationToken)
 						.ConfigureAwait(false);
+
+					await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
+
+					return ret;
 				}
 			}
 
@@ -89,13 +99,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (table.TryGetDataConnection(out var dataConnection))
+			if (table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
 			{
 				var connection = _provider.TryGetProviderConnection(dataConnection, await dataConnection.OpenDbConnectionAsync(cancellationToken).ConfigureAwait(false));
 
 				if (connection != null)
 				{
-					return await ProviderSpecificCopyImplAsync(
+					var ret = await ProviderSpecificCopyImplAsync(
 						dataConnection,
 						connection,
 						table,
@@ -103,6 +113,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 						columns => new BulkCopyReader<T>(dataConnection, columns, source),
 						cancellationToken)
 						.ConfigureAwait(false);
+
+					await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
+
+					return ret;
 				}
 			}
 
@@ -187,8 +201,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (currentCount > 0 && options.BulkCopyOptions.NotifyAfter != 0 && options.BulkCopyOptions.RowsCopiedCallback != null)
 				options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
 
-			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(false);
+			// CloseAfterUse is handled by the sync/async entry points so the close matches the caller's
+			// sync/async nature (and runs ReleaseQuery), per BasicBulkCopy.CloseConnectionIfNecessary[Async].
 
 			return rowsCopied;
 		}

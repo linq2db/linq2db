@@ -11,11 +11,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			_converters = converters;
 		}
 
-		public Expression Convert(Expression expression, out bool handled)
+		public Expression Convert(Expression expression, IConvertContext context, out bool handled)
 		{
 			foreach (var converter in _converters)
 			{
-				var result = converter.Convert(expression, out handled);
+				var result = converter.Convert(expression, context, out handled);
 				if (handled)
 					return result;
 			}

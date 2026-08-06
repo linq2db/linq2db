@@ -131,22 +131,19 @@ namespace Tests.Linq
 		[Sql.Expression("(1=1)", IsPredicate = true, ServerSideOnly = true)]
 		static bool TruePredicate() => true;
 
-		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
+		// Supported: ClickHouse, DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] TRUE")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
 		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		public void Test_Feature_IsTrue([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -169,22 +166,19 @@ namespace Tests.Linq
 			}
 		}
 
-		// Supported: DB2, FB3+, MySQL, PostgreSQL, SQLite
+		// Supported: ClickHouse, DB2, FB3+, MySQL, PostgreSQL, SQLite
 		[Test(Description = "<PREDICATE> IS [NOT] FALSE")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, TestProvName.AllAccessOdbc)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
 		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
 		[ThrowsForProvider("System.Data.SqlClient.SqlException", TestProvName.AllSqlServerSystem)]
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		public void Test_Feature_IsFalse([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -207,7 +201,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// Supported: Firebird3+, MySQL, PostgreSQL
+		// Supported: ClickHouse, Firebird3+, MySQL, PostgreSQL
 		[Test(Description = "<PREDICATE> IS [NOT] UNKNOWN")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative)]
@@ -221,10 +215,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		public void Test_Feature_IsUnknown([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -365,7 +356,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", ProviderName.Firebird25)]
 		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_Unknown([DataSources(false)] string context)
 		{
@@ -540,7 +531,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServerMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("FirebirdSql.Data.FirebirdClient.FbException", TestProvName.AllFirebird)]
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_NullSaveEqual([DataSources(false)] string context)
 		{
@@ -581,7 +572,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2, TestProvName.AllDB2)]
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_Is([DataSources(false)] string context)
 		{
@@ -622,7 +613,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Npgsql.PostgresException", TestProvName.AllPostgreSQL)]
 		[ThrowsForProvider("System.Data.SQLite.SQLiteException", TestProvName.AllSQLiteClassic)]
 		[ThrowsForProvider("Microsoft.Data.Sqlite.SqliteException", ProviderName.SQLiteMS)]
-		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", ProviderName.Ydb)]
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[ThrowsForProvider("DuckDB.NET.Data.DuckDBException", TestProvName.AllDuckDB)]
 		public void Test_Feature_Decode([DataSources(false, TestProvName.AllFirebird)] string context)
 		{
@@ -655,9 +646,7 @@ namespace Tests.Linq
 		[Test(Description = "EXISTS INTERSECT")]
 		[ThrowsForProvider("System.Data.OleDb.OleDbException", TestProvName.AllAccessOleDb)]
 		[ThrowsForProvider("System.Data.Odbc.OdbcException", TestProvName.AllAccessOdbc)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test_Feature_Intersect([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1065,7 +1054,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void Test_FieldInSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1086,7 +1074,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Test_VariableInSubquery([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);

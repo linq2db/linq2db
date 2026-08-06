@@ -10,13 +10,25 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class IgnoreFiltersBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFilters);
+			=> call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFilters)
+			|| call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFiltersByKey);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var types = builder.EvaluateExpression<Type[]>(methodCall.Arguments[1])!;
+			if (methodCall.IsSameGenericMethod(Methods.LinqToDB.IgnoreFiltersByKey))
+			{
+				// Coalesce a null key list to empty so it never reaches FilterIgnoreScope as the null "any key"
+				// wildcard — an explicit (empty/null) key list disables nothing, only the type-based overload disables all.
+				var keys  = builder.EvaluateExpression<string[]>(methodCall.Arguments[1]) ?? [];
+				var types = builder.EvaluateExpression<Type[]>  (methodCall.Arguments[2]) ?? [];
+				builder.PushDisabledQueryFilters(keys, types);
+			}
+			else
+			{
+				var types = builder.EvaluateExpression<Type[]>(methodCall.Arguments[1])!;
+				builder.PushDisabledQueryFilters(types);
+			}
 
-			builder.PushDisabledQueryFilters(types);
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			builder.PopDisabledFilter();
 

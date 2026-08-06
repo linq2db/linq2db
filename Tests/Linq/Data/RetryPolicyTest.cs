@@ -81,11 +81,9 @@ namespace Tests.Data
 			}
 		}
 
-		public sealed class TestException : Exception
-		{}
+		public sealed class TestException : Exception;
 
-		public class FakeClass
-		{}
+		public class FakeClass;
 
 		[Test]
 		public void TestRetryPolicy([DataSources(false)] string context)

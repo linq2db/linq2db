@@ -261,6 +261,14 @@ namespace LinqToDB
 		/// </summary>
 		public const string PostgreSQL95  = "PostgreSQL.9.5";
 		/// <summary>
+		/// PostgreSQL 11+ data provider.
+		/// </summary>
+		public const string PostgreSQL11  = "PostgreSQL.11";
+		/// <summary>
+		/// PostgreSQL 12+ data provider.
+		/// </summary>
+		public const string PostgreSQL12  = "PostgreSQL.12";
+		/// <summary>
 		/// PostgreSQL 13+ data provider.
 		/// </summary>
 		public const string PostgreSQL13 = "PostgreSQL.13";
@@ -272,6 +280,10 @@ namespace LinqToDB
 		/// PostgreSQL 18+ data provider.
 		/// </summary>
 		public const string PostgreSQL18 = "PostgreSQL.18";
+		/// <summary>
+		/// PostgreSQL 19+ data provider.
+		/// </summary>
+		public const string PostgreSQL19 = "PostgreSQL.19";
 		/// <summary>
 		/// Microsoft SQL Server Compact Edition provider.
 		/// Used as configuration name for SQL CE mapping schema <see cref="SqlCeMappingSchema"/>.

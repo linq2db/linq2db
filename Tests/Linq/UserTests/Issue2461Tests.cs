@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void AssociationConcat([DataSources(ProviderName.Ydb)] string context)
+		public void AssociationConcat([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestReceipt>())

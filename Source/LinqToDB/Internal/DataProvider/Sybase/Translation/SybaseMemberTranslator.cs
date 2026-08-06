@@ -262,14 +262,22 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR {value} NOT LIKE '%[^WHITESPACES]%'
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var pattern   = factory.Value(factory.GetDbDataType(typeof(string)), $"%[^{WHITESPACES}]%");
+				var predicate = factory.LikePredicate(value, true, pattern);
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID", factory.Value(1));
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID", factory.Value(1));
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -286,6 +294,16 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 				return toLower;
 			}
+		}
+
+		protected class SybaseWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SybaseWindowFunctionsMemberTranslator();
 		}
 	}
 }

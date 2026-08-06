@@ -340,7 +340,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			SqlFrameClause? frameClause = null,
 			SqlSearchCondition? filter = null,
 			bool isAggregate = false,
-			bool canBeAffectedByOrderBy = false
+			bool canBeAffectedByOrderBy = false,
+			SqlKeepClause? keepClause = null,
+			Sql.Nulls nullTreatment = Sql.Nulls.None,
+			Sql.From fromPosition = Sql.From.None,
+			bool isWindowFunction = false
 		)
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
@@ -352,7 +356,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				filter: filter,
 				frameClause: frameClause,
 				isAggregate: isAggregate,
-				canBeAffectedByOrderBy : canBeAffectedByOrderBy);
+				canBeAffectedByOrderBy: canBeAffectedByOrderBy,
+				keepClause: keepClause,
+				nullTreatment: nullTreatment,
+				fromPosition: fromPosition,
+				isWindowFunction: isWindowFunction);
 		}
 
 		#region String functions
@@ -395,9 +403,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static SqlPredicate.Like LikePredicate(this ISqlExpressionFactory factory, ISqlExpression value, bool isNull, ISqlExpression template, ISqlExpression? escape = null, string? functionName = null)
+		public static SqlPredicate.Like LikePredicate(this ISqlExpressionFactory factory, ISqlExpression value, bool isNot, ISqlExpression template, ISqlExpression? escape = null, string? functionName = null)
 		{
-			return new SqlPredicate.Like(value, isNull, template, escape, functionName);
+			return new SqlPredicate.Like(value, isNot, template, escape, functionName);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]

@@ -203,8 +203,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings/don't infer facets
 		[Test]
-		[YdbMemberNotFound]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			var p   = 123.456m;
@@ -217,8 +216,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings
 		[Test]
-		[YdbMemberNotFound]
-		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			var p   = new byte[] { 0, 1, 2 };
@@ -291,7 +289,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void TestQueryableCall([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -299,7 +296,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void TestQueryableCallWithParameters([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
@@ -308,7 +304,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void TestQueryableCallWithParametersWorkaround([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
@@ -331,7 +326,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbCteAsSource]
 		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -512,6 +506,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestParameterInEquals([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1286,7 +1281,6 @@ namespace Tests.Linq
 		private int _param;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
-		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1433,7 +1427,6 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
-		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1688,9 +1681,10 @@ namespace Tests.Linq
 			query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
 			AssertQuery(query1);
 
-			// check only one parameter generated (1+2+1=4)
+			// query1 third call is structurally identical to the first; cache must reuse the
+			// 1-parameter plan, not promote to query2's 2-parameter plan
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
+				query1.ToSqlQuery().Parameters.Count.ShouldBe(1);
 		}
 
 #if SUPPORTS_DATEONLY
@@ -1978,6 +1972,35 @@ namespace Tests.Linq
 			var record = tb.Single();
 
 			Assert.That(record.Field, Is.EqualTo(1));
+		}
+
+		sealed class ParameterCastUnderCastTable
+		{
+			[PrimaryKey]                        public int     Id    { get; set; }
+			[Column(Length = 50)]               public string? Value { get; set; }
+			[Column(Precision = 10, Scale = 2)] public decimal Money { get; set; }
+		}
+
+		// A constant fold whose source usage carried a per-usage cast folds to a cast-wrapped parameter
+		// (QueryHelper.CreateSqlValue). When that fold sits directly under an explicit cast, the marker
+		// reaches BuildTypedExpression, whose provider overrides match only SqlValue / SqlParameter - so
+		// Firebird dropped the declared cast entirely for a string target and skipped the decimal facet
+		// correction for a numeric one. The captured SQL baseline is what pins the rendering.
+		[Test]
+		public void ParameterCastDirectlyUnderExplicitCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[] { new ParameterCastUnderCastTable() { Id = 1, Value = "4", Money = 4m } });
+
+			var name = "john";
+
+			// Sql.AsSql keeps the length evaluation on the server, so the optimizer folds it - and the fold's
+			// basedOn carries the cast-wrapped @name usage, so the folded parameter is cast-wrapped in turn.
+			var byString = tb.Where(t => t.Value == Sql.Convert<string, int>(Sql.AsSql(name).Length)).ToArray();
+			var byNumber = tb.Where(t => t.Money == Sql.Convert<decimal, int>(Sql.AsSql(name).Length)).ToArray();
+
+			byString.Length.ShouldBe(1);
+			byNumber.Length.ShouldBe(1);
 		}
 	}
 }

@@ -9,6 +9,11 @@ namespace LinqToDB.Internal.Common
 {
 	public sealed class StackGuard
 	{
+		// How often (in recursion levels) Enter probes the remaining stack. Small enough that the stack
+		// consumed between two probes stays well inside the margin TryEnsureSufficientExecutionStack
+		// guarantees, so deep recursion always hops gracefully instead of overflowing between probes.
+		const int StackProbeInterval = 8;
+
 		// Use interlocked to be safe when execution switches threads.
 		int _hopCount;
 		int _internalDepth;
@@ -29,11 +34,17 @@ namespace LinqToDB.Internal.Common
 			_internalDepth++;
 			_maxHops ??= LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
 
-			// test _internalDepth for 1 so we can trigger hop before doing 64 calls and fail
-			// when starting stack is already too small
+			// Probe the stack every StackProbeInterval recursion levels (and on the very first call, so
+			// an already-too-small starting stack is caught). The interval bounds how much stack can be
+			// consumed between two probes: TryEnsureSufficientExecutionStack only guarantees a fixed
+			// margin, so if (interval x per-level-stack) exceeds that margin the stack can overflow
+			// BETWEEN probes - an uncatchable StackOverflowException instead of a graceful hop. At ~220
+			// bytes/level (x64) the old interval of 64 used ~14KB between probes, which overran the
+			// margin on tighter configs (net462 / Linux, larger frames) and produced a flaky hard SO.
+			// 8 keeps it under ~2KB, comfortably inside the margin on every TFM.
 			return _maxHops switch
 			{
-				>= 0 when _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack() =>
+				>= 0 when _internalDepth % StackProbeInterval == 1 && !TryEnsureSufficientExecutionStack() =>
 					RunOnEmptyStack(action, arg),
 
 				_ => default,

@@ -20,8 +20,6 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class YdbTests : DataProviderTestBase
 	{
-		private const string Ctx = "YDB";           // context name from DataProviders.json
-
 		[Table]
 		public class SimpleEntity
 		{
@@ -34,28 +32,19 @@ namespace Tests.DataProvider
 		}
 
 		#region SchemaProviderTests
-		//------------------------------------------------------------------
-		//  YdbSchemaProvider: verifies that the provider correctly returns
-		//  information about tables, columns, data types, and primary keys.
-		//------------------------------------------------------------------
-
-		//------------------------------------------------------------------
-		// 1. The table created via CreateLocalTable is present in the schema.
-		//------------------------------------------------------------------
 		[Test]
-		[YdbNotImplementedYet]
-		public void SchemaProvider_ReturnsCreatedTable([IncludeDataSources(Ctx)] string context)
+		public void SchemaProvider_ReturnsCreatedTable([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
 			var schema = db.DataProvider.GetSchemaProvider()
-		.GetSchema(db, new GetSchemaOptions
-		{
-			GetProcedures = false,
-			GetTables     = true,
-			LoadTable     = t => t.Name == nameof(SimpleEntity)
-		});
+				.GetSchema(db, new GetSchemaOptions
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(SimpleEntity)
+				});
 
 			Assert.That(schema.Tables, Has.Count.EqualTo(1));
 			var tbl = schema.Tables.Single();
@@ -66,23 +55,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-		//------------------------------------------------------------------
-		// 2. Verify metadata for individual columns: data type and nullability.
-		//------------------------------------------------------------------
 		[Test]
-		[YdbNotImplementedYet]
-		public void SchemaProvider_ReturnsCorrectColumnMetadata([IncludeDataSources(Ctx)] string context)
+		public void SchemaProvider_ReturnsCorrectColumnMetadata([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
 			var schema = db.DataProvider.GetSchemaProvider()
-		.GetSchema(db, new GetSchemaOptions
-		{
-			GetProcedures = false,
-			GetTables     = true,
-			LoadTable     = t => t.Name == nameof(SimpleEntity)
-		});
+				.GetSchema(db, new GetSchemaOptions
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(SimpleEntity)
+				});
 
 			var cols = schema.Tables.Single().Columns;
 
@@ -104,41 +89,66 @@ namespace Tests.DataProvider
 			}
 		}
 
-		//------------------------------------------------------------------
-		// 3. Column 'Id' is recognized as the primary key.
-		//------------------------------------------------------------------
 		[Test]
-		[YdbNotImplementedYet]
-		public void SchemaProvider_DetectsPrimaryKey([IncludeDataSources(Ctx)] string context)
+		public void SchemaProvider_DetectsPrimaryKey([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
 			var schema = db.DataProvider.GetSchemaProvider()
-		.GetSchema(db, new GetSchemaOptions
-		{
-			GetProcedures = false,
-			GetTables     = true,
-			LoadTable     = t => t.Name == nameof(SimpleEntity)
-		});
+				.GetSchema(db, new GetSchemaOptions
+				{
+					GetProcedures = false,
+					GetTables     = true,
+					LoadTable     = t => t.Name == nameof(SimpleEntity)
+				});
 
 			var tbl = schema.Tables.Single();
 			var pks = tbl.Columns
-		.Where(c => c.IsPrimaryKey)
-		.Select(c => c.ColumnName)
-		.ToArray();
+				.Where(c => c.IsPrimaryKey)
+				.Select(c => c.ColumnName)
+				.ToArray();
 
-			Assert.That(pks, Is.Empty, "YDB driver doesn’t expose PK meta for local tables yet");
+			Assert.That(pks, Is.EqualTo(new[] { nameof(SimpleEntity.Id) }));
 		}
 		#endregion
 
 		[Test]
-		public void InsertSimpleEntity([IncludeDataSources(Ctx)] string context)
+		public void CteNamedLikeTable_Works([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// A YDB CTE renders as a named query variable `$Parent`, distinct from the `Parent` table,
+			// so naming them alike must not trigger name-conflict resolution or break the query.
+			var cte   = db.Child.Where(c => c.ChildID > 0).AsCte("Parent");
+			var query = cte.Where(c => c.ParentID > 0);
+
+			query.ToList();
+		}
+
+		[Test]
+		public void CteNameCollidesWithParameter([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// A YDB CTE and a query parameter share the `$`-name bucket, so a CTE named like the parameter
+			// must be renamed to avoid `$p` (CTE) colliding with `$p` (parameter).
+			var p     = 1;
+			var cte   = db.Child.Where(c => c.ChildID > 0).AsCte("p");
+			var query = cte.Where(c => c.ParentID == p);
+
+			query.ToList();
+		}
+
+		[Test]
+		public void InsertSimpleEntity([IncludeDataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var table = db.CreateLocalTable<SimpleEntity>();
 
-			var now = DateTime.UtcNow;
+			// Fixed instead of DateTime.UtcNow: the value is inlined into the INSERT (YDB renders date types as
+			// literals), so a moving "now" drifts the baseline on every run.
+			var now = TestData.DateTimeUtc;
 
 			var entity = new SimpleEntity
 			{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 
@@ -8,15 +9,22 @@ namespace LinqToDB.Internal.SqlQuery
 	public sealed class SqlOrderByItem : QueryElement
 	{
 		public SqlOrderByItem(ISqlExpression expression, bool isDescending, bool isPositioned)
+			: this(expression, isDescending, isPositioned, Sql.NullsPosition.None)
 		{
-			Expression   = expression;
-			IsDescending = isDescending;
-			IsPositioned = isPositioned;
 		}
 
-		public ISqlExpression Expression   { get; internal set; }
-		public bool           IsDescending { get; }
-		public bool           IsPositioned { get; }
+		public SqlOrderByItem(ISqlExpression expression, bool isDescending, bool isPositioned, Sql.NullsPosition nullsPosition)
+		{
+			Expression    = expression;
+			IsDescending  = isDescending;
+			IsPositioned  = isPositioned;
+			NullsPosition = nullsPosition;
+		}
+
+		public ISqlExpression    Expression    { get; internal set; }
+		public bool              IsDescending  { get; }
+		public bool              IsPositioned  { get; }
+		public Sql.NullsPosition NullsPosition { get; }
 
 		#region Overrides
 
@@ -32,6 +40,9 @@ namespace LinqToDB.Internal.SqlQuery
 			if (IsDescending)
 				writer.Append(" DESC");
 
+			if (NullsPosition != Sql.NullsPosition.None)
+				writer.Append(" NULLS ").Append(NullsPosition.ToString().ToUpper(CultureInfo.InvariantCulture));
+
 			return writer;
 		}
 
@@ -41,7 +52,8 @@ namespace LinqToDB.Internal.SqlQuery
 				ElementType,
 				Expression.GetElementHashCode(),
 				IsDescending,
-				IsPositioned
+				IsPositioned,
+				NullsPosition
 			);
 		}
 

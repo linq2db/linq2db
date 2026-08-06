@@ -9,6 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.Internal.DataProvider.Access.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -35,9 +36,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 
             SqlProviderFlags.IsSubQueryOrderBySupported          = false;
             SqlProviderFlags.IsUnionAllOrderBySupported          = true;
+            SqlProviderFlags.DefaultNullsOrdering                = NullsDefaultOrdering.Smallest; // Access sorts NULL as the smallest value
 			SqlProviderFlags.AcceptsTakeAsParameter              = false;
 			SqlProviderFlags.IsSkipSupported                     = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			// Access has no MERGE statement — Upsert configurations that require MERGE lowering
+			// surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported  = false;
 			SqlProviderFlags.IsSubQuerySkipSupported             = false;
 			SqlProviderFlags.IsSupportsJoinWithoutCondition      = false;
 			SqlProviderFlags.TakeHintsSupported                  = TakeHints.Percent;

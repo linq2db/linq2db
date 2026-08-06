@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -32,7 +33,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region IEquatable implementation
 
-		public bool Equals(MySqlOptions? other)
+		public bool Equals([NotNullWhen(true)] MySqlOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

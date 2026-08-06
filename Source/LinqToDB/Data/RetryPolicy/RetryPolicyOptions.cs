@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
@@ -122,7 +123,7 @@ namespace LinqToDB.Data.RetryPolicy
 
 		#region IEquatable implementation
 
-		public bool Equals(RetryPolicyOptions? other)
+		public bool Equals([NotNullWhen(true)] RetryPolicyOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;

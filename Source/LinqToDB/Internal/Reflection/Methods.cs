@@ -146,6 +146,8 @@ namespace LinqToDB.Internal.Reflection
 
 			public static readonly MethodInfo OrderBy            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderBy(x => 1));
 			public static readonly MethodInfo OrderByDescending  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderByDescending(x => 1));
+			public static readonly MethodInfo ThenBy             = MemberHelper.MethodOfGeneric<IOrderedQueryable<int>>(q => q.ThenBy(x => 1));
+			public static readonly MethodInfo ThenByDescending   = MemberHelper.MethodOfGeneric<IOrderedQueryable<int>>(q => q.ThenByDescending(x => 1));
 			public static readonly MethodInfo GroupBy            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.GroupBy(x => 1));
 
 #if NET8_0_OR_GREATER
@@ -172,9 +174,9 @@ namespace LinqToDB.Internal.Reflection
 		{
 			internal static readonly MethodInfo EvaluateExpression = MemberHelper.MethodOf(() => ExpressionEvaluator.EvaluateExpression(null));
 
-			public static readonly MethodInfo GetTable    = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.GetTable<object>());
+			public static readonly MethodInfo GetTable = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.GetTable<object>());
 
-			public static readonly MethodInfo LoadWithAsTable       = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.LoadWithAsTable(e => e.Single2));
+			public static readonly MethodInfo LoadWithAsTable = MemberHelper.MethodOfGeneric<ITable<LW1>>(q => q.LoadWithAsTable(e => e.Single2));
 
 			internal static readonly MethodInfo DisableFilterInternal = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.DisableFilterInternal());
 			internal static readonly MethodInfo ApplyModifierInternal = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.ApplyModifierInternal(null!));
@@ -182,6 +184,10 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo LoadWith              = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2));
 			public static readonly MethodInfo LoadWithSingleFilter  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2, eq => eq.Where(e => e.Value2 == 1)));
 			public static readonly MethodInfo LoadWithManyFilter    = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Many2,   eq => eq.Where(e => e.Value2 == 1)));
+
+			public static readonly MethodInfo WithUnionLoadStrategyQueryable     = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.WithUnionLoadStrategy());
+			public static readonly MethodInfo WithSeparateLoadStrategyQueryable  = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.WithSeparateLoadStrategy());
+			public static readonly MethodInfo WithKeyedLoadStrategyQueryable     = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.WithKeyedLoadStrategy());
 
 			public static readonly MethodInfo ThenLoadFromSingle             = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Single2).ThenLoad(e => e.Single3));
 			public static readonly MethodInfo ThenLoadFromMany               = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.LoadWith(e => e.Many2).ThenLoad(e => e.Single3));
@@ -194,18 +200,19 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo ElementAtLambda = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.ElementAt(() => 1));
 			public static readonly MethodInfo SkipLambda      = MemberHelper.MethodOfGeneric<IQueryable<LW1>>(q => q.Skip(() => 1));
 
-			public static readonly MethodInfo RemoveOrderBy         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
-			public static readonly MethodInfo IgnoreFilters         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters());
-			public static readonly MethodInfo DisableGuard          = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
-			public static readonly MethodInfo InlineParameters      = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.InlineParameters());
+			public static readonly MethodInfo RemoveOrderBy             = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.RemoveOrderBy());
+			public static readonly MethodInfo IgnoreFilters             = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters());
+			public static readonly MethodInfo IgnoreFiltersByKey        = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreFilters(Array.Empty<string>()));
+			public static readonly MethodInfo DisableGuard              = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
+			public static readonly MethodInfo InlineParameters          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.InlineParameters());
 
-			public static readonly MethodInfo Select              = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.Select(() => 1));
+			public static readonly MethodInfo Select = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.Select(() => 1));
 
 			public static readonly MethodInfo AsQueryable           = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsQueryable(null!));
 			public static readonly MethodInfo AsQueryableConfigured = MemberHelper.MethodOfGeneric<IEnumerable<object>>(e => e.AsQueryable(null!, b => b.Parameterize()));
 			public static readonly MethodInfo AsSubQuery            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsSubQuery());
 
-			public static readonly MethodInfo TagQuery            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.TagQuery(string.Empty));
+			public static readonly MethodInfo TagQuery = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.TagQuery(string.Empty));
 
 			public static readonly MethodInfo JoinTypePredicateSelector = MemberHelper.MethodOfGeneric((IQueryable<object> q1, IQueryable<object> q2, Expression<Func<object, object, bool>> p, Expression<Func<object, object, object>> r) => q1.Join(q2, default(SqlJoinType), p, r));
 
@@ -219,6 +226,7 @@ namespace LinqToDB.Internal.Reflection
 			internal static readonly MethodInfo AssociationOptionalRecord = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationOptionalRecord());
 			internal static readonly MethodInfo SelectDistinct            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectDistinct());
 			internal static readonly MethodInfo AggregateExecute          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AggregateExecute(e => 1));
+			internal static readonly MethodInfo AsCte                     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AsCte());
 
 			#endregion
 

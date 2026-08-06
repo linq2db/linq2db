@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -356,7 +357,31 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-								var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+								List<SqlWindowOrderItem>? withinGroup = null;
+								if (info.OrderBySql.Length > 0)
+								{
+									withinGroup = new List<SqlWindowOrderItem>(info.OrderBySql.Length);
+									foreach (var (expr, desc, nulls) in info.OrderBySql)
+									{
+										// DB2 LUW supports NULLS FIRST/LAST in a plain ORDER BY but rejects it inside LISTAGG's
+										// WITHIN GROUP (ORDER BY ...) with SQL0109N. Emulate it with a leading CASE sort key (null
+										// rows sorted first or last via 0/1) and drop the unsupported NULLS token from the real key —
+										// unless the requested position already matches DB2's natural order (NULL is the largest value).
+										if (nulls != Sql.NullsPosition.None
+											&& !QueryHelper.MatchesNaturalNullsPosition(translationContext.ProviderFlags.DefaultNullsOrdering, nulls, desc))
+										{
+											var nullsKey = factory.Fragment(
+												nulls == Sql.NullsPosition.Last
+													? "CASE WHEN {0} IS NULL THEN 1 ELSE 0 END"
+													: "CASE WHEN {0} IS NULL THEN 0 ELSE 1 END",
+												expr);
+
+											withinGroup.Add(new SqlWindowOrderItem(nullsKey, false, Sql.NullsPosition.None));
+										}
+
+										withinGroup.Add(new SqlWindowOrderItem(expr, desc, Sql.NullsPosition.None));
+									}
+								}
 
 								var fn = factory.Function(valueType, "LISTAGG",
 									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
@@ -433,6 +458,33 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 					return factory.Function(stringDbType, "substr", expression, factory.Value(pos), factory.Value(length));
 				}
 			}
+		}
+
+		protected class DB2WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported          => false;
+			protected override bool IsFrameExclusionSupported       => false;
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+			protected override bool IsNthValueFromSupported         => true;
+			// DB2 supports the full statistical/regression window-function set. Bare STDDEV/VARIANCE are the
+			// *population* forms (DB2 docs), so map the sample-API Sql.Window.StdDev/Variance to the documented
+			// sample names STDDEV_SAMP/VAR_SAMP.
+			protected override bool   IsVarianceSupported           => true;
+			protected override bool   IsVarianceBareSupported       => true;
+			protected override bool   IsCorrelationSupported        => true;
+			protected override bool   IsLinearRegressionSupported   => true;
+			protected override bool   IsMedianSupported             => true;
+			protected override string StdDevFunctionName            => "STDDEV_SAMP";
+			protected override string VarianceFunctionName          => "VAR_SAMP";
+
+			public override Expression? TranslateRatioToReport(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+				=> TranslateRatioToReportNative(translationContext, methodCall);
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new DB2WindowFunctionsMemberTranslator();
 		}
 	}
 }

@@ -11,9 +11,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 {
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-		}
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault;
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -405,6 +403,20 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+
+			// {value} IS NULL OR LTRIM({value}) = ''
+			// (Access LTRIM only trims spaces; full Unicode whitespace handling would require
+			// sandbox-mode REPLACE chains. This matches the pre-refactor behavior.)
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				var trimmed   = factory.Function(valueType, "LTRIM", value);
+				var predicate = factory.Equal(trimmed, factory.Value(valueType, string.Empty));
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -439,6 +451,16 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 		{
 			protected override bool IsCountDistinctSupported       => false;
 			protected override bool IsAggregationDistinctSupported => false;
+		}
+
+		protected class AccessWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new AccessWindowFunctionsMemberTranslator();
 		}
 	}
 }

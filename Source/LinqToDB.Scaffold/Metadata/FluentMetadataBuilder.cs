@@ -18,10 +18,10 @@ namespace LinqToDB.Metadata
 	{
 		private const string BUILDER_VAR_NAME = "builder";
 
-		private readonly CodeVariable                                                                                                  _builderVar;
-		private readonly List<ICodeStatement>                                                                                          _builderCalls = new();
-		// [T, (Attr, [Member, Attr])]
-		private readonly Dictionary<CodeClass, (ICodeExpression? tableAttribute, Dictionary<CodeReference, ICodeExpression?> members)> _entities     = new();
+		private readonly CodeVariable                                                                                                        _builderVar;
+		private readonly List<ICodeStatement>                                                                                                _builderCalls = new();
+		// [T, (Attr, [Member, Attrs])]
+		private readonly Dictionary<CodeClass, (ICodeExpression? tableAttribute, Dictionary<CodeReference, List<ICodeExpression>?> members)> _entities     = new();
 
 		public FluentMetadataBuilder(CodeBuilder builder)
 		{
@@ -62,14 +62,14 @@ namespace LinqToDB.Metadata
 
 			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.TableAttribute, parameters, initializers?.ToArray() ?? []);
 
-			_entities.Add(entityBuilder.Type, (attr, new Dictionary<CodeReference, ICodeExpression?>()));
+			_entities.Add(entityBuilder.Type, (attr, new Dictionary<CodeReference, List<ICodeExpression>?>()));
 		}
 
 		void IMetadataBuilder.BuildColumnMetadata(IDataModelGenerationContext context, CodeClass entityClass, ColumnMetadata metadata, PropertyBuilder propertyBuilder)
 		{
 			if (!_entities.TryGetValue(entityClass, out var entity))
 			{
-				_entities.Add(entityClass, entity = (null, new Dictionary<CodeReference, ICodeExpression?>()));
+				_entities.Add(entityClass, entity = (null, new Dictionary<CodeReference, List<ICodeExpression>?>()));
 			}
 
 			var members = entity.members;
@@ -131,12 +131,17 @@ namespace LinqToDB.Metadata
 
 			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute, parameters, initializers?.ToArray() ?? []);
 
-			_entities[entityClass].members.Add(propertyBuilder.Property.Reference, attr);
+			var attributes = new List<ICodeExpression> { attr };
+
+			if (metadata.UseGetSqlDecimal)
+				attributes.Add(context.AST.New(WellKnownTypes.LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute));
+
+			_entities[entityClass].members.Add(propertyBuilder.Property.Reference, attributes);
 		}
 
 		void IMetadataBuilder.BuildAssociationMetadata(IDataModelGenerationContext context, CodeClass entityClass, AssociationMetadata metadata, PropertyBuilder propertyBuilder)
 		{
-			_entities[entityClass].members.Add(propertyBuilder.Property.Reference, BuildAssociationAttribute(context, metadata));
+			_entities[entityClass].members.Add(propertyBuilder.Property.Reference, [BuildAssociationAttribute(context, metadata)]);
 		}
 
 		void IMetadataBuilder.BuildAssociationMetadata(IDataModelGenerationContext context, CodeClass entityClass, AssociationMetadata metadata, MethodBuilder methodBuilder)
@@ -513,8 +518,8 @@ namespace LinqToDB.Metadata
 				var cnt = 0;
 				foreach (var members in kvp.Value.members)
 				{
-					var member    = members.Key;
-					var attribute = members.Value;
+					var member     = members.Key;
+					var attributes = members.Value;
 					cnt++;
 					var isLast = cnt == kvp.Value.members.Count;
 
@@ -531,7 +536,7 @@ namespace LinqToDB.Metadata
 						entityBuilderType,
 						lambda.Method).Wrap(2);
 
-					if (attribute == null)
+					if (attributes == null)
 					{
 						// .IsNotColumn()
 						if (isLast)
@@ -545,13 +550,18 @@ namespace LinqToDB.Metadata
 					else
 					{
 						// .HasAttribute()
-						if (isLast)
+						foreach (var attribute in attributes)
 						{
-							context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, attribute).Wrap(3).NewLine());
-							break;
+							var isLastAttribute = isLast && attribute == attributes[^1];
+
+							if (isLastAttribute)
+							{
+								context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, attribute).Wrap(3).NewLine());
+								break;
+							}
+							else
+								expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, entityBuilderType, attribute).Wrap(3);
 						}
-						else
-							expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, entityBuilderType, attribute).Wrap(3);
 					}
 				}
 			}

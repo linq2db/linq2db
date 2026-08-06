@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
 
@@ -44,6 +45,14 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlTableType    SqlTableType => Source.SqlTableType;
 
 		private string? _alias;
+
+		/// <summary>
+		/// The raw / un-finalized table-source alias - the stored <see cref="RawAlias"/>, or the alias
+		/// derived from <see cref="Source"/>. For non-render use (optimizers, expression builders,
+		/// diagnostics). In a SQL builder, read the finalized alias via
+		/// <c>AliasesContext.GetTableAlias(this)</c> instead: finalized names live in the context, not
+		/// on the node (enforced by the <c>LINQ2DB0001</c> analyzer).
+		/// </summary>
 		public  string?  Alias
 		{
 			get
@@ -131,7 +140,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		public override bool Equals(ISqlExpression? other)
+		public override bool Equals([NotNullWhen(true)] ISqlExpression? other)
 		{
 			return ReferenceEquals(this, other);
 		}

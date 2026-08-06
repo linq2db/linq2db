@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -114,7 +115,7 @@ namespace LinqToDB.EntityFrameworkCore
 				return EntityType.Equals(other.EntityType) && Equals(Model, other.Model);
 			}
 
-			public override bool Equals(object? obj)
+			public override bool Equals([NotNullWhen(true)] object? obj)
 			{
 				if (ReferenceEquals(null, obj))
 				{
@@ -193,9 +194,9 @@ namespace LinqToDB.EntityFrameworkCore
 
 			entry = retrieved ?? _stateManager.StartTrackingFromQuery(_lastEntityType, entity,
 #if !EF31 && !EF8
-				Snapshot.Empty);
+				in Snapshot.Empty);
 #else
-				ValueBuffer.Empty);
+				in ValueBuffer.Empty);
 #endif
 
 			return entry.Entity;

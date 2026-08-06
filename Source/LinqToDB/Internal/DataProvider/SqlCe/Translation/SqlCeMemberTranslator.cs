@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
@@ -318,14 +319,30 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
 
+			// {value} IS NULL OR REPLACE(REPLACE(... 25 whitespace codepoints ..., '')) = ''
+			// SqlCe has no native multi-char trim or regex replace, so each Unicode whitespace
+			// codepoint is stripped via a chained REPLACE.
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var valueType   = factory.GetDbDataType(value);
+				var literalType = factory.GetDbDataType(typeof(string));
+				var empty       = factory.Value(literalType, string.Empty);
+
+				var trimmed = WHITESPACES.Aggregate(value, (acc, ch) =>
+					factory.Function(valueType, "REPLACE", acc, factory.Value(literalType, ch.ToString()), empty));
+
+				var predicate = factory.Equal(trimmed, empty);
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
+			}
+
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -348,6 +365,16 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 		{
 			protected override bool IsCountDistinctSupported       => false;
 			protected override bool IsAggregationDistinctSupported => false;
+		}
+
+		protected class SqlCeWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SqlCeWindowFunctionsMemberTranslator();
 		}
 	}
 }

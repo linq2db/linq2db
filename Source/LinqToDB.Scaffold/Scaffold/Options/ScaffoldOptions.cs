@@ -69,6 +69,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.GenerateLength                                 = false;
 			options.DataModel.GeneratePrecision                              = false;
 			options.DataModel.GenerateScale                                  = false;
+			options.DataModel.GenerateSqlServerDecimalOverflowProtection     = false;
 			options.DataModel.FluentEntityTypeHelpers                        = [];
 			options.DataModel.IncludeDatabaseInfo                            = false;
 			options.DataModel.HasDefaultConstructor                          = true;

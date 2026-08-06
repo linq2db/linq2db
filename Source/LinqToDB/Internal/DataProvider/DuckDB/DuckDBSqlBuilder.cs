@@ -37,6 +37,17 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override string LimitFormat (SelectQuery selectQuery) => "LIMIT {0}";
 		protected override string OffsetFormat(SelectQuery selectQuery) => "OFFSET {0} ";
 
+		// DuckDB places IGNORE NULLS inside the parentheses after the last argument, e.g.
+		// LAG(expr, offset, default IGNORE NULLS), NTH_VALUE(expr, n IGNORE NULLS).
+		protected override WindowNullsPlacement GetWindowNullsPlacement(SqlExtendedFunction extendedFunction)
+			=> WindowNullsPlacement.AfterLastArgument;
+
+		protected override void BuildDistinctModifier(SelectQuery selectQuery)
+		{
+			StringBuilder.Append(" DISTINCT");
+			BuildDistinctOnExpressions(selectQuery);
+		}
+
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField()
@@ -389,30 +400,17 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			}
 		}
 
-		protected override void BuildParameter(SqlParameter parameter)
+		// DuckDB.NET parameters not well-typed, which prevents DuckDB
+		// from picking the right operator overload (e.g. -(TIMESTAMP, INTERVAL) or
+		// arithmetic on DECIMAL).
+		// We need an explicit CAST in SQL so DuckDB sees the intended type.
+		//
+		// Known/handled cases:
+		// - INTERVAL
+		// - DECIMAL
+		protected override DbDataType? GetParameterCastType(SqlParameter parameter)
 		{
-			// DuckDB.NET parameters not well-typed, which prevents DuckDB
-			// from picking the right operator overload (e.g. -(TIMESTAMP, INTERVAL) or
-			// arithmetic on DECIMAL).
-			// We need an explicit CAST in SQL so DuckDB sees the intended type.
-			//
-			// Known/handled cases:
-			// - INTERVAL
-			// - DECIMAL
-
-			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
-			{
-				if (parameter.Type.DataType is DataType.Interval or DataType.Decimal)
-				{
-					var saveStep = BuildStep;
-					BuildStep = Step.TypedExpression;
-					BuildTypedExpression(parameter.Type, parameter);
-					BuildStep = saveStep;
-					return;
-				}
-			}
-
-			base.BuildParameter(parameter);
+			return parameter.Type.DataType is DataType.Interval or DataType.Decimal ? parameter.Type : null;
 		}
 
 		/// <summary>

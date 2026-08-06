@@ -17,6 +17,11 @@ namespace LinqToDB.Internal.SqlQuery
 			Target = new SqlTableSource(target, TargetAlias);
 		}
 
+		public SqlMergeStatement(ISqlTableSource target) : base(null)
+		{
+			Target = new SqlTableSource(target, TargetAlias);
+		}
+
 		internal SqlMergeStatement(
 			SqlWithClause?                       with,
 			string?                              hint,

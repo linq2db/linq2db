@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Internal.Expressions
@@ -17,9 +18,7 @@ namespace LinqToDB.Internal.Expressions
 		public override string ToString()
 		{
 			if (Predicate != null)
-			{
 				return $"Eager({SequenceExpression} AND {Predicate})::{Type.Name}";
-			}
 
 			return $"Eager({SequenceExpression})::{Type.Name}";
 		}
@@ -34,7 +33,7 @@ namespace LinqToDB.Internal.Expressions
 			return base.Accept(visitor);
 		}
 
-		public bool Equals(SqlEagerLoadExpression? other)
+		public bool Equals([NotNullWhen(true)] SqlEagerLoadExpression? other)
 		{
 			if (ReferenceEquals(null, other))
 			{
@@ -63,7 +62,7 @@ namespace LinqToDB.Internal.Expressions
 			return ExpressionEqualityComparer.Instance.Equals(SequenceExpression, other.SequenceExpression);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{
@@ -104,9 +103,7 @@ namespace LinqToDB.Internal.Expressions
 		public SqlEagerLoadExpression AppendPredicate(Expression predicate)
 		{
 			if (Predicate != null)
-			{
 				predicate = AndAlso(Predicate, predicate);
-			}
 
 			return new SqlEagerLoadExpression(SequenceExpression, predicate);
 		}

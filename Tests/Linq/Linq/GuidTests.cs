@@ -66,6 +66,29 @@ namespace Tests.Linq
 			Assert.That(lD, Has.Count.Zero);
 		}
 
+		// Regression for #5528: a provider's Guid→string translator already lower-cases its result —
+		// wrapped in a CAST on Firebird (Lower(Cast(Lower(...) as VarChar(36)))) or behind an
+		// IIf-nullability guard on Access (LCase(«not-null»(LCase(...)))). A user-supplied .ToLower()
+		// on top must collapse, not add a second redundant case wrap. Asserted inline (not only via
+		// baselines) so the nested shape can't silently reappear in a future baseline refresh.
+		[Test]
+		public void GuidToStringNoRedundantCaseWrap([DataSources] string context)
+		{
+			// Matches Lower(Lower(...)), Lower(Cast(Lower(...))), LCase(LCase(...)), LCase(Cast(LCase(...))).
+			const string nestedCasePattern = @"(?i)(lower|lcase)\s*\(\s*(cast\s*\(\s*)?(lower|lcase)\s*\(";
+
+			TableWithGuid[] data = [new () { Id = TestData.Guid1 }];
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			_ = (from t in table select t.Id.ToString().ToLower()).ToList();
+			Assert.That(LastQuery, Does.Not.Match(nestedCasePattern));
+
+			_ = (from t in table where Sql.ConvertTo<string>.From(t.Id).ToLower() == "x" select t.Id).ToList();
+			Assert.That(LastQuery, Does.Not.Match(nestedCasePattern));
+		}
+
 		[Test]
 		public void GuidToStringIsNull([DataSources] string context)
 		{

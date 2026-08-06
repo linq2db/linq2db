@@ -7,6 +7,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -172,8 +173,20 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			if (MappingSchema.HasInconsistentCharset(element.Expressions))
 			{
+				// The charset fix goes into a new node: on a Transform pass the element handed to
+				// this visitor is the query's cached statement, and a write reaching it corrupts
+				// every later render, including the remote path.
+				var expressions = new ISqlExpression[element.Expressions.Length];
+				var replaced    = false;
+
 				for (var i = 0; i < element.Expressions.Length; i++)
-					element.Expressions[i] = MappingSchema.FixCharset(element.Expressions[i]);
+				{
+					expressions[i] = MappingSchema.FixCharset(element.Expressions[i]);
+					replaced      |= !ReferenceEquals(expressions[i], element.Expressions[i]);
+				}
+
+				if (replaced)
+					return base.ConvertCoalesce(new SqlCoalesceExpression(expressions));
 			}
 
 			return base.ConvertCoalesce(element);
@@ -215,19 +228,57 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 		{
+			// A VALUES column mixing VARCHAR2 and NVARCHAR2 rows raises ORA-12704, so the charset
+			// has to be unified per column. The affected columns are collected first so the fix can
+			// be applied according to the visit mode: on a Transform pass the element belongs to the
+			// query's cached statement, which is re-rendered on every execution and by the remote
+			// path, so a write reaching it surfaces as a failure in some later render.
+			List<int>? inconsistent = null;
+
 			if (element.Rows?.Count > 1)
 			{
 				for (var i = 0; i < element.Rows[0].Count; i++)
 				{
 					if (MappingSchema.HasInconsistentCharset(element.Rows.Select(r => r[i])))
-					{
-						foreach (var row in element.Rows)
-							row[i] = MappingSchema.FixCharset(row[i]);
-					}
+						(inconsistent ??= new List<int>()).Add(i);
 				}
 			}
 
-			return base.VisitSqlValuesTable(element);
+			if (inconsistent == null)
+				return base.VisitSqlValuesTable(element);
+
+			switch (GetVisitMode(element))
+			{
+				// Nothing to rewrite when only inspecting.
+				case VisitMode.ReadOnly:
+					return base.VisitSqlValuesTable(element);
+
+				// We own this element, so an in-place fix is licensed.
+				case VisitMode.Modify:
+				{
+					foreach (var row in element.Rows!)
+						foreach (var i in inconsistent)
+							row[i] = MappingSchema.FixCharset(row[i]);
+
+					return base.VisitSqlValuesTable(element);
+				}
+			}
+
+			var newRows = new List<List<ISqlExpression>>(element.Rows!.Count);
+
+			foreach (var row in element.Rows)
+			{
+				var newRow = new List<ISqlExpression>(row);
+
+				foreach (var i in inconsistent)
+					newRow[i] = MappingSchema.FixCharset(newRow[i]);
+
+				newRows.Add(newRow);
+			}
+
+			var newTable = new SqlValuesTable(element.Source, element.ValueBuilders, CopyFields(element.Fields), newRows);
+
+			return NotifyReplaced(base.VisitSqlValuesTable(newTable), element);
 		}
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
@@ -283,7 +334,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						return new SqlFunction(cast.Type, "Trunc", argument, new SqlValue("DD"));
 					}
 
-					return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
 				}
 
 				if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
@@ -294,29 +346,32 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					if (ftype == typeof(DateTimeOffset))
 						return argument;
 
-					return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 
-				return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+				if (argument.SystemType == typeof(string))
+					return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 			}
 			else if (ftype == typeof(string))
 			{
 				var stype = argument.SystemType!.ToUnderlying();
-
-				if (stype == typeof(DateTimeOffset))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
-				}
-				else if (stype == typeof(DateTime))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
-				}
+				var format =
+					stype == typeof(DateTimeOffset) ? "YYYY-MM-DD HH24:MI:SS TZH:TZM" :
+					stype == typeof(DateTime)       ? "YYYY-MM-DD HH24:MI:SS" :
 #if SUPPORTS_DATEONLY
-				else if (stype == typeof(DateOnly))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
-				}
+					stype == typeof(DateOnly)       ? "YYYY-MM-DD" :
 #endif
+					null;
+
+				if (format != null)
+				{
+					return new SqlFunction(
+						cast.Type,
+						cast.Type.DataType is DataType.NChar or DataType.NVarChar ? "To_NChar" : "To_Char",
+						argument,
+						new SqlValue(format));
+				}
 			}
 
 			return FloorBeforeConvert(cast);

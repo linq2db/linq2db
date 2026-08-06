@@ -26,7 +26,67 @@
 		public const string Error_OrderByRequiredForIndexing       = "For retrieving index of row, specify OrderBy part.";
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
 
-		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
+		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
+		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";
+		public const string Error_WindowFunction_CumeDist                         = "CUME_DIST is not supported by current provider.";
+		public const string Error_WindowFunction_NTile                            = "NTILE is not supported by current provider.";
+		public const string Error_WindowFunction_NthValue                         = "NTH_VALUE is not supported by current provider.";
+		public const string Error_WindowFunction_LeadLag                          = "LEAD/LAG is not supported by current provider.";
+		public const string Error_WindowFunction_FirstLastValue                   = "FIRST_VALUE/LAST_VALUE is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileCont                   = "PERCENTILE_CONT is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileDisc                   = "PERCENTILE_DISC is not supported by current provider.";
+		public const string Error_WindowFunction_Variance                         = "STDDEV/VARIANCE is not supported by current provider.";
+		public const string Error_WindowFunction_Correlation                      = "COVAR/CORR is not supported by current provider.";
+		public const string Error_WindowFunction_LinearRegression                 = "REGR_* is not supported by current provider.";
+		public const string Error_WindowFunction_Median                           = "MEDIAN is not supported by current provider.";
+		public const string Error_WindowFunction_HypotheticalSet                  = "Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRows                        = "ROWS frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRange                       = "RANGE frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameGroups                      = "GROUPS frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameExclude                     = "Frame EXCLUDE clause is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRangeGroupsOrderBy          = "A RANGE or GROUPS frame with a value offset requires exactly one ORDER BY expression.";
+		public const string Error_WindowFunction_FrameRangeGroupsNullsEmulation   = "A RANGE or GROUPS frame with a value offset requires a single ORDER BY key, but the requested NULLS ordering is emulated with an extra sort key on this provider. Use a non-nullable ORDER BY key, drop the explicit NULLS position, or use a ROWS frame.";
+		public const string Error_WindowFunction_OrderedSetFilter                 = "FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/PERCENTILE_DISC) is not supported by current provider.";
+		public const string Error_WindowFunction_Keep                             = "KEEP clause is not supported by current provider.";
+		public const string Error_WindowFunction_KeepOrderBy                      = "KEEP (DENSE_RANK FIRST/LAST) requires an ORDER BY.";
+		public const string Error_WindowFunction_NullTreatment                    = "IGNORE NULLS is not supported by current provider.";
+		public const string Error_WindowFunction_NthValueFrom                     = "NTH_VALUE FROM LAST is not supported by current provider.";
+		public const string Error_WindowFunction_LeadLagDefault                   = "Default value argument for LEAD/LAG is not supported by current provider.";
+		public const string Error_WindowFunction_AggregateWindowFunctions         = "Aggregate window functions are not supported by current provider.";
+		public const string Error_WindowFunction_AggregateDistinct                = "DISTINCT is not supported in window aggregate functions by current provider.";
+		public const string Error_WindowFunction_NotSupported                     = "Window functions are not supported by current provider.";
+
+		public const string Error_Upsert_MergeLowering_NotSupported =
+			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
+			+ "but the current provider does not support the two-branch MERGE shape. "
+			+ "Reshape the Upsert call to a single-entity PK match without SkipInsert / Insert.When, "
+			+ "or target a MERGE-capable provider.";
+
+		public const string Error_Upsert_MergeWithPredicate_NotSupported =
+			"Upsert configuration attaches a predicate to an Insert.When / Update.When branch routed through MERGE lowering, "
+			+ "but the current provider's MERGE dialect has no WHEN [NOT] MATCHED AND <cond> or UPDATE … WHERE <cond> form. "
+			+ "Remove the .When predicate, or target a provider that supports conditional MERGE branches.";
+
+		public const string Error_Internal_UpdateInsertEmitter_CannotEmitUpdatePredicate =
+			"Internal error: BuildInsertOrUpdateQueryAsUpdateInsert cannot emit an UPDATE predicate. "
+			+ "Providers with IsInsertOrUpdateWithPredicateSupported=false must route Upsert.Update.When "
+			+ "through SetIfExistsUpdateElseInsert (3-query orchestration).";
+
+		public const string Error_Upsert_SkipInsert_With_Insert =
+			"Upsert configuration is contradictory: SkipInsert() cannot be combined with Insert(...).";
+
+		public const string Error_Upsert_SkipUpdate_With_Update =
+			"Upsert configuration is contradictory: SkipUpdate() cannot be combined with Update(...).";
+
+		public const string Error_Upsert_InsertBranch_DoNothing_With_Ops =
+			"Insert branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When.";
+
+		public const string Error_Upsert_UpdateBranch_DoNothing_With_Ops =
+			"Update branch configuration is contradictory: DoNothing() cannot be combined with Set/Ignore/When.";
+
+		public const string Error_Upsert_EmulationDisallowed =
+			"Upsert cannot be expressed natively for this provider / configuration and would fall back to an emulated UPDATE+INSERT sequence. "
+			+ "LinqOptions.UpsertEmulationPolicy is set to Throw — change the provider, adjust the Upsert configuration, or set it to Allow to permit emulation.";
 
 		public const string Error_GroupGuard =
 							"""
@@ -35,6 +95,10 @@
 							Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().
 							NOTE! By disabling this guard you accept Eager Loading for grouping query.
 							""";
+
+		public const string Error_ImplicitEagerLoadingNotAllowed =
+			"Implicit eager loading is not allowed (LinqOptions.ImplicitCollectionLoading = Throw): a collection was projected without an explicit eager-load request. "
+			+ "To allow it, request the load explicitly with LoadWith()/ThenLoad(), or opt the whole query in with WithUnionLoadStrategy()/WithKeyedLoadStrategy()/WithSeparateLoadStrategy() — or set ImplicitCollectionLoading = Allow to turn the guard off.";
 
 		public static class Oracle
 		{

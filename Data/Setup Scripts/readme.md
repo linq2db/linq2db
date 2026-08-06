@@ -35,6 +35,7 @@ Contains database setup scripts for local testing
 - `pgsql16.cmd` : Windows script to create or update docker container with PostgreSQL 16 instance
 - `pgsql17.cmd` : Windows script to create or update docker container with PostgreSQL 17 instance
 - `pgsql18.cmd` : Windows script to create or update docker container with PostgreSQL 18 instance
+- `pgsql19.cmd` : Windows script to create or update docker container with PostgreSQL 19 instance
 - `saphana2.cmd` : Windows script to create or update docker container with SAP HANA 2 instance
 - `sqlserver2017.cmd` : Windows script to create or update docker container with SQL Server 2017 (Linux-based) instance
 - `sqlserver2019.cmd` : Windows script to create or update docker container with SQL Server 2019 (Linux-based) instance (also creates databases for FTS, Contained and SequentialAccess test providers)

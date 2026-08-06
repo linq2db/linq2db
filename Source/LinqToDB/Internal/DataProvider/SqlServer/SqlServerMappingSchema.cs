@@ -814,7 +814,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				BuildAnyVectorArrayRaw(sb, data);
 
-				sb.Append(FormattableString.Invariant($"' AS VECTOR({size}, {typeName}))"));
+				sb.Append(string.Create(CultureInfo.InvariantCulture, $"' AS VECTOR({size}, {typeName}))"));
 			}
 #else
 			internal static readonly MethodInfo BuildHalfVectorLiteralMethod = typeof(SqlServer2025MappingSchema).GetMethod(nameof(BuildHalfVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;

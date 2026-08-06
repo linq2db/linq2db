@@ -21,7 +21,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowCorrelatedValues([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowCorrelatedValues([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -104,7 +105,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowSingle([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowSingle([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -129,7 +131,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowSingleOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -153,9 +156,9 @@ namespace Tests.xUpdate
 			AssertRowUpdateOptimized(context);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowFirst([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -180,7 +183,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromScalarSettersSharingSubquery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromScalarSettersSharingSubquery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -254,7 +258,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
-		public void UpdateFromSubqueryRowShouldRemainSimple([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		public void UpdateFromSubqueryRowShouldRemainSimple1([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -277,8 +281,36 @@ namespace Tests.xUpdate
 			LastQuery!.ShouldNotContain("EXISTS");
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5413")]
+		public void UpdateFromSubqueryRowShouldRemainSimple2([IncludeDataSources(TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table1 = db.CreateLocalTable<NewEntities>();
+			using var table2 = db.CreateLocalTable<UpdatedEntities>();
+			using var table3 = db.CreateLocalTable<UpdateRelation>();
+
+			// Optimizer transformation is sensitive to exact patterns,
+			// this is another test case for the same issues as previous test.
+
+			table1
+				.Set(
+					u1 => Sql.Row(u1.Value1, u1.Value2),
+					u1 => (
+						from n2 in table2
+						// Note: it's important that the join condition is not based on PK, it changes optimizer behavior
+						from n3 in table3.LeftJoin(n3 => n3.RelatedValue1 == n2.RelationId)
+						where n2.id == u1.id
+						select Sql.Row(n2.Value1, n3.RelatedValue2))
+						.Single()
+				)
+				.Update();
+
+			LastQuery!.ShouldNotContain("EXISTS");
+		}
+
 		[Test]
-		public void UpdateFromScalarSettersSharingSubqueryPostgreSql([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromScalarSettersSharingSubqueryPostgreSql([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -324,9 +356,9 @@ namespace Tests.xUpdate
 			LastQuery!.ShouldNotContain(") =");
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowFirstOrDefault([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle12Plus, TestProvName.AllPostgreSQL95Plus, TestProvName.AllInformix, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();
@@ -386,10 +418,10 @@ namespace Tests.xUpdate
 					LastQuery!.ShouldNotContain("EXISTS");
 					break;
 
-				// Informix/Firebird5 fall through: Informix throws (see ThrowsForProvider on the
-				// First/FirstOrDefault methods); Firebird5 no longer throws thanks to the
-				// projection-column fix in FlattenRowConstructors, but its SQL shape differs
-				// enough that a shape assertion isn't meaningful here.
+				// Informix/Firebird5 fall through: both now build valid SQL (FlattenRowConstructors
+				// puts the row subquery's OUTER joins inside per-setter scalar subqueries, which both
+				// accept), but their shapes differ (Informix keeps an EXISTS filter) enough that a
+				// shape assertion isn't meaningful here.
 			}
 		}
 
@@ -435,7 +467,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromSubqueryRowOnPostgreSQL([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		// PostgreSQL 9.5+ (multi-column UPDATE ... = (SELECT ...))
+		public void UpdateFromSubqueryRowOnPostgreSQL([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table1 = db.CreateLocalTable<NewEntities>();

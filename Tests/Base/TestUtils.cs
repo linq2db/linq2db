@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -85,14 +86,16 @@ namespace Tests
 
 		/// <summary>
 		/// Returns schema name for provided connection.
-		/// Returns UNUSED_SCHEMA if fully-qualified table name doesn't support database name.
+		/// Returns UNUSED_SCHEMA if fully-qualified table name doesn't support a schema, or <see langword="null"/> when the
+		/// provider has a schema/namespace concept but the table lives in the default (root) schema.
 		/// </summary>
-		public static string GetSchemaName(IDataContext db, string context)
+		public static string? GetSchemaName(IDataContext db, string context)
 		{
 			switch (context)
 			{
-				case string when context.IsAnyOf(ProviderName.Ydb)          :
-					return "test/fqn/names";
+				// YDB test tables live at the database root (no sub-directory) => null means default/no schema
+				case string when context.IsAnyOf(TestProvName.AllYdb)       :
+					return null;
 				case string when context.IsAnyOf(TestProvName.AllInformix)  :
 				case string when context.IsAnyOf(TestProvName.AllOracle)    :
 				case string when context.IsAnyOf(TestProvName.AllPostgreSQL):
@@ -150,7 +153,7 @@ namespace Tests
 		{
 			return context switch
 			{
-				string when context.IsAnyOf(ProviderName.Ydb)            => "local",
+				string when context.IsAnyOf(TestProvName.AllYdb)         => "local",
 				string when context.IsAnyOf(TestProvName.AllSQLite)      => "main",
 				string when context.IsAnyOf(TestProvName.AllDuckDB)      => db.Select(() => DbName()),
 				// Access adds extension automatically to database name, but if there are
@@ -196,25 +199,20 @@ namespace Tests
 
 			public override void Dispose()
 			{
-				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
-				{
-					FirebirdTools.ClearAllPools();
-				}
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				DataContext.Close();
-				FirebirdTools.ClearAllPools();
+				ClearFirebirdPool(DataContext, fbConnection);
+
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
-				{
-					FirebirdTools.ClearAllPools();
-				}
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				await DataContext.CloseAsync();
-				FirebirdTools.ClearAllPools();
+				ClearFirebirdPool(DataContext, fbConnection);
 
 				await base.DisposeAsync();
 			}
@@ -251,9 +249,24 @@ namespace Tests
 		{
 			if (db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true)
 			{
+				var fbConnection = db is DataConnection dc ? dc.TryGetDbConnection() : null;
+
 				db.Close();
-				FirebirdTools.ClearAllPools();
+				ClearFirebirdPool(db, fbConnection);
 			}
+		}
+
+		// Firebird serializes DDL against object references: after dropping a temp table, the closed-but-pooled
+		// connection keeps a reference that fails the next CREATE/DROP ("object TABLE is in use"). Evict only
+		// THIS database's pool — by the live connection when we have one (direct path), else by its connection
+		// string (remote/LinqService path, where DataContext is not a DataConnection). Never ClearAllPools: it is
+		// process-wide and would tear down the connections other concurrently-running Firebird versions are using.
+		static void ClearFirebirdPool(IDataContext dataContext, DbConnection? connection)
+		{
+			if (connection != null)
+				FirebirdTools.ClearPool(connection);
+			else if (dataContext.ConfigurationString is { } configuration)
+				FirebirdTools.ClearPool(DataConnection.GetConnectionString(configuration.StripRemote()));
 		}
 
 		public static Version GetSqliteVersion(DataConnection db)

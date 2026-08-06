@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 
@@ -55,10 +56,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			return sb.ToString();
 		}
 
-		public bool Equals(CteAnnotationsContainer? other)
+		public bool Equals([NotNullWhen(true)] CteAnnotationsContainer? other)
 			=> other != null && string.Equals(_cacheKey, other._cacheKey, StringComparison.Ordinal);
 
-		public override bool Equals(object? obj) => obj is CteAnnotationsContainer c && Equals(c);
+		public override bool Equals([NotNullWhen(true)] object? obj) => obj is CteAnnotationsContainer c && Equals(c);
 
 		public override int GetHashCode() => StringComparer.Ordinal.GetHashCode(_cacheKey);
 	}

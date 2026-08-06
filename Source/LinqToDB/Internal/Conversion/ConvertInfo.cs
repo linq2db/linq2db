@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -52,7 +53,7 @@ namespace LinqToDB.Internal.Conversion
 				}
 			}
 
-			public bool Equals(LambdaInfo? other)
+			public bool Equals([NotNullWhen(true)] LambdaInfo? other)
 			{
 				if (ReferenceEquals(null, other)) return false;
 				if (ReferenceEquals(this, other)) return true;
@@ -63,7 +64,7 @@ namespace LinqToDB.Internal.Conversion
 					LambdaID          == other.LambdaID;
 			}
 
-			public override bool Equals(object? obj)
+			public override bool Equals([NotNullWhen(true)] object? obj)
 			{
 				if (ReferenceEquals(null, obj)) return false;
 				if (ReferenceEquals(this, obj)) return true;

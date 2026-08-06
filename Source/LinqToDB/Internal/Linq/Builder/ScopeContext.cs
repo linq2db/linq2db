@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -76,7 +77,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return Context.Equals(other.Context) && UpTo.Equals(other.UpTo);
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{

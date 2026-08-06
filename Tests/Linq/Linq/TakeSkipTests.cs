@@ -288,7 +288,7 @@ namespace Tests.Linq
 		public void SkipCount([DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess)]
 			string context,
 			[Values] bool withParameters)
@@ -731,6 +731,7 @@ namespace Tests.Linq
 			Assert.Throws<LinqToDBException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
+		[ActiveIssue("https://github.com/ydb-platform/ydb/issues/46197", Configuration = TestProvName.AllYdb, Details = "YDB 26.1.1.20 server optimizer assertion (dq_opt_phy_finalizing.cpp:540 'requirement false failed') on a LEFT JOIN of two LIMIT-ed UNION ALL subqueries; regression from the release's Shuffle Elimination.")]
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
@@ -875,7 +876,6 @@ namespace Tests.Linq
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
 		[Test]
-		[YdbCteAsSource]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));

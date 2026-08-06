@@ -21,7 +21,7 @@
 		</Reference>
 	</ItemGroup>
 
-	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+	<ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) and '$(X86STUBS)' != 'True'">
 		<Reference Include="Sap.Data.Hana.Net.v8.0">
 			<HintPath>..\..\Redist\SapHana\v8.0\Sap.Data.Hana.Net.v8.0.dll</HintPath>
 		</Reference>

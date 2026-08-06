@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 								{
 									if (c.Expression.Equals(item.Expression))
 									{
-										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned, item.NullsPosition));
 										break;
 									}
 								}

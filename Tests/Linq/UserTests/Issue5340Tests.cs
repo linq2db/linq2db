@@ -75,6 +75,7 @@ namespace Tests.UserTests
 
 		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateWithSubquery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSqlCe)] string context)
 		{
 			var outerData = new[]

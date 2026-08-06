@@ -13,6 +13,7 @@ using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
@@ -86,6 +87,24 @@ namespace Tests.Data
 				var sdp = conn.DataProvider;
 				Assert.That(sdp.Name, Is.EqualTo("SqlServer.2008"));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5296")]
+		public void ProviderDetectionDoesNotLeakConnection([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		{
+			var provider         = DataConnection.GetDataProvider(context);
+			var connectionString = DataConnection.GetConnectionString(context);
+
+			using var connection = provider.CreateConnection(connectionString);
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
+
+			// AutoDetect version detection on a caller-owned connection must leave it in the state it found it -
+			// opening and not closing it leaks an open connection back to the caller (issue #5296).
+			_ = context.IsAnyOf(TestProvName.AllSqlServer)
+				? SqlServerTools .GetDataProvider(SqlServerVersion .AutoDetect, connection: connection)
+				: PostgreSQLTools.GetDataProvider(PostgreSQLVersion.AutoDetect, connection: connection);
+
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
 		}
 
 		[Test]
@@ -410,7 +429,7 @@ namespace Tests.Data
 			}
 		}
 
-		public class DummyService { }
+		public class DummyService;
 
 		public class DbConnection3 : DataConnection
 		{
@@ -1275,7 +1294,7 @@ namespace Tests.Data
 		public void MARS_Supported(
 			[DataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1305,7 +1324,7 @@ namespace Tests.Data
 		public void MARS_Unsupported(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
@@ -1360,7 +1379,7 @@ namespace Tests.Data
 		public async Task MARS_SupportedAsync(
 			[DataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1390,7 +1409,7 @@ namespace Tests.Data
 		public async Task MARS_UnsupportedAsync(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				TestProvName.AllPostgreSQL,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica)] string context)

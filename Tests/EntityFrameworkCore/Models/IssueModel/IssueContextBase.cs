@@ -69,6 +69,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue5355LicenseProfile> Issue5355LicenseProfiles { get; set; } = null!;
 		public DbSet<Issue5355Customer>       Issue5355Customers       { get; set; } = null!;
 
+		public DbSet<Issue5547CustomerShare>  Issue5547CustomerShares  { get; set; } = null!;
+
+#if !NETFRAMEWORK
+		public DbSet<Issue5585Customer> Issue5585Customers { get; set; } = null!;
+		public DbSet<Issue5585CustomerShare> Issue5585CustomerShares { get; set; } = null!;
+		public DbSet<Issue5585User> Issue5585Users { get; set; } = null!;
+#endif
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -377,6 +385,61 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					new Issue5355Customer { Id = 2, ProfileId = 1, Name = "Bob Jones"   },
 					new Issue5355Customer { Id = 3, ProfileId = 2, Name = "Carol Davis" });
 			});
+
+			modelBuilder.Entity<Issue5547CustomerShare>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasOne(e => e.Customer)
+					.WithMany()
+					.HasForeignKey(e => e.CustomerId);
+
+				b.HasData(
+					new Issue5547CustomerShare { Id = 1, CustomerId = 1 },
+					new Issue5547CustomerShare { Id = 2, CustomerId = 2 },
+					new Issue5547CustomerShare { Id = 3, CustomerId = 3 });
+			});
+
+#if !NETFRAMEWORK
+			modelBuilder.Entity<Issue5585Customer>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasMany(e => e.CustomerShares)
+					.WithOne(e => e.Customer)
+					.HasForeignKey(e => e.CustomerId);
+
+				b.HasData(
+					new Issue5585Customer { Id = 1, Name = "Alice Smith" },
+					new Issue5585Customer { Id = 2, Name = "Bob Jones"   });
+			});
+
+			modelBuilder.Entity<Issue5585CustomerShare>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasMany(e => e.Users)
+					.WithMany(e => e.CustomerShares)
+					.UsingEntity(j => j.HasData(
+						new { CustomerSharesId = 1, UsersId = 1 },
+						new { CustomerSharesId = 2, UsersId = 1 },
+						new { CustomerSharesId = 3, UsersId = 2 }));
+
+				b.HasData(
+					new Issue5585CustomerShare { Id = 1, CustomerId = 1 },
+					new Issue5585CustomerShare { Id = 2, CustomerId = 1 },
+					new Issue5585CustomerShare { Id = 3, CustomerId = 2 });
+			});
+
+			modelBuilder.Entity<Issue5585User>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+
+				b.HasData(
+					new Issue5585User { Id = 1, Email = "user@mail.com"  },
+					new Issue5585User { Id = 2, Email = "other@mail.com" });
+			});
+#endif
 		}
 	}
 }
