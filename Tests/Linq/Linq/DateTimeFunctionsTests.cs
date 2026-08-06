@@ -2006,7 +2006,8 @@ namespace Tests.Linq
 			TestProvName.AllFirebird         + "," +
 			TestProvName.AllClickHouse       + "," +
 			TestProvName.AllSapHana          + "," +
-			TestProvName.AllSybase;
+			TestProvName.AllSybase           + "," +
+			TestProvName.AllOracle;
 
 		[Table("NullableDateTimeSub")]
 		sealed class NullableDateTimeSubtractionTable
