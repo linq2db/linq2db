@@ -272,14 +272,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// Translates <c>end - start</c> between two date/time values into an elapsed interval.
-		/// </summary>
-		/// <remarks>
-		/// Elapsed time, not a boundary count: <c>Sql.DateDiff</c> answers a different question and would report
-		/// one hour between 10:59 and 11:01, where this reports two minutes. The existing per-provider
-		/// <c>DateDiffBuilder</c> family implements the boundary contract and deliberately is not reused here.
-		/// </remarks>
-		/// <summary>
 		/// Whether this provider can lower an elapsed date difference to SQL. Defaults to no.
 		/// </summary>
 		/// <remarks>
@@ -291,6 +283,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </remarks>
 		private protected virtual bool CanTranslateDateDifference => false;
 
+		/// <summary>
+		/// Translates <c>end - start</c> between two date/time values into an elapsed interval.
+		/// </summary>
+		/// <remarks>
+		/// Elapsed time, not a boundary count: <c>Sql.DateDiff</c> answers a different question and would report
+		/// one hour between 10:59 and 11:01, where this reports two minutes. The existing per-provider
+		/// <c>DateDiffBuilder</c> family implements the boundary contract and deliberately is not reused here.
+		/// </remarks>
 		Expression? TranslateDateTimeDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
 			if (!CanTranslateDateDifference)

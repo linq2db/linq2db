@@ -1171,19 +1171,51 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <remarks>
 		/// The one quantity that has to be a tick count rather than any equivalent duration, because
 		/// <see cref="TimeSpan.Ticks"/> asks for it by name. Unlike the other members it is not a count of whole
-		/// units that anchoring can correct, so a provider answers it or does not.
+		/// units that anchoring can correct, so a provider answers it or does not - one that cannot produce it
+		/// <em>exactly</em>, at the resolution its own date type stores, returns <see langword="null"/> rather than
+		/// approximating.
 		/// <para>
-		/// There is no default: elapsed time between two date/time values has no portable SQL form, and the
-		/// per-provider <c>DateDiff</c> machinery answers the boundary-count question instead. A provider that
-		/// cannot produce it <em>exactly</em>, at the resolution its own date type stores, should leave this alone
-		/// rather than approximate - SQLite keeps timestamps as text and <c>julianday</c> returns days as a float,
-		/// which cannot carry ticks.
+		/// The default derives it from the counting primitives, so a provider that has those needs nothing more:
+		/// whole elapsed seconds, plus the sub-second remainder counted in <see cref="FinestDateUnit"/>. Neither
+		/// part can overflow - the second count is small for any range a <see cref="TimeSpan"/> can hold, and the
+		/// remainder is measured across a window shorter than one second - which is what makes this preferable to
+		/// counting the whole range in a fine unit. A provider with a single exact expression for the difference
+		/// overrides it with that instead.
 		/// </para>
 		/// </remarks>
 		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
 		protected virtual ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
-			return null;
+			if (FinestDateUnit is not { } finest)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(finest, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			var whole = IntervalLowering.ElapsedUnits(Factory, element, SqlIntervalUnit.Second, CountDateBoundaries, ShiftDate);
+			if (whole == null)
+				return null;
+
+			var anchor = ShiftDate(SqlIntervalUnit.Second, whole, element.Start);
+			if (anchor == null)
+				return null;
+
+			var remainder = CountDateBoundaries(finest, anchor, element.End);
+			if (remainder == null)
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// A fine unit may be finer than a tick - a nanosecond is a hundredth of one - so the ratio is applied
+			// as a fraction. Every value the provider can store is a whole number of its own finest unit, so the
+			// division lands exactly.
+			if (ticksPerFine != 1)
+				remainder = Factory.Multiply(longType, remainder, ticksPerFine);
+
+			if (fineDenominator != 1)
+				remainder = TruncateDivide(remainder, fineDenominator);
+
+			return Factory.Add(longType, Factory.Multiply(longType, whole, TimeSpan.TicksPerSecond), remainder);
 		}
 
 		/// <summary>

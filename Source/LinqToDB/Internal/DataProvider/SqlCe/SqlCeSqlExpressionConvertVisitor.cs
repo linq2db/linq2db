@@ -16,6 +16,57 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		protected override bool SupportsNullIf => false;
 
+		/// <summary>
+		/// <c>DATEDIFF</c> counts milliseconds, which is what a SQL CE <c>datetime</c> stores, so the leftover of a
+		/// total is exact.
+		/// </summary>
+		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Millisecond;
+
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Day         => "day",
+				SqlIntervalUnit.Hour        => "hour",
+				SqlIntervalUnit.Minute      => "minute",
+				SqlIntervalUnit.Second      => "second",
+				SqlIntervalUnit.Millisecond => "millisecond",
+				_                           => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Function(Factory.GetDbDataType(date), "DateAdd",
+					Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), amount, date);
+		}
+
+		/// <summary>
+		/// Boundary counting through <c>DATEDIFF</c>, which the anchor correction turns into elapsed units.
+		/// </summary>
+		/// <remarks>
+		/// SQL CE has no wide form of <c>DATEDIFF</c>, so the count is a 32-bit integer and overflows about 24 days
+		/// apart in milliseconds. Counting whole units keeps the number small for every unit a member asks for, and
+		/// the fine count that fills in a fraction is only ever taken across a window shorter than one of those
+		/// units. Only a total asked for in milliseconds spans the whole range in the fine unit, and there SQL CE
+		/// raises an overflow rather than returning a wrapped value.
+		/// </remarks>
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Cast(
+					Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff",
+						Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end),
+					Factory.GetDbDataType(typeof(long)), true);
+		}
+
 		#region LIKE
 
 		private static readonly string[] LikeSqlCeCharactersToEscape = { "_", "%" };

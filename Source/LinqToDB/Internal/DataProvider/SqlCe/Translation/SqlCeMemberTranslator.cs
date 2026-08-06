@@ -70,6 +70,12 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Elapsed time is counted and anchor-corrected - see
+			/// <c>SqlCeSqlExpressionConvertVisitor.CountDateBoundaries</c>.
+			/// </summary>
+			private protected override bool CanTranslateDateDifference => true;
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var partStr = datepart switch
