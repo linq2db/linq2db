@@ -164,6 +164,15 @@ namespace Tests.Linq
 		const string ShiftRefusedWhileBuildingProviders = TestProvName.AllAccess;
 
 		/// <summary>
+		/// Providers that cannot express an elapsed difference as a value at all, so any comparison or member
+		/// taken from one is refused rather than answered.
+		/// </summary>
+		const string UnsupportedDifferenceProviders =
+			TestProvName.AllAccess            + "," +
+			TestProvName.AllInformix          + "," +
+			TestProvName.AllSqlServer2014Minus;
+
+		/// <summary>
 		/// The base is deliberately not the difference's own start: that form cancels in the optimizer and no
 		/// shift survives to test.
 		/// </summary>
