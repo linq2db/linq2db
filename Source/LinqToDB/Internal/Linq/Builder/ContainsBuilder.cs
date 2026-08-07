@@ -156,10 +156,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				// keeps its own type all the way to the provider - a TimeSpan handed to a driver that expects the
 				// stored form.
 				//
-				// Only a single projected column can say what those terms are. Where the sequence projects an object,
-				// each member has terms of its own and the comparison is taken apart member by member further down.
-				var sequenceDescriptor = sequencePlaceholders.Count == 1
-					? QueryHelper.GetColumnDescriptor(sequencePlaceholders[0].Sql)
+				// Only a sequence that projects one value can say what those terms are, and the shape says that, not
+				// the count: an object with a single column also yields one placeholder, but the value searched for
+				// is then the object rather than the column, and the column's terms are not its to take. Those are
+				// taken apart member by member further down.
+				var sequenceDescriptor = sequenceExpr is SqlPlaceholderExpression scalarProjection
+					? QueryHelper.GetColumnDescriptor(scalarProjection.Sql)
 					: null;
 
 				Expression testExpr;
