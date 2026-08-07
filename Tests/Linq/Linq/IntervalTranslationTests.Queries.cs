@@ -502,6 +502,71 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A set operation that compares rows refuses branches that store a duration differently.
+		/// </summary>
+		/// <remarks>
+		/// <c>UNION ALL</c> hands every row back, so each can be read the way its own branch stores it. Every other
+		/// set operation decides which rows survive by comparing the values in the database, where a duration in
+		/// seconds and one in ticks are two different numbers - the comparison would not mean what it says, and no
+		/// per-branch reading afterwards can repair a row that was already dropped or kept wrongly.
+		/// <para>
+		/// So the answer is a refusal rather than an answer. The message is checked, not just the exception type:
+		/// the same exception stands for every untranslatable query, and what makes this one useful is that it says
+		/// which operation and what is wrong with it.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void UnionRefusesBranchesThatStoreADurationDifferently([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, TimeSpan.FromMinutes(90));
+
+			var act = () => t
+				.Select(r => new { Duration = r.InSeconds })
+				.Union(t.Select(r => new { Duration = r.InTicks }))
+				.ToList();
+
+			var message = act.ShouldThrow<LinqToDBException>().Message;
+
+			message.ShouldContain("Union");
+			message.ShouldContain("in different terms");
+		}
+
+		/// <summary>
+		/// Choosing between two columns converted differently keeps each one's own conversion.
+		/// </summary>
+		/// <remarks>
+		/// Nothing about this is particular to set operations: a conditional hands the reader one value, and a
+		/// server-side <c>CASE</c> would hand it one conversion with it, which is right for at most one of the two
+		/// columns. The choice therefore stays where the row is, and each answer is read the way its own column
+		/// stores it.
+		/// <para>
+		/// The two columns here carry hand-written converters rather than a declared unit, so this also covers the
+		/// half of the comparison that the declared-unit tests never reach. Two rows are seeded with different
+		/// values and the condition sends them down different arms, so a single conversion applied to both shows up
+		/// as a wrong value rather than as an equal one.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ConditionalKeepsEachColumnsOwnConversion([DataSources] string context)
+		{
+			var longer  = TimeSpan.FromMinutes(90);
+			var shorter = TimeSpan.FromMinutes(30);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, longer, shorter);
+
+			var durations = t
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id == 1 ? r.Undeclared : r.UndeclaredSeconds)
+				.ToList();
+
+			durations.ShouldBe([longer, shorter]);
+		}
+
+		/// <summary>
 		/// Comparing a duration column against a duration value uses the column's declared unit.
 		/// </summary>
 		/// <remarks>
