@@ -56,6 +56,13 @@
 		public const string Error_WindowFunction_AggregateDistinct                = "DISTINCT is not supported in window aggregate functions by current provider.";
 		public const string Error_WindowFunction_NotSupported                     = "Window functions are not supported by current provider.";
 
+		public const string Error_Interval_Operation                              = "This TimeSpan operation is not supported by current provider.";
+		public const string Error_Interval_Difference                             = "Subtracting one date/time value from another is not supported by current provider.";
+		public const string Error_Interval_Member                                 = "This TimeSpan member is not supported by current provider.";
+		public const string Error_Interval_Shift                                  = "Adding a TimeSpan to a date/time value is not supported by current provider.";
+		/// <summary><c>{0}</c> - the requested component unit, <c>{1}</c> - the finest unit the provider resolves.</summary>
+		public const string Error_Interval_ComponentBelowResolution               = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated.";
+
 		public const string Error_Upsert_MergeLowering_NotSupported =
 			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
 			+ "but the current provider does not support the two-branch MERGE shape. "

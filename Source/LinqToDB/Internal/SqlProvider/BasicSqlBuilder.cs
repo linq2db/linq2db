@@ -3613,25 +3613,25 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		protected virtual void BuildSqlIntervalExpression(SqlIntervalExpression element)
 		{
-			throw new LinqToDBException($"{Name} does not support this TimeSpan operation in SQL.");
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Operation);
 		}
 
 		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
 		protected virtual void BuildSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
 		{
-			throw new LinqToDBException($"{Name} does not support subtracting one date/time value from another in SQL.");
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Difference);
 		}
 
 		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
 		protected virtual void BuildSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
-			throw new LinqToDBException($"{Name} does not support this TimeSpan member in SQL.");
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Member);
 		}
 
 		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
 		protected virtual void BuildSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
 		{
-			throw new LinqToDBException($"{Name} does not support adding a TimeSpan to a date/time value in SQL.");
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Shift);
 		}
 
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)
