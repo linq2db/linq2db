@@ -176,7 +176,9 @@ namespace Tests
 					}
 					else
 					{
-						if (!string.IsNullOrEmpty(_attribute.ErrorMessage) && !MessageMatches(testResult.Message, _attribute.ErrorMessage))
+						// Pattern-matched rather than string.IsNullOrEmpty: the net462 reference assembly carries no
+						// [NotNullWhen] on it, so the compiler would not narrow ErrorMessage to non-null there.
+						if (_attribute.ErrorMessage is { Length: > 0 } expectedMessage && !MessageMatches(testResult.Message, expectedMessage))
 						{
 							testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown with message containing '{_attribute.ErrorMessage}', but found: '{testResult.Message}'");
 						}
