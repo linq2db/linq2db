@@ -150,7 +150,23 @@ namespace LinqToDB.Internal.Linq.Builder
 					return null;
 				}
 
-				var testExpr         = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
+				// The value is going to be compared against what the sequence projects, so it has to arrive on that
+				// column's terms: a duration held in seconds is a different number from the same duration held in
+				// ticks, and a converted column is a different number again. Built without the descriptor, the value
+				// keeps its own type all the way to the provider - a TimeSpan handed to a driver that expects the
+				// stored form.
+				//
+				// Only a single projected column can say what those terms are. Where the sequence projects an object,
+				// each member has terms of its own and the comparison is taken apart member by member further down.
+				var sequenceDescriptor = sequencePlaceholders.Count == 1
+					? QueryHelper.GetColumnDescriptor(sequencePlaceholders[0].Sql)
+					: null;
+
+				Expression testExpr;
+
+				using (Builder.UsingColumnDescriptor(sequenceDescriptor))
+					testExpr = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
+
 				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr, false);
 
 				var placeholderQuery = OuterQuery;
