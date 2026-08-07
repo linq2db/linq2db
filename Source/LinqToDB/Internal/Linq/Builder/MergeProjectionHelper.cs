@@ -17,13 +17,27 @@ namespace LinqToDB.Internal.Linq.Builder
 		public MappingSchema     MappingSchema { get; }
 		public MergeFallback?    Fallback      { get; }
 
+		/// <summary>
+		/// Asked before two projections that look alike are merged into one, so a caller that knows the two sides
+		/// are read differently can keep them apart.
+		/// </summary>
+		/// <remarks>
+		/// Looking alike is not enough for a set operation: two branches can name the same member and still store it
+		/// in different terms - a duration in seconds against one in ticks, or two different value converters - and
+		/// merging them leaves one column with one conversion, which is right for at most one of the branches.
+		/// </remarks>
+		public CanMergeCheck?    CanMerge      { get; }
+
 		public delegate bool MergeFallback(Expression projection1, Expression projection2, out Expression? merged);
 
-		public MergeProjectionHelper(ExpressionBuilder builder, MappingSchema mappingSchema, MergeFallback? fallback = null)
+		public delegate bool CanMergeCheck(Expression projection1, Expression projection2);
+
+		public MergeProjectionHelper(ExpressionBuilder builder, MappingSchema mappingSchema, MergeFallback? fallback = null, CanMergeCheck? canMerge = null)
 		{
 			Builder       = builder;
 			MappingSchema = mappingSchema;
 			Fallback      = fallback;
+			CanMerge      = canMerge;
 		}
 
 		static bool IsNullValueOrSqlNull(Expression expression)
@@ -95,6 +109,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (ExpressionEqualityComparer.Instance.Equals(projection1, projection2))
 			{
+				if (CanMerge?.Invoke(projection1, projection2) == false)
+					return false;
+
 				merged = projection1;
 				return true;
 			}

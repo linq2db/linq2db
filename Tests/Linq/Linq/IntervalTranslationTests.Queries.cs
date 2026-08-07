@@ -204,35 +204,113 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// A set operation with a difference on one side and a stored duration on the other.
+		/// Three branches - a stored duration, a difference, and the stored duration again.
 		/// </summary>
 		/// <remarks>
-		/// The cross-unit case in a union: one branch produces a tick count from the lowering, the other reads a
-		/// column of seconds. Both must denote the same duration by the time the reader sees them, and the rows
-		/// are seeded so that they do - a branch that kept its raw number would come back off by a factor of ten
-		/// million rather than slightly wrong.
+		/// A set operation is a list, not a pair, so a branch in the middle is reached by walking it rather than by
+		/// looking at the other side. A two-branch shape cannot tell a walk from a look, because there every branch
+		/// is both first and last. Here the difference sits where neither end is, and the column branches around it
+		/// must still agree with each other across it.
+		/// <para>
+		/// The difference is seeded shorter than the stored duration so the three branches answer two distinct
+		/// values. Making them equal would let a branch that took another branch's conversion pass unnoticed.
+		/// </para>
 		/// </remarks>
-		[ActiveIssue(Details = "The two branches lower the same logical type to different SQL types, and PostgreSQL says so outright: \"UNION types interval and bigint cannot be matched\". One branch produces a native interval from the lowering, the other reads a bigint column of seconds. Where the union does succeed the answer is wrong instead - the first branch's conversion is applied to both. A duration needs one representation across the branches of a query, which is the same root as the other set-operation and comparison defects recorded here.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		public void ConcatMixesADifferenceAndAColumn([DataSources(false)] string context)
+		public void ConcatSurroundsADifferenceWithColumns([DataSources(false)] string context)
 		{
-			var value = TimeSpan.FromHours(3);
+			var elapsed = TimeSpan.FromHours(1);
+			var budget  = TimeSpan.FromHours(3);
 
 			using var db = GetDataContext(context, BuildSchema());
 			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
 
-			SeedTasks(db, (value, value));
+			SeedTasks(db, (elapsed, budget));
 
 			var rows = t
-				.Select(r => new { Source = 1, Duration = r.FinishedOn - r.StartedOn })
-				.Concat(t.Select(r => new { Source = 2, Duration = r.Budget }))
+				.Select(r => new { Source = 1, Duration = r.Budget })
+				.Concat(t.Select(r => new { Source = 2, Duration = r.FinishedOn - r.StartedOn }))
+				.Concat(t.Select(r => new { Source = 3, Duration = r.Budget }))
+				.OrderBy(r => r.Source)
+				.ToList();
+
+			rows.Count.ShouldBe(3);
+
+			rows[0].Duration.ShouldBe(budget);
+			rows[1].Duration.ShouldBe(elapsed);
+			rows[2].Duration.ShouldBe(budget);
+		}
+
+		/// <summary>
+		/// Two durations in one projection, mixed the opposite way round in each branch.
+		/// </summary>
+		/// <remarks>
+		/// Every shape above carries a single duration, so they cannot tell whether the reconciliation is decided
+		/// per column or once for the query. Here the first column is a stored duration meeting a difference and the
+		/// second is a difference meeting a stored duration, in the same union - a decision that leaked from one
+		/// column to the other would put the wrong conversion on one of them.
+		/// <para>
+		/// The two durations are deliberately unequal, and they swap places between the branches. Seeding them the
+		/// same would make a column mix-up look identical to a correct answer.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ConcatMixesTwoDurationsPerRow([DataSources(false)] string context)
+		{
+			var elapsed = TimeSpan.FromHours(1);
+			var budget  = TimeSpan.FromHours(3);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+
+			SeedTasks(db, (elapsed, budget));
+
+			var rows = t
+				.Select(r => new { Source = 1, First = r.Budget,                        Second = r.FinishedOn - r.StartedOn })
+				.Concat(t.Select(r => new { Source = 2, First = r.FinishedOn - r.StartedOn, Second = r.Budget }))
 				.OrderBy(r => r.Source)
 				.ToList();
 
 			rows.Count.ShouldBe(2);
-			rows[0].Duration.ShouldBe(value);
-			rows[1].Duration.ShouldBe(value);
+
+			rows[0].First.ShouldBe(budget);
+			rows[0].Second.ShouldBe(elapsed);
+
+			rows[1].First.ShouldBe(elapsed);
+			rows[1].Second.ShouldBe(budget);
+		}
+
+		/// <summary>
+		/// A union of two differences, with no stored duration on either side.
+		/// </summary>
+		/// <remarks>
+		/// The control for the two mixed shapes above. Both branches reach the reader by the same lowering, so there
+		/// is nothing to reconcile and this must pass - if it did not, the mixed cases would not be about mixing at
+		/// all and the diagnosis would be wrong.
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ConcatOfTwoDifferences([DataSources(false)] string context)
+		{
+			var elapsed = TimeSpan.FromHours(1);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+
+			SeedTasks(db, (elapsed, TimeSpan.FromHours(3)));
+
+			var rows = t
+				.Select(r => new { Source = 1, Duration = r.FinishedOn - r.StartedOn })
+				.Concat(t.Select(r => new { Source = 2, Duration = r.FinishedOn - r.StartedOn }))
+				.OrderBy(r => r.Source)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+
+			rows[0].Duration.ShouldBe(elapsed);
+			rows[1].Duration.ShouldBe(elapsed);
 		}
 
 		/// <summary>
@@ -338,7 +416,6 @@ namespace Tests.Linq
 		/// two sides here read different columns holding the same duration in different units, so a branch that
 		/// dropped its conversion would come back off by a factor of ten million rather than not at all.
 		/// </remarks>
-		[ActiveIssue(Details = "A set operation applies the first branch's conversion to both. The ticks branch is read as seconds, so ninety minutes comes back as 625000 days - not a lost conversion but a foreign one. One of five defects found together: the duration unit declared by the mapping reaches the value only through the column read path, so every other route to a TimeSpan - comparison, aggregate, set operation - loses it or applies the wrong one. Recorded rather than fixed because reconciling units across those paths is a change in shared code, not a local repair.")]
 		[Test]
 		public void ConcatKeepsTheDeclaredUnitOnBothSides([DataSources] string context)
 		{
