@@ -2002,7 +2002,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (test is SqlPlaceholderExpression testPlaceholder
 					    && ifTrue is SqlPlaceholderExpression truePlaceholder
-					    && ifFalse is SqlPlaceholderExpression falsePlaceholder)
+					    && ifFalse is SqlPlaceholderExpression falsePlaceholder
+					    && CanShareOneReading(truePlaceholder, falsePlaceholder))
 					{
 						testPlaceholder  = UpdateNesting(testPlaceholder);
 						truePlaceholder  = UpdateNesting(truePlaceholder);
@@ -2018,6 +2019,34 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return node;
+		}
+
+		/// <summary>
+		/// Refuses to bring the two answers of a conditional into a single SQL value when they are not read the
+		/// same way.
+		/// </summary>
+		/// <remarks>
+		/// A <c>CASE</c> hands the reader one value with one conversion, which is right for both answers only while
+		/// they are stored on the same terms. Two columns holding a duration in different units, or carrying
+		/// different value converters, are not - collapsing them would read one through the other's conversion,
+		/// which is exactly the difference the conditional was built to keep. Asking for the choice in SQL leaves
+		/// nobody to make it per row, so it is refused by name instead of answered wrongly.
+		/// <para>
+		/// Only two stored values can disagree. Anything else - a literal, a parameter, a computed expression -
+		/// arrives already in the terms of whatever it is being chosen against, so it never stands in the way.
+		/// </para>
+		/// </remarks>
+		static bool CanShareOneReading(SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)
+		{
+			var descriptor1 = QueryHelper.GetColumnDescriptor(placeholder1.Sql);
+			if (descriptor1 == null)
+				return true;
+
+			var descriptor2 = QueryHelper.GetColumnDescriptor(placeholder2.Sql);
+			if (descriptor2 == null)
+				return true;
+
+			return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
 		}
 
 		bool HandleDefaultIfEmptyInBinary(Expression left, Expression right, [NotNullWhen(true)] out Expression? newCondition)

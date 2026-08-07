@@ -356,13 +356,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				var descriptor1 = QueryHelper.GetColumnDescriptor(placeholder1.Sql);
 				var descriptor2 = QueryHelper.GetColumnDescriptor(placeholder2.Sql);
 
+				// One side without a conversion of its own is only safe against another that has none either: a
+				// branch is a stored value, so an unknown here is a value whose terms are not declared anywhere.
 				if (descriptor1 == null || descriptor2 == null)
-					return (descriptor1 ?? descriptor2)?.ValueConverter == null;
+					return SequenceHelper.ConvertTheSameWay((descriptor1 ?? descriptor2)?.ValueConverter, null);
 
-				if (descriptor1.DurationUnit != null || descriptor2.DurationUnit != null)
-					return descriptor1.DurationUnit == descriptor2.DurationUnit;
-
-				return ReferenceEquals(descriptor1.ValueConverter, descriptor2.ValueConverter);
+				return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
 			}
 
 			Expression MergeProjections(Expression path, Expression projection1, Expression projection2, ProjectFlags flags)
