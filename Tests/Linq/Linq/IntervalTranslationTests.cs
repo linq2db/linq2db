@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -12,7 +13,7 @@ using Shouldly;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class IntervalTranslationTests : TestBase
+	public partial class IntervalTranslationTests : TestBase
 	{
 		// Access has no 64-bit integer column type, so it stores the same durations as DECIMAL. Declaring that per
 		// configuration keeps one model and one set of tests: the storage type is a provider detail, and the
@@ -65,6 +66,15 @@ namespace Tests.Linq
 			return ms;
 		}
 
+		/// <summary>
+		/// Relative tolerance for a <c>Total*</c> member, which is a double the server divides in its own order of
+		/// operations. Relative rather than fixed because the members span days to milliseconds.
+		/// </summary>
+		static double Tolerance(double expected)
+		{
+			return Math.Abs(expected) * 1e-12;
+		}
+
 		static void Seed(IDataContext db, params TimeSpan[] values)
 		{
 			for (var i = 0; i < values.Length; i++)
@@ -80,369 +90,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
-		public void TotalMatchesClr([DataSources] string context)
-		{
-			var value = TimeSpan.FromMinutes(90);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			var row = t
-				.Select(r => new
-				{
-					SecondsHours   = r.InSeconds.TotalHours,
-					SecondsMinutes = r.InSeconds.TotalMinutes,
-					TicksHours     = r.InTicks.TotalHours,
-				})
-				.Single();
-
-			row.SecondsHours.ShouldBe(value.TotalHours);
-			row.SecondsMinutes.ShouldBe(value.TotalMinutes);
-			row.TicksHours.ShouldBe(value.TotalHours);
-		}
-
-		[Test]
-		public void ComponentMatchesClr([DataSources] string context)
-		{
-			var value = new TimeSpan(2, 3, 4, 5);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			var row = t
-				.Select(r => new
-				{
-					r.InSeconds.Days,
-					r.InSeconds.Hours,
-					r.InSeconds.Minutes,
-					r.InSeconds.Seconds,
-				})
-				.Single();
-
-			row.Days.ShouldBe(value.Days);
-			row.Hours.ShouldBe(value.Hours);
-			row.Minutes.ShouldBe(value.Minutes);
-			row.Seconds.ShouldBe(value.Seconds);
-		}
-
-		[Test]
-		public void NegativeComponentsTruncateTowardZero([DataSources] string context)
-		{
-			// The case provider division and modulo disagree on. CLR truncates toward zero, so -25h is
-			// Days == -1 and Hours == -1, not -2 / +23 as a flooring provider would give.
-			var value = TimeSpan.FromHours(-25);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			value.Days.ShouldBe(-1);
-			value.Hours.ShouldBe(-1);
-
-			var row = t
-				.Select(r => new
-				{
-					r.InSeconds.Days,
-					r.InSeconds.Hours,
-					r.InSeconds.TotalHours,
-				})
-				.Single();
-
-			row.Days.ShouldBe(value.Days);
-			row.Hours.ShouldBe(value.Hours);
-			row.TotalHours.ShouldBe(value.TotalHours);
-		}
-
-		[Test]
-		public void UnitIsTakenFromTheDeclarationNotTheStorageType([DataSources] string context)
-		{
-			// Both columns are Int64 and hold the same duration, but in different units. If the unit were
-			// inferred from the storage type instead of the declaration, one of these would be wrong.
-			var value = TimeSpan.FromHours(3);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			var row = t
-				.Select(r => new
-				{
-					Seconds = r.InSeconds.TotalHours,
-					Ticks   = r.InTicks.TotalHours,
-				})
-				.Single();
-
-			row.Seconds.ShouldBe(3d);
-			row.Ticks.ShouldBe(3d);
-		}
-
-		[Test]
-		public void ValueRoundTripsThroughTheDeclaredUnit([DataSources] string context)
-		{
-			// No HasConversion anywhere in this fixture for the declared columns - the conversion is derived from
-			// the unit, so writing and reading back has to work on the declaration alone.
-			var value = TimeSpan.FromSeconds(4567);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			var row = t.Single();
-
-			row.InSeconds.ShouldBe(value);
-			row.InTicks.ShouldBe(value);
-		}
-
 		// The write paths below matter because the conversion on the declared columns is *derived* from the unit
 		// rather than written by hand. Anything that builds its own parameters, or copies values without asking
 		// the column descriptor, would store a number in the wrong unit - and store it silently.
-
-		[Test]
-		public void BulkCopyRoundTripsTheDeclaredUnit(
-			[DataSources(false)] string context,
-			[Values(BulkCopyType.RowByRow, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType copyType)
-		{
-			var value = TimeSpan.FromSeconds(4567);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			db.BulkCopy(
-				new BulkCopyOptions().WithBulkCopyType(copyType),
-				[
-					new DurationRow
-					{
-						Id                = 1,
-						InSeconds         = value,
-						InTicks           = value,
-						Undeclared        = value,
-						UndeclaredSeconds = value,
-					}
-				]);
-
-			var row = t.Single();
-
-			row.InSeconds.ShouldBe(value);
-			row.InTicks.ShouldBe(value);
-			row.Undeclared.ShouldBe(value);
-			row.UndeclaredSeconds.ShouldBe(value);
-		}
-
-		[Test]
-		public void UpdateRoundTripsTheDeclaredUnit([DataSources] string context)
-		{
-			var value   = TimeSpan.FromSeconds(4567);
-			var updated = TimeSpan.FromMinutes(321);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			// Through the entity, which goes by the descriptor...
-			var row = t.Single();
-
-			row.InSeconds = updated;
-			row.InTicks   = updated;
-			db.Update(row);
-
-			var afterEntity = t.Single();
-
-			afterEntity.InSeconds.ShouldBe(updated);
-			afterEntity.InTicks.ShouldBe(updated);
-
-			// ...and through a set expression, which builds its own assignment.
-			t
-				.Where(r => r.Id == 1)
-				.Set(r => r.InSeconds, value)
-				.Set(r => r.InTicks,   value)
-				.Update();
-
-			var afterSet = t.Single();
-
-			afterSet.InSeconds.ShouldBe(value);
-			afterSet.InTicks.ShouldBe(value);
-		}
-
-		[Test]
-		public void UpsertRoundTripsTheDeclaredUnit(
-			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
-		{
-			// The Upsert extension, which resolves to a native ON CONFLICT or a synthesised MERGE depending on the
-			// provider - a different way of building the write than InsertOrUpdate below, so both are covered.
-			// The two providers excluded resolve it to InsertOrUpdate, which they do not support either.
-			var inserted = TimeSpan.FromSeconds(4567);
-			var updated  = TimeSpan.FromMinutes(321);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			// The insert branch first, on an empty table, then the update branch over the same key.
-			foreach (var value in new[] { inserted, updated })
-			{
-				t.Upsert(new DurationRow
-				{
-					Id                = 1,
-					InSeconds         = value,
-					InTicks           = value,
-					Undeclared        = value,
-					UndeclaredSeconds = value,
-				});
-
-				var row = t.Single();
-
-				row.InSeconds.ShouldBe(value);
-				row.InTicks.ShouldBe(value);
-				row.Undeclared.ShouldBe(value);
-				row.UndeclaredSeconds.ShouldBe(value);
-			}
-		}
-
-		[Test]
-		public void UpsertBuilderRoundTripsTheDeclaredUnit(
-			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
-		{
-			// The builder is where a derived conversion is easiest to lose: the match condition compares a
-			// duration column, and Set writes a value into another. Both build their own SQL rather than going
-			// through the entity's column list.
-			//
-			// Column-to-column assignment is deliberately not exercised here: that copies stored numbers, and two
-			// duration columns declared in different units hold different numbers for the same duration. Whether
-			// such an assignment should convert is a question about differing converters in general, not about
-			// this feature.
-			var seed  = TimeSpan.FromSeconds(4567);
-			var extra = TimeSpan.FromMinutes(30);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, seed);
-
-			var payload = new DurationRow
-			{
-				Id                = 1,
-				InSeconds         = seed,
-				InTicks           = seed,
-				Undeclared        = seed,
-				UndeclaredSeconds = seed,
-			};
-
-			t.Upsert(payload, u => u
-				.Match((target, source) => target.Id == source.Id)
-				.Set(target => target.InTicks, () => extra));
-
-			var row = t.Single();
-
-			// Matched on the duration column, so no second row appeared, and the value written through Set comes
-			// back as the duration it was.
-			row.InTicks.ShouldBe(extra);
-			row.InSeconds.ShouldBe(seed);
-		}
-
-		[Test]
-		public void InsertOrUpdateRoundTripsTheDeclaredUnit(
-			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
-		{
-			// ClickHouse and YDB have no InsertOrUpdate at all, which is a provider capability rather than
-			// anything about durations.
-			var inserted = TimeSpan.FromSeconds(4567);
-			var updated  = TimeSpan.FromMinutes(321);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			// The insert branch first, on an empty table, then the update branch over the same key.
-			foreach (var value in new[] { inserted, updated })
-			{
-				t
-					.InsertOrUpdate(
-						() => new DurationRow
-						{
-							Id                = 1,
-							InSeconds         = value,
-							InTicks           = value,
-							Undeclared        = value,
-							UndeclaredSeconds = value,
-						},
-						r => new DurationRow
-						{
-							InSeconds = value,
-							InTicks   = value,
-						});
-
-				var row = t.Single();
-
-				row.InSeconds.ShouldBe(value);
-				row.InTicks.ShouldBe(value);
-			}
-		}
-
-		[Test]
-		public void NegationIsTranslatedWhenConsumed([DataSources] string context)
-		{
-			var value = TimeSpan.FromMinutes(90);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			var row = t
-				.Select(r => new
-				{
-					(-r.InSeconds).TotalHours,
-					(-r.InSeconds).Hours,
-				})
-				.Single();
-
-			row.TotalHours.ShouldBe((-value).TotalHours);
-			row.Hours.ShouldBe((-value).Hours);
-		}
-
-		[Test]
-		public void ComputedIntervalProjectsAndMaterializes([DataSources] string context)
-		{
-			// Nothing carries a converter on the expression. QueryHelper.GetColumnDescriptor looks through the
-			// interval node back to the operand's column, and ToReadExpression uses that column's converter -
-			// the same path an ordinary column projection takes.
-			//
-			// This only works because the interval node carries the model type: were it typed by its storage,
-			// the descriptor lookup would drop it and the amount would come back read as raw ticks.
-			var value = TimeSpan.FromMinutes(90);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			var row = t
-				.Select(r => new
-				{
-					Seconds = -r.InSeconds,
-					Ticks   = -r.InTicks,
-				})
-				.Single();
-
-			row.Seconds.ShouldBe(-value);
-			row.Ticks.ShouldBe(-value);
-		}
-
-		[Test]
-		public void NegatedConvertedColumnKeepsItsConverter([DataSources] string context)
-		{
-			// Undeclared, so no interval node is involved - this exercises the plain converted-column path and
-			// answers whether GetColumnDescriptor's unary branch is fixing a pre-existing defect or only serving
-			// the interval path. Whatever the query does, negating must not change which converter applies.
-			var value = TimeSpan.FromMinutes(90);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			t
-				.Select(r => Sql.AsSql(-r.UndeclaredSeconds))
-				.Single()
-				.ShouldBe(-value);
-		}
 
 		[Table]
 		sealed class EventRow
@@ -464,86 +114,54 @@ namespace Tests.Linq
 			public DateTime FinishedOn { get; set; }
 		}
 
-		[Test]
-		public void DateDifferenceComponentsMatchClr(
-			[IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context,
-			[Values(1, -1)] int direction)
+		[Table]
+		sealed class ZonedEventRow
 		{
-			// 2 days 3 hours 30 minutes, taken in both directions. The negative case is where a native interval
-			// type is most likely to disagree with the CLR - PostgreSQL reports it as "-2 days -03:30:00", so the
-			// components come back negative as .NET gives them, but that has to be verified, not assumed.
-			var earlier = new DateTime(2026, 1, 1, 10,  0, 0);
-			var later   = new DateTime(2026, 1, 3, 13, 30, 0);
+			[PrimaryKey] public int Id { get; set; }
 
-			var start = direction > 0 ? earlier : later;
-			var end   = direction > 0 ? later   : earlier;
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
-
-			var elapsed = end - start;
-
-			elapsed.Days.ShouldBe(2 * direction);
-			elapsed.Hours.ShouldBe(3 * direction);
-
-			var row = t.Select(r => new
-			{
-				Days       = Sql.AsSql((r.FinishedOn - r.StartedOn).Days),
-				Hours      = Sql.AsSql((r.FinishedOn - r.StartedOn).Hours),
-				Minutes    = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
-				TotalHours = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours),
-			}).Single();
-
-			row.Days.ShouldBe(elapsed.Days);
-			row.Hours.ShouldBe(elapsed.Hours);
-			row.Minutes.ShouldBe(elapsed.Minutes);
-			row.TotalHours.ShouldBe(elapsed.TotalHours, 1e-9);
-		}
-
-		[Test]
-		public void DifferenceAddedBackToADate([DataSources] string context)
-		{
-			// A difference is not only read for its parts - it gets used. Adding it back to its own start must
-			// land on the end, and adding it to a third date must move that one by the same amount.
-			var started  = new DateTime(2026, 1, 1, 10,  0, 0);
-			var finished = new DateTime(2026, 1, 3, 13, 30, 0);
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
-
-			// Only the cancelling forms here, which the optimizer resolves before any provider is asked - so this
-			// runs everywhere. A shift off an unrelated base needs real lowering and is tested separately.
-			var row = t
-				.Select(r => new
-				{
-					BackToEnd = r.StartedOn + (r.FinishedOn - r.StartedOn),
-					BackToStart = r.FinishedOn - (r.FinishedOn - r.StartedOn),
-
-					// The result is a date like any other, so a part of it still has to read.
-					Hour = (r.StartedOn + (r.FinishedOn - r.StartedOn)).Hour,
-				})
-				.Single();
-
-			row.BackToEnd.ShouldBe(finished);
-			row.BackToStart.ShouldBe(started);
-			row.Hour.ShouldBe(finished.Hour);
+			// [Column] is not decoration here: [Table] requires it, so a property without one is silently left out
+			// of the model - the table is created without the column and the query never resolves it.
+			//
+			// The precision is asked for because several providers default to whole seconds for a timestamp -
+			// MySQL among them - and a difference measured on a column that dropped its fractional part would be
+			// testing the column type rather than the translation.
+			[Column(Precision = 6)] public DateTimeOffset StartedOn  { get; set; }
+			[Column(Precision = 6)] public DateTimeOffset FinishedOn { get; set; }
 		}
 
 		/// <summary>
-		/// Providers that can express a date shifted by an interval. One name to add as each gains support.
+		/// Providers with no lowering for a date shifted by an interval yet, so the attempt is refused by name.
 		/// </summary>
-		const string TemporalShiftProviders =
-			TestProvName.AllPostgreSQL + "," +
-			TestProvName.AllMySql      + "," +
-			TestProvName.AllDuckDB     + "," +
-			TestProvName.AllClickHouse + "," +
-			TestProvName.AllSqlServer2016Plus + "," +
-			ProviderName.SqlCe + "," +
-			TestProvName.AllSybase;
+		/// <remarks>
+		/// Declared as the unsupported side rather than the supported one so a single test can run everywhere and
+		/// assert both outcomes: the providers listed here must fail with <em>our</em> refusal, and every other
+		/// provider must answer. Naming the supported side instead would need two tests, and the excluded one
+		/// would only ever check that <em>something</em> was thrown.
+		/// <para>
+		/// This list shrinks as the lowering spreads - most of these could shift a date perfectly well and simply
+		/// have no implementation yet.
+		/// </para>
+		/// </remarks>
+		const string UnsupportedShiftProviders =
+			TestProvName.AllSQLite            + "," +
+			TestProvName.AllOracle            + "," +
+			TestProvName.AllFirebird          + "," +
+			TestProvName.AllSapHana           + "," +
+			TestProvName.AllDB2               + "," +
+			TestProvName.AllInformix          + "," +
+			TestProvName.AllYdb               + "," +
+			TestProvName.AllSqlServer2014Minus;
+
+		/// <summary>
+		/// Providers that refuse the shift one step earlier, while the expression is still being built.
+		/// </summary>
+		/// <remarks>
+		/// Access counts elapsed units but cannot turn a difference into a value at all, so the shift node is never
+		/// created and the refusal comes from expression building rather than from the SQL builder. Both are
+		/// refusals and both are correct - they are listed apart because the message differs, and a test that
+		/// accepted either would stop proving which one happened.
+		/// </remarks>
+		const string ShiftRefusedWhileBuildingProviders = TestProvName.AllAccess;
 
 		/// <summary>
 		/// The base is deliberately not the difference's own start: that form cancels in the optimizer and no
@@ -558,220 +176,5 @@ namespace Tests.Linq
 				.Select(r => r.Id);
 		}
 
-		[Test]
-		public void ShiftIsExpressedInAPredicate([IncludeDataSources(true, TemporalShiftProviders)] string context)
-		{
-			var started = new DateTime(2026, 1, 1, 10, 0, 0);
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
-
-			ShiftedInAPredicate(t)
-				.ToArray()
-				.ShouldBe([1]);
-		}
-
-		[Test]
-		public void ShiftIsRefusedWhileItIsNotTranslated([DataSources(false, TemporalShiftProviders)] string context)
-		{
-			// The contract pinned here is loudness, not incapability: most of these providers could shift a date
-			// perfectly well - SQL Server through DATEADD, SQLite through datetime modifiers, MySQL through
-			// DATE_ADD - and simply have no lowering yet. What matters is that until they do, the attempt fails by
-			// name instead of producing SQL the database accepts and answers wrongly, which is what a plain plus
-			// between a date and a tick count gives.
-			//
-			// So this shrinks as the lowering spreads: each provider that gains it moves into
-			// TemporalShiftProviders and out of here. A predicate is the right place to pin it, because there is
-			// no falling back to .NET for any provider - the rows have to be chosen by the database.
-			//
-			// Remote contexts are left out: they wrap the refusal in a transport exception, which says nothing
-			// about the translation.
-			var started = new DateTime(2026, 1, 1, 10, 0, 0);
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
-
-			var act = () => ShiftedInAPredicate(t).ToArray();
-
-			act.ShouldThrow<LinqToDBException>();
-		}
-
-		[Test]
-		public void DifferenceSurvivesAsASubqueryColumn([DataSources] string context)
-		{
-			// AsSubQuery keeps the nesting, so the difference really becomes a column of an inner SELECT and the
-			// outer query meets a column reference rather than the difference node itself. Without it the
-			// optimizer folds the projection away and the lowering never sees that shape at all.
-			var started = new DateTime(2026, 1, 1, 10, 0, 0);
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
-			db.Insert(new EventRow { Id = 2, StartedOn = started, FinishedOn = started.AddHours(1) });
-
-			var inner =
-				(from r in t
-				 select new { r.Id, Taken = r.FinishedOn - r.StartedOn })
-				.AsSubQuery();
-
-			var rows = inner
-				.Where(x => x.Taken.TotalHours > 3)
-				.OrderBy(x => x.Id)
-				.ToArray();
-
-			rows.Length.ShouldBe(1);
-			rows[0].Id.ShouldBe(1);
-			rows[0].Taken.ShouldBe(TimeSpan.FromHours(5));
-		}
-
-		[Test]
-		public void DifferenceFromASubqueryFiltersOnItsParts([DataSources] string context)
-		{
-			// The difference is computed in one query and a part of it is taken in the enclosing one, so the
-			// lowering meets a column reference where it usually meets the difference node itself.
-			var started  = new DateTime(2026, 1, 1, 10, 0, 0);
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
-			db.Insert(new EventRow { Id = 2, StartedOn = started, FinishedOn = started.AddHours(1) });
-
-			var elapsed =
-				from r in t
-				select new { r.Id, Taken = r.FinishedOn - r.StartedOn };
-
-			elapsed
-				.Where(x => x.Taken.TotalHours > 3)
-				.Select(x => x.Id)
-				.ToArray()
-				.ShouldBe([1]);
-			elapsed
-				.Where(x => x.Taken.Hours == 1)
-				.Select(x => x.Id)
-				.ToArray()
-				.ShouldBe([2]);
-			elapsed
-				.OrderByDescending(x => x.Taken)
-				.Select(x => x.Id)
-				.ToArray()
-				.ShouldBe([1, 2]);
-
-			// And the interval itself comes back, not only the rows it selected: filtering on a part says nothing
-			// about whether the value survives the trip out of the subquery.
-			elapsed
-				.OrderBy(x => x.Id)
-				.Select(x => x.Taken)
-				.ToArray()
-				.ShouldBe([TimeSpan.FromHours(5), TimeSpan.FromHours(1)]);
-
-			var whole = elapsed
-				.OrderBy(x => x.Id)
-				.ToArray();
-
-			whole[0].Taken.ShouldBe(TimeSpan.FromHours(5));
-			whole[1].Taken.ShouldBe(TimeSpan.FromHours(1));
-		}
-
-		[Test]
-		public void DateDifferenceIsElapsedTime([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
-		{
-			// Elapsed, not a boundary count. 10:59 -> 11:01 is two minutes; Sql.DateDiff(hour, ...) would say one,
-			// and that difference is the whole reason this does not reuse the DateDiff builders.
-			var started  = new DateTime(2026, 1, 1, 10, 59, 0);
-			var finished = new DateTime(2026, 1, 1, 11,  1, 0);
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
-
-			var elapsed = finished - started;
-
-			var row = t
-				.Select(r => new
-				{
-					TotalMinutes = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes),
-					Minutes      = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
-				})
-				.Single();
-
-			row.TotalMinutes.ShouldBe(elapsed.TotalMinutes);
-			row.Minutes.ShouldBe(elapsed.Minutes);
-		}
-
-		[Test]
-		public void DateDifferenceKeepsSubSecondPrecision([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context)
-		{
-			// A millisecond-resolution DATEDIFF would report zero here. This is the case the review of #5739 called
-			// out as translator-induced precision loss.
-			var started = new DateTime(2026, 1, 1);
-
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable<EventRow>();
-
-			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddTicks(9999) });
-
-			// Read against the stored value, not against 9999: the difference cannot be finer than what the column
-			// holds, and the storage quantum differs - datetime2 keeps 100ns where a PostgreSQL timestamp keeps a
-			// microsecond. What is being pinned is that the difference loses nothing beyond that.
-			var row = t
-				.Select(r => new
-				{
-					Ticks  = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
-					Stored = r.FinishedOn,
-				})
-				.Single();
-
-			var ticks = row.Ticks;
-
-			ticks.ShouldBe((row.Stored - started).Ticks);
-
-			// And that what remains is genuinely sub-millisecond, so the assertion above cannot be satisfied by a
-			// provider that rounded the stored value to a whole millisecond in the first place.
-			(ticks % TimeSpan.TicksPerMillisecond).ShouldNotBe(0L);
-		}
-
-		[Test]
-		public void ArithmeticHappensOnTheServer([DataSources] string context)
-		{
-			// Without this the fixture would prove much less: had translation returned null, linq2db would
-			// evaluate the members client-side and every value assertion above would still pass.
-			//
-			// Sql.AsSql forces server evaluation, so a provider that cannot translate the member fails here
-			// instead of quietly computing it in .NET. Matching the generated SQL text would not work across
-			// providers - the constants and the truncation function differ from one to the next.
-			var value = new TimeSpan(2, 3, 4, 5);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-			Seed(db, value);
-
-			var row = t
-				.Select(r => new
-				{
-					TotalHours   = Sql.AsSql(r.InSeconds.TotalHours),
-					Hours        = Sql.AsSql(r.InSeconds.Hours),
-					TotalMinutes = Sql.AsSql(r.InTicks.TotalMinutes),
-				})
-				.Single();
-
-			row.TotalHours.ShouldBe(value.TotalHours);
-			row.Hours.ShouldBe(value.Hours);
-
-			// Access stores the tick count as DECIMAL - it has no 64-bit integer type - so dividing it happens in
-			// decimal arithmetic and the last bit of the resulting double need not match .NET's binary division.
-			// Every provider that holds the count in BIGINT does match exactly, so the tolerance is granted only
-			// where the storage makes exactness impossible, not everywhere.
-			if (context.IsAnyOf(TestProvName.AllAccess))
-				row.TotalMinutes.ShouldBe(value.TotalMinutes, tolerance: 1e-9);
-			else
-				row.TotalMinutes.ShouldBe(value.TotalMinutes);
-		}
 	}
 }
