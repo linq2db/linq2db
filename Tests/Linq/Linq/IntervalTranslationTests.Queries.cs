@@ -306,7 +306,6 @@ namespace Tests.Linq
 		/// member rather than the column - there is no numeric sum of a <see cref="TimeSpan"/> - which makes it the
 		/// case where the unit has to be applied before the addition rather than after.
 		/// </remarks>
-		[ActiveIssue(Details = "Min and Max over a duration column return the stored number read as ticks - 1800 seconds comes back as 1800 ticks. The aggregate produces its result without the column's conversion. One of five defects found together: the duration unit declared by the mapping reaches the value only through the column read path, so every other route to a TimeSpan - comparison, aggregate, set operation - loses it or applies the wrong one. Recorded rather than fixed because reconciling units across those paths is a change in shared code, not a local repair.")]
 		[Test]
 		public void AggregatesKeepTheDeclaredUnit([DataSources] string context)
 		{

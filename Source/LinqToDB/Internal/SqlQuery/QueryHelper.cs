@@ -348,6 +348,18 @@ namespace LinqToDB.Internal.SqlQuery
 					return found;
 				}
 
+				// The same rule once more for the extended form, which is what an aggregate is built as. MIN and
+				// MAX answer with an element of their operand's own domain, so the operand's descriptor keeps
+				// describing the result. The type guard is what holds the line: COUNT answers in a type of its
+				// own and stops matching, and so does any other function that does not preserve the type.
+				case SqlExtendedFunction { Arguments: [var singleArgument] } extendedFunction:
+				{
+					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements);
+					if (found?.GetDbDataType(true).SystemType != extendedFunction.SystemType)
+						return null;
+					return found;
+				}
+
 				// An interval keeps its operand's storage, so the operand's descriptor - and with it the value
 				// converter the read path needs - still describes the result. This is why a computed interval
 				// needs no converter attached to the expression itself.
