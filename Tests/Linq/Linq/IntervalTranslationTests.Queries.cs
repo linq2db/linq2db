@@ -437,6 +437,47 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A duration the branches store differently is read a branch at a time, and refused where no branch is
+		/// known yet.
+		/// </summary>
+		/// <remarks>
+		/// Which conversion a value needs is settled when the row is materialised, because only then is it known
+		/// which branch the row came from. That is enough to read it, whatever shape it is projected in - the shape
+		/// above carries the member inside an object, this one projects it alone, and the two reach the reader by
+		/// different routes.
+		/// <para>
+		/// Asking for the same value in SQL has no row and no branch yet, so the choice cannot be made: the two
+		/// columns would have to become one, and one column carries one conversion, which is right for at most one
+		/// of the branches. The query is refused rather than answered - the answer would look ordinary and be wrong
+		/// by a factor of ten million.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ConcatReadsADivergentMemberButRefusesItInSql([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			var union = t
+				.Select(r => new { Source = 1, Duration = r.InSeconds })
+				.Concat(t.Select(r => new { Source = 2, Duration = r.InTicks }));
+
+			var durations = union
+				.OrderBy(r => r.Source)
+				.Select(r => r.Duration)
+				.ToList();
+
+			durations.ShouldBe([value, value]);
+
+			var act = () => union.Where(r => r.Duration > TimeSpan.Zero).Select(r => r.Source).ToList();
+
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		/// <summary>
 		/// Comparing a duration column against a duration value uses the column's declared unit.
 		/// </summary>
 		/// <remarks>
