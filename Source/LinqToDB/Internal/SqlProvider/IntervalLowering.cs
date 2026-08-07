@@ -223,6 +223,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!SqlIntervalUnits.TryGetTicksRatio(unit, out var numerator, out var denominator))
 				return null;
 
+			// A total in ticks is the tick count itself. Sending it through double to divide it by one would be
+			// arithmetic that cannot change the value but can lose it: past 2^53 ticks - about twenty-eight years -
+			// double stops representing every one of them.
+			if (numerator == 1 && denominator == 1)
+				return factory.Cast(ticks, resultType);
+
 			var doubleType = factory.GetDbDataType(typeof(double));
 			var value      = factory.Cast(ticks, doubleType, true);
 
