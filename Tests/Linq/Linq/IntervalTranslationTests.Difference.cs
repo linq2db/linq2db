@@ -382,5 +382,55 @@ namespace Tests.Linq
 			// provider that rounded the stored value to a whole millisecond in the first place.
 			(ticks % TimeSpan.TicksPerMillisecond).ShouldNotBe(0L);
 		}
+
+		/// <summary>
+		/// Sub-second components of a plain <see cref="DateTime"/> difference agree with what the storage kept.
+		/// </summary>
+		/// <remarks>
+		/// The detector for a component that reports zero while the column holds a value. Runs everywhere and needs
+		/// no per-provider expectation, because the expectation is read back rather than assumed: a storage that
+		/// truncates to the second genuinely has no milliseconds and answering zero is right, while a storage that
+		/// kept them and still answers zero is wrong. Excluding the coarse providers - the obvious way to make this
+		/// green - would remove exactly the second case from view.
+		/// <para>
+		/// The <see cref="DateTimeOffset"/> twin cannot cover these providers: several have no offset-carrying
+		/// column type at all, so they are out of its scope entirely.
+		/// </para>
+		/// <para>
+		/// Two providers refuse rather than answer, and the difference between them is worth keeping in mind.
+		/// Access has no sub-second date part to extract at all. PostgreSQL does - <c>EXTRACT(MILLISECONDS ...)</c>
+		/// exists - but it returns the whole seconds field scaled, not the part within the second, so mapping it
+		/// would need a truncation and a modulus rather than a name. That is unimplemented, not impossible.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL, TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		public void DateDifferenceSubSecondComponentsAgreeWithStorage([DataSources] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 20, 30);
+
+			// Milliseconds, microseconds and sub-microsecond ticks all non-zero, so a component that survives the
+			// storage cannot be confused with one that is legitimately zero.
+			var written = started.AddTicks(TimeSpan.TicksPerMillisecond * 123 + 4567);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = written });
+
+			var stored   = t.Select(r => r.FinishedOn).Single();
+			var expected = stored - started;
+
+			var row = t
+				.Select(r => new
+				{
+					Milliseconds = Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds),
+					Seconds      = Sql.AsSql((r.FinishedOn - r.StartedOn).Seconds),
+				})
+				.Single();
+
+			row.Seconds.ShouldBe(expected.Seconds);
+			row.Milliseconds.ShouldBe(expected.Milliseconds);
+		}
 	}
 }
