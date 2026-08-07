@@ -65,9 +65,9 @@ namespace Tests.Linq
 		/// The difference lowers to ticks, so the bound has to arrive in ticks - a different conversion from the
 		/// one a declared column needs, and reached by a different path.
 		/// </remarks>
-		[ActiveIssue(Details = "The bound reaches the comparison as a TimeSpan while the difference lowered to a tick count, and the read fails with InvalidCastException. One of five defects found together: the duration unit declared by the mapping reaches the value only through the column read path, so every other route to a TimeSpan - comparison, aggregate, set operation - loses it or applies the wrong one. Recorded rather than fixed because reconciling units across those paths is a change in shared code, not a local repair.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders,          ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		public void DifferenceComparedToAValue([DataSources(false)] string context)
 		{
 			var bound = TimeSpan.FromHours(2);
@@ -104,9 +104,9 @@ namespace Tests.Linq
 		/// stand puts every row on the same side. The rows are chosen so that answer - all or nothing - differs
 		/// from the correct one.
 		/// </remarks>
-		[ActiveIssue(Details = "A lowered difference is a tick count and the column holds seconds, and the two are compared as they stand - every row lands on the same side. One of five defects found together: the duration unit declared by the mapping reaches the value only through the column read path, so every other route to a TimeSpan - comparison, aggregate, set operation - loses it or applies the wrong one. Recorded rather than fixed because reconciling units across those paths is a change in shared code, not a local repair.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders,          ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		public void DifferenceComparedToADeclaredColumn([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context, BuildSchema());
@@ -141,7 +141,6 @@ namespace Tests.Linq
 		/// </summary>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
 		public void GroupByDifferenceReturnsTheDuration([DataSources(false)] string context)
 		{
 			var shorter = TimeSpan.FromHours(1);
@@ -179,7 +178,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
+		[ActiveIssue(Configuration = NoTickTotalProviders, Details = "An aggregate whose body cannot be translated falls back to client evaluation, and the fallback builds a LinqExtensions.AggregateExecute call that EnumerableQuery cannot rewrite: 'There is no method AggregateExecute ... that matches the specified arguments'. Not an interval defect - reproduced on SQLite with Min(r => r.Stamp.ToBinary()), no interval code on the path - so the refusal Access should report is masked by a pre-existing core failure.")]
 		public void AggregatesOverADifference([DataSources(false)] string context)
 		{
 			var shorter = TimeSpan.FromHours(1);
@@ -216,7 +215,6 @@ namespace Tests.Linq
 		[ActiveIssue(Details = "The two branches lower the same logical type to different SQL types, and PostgreSQL says so outright: \"UNION types interval and bigint cannot be matched\". One branch produces a native interval from the lowering, the other reads a bigint column of seconds. Where the union does succeed the answer is wrong instead - the first branch's conversion is applied to both. A duration needs one representation across the branches of a query, which is the same root as the other set-operation and comparison defects recorded here.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
 		public void ConcatMixesADifferenceAndAColumn([DataSources(false)] string context)
 		{
 			var value = TimeSpan.FromHours(3);
@@ -242,7 +240,6 @@ namespace Tests.Linq
 		/// </summary>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
 		public void OrderByDifferenceOrdersByTheDuration([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context, BuildSchema());
@@ -375,7 +372,6 @@ namespace Tests.Linq
 		/// converted correctly but rendered with the wrong operator is still caught.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(Details = "The bound is not converted into the column's unit before the comparison. One of five defects found together: the duration unit declared by the mapping reaches the value only through the column read path, so every other route to a TimeSpan - comparison, aggregate, set operation - loses it or applies the wrong one. Recorded rather than fixed because reconciling units across those paths is a change in shared code, not a local repair.")]
 		[Test]
 		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -421,7 +417,6 @@ namespace Tests.Linq
 		/// own: the stored numbers are 1800 and 18000000000 for the same ninety minutes, so a comparison left to
 		/// the raw values answers "not equal" - a plausible-looking answer that is simply wrong.
 		/// </remarks>
-		[ActiveIssue(Details = "Comparing two duration columns compares the numbers as stored, so the same ninety minutes held as 1800 seconds and as 18000000000 ticks are reported unequal. The declared unit is applied on the read path only, and a comparison never goes through it. One of five defects found together: the duration unit declared by the mapping reaches the value only through the column read path, so every other route to a TimeSpan - comparison, aggregate, set operation - loses it or applies the wrong one. Recorded rather than fixed because reconciling units across those paths is a change in shared code, not a local repair.")]
 		[Test]
 		public void EqualDurationsInDifferentUnitsCompareEqual([DataSources] string context)
 		{

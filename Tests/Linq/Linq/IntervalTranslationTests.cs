@@ -168,9 +168,20 @@ namespace Tests.Linq
 		/// taken from one is refused rather than answered.
 		/// </summary>
 		const string UnsupportedDifferenceProviders =
-			TestProvName.AllAccess            + "," +
 			TestProvName.AllInformix          + "," +
 			TestProvName.AllSqlServer2014Minus;
+
+		/// <summary>
+		/// Providers that measure an elapsed difference but cannot express one as a tick count.
+		/// </summary>
+		/// <remarks>
+		/// Access is the only one: <c>DateDiff</c> hands back a 32-bit count, and scaling seconds to ticks overflows
+		/// it after about three and a half minutes, so its <c>ElapsedTicks</c> refuses by design. That splits the
+		/// query shapes in two. Grouping and ordering compare a difference against itself, so any single unit does
+		/// and Access answers them; comparing one against a duration that came from somewhere else needs a unit both
+		/// sides share, and ticks are the only one - so those are refused instead of answered approximately.
+		/// </remarks>
+		const string NoTickTotalProviders = TestProvName.AllAccess;
 
 		/// <summary>
 		/// The base is deliberately not the difference's own start: that form cancels in the optimizer and no

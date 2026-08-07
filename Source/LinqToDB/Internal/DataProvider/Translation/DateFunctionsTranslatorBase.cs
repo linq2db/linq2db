@@ -242,30 +242,44 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterTimeSpan()
 		{
-			// Component members truncate toward zero within the next coarser unit; Total* members keep the whole
-			// interval and its fraction. Ticks is the whole interval too - it is a Total, not a Component.
-			Registration.RegisterMember((TimeSpan ts) => ts.Days, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Day, SqlIntervalPartKind.Component, null));
-			Registration.RegisterMember((TimeSpan ts) => ts.Hours, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Hour, SqlIntervalPartKind.Component, SqlIntervalUnit.Day));
-			Registration.RegisterMember((TimeSpan ts) => ts.Minutes, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Minute, SqlIntervalPartKind.Component, SqlIntervalUnit.Hour));
-			Registration.RegisterMember((TimeSpan ts) => ts.Seconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Second, SqlIntervalPartKind.Component, SqlIntervalUnit.Minute));
-			Registration.RegisterMember((TimeSpan ts) => ts.Milliseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Millisecond, SqlIntervalPartKind.Component, SqlIntervalUnit.Second));
+			// A Component truncates toward zero within the unit named last - stated rather than implied, because
+			// the same unit reads differently depending on what encloses it. Total* keeps the whole interval and
+			// its fraction and has nothing enclosing it, Ticks among them: it is a Total, not a Component.
+			Registration.RegisterMember((TimeSpan ts) => ts.Days,              (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Day,         SqlIntervalPartKind.Component, null));
+			Registration.RegisterMember((TimeSpan ts) => ts.Hours,             (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Hour,        SqlIntervalPartKind.Component, SqlIntervalUnit.Day));
+			Registration.RegisterMember((TimeSpan ts) => ts.Minutes,           (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Minute,      SqlIntervalPartKind.Component, SqlIntervalUnit.Hour));
+			Registration.RegisterMember((TimeSpan ts) => ts.Seconds,           (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Second,      SqlIntervalPartKind.Component, SqlIntervalUnit.Minute));
+			Registration.RegisterMember((TimeSpan ts) => ts.Milliseconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Millisecond, SqlIntervalPartKind.Component, SqlIntervalUnit.Second));
 
-			Registration.RegisterMember((TimeSpan ts) => ts.Ticks,             (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, null));
-			Registration.RegisterMember((TimeSpan ts) => ts.TotalDays,         (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Day, SqlIntervalPartKind.Total, null));
-			Registration.RegisterMember((TimeSpan ts) => ts.TotalHours,        (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Hour, SqlIntervalPartKind.Total, null));
-			Registration.RegisterMember((TimeSpan ts) => ts.TotalMinutes,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Minute, SqlIntervalPartKind.Total, null));
-			Registration.RegisterMember((TimeSpan ts) => ts.TotalSeconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Second, SqlIntervalPartKind.Total, null));
-			Registration.RegisterMember((TimeSpan ts) => ts.TotalMilliseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Millisecond, SqlIntervalPartKind.Total, null));
+			Registration.RegisterMember((TimeSpan ts) => ts.Ticks,             (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Tick,        SqlIntervalPartKind.Total,     null));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalDays,         (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Day,         SqlIntervalPartKind.Total,     null));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalHours,        (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Hour,        SqlIntervalPartKind.Total,     null));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMinutes,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Minute,      SqlIntervalPartKind.Total,     null));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalSeconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Second,      SqlIntervalPartKind.Total,     null));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMilliseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Millisecond, SqlIntervalPartKind.Total,     null));
 
 #if NET8_0_OR_GREATER
-			Registration.RegisterMember((TimeSpan ts) => ts.Microseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Microsecond, SqlIntervalPartKind.Component, SqlIntervalUnit.Millisecond));
-			Registration.RegisterMember((TimeSpan ts) => ts.Nanoseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Nanosecond, SqlIntervalPartKind.Component, SqlIntervalUnit.Microsecond));
-			Registration.RegisterMember((TimeSpan ts) => ts.TotalMicroseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Microsecond, SqlIntervalPartKind.Total, null));
-			Registration.RegisterMember((TimeSpan ts) => ts.TotalNanoseconds,  (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Nanosecond, SqlIntervalPartKind.Total, null));
+			Registration.RegisterMember((TimeSpan ts) => ts.Microseconds,      (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Microsecond, SqlIntervalPartKind.Component, SqlIntervalUnit.Millisecond));
+			Registration.RegisterMember((TimeSpan ts) => ts.Nanoseconds,       (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Nanosecond,  SqlIntervalPartKind.Component, SqlIntervalUnit.Microsecond));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalMicroseconds, (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Microsecond, SqlIntervalPartKind.Total,     null));
+			Registration.RegisterMember((TimeSpan ts) => ts.TotalNanoseconds,  (tc, me, tf) => TranslateTimeSpanMember(tc, me, tf, SqlIntervalUnit.Nanosecond,  SqlIntervalPartKind.Total,     null));
 #endif
 
 			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan),  TranslateTimeSpanNegate);
 			Registration.RegisterUnaryInternal(ExpressionType.Negate, typeof(TimeSpan?), TranslateTimeSpanNegate);
+
+			// Comparisons need a handler of their own: without one the two sides are compared as the numbers they
+			// are stored as, which is only right when both were declared in the same unit.
+			foreach (var comparison in new[]
+			{
+				ExpressionType.Equal, ExpressionType.NotEqual,
+				ExpressionType.GreaterThan, ExpressionType.GreaterThanOrEqual,
+				ExpressionType.LessThan, ExpressionType.LessThanOrEqual,
+			})
+			{
+				Registration.RegisterBinaryInternal(comparison, typeof(TimeSpan),  typeof(TimeSpan),  TranslateIntervalComparison);
+				Registration.RegisterBinaryInternal(comparison, typeof(TimeSpan?), typeof(TimeSpan?), TranslateIntervalComparison);
+			}
 
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime),        typeof(DateTime),        TranslateDateTimeDifference);
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime?),       typeof(DateTime?),       TranslateDateTimeDifference);
@@ -382,6 +396,72 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
 
 			return placeholder == null ? null : TryMakeInterval(translationContext, placeholder.Sql);
+		}
+
+		/// <summary>
+		/// An operand of a duration comparison, expressed in ticks.
+		/// </summary>
+		/// <remarks>
+		/// A declared column or a computed difference becomes an interval node and its total in ticks. A plain
+		/// <see cref="TimeSpan"/> value has no declared unit - by design, since an undeclared one keeps whatever
+		/// the provider maps it to - but in a comparison against a duration its unit is not in doubt, so its tick
+		/// count is used directly rather than letting the provider's own type meet a number.
+		/// </remarks>
+		ISqlExpression? TicksOf(ITranslationContext translationContext, Expression operand, TranslationFlags translationFlags, DbDataType tickType)
+		{
+			var interval = TranslateIntervalOperand(translationContext, operand, translationFlags);
+
+			if (interval != null)
+				return new SqlIntervalPartExpression(interval, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
+
+			return translationContext.TryEvaluate<TimeSpan>(operand, out var value)
+				? translationContext.ExpressionFactory.Value(tickType, value.Ticks)
+				: null;
+		}
+
+		/// <summary>
+		/// Compares two durations by their tick counts rather than by the numbers they happen to be stored as.
+		/// </summary>
+		/// <remarks>
+		/// A duration lowers to its stored amount and nothing more - the unit is put back by the read path, through
+		/// the column descriptor. That works for a projection and for nothing else: two durations meeting in a
+		/// comparison arrive as bare numbers in whatever units they were declared with, so ninety minutes held as
+		/// 1800 seconds and as 18000000000 ticks compare unequal.
+		/// <para>
+		/// Both sides are taken to ticks instead, which is the one representation every duration has: a declared
+		/// column converts through its unit, and an elapsed difference is a tick count already. On a provider with
+		/// a native interval type this also stops the two sides having different SQL types.
+		/// </para>
+		/// </remarks>
+		Expression? TranslateIntervalComparison(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			var factory  = translationContext.ExpressionFactory;
+			var tickType = factory.GetDbDataType(typeof(long));
+
+			var leftTicks  = TicksOf(translationContext, binaryExpression.Left,  translationFlags, tickType);
+			var rightTicks = TicksOf(translationContext, binaryExpression.Right, translationFlags, tickType);
+
+			if (leftTicks == null || rightTicks == null)
+				return null;
+
+			ISqlPredicate? predicate = binaryExpression.NodeType switch
+			{
+				ExpressionType.Equal              => factory.Equal(leftTicks, rightTicks),
+				ExpressionType.NotEqual           => factory.NotEqual(leftTicks, rightTicks),
+				ExpressionType.GreaterThan        => factory.Greater(leftTicks, rightTicks),
+				ExpressionType.GreaterThanOrEqual => factory.GreaterOrEqual(leftTicks, rightTicks),
+				ExpressionType.LessThan           => factory.Less(leftTicks, rightTicks),
+				ExpressionType.LessThanOrEqual    => factory.LessOrEqual(leftTicks, rightTicks),
+				_                                 => null,
+			};
+
+			if (predicate == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(
+				translationContext.CurrentSelectQuery,
+				factory.SearchCondition().Add(predicate),
+				binaryExpression);
 		}
 
 		/// <summary>
