@@ -16,12 +16,13 @@ namespace LinqToDB.Internal.SqlQuery
 	/// </remarks>
 	public sealed class SqlIntervalPartExpression : SqlExpressionBase
 	{
-		public SqlIntervalPartExpression(ISqlExpression interval, SqlIntervalUnit unit, SqlIntervalPartKind kind, DbDataType type)
+		public SqlIntervalPartExpression(ISqlExpression interval, SqlIntervalUnit unit, SqlIntervalPartKind kind, DbDataType type, SqlIntervalUnit? within = null)
 		{
 			Interval = interval ?? throw new ArgumentNullException(nameof(interval));
 			Unit     = unit;
 			Kind     = kind;
 			Type     = type;
+			Within   = within;
 		}
 
 		/// <summary>
@@ -35,9 +36,23 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlIntervalUnit     Unit     { get; private set; }
 
 		/// <summary>
-		/// Whether a component within the next coarser unit or the whole interval is requested.
+		/// Whether a component within an enclosing unit or the whole interval is requested.
 		/// </summary>
 		public SqlIntervalPartKind Kind     { get; private set; }
+
+		/// <summary>
+		/// The unit a <see cref="SqlIntervalPartKind.Component"/> is counted within, or <see langword="null"/> when
+		/// it is not counted within anything - <c>TimeSpan.Days</c> is the whole day count and does not wrap.
+		/// Meaningless for <see cref="SqlIntervalPartKind.Total"/>.
+		/// </summary>
+		/// <remarks>
+		/// Stated rather than implied. "The next coarser unit" cannot express the two readings the same unit has -
+		/// <c>TimeSpan.Microseconds</c> counts within the millisecond while <c>DATEPART(microsecond, ...)</c>
+		/// counts within the second - and it is the enclosing unit, not this one, that decides whether a component
+		/// survives a coarse measurement: nanoseconds within a microsecond stay meaningful at tick resolution,
+		/// because a tick is a hundred of them.
+		/// </remarks>
+		public SqlIntervalUnit?    Within   { get; private set; }
 
 		/// <summary>
 		/// Result type - integral for <see cref="SqlIntervalPartKind.Component"/>, floating point for
@@ -68,6 +83,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(Type);
 			hash.Add(Unit);
 			hash.Add(Kind);
+			hash.Add(Within);
 			hash.Add(Interval.GetElementHashCode());
 			return hash.ToHashCode();
 		}
@@ -83,6 +99,7 @@ namespace LinqToDB.Internal.SqlQuery
 				&& Type.Equals(otherPart.Type)
 				&& Unit == otherPart.Unit
 				&& Kind == otherPart.Kind
+				&& Within == otherPart.Within
 				&& Interval.Equals(otherPart.Interval, comparer);
 		}
 
@@ -98,15 +115,16 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			if (ReferenceEquals(interval, Interval))
 				return this;
-			return new SqlIntervalPartExpression(interval, Unit, Kind, Type);
+			return new SqlIntervalPartExpression(interval, Unit, Kind, Type, Within);
 		}
 
-		public void Modify(ISqlExpression interval, SqlIntervalUnit unit, SqlIntervalPartKind kind, DbDataType type)
+		public void Modify(ISqlExpression interval, SqlIntervalUnit unit, SqlIntervalPartKind kind, DbDataType type, SqlIntervalUnit? within)
 		{
 			Interval = interval;
 			Unit     = unit;
 			Kind     = kind;
 			Type     = type;
+			Within   = within;
 		}
 	}
 }

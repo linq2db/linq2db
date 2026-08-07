@@ -46,6 +46,26 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
+		/// Whether <paramref name="unit"/> is smaller than <paramref name="other"/>.
+		/// </summary>
+		/// <remarks>
+		/// Compared through the tick ratios rather than the enum's declaration order, so the answer stays right if
+		/// a member is ever added out of order. Calendar units have no fixed tick count and are not comparable this
+		/// way - the method reports <see langword="false"/> for them rather than guessing.
+		/// </remarks>
+		public static bool IsFinerThan(SqlIntervalUnit unit, SqlIntervalUnit other)
+		{
+			if (!TryGetTicksRatio(unit, out var unitTicks, out var unitDivisor))
+				return false;
+
+			if (!TryGetTicksRatio(other, out var otherTicks, out var otherDivisor))
+				return false;
+
+			// unitTicks / unitDivisor  <  otherTicks / otherDivisor, cross-multiplied to stay integral.
+			return unitTicks * otherDivisor < otherTicks * unitDivisor;
+		}
+
+		/// <summary>
 		/// Converts an amount expressed in <paramref name="unit"/> to ticks, exactly.
 		/// </summary>
 		/// <param name="amount">Amount in <paramref name="unit"/> units.</param>

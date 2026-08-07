@@ -22,16 +22,19 @@ namespace LinqToDB.Linq.Translation
 		/// <param name="isNullsOrderingSupported">Whether the provider supports the <c>NULLS FIRST</c>/<c>NULLS LAST</c> keyword in <c>ORDER BY</c>.</param>
 		/// <param name="canLowerIntervalDifference">Whether an elapsed date difference can be lowered to a value.</param>
 		/// <param name="canLowerIntervalPart">Whether a member of an elapsed date difference can be lowered.</param>
+		/// <param name="intervalResolution">The finest unit the provider can resolve when measuring elapsed time.</param>
 		public TranslationProviderFlags(
 			NullsDefaultOrdering defaultNullsOrdering,
 			bool                 isNullsOrderingSupported,
 			bool                 canLowerIntervalDifference,
-			bool                 canLowerIntervalPart)
+			bool                 canLowerIntervalPart,
+			SqlIntervalUnit      intervalResolution = SqlIntervalUnit.Tick)
 		{
 			DefaultNullsOrdering       = defaultNullsOrdering;
 			IsNullsOrderingSupported   = isNullsOrderingSupported;
 			CanLowerIntervalDifference = canLowerIntervalDifference;
 			CanLowerIntervalPart       = canLowerIntervalPart;
+			IntervalResolution         = intervalResolution;
 		}
 
 		/// <summary>The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</summary>
@@ -51,5 +54,12 @@ namespace LinqToDB.Linq.Translation
 		/// <see cref="CanLowerIntervalDifference"/> because a provider may have only this half.
 		/// </summary>
 		public bool CanLowerIntervalPart { get; }
+
+		/// <summary>
+		/// The finest unit the provider can resolve when measuring elapsed time. A <em>component</em> asked for in
+		/// a finer unit is identically zero rather than merely imprecise, so the translator declines to build it
+		/// and leaves the member to .NET.
+		/// </summary>
+		public SqlIntervalUnit IntervalResolution { get; }
 	}
 }

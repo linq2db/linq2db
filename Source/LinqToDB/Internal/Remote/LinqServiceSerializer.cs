@@ -1819,6 +1819,8 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.Interval);
 						Append((int)elem.Unit);
 						Append((int)elem.Kind);
+						// -1 stands for "nothing encloses it" - Days does not wrap.
+						Append(elem.Within is { } within ? (int)within : -1);
 						break;
 					}
 
@@ -3122,8 +3124,9 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var interval = Read<ISqlExpression>();
 						var unit     = (SqlIntervalUnit)ReadInt();
 						var kind     = (SqlIntervalPartKind)ReadInt();
+						var within   = ReadInt();
 
-						obj = new SqlIntervalPartExpression(interval!, unit, kind, dataType);
+						obj = new SqlIntervalPartExpression(interval!, unit, kind, dataType, within < 0 ? null : (SqlIntervalUnit)within);
 
 						break;
 					}

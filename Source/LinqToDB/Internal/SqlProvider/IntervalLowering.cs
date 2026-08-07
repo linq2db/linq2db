@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			return element.Kind == SqlIntervalPartKind.Total
 				? Total(factory, ticks, element.Unit, element.Type)
-				: Component(factory, ticks, element.Unit, element.Type, truncateDivide, truncateRemainder);
+				: Component(factory, ticks, element.Unit, element.Within, element.Type, truncateDivide, truncateRemainder);
 		}
 
 		/// <summary>
@@ -159,19 +159,44 @@ namespace LinqToDB.Internal.SqlProvider
 			ISqlExpressionFactory                     factory,
 			ISqlExpression                            wholeUnits,
 			SqlIntervalUnit                           unit,
+			SqlIntervalUnit?                          within,
 			Func<ISqlExpression, long, ISqlExpression> truncateRemainder)
 		{
-			var wrap = unit switch
-			{
-				SqlIntervalUnit.Hour        => 24L,
-				SqlIntervalUnit.Minute      => 60L,
-				SqlIntervalUnit.Second      => 60L,
-				SqlIntervalUnit.Millisecond => 1000L,
-				SqlIntervalUnit.Microsecond => 1000L,
-				_                           => 0L,
-			};
+			// The modulus is the enclosing unit expressed in this one, so it comes from the ratio table rather
+			// than from a switch of its own. A component with nothing enclosing it does not wrap.
+			if (!TryGetWrap(unit, within, out var enclosingWrap))
+				return wholeUnits;
 
-			return wrap == 0 ? wholeUnits : truncateRemainder(wholeUnits, wrap);
+			return truncateRemainder(wholeUnits, enclosingWrap);
+		}
+
+		/// <summary>
+		/// How many <paramref name="unit"/> fit in <paramref name="within"/>, when the component wraps at all.
+		/// </summary>
+		static bool TryGetWrap(SqlIntervalUnit unit, SqlIntervalUnit? within, out long wrap)
+		{
+			wrap = 0;
+
+			if (within is not { } enclosing)
+				return false;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(unit, out var unitTicks, out var unitDivisor))
+				return false;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(enclosing, out var enclosingTicks, out var enclosingDivisor))
+				return false;
+
+			// (enclosingTicks / enclosingDivisor) / (unitTicks / unitDivisor), which stays integral for every pair
+			// the model allows - each unit divides the next evenly.
+			var numerator   = enclosingTicks * unitDivisor;
+			var denominator = unitTicks * enclosingDivisor;
+
+			if (denominator == 0 || numerator % denominator != 0)
+				return false;
+
+			wrap = numerator / denominator;
+
+			return wrap > 1;
 		}
 
 		/// <summary>
@@ -209,37 +234,36 @@ namespace LinqToDB.Internal.SqlProvider
 			return factory.Cast(total, resultType);
 		}
 
-		static ISqlExpression? Component(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalUnit unit, DbDataType resultType, Func<ISqlExpression, long, ISqlExpression> truncateDivide, Func<ISqlExpression, long, ISqlExpression> truncateRemainder)
+		static ISqlExpression? Component(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalUnit unit, SqlIntervalUnit? within, DbDataType resultType, Func<ISqlExpression, long, ISqlExpression> truncateDivide, Func<ISqlExpression, long, ISqlExpression> truncateRemainder)
 		{
 			var longType = factory.GetDbDataType(typeof(long));
 
-			// TimeSpan.Nanoseconds is the nanosecond part within the current microsecond, and a tick is 100ns, so
-			// it is the scaled tick remainder - not a division of the whole tick count.
-			if (unit == SqlIntervalUnit.Nanosecond)
-				return factory.Cast(factory.Multiply(longType, truncateRemainder(ticks, 10), 100L), resultType);
-
-			if (!SqlIntervalUnits.TryGetTicksRatio(unit, out var ticksPerUnit, out var denominator) || denominator != 1)
+			if (!SqlIntervalUnits.TryGetTicksRatio(unit, out var ticksPerUnit, out var divisor))
 				return null;
 
-			// Days is the whole day count and does not wrap - a duration may legitimately exceed a year. Every
-			// finer component wraps within the next coarser unit, as the CLR members do.
-			var wrap = unit switch
+			// A sub-tick unit cannot be divided out of a tick count - it is the scaled remainder instead. Two
+			// different factors meet here and must not be confused: the modulus is how many ticks the enclosing
+			// unit holds, while the scale is how many of this unit fit in a tick. TimeSpan.Nanoseconds is
+			// (ticks % 10) * 100 - ten ticks to a microsecond, a hundred nanoseconds to a tick.
+			if (divisor != 1)
 			{
-				SqlIntervalUnit.Day         => (long?)null,
-				SqlIntervalUnit.Hour        => 24L,
-				SqlIntervalUnit.Minute      => 60L,
-				SqlIntervalUnit.Second      => 60L,
-				SqlIntervalUnit.Millisecond => 1000L,
-				SqlIntervalUnit.Microsecond => 1000L,
-				_                           => null,
-			};
+				if (ticksPerUnit != 1 || within is not { } subTickEnclosing)
+					return null;
 
-			if (wrap == null && unit != SqlIntervalUnit.Day)
-				return null;
+				if (!SqlIntervalUnits.TryGetTicksRatio(subTickEnclosing, out var ticksPerEnclosing, out var enclosingDivisor) || enclosingDivisor != 1)
+					return null;
+
+				return factory.Cast(factory.Multiply(longType, truncateRemainder(ticks, ticksPerEnclosing), divisor), resultType);
+			}
 
 			var whole = truncateDivide(ticks, ticksPerUnit);
 
-			return factory.Cast(wrap == null ? whole : truncateRemainder(whole, wrap.Value), resultType);
+			// The enclosing unit is stated by the node, so there is no table here - and no assumption that it is
+			// the next coarser one, which is what makes microseconds-within-a-second expressible alongside
+			// microseconds-within-a-millisecond.
+			return factory.Cast(
+				TryGetWrap(unit, within, out var wrap) ? truncateRemainder(whole, wrap) : whole,
+				resultType);
 		}
 	}
 }

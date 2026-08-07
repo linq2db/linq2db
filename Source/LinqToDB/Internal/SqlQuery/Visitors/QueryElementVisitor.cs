@@ -3538,7 +3538,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					element.Modify((ISqlExpression)Visit(element.Interval), element.Unit, element.Kind, element.Type);
+					element.Modify((ISqlExpression)Visit(element.Interval), element.Unit, element.Kind, element.Type, element.Within);
 					break;
 				}
 				case VisitMode.Transform:
@@ -3547,7 +3547,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Interval, interval))
 					{
-						return NotifyReplaced(new SqlIntervalPartExpression(interval, element.Unit, element.Kind, element.Type), element);
+						return NotifyReplaced(new SqlIntervalPartExpression(interval, element.Unit, element.Kind, element.Type, element.Within), element);
 					}
 
 					break;

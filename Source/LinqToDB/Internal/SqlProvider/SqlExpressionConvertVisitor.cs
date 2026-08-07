@@ -1164,6 +1164,24 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </remarks>
 		public virtual bool CanLowerIntervalPart => CanLowerIntervalDifference;
 
+		/// <summary>
+		/// The finest unit this provider can actually resolve when it measures elapsed time. Defaults to
+		/// <see cref="SqlIntervalUnit.Tick"/> - no loss.
+		/// </summary>
+		/// <remarks>
+		/// Distinct from <see cref="FinestDateUnit"/>, which names the finest unit the provider's own difference
+		/// function counts in. A provider may measure elapsed time some other way and still be limited: SQLite goes
+		/// through <c>julianday</c>, whose double holds about 47 microseconds of a Julian day number, so its
+		/// measurement is rounded to the millisecond however the value is stored.
+		/// <para>
+		/// Read by the member translator, which declines to build a <em>component</em> in a unit finer than this.
+		/// Such a component is not merely less precise - it is identically zero, because the count it is taken
+		/// from was rounded to a coarser unit first. Declining leaves the member to .NET, which has both dates and
+		/// can answer exactly.
+		/// </para>
+		/// </remarks>
+		public virtual SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Tick;
+
 		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
 		{
 			var lowered = LowerTemporalArithmetic(element);
@@ -1394,7 +1412,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (whole != null)
 				{
 					if (element.Kind == SqlIntervalPartKind.Component)
-						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, TruncateRemainder), element.Type);
+						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, element.Within, TruncateRemainder), element.Type);
 
 					var total = IntervalLowering.ElapsedTotal(
 						Factory, difference, element.Unit, whole, FinestDateUnit, CountDateBoundaries, ShiftDate);

@@ -72,8 +72,6 @@ LinqToDB.Internal.SqlQuery.SqlIntervalExpression.WithValue(LinqToDB.Internal.Sql
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Interval.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Kind.get -> LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
-LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Modify(LinqToDB.Internal.SqlQuery.ISqlExpression! interval, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalPartKind kind, LinqToDB.DbDataType type) -> void
-LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.SqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! interval, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalPartKind kind, LinqToDB.DbDataType type) -> void
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Type.get -> LinqToDB.DbDataType
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Unit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.WithInterval(LinqToDB.Internal.SqlQuery.ISqlExpression! interval) -> LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression!
@@ -179,7 +177,6 @@ override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.T
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.Internal.SqlProvider.IntervalLowering.FromTicks(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! ticks, LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateDivide, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateRemainder) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 static LinqToDB.Internal.SqlProvider.IntervalLowering.LowerPart(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateDivide, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateRemainder) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
-static LinqToDB.Internal.SqlProvider.IntervalLowering.WrapComponent(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! wholeUnits, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateRemainder) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 override LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
@@ -191,7 +188,6 @@ virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerTemporalA
 override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference.get -> bool
 LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart.get -> bool
-LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart) -> void
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool
 override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 override LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
@@ -208,3 +204,17 @@ override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_ComponentBelowResolution = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Difference = "Subtracting one date/time value from another is not supported by current provider." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Member = "This TimeSpan member is not supported by current provider." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Operation = "This TimeSpan operation is not supported by current provider." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Shift = "Adding a TimeSpan to a date/time value is not supported by current provider." -> string!
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Modify(LinqToDB.Internal.SqlQuery.ISqlExpression! interval, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalPartKind kind, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalUnit? within) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.SqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! interval, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalPartKind kind, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalUnit? within = null) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Within.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart, LinqToDB.Internal.SqlQuery.SqlIntervalUnit intervalResolution = LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick) -> void
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+static LinqToDB.Internal.SqlProvider.IntervalLowering.WrapComponent(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! wholeUnits, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalUnit? within, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateRemainder) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.IsFinerThan(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalUnit other) -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit

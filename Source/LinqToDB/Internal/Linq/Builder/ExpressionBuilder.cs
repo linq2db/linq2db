@@ -214,7 +214,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				DataContext.SqlProviderFlags.DefaultNullsOrdering,
 				DataContext.SqlProviderFlags.IsNullsOrderingSupported,
 				convertVisitor.CanLowerIntervalDifference,
-				convertVisitor.CanLowerIntervalPart);
+				convertVisitor.CanLowerIntervalPart,
+				convertVisitor.IntervalResolution);
 		}
 
 		#endregion
