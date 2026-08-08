@@ -26,6 +26,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[ActiveIssue(Configurations = [TestProvName.AllSQLiteClassic, TestProvName.AllOracle], Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix, and Oracle 11 loses the zone in the CAST(x AS DATE) that the elapsed lowering uses. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceMeasuresInstantsNotLocalTime(
 			[SupportsDateTimeOffsetContext] string context)
 		{
@@ -86,6 +87,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[ActiveIssue(Configurations = [TestProvName.AllSQLiteClassic, TestProvName.AllOracle], Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix, and Oracle 11 loses the zone in the CAST(x AS DATE) that the elapsed lowering uses. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceMembersMatchClr(
 			[SupportsDateTimeOffsetContext] string context)
 		{
@@ -155,6 +157,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceSubMillisecondMembersMatchClr(
 			[SupportsDateTimeOffsetContext] string context)
 		{
@@ -199,6 +202,7 @@ namespace Tests.Linq
 #endif
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceComponentsMatchClr(
 			[DataSources] string context,
 			[Values(1, -1)] int direction)
@@ -267,8 +271,8 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders,          ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		public void LongSpanMatchesClr([DataSources] string context, [Values(1, -1)] int direction)
 		{
 			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
@@ -353,6 +357,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DifferenceSurvivesAsASubqueryColumn([DataSources] string context)
 		{
 			// AsSubQuery keeps the nesting, so the difference really becomes a column of an inner SELECT and the
@@ -382,6 +387,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DifferenceFromASubqueryFiltersOnItsParts([DataSources] string context)
 		{
 			// The difference is computed in one query and a part of it is taken in the enclosing one, so the
@@ -431,6 +437,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceIsElapsedTime([DataSources] string context)
 		{
 			// Elapsed, not a boundary count. 10:59 -> 11:01 is two minutes; Sql.DateDiff(hour, ...) would say one,
@@ -522,6 +529,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL, TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceSubSecondComponentsAgreeWithStorage([DataSources] string context)
 		{
 			var started = new DateTime(2026, 1, 1, 10, 20, 30);

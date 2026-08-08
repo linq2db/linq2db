@@ -222,7 +222,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
-		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
+		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders + "," + UnsupportedDifferenceProviders)]
 		public void ShiftIsExpressedInAPredicate([DataSources(false)] string context)
 		{
 			var started = new DateTime(2026, 1, 1, 10, 0, 0);

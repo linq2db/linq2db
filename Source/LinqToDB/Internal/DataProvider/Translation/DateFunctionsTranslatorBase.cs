@@ -493,7 +493,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var rightTicks = TicksOf(translationContext, binaryExpression.Right, translationFlags, tickType);
 
 			if (leftTicks == null || rightTicks == null)
+			{
+				// The same refusal a member of an unlowerable difference gets, for the same reason: a comparison
+				// has to be made by the database, so there is no client-side answer to fall back to, and saying
+				// which operation is missing beats reporting that some expression could not be converted.
+				if (!translationContext.ProviderFlags.CanLowerIntervalPart
+					&& (IsDateDifference(translationContext, binaryExpression.Left) || IsDateDifference(translationContext, binaryExpression.Right)))
+				{
+					return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_Difference);
+				}
+
 				return null;
+			}
 
 			ISqlPredicate? predicate = binaryExpression.NodeType switch
 			{
@@ -518,6 +529,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// <summary>
 		/// The expression as a subtraction of two date/time values of the same type, or <see langword="null"/>.
 		/// </summary>
+		/// <summary>
+		/// Whether an operand is the difference between two date/time values, in either the shape it was written
+		/// in or the one a projection leaves behind.
+		/// </summary>
+		static bool IsDateDifference(ITranslationContext translationContext, Expression? operand)
+		{
+			if (operand == null)
+				return false;
+
+			return AsDateDifference(operand) != null
+				|| AsDateDifference(translationContext.Translate(operand, TranslationFlags.Expand)) != null;
+		}
+
 		static BinaryExpression? AsDateDifference(Expression? expression)
 		{
 			if (expression is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction)
@@ -644,8 +668,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 
 			var interval = TranslateIntervalOperand(translationContext, memberExpression.Expression, translationFlags);
+
 			if (interval == null)
+			{
+				// Asking a member of a difference is a point where SQL is genuinely wanted, so a provider that
+				// cannot measure one says so by name here rather than leaving the whole expression to fail as
+				// something that could not be converted. Named at the member and not at the difference itself
+				// because that would be too early: the forms that cancel before any provider is asked - start +
+				// (end - start) is end - would be sunk along with it, and they need nothing from the provider.
+				//
+				// An error only propagates where SQL is required, so a projection still falls back to .NET and
+				// answers exactly, which is what these providers do for a difference they can compute on the row.
+				if (!translationContext.ProviderFlags.CanLowerIntervalPart && IsDateDifference(translationContext, memberExpression.Expression))
+					return translationContext.CreateErrorExpression(memberExpression, ErrorHelper.Error_Interval_Difference);
+
 				return null;
+			}
 
 			var resultType = translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);
 			var part       = new SqlIntervalPartExpression(interval, unit, kind, resultType, within);

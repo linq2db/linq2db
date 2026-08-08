@@ -157,19 +157,24 @@ namespace Tests.Linq
 			TestProvName.AllFirebird          + "," +
 			TestProvName.AllSapHana           + "," +
 			TestProvName.AllDB2               + "," +
-			TestProvName.AllInformix          + "," +
-			TestProvName.AllYdb               + "," +
-			TestProvName.AllSqlServer2014Minus;
+			TestProvName.AllYdb;
 
 		/// <summary>
 		/// Providers that refuse a date shifted by a <em>declared</em> duration.
 		/// </summary>
 		/// <remarks>
-		/// The shift list plus Access, which is absent from it only because a difference never becomes a value there
-		/// - a declared column gives it one, so the attempt reaches the SQL builder and is refused there instead.
-		/// What Access cannot do either way is take the amount in ticks, which is the form a shift receives.
+		/// The shift list plus two that reach it only from a declaration. Access and Informix cannot turn a difference
+		/// into a value, so a shift built from one is refused before the SQL builder ever sees it - but a declared
+		/// column hands the amount over directly, and then the refusal is the shift's own.
+		/// <para>
+		/// SQL Server is absent at every version: <c>DATEADD</c> is as old as the product, so a declared duration
+		/// shifts a date there even where the difference between two dates cannot be measured.
+		/// </para>
 		/// </remarks>
-		const string UnsupportedDeclaredShiftProviders = UnsupportedShiftProviders + "," + TestProvName.AllAccess;
+		const string UnsupportedDeclaredShiftProviders =
+			UnsupportedShiftProviders         + "," +
+			TestProvName.AllAccess            + "," +
+			TestProvName.AllInformix;
 
 		/// <summary>
 		/// Providers that refuse the shift one step earlier, while the expression is still being built.
@@ -183,9 +188,19 @@ namespace Tests.Linq
 		const string ShiftRefusedWhileBuildingProviders = TestProvName.AllAccess;
 
 		/// <summary>
-		/// Providers that cannot express an elapsed difference as a value at all, so any comparison or member
-		/// taken from one is refused rather than answered.
+		/// Providers that cannot express an elapsed difference as a value at all, so any member or comparison taken
+		/// from one is refused rather than answered.
 		/// </summary>
+		/// <remarks>
+		/// Refused where the member is asked for rather than where the subtraction is translated, and the difference
+		/// matters: an error raised at the subtraction would also sink the forms that never need it - <c>start +
+		/// (end - start)</c> cancels to <c>end</c> and asks the provider for nothing at all.
+		/// <para>
+		/// It also leaves the client-side answer intact, which is why several tests below expect these providers to
+		/// <em>answer</em> rather than refuse: an error only propagates where SQL is required, so a projection, a set
+		/// operation or a grouping key read back is computed on the row and is exact.
+		/// </para>
+		/// </remarks>
 		const string UnsupportedDifferenceProviders =
 			TestProvName.AllInformix          + "," +
 			TestProvName.AllSqlServer2014Minus;

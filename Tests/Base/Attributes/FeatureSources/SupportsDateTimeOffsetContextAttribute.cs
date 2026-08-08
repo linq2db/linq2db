@@ -26,6 +26,7 @@ namespace Tests
 			TestProvName.AllDB2,
 			TestProvName.AllSybase,
 			TestProvName.AllFirebird,
+			TestProvName.AllInformix,
 		}.SelectMany(_ => _.Split(',')).ToList();
 
 		public SupportsDateTimeOffsetContextAttribute(params string[] excludedProviders)
