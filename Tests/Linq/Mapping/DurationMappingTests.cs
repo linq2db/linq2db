@@ -101,6 +101,33 @@ namespace Tests.Mapping
 			Column(new MappingSchema(), typeof(Attributed), nameof(Attributed.Undeclared)).ValueConverter.ShouldBeNull();
 		}
 
+		[Table]
+		sealed class NotADuration
+		{
+			[Column] public long Elapsed { get; set; }
+		}
+
+		[Test]
+		public void AUnitOnSomethingOtherThanADurationIsRefused()
+		{
+			// The unit says how a TimeSpan is stored, so on anything else it describes nothing - and the rest of the
+			// query trusts it: the SQL is built on it and two columns are called interchangeable by it. Refused where
+			// it is stated rather than left to make a query answer oddly.
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<NotADuration>()
+					.Property(e => e.Elapsed).HasDuration(DurationUnit.Second)
+				.Build();
+
+			Action act = () => Column(ms, typeof(NotADuration), nameof(NotADuration.Elapsed));
+
+			var refusal = act.ShouldThrow<LinqToDBException>();
+
+			refusal.Message.ShouldContain(nameof(NotADuration.Elapsed));
+			refusal.Message.ShouldContain(nameof(Int64));
+		}
+
 		[Test]
 		public void AUnitBesideAnExplicitConverterIsRefused()
 		{

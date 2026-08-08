@@ -158,8 +158,17 @@ namespace LinqToDB.Mapping
 						+ "State the unit and let the conversion follow from it, or keep the converter and drop the unit.");
 				}
 
-				DurationUnit   = duration.Unit;
-				ValueConverter = CreateDurationConverter(MemberType, duration.Unit);
+				// A unit describes how a duration is stored, so it says nothing about a member that is not one. Left
+				// alone such a column would carry a unit no conversion follows from, and the unit is what the rest of
+				// the query trusts - the SQL is built on it and two columns are called interchangeable by it. Refused
+				// here for the same reason the pair above is: a declaration that cannot mean anything is a mistake in
+				// the mapping, and it is cheaper to hear about it now than to find the query answering oddly later.
+				ValueConverter = CreateDurationConverter(MemberType, duration.Unit)
+					?? throw new LinqToDBException(
+						$"Member '{memberAccessor.TypeAccessor.Type.Name}.{MemberInfo.Name}' declares a duration unit ({duration.Unit}) but is a {MemberType.Name}. "
+						+ "A duration unit describes how a TimeSpan is stored, so it can only be declared on a TimeSpan or TimeSpan? member.");
+
+				DurationUnit = duration.Unit;
 			}
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
