@@ -54,6 +54,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var _ = new DisableBaseline("create db");
 
+			if (provider.IsAnyOf(TestProvName.AllPostgreSQL))
+				DropPostgresDatabaseIfExists(connectionString);
+
 			context.Database.EnsureDeleted();
 			context.Database.EnsureCreated();
 
@@ -63,6 +66,30 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			// remove potential CT pollution by OnDatabaseCreated
 			ResetChangeTracker(context);
+		}
+
+		// EnsureDeleted()'s own Exists()-then-DROP path doesn't recover from Postgres's "invalid database"
+		// state (observed here: a prior run's EnsureCreated() left the target database marked invalid - a
+		// connection attempt fails with "55000: cannot connect to invalid database", which Exists() doesn't
+		// treat as "doesn't exist" the way it does the ordinary "3D000: database does not exist", so the
+		// invalid state persists and every subsequent test against that provider fails identically until
+		// someone manually drops it). Postgres's own fix for this is exactly DROP DATABASE - it works on
+		// both an invalid and a normal existing database - so run it explicitly and unconditionally before
+		// EnsureDeleted/EnsureCreated even start, over a connection to the "postgres" maintenance database
+		// (a database can't drop itself while connected to it).
+		static void DropPostgresDatabaseIfExists(string connectionString)
+		{
+			var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+			var dbName  = builder.Database!;
+
+			builder.Database = "postgres";
+
+			using var connection = new Npgsql.NpgsqlConnection(builder.ConnectionString);
+			connection.Open();
+
+			using var command = connection.CreateCommand();
+			command.CommandText = $"DROP DATABASE IF EXISTS \"{dbName.Replace("\"", "\"\"")}\" WITH (FORCE);";
+			command.ExecuteNonQuery();
 		}
 
 		protected static void ResetChangeTracker(TContext context)
