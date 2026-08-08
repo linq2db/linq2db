@@ -198,17 +198,20 @@ jobs:
             Write-Host "Baselines branch hash missing"
             exit 1
         }
-        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        # @(...) keeps a single-line answer an array, so the emptiness test below counts refs rather
+        # than characters - a bare string would make a legitimate multi-ref answer read as "no result".
+        $output = @(git ls-remote --heads $baselinesRepoUrl $baselinesBranch)
         Write-Host "Baselines current HEAD: ${output}"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
             exit 1
         }
-        if ($output.Length -lt 40) {
+        $baselinesHeadLine = $output | Where-Object { $_ -match '^[0-9a-f]{40}\s' } | Select-Object -First 1
+        if (-not $baselinesHeadLine) {
             Write-Host "Baselines HEAD request returned no result"
             exit 1
         }
-        $baslinesCurrentHash = ($output -split '\s+')[0]
+        $baslinesCurrentHash = ($baselinesHeadLine -split '\s+')[0]
         Write-Host "Baselines branch current head hash: ${baslinesCurrentHash}"
         if ($baselinesHash -eq $baslinesCurrentHash) {
             Write-Host "Baselines branch has no new commits"

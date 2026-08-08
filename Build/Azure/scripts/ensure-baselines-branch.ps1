@@ -60,19 +60,23 @@ if (-not $Branch) {
 Write-Host "Baselines branch name: ${Branch}"
 
 function Get-RemoteHash([string]$ref, [switch]$Heads) {
+    # @(...) keeps a single-line answer an array. Without it PowerShell hands back a bare string for
+    # one match and a string[] for several, so a length test means "characters" in the first case and
+    # "lines" in the second — and a legitimate multi-ref answer reads as "not found".
     if ($Heads) {
-        $out = git ls-remote --heads $baselinesRepoUrl $ref
+        $out = @(git ls-remote --heads $baselinesRepoUrl $ref)
     } else {
-        $out = git ls-remote $baselinesRepoUrl $ref
+        $out = @(git ls-remote $baselinesRepoUrl $ref)
     }
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ls-remote for '${ref}' failed with code ${LASTEXITCODE}"
         exit 1
     }
-    if ($out.Length -lt 40) {
+    $line = $out | Where-Object { $_ -match '^[0-9a-f]{40}\s' } | Select-Object -First 1
+    if (-not $line) {
         return ''
     }
-    return ($out -split '\s+')[0]
+    return ($line -split '\s+')[0]
 }
 
 $branchHash  = Get-RemoteHash $Branch -Heads
