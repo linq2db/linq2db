@@ -219,6 +219,14 @@ public class TestsInitialization
 	{
 		foreach (var name in new[] { "Access.Ace.Odbc", "Access.Jet.Odbc" })
 		{
+			// Only what this run actually tests. Both configs point at the same TestData.ODBC.mdb but through
+			// different engines - {Microsoft Access Driver (*.mdb, *.accdb)} is ACE, the {...(*.mdb)} one is
+			// Jet - and a connection string exists for both no matter which are enabled. Opening the one that
+			// is not under test pinned that single file open through two Access engines for the whole run,
+			// which is not a supported combination.
+			if (!TestConfiguration.UserProviders.Contains(name))
+				continue;
+
 			string cs;
 			try { cs = LinqToDB.Data.DataConnection.GetConnectionString(name); }
 			catch { continue; }
