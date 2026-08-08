@@ -4,6 +4,9 @@
 # conflict. Both use log-grep waits that are timing-insensitive, so the containers are started up
 # front and waited on in turn. Split out of the former db2+informix+ydb+sybase job so a single agent
 # no longer runs four DB engines at once.
+#
+# DuckDB shares this job too but needs nothing here: it is embedded (in-process, in-memory), so
+# there is no container to start and no readiness to wait for.
 
 docker run -d --name db2      --privileged -e LICENSE=accept -e DB2INST1_PASSWORD=Password12! -e DBNAME=testdb -p 50000:50000 icr.io/db2_community/db2:latest
 docker run -d --name informix -e INIT_FILE=linq2db.sql -e LICENSE=ACCEPT -p 9089:9089 icr.io/informix/informix-developer-database:latest

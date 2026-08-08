@@ -489,28 +489,35 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
             enabled: false
 
-# DB2 + Informix and YDB + Sybase - fast providers paired two-per-job (distinct ports, no conflict)
-# to save CI agent capacity without running four DB engines on one agent. DB2 keeps its native-driver
-# local scripts (Informix.DB2 uses the DB2 client too).
-        - name: DB2Informix
-          title: DB2 + Informix
-          config_linux: db2informix
-          config_macos: db2informix
-          script_linux_global: db2informix.sh
-          script_macos_global: db2informix.sh
+# DB2 + Informix + DuckDB and YDB + Sybase - fast providers paired per-job (distinct ports, no
+# conflict) to save CI agent capacity without running several DB engines on one agent. DB2 keeps its
+# native-driver local scripts (Informix.DB2 uses the DB2 client too). DuckDB is embedded - no
+# container, no setup script - so it rides along at near-zero agent cost. On Windows the leg runs
+# DuckDB alone (DB2/Informix have no Windows containers) via config_win, and stays full-run-only:
+# DuckDB has no netfx-only tests, so PR runs are already covered by the Linux leg.
+        - name: DB2InformixDuckDB
+          title: DB2 + Informix + DuckDB
+          config_win: duckdb
+          config_linux: db2informixduckdb
+          config_macos: db2informixduckdb
+          script_linux_global: db2informixduckdb.sh
+          script_macos_global: db2informixduckdb.sh
           script_linux_local: db2.provider.sh
           script_macos_local: mac.db2.provider.sh
           install_docker_macos: true
-          enable_os_windows: false
+          ${{ if eq(parameters.full_run, true) }}:
+            enable_os_windows: true
+          ${{ if not(eq(parameters.full_run, true)) }}:
+            enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
             enabled: false
 
         - name: YdbSybase
@@ -576,25 +583,4 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
             enabled: false
 
-# DuckDB
-        - name: DuckDB
-          title: DuckDB
-          config_win: duckdb
-          config_linux: duckdb
-          config_macos: duckdb
-          # DuckDB has no netfx-only tests -> its Windows run is redundant with Linux.
-          # Run the Windows job on full (release) runs only; regular PR runs cover it on Linux.
-          ${{ if eq(parameters.full_run, true) }}:
-            enable_os_windows: true
-          ${{ if not(eq(parameters.full_run, true)) }}:
-            enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
-            enabled: false
+# DuckDB runs as part of the DB2 + Informix + DuckDB job above.
