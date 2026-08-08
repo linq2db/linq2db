@@ -123,12 +123,23 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		/// difference of two timestamps.
 		/// <para>
 		/// Totals go through <c>EPOCH</c>, which is the whole interval in seconds and needs no decomposition -
-		/// PostgreSQL stores microseconds, so the double it returns carries the full stored precision.
+		/// PostgreSQL stores microseconds, so the double it returns carries the full stored precision. Ticks are
+		/// the exception, and take the decomposition instead - see below.
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
 			if (QueryHelper.UnwrapNullablity(element.Interval) is not SqlIntervalDifferenceExpression difference)
+				return base.LowerIntervalPart(element);
+
+			// Ticks is the one total EPOCH cannot answer, and the reason is the divisor rather than the epoch.
+			// Every other unit is a whole number of seconds, but a tick is a ten-millionth of one, and no binary
+			// double holds that: the nearest one prints as 9.9999999999999995E-08, and PostgreSQL reads a literal
+			// carrying an exponent as an exact numeric rather than as the double it came from. So the division is
+			// exactly wrong, by five parts in 10^17 - which reaches a whole tick once the span passes sixty-three
+			// years, and grows from there. Handing it to the base implementation takes it to ElapsedTicks, which
+			// has no such divisor.
+			if (element is { Unit: SqlIntervalUnit.Tick, Kind: SqlIntervalPartKind.Total })
 				return base.LowerIntervalPart(element);
 
 			var elapsed = Elapsed(difference);
