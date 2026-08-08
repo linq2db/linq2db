@@ -231,7 +231,9 @@ public class TestsInitialization
 			try { cs = LinqToDB.Data.DataConnection.GetConnectionString(name); }
 			catch { continue; }
 
-			if (cs == null)
+			// Whitespace, not just null: a provider can be enabled with an empty connection string, and
+			// handing that to Open() only to land in the catch below is noise for a known non-starter.
+			if (string.IsNullOrWhiteSpace(cs))
 				continue;
 
 			var keep = new System.Data.Odbc.OdbcConnection(cs);
@@ -243,8 +245,12 @@ public class TestsInitialization
 			catch (Exception ex)
 			{
 				// No ACE driver on this leg, or no database file: Access simply is not tested here, and a
-				// keep-alive that cannot open must not take down the whole assembly's setup.
-				TestContext.Progress.WriteLine($"[access-keepalive] skipped {name}: {ex.Message}");
+				// keep-alive that cannot open must not take down the whole assembly's setup. The catch is
+				// deliberately broad - see SetupDuckDBInMemory below, where catching only the expected
+				// exception type missed a TypeInitializationException wrapping it and failed every test in
+				// the assembly. Log the whole exception, not just Message, so that if something other than
+				// "not installed here" ever lands in this path it is still diagnosable from the log.
+				TestContext.Progress.WriteLine($"[access-keepalive] skipped {name}: {ex}");
 				keep.Dispose();
 				continue;
 			}
