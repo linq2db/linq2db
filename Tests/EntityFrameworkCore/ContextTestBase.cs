@@ -54,11 +54,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var _ = new DisableBaseline("create db");
 
-			if (provider.IsAnyOf(TestProvName.AllPostgreSQL))
+			try
+			{
+				context.Database.EnsureDeleted();
+				context.Database.EnsureCreated();
+			}
+			catch (Exception ex) when (provider.IsAnyOf(TestProvName.AllPostgreSQL) && IsInvalidDatabaseError(ex))
+			{
+				// Recover exactly as Postgres's own HINT says, then retry once.
 				DropPostgresDatabaseIfExists(connectionString);
-
-			context.Database.EnsureDeleted();
-			context.Database.EnsureCreated();
+				context.Database.EnsureCreated();
+			}
 
 			TestContextTracker.LastContexts[connectionString] = typeof(TContext);
 
@@ -74,9 +80,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// treat as "doesn't exist" the way it does the ordinary "3D000: database does not exist", so the
 		// invalid state persists and every subsequent test against that provider fails identically until
 		// someone manually drops it). Postgres's own fix for this is exactly DROP DATABASE - it works on
-		// both an invalid and a normal existing database - so run it explicitly and unconditionally before
-		// EnsureDeleted/EnsureCreated even start, over a connection to the "postgres" maintenance database
-		// (a database can't drop itself while connected to it).
+		// both an invalid and a normal existing database.
+		//
+		// Scoped to fire only on that exact error, not unconditionally on every InitializeDatabase call:
+		// InitializeDatabase reruns whenever the cached (connectionString, TContext type) pair in
+		// TestContextTracker changes - i.e. potentially many times per suite run, not just once at the
+		// start. An earlier version of this fix ran DROP DATABASE ... WITH (FORCE) unconditionally before
+		// every EnsureDeleted/EnsureCreated call, which killed other still-pooled connections to the same
+		// database on every one of those calls ("57P01: terminating connection due to administrator
+		// command") - a regression worse than the problem it fixed.
+		static bool IsInvalidDatabaseError(Exception ex)
+		{
+			for (var e = ex; e != null; e = e.InnerException)
+				if (e is Npgsql.PostgresException { SqlState: "55000" } pg && pg.MessageText.Contains("invalid database", StringComparison.OrdinalIgnoreCase))
+					return true;
+
+			return false;
+		}
+
 		static void DropPostgresDatabaseIfExists(string connectionString)
 		{
 			var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
