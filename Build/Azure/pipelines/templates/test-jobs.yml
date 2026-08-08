@@ -50,7 +50,12 @@ jobs:
 
   displayName: 'Win'
   dependsOn: create_baselines_branch
-  timeoutInMinutes: 180 # default: 60, max: 360
+  # Release (full_run) legs run every TFM's main suite, not just net10, and jobs now bundle several
+  # providers - so they need materially more headroom than a PR run. default: 60, max: 360.
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 180
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
@@ -89,7 +94,10 @@ jobs:
 - job: test_ubuntu_job
   pool:
     vmImage: 'ubuntu-24.04'
-  timeoutInMinutes: 180 # default: 60, max: 360
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 180
   displayName: 'Lin'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -124,7 +132,10 @@ jobs:
   pool:
     vmImage: 'macOS-15'
   displayName: 'Mac'
-  timeoutInMinutes: 240 # default: 60, max: 360
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 240
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
