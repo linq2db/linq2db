@@ -39,9 +39,9 @@ namespace Tests.Linq
 
 			public static readonly OptionalDurationRow[] Data =
 			[
-				new() { Id = 1, Grace =TimeSpan.FromMinutes(15), Required = TimeSpan.FromMinutes(15) },
-				new() { Id = 2, Grace =null,                     Required = TimeSpan.FromMinutes(30) },
-				new() { Id = 3, Grace =TimeSpan.FromMinutes(45), Required = TimeSpan.FromMinutes(45) },
+				new() { Id = 1, Grace = TimeSpan.FromMinutes(15), Required = TimeSpan.FromMinutes(15) },
+				new() { Id = 2, Grace = null,                     Required = TimeSpan.FromMinutes(30) },
+				new() { Id = 3, Grace = TimeSpan.FromMinutes(45), Required = TimeSpan.FromMinutes(45) },
 			];
 		}
 
@@ -133,7 +133,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NegationIsTranslatedWhenConsumed([DataSources] string context)
+		public void TotalMatchesClr([DataSources] string context)
 		{
 			var value = TimeSpan.FromMinutes(90);
 
@@ -144,25 +144,21 @@ namespace Tests.Linq
 			var row = t
 				.Select(r => new
 				{
-					(-r.InSeconds).TotalHours,
-					(-r.InSeconds).Hours,
+					SecondsHours   = r.InSeconds.TotalHours,
+					SecondsMinutes = r.InSeconds.TotalMinutes,
+					TicksHours     = r.InTicks.TotalHours,
 				})
 				.Single();
 
-			row.TotalHours.ShouldBe((-value).TotalHours);
-			row.Hours.ShouldBe((-value).Hours);
+			row.SecondsHours.ShouldBe(value.TotalHours);
+			row.SecondsMinutes.ShouldBe(value.TotalMinutes);
+			row.TicksHours.ShouldBe(value.TotalHours);
 		}
 
 		[Test]
-		public void ComputedIntervalProjectsAndMaterializes([DataSources] string context)
+		public void ComponentMatchesClr([DataSources] string context)
 		{
-			// Nothing carries a converter on the expression. QueryHelper.GetColumnDescriptor looks through the
-			// interval node back to the operand's column, and ToReadExpression uses that column's converter -
-			// the same path an ordinary column projection takes.
-			//
-			// This only works because the interval node carries the model type: were it typed by its storage,
-			// the descriptor lookup would drop it and the amount would come back read as raw ticks.
-			var value = TimeSpan.FromMinutes(90);
+			var value = new TimeSpan(2, 3, 4, 5);
 
 			using var db = GetDataContext(context, BuildSchema());
 			using var t  = db.CreateLocalTable<DurationRow>();
@@ -171,13 +167,45 @@ namespace Tests.Linq
 			var row = t
 				.Select(r => new
 				{
-					Seconds = -r.InSeconds,
-					Ticks   = -r.InTicks,
+					r.InSeconds.Days,
+					r.InSeconds.Hours,
+					r.InSeconds.Minutes,
+					r.InSeconds.Seconds,
 				})
 				.Single();
 
-			row.Seconds.ShouldBe(-value);
-			row.Ticks.ShouldBe(-value);
+			row.Days.ShouldBe(value.Days);
+			row.Hours.ShouldBe(value.Hours);
+			row.Minutes.ShouldBe(value.Minutes);
+			row.Seconds.ShouldBe(value.Seconds);
+		}
+
+		[Test]
+		public void NegativeComponentsTruncateTowardZero([DataSources] string context)
+		{
+			// The case provider division and modulo disagree on. CLR truncates toward zero, so -25h is
+			// Days == -1 and Hours == -1, not -2 / +23 as a flooring provider would give.
+			var value = TimeSpan.FromHours(-25);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			value.Days.ShouldBe(-1);
+			value.Hours.ShouldBe(-1);
+
+			var row = t
+				.Select(r => new
+				{
+					r.InSeconds.Days,
+					r.InSeconds.Hours,
+					r.InSeconds.TotalHours,
+				})
+				.Single();
+
+			row.Days.ShouldBe(value.Days);
+			row.Hours.ShouldBe(value.Hours);
+			row.TotalHours.ShouldBe(value.TotalHours);
 		}
 	}
 }
