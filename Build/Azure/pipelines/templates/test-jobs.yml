@@ -48,7 +48,7 @@ jobs:
   pool:
     vmImage: 'windows-2025'
 
-  displayName: 'Tests: Windows'
+  displayName: 'Win'
   dependsOn: create_baselines_branch
   timeoutInMinutes: 180 # default: 60, max: 360
   condition: ${{ parameters.enabled }}
@@ -90,7 +90,7 @@ jobs:
   pool:
     vmImage: 'ubuntu-24.04'
   timeoutInMinutes: 180 # default: 60, max: 360
-  displayName: 'Tests: Linux'
+  displayName: 'Lin'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
   variables:
@@ -123,7 +123,7 @@ jobs:
 - job: test_macos_job
   pool:
     vmImage: 'macOS-15'
-  displayName: 'Tests: MacOS'
+  displayName: 'Mac'
   timeoutInMinutes: 240 # default: 60, max: 360
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
