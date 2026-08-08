@@ -171,6 +171,9 @@ public class TestsInitialization
 		// Set up in-memory databases (SQLite/DuckDB) for any provider configured with an in-memory
 		// connection string (CI), before a_CreateData seeds them. No-op for the normal file-based setup.
 		SetupInMemoryDatabases();
+
+		// Hold one Access connection open for the run - see the method for why. No-op where Access isn't tested.
+		SetupAccessKeepAlive();
 	}
 
 	private void RegisterSqlCEFactory()
@@ -196,6 +199,67 @@ public class TestsInitialization
 	// the run (the DB is destroyed once its last connection closes) — registered in TestInMemoryDatabases.
 	// Auto-activates per config only when its connection string is in-memory; a complete no-op for the
 	// normal file-based (dev) setup.
+	// Access over ODBC pays for every connection twice over, and both charges fall on opening the first one.
+	// The ACE driver has no pooling - it is the one driver with no CPTimeout under its ODBCINST.INI key, so
+	// the driver manager closes each connection for real - and ACEODBC.DLL leaks three OS handles per connect
+	// that it never releases: the Office 16.0 "common" registry key, the same key again through the
+	// Click-to-Run virtualization layer, and an ETW registration. Neither is ours to fix; both were measured
+	// against a raw OdbcConnection with no linq2db on the path, and against the same driver with no database
+	// at all, while a different ODBC driver over the identical stack showed neither.
+	//
+	// What that costs is the 0->1 transition. While any connection to the file is open the driver keeps its
+	// state, and every further connect is cheap and leaks nothing - so one connection held for the run pays
+	// the price once instead of once per test. Measured over the full Access suite: it did not finish at all
+	// before (a run stopped at 36 minutes had reached 2096 of 7861 tests, holding 13891 handles and slowing
+	// from 112 to 2-6 tests a minute), and completes in 13 minutes with this, handle count flat.
+	//
+	// Registered with the same keep-alive list the in-memory databases use: not an in-memory database, but the
+	// same lifetime - opened before the first test, disposed at assembly teardown.
+	static void SetupAccessKeepAlive()
+	{
+		foreach (var name in new[] { "Access.Ace.Odbc", "Access.Jet.Odbc" })
+		{
+			// Only what this run actually tests. Both configs point at the same TestData.ODBC.mdb but through
+			// different engines - {Microsoft Access Driver (*.mdb, *.accdb)} is ACE, the {...(*.mdb)} one is
+			// Jet - and a connection string exists for both no matter which are enabled. Opening the one that
+			// is not under test pinned that single file open through two Access engines for the whole run,
+			// which is not a supported combination.
+			if (!TestConfiguration.UserProviders.Contains(name))
+				continue;
+
+			string cs;
+			try { cs = LinqToDB.Data.DataConnection.GetConnectionString(name); }
+			catch { continue; }
+
+			// Whitespace, not just null: a provider can be enabled with an empty connection string, and
+			// handing that to Open() only to land in the catch below is noise for a known non-starter.
+			if (string.IsNullOrWhiteSpace(cs))
+				continue;
+
+			var keep = new System.Data.Odbc.OdbcConnection(cs);
+
+			try
+			{
+				keep.Open();
+			}
+			catch (Exception ex)
+			{
+				// No ACE driver on this leg, or no database file: Access simply is not tested here, and a
+				// keep-alive that cannot open must not take down the whole assembly's setup. The catch is
+				// deliberately broad - see SetupDuckDBInMemory below, where catching only the expected
+				// exception type missed a TypeInitializationException wrapping it and failed every test in
+				// the assembly. Log the whole exception, not just Message, so that if something other than
+				// "not installed here" ever lands in this path it is still diagnosable from the log.
+				TestContext.Progress.WriteLine($"[access-keepalive] skipped {name}: {ex}");
+				keep.Dispose();
+				continue;
+			}
+
+			TestInMemoryDatabases.AddKeepAlive(keep);
+			TestContext.Progress.WriteLine($"[access-keepalive] holding a connection open for {name}");
+		}
+	}
+
 	static void SetupInMemoryDatabases()
 	{
 		SetupSqliteInMemory();
