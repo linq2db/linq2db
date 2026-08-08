@@ -20,6 +20,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		public override bool CanLowerIntervalDifference => true;
 
 		/// <summary>
+		/// <c>julianday</c> returns a double, and a Julian day number today is around 2460000 - so one unit in the
+		/// last place is about 47 microseconds. The millisecond is the finest quantum that survives that, whatever
+		/// the column holds.
+		/// </summary>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Millisecond;
+
+		/// <summary>
 		/// Elapsed ticks from the Julian day difference, resolved to the millisecond.
 		/// </summary>
 		/// <remarks>
@@ -33,13 +40,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		/// and the error is far below half of one, so the nearest is the exact one.
 		/// </para>
 		/// </remarks>
-		/// <summary>
-		/// <c>julianday</c> returns a double, and a Julian day number today is around 2460000 - so one unit in the
-		/// last place is about 47 microseconds. The millisecond is the finest quantum that survives that, whatever
-		/// the column holds.
-		/// </summary>
-		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Millisecond;
-
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
 			var doubleType = Factory.GetDbDataType(typeof(double));

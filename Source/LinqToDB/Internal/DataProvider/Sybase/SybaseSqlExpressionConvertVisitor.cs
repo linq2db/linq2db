@@ -51,8 +51,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		/// </summary>
 		/// <remarks>
 		/// The count is a 32-bit value, so asking it for milliseconds across more than about twenty-four days
-		/// overflows. Nothing does: the whole part is counted in seconds and the millisecond count only ever spans
-		/// the remainder of one.
+		/// overflows. Nothing does: the whole part is counted in days and the millisecond count only ever spans the
+		/// remainder of one, which is 86,400,000 at most.
 		/// </remarks>
 		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
 		{

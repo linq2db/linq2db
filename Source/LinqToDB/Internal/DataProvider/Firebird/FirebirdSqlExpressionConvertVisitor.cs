@@ -27,9 +27,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		/// That tenth of a millisecond is exactly what a Firebird timestamp stores - its resolution is a hundred
 		/// microseconds - so scaling the count to ticks loses nothing, and the scaled value is always whole.
 		/// <para>
-		/// The fractional form arrived in Firebird 4. Earlier versions never reach this, because their member
-		/// translator does not produce a difference node at all - which is also why the version is not tested here:
-		/// this visitor is shared from Firebird 3 up.
+		/// Every version comes through here, including 2.5 - this class is what <c>FirebirdSqlOptimizer</c> builds,
+		/// and the later ones derive from it - so the count is taken at whatever fidelity the version offers rather
+		/// than being asked for by version. Firebird 4 answers the tenth of a millisecond, earlier ones a whole one,
+		/// and both are exact at the resolution their own timestamps keep.
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)

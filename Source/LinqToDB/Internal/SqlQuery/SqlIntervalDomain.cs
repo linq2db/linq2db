@@ -19,6 +19,11 @@
 		/// A calendar-relative interval, whose elapsed length depends on the point in time it is applied to.
 		/// Corresponds to SQL <c>INTERVAL YEAR TO MONTH</c> and to the month component of a PostgreSQL interval.
 		/// </summary>
+		/// <remarks>
+		/// Reserved: nothing constructs one yet. It is named here because the distinction it draws is what makes the
+		/// duration family safe to reason about - an optimization that may reorder or fold a fixed duration must not
+		/// do the same to a calendar one - so the two are kept apart from the start rather than after the fact.
+		/// </remarks>
 		Calendar,
 	}
 }

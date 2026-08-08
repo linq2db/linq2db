@@ -87,13 +87,6 @@ namespace LinqToDB.Internal.SqlQuery
 			return Value.CanBeNullable(nullability);
 		}
 
-		public SqlIntervalExpression WithValue(ISqlExpression value)
-		{
-			if (ReferenceEquals(value, Value))
-				return this;
-			return new SqlIntervalExpression(value, Type, IntervalType);
-		}
-
 		public void Modify(ISqlExpression value, DbDataType type, SqlIntervalType intervalType)
 		{
 			Value        = value;

@@ -111,13 +111,6 @@ namespace LinqToDB.Internal.SqlQuery
 			return Interval.CanBeNullable(nullability);
 		}
 
-		public SqlIntervalPartExpression WithInterval(ISqlExpression interval)
-		{
-			if (ReferenceEquals(interval, Interval))
-				return this;
-			return new SqlIntervalPartExpression(interval, Unit, Kind, Type, Within);
-		}
-
 		public void Modify(ISqlExpression interval, SqlIntervalUnit unit, SqlIntervalPartKind kind, DbDataType type, SqlIntervalUnit? within)
 		{
 			Interval = interval;

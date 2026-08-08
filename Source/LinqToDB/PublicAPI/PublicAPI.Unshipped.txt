@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 LinqToDB.Mapping.DurationUnit
 LinqToDB.Mapping.DurationUnit.Nanosecond = 0 -> LinqToDB.Mapping.DurationUnit
 LinqToDB.Mapping.DurationUnit.Tick = 1 -> LinqToDB.Mapping.DurationUnit
@@ -68,13 +68,11 @@ LinqToDB.Internal.SqlQuery.SqlIntervalExpression.SqlIntervalExpression(LinqToDB.
 LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Type.get -> LinqToDB.DbDataType
 LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Unit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Value.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
-LinqToDB.Internal.SqlQuery.SqlIntervalExpression.WithValue(LinqToDB.Internal.SqlQuery.ISqlExpression! value) -> LinqToDB.Internal.SqlQuery.SqlIntervalExpression!
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Interval.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Kind.get -> LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Type.get -> LinqToDB.DbDataType
 LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Unit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
-LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.WithInterval(LinqToDB.Internal.SqlQuery.ISqlExpression! interval) -> LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression!
 LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
 LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Component = 0 -> LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
 LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Total = 1 -> LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
