@@ -60,20 +60,26 @@ namespace Tests.Linq
 		/// Why a duration carried by a per-value query arrives as the first value every time.
 		/// </summary>
 		/// <remarks>
-		/// The unit itself is reconciled correctly - the column is raised to ticks and the candidate is written in
-		/// ticks - but the converted candidate ends up in the statement as a literal rather than as a parameter.
-		/// Every value after the first then reuses the first one's statement, so the query asks the same question
-		/// repeatedly and answers it consistently and wrongly. An integer column in the same shape keeps its value
-		/// a parameter and answers correctly.
+		/// A duration never becomes a parameter. Compared against a column, it is written into the statement as the
+		/// number its declaration says it is - and an integer or a date in exactly the same position does become
+		/// one, so this is the duration's own behaviour rather than how a captured local is treated in general.
+		/// <see cref="ConstantDurationsReachTheStatementAndStillAnswer"/> shows it plainly: asking for a constant
+		/// changes nothing, because the value was already one.
+		/// <para>
+		/// Harmless while a query is built once. The shape this gate names is not: the collection is walked on the
+		/// client and a query runs per value, so every value after the first finds the first one's statement already
+		/// built and asks its question again. The unit is reconciled correctly throughout - it is the value that
+		/// fails to travel.
+		/// </para>
 		/// <para>
 		/// Silent by nature: the rows come back, they are simply the wrong ones, and the number of them is right.
 		/// </para>
 		/// </remarks>
 		const string ConvertedValueIsInlinedPerQuery =
-			"A converted duration reaches the statement as a literal rather than a parameter, so a shape that runs "
-			+ "one query per local value reuses the first value's statement for all of them - the same rows come back "
-			+ "for every value. The unit is reconciled correctly; it is the value that fails to travel. The same shape "
-			+ "over a plain integer column answers correctly.";
+			"A duration is written into the statement rather than passed as a parameter - always, not only when asked "
+			+ "for - while an integer or a date in the same position becomes a parameter. A shape that runs one query "
+			+ "per local value therefore reuses the first value's statement for all of them, and the same rows come "
+			+ "back for every value. The unit is reconciled correctly; it is the value that fails to travel.";
 
 		/// <summary>
 		/// Why a branch holding a difference cannot meet one holding a declared duration on some providers.
@@ -884,6 +890,54 @@ namespace Tests.Linq
 			matching.ShouldBe([1, 3]);
 			present.ShouldBeTrue();
 			absent.ShouldBeFalse();
+		}
+
+		/// <summary>
+		/// Asking for a duration to be written into the statement answers the same as letting it travel on its own.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="TimeSpan"/> has no literal form of its own in SQL - what reaches the statement is the number
+		/// its declaration says it is. So <c>Sql.Constant</c> over one cannot be refused for want of a literal, and
+		/// it cannot mean something different from the ordinary form either: both are the same number, and the only
+		/// question is whether asking explicitly still produces a query that runs and answers correctly.
+		/// <para>
+		/// Both units are asked, because the number differs between them while the duration does not, and the rows
+		/// are checked rather than the text: which side of the comparison carries the reconciliation - the column
+		/// lifted to ticks, or the value lowered to seconds - is the provider's business, and pinning it here would
+		/// be pinning the wrong thing.
+		/// </para>
+		/// <para>
+		/// The absence of parameters is worth stating, though, and not as an endorsement: a duration is written into
+		/// the statement even when nobody asks, which an integer or a date in the same position is not. That is what
+		/// <see cref="ConvertedValueIsInlinedPerQuery"/> is about, and this test is where the behaviour is visible
+		/// without being wrong.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ConstantDurationsReachTheStatementAndStillAnswer([DataSources(false)] string context)
+		{
+			var bound = TimeSpan.FromMinutes(30);
+
+			using var db = GetDataConnection(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), bound, TimeSpan.FromMinutes(45));
+
+			var constantSeconds = t.Where(r => r.InSeconds > Sql.Constant(bound)).Select(r => r.Id);
+			var constantTicks   = t.Where(r => r.InTicks   > Sql.Constant(bound)).Select(r => r.Id);
+			var ordinary        = t.Where(r => r.InSeconds > bound).Select(r => r.Id);
+
+			var secondsQuery = constantSeconds.ToSqlQuery();
+			var ticksQuery   = constantTicks.ToSqlQuery();
+			var ordinaryQuery = ordinary.ToSqlQuery();
+
+			constantSeconds.OrderBy(id => id).ToArray().ShouldBe([3]);
+			constantTicks.OrderBy(id => id).ToArray().ShouldBe([3]);
+			ordinary.OrderBy(id => id).ToArray().ShouldBe([3]);
+
+			secondsQuery.Parameters.ShouldBeEmpty();
+			ticksQuery.Parameters.ShouldBeEmpty();
+			ordinaryQuery.Parameters.ShouldBeEmpty();
 		}
 
 		/// <summary>
