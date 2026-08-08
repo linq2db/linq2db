@@ -78,7 +78,12 @@ jobs:
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
-            x86: ${{ test_config.x86 }}
+            # Resolved here rather than branched on in the workflow, so each test/setup step exists
+            # once with an $(arch) path instead of twice with one half always skipped.
+            ${{ if eq(test_config.x86, true) }}:
+              arch: x86
+            ${{ if not(eq(test_config.x86, true)) }}:
+              arch: x64
             retry: ${{ test_config.retry }}
             win_efcore_only: ${{ test_config.win_efcore_only }}
 

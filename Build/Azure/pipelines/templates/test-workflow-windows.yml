@@ -1,56 +1,46 @@
 parameters:
   with_baselines: false
+  full_run: false
+  # Per-TFM knobs driving the loops below. One entry generates the whole
+  # extract -> configure -> setup -> test -> cleanup block for that TFM, so adding or retiring a TFM
+  # is a one-line change rather than a copied 70-line section.
+  #   flag    : matrix variable holding the per-leg enable switch; also names the binaries artifact
+  #             ($(artifact_test_<flag>_binaries)) and the config subdirectory (configs\<flag>)
+  #   label   : human-readable name used in step display names
+  #   dir     : directory the test binaries are extracted into
+  #   trx     : filename prefix for the .trx result files
+  #   sdk     : UseDotNet@2 version to install; empty for netfx, which ships with the image
+  #   pr_main : whether the main (non-EF) suite runs on PR runs too, or only on release (full_run)
+  #             runs. Legs where this is false emit no main-test step at all outside a release run.
+  tfms:
+  - { flag: netfx,  label: 'NETFX',   dir: '$(netfx_tfm)', trx: 'netfx',   sdk: '',     pr_main: true  }
+  - { flag: net80,  label: '.NET 8',  dir: 'net8.0',       trx: 'net8.0',  sdk: '8.x',  pr_main: false }
+  - { flag: net90,  label: '.NET 9',  dir: 'net9.0',       trx: 'net9.0',  sdk: '9.x',  pr_main: false }
+  - { flag: net100, label: '.NET 10', dir: 'net10.0',      trx: 'net10.0', sdk: '10.x', pr_main: true  }
 
 steps:
 - checkout: none
 
-# .NET 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
-# so we need to install only x86 versions
+# .NET 8, 9 and 10 SDKs already ship with the image https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+# so only the x86 ones need installing, and only on an x86 leg.
+- ${{ each tfm in parameters.tfms }}:
+  - ${{ if ne(tfm.sdk, '') }}:
+    - task: UseDotNet@2
+      displayName: 'Install ${{ tfm.label }} (x86)'
+      inputs:
+        packageType: sdk
+        version: ${{ tfm.sdk }}
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), eq(variables.arch, 'x86'), succeeded())
+      env:
+        PROCESSOR_ARCHITECTURE: x86
 
-- task: UseDotNet@2
-  displayName: 'Install .NET 8 (x86)'
-  inputs:
-    packageType: sdk
-    version: 8.x
-  condition: and(variables.title, eq(variables.net80, 'true'), eq(variables.x86, 'true'), succeeded())
-  env:
-    PROCESSOR_ARCHITECTURE: x86
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 9 (x86)'
-  inputs:
-    packageType: sdk
-    version: 9.x
-  condition: and(variables.title, eq(variables.net90, 'true'), eq(variables.x86, 'true'), succeeded())
-  env:
-    PROCESSOR_ARCHITECTURE: x86
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 10 (x86)'
-  inputs:
-    packageType: sdk
-    version: 10.x
-  condition: and(variables.title, eq(variables.net100, 'true'), eq(variables.x86, 'true'), succeeded())
-  env:
-    PROCESSOR_ARCHITECTURE: x86
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 8 (x64)'
-  inputs:
-    packageType: sdk
-    version: 8.x
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 9 (x64)'
-  inputs:
-    packageType: sdk
-    version: 9.x
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 10 (x64)'
-  inputs:
-    packageType: sdk
-    version: 10.x
+- ${{ each tfm in parameters.tfms }}:
+  - ${{ if ne(tfm.sdk, '') }}:
+    - task: UseDotNet@2
+      displayName: 'Install ${{ tfm.label }} (x64)'
+      inputs:
+        packageType: sdk
+        version: ${{ tfm.sdk }}
 
 # Diagnostic: list the heaviest resident processes so we can spot agent background services worth
 # killing to free RAM for the test process (some jobs run near the memory ceiling).
@@ -129,360 +119,71 @@ steps:
   condition: and(variables.title, eq(variables.psscript_global, 'sqlce.ps1'), eq(variables.use_ramdisk, 'true'), succeeded())
   displayName: 'Mount RAM disk (opt-in)'
 
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(artifact_test_netfx_binaries)
-    targetPath: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)'
-  condition: and(variables.title, eq(variables.netfx, 'true'), succeeded())
-  displayName: Extract NETFX test binaries
+# One block per TFM, run in list order. $(arch) is resolved per matrix leg in test-jobs.yml, so the
+# x86 and x64 variants of every step below collapse into a single step.
+- ${{ each tfm in parameters.tfms }}:
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: $(artifact_test_${{ tfm.flag }}_binaries)
+      targetPath: '$(System.DefaultWorkingDirectory)/${{ tfm.dir }}'
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
+    displayName: 'Extract ${{ tfm.label }} test binaries'
 
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\$(netfx_tfm)\UserDataProviders.json'
-  displayName: Copy .NET FW test config
-  condition: and(variables.title, eq(variables.netfx, 'true'), succeeded())
+  - task: CmdLine@2
+    inputs:
+      script: 'copy $(System.DefaultWorkingDirectory)\configs\${{ tfm.flag }}\$(config).json $(System.DefaultWorkingDirectory)\${{ tfm.dir }}\UserDataProviders.json'
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
+    displayName: 'Copy ${{ tfm.label }} test config'
 
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x86'
-  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.script_local, succeeded())
-  displayName: Execute NETFX x86 Setup Script
+  - task: CmdLine@2
+    inputs:
+      script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/${{ tfm.dir }}/main/$(arch)'
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), variables.script_local, succeeded())
+    displayName: 'Execute ${{ tfm.label }} Setup Script'
 
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x86'
-  condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NETFX x86 PowerShell Setup Script
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/${{ tfm.dir }}/main/$(arch)'
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), variables.psscript_local, succeeded())
+    displayName: 'Execute ${{ tfm.label }} PowerShell Setup Script'
 
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.pre_test_win_local, succeeded())
-  displayName: Execute Pre-test Script
+  - task: CmdLine@2
+    inputs:
+      script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+    condition: and(variables.title, variables.pre_test_win_local, succeeded())
+    displayName: Execute Pre-test Script
 
-- script: $(netfx_tfm)\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x86\.runsettings --report-trx --report-trx-filename netfx-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (NETFX): $(title)'
-  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
+  # Main suite. Retry legs (Access, Oracle) get MTP's in-process failed-test retry plus a whole-step
+  # retry for the crash case, which is what forces the pair of otherwise identical steps.
+  - ${{ if or(eq(tfm.pr_main, true), eq(parameters.full_run, true)) }}:
+    - script: ${{ tfm.dir }}\main\$(arch)\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings ${{ tfm.dir }}\main\$(arch)\.runsettings --report-trx --report-trx-filename ${{ tfm.trx }}-main-$(arch).trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+      displayName: 'Tests (${{ tfm.label }}): $(title)'
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), ne(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
 
-- script: $(netfx_tfm)\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x86\.runsettings --report-trx --report-trx-filename netfx-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (NETFX): $(title)'
-  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
+    - script: ${{ tfm.dir }}\main\$(arch)\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings ${{ tfm.dir }}\main\$(arch)\.runsettings --report-trx --report-trx-filename ${{ tfm.trx }}-main-$(arch).trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
+      displayName: 'Tests (${{ tfm.label }}): $(title)'
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), eq(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
+      retryCountOnTaskFailure: 2
 
-- script: $(netfx_tfm)\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\efcore\x86\.runsettings --report-trx --report-trx-filename netfx-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (NETFX): $(title)'
-  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  - script: ${{ tfm.dir }}\efcore\$(arch)\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings ${{ tfm.dir }}\efcore\$(arch)\.runsettings --report-trx --report-trx-filename ${{ tfm.trx }}-efcore-$(arch).trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+    displayName: 'EF.Core Tests (${{ tfm.label }}): $(title)'
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
 
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.post_test_win_local, succeeded())
-  displayName: Execute Post-test Script
+  - task: CmdLine@2
+    inputs:
+      script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
+      workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+    condition: and(variables.title, variables.post_test_win_local, succeeded())
+    displayName: Execute Post-test Script
 
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.script_local, succeeded())
-  displayName: Execute NETFX x64 Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NETFX x64 PowerShell Setup Script
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.pre_test_win_local, succeeded())
-  displayName: Execute Pre-test Script
-
-- script: $(netfx_tfm)\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x64\.runsettings --report-trx --report-trx-filename netfx-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (NETFX x64): $(title)'
-  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-
-- script: $(netfx_tfm)\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x64\.runsettings --report-trx --report-trx-filename netfx-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (NETFX x64): $(title)'
-  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
-
-- script: $(netfx_tfm)\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\efcore\x64\.runsettings --report-trx --report-trx-filename netfx-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (NETFX x64): $(title)'
-  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.post_test_win_local, succeeded())
-  displayName: Execute Post-test Script
-
-- task: CmdLine@2
-  inputs:
-    script: 'if exist $(System.DefaultWorkingDirectory)\$(netfx_tfm) rmdir $(System.DefaultWorkingDirectory)\$(netfx_tfm) /S /Q'
-  displayName: Remove NETFX test binaries
-  condition: and(variables.title, eq(variables.netfx, 'true'))
-
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(artifact_test_net80_binaries)
-    targetPath: '$(System.DefaultWorkingDirectory)/net8.0'
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-  displayName: Extract NET 8 test binaries
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net8.0\UserDataProviders.json'
-  displayName: Copy .NET 8 test config
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
-  displayName: Execute NET 8 (x64) Setup Script
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
-  displayName: Execute NET 8 (x86) Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 8 (x64) PowerShell Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 8 (x86) PowerShell Setup Script
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.pre_test_win_local, succeeded())
-  displayName: Execute Pre-test Script
-
-- script: net8.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x64\.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (.NET 8 x64): $(title)'
-  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-
-- script: net8.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x64\.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (.NET 8 x64): $(title)'
-  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
-
-- script: net8.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x86\.runsettings --report-trx --report-trx-filename net8.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (.NET 8 x86): $(title)'
-  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-
-- script: net8.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x86\.runsettings --report-trx --report-trx-filename net8.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (.NET 8 x86): $(title)'
-  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
-
-- script: net8.0\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\efcore\x64\.runsettings --report-trx --report-trx-filename net8.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (.NET 8 x64): $(title)'
-  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-
-- script: net8.0\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\efcore\x86\.runsettings --report-trx --report-trx-filename net8.0-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (.NET 8 x86): $(title)'
-  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.post_test_win_local, succeeded())
-  displayName: Execute Post-test Script
-
-- task: CmdLine@2
-  inputs:
-    script: 'if exist $(System.DefaultWorkingDirectory)\net8.0 rmdir $(System.DefaultWorkingDirectory)\net8.0 /S /Q'
-  displayName: Remove NET 8 test binaries
-  condition: and(variables.title, eq(variables.net80, 'true'))
-
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(artifact_test_net90_binaries)
-    targetPath: '$(System.DefaultWorkingDirectory)/net9.0'
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
-  displayName: Extract NET 9 test binaries
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net90\$(config).json $(System.DefaultWorkingDirectory)\net9.0\UserDataProviders.json'
-  displayName: Copy .NET 9 test config
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
-  displayName: Execute NET 9 (x64) Setup Script
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
-  displayName: Execute NET 9 (x86) Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 9 (x64) PowerShell Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 9 (x86) PowerShell Setup Script
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.pre_test_win_local, succeeded())
-  displayName: Execute Pre-test Script
-
-- script: net9.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x64\.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (.NET 9 x64): $(title)'
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-
-- script: net9.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x64\.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (.NET 9 x64): $(title)'
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
-
-- script: net9.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x86\.runsettings --report-trx --report-trx-filename net9.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (.NET 9 x86): $(title)'
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-
-- script: net9.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x86\.runsettings --report-trx --report-trx-filename net9.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (.NET 9 x86): $(title)'
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }}, or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
-
-- script: net9.0\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\efcore\x64\.runsettings --report-trx --report-trx-filename net9.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (.NET 9 x64): $(title)'
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-
-- script: net9.0\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\efcore\x86\.runsettings --report-trx --report-trx-filename net9.0-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (.NET 9 x86): $(title)'
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.post_test_win_local, succeeded())
-  displayName: Execute Post-test Script
-
-- task: CmdLine@2
-  inputs:
-    script: 'if exist $(System.DefaultWorkingDirectory)\net9.0 rmdir $(System.DefaultWorkingDirectory)\net9.0 /S /Q'
-  displayName: Remove NET 9 test binaries
-  condition: and(variables.title, eq(variables.net90, 'true'))
-
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(artifact_test_net100_binaries)
-    targetPath: '$(System.DefaultWorkingDirectory)/net10.0'
-  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
-  displayName: Extract NET 10 test binaries
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net100\$(config).json $(System.DefaultWorkingDirectory)\net10.0\UserDataProviders.json'
-  displayName: Copy .NET 10 test config
-  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net10.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net100, 'true'), variables.script_local, succeeded())
-  displayName: Execute NET 10 (x86) Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net10.0/main/x64'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net100, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 10 (x64) PowerShell Setup Script
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net10.0/main/x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net100, 'true'), variables.psscript_local, succeeded())
-  displayName: Execute NET 10 (x86) PowerShell Setup Script
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.pre_test_win_local, succeeded())
-  displayName: Execute Pre-test Script
-
-- script: net10.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x64\.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (.NET 10 x64): $(title)'
-  condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-
-- script: net10.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x64\.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (.NET 10 x64): $(title)'
-  condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
-
-- script: net10.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x86\.runsettings --report-trx --report-trx-filename net10.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'Tests (.NET 10 x86): $(title)'
-  condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-
-- script: net10.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x86\.runsettings --report-trx --report-trx-filename net10.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
-  displayName: 'Tests (.NET 10 x86): $(title)'
-  condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
-  retryCountOnTaskFailure: 2
-
-- script: net10.0\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\efcore\x64\.runsettings --report-trx --report-trx-filename net10.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (.NET 10 x64): $(title)'
-  condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-
-- script: net10.0\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\efcore\x86\.runsettings --report-trx --report-trx-filename net10.0-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
-  displayName: 'EF.Core Tests (.NET 10 x86): $(title)'
-  condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.post_test_win_local, succeeded())
-  displayName: Execute Post-test Script
-
-- task: CmdLine@2
-  inputs:
-    script: 'if exist $(System.DefaultWorkingDirectory)\net10.0 rmdir $(System.DefaultWorkingDirectory)\net10.0 /S /Q'
-  displayName: Remove NET 10 test binaries
-  condition: and(variables.title, eq(variables.net100, 'true'))
+  - task: CmdLine@2
+    inputs:
+      script: 'if exist $(System.DefaultWorkingDirectory)\${{ tfm.dir }} rmdir $(System.DefaultWorkingDirectory)\${{ tfm.dir }} /S /Q'
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'))
+    displayName: 'Remove ${{ tfm.label }} test binaries'
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
