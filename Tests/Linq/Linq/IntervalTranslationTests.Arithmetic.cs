@@ -98,6 +98,45 @@ namespace Tests.Linq
 			rows.Select(r => r.BackToStart).ShouldBe([null, null, started]);
 		}
 
+		[Table]
+		sealed class PlainDateRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			// Deliberately no DataType: this is what a date column looks like when nobody asks for anything, and
+			// on SQL Server that is DATETIME rather than DATETIME2.
+			[Column] public DateTime When { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Duration(DurationUnit.Second)]
+			public TimeSpan Elapsed { get; set; }
+		}
+
+		/// <summary>
+		/// A date column that asked for no particular type is still shiftable.
+		/// </summary>
+		/// <remarks>
+		/// Every other shift here runs over a column that pins <see cref="DataType.DateTime2"/>, which is not what a
+		/// model looks like by default - and the shift ends in the finest unit the provider counts, which on SQL
+		/// Server is the nanosecond. Whether a date type that stores less than that accepts being moved by one is a
+		/// property of the column, not of the interval, so it is asked of a column that declares nothing.
+		/// </remarks>
+		[Test]
+		public void ADateColumnWithNoDeclaredTypeShifts([IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			var when    = new DateTime(2026, 3, 1, 0, 0, 0);
+			var elapsed = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<PlainDateRow>();
+
+			db.Insert(new PlainDateRow { Id = 1, When = when, Elapsed = elapsed });
+
+			var shifted = t.Select(r => r.When + r.Elapsed).Single();
+
+			shifted.ShouldBe(when + elapsed);
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDeclaredShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		public void ADeclaredDurationShiftsADate([DataSources(false)] string context)

@@ -374,6 +374,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </remarks>
 		Expression? TranslateDateTimeDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
+			// Left untranslated rather than reported as an error by name, though the message would be better: an
+			// error expression is built here, before the optimizer sees the statement, so it would also sink the
+			// shapes that never need the difference at all - start + (end - start) cancels to end and asks nothing
+			// of the provider. Those must keep working where the difference itself cannot be lowered.
 			if (!translationContext.ProviderFlags.CanLowerIntervalDifference)
 				return null;
 
