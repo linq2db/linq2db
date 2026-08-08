@@ -1323,7 +1323,61 @@ namespace Tests.Linq
 				Assert.That(res[1].IntStructRequiredWithNull?.Value, Is.EqualTo(1));
 				Assert.That(res[1].IntStructNullableWithNull?.Value, Is.EqualTo(1));
 			}
+		}
 
+		[Table]
+		sealed class ScaledRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			// Access has no 64-bit integer type, so it stores the count as CURRENCY - which carries one exactly.
+			// The storage type is a provider detail here: what is under test is that the conversion survives.
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		/// <summary>
+		/// A converted column keeps its conversion when it is read through a set operation.
+		/// </summary>
+		/// <remarks>
+		/// The conversion is not applied by the SQL - it is applied when the row is materialised, by walking the
+		/// column expression back to the descriptor that carries it. A provider that wraps a set-operation column
+		/// breaks that walk unless the wrapper is transparent to it, and then the stored number is read raw: this
+		/// one stores seconds, so losing the conversion reads ninety minutes as fifty-four hundred ticks.
+		/// <para>
+		/// Informix is the provider that does the wrapping, in <c>NVL(x, NULL)</c>, to stop its driver typing the
+		/// column from the first branch alone. Nothing here is provider-specific though, and the assertion is the
+		/// same everywhere.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ConversionSurvivesASetOperation([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ScaledRow>()
+					.Property(e => e.Span)
+						.HasConversion(
+							ts => ts.Ticks / TimeSpan.TicksPerSecond,
+							v  => TimeSpan.FromTicks(v * TimeSpan.TicksPerSecond))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<ScaledRow>();
+
+			db.Insert(new ScaledRow { Id = 1, Span = value });
+
+			var rows = t
+				.Select(r => new { Source = 1, r.Span })
+				.Concat(t.Select(r => new { Source = 2, r.Span }))
+				.OrderBy(r => r.Source)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Span).ShouldBe([value, value]);
 		}
 	}
 }

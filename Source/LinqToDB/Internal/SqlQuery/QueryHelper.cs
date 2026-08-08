@@ -348,6 +348,25 @@ namespace LinqToDB.Internal.SqlQuery
 					return found;
 				}
 
+				// Coalescing a value with nothing is that value, so a two-argument function whose second argument
+				// is a null literal describes the same column its first argument does. The shape exists for one
+				// reason: a provider that has to state a set-operation column is nullable writes it that way -
+				// Informix wraps in NVL(x, NULL) to stop its driver typing the column from the first branch alone.
+				// Without this the wrapper hides the column, and every value converter in a set operation is lost
+				// there: the stored number is read raw, off by whatever the conversion was worth.
+				//
+				// Matched by shape rather than by name, deliberately: naming the coalescing functions would add to
+				// the string matching that issue #5334 asks to be removed from this method. A null literal as a
+				// second argument is not something an ordinary call is built with, and the type guard below is the
+				// same one the neighbouring arms rely on.
+				case SqlFunction { Parameters: [var coalesced, SqlValue { Value: null }] } function:
+				{
+					var found = GetColumnDescriptor(coalesced, alreadyVisitedElements);
+					if (found?.GetDbDataType(true).SystemType != function.SystemType)
+						return null;
+					return found;
+				}
+
 				// The same rule once more for the extended form, which is what an aggregate is built as. MIN and
 				// MAX answer with an element of their operand's own domain, so the operand's descriptor keeps
 				// describing the result. The type guard is what holds the line: COUNT answers in a type of its
