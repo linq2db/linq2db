@@ -292,6 +292,7 @@ namespace Tests.Linq
 			row.Seconds.ShouldBe(value.Seconds);
 		}
 
+#if NET8_0_OR_GREATER
 		/// <summary>
 		/// A sub-second component of a stored duration answers even where the provider measures elapsed time
 		/// more coarsely.
@@ -326,6 +327,7 @@ namespace Tests.Linq
 			row.Milliseconds.ShouldBe(value.Milliseconds);
 			row.Microseconds.ShouldBe(value.Microseconds);
 		}
+#endif
 
 		[Test]
 		public void NegativeComponentsTruncateTowardZero([DataSources] string context)
