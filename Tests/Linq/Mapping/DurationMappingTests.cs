@@ -102,8 +102,12 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void ExplicitConverterIsNotReplaced()
+		public void AUnitBesideAnExplicitConverterIsRefused()
 		{
+			// Two answers to one question, and the query believes both: it reads the value through the converter
+			// and builds the SQL on the unit. Left alone, the pair above reports an hour and a half as fifteen
+			// million hours - the stored ticks read as though they were seconds. Neither one can be picked as the
+			// winner without making the other silently wrong, so stating both is refused where it is stated.
 			var ms = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -113,12 +117,12 @@ namespace Tests.Mapping
 						.HasDuration(DurationUnit.Second)
 				.Build();
 
-			var column = Column(ms, typeof(Fluent), nameof(Fluent.Elapsed));
+			Action act = () => Column(ms, typeof(Fluent), nameof(Fluent.Elapsed));
 
-			// The user's converter wins; deriving one would silently change how existing data is read.
-			column.DurationUnit.ShouldBe(DurationUnit.Second);
-			column.ValueConverter.ShouldNotBeNull();
-			column.ValueConverter!.ToProviderExpression.Body.Type.ShouldBe(typeof(long));
+			var refusal = act.ShouldThrow<LinqToDBException>();
+
+			refusal.Message.ShouldContain(nameof(Fluent.Elapsed));
+			refusal.Message.ShouldContain(nameof(DurationUnit.Second));
 		}
 
 		[Test]

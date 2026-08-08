@@ -144,12 +144,22 @@ namespace LinqToDB.Mapping
 			var duration = mappingSchema.GetAttribute<DurationAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
 			if (duration != null)
 			{
-				DurationUnit = duration.Unit;
+				// A declared unit and a hand-written converter are two answers to the same question, and the two
+				// halves of a query believe different ones: the value comes back through the converter, while the
+				// SQL is built on the unit. A pair that disagrees is then wrong by whatever they differ by, and
+				// wrong without saying so - a unit of seconds beside a converter storing ticks reads an hour and a
+				// half as fifteen million. Letting one of them quietly win is the failure this feature exists to
+				// prevent, so the pair is refused where it is stated.
+				if (ValueConverter != null)
+				{
+					throw new LinqToDBException(
+						$"Member '{memberAccessor.TypeAccessor.Type.Name}.{MemberInfo.Name}' declares both a duration unit ({duration.Unit}) and a value converter. "
+						+ "The unit is what the SQL translation is built on and the converter is what the value is read through, so the two cannot both define the stored form. "
+						+ "State the unit and let the conversion follow from it, or keep the converter and drop the unit.");
+				}
 
-				// Derive the value conversion from the declared unit unless the user wrote one. Stating the unit
-				// once is the point: a hand-written converter in seconds next to a declaration in ticks would
-				// disagree silently, which is exactly the failure this feature exists to prevent.
-				ValueConverter ??= CreateDurationConverter(MemberType, duration.Unit);
+				DurationUnit   = duration.Unit;
+				ValueConverter = CreateDurationConverter(MemberType, duration.Unit);
 			}
 
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);

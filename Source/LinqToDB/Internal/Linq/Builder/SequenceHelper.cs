@@ -28,7 +28,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// sides are known.
 		/// <para>
 		/// The declared duration unit is compared rather than the converter derived from it: two columns declaring
-		/// the same unit get equivalent converters that are not the same object.
+		/// the same unit get equivalent converters that are not the same object. That substitution is sound because
+		/// a declared unit is the only thing that can define the stored form - <see cref="ColumnDescriptor"/> refuses
+		/// a column that states a unit and carries a hand-written converter as well, so equal units cannot hide
+		/// unequal conversions.
 		/// </para>
 		/// </remarks>
 		public static bool ReadTheSameWay(ColumnDescriptor descriptor1, ColumnDescriptor descriptor2)
