@@ -408,6 +408,22 @@ namespace LinqToDB.Internal.SqlQuery
 
 				case SqlAnchor anchor:
 					return GetColumnDescriptor(anchor.SqlExpression, alreadyVisitedElements);
+
+				// A scalar sub-query lifted into a CTE and referred to as a value still describes what its body
+				// projects, exactly as the SelectQuery case above does for the shape before the lowering. A
+				// provider with no inline scalar sub-query rewrites one into a bare reference to the CTE, and
+				// the read expression is built from the lowered statement - so this is where the walk arrives
+				// instead, and without it every value converter on that column is lost.
+				//
+				// Fields.Count tells the scalar use from a CTE table named in a FROM clause, whose columns answer
+				// for themselves through SqlCteTableField - but only once they exist, and CteTableContext builds
+				// its table field-less too and fills it later. So a second condition carries the weight: a
+				// recursive expression is never a single value, and refusing it here keeps the walk away from a
+				// body that names the expression it belongs to. The tempting discriminator - CanBeNull, which
+				// SqlCteTable documents as meaning exactly the scalar use - is not safe: neither the Transform
+				// nor the Clone visitor copies it, so a rebuilt table silently stops being recognised.
+				case SqlCteTable { Fields.Count: 0, Cte: { IsRecursive: false, Body: { Select.Columns: [_] } cteBody } }:
+					return GetColumnDescriptor(cteBody, alreadyVisitedElements);
 			}
 
 			return null;
