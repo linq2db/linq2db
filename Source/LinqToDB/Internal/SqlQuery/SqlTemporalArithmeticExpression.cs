@@ -30,8 +30,14 @@ namespace LinqToDB.Internal.SqlQuery
 		public ISqlExpression Temporal   { get; private set; }
 
 		/// <summary>
-		/// Interval to shift by.
+		/// Interval to shift by, carrying no unit of its own.
 		/// </summary>
+		/// <remarks>
+		/// Either a <see cref="SqlIntervalDifferenceExpression"/>, which each provider lowers into the form its own
+		/// date arithmetic takes, or an amount already reduced to ticks. Never a <see cref="SqlIntervalExpression"/>:
+		/// that one holds a number in a declared unit, and nothing downstream can recover the unit from the node it
+		/// lowers to - so the translator converts it before building this one.
+		/// </remarks>
 		public ISqlExpression Interval   { get; private set; }
 
 		/// <summary>

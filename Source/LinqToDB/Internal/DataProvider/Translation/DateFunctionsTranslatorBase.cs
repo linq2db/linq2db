@@ -337,6 +337,24 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			var factory = translationContext.ExpressionFactory;
+
+			// A declared duration is a number in a unit of its own choosing, so it is asked for its tick total here
+			// rather than passed on as it stands. The lowering spends the amount through the provider's own date
+			// arithmetic, which has no way to learn that unit - handed 5400 from a column declared in seconds it
+			// would spend 5400 ticks, a wrong date rather than a refused one.
+			//
+			// A difference needs no such step and must not get one: it has no unit of its own, and each provider
+			// lowers one into whatever form its own date arithmetic takes - a tick count on most, a native interval
+			// on PostgreSQL.
+			if (amount is SqlIntervalExpression)
+			{
+				amount = new SqlIntervalPartExpression(
+					amount,
+					SqlIntervalUnit.Tick,
+					SqlIntervalPartKind.Total,
+					factory.GetDbDataType(typeof(long)));
+			}
+
 			var shifted = new SqlTemporalArithmeticExpression(
 				temporal.Sql,
 				amount,

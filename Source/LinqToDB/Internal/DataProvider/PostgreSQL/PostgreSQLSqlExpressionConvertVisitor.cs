@@ -29,13 +29,39 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		/// <summary>
 		/// A timestamp takes an interval directly, so the shift is the operator itself.
 		/// </summary>
+		/// <remarks>
+		/// A difference lowers to a native <c>interval</c> here, so it is added as it stands. Every other interval
+		/// arrives as a tick count, which PostgreSQL reads as an ordinary number and refuses to add to a date - so
+		/// it is turned into an interval first.
+		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
 			var type = Factory.GetDbDataType(element.Temporal);
 
+			var interval = QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression
+				? element.Interval
+				: IntervalFromTicks(element.Interval);
+
 			return element.IsSubtract
-				? Factory.Sub(type, element.Temporal, element.Interval)
-				: Factory.Add(type, element.Temporal, element.Interval);
+				? Factory.Sub(type, element.Temporal, interval)
+				: Factory.Add(type, element.Temporal, interval);
+		}
+
+		/// <summary>
+		/// A tick count as a native interval, counted in microseconds.
+		/// </summary>
+		/// <remarks>
+		/// The microsecond is what a timestamp stores, so nothing is lost that the value could have kept: dividing
+		/// the ticks by ten drops only the digit PostgreSQL would have dropped on its way into the column.
+		/// </remarks>
+		ISqlExpression IntervalFromTicks(ISqlExpression ticks)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var intervalType = longType.WithDataType(DataType.Interval);
+
+			return Factory.Multiply(intervalType,
+				Factory.Div(longType, ticks, Factory.Value(longType, TimeSpan.TicksPerMillisecond / 1000)),
+				Factory.NotNullExpression(intervalType, "Interval '1 microsecond'"));
 		}
 
 		/// <inheritdoc />

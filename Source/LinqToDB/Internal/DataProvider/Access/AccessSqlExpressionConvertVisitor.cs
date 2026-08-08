@@ -61,6 +61,23 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return null;
 		}
 
+		/// <summary>
+		/// No shift by an interval either, for the reason <see cref="ElapsedTicks"/> gives.
+		/// </summary>
+		/// <remarks>
+		/// The amount reaches a shift as a tick count whatever it was built from, and that is the one number Access
+		/// cannot hold - scaling to ticks overflows its arithmetic and the driver answers <c>Numeric value out of
+		/// range</c>. Refusing by name is the whole of the difference between this and a date that comes back wrong.
+		/// <para>
+		/// Access shifts dates perfectly well in seconds; what it cannot do is take delivery of the amount in ticks.
+		/// Should a coarser hand-off ever exist, this is the override to drop.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			return null;
+		}
+
 		static string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch

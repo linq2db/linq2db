@@ -43,6 +43,75 @@ namespace Tests.Linq
 			row.Hour.ShouldBe(finished.Hour);
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDeclaredShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
+		public void ADeclaredDurationShiftsADate([DataSources(false)] string context)
+		{
+			// A shift whose interval is a declared column rather than a computed difference. The two reach the
+			// provider as the same node but carry the amount differently - a difference lowers to ticks, a
+			// declaration keeps the number the column holds - so the seconds column is what tells them apart.
+			// The tick column is the control: its stored number already is a tick count, so it reads correctly
+			// either way and a failure on it alone would mean something else broke.
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			var row = t
+				.Select(r => new
+				{
+					AddedSeconds      = ShiftOrigin + r.InSeconds,
+					SubtractedSeconds = ShiftOrigin - r.InSeconds,
+					AddedTicks        = ShiftOrigin + r.InTicks,
+				})
+				.Single();
+
+			// Subtraction is its own branch in every lowering - the shared one negates the amount, the providers
+			// with a native interval spell a different operator - so it is asked for beside the addition rather
+			// than assumed to follow from it.
+			row.AddedSeconds.ShouldBe(ShiftOrigin + value);
+			row.SubtractedSeconds.ShouldBe(ShiftOrigin - value);
+			row.AddedTicks.ShouldBe(ShiftOrigin + value);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDeclaredShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
+		public void ADurationThatMayBeAbsentShiftsADate([DataSources(false)] string context)
+		{
+			// A shift by a nullable duration is a registration of its own, and the result is nullable with it: the
+			// row that holds no duration must come back holding no date, which is what the CLR's lifted operator
+			// says. A zero-length shift landing on the origin would read as an answer and is the failure to catch.
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable(OptionalDurationRow.Data);
+
+			var rows = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					Shifted  = ShiftOrigin + r.Grace,
+					Required = ShiftOrigin + r.Required,
+				})
+				.ToList();
+
+			rows.Select(r => r.Shifted).ShouldBe(
+			[
+				ShiftOrigin + TimeSpan.FromMinutes(15),
+				null,
+				ShiftOrigin + TimeSpan.FromMinutes(45),
+			]);
+
+			// The column that is never absent rides along, so a run that answered nothing for every row would fail
+			// here rather than pass on the nulls.
+			rows.Select(r => r.Required).ShouldBe(
+			[
+				ShiftOrigin + TimeSpan.FromMinutes(15),
+				ShiftOrigin + TimeSpan.FromMinutes(30),
+				ShiftOrigin + TimeSpan.FromMinutes(45),
+			]);
+		}
+
 		/// <summary>
 		/// A date shifted by an interval, in a predicate - answered where the provider can lower it, refused by
 		/// name where it cannot.

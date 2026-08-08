@@ -162,6 +162,16 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2014Minus;
 
 		/// <summary>
+		/// Providers that refuse a date shifted by a <em>declared</em> duration.
+		/// </summary>
+		/// <remarks>
+		/// The shift list plus Access, which is absent from it only because a difference never becomes a value there
+		/// - a declared column gives it one, so the attempt reaches the SQL builder and is refused there instead.
+		/// What Access cannot do either way is take the amount in ticks, which is the form a shift receives.
+		/// </remarks>
+		const string UnsupportedDeclaredShiftProviders = UnsupportedShiftProviders + "," + TestProvName.AllAccess;
+
+		/// <summary>
 		/// Providers that refuse the shift one step earlier, while the expression is still being built.
 		/// </summary>
 		/// <remarks>
