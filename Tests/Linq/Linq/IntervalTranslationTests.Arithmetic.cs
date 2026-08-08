@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -41,6 +42,60 @@ namespace Tests.Linq
 			row.BackToEnd.ShouldBe(finished);
 			row.BackToStart.ShouldBe(started);
 			row.Hour.ShouldBe(finished.Hour);
+		}
+
+		/// <summary>
+		/// Two dates that may be absent, so a difference taken between them can be absent too.
+		/// </summary>
+		/// <remarks>
+		/// Seeded so that each endpoint is the missing one in turn: which endpoint is missing decides which of the
+		/// two cancelling forms goes wrong, and a row missing both would come out right by accident either way.
+		/// </remarks>
+		[Table]
+		sealed class OptionalEventRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7, CanBeNull = true)]
+			[Column(Configuration = ProviderName.Access,     CanBeNull = true)]
+			[Column(Configuration = ProviderName.ClickHouse, CanBeNull = true)]
+			public DateTime? StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7, CanBeNull = true)]
+			[Column(Configuration = ProviderName.Access,     CanBeNull = true)]
+			[Column(Configuration = ProviderName.ClickHouse, CanBeNull = true)]
+			public DateTime? FinishedOn { get; set; }
+		}
+
+		[Test]
+		public void CancellingAShiftKeepsTheAbsenceItCarried([DataSources] string context)
+		{
+			// The term that cancels is also the one whose absence the whole expression propagated, so dropping it
+			// turns a row that has no answer into one that does - a date appears where the CLR says nothing. The
+			// two forms fail on opposite rows, because each discards a different endpoint, which is why one row
+			// is missing its start and the next is missing its end.
+			var started  = new DateTime(2026, 1, 1, 10,  0, 0);
+			var finished = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<OptionalEventRow>();
+
+			db.Insert(new OptionalEventRow { Id = 1, StartedOn = null,    FinishedOn = finished });
+			db.Insert(new OptionalEventRow { Id = 2, StartedOn = started, FinishedOn = null     });
+			db.Insert(new OptionalEventRow { Id = 3, StartedOn = started, FinishedOn = finished });
+
+			var rows = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					r.Id,
+					BackToEnd   = r.StartedOn  + (r.FinishedOn - r.StartedOn),
+					BackToStart = r.FinishedOn - (r.FinishedOn - r.StartedOn),
+				})
+				.ToList();
+
+			rows.Select(r => r.BackToEnd).ShouldBe([null, null, finished]);
+			rows.Select(r => r.BackToStart).ShouldBe([null, null, started]);
 		}
 
 		[Test]
