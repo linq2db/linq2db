@@ -11,107 +11,13 @@ using Shouldly;
 
 namespace Tests.Linq
 {
-	// A duration column reads back through a conversion derived from its declared unit. Projecting one is the
-	// obvious place that can go wrong, and it is covered elsewhere - these are the shapes where the value reaches
-	// the reader by another route: as a grouping key, as an aggregate result, through a set operation, or as a
-	// sort key where it is never read at all and only has to order correctly.
+	// A duration column reads back through a conversion derived from its declared unit, and an elapsed difference
+	// reads back through whatever the lowering produces. Projecting one of those is the obvious place either can go
+	// wrong and is covered elsewhere - these are the shapes where the value takes another route: through a
+	// comparison, a grouping key, an aggregate, a sort key it is never read from, a membership test, a local
+	// collection, a set operation, or the choice between being written into the statement and being passed to it.
 	public partial class IntervalTranslationTests
 	{
-		/// <summary>
-		/// Why a branch holding a difference cannot meet one holding a declared duration on some providers.
-		/// </summary>
-		/// <remarks>
-		/// A member the branches store differently is given a column each, so that each is read the way its own
-		/// branch stores it. That keeps the reader right, but it does not make the two storages meet: DB2 and YDB
-		/// require corresponding columns of a set operation to have compatible types, and on them a difference is a
-		/// native interval while a declared duration is an integer. Neither is convertible to the other by anything
-		/// the set operation can express, so the driver refuses the whole statement - DB2 with SQL0415N, YDB with
-		/// "Uncompatible member ... types: Optional&lt;Interval&gt; and Int64".
-		/// <para>
-		/// Not a defect in the splitting: the same shape with two stored durations passes on both, because both
-		/// sides are integers there. Answering it needs the two branches brought to one representation before they
-		/// meet, which is a separate piece of work.
-		/// </para>
-		/// </remarks>
-		/// <summary>
-		/// Why a membership test still loses the unit where a comparison keeps it.
-		/// </summary>
-		/// <remarks>
-		/// Units are reconciled while an expression is translated: a declared duration is wrapped so that it carries
-		/// its unit with it, and two such wrapped values can then be brought to common terms. A comparison goes
-		/// through that translation, which is why <c>InSeconds == InTicks</c> answers correctly. <c>Contains</c>
-		/// builds its predicate itself, straight from the two SQL expressions, and never passes through it - so two
-		/// columns are compared as the raw numbers they store, and a value taken from an expression with no declared
-		/// unit at all reaches the provider in its CLR form.
-		/// <para>
-		/// The value-against-a-projected-column case is different and is fixed: there the sequence names one column,
-		/// so the value can be built on that column's terms before any translation is needed. These two cannot be
-		/// answered the same way - one has no constant to convert, the other has no unit to convert to.
-		/// </para>
-		/// </remarks>
-		const string ContainsSkipsIntervalTranslation =
-			"Contains builds its predicate from the two SQL expressions directly rather than through the translation "
-			+ "that reconciles declared duration units, so two columns held in different units are compared as the raw "
-			+ "numbers they store, and a candidate taken from an expression with no declared unit reaches the provider "
-			+ "as a CLR TimeSpan. A comparison of the same two values answers correctly, which is where the reconciliation "
-			+ "already lives.";
-
-		/// <summary>
-		/// Why a duration carried by a per-value query arrives as the first value every time.
-		/// </summary>
-		/// <remarks>
-		/// A duration never becomes a parameter. Compared against a column, it is written into the statement as the
-		/// number its declaration says it is - and an integer or a date in exactly the same position does become
-		/// one, so this is the duration's own behaviour rather than how a captured local is treated in general.
-		/// <see cref="ConstantDurationsReachTheStatementAndStillAnswer"/> shows it plainly: asking for a constant
-		/// changes nothing, because the value was already one.
-		/// <para>
-		/// Harmless while a query is built once. The shape this gate names is not: the collection is walked on the
-		/// client and a query runs per value, so every value after the first finds the first one's statement already
-		/// built and asks its question again. The unit is reconciled correctly throughout - it is the value that
-		/// fails to travel.
-		/// </para>
-		/// <para>
-		/// Silent by nature: the rows come back, they are simply the wrong ones, and the number of them is right.
-		/// </para>
-		/// </remarks>
-		const string ConvertedValueIsInlinedPerQuery =
-			"A duration is written into the statement rather than passed as a parameter - always, not only when asked "
-			+ "for - while an integer or a date in the same position becomes a parameter. A shape that runs one query "
-			+ "per local value therefore reuses the first value's statement for all of them, and the same rows come "
-			+ "back for every value. The unit is reconciled correctly; it is the value that fails to travel.";
-
-		/// <summary>
-		/// Why a branch holding a difference cannot meet one holding a declared duration on some providers.
-		/// </summary>
-		/// <remarks>
-		/// A member the branches store differently is given a column each, so each is read the way its own branch
-		/// stores it. That keeps the reader right, but it does not make the two storages meet: where the provider
-		/// has a type of its own for elapsed time, a difference arrives in that type and a declared duration
-		/// arrives as an integer, and the two still have to occupy one position of the set operation.
-		/// <para>
-		/// From there each provider fails its own way, which is why this is one gate rather than one fix. DB2, YDB
-		/// and DuckDB refuse the statement - DuckDB says it plainly, <em>Unimplemented type for cast (BIGINT -&gt;
-		/// INTERVAL)</em>, and DB2 (SQL0415N) and YDB (<em>Uncompatible member ... Optional&lt;Interval&gt; and
-		/// Int64</em>) say the same in their own words. MySQL and MariaDB accept it and break on the way back
-		/// instead: the column becomes a <c>TIME</c>, the tick count goes into it, and the driver cannot read
-		/// 36000000000 back out as a <see cref="TimeSpan"/>.
-		/// </para>
-		/// <para>
-		/// Not a defect in the splitting. Providers that hold elapsed time as a plain number run these shapes green
-		/// - every Firebird version, ClickHouse, SQLite, SQL Server, PostgreSQL, Oracle - and on the refusing
-		/// providers the same shape with two stored durations passes, because there both sides are integers.
-		/// Answering it needs the branches brought to one representation before they meet, which is separate work.
-		/// </para>
-		/// </remarks>
-		const string MixedStorageInASetOperation =
-			"Where a provider has its own type for elapsed time, a difference and a declared duration reach it as "
-			+ "different SQL types and cannot share one position of a set operation. DB2, YDB and DuckDB refuse the "
-			+ "statement (DuckDB: 'Unimplemented type for cast (BIGINT -> INTERVAL)'); MySQL and MariaDB accept it "
-			+ "and then cannot read the tick count back out of a TIME column. Giving each branch its own column "
-			+ "keeps the reader right but cannot reconcile the two storages - that needs both branches projected to "
-			+ "one representation first. Providers that hold elapsed time as a plain number run these shapes green.";
-
 		/// <summary>
 		/// Carries a date pair and a declared duration in one row, so a difference and a stored duration can be
 		/// compared against each other - which is the case neither model alone can express.
@@ -154,6 +60,67 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// Why a branch holding a difference cannot meet one holding a declared duration on some providers.
+		/// </summary>
+		/// <remarks>
+		/// A member the branches store differently is given a column each, so each is read the way its own branch
+		/// stores it. That keeps the reader right, but it does not make the two storages meet: where the provider
+		/// has a type of its own for elapsed time, a difference arrives in that type and a declared duration
+		/// arrives as an integer, and the two still have to occupy one position of the set operation.
+		/// <para>
+		/// From there each provider fails its own way, which is why this is one gate rather than one fix. DB2, YDB
+		/// and DuckDB refuse the statement - DuckDB says it plainly, <em>Unimplemented type for cast (BIGINT -&gt;
+		/// INTERVAL)</em>, and DB2 (SQL0415N) and YDB (<em>Uncompatible member ... Optional&lt;Interval&gt; and
+		/// Int64</em>) say the same in their own words. MySQL and MariaDB accept it and break on the way back
+		/// instead: the column becomes a <c>TIME</c>, the tick count goes into it, and the driver cannot read
+		/// 36000000000 back out as a <see cref="TimeSpan"/>.
+		/// </para>
+		/// <para>
+		/// Not a defect in the splitting. Providers that hold elapsed time as a plain number run these shapes green
+		/// - every Firebird version, ClickHouse, SQLite, SQL Server, PostgreSQL, Oracle - and on the refusing
+		/// providers the same shape with two stored durations passes, because there both sides are integers.
+		/// Answering it needs the branches brought to one representation before they meet, which is separate work.
+		/// </para>
+		/// </remarks>
+		const string MixedStorageInASetOperation =
+			"Where a provider has its own type for elapsed time, a difference and a declared duration reach it as "
+			+ "different SQL types and cannot share one position of a set operation. DB2, YDB and DuckDB refuse the "
+			+ "statement (DuckDB: 'Unimplemented type for cast (BIGINT -> INTERVAL)'); MySQL and MariaDB accept it "
+			+ "and then cannot read the tick count back out of a TIME column. Giving each branch its own column "
+			+ "keeps the reader right but cannot reconcile the two storages - that needs both branches projected to "
+			+ "one representation first. Providers that hold elapsed time as a plain number run these shapes green.";
+
+		/// <summary>
+		/// Why a membership test still loses the unit where a comparison keeps it.
+		/// </summary>
+		/// <remarks>
+		/// Units are reconciled while an expression is translated: a declared duration is wrapped so that it carries
+		/// its unit with it, and two such wrapped values can then be brought to common terms. A comparison goes
+		/// through that translation, which is why <c>InSeconds == InTicks</c> answers correctly. <c>Contains</c>
+		/// builds its predicate itself, straight from the two SQL expressions, and never passes through it - so two
+		/// columns are compared as the raw numbers they store, and a value taken from an expression with no declared
+		/// unit at all reaches the provider in its CLR form.
+		/// <para>
+		/// The value-against-a-projected-column case is different and is fixed: there the sequence names one column,
+		/// so the value can be built on that column's terms before any translation is needed. These two cannot be
+		/// answered the same way - one has no constant to convert, the other has no unit to convert to.
+		/// </para>
+		/// </remarks>
+		const string ContainsSkipsIntervalTranslation =
+			"Contains builds its predicate from the two SQL expressions directly rather than through the translation "
+			+ "that reconciles declared duration units, so two columns held in different units are compared as the raw "
+			+ "numbers they store, and a candidate taken from an expression with no declared unit reaches the provider "
+			+ "as a CLR TimeSpan. A comparison of the same two values answers correctly, which is where the reconciliation "
+			+ "already lives.";
+
+		// Here the duration is the difference between two dates. Most of these shapes are asked again in the block
+		// that follows, over a column whose unit comes from its declaration, and the repetition is deliberate rather
+		// than one parameterised pass: a column reaches the query as itself while a difference reaches it as lowered
+		// arithmetic, so a grouping key, an aggregate or a sort key is applied to a computed expression here, and a
+		// provider may refuse it in one of those positions even though the projection works. A shape only one of the
+		// two models can express is asked once, in the block that can express it.
+
+		/// <summary>
 		/// A date difference compared against a duration value.
 		/// </summary>
 		/// <remarks>
@@ -191,6 +158,69 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A bound compared against a difference travels as a parameter unless it is asked to stand in the
+		/// statement.
+		/// </summary>
+		/// <remarks>
+		/// The bound is not sent as the duration it was written as: a difference arrives in ticks, so what reaches
+		/// the statement is the bound's tick count. That is what makes this the discriminating place for either
+		/// request - <c>Sql.Constant</c> and <c>Sql.Parameter</c> are written around the duration, and unless the
+		/// request travels with the value onto the member actually sent, it is left sitting on an argument nothing
+		/// reads any more and the caller's choice is dropped in silence.
+		/// <para>
+		/// Which form a bound takes on its own is not one answer but two, so both requests have somewhere to bite. A
+		/// duration the query has to look up - a captured local, a call - is a parameter, and asking it to stand in
+		/// the statement is what changes that. One written as an expression that cannot vary is already standing
+		/// there, and asking it to travel is what changes that instead. Each request is therefore asked over the
+		/// form that would otherwise go the other way, with that form asked unmarked beside it.
+		/// </para>
+		/// <para>
+		/// Every query is also run. A bound that reaches the statement in the right form and means the wrong
+		/// duration would pass the counts alone. The values are checked everywhere; only the counts stand aside on
+		/// ClickHouse, which has no query parameters at all and answers zero to every form alike.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders,          ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		public void DifferenceBoundFollowsTheRequestForHowItTravels([DataSources(false)] string context)
+		{
+			var bound = TimeSpan.FromHours(2);
+
+			using var db = GetDataConnection(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+
+			SeedTasks(db,
+				(TimeSpan.FromHours(1), TimeSpan.FromHours(3)),
+				(TimeSpan.FromHours(2), TimeSpan.FromHours(3)),
+				(TimeSpan.FromHours(3), TimeSpan.FromHours(3)));
+
+			var lookedUp    = t.Where(r => r.FinishedOn - r.StartedOn > bound).Select(r => r.Id);
+			var askedToStay = t.Where(r => r.FinishedOn - r.StartedOn > Sql.Constant(bound)).Select(r => r.Id);
+			var cannotVary  = t.Where(r => r.FinishedOn - r.StartedOn > TimeSpan.Zero).Select(r => r.Id);
+			var askedToGo   = t.Where(r => r.FinishedOn - r.StartedOn > Sql.Parameter(TimeSpan.Zero)).Select(r => r.Id);
+
+			var lookedUpSql    = lookedUp.ToSqlQuery();
+			var askedToStaySql = askedToStay.ToSqlQuery();
+			var cannotVarySql  = cannotVary.ToSqlQuery();
+			var askedToGoSql   = askedToGo.ToSqlQuery();
+
+			lookedUp.OrderBy(id => id).ToArray().ShouldBe([3]);
+			askedToStay.OrderBy(id => id).ToArray().ShouldBe([3]);
+			cannotVary.OrderBy(id => id).ToArray().ShouldBe([1, 2, 3]);
+			askedToGo.OrderBy(id => id).ToArray().ShouldBe([1, 2, 3]);
+
+			askedToStaySql.Parameters.ShouldBeEmpty();
+			cannotVarySql.Parameters.ShouldBeEmpty();
+
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				lookedUpSql.Parameters.Count.ShouldBe(1);
+				askedToGoSql.Parameters.Count.ShouldBe(1);
+			}
+		}
+
+		/// <summary>
 		/// A date difference compared against a declared duration column.
 		/// </summary>
 		/// <remarks>
@@ -225,11 +255,6 @@ namespace Tests.Linq
 			overBudget.ShouldBe([2]);
 			onBudget.ShouldBe([3]);
 		}
-
-		// The same four shapes again, over a date difference rather than a stored column. Worth repeating rather
-		// than parameterising: a column reaches the query as itself, while a difference reaches it as lowered
-		// arithmetic, so GROUP BY, MIN and ORDER BY are applied to a computed expression - and a provider may
-		// place one of those where the expression is not allowed even though the projection works.
 
 		/// <summary>
 		/// A difference used as a grouping key comes back as the duration it denotes.
@@ -271,9 +296,9 @@ namespace Tests.Linq
 		/// <c>Min</c> and <c>Max</c> put the lowered arithmetic inside an aggregate, which is where a provider that
 		/// renders the difference as a multi-part expression is most likely to object.
 		/// </remarks>
+		[ActiveIssue(Configuration = NoTickTotalProviders, Details = "An aggregate whose body cannot be translated falls back to client evaluation, and the fallback builds a LinqExtensions.AggregateExecute call that EnumerableQuery cannot rewrite: 'There is no method AggregateExecute ... that matches the specified arguments'. Not an interval defect - reproduced on SQLite with Min(r => r.Stamp.ToBinary()), no interval code on the path - so the refusal Access should report is masked by a pre-existing core failure.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		[ActiveIssue(Configuration = NoTickTotalProviders, Details = "An aggregate whose body cannot be translated falls back to client evaluation, and the fallback builds a LinqExtensions.AggregateExecute call that EnumerableQuery cannot rewrite: 'There is no method AggregateExecute ... that matches the specified arguments'. Not an interval defect - reproduced on SQLite with Min(r => r.Stamp.ToBinary()), no interval code on the path - so the refusal Access should report is masked by a pre-existing core failure.")]
 		public void AggregatesOverADifference([DataSources(false)] string context)
 		{
 			var shorter = TimeSpan.FromHours(1);
@@ -296,6 +321,75 @@ namespace Tests.Linq
 			row.Min.ShouldBe(shorter);
 			row.Max.ShouldBe(longer);
 			row.TotalMin.ShouldBe(shorter.TotalMinutes + longer.TotalMinutes);
+		}
+
+		/// <summary>
+		/// Ordering by a difference orders by the duration.
+		/// </summary>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void OrderByDifferenceOrdersByTheDuration([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+
+			// Not seeded in sorted order, so a dropped ORDER BY returns the insertion order and fails.
+			SeedTasks(db,
+				(TimeSpan.FromHours(3), TimeSpan.FromHours(3)),
+				(TimeSpan.FromHours(1), TimeSpan.FromHours(3)),
+				(TimeSpan.FromHours(2), TimeSpan.FromHours(3)));
+
+			var ascending = t
+				.OrderBy(r => r.FinishedOn - r.StartedOn)
+				.Select(r => r.Id)
+				.ToArray();
+
+			var descending = t
+				.OrderByDescending(r => r.FinishedOn - r.StartedOn)
+				.Select(r => r.Id)
+				.ToArray();
+
+			ascending.ShouldBe([2, 3, 1]);
+			descending.ShouldBe([1, 3, 2]);
+		}
+
+		/// <summary>
+		/// Membership tests over an elapsed difference convert the candidates into the unit the lowering produces.
+		/// </summary>
+		/// <remarks>
+		/// A difference is not a column and has no declared unit of its own - it arrives in whatever the lowering
+		/// yields - so the candidates cannot be converted by asking the mapping. The rows are seeded so that the
+		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
+		/// that matched everything or nothing.
+		/// </remarks>
+		[ActiveIssue(Details = ContainsSkipsIntervalTranslation)]
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders,          ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		public void ContainsOverADifference([DataSources(false)] string context)
+		{
+			var wanted = new[] { TimeSpan.FromHours(1), TimeSpan.FromHours(3) };
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+
+			SeedTasks(db,
+				(TimeSpan.FromHours(1), TimeSpan.FromHours(3)),
+				(TimeSpan.FromHours(2), TimeSpan.FromHours(3)),
+				(TimeSpan.FromHours(3), TimeSpan.FromHours(3)));
+
+			var matching = t
+				.Where(r => wanted.Contains(r.FinishedOn - r.StartedOn))
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var present = t.Select(r => r.FinishedOn - r.StartedOn).Contains(TimeSpan.FromHours(2));
+			var absent  = t.Select(r => r.FinishedOn - r.StartedOn).Contains(TimeSpan.FromHours(5));
+
+			matching.ShouldBe([1, 3]);
+			present.ShouldBeTrue();
+			absent.ShouldBeFalse();
 		}
 
 		/// <summary>
@@ -411,33 +505,195 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// Ordering by a difference orders by the duration.
+		/// A common table expression carrying both a difference and a stored duration reads each on its own terms.
 		/// </summary>
+		/// <remarks>
+		/// The two reach the expression by different routes - one is a column with a declared unit, the other is
+		/// lowered arithmetic with no declaration of its own - and the CTE puts the same hop in front of both: what
+		/// the outer query names is a field of the expression, not the column, so each conversion has to be found
+		/// through it.
+		/// <para>
+		/// The two durations are seeded unequal, so a hop that handed one of them the other's conversion shows up
+		/// as a wrong value rather than as an equal one.
+		/// </para>
+		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		public void OrderByDifferenceOrdersByTheDuration([DataSources(false)] string context)
+		public void CteCarriesADifferenceAndAStoredDuration([CteContextSource] string context)
 		{
+			var elapsed = TimeSpan.FromHours(1);
+			var budget  = TimeSpan.FromHours(3);
+
 			using var db = GetDataContext(context, BuildSchema());
 			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
 
-			// Not seeded in sorted order, so a dropped ORDER BY returns the insertion order and fails.
-			SeedTasks(db,
-				(TimeSpan.FromHours(3), TimeSpan.FromHours(3)),
-				(TimeSpan.FromHours(1), TimeSpan.FromHours(3)),
-				(TimeSpan.FromHours(2), TimeSpan.FromHours(3)));
+			SeedTasks(db, (elapsed, budget));
 
-			var ascending = t
-				.OrderBy(r => r.FinishedOn - r.StartedOn)
+			var cte = t
+				.Select(r => new { r.Id, Taken = r.FinishedOn - r.StartedOn, r.Budget })
+				.AsCte();
+
+			var row = cte.OrderBy(r => r.Id).Single();
+
+			row.Taken.ShouldBe(elapsed);
+			row.Budget.ShouldBe(budget);
+		}
+
+		// The same shapes again over a column whose unit comes from its declaration. What is at stake changes with
+		// them: the number in the database is not the duration - 1800 and 18000000000 are the same ninety minutes -
+		// so the question is no longer whether the provider allows the expression but whether the right conversion
+		// reaches the value, and a wrong one answers plausibly instead of failing.
+
+		/// <summary>
+		/// Comparing a duration column against a duration value uses the column's declared unit.
+		/// </summary>
+		/// <remarks>
+		/// The value has to be converted into the column's unit before the comparison, not after: against
+		/// <c>InSeconds</c> the bound is 1800 and against <c>InTicks</c> it is 18000000000, for the same half hour.
+		/// Sending the tick count to both would put every row on the wrong side of the boundary.
+		/// <para>
+		/// Both a strict and a non-strict bound are asked, and one row sits exactly on it, so a comparison that is
+		/// converted correctly but rendered with the wrong operator is still caught.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
+		{
+			var bound = TimeSpan.FromMinutes(30);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), bound, TimeSpan.FromMinutes(45));
+
+			var overInSeconds = t
+				.Where(r => r.InSeconds > bound)
 				.Select(r => r.Id)
 				.ToArray();
 
-			var descending = t
-				.OrderByDescending(r => r.FinishedOn - r.StartedOn)
+			var atLeastInSeconds = t
+				.Where(r => r.InSeconds >= bound)
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var overInTicks = t
+				.Where(r => r.InTicks > bound)
 				.Select(r => r.Id)
 				.ToArray();
 
-			ascending.ShouldBe([2, 3, 1]);
-			descending.ShouldBe([1, 3, 2]);
+			var equalInTicks = t
+				.Where(r => r.InTicks == bound)
+				.Select(r => r.Id)
+				.ToArray();
+
+			overInSeconds.ShouldBe([3]);
+			atLeastInSeconds.ShouldBe([2, 3]);
+			overInTicks.ShouldBe([3]);
+			equalInTicks.ShouldBe([2]);
+		}
+
+		/// <summary>
+		/// How a duration reaches the statement follows the expression it was written as, and either request
+		/// overrides that.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="TimeSpan"/> has no literal form of its own in SQL - what reaches the statement is the number
+		/// its declaration says it is - so nothing forces the choice either way, and the choice matters: a value
+		/// written into the statement makes a query that differs only by its duration a different query, which the
+		/// cache then keeps apart, and which a shape running one query per value cannot vary at all.
+		/// <para>
+		/// Left alone the choice follows whether the expression could have been anything else. A captured local is
+		/// looked up, and so is a call - <c>TimeSpan.FromMinutes(30)</c> is written in place but still has to be
+		/// evaluated - and both become parameters. <c>TimeSpan.Zero</c> cannot be anything else, and is written into
+		/// the statement. So each request is asked over the form that would otherwise go the other way, and that
+		/// form is asked unmarked beside it; asked the other way round, either would pass without being honoured.
+		/// </para>
+		/// <para>
+		/// The statement is read rather than its text searched, and every query is also run, because a value that
+		/// travels correctly and means the wrong duration would pass the first check alone. The values are checked
+		/// everywhere; only the counts stand aside where there is nothing to count, since ClickHouse has no query
+		/// parameters at all - it refuses to name one - and answers zero to every form alike.
+		/// </para>
+		/// <para>
+		/// Both units are asked of the constant, because the number differs between them while the duration does
+		/// not. The number itself is not pinned: which side of the comparison carries the reconciliation - the
+		/// column lifted to ticks, or the value lowered to seconds - is the provider's business.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void DeclaredDurationFollowsTheRequestForHowItTravels([DataSources(false)] string context)
+		{
+			var bound = TimeSpan.FromMinutes(30);
+
+			using var db = GetDataConnection(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), bound, TimeSpan.FromMinutes(45));
+
+			var lookedUp         = t.Where(r => r.InSeconds > bound).Select(r => r.Id);
+			var calledInPlace    = t.Where(r => r.InSeconds > TimeSpan.FromMinutes(30)).Select(r => r.Id);
+			var askedToStay      = t.Where(r => r.InSeconds > Sql.Constant(bound)).Select(r => r.Id);
+			var askedToStayTicks = t.Where(r => r.InTicks   > Sql.Constant(bound)).Select(r => r.Id);
+			var cannotVary       = t.Where(r => r.InSeconds > TimeSpan.Zero).Select(r => r.Id);
+			var askedToGo        = t.Where(r => r.InSeconds > Sql.Parameter(TimeSpan.Zero)).Select(r => r.Id);
+
+			var lookedUpSql         = lookedUp.ToSqlQuery();
+			var calledInPlaceSql    = calledInPlace.ToSqlQuery();
+			var askedToStaySql      = askedToStay.ToSqlQuery();
+			var askedToStayTicksSql = askedToStayTicks.ToSqlQuery();
+			var cannotVarySql       = cannotVary.ToSqlQuery();
+			var askedToGoSql        = askedToGo.ToSqlQuery();
+
+			lookedUp.OrderBy(id => id).ToArray().ShouldBe([3]);
+			calledInPlace.OrderBy(id => id).ToArray().ShouldBe([3]);
+			askedToStay.OrderBy(id => id).ToArray().ShouldBe([3]);
+			askedToStayTicks.OrderBy(id => id).ToArray().ShouldBe([3]);
+			cannotVary.OrderBy(id => id).ToArray().ShouldBe([1, 2, 3]);
+			askedToGo.OrderBy(id => id).ToArray().ShouldBe([1, 2, 3]);
+
+			askedToStaySql.Parameters.ShouldBeEmpty();
+			askedToStayTicksSql.Parameters.ShouldBeEmpty();
+			cannotVarySql.Parameters.ShouldBeEmpty();
+
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				lookedUpSql.Parameters.Count.ShouldBe(1);
+				calledInPlaceSql.Parameters.Count.ShouldBe(1);
+				askedToGoSql.Parameters.Count.ShouldBe(1);
+			}
+		}
+
+		/// <summary>
+		/// Two columns holding the same duration in different units compare equal.
+		/// </summary>
+		/// <remarks>
+		/// The discriminating case for comparing durations across units, and the reason it is worth a test of its
+		/// own: the stored numbers are 1800 and 18000000000 for the same ninety minutes, so a comparison left to
+		/// the raw values answers "not equal" - a plausible-looking answer that is simply wrong.
+		/// </remarks>
+		[Test]
+		public void EqualDurationsInDifferentUnitsCompareEqual([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			// Seeded from one value, so the two columns denote the same duration and differ only in storage.
+			var equal = t
+				.Where(r => r.InSeconds == r.InTicks)
+				.Select(r => r.Id)
+				.ToArray();
+
+			var greater = t
+				.Where(r => r.InSeconds > r.InTicks)
+				.Select(r => r.Id)
+				.ToArray();
+
+			equal.ShouldBe([1]);
+			greater.ShouldBeEmpty();
 		}
 
 		/// <summary>
@@ -503,6 +759,206 @@ namespace Tests.Linq
 			row.Min.ShouldBe(shorter);
 			row.Max.ShouldBe(longer);
 			row.TotalMin.ShouldBe(shorter.TotalMinutes + longer.TotalMinutes);
+		}
+
+		/// <summary>
+		/// Ordering by a duration orders by the duration.
+		/// </summary>
+		/// <remarks>
+		/// The one shape where the value is never read, so nothing about the conversion is exercised - what is
+		/// pinned instead is that the sort happens on the stored amount and stays monotone in the duration. The
+		/// seeded order is deliberately not the sorted one, so a query that dropped the ORDER BY would return the
+		/// rows as inserted and fail rather than pass by coincidence.
+		/// </remarks>
+		[Test]
+		public void OrderByDurationOrdersByTheDuration([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(90), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(60));
+
+			var ascending = t
+				.OrderBy(r => r.InSeconds)
+				.Select(r => r.Id)
+				.ToArray();
+
+			var descending = t
+				.OrderByDescending(r => r.InTicks)
+				.Select(r => r.Id)
+				.ToArray();
+
+			ascending.ShouldBe([2, 3, 1]);
+			descending.ShouldBe([1, 3, 2]);
+		}
+
+		/// <summary>
+		/// Membership tests convert each candidate into the column's declared unit.
+		/// </summary>
+		/// <remarks>
+		/// An <c>IN</c> list is a comparison repeated, so it needs the same conversion a single comparison needs -
+		/// against <c>InSeconds</c> the candidates are 900 and 2700, against <c>InTicks</c> nine and twenty-seven
+		/// billion, for the same two durations. Sending one set of numbers to both columns matches nothing, which is
+		/// why the expected answer here is a subset rather than everything: an empty result and a full one would
+		/// both be indistinguishable from a plausible mistake.
+		/// <para>
+		/// Three routes reach that conversion, each arriving differently - the list may stand in the predicate or be
+		/// projected as a value, and the set may be the local list or a subquery with the candidate outside it. Both
+		/// units are asked of each, because a conversion taken from the wrong column would still answer one of them.
+		/// </para>
+		/// <para>
+		/// The fourth route, where both sides are columns and neither number is known while the query is built, is
+		/// <c>ContainsAcrossUnitsReconcilesTheColumns</c> below - it does not work yet.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ContainsUsesTheDeclaredUnit([DataSources] string context)
+		{
+			var wanted = new[] { TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45) };
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
+
+			var inSeconds = t
+				.Where(r => wanted.Contains(r.InSeconds))
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var inTicks = t
+				.Where(r => wanted.Contains(r.InTicks))
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var projected = t
+				.OrderBy(r => r.Id)
+				.Select(r => wanted.Contains(r.InSeconds))
+				.ToArray();
+
+			var present = t.Select(r => r.InSeconds).Contains(TimeSpan.FromMinutes(30));
+			var absent  = t.Select(r => r.InTicks).Contains(TimeSpan.FromMinutes(90));
+
+			inSeconds.ShouldBe([1, 3]);
+			inTicks.ShouldBe([1, 3]);
+			projected.ShouldBe([true, false, true]);
+			present.ShouldBeTrue();
+			absent.ShouldBeFalse();
+		}
+
+		/// <summary>
+		/// A membership test between two columns held in different units brings them to common terms.
+		/// </summary>
+		/// <remarks>
+		/// The case no conversion of a constant can carry: both sides are columns, so neither number is known while
+		/// the query is being built, and 1800 against 18000000000 is the same ninety minutes written two ways. The
+		/// answer is every row, because each row's two columns hold the same duration - an empty result means the
+		/// raw numbers were compared.
+		/// </remarks>
+		[ActiveIssue(Details = ContainsSkipsIntervalTranslation)]
+		[Test]
+		public void ContainsAcrossUnitsReconcilesTheColumns([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
+
+			var acrossUnits = t
+				.Where(r => t.Select(x => x.InTicks).Contains(r.InSeconds))
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			acrossUnits.ShouldBe([1, 2, 3]);
+		}
+
+		/// <summary>
+		/// A local collection used as a source carries its durations into the query on the column's terms.
+		/// </summary>
+		/// <remarks>
+		/// A collection joined to a table is not a predicate but a source: its values become rows the query selects
+		/// from, so each one is written into the statement rather than bound to a comparison. The unit still has to
+		/// come from whatever the value meets - a row holding ninety minutes matches <c>InSeconds</c> only if it is
+		/// written as 1800, and <c>InTicks</c> only if it is written as eighteen billion, and the same collection is
+		/// used against both here.
+		/// </remarks>
+		[Test]
+		public void LocalCollectionAsASourceKeepsTheDeclaredUnit([DataSources] string context)
+		{
+			var wanted = new[] { TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45) };
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
+
+			var joinedToSeconds =
+				(from d in wanted
+				 join r in t on d equals r.InSeconds
+				 orderby r.Id
+				 select r.Id)
+				.ToArray();
+
+			var joinedToTicks =
+				(from d in wanted
+				 join r in t on d equals r.InTicks
+				 orderby r.Id
+				 select r.Id)
+				.ToArray();
+
+			joinedToSeconds.ShouldBe([1, 3]);
+			joinedToTicks.ShouldBe([1, 3]);
+		}
+
+		/// <summary>
+		/// Each value of a local collection driving a per-value query reaches its own query.
+		/// </summary>
+		/// <remarks>
+		/// This shape is not one statement over a values source: the collection is walked on the client and a query
+		/// runs per value. Each of those has to carry its own value, and the two here are chosen to match different
+		/// rows, so a value that failed to travel shows up as the same row twice rather than as no rows at all.
+		/// <para>
+		/// Which is what it did for as long as a duration was written into the statement rather than passed to it:
+		/// every value after the first found the first one's query already built and asked its question again. The
+		/// same shape over a plain integer column always answered correctly, and that difference is what showed the
+		/// fault was in how the duration travelled rather than in the shape. What settled it is one test below.
+		/// </para>
+		/// <para>
+		/// A duration is also projected back out, which is the other direction through the same seam: the value has
+		/// to survive the round trip into the statement and back into a <see cref="TimeSpan"/>.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void LocalCollectionDrivingAQueryPerValueKeepsEachValue([DataSources] string context)
+		{
+			var wanted = new[] { TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45) };
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
+
+			var correlated =
+				(from d in wanted
+				 from r in t.Where(x => x.InSeconds == d)
+				 orderby r.Id
+				 select r.Id)
+				.ToArray();
+
+			var roundTripped =
+				(from d in wanted
+				 from r in t.Where(x => x.InSeconds == d)
+				 orderby r.Id
+				 select new { Local = d, Stored = r.InSeconds })
+				.ToArray();
+
+			correlated.ShouldBe([1, 3]);
+
+			roundTripped.Select(x => x.Local).ShouldBe([TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45)]);
+			roundTripped.Select(x => x.Stored).ShouldBe([TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45)]);
 		}
 
 		/// <summary>
@@ -640,316 +1096,17 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// Comparing a duration column against a duration value uses the column's declared unit.
+		/// A duration read through a common table expression keeps the conversion its own column carries.
 		/// </summary>
 		/// <remarks>
-		/// The value has to be converted into the column's unit before the comparison, not after: against
-		/// <c>InSeconds</c> the bound is 1800 and against <c>InTicks</c> it is 18000000000, for the same half hour.
-		/// Sending the tick count to both would put every row on the wrong side of the boundary.
-		/// <para>
-		/// Both a strict and a non-strict bound are asked, and one row sits exactly on it, so a comparison that is
-		/// converted correctly but rendered with the wrong operator is still caught.
-		/// </para>
+		/// A CTE puts a hop between the column and the reader: what the outer query names is a field of the
+		/// expression rather than the column itself, so the conversion has to be found through that field. The three
+		/// columns asked here are stored three different ways - two declared units and one hand-written converter -
+		/// and each would come back as a different wrong number if the hop lost it, so a single conversion applied
+		/// to all three could not pass either.
 		/// </remarks>
 		[Test]
-		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
-		{
-			var bound = TimeSpan.FromMinutes(30);
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			Seed(db, TimeSpan.FromMinutes(15), bound, TimeSpan.FromMinutes(45));
-
-			var overInSeconds = t
-				.Where(r => r.InSeconds > bound)
-				.Select(r => r.Id)
-				.ToArray();
-
-			var atLeastInSeconds = t
-				.Where(r => r.InSeconds >= bound)
-				.Select(r => r.Id)
-				.OrderBy(id => id)
-				.ToArray();
-
-			var overInTicks = t
-				.Where(r => r.InTicks > bound)
-				.Select(r => r.Id)
-				.ToArray();
-
-			var equalInTicks = t
-				.Where(r => r.InTicks == bound)
-				.Select(r => r.Id)
-				.ToArray();
-
-			overInSeconds.ShouldBe([3]);
-			atLeastInSeconds.ShouldBe([2, 3]);
-			overInTicks.ShouldBe([3]);
-			equalInTicks.ShouldBe([2]);
-		}
-
-		/// <summary>
-		/// Membership tests convert each candidate into the column's declared unit.
-		/// </summary>
-		/// <remarks>
-		/// An <c>IN</c> list is a comparison repeated, so it needs the same conversion a single comparison needs -
-		/// against <c>InSeconds</c> the candidates are 900 and 2700, against <c>InTicks</c> they are nine and
-		/// twenty-seven billion, for the same two durations. Sending one set of numbers to both columns matches
-		/// nothing, which is why the expected answer here is a subset rather than everything: an empty result and a
-		/// full one would both be indistinguishable from a plausible mistake.
-		/// <para>
-		/// Four routes to the same conversion, and each reaches it differently: the list may sit in the predicate or
-		/// be projected as a value, and the set may be a local collection or a subquery. The last case is the
-		/// discriminating one - both sides are columns, in different units, so neither can be converted at build
-		/// time and they have to meet on terms the query itself establishes.
-		/// </para>
-		/// </remarks>
-		[Test]
-		public void ContainsUsesTheDeclaredUnit([DataSources] string context)
-		{
-			var wanted = new[] { TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45) };
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
-
-			var inSeconds = t
-				.Where(r => wanted.Contains(r.InSeconds))
-				.Select(r => r.Id)
-				.OrderBy(id => id)
-				.ToArray();
-
-			var inTicks = t
-				.Where(r => wanted.Contains(r.InTicks))
-				.Select(r => r.Id)
-				.OrderBy(id => id)
-				.ToArray();
-
-			var projected = t
-				.OrderBy(r => r.Id)
-				.Select(r => wanted.Contains(r.InSeconds))
-				.ToArray();
-
-			var present = t.Select(r => r.InSeconds).Contains(TimeSpan.FromMinutes(30));
-			var absent  = t.Select(r => r.InTicks).Contains(TimeSpan.FromMinutes(90));
-
-			inSeconds.ShouldBe([1, 3]);
-			inTicks.ShouldBe([1, 3]);
-			projected.ShouldBe([true, false, true]);
-			present.ShouldBeTrue();
-			absent.ShouldBeFalse();
-		}
-
-		/// <summary>
-		/// A membership test between two columns held in different units brings them to common terms.
-		/// </summary>
-		/// <remarks>
-		/// The case no conversion of a constant can carry: both sides are columns, so neither number is known while
-		/// the query is being built, and 1800 against 18000000000 is the same ninety minutes written two ways. The
-		/// answer is every row, because each row's two columns hold the same duration - an empty result means the
-		/// raw numbers were compared.
-		/// </remarks>
-		[ActiveIssue(Details = ContainsSkipsIntervalTranslation)]
-		[Test]
-		public void ContainsAcrossUnitsReconcilesTheColumns([DataSources] string context)
-		{
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
-
-			var acrossUnits = t
-				.Where(r => t.Select(x => x.InTicks).Contains(r.InSeconds))
-				.Select(r => r.Id)
-				.OrderBy(id => id)
-				.ToArray();
-
-			acrossUnits.ShouldBe([1, 2, 3]);
-		}
-
-		/// <summary>
-		/// A local collection used as a source carries its durations into the query on the column's terms.
-		/// </summary>
-		/// <remarks>
-		/// A collection joined to a table is not a predicate but a source: its values become rows the query selects
-		/// from, so each one is written into the statement rather than bound to a comparison. The unit still has to
-		/// come from whatever the value meets - a row holding ninety minutes matches <c>InSeconds</c> only if it is
-		/// written as 1800, and <c>InTicks</c> only if it is written as eighteen billion, and the same collection is
-		/// used against both here.
-		/// <para>
-		/// A duration is also projected back out, which is the other direction through the same seam: the value has
-		/// to survive the round trip into the statement and back into a <see cref="TimeSpan"/>.
-		/// </para>
-		/// </remarks>
-		[Test]
-		public void LocalCollectionAsASourceKeepsTheDeclaredUnit([DataSources] string context)
-		{
-			var wanted = new[] { TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45) };
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
-
-			var joinedToSeconds =
-				(from d in wanted
-				 join r in t on d equals r.InSeconds
-				 orderby r.Id
-				 select r.Id)
-				.ToArray();
-
-			var joinedToTicks =
-				(from d in wanted
-				 join r in t on d equals r.InTicks
-				 orderby r.Id
-				 select r.Id)
-				.ToArray();
-
-			joinedToSeconds.ShouldBe([1, 3]);
-			joinedToTicks.ShouldBe([1, 3]);
-		}
-
-		/// <summary>
-		/// Each value of a local collection driving a per-value query reaches its own query.
-		/// </summary>
-		/// <remarks>
-		/// This shape is not one statement over a values source: the collection is walked on the client and a query
-		/// runs per value. Each of those has to carry its own value, and the two here are chosen to match different
-		/// rows, so a value that failed to travel shows up as the same row twice rather than as no rows at all.
-		/// <para>
-		/// The same shape over a plain integer column answers correctly, which is what makes this about the
-		/// conversion rather than about the shape.
-		/// </para>
-		/// </remarks>
-		[ActiveIssue(Details = ConvertedValueIsInlinedPerQuery)]
-		[Test]
-		public void LocalCollectionDrivingAQueryPerValueKeepsEachValue([DataSources] string context)
-		{
-			var wanted = new[] { TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45) };
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
-
-			var correlated =
-				(from d in wanted
-				 from r in t.Where(x => x.InSeconds == d)
-				 orderby r.Id
-				 select r.Id)
-				.ToArray();
-
-			var roundTripped =
-				(from d in wanted
-				 from r in t.Where(x => x.InSeconds == d)
-				 orderby r.Id
-				 select new { Local = d, Stored = r.InSeconds })
-				.ToArray();
-
-			correlated.ShouldBe([1, 3]);
-
-			roundTripped.Select(x => x.Local).ShouldBe([TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45)]);
-			roundTripped.Select(x => x.Stored).ShouldBe([TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(45)]);
-		}
-
-		/// <summary>
-		/// Membership tests over an elapsed difference convert the candidates into the unit the lowering produces.
-		/// </summary>
-		/// <remarks>
-		/// A difference is not a column and has no declared unit of its own - it arrives in whatever the lowering
-		/// yields - so the candidates cannot be converted by asking the mapping. The rows are seeded so that the
-		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
-		/// that matched everything or nothing.
-		/// </remarks>
-		[ActiveIssue(Details = ContainsSkipsIntervalTranslation)]
-		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
-		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders,          ErrorMessage = ErrorHelper.Error_Interval_Member)]
-		public void ContainsOverADifference([DataSources(false)] string context)
-		{
-			var wanted = new[] { TimeSpan.FromHours(1), TimeSpan.FromHours(3) };
-
-			using var db = GetDataContext(context, BuildSchema());
-			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
-
-			SeedTasks(db,
-				(TimeSpan.FromHours(1), TimeSpan.FromHours(3)),
-				(TimeSpan.FromHours(2), TimeSpan.FromHours(3)),
-				(TimeSpan.FromHours(3), TimeSpan.FromHours(3)));
-
-			var matching = t
-				.Where(r => wanted.Contains(r.FinishedOn - r.StartedOn))
-				.Select(r => r.Id)
-				.OrderBy(id => id)
-				.ToArray();
-
-			var present = t.Select(r => r.FinishedOn - r.StartedOn).Contains(TimeSpan.FromHours(2));
-			var absent  = t.Select(r => r.FinishedOn - r.StartedOn).Contains(TimeSpan.FromHours(5));
-
-			matching.ShouldBe([1, 3]);
-			present.ShouldBeTrue();
-			absent.ShouldBeFalse();
-		}
-
-		/// <summary>
-		/// Asking for a duration to be written into the statement answers the same as letting it travel on its own.
-		/// </summary>
-		/// <remarks>
-		/// A <see cref="TimeSpan"/> has no literal form of its own in SQL - what reaches the statement is the number
-		/// its declaration says it is. So <c>Sql.Constant</c> over one cannot be refused for want of a literal, and
-		/// it cannot mean something different from the ordinary form either: both are the same number, and the only
-		/// question is whether asking explicitly still produces a query that runs and answers correctly.
-		/// <para>
-		/// Both units are asked, because the number differs between them while the duration does not, and the rows
-		/// are checked rather than the text: which side of the comparison carries the reconciliation - the column
-		/// lifted to ticks, or the value lowered to seconds - is the provider's business, and pinning it here would
-		/// be pinning the wrong thing.
-		/// </para>
-		/// <para>
-		/// The absence of parameters is worth stating, though, and not as an endorsement: a duration is written into
-		/// the statement even when nobody asks, which an integer or a date in the same position is not. That is what
-		/// <see cref="ConvertedValueIsInlinedPerQuery"/> is about, and this test is where the behaviour is visible
-		/// without being wrong.
-		/// </para>
-		/// </remarks>
-		[Test]
-		public void ConstantDurationsReachTheStatementAndStillAnswer([DataSources(false)] string context)
-		{
-			var bound = TimeSpan.FromMinutes(30);
-
-			using var db = GetDataConnection(context, BuildSchema());
-			using var t  = db.CreateLocalTable<DurationRow>();
-
-			Seed(db, TimeSpan.FromMinutes(15), bound, TimeSpan.FromMinutes(45));
-
-			var constantSeconds = t.Where(r => r.InSeconds > Sql.Constant(bound)).Select(r => r.Id);
-			var constantTicks   = t.Where(r => r.InTicks   > Sql.Constant(bound)).Select(r => r.Id);
-			var ordinary        = t.Where(r => r.InSeconds > bound).Select(r => r.Id);
-
-			var secondsQuery = constantSeconds.ToSqlQuery();
-			var ticksQuery   = constantTicks.ToSqlQuery();
-			var ordinaryQuery = ordinary.ToSqlQuery();
-
-			constantSeconds.OrderBy(id => id).ToArray().ShouldBe([3]);
-			constantTicks.OrderBy(id => id).ToArray().ShouldBe([3]);
-			ordinary.OrderBy(id => id).ToArray().ShouldBe([3]);
-
-			secondsQuery.Parameters.ShouldBeEmpty();
-			ticksQuery.Parameters.ShouldBeEmpty();
-			ordinaryQuery.Parameters.ShouldBeEmpty();
-		}
-
-		/// <summary>
-		/// Two columns holding the same duration in different units compare equal.
-		/// </summary>
-		/// <remarks>
-		/// The discriminating case for comparing durations across units, and the reason it is worth a test of its
-		/// own: the stored numbers are 1800 and 18000000000 for the same ninety minutes, so a comparison left to
-		/// the raw values answers "not equal" - a plausible-looking answer that is simply wrong.
-		/// </remarks>
-		[Test]
-		public void EqualDurationsInDifferentUnitsCompareEqual([DataSources] string context)
+		public void CteCarriesADurationHoweverItIsStored([CteContextSource] string context)
 		{
 			var value = TimeSpan.FromMinutes(90);
 
@@ -957,50 +1114,115 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable<DurationRow>();
 			Seed(db, value);
 
-			// Seeded from one value, so the two columns denote the same duration and differ only in storage.
-			var equal = t
-				.Where(r => r.InSeconds == r.InTicks)
-				.Select(r => r.Id)
-				.ToArray();
+			var cte = t
+				.Select(r => new { r.Id, r.InSeconds, r.InTicks, r.UndeclaredSeconds })
+				.AsCte();
 
-			var greater = t
-				.Where(r => r.InSeconds > r.InTicks)
-				.Select(r => r.Id)
-				.ToArray();
+			var row = cte.OrderBy(r => r.Id).Single();
 
-			equal.ShouldBe([1]);
-			greater.ShouldBeEmpty();
+			row.InSeconds.ShouldBe(value);
+			row.InTicks.ShouldBe(value);
+			row.UndeclaredSeconds.ShouldBe(value);
 		}
 
 		/// <summary>
-		/// Ordering by a duration orders by the duration.
+		/// A duration produced by a scalar sub-query keeps its conversion, including where the provider can only
+		/// express the sub-query by lifting it into a common table expression.
 		/// </summary>
 		/// <remarks>
-		/// The one shape where the value is never read, so nothing about the conversion is exercised - what is
-		/// pinned instead is that the sort happens on the stored amount and stays monotone in the duration. The
-		/// seeded order is deliberately not the sorted one, so a query that dropped the ORDER BY would return the
-		/// rows as inserted and fail rather than pass by coincidence.
+		/// A single-column sub-query in a projection is a value rather than a row, and a provider with no inline
+		/// form for one rewrites it into a named expression and refers to that name instead. The reader is built
+		/// from the rewritten statement, so it has to find the conversion through the expression rather than through
+		/// the sub-query - a different walk, and the one that was not answered: a duration stored as 1800 seconds
+		/// came back as 1800 ticks, which is the same value the reader would produce with no conversion at all.
+		/// <para>
+		/// Three storages are asked, and the third is what widens the case beyond durations: <c>UndeclaredSeconds</c>
+		/// has no declared unit and only a hand-written converter, so what is pinned here is that any value
+		/// converter survives this route, not that this one does.
+		/// </para>
 		/// </remarks>
 		[Test]
-		public void OrderByDurationOrdersByTheDuration([DataSources] string context)
+		public void ScalarSubqueryKeepsTheConversion([DataSources] string context)
 		{
+			var shorter = TimeSpan.FromMinutes(30);
+			var longer  = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, longer, shorter);
+
+			var row = t
+				.Select(_ => new
+				{
+					Seconds   = t.Min(r => r.InSeconds),
+					Ticks     = t.Min(r => r.InTicks),
+					Converted = t.Min(r => r.UndeclaredSeconds),
+					Largest   = t.Max(r => r.InSeconds),
+				})
+				.First();
+
+			row.Seconds.ShouldBe(shorter);
+			row.Ticks.ShouldBe(shorter);
+			row.Converted.ShouldBe(shorter);
+			row.Largest.ShouldBe(longer);
+		}
+
+		/// <summary>
+		/// Carries a duration through the levels of a recursive expression, where it is a projected value rather
+		/// than a column of its own.
+		/// </summary>
+		sealed class DurationChain
+		{
+			public int      Id        { get; set; }
+			public int      Level     { get; set; }
+			public TimeSpan Duration  { get; set; }
+			public TimeSpan Converted { get; set; }
+		}
+
+		/// <summary>
+		/// A duration carried through a recursive common table expression keeps its conversion at every level.
+		/// </summary>
+		/// <remarks>
+		/// A recursive expression names itself, so a walk looking for the conversion can arrive back where it
+		/// started. The scalar-expression rule therefore refuses a recursive one outright instead of trying to
+		/// answer for it, and this is the shape that says whether refusing cost anything: the value still has to
+		/// reach the reader, by the ordinary route through the expression's own fields.
+		/// <para>
+		/// Each level carries a different duration, and a second column carries a hand-written converter beside the
+		/// declared unit, so a conversion lost after the first level - or taken once and reused for both columns -
+		/// shows up as a wrong value rather than as an equal one.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void RecursiveCteCarriesADurationThroughEveryLevel([RecursiveCteContextSource] string context)
+		{
+			var first  = TimeSpan.FromMinutes(15);
+			var second = TimeSpan.FromMinutes(30);
+			var third  = TimeSpan.FromMinutes(45);
+
 			using var db = GetDataContext(context, BuildSchema());
 			using var t  = db.CreateLocalTable<DurationRow>();
 
-			Seed(db, TimeSpan.FromMinutes(90), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(60));
+			Seed(db, first, second, third);
 
-			var ascending = t
-				.OrderBy(r => r.InSeconds)
-				.Select(r => r.Id)
-				.ToArray();
+			var chain = db.GetCte<DurationChain>(self =>
+				(
+					from r in t
+					where r.Id == 1
+					select new DurationChain { Id = r.Id, Level = 1, Duration = r.InSeconds, Converted = r.UndeclaredSeconds }
+				)
+				.Concat
+				(
+					from r in t
+					from c in self.InnerJoin(c => r.Id == c.Id + 1)
+					select new DurationChain { Id = r.Id, Level = c.Level + 1, Duration = r.InSeconds, Converted = r.UndeclaredSeconds }
+				));
 
-			var descending = t
-				.OrderByDescending(r => r.InTicks)
-				.Select(r => r.Id)
-				.ToArray();
+			var rows = chain.OrderBy(r => r.Id).ToList();
 
-			ascending.ShouldBe([2, 3, 1]);
-			descending.ShouldBe([1, 3, 2]);
+			rows.Select(r => r.Level).ShouldBe([1, 2, 3]);
+			rows.Select(r => r.Duration).ShouldBe([first, second, third]);
+			rows.Select(r => r.Converted).ShouldBe([first, second, third]);
 		}
 	}
 }
