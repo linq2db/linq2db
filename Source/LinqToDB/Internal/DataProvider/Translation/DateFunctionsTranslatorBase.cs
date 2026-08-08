@@ -414,8 +414,31 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (interval != null)
 				return new SqlIntervalPartExpression(interval, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
 
-			return translationContext.TryEvaluate<TimeSpan>(operand, out var value)
-				? translationContext.ExpressionFactory.Value(tickType, value.Ticks)
+			// Everything that is not an interval reaches here, not only a value: a member of a set operation whose
+			// branches disagree arrives too, and it has no tick count to give. So the question is asked before
+			// anything else, and asked without answering it - whether the operand could be worked out, not what it
+			// works out to. What could not leaves the comparison untranslated, which is how it is refused rather
+			// than quietly answered.
+			if (!translationContext.CanBeEvaluated(operand))
+				return null;
+
+			var unwrapped = operand.UnwrapConvert();
+
+			if (unwrapped.Type != typeof(TimeSpan))
+				return null;
+
+			// The tick count is asked for as an expression rather than worked out here, so how the value travels
+			// stays the ordinary decision - and it becomes a parameter, as an integer or a date in the same position
+			// already does. Deciding it here would settle that by accident: the number would be written into the
+			// statement, and a query differing only by its duration would ask the previous one's question.
+			//
+			// A caller who said how the value should travel wrapped the duration, and the duration is not what
+			// reaches the statement - the tick count is - so the request is moved onto it.
+			var ticks = ExpressionHelpers.MoveValueMarkerOutside(
+				Expression.Property(unwrapped, nameof(TimeSpan.Ticks)));
+
+			return translationContext.Translate(ticks, translationFlags) is SqlPlaceholderExpression placeholder
+				? placeholder.Sql
 				: null;
 		}
 
@@ -435,6 +458,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </remarks>
 		Expression? TranslateIntervalComparison(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
+			// What the comparison sends is a tick count, and the column whose value the comparison is being built as
+			// - the flag it is assigned to, the column it is compared against - has nothing to say about how a tick
+			// count is written. Left in scope its descriptor would be asked anyway, so it is dropped here, as every
+			// other translation in this file drops it.
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			var factory  = translationContext.ExpressionFactory;
 			var tickType = factory.GetDbDataType(typeof(long));
 
