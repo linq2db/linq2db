@@ -173,6 +173,11 @@ jobs:
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
     baselines_new_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_new_branch'] ]
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
+    # Read by the empty-branch cleanup below: this job's condition replaces the implicit succeeded(),
+    # so it also runs when a test leg failed and a retry is still to come.
+    tests_windows_result: $[ dependencies.test_windows_job.result ]
+    tests_ubuntu_result: $[ dependencies.test_ubuntu_job.result ]
+    tests_macos_result: $[ dependencies.test_macos_job.result ]
 
   steps:
   - checkout: none
@@ -199,21 +204,35 @@ jobs:
             Write-Host "Baselines branch hash missing"
             exit 1
         }
-        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        # @(...) keeps a single-line answer an array, so the emptiness test below counts refs rather
+        # than characters - a bare string would make a legitimate multi-ref answer read as "no result".
+        $output = @(git ls-remote --heads $baselinesRepoUrl $baselinesBranch)
         Write-Host "Baselines current HEAD: ${output}"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
             exit 1
         }
-        if ($output.Length -lt 40) {
+        $baselinesHeadLine = $output | Where-Object { $_ -match '^[0-9a-f]{40}\s' } | Select-Object -First 1
+        if (-not $baselinesHeadLine) {
             Write-Host "Baselines HEAD request returned no result"
             exit 1
         }
-        $baslinesCurrentHash = ($output -split '\s+')[0]
+        $baslinesCurrentHash = ($baselinesHeadLine -split '\s+')[0]
         Write-Host "Baselines branch current head hash: ${baslinesCurrentHash}"
         if ($baselinesHash -eq $baslinesCurrentHash) {
             Write-Host "Baselines branch has no new commits"
             if ($newBranch -eq 1) {
+                $testResults = @("$(tests_windows_result)", "$(tests_ubuntu_result)", "$(tests_macos_result)")
+                $resultsText = $testResults -join ', '
+                Write-Host "Test job results: ${resultsText}"
+                # A failed leg can still be retried, and the retry re-creates this branch through the
+                # self-heal in ensure-baselines-branch.ps1. Deleting it now races that retry, which is
+                # how the branch ends up vanishing and reappearing mid-run.
+                $blocked = $testResults | Where-Object { $_ -in @('Failed', 'Canceled') }
+                if ($blocked) {
+                    Write-Host "A test job did not pass - keeping the baselines branch for a possible retry"
+                    exit 0
+                }
                 Write-Host "Remove empty baselines branch"
                 $output = gh api -XDELETE /repos/$orgName/$baselinesRepo/git/refs/heads/$baselinesBranch
                 Write-Host "Delete branch command output: ${output}"

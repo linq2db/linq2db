@@ -226,7 +226,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\$(netfx_tfm) /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\$(netfx_tfm) rmdir $(System.DefaultWorkingDirectory)\$(netfx_tfm) /S /Q'
   displayName: Remove NETFX test binaries
   condition: and(variables.title, eq(variables.netfx, 'true'))
 
@@ -313,7 +313,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\net8.0 /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\net8.0 rmdir $(System.DefaultWorkingDirectory)\net8.0 /S /Q'
   displayName: Remove NET 8 test binaries
   condition: and(variables.title, eq(variables.net80, 'true'))
 
@@ -400,7 +400,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\net9.0 /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\net9.0 rmdir $(System.DefaultWorkingDirectory)\net9.0 /S /Q'
   displayName: Remove NET 9 test binaries
   condition: and(variables.title, eq(variables.net90, 'true'))
 
@@ -480,7 +480,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\net10.0 /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\net10.0 rmdir $(System.DefaultWorkingDirectory)\net10.0 /S /Q'
   displayName: Remove NET 10 test binaries
   condition: and(variables.title, eq(variables.net100, 'true'))
 

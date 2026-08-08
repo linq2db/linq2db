@@ -728,10 +728,14 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDbVersion([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			// Both arms currently resolve to the same engine version: TestsInitialization points the native
+			// runtimes folder (PreLoadSQLite_BaseDirectory) at SourceGear.sqlite3's e_sqlite3, so
+			// Microsoft.Data.Sqlite loads that binary instead of its own SQLitePCLRaw bundle. They separate
+			// again if MDS moves to its own runtimes nuget — see this test's [Explicit] reason.
 			var expectedVersion = context switch
 			{
-				ProviderName.SQLiteClassic or TestProvName.SQLiteClassicMiniProfilerMapped or TestProvName.SQLiteClassicMiniProfilerUnmapped => "3.50.4",
-				ProviderName.SQLiteMS => "3.46.1",
+				ProviderName.SQLiteClassic or TestProvName.SQLiteClassicMiniProfilerMapped or TestProvName.SQLiteClassicMiniProfilerUnmapped => "3.53.4",
+				ProviderName.SQLiteMS => "3.53.4",
 
 				_ => throw new InvalidOperationException(),
 			};

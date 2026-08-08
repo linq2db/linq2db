@@ -6,7 +6,7 @@
 # Bump these in lockstep with Directory.Packages.props.
 TFM=$(basename "$(dirname "$(dirname "$PWD")")")
 if [ "$TFM" = "net10.0" ]; then
-	DB2_PKG_VERSION=10.0.0.100
+	DB2_PKG_VERSION=10.0.0.200
 else
 	DB2_PKG_VERSION=9.0.0.400
 fi

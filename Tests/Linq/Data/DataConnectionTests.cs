@@ -429,7 +429,7 @@ namespace Tests.Data
 			}
 		}
 
-		public class DummyService { }
+		public class DummyService;
 
 		public class DbConnection3 : DataConnection
 		{

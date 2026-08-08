@@ -9,42 +9,42 @@ namespace LinqToDB.Internal.Linq.Builder
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsRoot(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Root) != 0;
+			return flags.HasFlag(ProjectFlags.Root);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAggregationRoot(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.AggregationRoot) != 0;
+			return flags.HasFlag(ProjectFlags.AggregationRoot);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsKeys(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Keys) != 0;
+			return flags.HasFlag(ProjectFlags.Keys);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAssociationRoot(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.AssociationRoot) != 0;
+			return flags.HasFlag(ProjectFlags.AssociationRoot);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSql(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.SQL) != 0;
+			return flags.HasFlag(ProjectFlags.SQL);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsExpression(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Expression) != 0;
+			return flags.HasFlag(ProjectFlags.Expression);
 		}
 
 		[DebuggerStepThrough]
@@ -58,49 +58,49 @@ namespace LinqToDB.Internal.Linq.Builder
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsTable(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Table) != 0;
+			return flags.HasFlag(ProjectFlags.Table);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsTraverse(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Traverse) != 0;
+			return flags.HasFlag(ProjectFlags.Traverse);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSubquery(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Subquery) != 0;
+			return flags.HasFlag(ProjectFlags.Subquery);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsExtractProjection(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.ExtractProjection) != 0;
+			return flags.HasFlag(ProjectFlags.ExtractProjection);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsExpand(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Expand) != 0;
+			return flags.HasFlag(ProjectFlags.Expand);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsMemberRoot(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.MemberRoot) != 0;
+			return flags.HasFlag(ProjectFlags.MemberRoot);
 		}
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsForSetProjection(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.ForSetProjection) != 0;
+			return flags.HasFlag(ProjectFlags.ForSetProjection);
 		}
 
 	}
