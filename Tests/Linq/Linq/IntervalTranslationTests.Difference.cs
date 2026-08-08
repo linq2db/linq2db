@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -233,6 +234,122 @@ namespace Tests.Linq
 			row.Hours.ShouldBe(elapsed.Hours);
 			row.Minutes.ShouldBe(elapsed.Minutes);
 			row.TotalHours.ShouldBe(elapsed.TotalHours, 1e-9);
+		}
+
+		/// <summary>
+		/// A span longer than sixty-eight years measures what it measures in the CLR.
+		/// </summary>
+		/// <remarks>
+		/// Sixty-eight years is not an arbitrary length to pick: it is two to the thirty-first seconds, and it was
+		/// the ceiling. The decomposition anchors the start by shifting it forward by the whole units it counted,
+		/// and a shift takes a 32-bit amount on the providers that lower a difference this way - so counting those
+		/// whole units in seconds capped the whole thing at that many. Past it SQL Server answered <em>arithmetic
+		/// overflow error converting expression to data type int</em>, and the age of anyone born before about
+		/// 1958 is already past it. Counting the whole part in days instead puts the ceiling beyond what a date
+		/// can hold at all, which is what makes the range match the CLR's rather than merely being large.
+		/// <para>
+		/// The span deliberately ends part-way through a day. A whole number of days would answer correctly even
+		/// if the remainder were dropped entirely, and the remainder is the half of the decomposition the anchor
+		/// exists for. It is a whole number of seconds, so that a provider keeping less than tick resolution still
+		/// answers exactly rather than approximately.
+		/// </para>
+		/// <para>
+		/// Taken in both directions, and the reverse is not symmetry for its own sake. A tick count reached by
+		/// dividing rather than by decomposing carries a relative error, and where the result is then floored the
+		/// error stops cancelling and starts costing a whole tick - on PostgreSQL that made every negative span
+		/// wrong, down to one of a single second, while the positive half only went wrong past sixty-three years.
+		/// A test that asked one direction would have found half of that.
+		/// </para>
+		/// <para>
+		/// The dates sit inside the narrowest window any tested provider offers: YDB stores a timestamp as
+		/// microseconds after the Unix epoch, so nothing earlier than 1970 can be written there at all, which is
+		/// a limit of the storage rather than of the arithmetic - see the companion test on a wider column.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders,          ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		public void LongSpanMatchesClr([DataSources] string context, [Values(1, -1)] int direction)
+		{
+			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
+			var later   = new DateTime(2045, 6, 5, 4, 3, 2);
+
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
+
+			var expected = end - start;
+
+			// The guard against the test quietly ceasing to test anything: if these dates are ever brought closer
+			// together, the shape stops crossing the boundary it exists for.
+			Math.Abs(expected.TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var row = t.Select(r => new
+			{
+				Ticks     = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+				TotalDays = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalDays),
+			}).Single();
+
+			row.Ticks.ShouldBe(expected.Ticks);
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+		}
+
+		/// <summary>
+		/// Carries dates on a column wide enough for the whole CLR range, which on YDB is not the default.
+		/// </summary>
+		[Table]
+		sealed class WideEventRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Timestamp64)] public DateTime StartedOn  { get; set; }
+			[Column(DataType = DataType.Timestamp64)] public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// Given a column that can hold them, the whole CLR range measures what it measures in the CLR.
+		/// </summary>
+		/// <remarks>
+		/// The companion to the span test above, and the point is to separate two limits that look like one. YDB
+		/// maps a <see cref="DateTime"/> to <c>Timestamp</c>, which counts microseconds after the Unix epoch and
+		/// is unsigned, so a date before 1970 cannot be written and one after 2105 is refused - and the failure
+		/// arrives from the driver while binding the insert, before any query is built. That is easy to mistake
+		/// for the difference arithmetic being unable to reach far, which it is not.
+		/// <para>
+		/// Declaring the columns <c>Timestamp64</c> - signed, and spanning years 1 through 9999 - the same
+		/// untouched lowering answers exactly across the entire CLR range, in both directions. So the boundary
+		/// belongs to the storage type alone, and this pins that: should YDB's default ever widen, the arithmetic
+		/// is already known to be ready for it.
+		/// </para>
+		/// <para>
+		/// Whole seconds, because <c>Timestamp64</c> keeps microseconds rather than ticks.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void FullClrRangeMatchesClrOnAWideColumn(
+			[IncludeDataSources(TestProvName.AllYdb)] string context,
+			[Values(1, -1)] int direction)
+		{
+			var earliest = DateTime.MinValue;
+			var latest   = new DateTime(9999, 12, 31, 23, 59, 59);
+
+			var start = direction > 0 ? earliest : latest;
+			var end   = direction > 0 ? latest   : earliest;
+
+			var expected = end - start;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<WideEventRow>();
+
+			db.Insert(new WideEventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var ticks = t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).Single();
+
+			ticks.ShouldBe(expected.Ticks);
 		}
 
 		[Test]
