@@ -132,6 +132,118 @@ namespace Tests.Linq
 			required.ShouldBe([3]);
 		}
 
+		/// <summary>
+		/// The units the rest of the fixture does not store, kept in their own table so the shared one stays as it
+		/// is.
+		/// </summary>
+		/// <remarks>
+		/// Second and Tick are what everything else declares, and between them they never divide: a tick passes
+		/// through and a second multiplies. The two ends of the scale behave differently and are what this covers -
+		/// Nanosecond is the only unit finer than a tick, so reaching ticks from it is a division, while Day carries
+		/// the largest factor there is and is the one most likely to overflow a provider's own arithmetic.
+		/// </remarks>
+		[Table]
+		sealed class UnitSpreadRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = Wide, DataType = DataType.Money)]
+			[Duration(DurationUnit.Day)]
+			public TimeSpan InDays { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = Wide, DataType = DataType.Money)]
+			[Duration(DurationUnit.Millisecond)]
+			public TimeSpan InMilliseconds { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Duration(DurationUnit.Nanosecond)]
+			public TimeSpan InNanoseconds { get; set; }
+		}
+
+		/// <summary>
+		/// A duration declared in each of the remaining units is written, read back and asked for a member.
+		/// </summary>
+		/// <remarks>
+		/// The day column is seeded with something that is not a whole number of days, which pins the truncation the
+		/// derived conversion documents: storage coarser than the value keeps what fits and drops the rest, and that
+		/// belongs to the unit the user chose rather than to anything this could avoid.
+		/// <para>
+		/// Access is left out because it has no integer wide enough for the nanosecond column - a hundred times a
+		/// tick count - not because anything about the units differs there.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void EachDeclaredUnitRoundTripsAndReads([DataSources(false, TestProvName.AllAccess)] string context)
+		{
+			var days         = TimeSpan.FromHours(60);
+			var milliseconds = new TimeSpan(0, 1, 2, 3, 456);
+			var nanoseconds  = TimeSpan.FromTicks(TimeSpan.TicksPerSecond * 7 + 1234);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<UnitSpreadRow>();
+
+			db.Insert(new UnitSpreadRow
+			{
+				Id             = 1,
+				InDays         = days,
+				InMilliseconds = milliseconds,
+				InNanoseconds  = nanoseconds,
+			});
+
+			var row = t.Single();
+
+			// Two and a half days stored as whole days is two - the value the column can hold, not the one written.
+			row.InDays.ShouldBe(TimeSpan.FromDays(2));
+			row.InMilliseconds.ShouldBe(milliseconds);
+			row.InNanoseconds.ShouldBe(nanoseconds);
+
+			var members = t
+				.Select(r => new
+				{
+					DayHours          = Sql.AsSql(r.InDays.TotalHours),
+					MillisecondSecond = Sql.AsSql(r.InMilliseconds.Seconds),
+				})
+				.Single();
+
+			members.DayHours.ShouldBe(48d);
+			members.MillisecondSecond.ShouldBe(milliseconds.Seconds);
+		}
+
+		/// <summary>
+		/// A duration stored in a unit finer than a tick round-trips, but its members do not translate anywhere.
+		/// </summary>
+		/// <remarks>
+		/// Reaching a tick count from nanoseconds is a division, and the lowering takes only units that scale up -
+		/// so the member is refused by name on every provider rather than answered by one and not another. The
+		/// conversion itself is unaffected, which is why the value above comes back intact: what cannot be done is
+		/// arithmetic on the stored number in SQL.
+		/// <para>
+		/// Pinned rather than left undiscovered because the unit is offered on the public enum: whoever declares it
+		/// should meet a refusal that says so, and this goes red the day the lowering learns to divide.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void AUnitFinerThanATickHasNoMembers([DataSources(false, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<UnitSpreadRow>();
+
+			var value = TimeSpan.FromSeconds(7);
+
+			db.Insert(new UnitSpreadRow { Id = 1, InNanoseconds = value });
+
+			// Asserted here rather than through ThrowsForProvider because there is no provider to name: the refusal
+			// comes from the shared lowering, so every one of them gives it.
+			Action act = () => t.Select(r => Sql.AsSql(r.InNanoseconds.Ticks)).Single();
+
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("TimeSpan member");
+
+			// The conversion is untouched by that - only arithmetic on the stored number is refused.
+			t.Single().InNanoseconds.ShouldBe(value);
+		}
+
 		[Test]
 		public void TotalMatchesClr([DataSources] string context)
 		{
@@ -178,6 +290,41 @@ namespace Tests.Linq
 			row.Hours.ShouldBe(value.Hours);
 			row.Minutes.ShouldBe(value.Minutes);
 			row.Seconds.ShouldBe(value.Seconds);
+		}
+
+		/// <summary>
+		/// A sub-second component of a stored duration answers even where the provider measures elapsed time
+		/// more coarsely.
+		/// </summary>
+		/// <remarks>
+		/// The two are different questions. How finely a provider can measure the time between two dates says
+		/// nothing about a number already sitting in a column: a duration declared in ticks carries its own
+		/// microseconds exactly, and dividing that number needs no measurement at all. SQLite is the provider
+		/// where the two come apart - it measures through <c>julianday</c> and resolves to the millisecond - so a
+		/// gate applied to both would refuse this while the answer is sitting in the column.
+		/// </remarks>
+		[Test]
+		public void SubSecondComponentsOfAStoredDurationAnswer([DataSources] string context)
+		{
+			var value = new TimeSpan(0, 0, 0, 1, 234) + TimeSpan.FromTicks(5670);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			// Sql.AsSql is what makes this a test: the refusal it guards against is an error expression, and one of
+			// those only propagates where SQL is required. Left as a plain projection the member would fall back to
+			// .NET and answer correctly whether or not the gate had fired.
+			var row = t
+				.Select(r => new
+				{
+					Milliseconds = Sql.AsSql(r.InTicks.Milliseconds),
+					Microseconds = Sql.AsSql(r.InTicks.Microseconds),
+				})
+				.Single();
+
+			row.Milliseconds.ShouldBe(value.Milliseconds);
+			row.Microseconds.ShouldBe(value.Microseconds);
 		}
 
 		[Test]

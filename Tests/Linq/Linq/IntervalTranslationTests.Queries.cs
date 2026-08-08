@@ -940,7 +940,6 @@ namespace Tests.Linq
 		/// answer is every row, because each row's two columns hold the same duration - an empty result means the
 		/// raw numbers were compared.
 		/// </remarks>
-		[ActiveIssue(Details = ContainsSkipsIntervalTranslation)]
 		[Test]
 		public void ContainsAcrossUnitsReconcilesTheColumns([DataSources] string context)
 		{

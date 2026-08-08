@@ -1027,6 +1027,10 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
 
+			var reconciled = ReconcileDurationUnits(predicate);
+			if (reconciled != null)
+				return Visit(reconciled);
+
 			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0;
 
 			var testExpression  = predicate.Expr1;
@@ -1274,11 +1278,11 @@ namespace LinqToDB.Internal.SqlProvider
 		/// approximating.
 		/// <para>
 		/// The default derives it from the counting primitives, so a provider that has those needs nothing more:
-		/// whole elapsed seconds, plus the sub-second remainder counted in <see cref="FinestDateUnit"/>. Neither
-		/// part can overflow - the second count is small for any range a <see cref="TimeSpan"/> can hold, and the
-		/// remainder is measured across a window shorter than one second - which is what makes this preferable to
-		/// counting the whole range in a fine unit. A provider with a single exact expression for the difference
-		/// overrides it with that instead.
+		/// whole elapsed days, plus the remainder counted in <see cref="FinestDateUnit"/>. Neither part can
+		/// overflow - the day count is small for any range a <see cref="TimeSpan"/> can hold, and the remainder is
+		/// measured across a window shorter than one day - which is what makes this preferable to counting the
+		/// whole range in a fine unit. A provider with a single exact expression for the difference overrides it
+		/// with that instead.
 		/// </para>
 		/// </remarks>
 		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
@@ -1892,6 +1896,60 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return selectQuery;
+		}
+
+		/// <summary>
+		/// Brings a membership test between two declared durations to common terms, or returns <see langword="null"/>
+		/// when there is nothing to reconcile.
+		/// </summary>
+		/// <remarks>
+		/// A comparison is reconciled while it is translated, because both operands are still expressions there. A
+		/// membership test is not: it becomes a predicate over one expression and a sub-query, and the two numbers
+		/// are then compared as they stand - 1800 against 18000000000 is the same ninety minutes written twice.
+		/// Neither value is known while the query is built, so no conversion of a constant can bridge them.
+		/// <para>
+		/// Both sides go to ticks rather than one side to the other's unit: converting the test down to a coarser
+		/// unit would truncate it, and a duration that the column cannot represent would then match a stored value
+		/// it does not equal.
+		/// </para>
+		/// <para>
+		/// The sub-query is cloned before its column is rewritten unless this visitor owns it outright, the same
+		/// condition <see cref="ConvertToExists"/> applies for the same reason - it may be shared, and a statement
+		/// reached through the query cache must not be edited in place.
+		/// </para>
+		/// </remarks>
+		ISqlPredicate? ReconcileDurationUnits(SqlPredicate.InSubQuery predicate)
+		{
+			if (predicate.SubQuery.Select.Columns is not [var singleColumn])
+				return null;
+
+			var testDescriptor   = QueryHelper.GetColumnDescriptor(predicate.Expr1);
+			var columnDescriptor = QueryHelper.GetColumnDescriptor(singleColumn.Expression);
+
+			if (testDescriptor?.DurationUnit is not { } testUnit || columnDescriptor?.DurationUnit is not { } columnUnit || testUnit == columnUnit)
+				return null;
+
+			var subQuery = predicate.SubQuery;
+
+			if (GetVisitMode(subQuery) == VisitMode.Transform)
+				subQuery = subQuery.CloneQuery();
+
+			var subQueryColumn = subQuery.Select.Columns[0];
+
+			subQueryColumn.Expression = TotalTicks(subQueryColumn.Expression, columnDescriptor, columnUnit);
+
+			return new SqlPredicate.InSubQuery(
+				TotalTicks(predicate.Expr1, testDescriptor, testUnit),
+				predicate.IsNot,
+				subQuery,
+				predicate.DoNotConvert);
+		}
+
+		ISqlExpression TotalTicks(ISqlExpression expression, ColumnDescriptor descriptor, DurationUnit unit)
+		{
+			var interval = new SqlIntervalExpression(expression, descriptor.GetDbDataType(true), SqlIntervalType.ForDuration(unit));
+
+			return new SqlIntervalPartExpression(interval, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, Factory.GetDbDataType(typeof(long)));
 		}
 
 		ISqlPredicate ConvertToExists(SqlPredicate.InSubQuery inPredicate)

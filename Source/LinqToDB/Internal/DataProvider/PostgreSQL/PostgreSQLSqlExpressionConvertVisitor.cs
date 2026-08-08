@@ -193,8 +193,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				_                      => null,
 			};
 
+			// EXTRACT names no field below the second, but that is a limit of this shortcut rather than of the
+			// provider: the base implementation reaches the same components from ElapsedTicks, which is exact here,
+			// using PostgreSQL's own integer division and remainder - both of which follow the CLR's rules.
 			if (part == null)
-				return null;
+				return base.LowerIntervalPart(element);
 
 			// second carries the fractional part in PostgreSQL, so truncate it to match TimeSpan.Seconds.
 			var extracted = Extract(part, elapsed, Factory.GetDbDataType(typeof(double)));

@@ -654,18 +654,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			//
 			// Totals are left alone: they scale the whole count rather than reading inside a coarser unit, so a
 			// coarser measurement makes them quantised but still meaningful.
-			var resolution = translationContext.ProviderFlags.IntervalResolution;
-
-			if (kind == SqlIntervalPartKind.Component && within is { } enclosing && !SqlIntervalUnits.IsFinerThan(resolution, enclosing))
-			{
-				return translationContext.CreateErrorExpression(
-					memberExpression,
-					string.Format(
-						CultureInfo.InvariantCulture,
-						ErrorHelper.Error_Interval_ComponentBelowResolution,
-						unit.ToString().ToLowerInvariant(),
-						resolution.ToString().ToLowerInvariant()));
-			}
+			//
+			// Asked of the resolved operand rather than up front, because the limit belongs to measuring elapsed
+			// time and not to durations in general: a column declared in ticks holds its own sub-second part
+			// exactly, whatever the provider's own difference would have rounded to.
 
 			var interval = TranslateIntervalOperand(translationContext, memberExpression.Expression, translationFlags);
 
@@ -683,6 +675,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return translationContext.CreateErrorExpression(memberExpression, ErrorHelper.Error_Interval_Difference);
 
 				return null;
+			}
+
+			var resolution = translationContext.ProviderFlags.IntervalResolution;
+
+			if (kind == SqlIntervalPartKind.Component
+				&& within is { } enclosing
+				&& QueryHelper.UnwrapNullablity(interval) is SqlIntervalDifferenceExpression
+				&& !SqlIntervalUnits.IsFinerThan(resolution, enclosing))
+			{
+				return translationContext.CreateErrorExpression(
+					memberExpression,
+					string.Format(
+						CultureInfo.InvariantCulture,
+						ErrorHelper.Error_Interval_ComponentBelowResolution,
+						unit.ToString().ToLowerInvariant(),
+						resolution.ToString().ToLowerInvariant()));
 			}
 
 			var resultType = translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);

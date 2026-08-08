@@ -184,19 +184,24 @@ namespace LinqToDB.Mapping
 				return null;
 
 			// ticks = amount * perUnit / perTick, so the stored amount is its inverse.
+			//
+			// Checked, for the reason SqlIntervalUnits.TryToTicks gives: a silent wrap here is a wrong duration,
+			// not a large one. It is reachable - a unit finer than a tick scales up rather than down, so storing
+			// nanoseconds multiplies by a hundred and leaves the long past about 292 years, well inside what a
+			// TimeSpan holds - and reading a coarse unit back scales up the same way from whatever the column has.
 			if (memberType == typeof(TimeSpan))
 			{
 				return new ValueConverter<TimeSpan, long>(
-					ts => ts.Ticks * perTick / perUnit,
-					v  => TimeSpan.FromTicks(v * perUnit / perTick),
+					ts => checked(ts.Ticks * perTick) / perUnit,
+					v  => TimeSpan.FromTicks(checked(v * perUnit) / perTick),
 					handlesNulls: false);
 			}
 
 			if (memberType == typeof(TimeSpan?))
 			{
 				return new ValueConverter<TimeSpan?, long?>(
-					ts => ts == null ? null : ts.Value.Ticks * perTick / perUnit,
-					v  => v  == null ? null : TimeSpan.FromTicks(v.Value * perUnit / perTick),
+					ts => ts == null ? null : checked(ts.Value.Ticks * perTick) / perUnit,
+					v  => v  == null ? null : TimeSpan.FromTicks(checked(v.Value * perUnit) / perTick),
 					handlesNulls: true);
 			}
 

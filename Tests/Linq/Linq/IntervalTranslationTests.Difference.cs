@@ -528,7 +528,9 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL, TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		// PostgreSQL is absent here although EXTRACT names no field below the second: the components are reached
+		// from its own exact tick count instead, so it answers them like everyone else.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceSubSecondComponentsAgreeWithStorage([DataSources] string context)
 		{
