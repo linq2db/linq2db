@@ -618,6 +618,67 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A duration that may be absent is compared on the column's declared unit when it is there, and matches
+		/// nothing when it is not.
+		/// </summary>
+		/// <remarks>
+		/// The bound arrives as a <see cref="Nullable{T}"/>, which is a different thing to convert from the value
+		/// itself: the unit has to be found through the wrapper. Both units are asked, so a conversion that was
+		/// lost rather than applied shows up as the wrong rows rather than as none - against <c>InSeconds</c> the
+		/// bound is 1800 and against <c>InTicks</c> 18000000000, for the same half hour.
+		/// <para>
+		/// The absent bound is the half that has nowhere to take a type from. It still has to reach the statement
+		/// as a duration, because a parameter with no type is what a provider refuses outright rather than
+		/// answering; and once there, the comparison must match nothing rather than everything. Both SQL and the
+		/// CLR agree that nothing is greater than an absent bound - that is the answer being pinned.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ComparisonAgainstAnOptionalValueUsesTheDeclaredUnit([DataSources] string context)
+		{
+			TimeSpan? present = TimeSpan.FromMinutes(30);
+			TimeSpan? absent  = null;
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+
+			Seed(db, TimeSpan.FromMinutes(15), TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(45));
+
+			var overInSeconds = t
+				.Where(r => r.InSeconds > present)
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var overInTicks = t
+				.Where(r => r.InTicks > present)
+				.Select(r => r.Id)
+				.OrderBy(id => id)
+				.ToArray();
+
+			var equalInSeconds = t
+				.Where(r => r.InSeconds == present)
+				.Select(r => r.Id)
+				.ToArray();
+
+			var overAbsent = t
+				.Where(r => r.InSeconds > absent)
+				.Select(r => r.Id)
+				.ToArray();
+
+			var equalAbsent = t
+				.Where(r => r.InSeconds == absent)
+				.Select(r => r.Id)
+				.ToArray();
+
+			overInSeconds.ShouldBe([3]);
+			overInTicks.ShouldBe([3]);
+			equalInSeconds.ShouldBe([2]);
+			overAbsent.ShouldBeEmpty();
+			equalAbsent.ShouldBeEmpty();
+		}
+
+		/// <summary>
 		/// How a duration reaches the statement follows the expression it was written as, and either request
 		/// overrides that.
 		/// </summary>

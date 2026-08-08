@@ -12,6 +12,56 @@ namespace Tests.Linq
 {
 	public partial class IntervalTranslationTests
 	{
+		/// <summary>
+		/// A duration that may be absent survives a write in both states, and in both directions between them.
+		/// </summary>
+		/// <remarks>
+		/// The conversion a declared unit derives is written for a value, and absence is not one. Storing it asks
+		/// the write path to leave the conversion alone and put nothing in the column; storing a value again
+		/// afterwards asks it to pick the conversion back up. A converter applied to an absent value would fail
+		/// here rather than quietly, which is the point of asking both directions in one test.
+		/// <para>
+		/// The absent value also travels as a parameter with nothing to take its type from, which is where a
+		/// provider that needs the type stated refuses. That is the same seam the comparison tests reach from the
+		/// other side, and it is worth having on the write path too - the value goes into a column there rather
+		/// than into a predicate, and the two are not the same code.
+		/// </para>
+		/// <para>
+		/// The required column rides along unchanged. If both came back absent the test would still fail, which is
+		/// what stops "everything is null" from reading as success.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void AnOptionalDurationRoundTripsIncludingItsAbsence([DataSources] string context)
+		{
+			var       value = TimeSpan.FromSeconds(4567);
+			TimeSpan? none  = null;
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<OptionalDurationRow>();
+
+			db.Insert(new OptionalDurationRow { Id = 1, Grace = value, Required = value });
+			db.Insert(new OptionalDurationRow { Id = 2, Grace = none,  Required = value });
+
+			var inserted = t.OrderBy(r => r.Id).ToList();
+
+			inserted.Count.ShouldBe(2);
+			inserted[0].Grace.ShouldBe(value);
+			inserted[1].Grace.ShouldBeNull();
+			inserted.Select(r => r.Required).ShouldBe([value, value]);
+
+			// Both directions, so neither "a value never becomes absent" nor "absence never takes a value" can
+			// pass unnoticed.
+			t.Where(r => r.Id == 1).Set(r => r.Grace, none).Update();
+			t.Where(r => r.Id == 2).Set(r => r.Grace, value).Update();
+
+			var updated = t.OrderBy(r => r.Id).ToList();
+
+			updated[0].Grace.ShouldBeNull();
+			updated[1].Grace.ShouldBe(value);
+			updated.Select(r => r.Required).ShouldBe([value, value]);
+		}
+
 		[Test]
 		public void BulkCopyRoundTripsTheDeclaredUnit(
 			[DataSources(false)] string context,
