@@ -237,6 +237,32 @@ namespace Tests.Linq
 				.ShouldBe([1]);
 		}
 
+		/// <summary>
+		/// A shift that survives to the SQL layer, over a remote context as well as a local one.
+		/// </summary>
+		/// <remarks>
+		/// The shift node is the one of the four that no other test can hand to the serializer: the local-only test
+		/// above cannot, and the cancelling forms are resolved by the optimizer before anything is written down. So
+		/// this names the providers that lower a shift rather than declaring the ones that refuse, which is the only
+		/// way to keep a remote context in scope - a refusal comes back wrapped in a transport exception there and
+		/// would say nothing about the translation.
+		/// </remarks>
+		[Test]
+		public void AShiftTravelsToARemoteContext(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllDuckDB)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
+
+			ShiftedInAPredicate(t)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
 		[Test]
 		public void ArithmeticHappensOnTheServer([DataSources] string context)
 		{

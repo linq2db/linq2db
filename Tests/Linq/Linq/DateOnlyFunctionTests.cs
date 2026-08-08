@@ -284,6 +284,7 @@ namespace Tests.Linq
 
 		#region DateDiff
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[DataSources(TestProvName.AllInformix, DateOnlySkipProviders)]

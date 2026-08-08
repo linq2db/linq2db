@@ -1432,6 +1432,10 @@ namespace Tests.Linq
 
 		#region DateDiff
 
+		// SQL Server before 2016 has no exact measure of elapsed time - DATEDIFF_BIG arrived there - and Sql.AsSql
+		// below asks for the value in SQL, so there is no client-side answer to fall back to. Declared rather than
+		// excluded so it goes red the day the lowering reaches those versions.
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[DataSources(TestProvName.AllInformix)]
@@ -1454,6 +1458,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateHour(
 			[DataSources(TestProvName.AllInformix)]
@@ -1477,6 +1482,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1501,6 +1507,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1532,6 +1539,7 @@ namespace Tests.Linq
 		// Possible reason:
 		// looks like Access runtime modify some C++ runtime options that affect runtime's rounding behavior
 		// used also by SQLite provider's native part
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMillisecond(
 			[DataSources(
@@ -2003,12 +2011,12 @@ namespace Tests.Linq
 			TestProvName.AllMySql             + "," +
 			TestProvName.AllDuckDB            + "," +
 			ProviderName.SqlCe                + "," +
-			TestProvName.AllFirebird         + "," +
-			TestProvName.AllClickHouse       + "," +
-			TestProvName.AllSapHana          + "," +
-			TestProvName.AllSybase           + "," +
-			TestProvName.AllOracle           + "," +
-			TestProvName.AllDB2              + "," +
+			TestProvName.AllFirebird          + "," +
+			TestProvName.AllClickHouse        + "," +
+			TestProvName.AllSapHana           + "," +
+			TestProvName.AllSybase            + "," +
+			TestProvName.AllOracle            + "," +
+			TestProvName.AllDB2               + "," +
 			TestProvName.AllYdb;
 
 		[Table("NullableDateTimeSub")]
