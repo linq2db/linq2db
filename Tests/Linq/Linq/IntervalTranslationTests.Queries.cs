@@ -38,7 +38,7 @@ namespace Tests.Linq
 			public DateTime FinishedOn { get; set; }
 
 			[Column(DataType = DataType.Int64)]
-			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Column(Configuration = Wide, DataType = DataType.Money)]
 			[Duration(DurationUnit.Second)]
 			public TimeSpan Budget { get; set; }
 		}
@@ -112,6 +112,29 @@ namespace Tests.Linq
 			+ "numbers they store, and a candidate taken from an expression with no declared unit reaches the provider "
 			+ "as a CLR TimeSpan. A comparison of the same two values answers correctly, which is where the reconciliation "
 			+ "already lives.";
+
+		/// <summary>
+		/// Why a duration compared against a value longer than about three and a half minutes fails on Access.
+		/// </summary>
+		/// <remarks>
+		/// Access has no 64-bit integer parameter, so its provider maps one to a 32-bit parameter and narrows the
+		/// value with a checked cast. Anything above <see cref="int.MaxValue"/> throws while the parameter is being
+		/// bound - before the statement executes, and before it reaches the trace, so the log says nothing about
+		/// which query failed. A comparison is reconciled in ticks, and 2147483647 ticks is three minutes and
+		/// thirty-four seconds, so every bound in these tests is far over the line.
+		/// <para>
+		/// Not an interval defect, and gated rather than declared for that reason: a plain captured <c>long</c>
+		/// compared against an ordinary integer column throws exactly the same way, with no duration anywhere. It
+		/// is also not declarable as a refusal - what escapes is a raw <see cref="OverflowException"/> rather than
+		/// one of ours, and the failure follows the <em>value</em>, not the shape of the query: the same comparison
+		/// with a hundred-second bound produces the same SQL and passes.
+		/// </para>
+		/// </remarks>
+		const string AccessLongParameterOverflow =
+			"Access maps a 64-bit integer parameter to a 32-bit one and narrows it with a checked cast, so any value "
+			+ "above int.MaxValue throws OverflowException as the parameter is bound. A duration comparison travels in "
+			+ "ticks, where int.MaxValue is three and a half minutes, so any longer bound fails. Not an interval "
+			+ "defect - a plain long compared against an int column throws identically. See issue 5748.";
 
 		// Here the duration is the difference between two dates. Most of these shapes are asked again in the block
 		// that follows, over a column whose unit comes from its declaration, and the repetition is deliberate rather
@@ -556,6 +579,7 @@ namespace Tests.Linq
 		/// converted correctly but rendered with the wrong operator is still caught.
 		/// </para>
 		/// </remarks>
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -621,6 +645,7 @@ namespace Tests.Linq
 		/// column lifted to ticks, or the value lowered to seconds - is the provider's business.
 		/// </para>
 		/// </remarks>
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void DeclaredDurationFollowsTheRequestForHowItTravels([DataSources(false)] string context)
 		{
@@ -931,6 +956,7 @@ namespace Tests.Linq
 		/// to survive the round trip into the statement and back into a <see cref="TimeSpan"/>.
 		/// </para>
 		/// </remarks>
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void LocalCollectionDrivingAQueryPerValueKeepsEachValue([DataSources] string context)
 		{

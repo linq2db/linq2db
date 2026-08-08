@@ -15,9 +15,18 @@ namespace Tests.Linq
 	[TestFixture]
 	public partial class IntervalTranslationTests : TestBase
 	{
-		// Access has no 64-bit integer column type, so it stores the same durations as DECIMAL. Declaring that per
+		// Access has no 64-bit integer column type, so it stores the same durations as CURRENCY - a 64-bit integer
+		// scaled by ten thousand, which carries a tick count exactly and with room to spare. Declaring that per
 		// configuration keeps one model and one set of tests: the storage type is a provider detail, and the
 		// feature under test - that the unit comes from the declaration - is exactly what should not vary with it.
+		//
+		// Not DECIMAL, which is the obvious choice and was the first one: the ACE ODBC driver cannot fetch a
+		// DECIMAL column produced by a scalar sub-query in the projection. The statement executes and then the
+		// read fails inside the driver with "Reserved error (|)". It is the pairing that breaks - the same column
+		// reads fine without the sub-query, and through a derived table, and INTEGER, DOUBLE, CURRENCY and VARCHAR
+		// all read fine through one - and it reproduces on a plain decimal property with no linq2db conversion on
+		// the path at all. So it is the driver's, not ours, and the model sidesteps it rather than the SQL builder
+		// working around it for every Access query.
 		const string Wide = ProviderName.Access;
 
 		[Table]
@@ -29,23 +38,23 @@ namespace Tests.Linq
 			// Same CLR type, same storage type, different units. Nothing about the storage says which - only the
 			// declaration does, and getting it wrong is a silent factor-of-10000000 error.
 			[Column(DataType = DataType.Int64)]
-			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Column(Configuration = Wide, DataType = DataType.Money)]
 			[Duration(DurationUnit.Second)]
 			public TimeSpan InSeconds { get; set; }
 
 			[Column(DataType = DataType.Int64)]
-			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Column(Configuration = Wide, DataType = DataType.Money)]
 			[Duration(DurationUnit.Tick)]
 			public TimeSpan InTicks { get; set; }
 
 			[Column(DataType = DataType.Int64)]
-			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Column(Configuration = Wide, DataType = DataType.Money)]
 			public TimeSpan Undeclared { get; set; }
 
 			// No duration declaration, and a converter that is NOT the identity in ticks - so reading it without
 			// the converter gives a visibly different value.
 			[Column(DataType = DataType.Int64)]
-			[Column(Configuration = Wide, DataType = DataType.Decimal, Precision = 18, Scale = 0)]
+			[Column(Configuration = Wide, DataType = DataType.Money)]
 			public TimeSpan UndeclaredSeconds { get; set; }
 		}
 
