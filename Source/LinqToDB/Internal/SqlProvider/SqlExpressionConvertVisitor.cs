@@ -1293,11 +1293,18 @@ namespace LinqToDB.Internal.SqlProvider
 			// Deliberately the raw boundary count, uncorrected: whatever it lands on, the remainder is measured
 			// from that exact point, so an overshoot comes back as a negative remainder of the same size and the
 			// two telescope. Correcting it here would only duplicate the count through a CASE for no gain.
-			var seconds = CountDateBoundaries(SqlIntervalUnit.Second, element.Start, element.End);
-			if (seconds == null)
+			//
+			// Days, not seconds, and the choice is what makes the whole CLR range reachable. A shift takes a
+			// 32-bit amount on the providers that come through here, so the anchor's unit sets the ceiling: in
+			// seconds that is 2^31 seconds, which is 68 years - close enough to ordinary that a person's age
+			// crosses it - while in days it is far past what a date can hold. Nothing else grows in exchange: the
+			// remainder spans at most one day, so counting it even in nanoseconds stays four orders below the
+			// 64-bit limit, and the whole part reaches about 3.2e18 ticks against a limit of 9.2e18.
+			var days = CountDateBoundaries(SqlIntervalUnit.Day, element.Start, element.End);
+			if (days == null)
 				return null;
 
-			var anchor = ShiftDate(SqlIntervalUnit.Second, seconds, element.Start);
+			var anchor = ShiftDate(SqlIntervalUnit.Day, days, element.Start);
 			if (anchor == null)
 				return null;
 
@@ -1316,7 +1323,16 @@ namespace LinqToDB.Internal.SqlProvider
 			if (fineDenominator != 1)
 				remainder = Factory.Div(longType, remainder, Factory.Value(longType, fineDenominator));
 
-			return Factory.Add(longType, Factory.Multiply(longType, seconds, TimeSpan.TicksPerSecond), remainder);
+			// Scaled in two steps rather than by the tick count of a day directly, and the reason is the type a
+			// literal takes rather than arithmetic: 864000000000 is past the 32-bit range, and a provider that
+			// reads such a literal as decimal makes the whole product decimal with it - the value stays right and
+			// arrives as the wrong CLR type, which the reader then refuses. Both factors here fit in 32 bits, so
+			// the product stays integral wherever the day count already is.
+			var wholeTicks = Factory.Multiply(longType,
+				Factory.Multiply(longType, days, (long)TimeSpan.TicksPerDay / TimeSpan.TicksPerSecond),
+				TimeSpan.TicksPerSecond);
+
+			return Factory.Add(longType, wholeTicks, remainder);
 		}
 
 		/// <summary>
