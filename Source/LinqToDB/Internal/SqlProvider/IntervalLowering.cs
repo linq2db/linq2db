@@ -33,6 +33,9 @@ namespace LinqToDB.Internal.SqlProvider
 			if (element.Interval is not SqlIntervalExpression interval || interval.IntervalType.Domain != SqlIntervalDomain.Duration)
 				return null;
 
+			if (Composed(factory, interval, element, truncateDivide, truncateRemainder) is { } composed)
+				return composed;
+
 			var ticks = ToTicks(factory, interval);
 
 			return ticks == null ? null : FromTicks(factory, ticks, element, truncateDivide, truncateRemainder);
@@ -236,6 +239,93 @@ namespace LinqToDB.Internal.SqlProvider
 			var ticks = factory.Cast(interval.Value, longType);
 
 			return numerator == 1 ? ticks : factory.Multiply(longType, ticks, numerator);
+		}
+
+		/// <summary>
+		/// The same member arithmetic written straight over the stored amount, for a column whose unit and the
+		/// member's unit are whole multiples of one another - or <see langword="null"/> where they are not.
+		/// </summary>
+		/// <remarks>
+		/// Ticks are the axis every unit converts through, and that is what keeps the number of conversions linear in
+		/// the number of units rather than square in it. Where both ends are known the axis is a detour: seconds to
+		/// hours is a division by 3600, and going by way of ticks multiplies by ten million first only to divide it
+		/// back out.
+		/// <para>
+		/// The detour is not merely long. The number it forms on the way is where a fine unit overflows - a column of
+		/// milliseconds multiplied by ten thousand reaches what a duration holds at all - and going out to a
+		/// floating type and back rounds twice where composing rounds once.
+		/// </para>
+		/// <para>
+		/// Only whole multiples compose. A unit finer than a tick has a ratio that is not one, and keeps the axis,
+		/// which is where its own arithmetic already lives.
+		/// </para>
+		/// </remarks>
+		static ISqlExpression? Composed(
+			ISqlExpressionFactory                       factory,
+			SqlIntervalExpression                       interval,
+			SqlIntervalPartExpression                   element,
+			Func<ISqlExpression, long, ISqlExpression>  truncateDivide,
+			Func<ISqlExpression, long, ISqlExpression>  truncateRemainder)
+		{
+			if (!SqlIntervalUnits.TryGetTicksRatio(interval.IntervalType.Resolution, out var perStored, out var storedDenominator) || storedDenominator != 1)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(element.Unit, out var perMember, out var memberDenominator) || memberDenominator != 1)
+				return null;
+
+			var longType = factory.GetDbDataType(typeof(long));
+			var amount   = factory.Cast(interval.Value, longType);
+
+			if (element.Kind == SqlIntervalPartKind.Total)
+			{
+				// Coarser than the column: one division, and a real one, because the answer is a count that need not
+				// come out whole.
+				if (perMember > perStored)
+				{
+					if (perMember % perStored != 0)
+						return null;
+
+					var doubleType = factory.GetDbDataType(typeof(double));
+
+					return factory.Cast(
+						factory.Div(doubleType, factory.Cast(amount, doubleType, true), factory.Value(doubleType, (double)(perMember / perStored))),
+						element.Type);
+				}
+
+				// Finer than the column, or the same: one multiplication, which stays whole and stays exact.
+				if (perStored % perMember != 0)
+					return null;
+
+				var scale = perStored / perMember;
+
+				return factory.Cast(scale == 1 ? amount : factory.Multiply(longType, amount, scale), element.Type);
+			}
+
+			// A component divides the same way a total does, but truncating, since it is asking how many whole units
+			// there are before the remainder is taken. The wrap it is taken within is a count of units and does not
+			// scale with any of this.
+			ISqlExpression whole;
+
+			if (perMember > perStored)
+			{
+				if (perMember % perStored != 0)
+					return null;
+
+				whole = truncateDivide(amount, perMember / perStored);
+			}
+			else
+			{
+				if (perStored % perMember != 0)
+					return null;
+
+				var scale = perStored / perMember;
+
+				whole = scale == 1 ? amount : factory.Multiply(longType, amount, scale);
+			}
+
+			return factory.Cast(
+				TryGetWrap(element.Unit, element.Within, out var wrap) ? truncateRemainder(whole, wrap) : whole,
+				element.Type);
 		}
 
 		static ISqlExpression? Total(ISqlExpressionFactory factory, ISqlExpression ticks, SqlIntervalUnit unit, DbDataType resultType)
