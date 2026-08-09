@@ -317,42 +317,14 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-# 2017 and 2019 ran as one two-lane job for a while, but the Linux leg hung: the merged config kept
-# the SA / Contained / Northwind providers, whose connection strings still use the default port,
-# while the job published only 1417 and 1419. Those connections do not fail fast - each one burns
-# the SqlClient connect timeout. Back to a job per version; 2019 keeps the extra databases.
-        - name: SqlServer2017
-          title: SQL Server 2017
-          config_win: sqlserver.2017
-          config_linux: sqlserver.2017
-          config_macos: sqlserver.2017
-          script_win_global: sqlserver.2017.cmd
-          script_linux_global: sqlserver.2017.sh
-          script_macos_global: sqlserver.2017.sh
-          install_docker_macos: true
-          enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          # 2017+: on Windows run only EF.Core for non-release runs (EF.Core needs netfx); main library
-          # runs on Linux. Release runs (full_run) still run the main library on Windows.
-          win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
-            enabled: false
-
-        - name: SqlServer2019
-          title: SQL Server 2019
-          config_win: sqlserver.2019
-          config_linux: sqlserver.fts.2019
-          config_macos: sqlserver.fts.2019
-          script_win_global: sqlserver.2019.cmd
-          script_linux_global: sqlserver.2019.sh
-          script_macos_global: sqlserver.2019.sh
+        - name: SqlServer2017_2019
+          title: SQL Server 2017 + 2019
+          config_win: sqlserver.2017_2019
+          config_linux: sqlserver.fts.2017_2019
+          config_macos: sqlserver.fts.2017_2019
+          script_win_global: sqlserver.2017_2019.cmd
+          script_linux_global: sqlserver.2017_2019.sh
+          script_macos_global: sqlserver.2017_2019.sh
           install_docker_macos: true
           enable_os_windows: true
           enable_os_ubuntu: true
