@@ -790,6 +790,15 @@ namespace Tests.Linq
 			Ids(t.Where(r => r.Grace == absent)).ShouldBe(Expected(v => v == absent), "equal to an absent bound");
 			Ids(t.Where(r => r.Grace != absent)).ShouldBe(Expected(v => v != absent), "other than an absent bound");
 
+			TimeSpan? unstorable = TimeSpan.FromMinutes(15) + TimeSpan.FromMilliseconds(500);
+
+			Ids(t.Where(r => r.Grace >  unstorable)).ShouldBe(Expected(v => v >  unstorable), "greater than an unstorable optional bound");
+			Ids(t.Where(r => r.Grace >= unstorable)).ShouldBe(Expected(v => v >= unstorable), "at least an unstorable optional bound");
+			Ids(t.Where(r => r.Grace <  unstorable)).ShouldBe(Expected(v => v <  unstorable), "less than an unstorable optional bound");
+			Ids(t.Where(r => r.Grace <= unstorable)).ShouldBe(Expected(v => v <= unstorable), "at most an unstorable optional bound");
+			Ids(t.Where(r => r.Grace == unstorable)).ShouldBe(Expected(v => v == unstorable), "equal to an unstorable optional bound");
+			Ids(t.Where(r => r.Grace != unstorable)).ShouldBe(Expected(v => v != unstorable), "other than an unstorable optional bound");
+
 			static int[] Expected(Func<TimeSpan?, bool> matches) =>
 				[.. OptionalDurationRow.Data.Where(r => matches(r.Grace)).Select(r => r.Id)];
 

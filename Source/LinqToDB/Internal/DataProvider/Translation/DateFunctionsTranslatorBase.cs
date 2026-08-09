@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -420,49 +421,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return placeholder == null ? null : TryMakeInterval(translationContext, placeholder.Sql);
 		}
 
-		/// <summary>
-		/// An operand of a duration comparison, expressed in ticks.
-		/// </summary>
-		/// <remarks>
-		/// A declared column or a computed difference becomes an interval node and its total in ticks. A plain
-		/// <see cref="TimeSpan"/> value has no declared unit - by design, since an undeclared one keeps whatever
-		/// the provider maps it to - but in a comparison against a duration its unit is not in doubt, so its tick
-		/// count is used directly rather than letting the provider's own type meet a number.
-		/// </remarks>
-		ISqlExpression? TicksOf(ITranslationContext translationContext, Expression operand, TranslationFlags translationFlags, DbDataType tickType)
-		{
-			var interval = TranslateIntervalOperand(translationContext, operand, translationFlags);
-
-			if (interval != null)
-				return new SqlIntervalPartExpression(interval, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
-
-			// Everything that is not an interval reaches here, not only a value: a member of a set operation whose
-			// branches disagree arrives too, and it has no tick count to give. So the question is asked before
-			// anything else, and asked without answering it - whether the operand could be worked out, not what it
-			// works out to. What could not leaves the comparison untranslated, which is how it is refused rather
-			// than quietly answered.
-			if (!translationContext.CanBeEvaluated(operand))
-				return null;
-
-			var unwrapped = operand.UnwrapConvert();
-
-			if (unwrapped.Type != typeof(TimeSpan))
-				return null;
-
-			// The tick count is asked for as an expression rather than worked out here, so how the value travels
-			// stays the ordinary decision - and it becomes a parameter, as an integer or a date in the same position
-			// already does. Deciding it here would settle that by accident: the number would be written into the
-			// statement, and a query differing only by its duration would ask the previous one's question.
-			//
-			// A caller who said how the value should travel wrapped the duration, and the duration is not what
-			// reaches the statement - the tick count is - so the request is moved onto it.
-			var ticks = ExpressionHelpers.MoveValueMarkerOutside(
-				Expression.Property(unwrapped, nameof(TimeSpan.Ticks)));
-
-			return translationContext.Translate(ticks, translationFlags) is SqlPlaceholderExpression placeholder
-				? placeholder.Sql
-				: null;
-		}
+		static readonly MethodInfo _countInOptional = ((Func<TimeSpan?, long, bool, long?>)CountIn).Method;
 
 		/// <summary>
 		/// A duration operand counted in units of <paramref name="perUnit"/> ticks rather than in ticks, rounded the
@@ -482,20 +441,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// <c>&gt;</c> and <c>&lt;=</c> take the floor and <c>&gt;=</c> and <c>&lt;</c> take the ceiling, and each
 		/// is exact for a representable duration too, where the two agree.
 		/// </para>
-		/// <para>
-		/// Decimal rather than double for the division: a tick count reaches nineteen digits and a double stops
-		/// being able to tell two of them apart at sixteen.
-		/// </para>
 		/// </remarks>
 		static Expression BoundIn(Expression duration, long perUnit, bool roundUp)
 		{
-			if (perUnit == 1)
-				return ExpressionHelpers.MoveValueMarkerOutside(Expression.Property(duration, nameof(TimeSpan.Ticks)));
-
 			return ExpressionHelpers.MoveValueMarkerOutside(duration, value =>
 			{
+				// One that may be absent is counted by a call instead. Written out, the parts it needs - asking
+				// whether it is there, and choosing between two answers - are themselves things this translator is
+				// registered for, and the conversion would arrive back at itself. A duration that cannot vary loses
+				// nothing by it, since one that may be absent is a value looked up rather than written down.
+				if (value.Type == typeof(TimeSpan?))
+					return Expression.Call(_countInOptional, value, Expression.Constant(perUnit), Expression.Constant(roundUp));
+
+				var ticks = Expression.Property(value, nameof(TimeSpan.Ticks));
+
+				if (perUnit == 1)
+					return ticks;
+
 				var quotient = Expression.Divide(
-					Expression.Convert(Expression.Property(value, nameof(TimeSpan.Ticks)), typeof(decimal)),
+					Expression.Convert(ticks, typeof(decimal)),
 					Expression.Constant((decimal)perUnit));
 
 				var rounded = Expression.Call(typeof(Math), roundUp ? nameof(Math.Ceiling) : nameof(Math.Floor), null, quotient);
@@ -505,7 +469,44 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// An ordinary <see cref="TimeSpan"/> operand as a whole number of <paramref name="perUnit"/>-tick units.
+		/// The whole number of <paramref name="perUnit"/>-tick units a duration is above or below, according to
+		/// <paramref name="roundUp"/>.
+		/// </summary>
+		/// <remarks>
+		/// A call rather than the arithmetic written into the expression, so that what reaches the statement is one
+		/// value worked out beside the duration it came from. Written out, the parts a duration that may be absent
+		/// needs - asking whether it is there, and choosing between two answers - are themselves things this
+		/// translator is registered for, and the conversion would arrive back at itself.
+		/// <para>
+		/// Decimal rather than double for the division: a tick count reaches nineteen digits and a double stops
+		/// being able to tell two of them apart at sixteen.
+		/// </para>
+		/// </remarks>
+		static long CountIn(TimeSpan duration, long perUnit, bool roundUp)
+		{
+			if (perUnit == 1)
+				return duration.Ticks;
+
+			var quotient = (decimal)duration.Ticks / perUnit;
+
+			return (long)(roundUp ? Math.Ceiling(quotient) : Math.Floor(quotient));
+		}
+
+		/// <summary>
+		/// The same count for a duration that may be absent, which counts to nothing when it is.
+		/// </summary>
+		/// <remarks>
+		/// A comparison whose bound is absent has nothing to hold a row against and answers no to every one of them,
+		/// which is the answer the language gives it.
+		/// </remarks>
+		static long? CountIn(TimeSpan? duration, long perUnit, bool roundUp)
+		{
+			return duration is { } present ? CountIn(present, perUnit, roundUp) : null;
+		}
+
+		/// <summary>
+		/// A <see cref="TimeSpan"/> operand, or one that may be absent, as a whole number of
+		/// <paramref name="perUnit"/>-tick units.
 		/// </summary>
 		/// <remarks>
 		/// Everything that is not an interval reaches here, not only a value: a member of a set operation whose
@@ -513,13 +514,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// else, and asked without answering it - whether the operand could be worked out, not what it works out
 		/// to. What could not leaves the comparison untranslated, which is how it is refused rather than quietly
 		/// answered.
+		/// <para>
+		/// One that may be absent is counted here too, and that is not a convenience. Refused, it would fall back on
+		/// the conversion the column carries for reading and writing, which divides and keeps the whole part - right
+		/// for storing a duration finer than the column, wrong for asking about one, since it would put the question
+		/// to a duration the caller did not ask about.
+		/// </para>
 		/// </remarks>
 		ISqlExpression? ValueIn(ITranslationContext translationContext, Expression operand, TranslationFlags translationFlags, long perUnit, bool roundUp)
 		{
-			if (!IsPresentDuration(translationContext, operand))
+			if (!translationContext.CanBeEvaluated(operand))
 				return null;
 
 			var unwrapped = operand.UnwrapConvert();
+
+			if (unwrapped.Type != typeof(TimeSpan) && unwrapped.Type != typeof(TimeSpan?))
+				return null;
 
 			// The count is asked for as an expression rather than worked out here, so how the value travels stays
 			// the ordinary decision - it becomes a parameter, as an integer in the same position already does.
@@ -625,12 +635,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		/// <summary>
 		/// Whether the operand is a duration whose value is settled before the statement runs and cannot turn out to
-		/// be absent - the only kind that can be converted into a column's unit.
+		/// be absent.
 		/// </summary>
 		/// <remarks>
-		/// Everything that is not an interval reaches here, not only a value: a member of a set operation whose
-		/// branches disagree arrives too, and it has no duration to give. So the question is asked before anything
-		/// else, and asked without answering it - whether the operand could be worked out, not what it works out to.
+		/// Only such a duration can stand in a pair of bounds for the equality it was written as. One that may be
+		/// absent has an answer of its own - it is equal to a column that is absent too - and no range says that.
 		/// </remarks>
 		static bool IsPresentDuration(ITranslationContext translationContext, Expression operand)
 		{
