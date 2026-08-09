@@ -630,6 +630,7 @@ namespace Tests.Linq
 		/// CLR agree that nothing is greater than an absent bound - that is the answer being pinned.
 		/// </para>
 		/// </remarks>
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void ComparisonAgainstAnOptionalValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -756,6 +757,7 @@ namespace Tests.Linq
 		/// second place the same question about the column has to be answered the same way.
 		/// </para>
 		/// </remarks>
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void ComparingAnAbsentDurationMatchesClr([DataSources] string context)
 		{
