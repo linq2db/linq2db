@@ -227,7 +227,13 @@ namespace LinqToDB.Internal.SqlProvider
 				return null;
 
 			var longType = factory.GetDbDataType(typeof(long));
-			var ticks    = factory.Cast(interval.Value, longType, true);
+
+			// Asked for rather than insisted on: a column declared over a type that is not an integer - a duration
+			// kept as money, which is how a provider without a 64-bit integer keeps one - has to be brought to one
+			// before it can be multiplied, while a column that is already one gains nothing but a wrapper. The
+			// difference is not ours to work out, and stating it as mandatory would put the wrapper on both, over a
+			// column an index would otherwise be reachable through.
+			var ticks = factory.Cast(interval.Value, longType);
 
 			return numerator == 1 ? ticks : factory.Multiply(longType, ticks, numerator);
 		}
