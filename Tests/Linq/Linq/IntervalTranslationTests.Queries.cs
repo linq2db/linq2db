@@ -704,6 +704,52 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
+		/// <summary>
+		/// A bound the column cannot represent selects the same rows the CLR would.
+		/// </summary>
+		/// <remarks>
+		/// The comparison is asked of the bare column, with the bound converted into the column's unit instead - so
+		/// a bound that falls between two storable values has to move to one of them, and which one is what the
+		/// operator decides. A column counting whole seconds is above one and a half exactly when it is above one,
+		/// but reaches one and a half only when it reaches two. Rounding the same way for both would answer a
+		/// different question for one of them, and it would answer it in the shape of an ordinary result.
+		/// <para>
+		/// Every case is checked against the same predicate applied in .NET rather than against a written-down row
+		/// list, so the test states the property instead of restating the arithmetic. The bound is also put on the
+		/// left in one case, since that turns the operator before the rounding is chosen from it.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ABoundBetweenTwoStorableValuesMatchesClr([DataSources] string context)
+		{
+			var stored = new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(3) };
+
+			// One and a half seconds is not a whole number of them, so the column can hold neither it nor anything
+			// between its neighbours. Two seconds is, and is checked beside it so the exact case cannot regress
+			// while the rounded one is being got right.
+			foreach (var bound in new[] { TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(2) })
+			{
+				using var db = GetDataContext(context, BuildSchema());
+				using var t  = db.CreateLocalTable<DurationRow>();
+
+				Seed(db, stored);
+
+				Ids(t.Where(r => r.InSeconds >  bound)).ShouldBe(Expected(v => v >  bound), $"greater than {bound}");
+				Ids(t.Where(r => r.InSeconds >= bound)).ShouldBe(Expected(v => v >= bound), $"at least {bound}");
+				Ids(t.Where(r => r.InSeconds <  bound)).ShouldBe(Expected(v => v <  bound), $"less than {bound}");
+				Ids(t.Where(r => r.InSeconds <= bound)).ShouldBe(Expected(v => v <= bound), $"at most {bound}");
+
+				// The same question written the other way round.
+				Ids(t.Where(r => bound <  r.InSeconds)).ShouldBe(Expected(v => bound <  v), $"{bound} below");
+				Ids(t.Where(r => bound >= r.InSeconds)).ShouldBe(Expected(v => bound >= v), $"{bound} at or above");
+
+				int[] Expected(Func<TimeSpan, bool> matches) =>
+					[.. stored.Select((v, i) => (Value: v, Id: i + 1)).Where(x => matches(x.Value)).Select(x => x.Id)];
+			}
+
+			static int[] Ids(IQueryable<DurationRow> rows) => [.. rows.Select(r => r.Id).OrderBy(id => id)];
+		}
+
 		[Test]
 		public void DeclaredDurationFollowsTheRequestForHowItTravels([DataSources(false)] string context)
 		{

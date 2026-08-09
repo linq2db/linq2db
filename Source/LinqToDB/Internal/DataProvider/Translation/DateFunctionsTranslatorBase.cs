@@ -465,6 +465,115 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
+		/// A duration operand expressed in <paramref name="unit"/> rather than in ticks, rounded the way the
+		/// comparison needs.
+		/// </summary>
+		/// <remarks>
+		/// Taking both sides to ticks makes a comparison mean the same thing on both, but it puts the arithmetic on
+		/// the column - <c>col * 10000000 &gt; …</c> - and a column under arithmetic cannot use its index. The same
+		/// question is asked of the bare column by converting the other side instead, and the conversion is done
+		/// where the value is: in the expression, before it ever becomes a parameter. Nothing is written into the
+		/// statement that was not going there anyway, so a query differing only by its duration still asks its own
+		/// question.
+		/// <para>
+		/// A duration that lands between two representable values is not simply truncated - that would answer a
+		/// different question. Which way the bound moves is what the operator decides: a column counting whole
+		/// seconds is above 1.5 exactly when it is above 1, but is at least 1.5 only when it is at least 2. So
+		/// <c>&gt;</c> and <c>&lt;=</c> take the floor and <c>&gt;=</c> and <c>&lt;</c> take the ceiling, and each
+		/// is exact for a representable duration too, where the two agree.
+		/// </para>
+		/// <para>
+		/// Decimal rather than double for the division: a tick count reaches nineteen digits and a double stops
+		/// being able to tell two of them apart at sixteen.
+		/// </para>
+		/// </remarks>
+		static Expression BoundIn(Expression duration, long perUnit, bool roundUp)
+		{
+			if (perUnit == 1)
+				return ExpressionHelpers.MoveValueMarkerOutside(Expression.Property(duration, nameof(TimeSpan.Ticks)));
+
+			return ExpressionHelpers.MoveValueMarkerOutside(duration, value =>
+			{
+				var quotient = Expression.Divide(
+					Expression.Convert(Expression.Property(value, nameof(TimeSpan.Ticks)), typeof(decimal)),
+					Expression.Constant((decimal)perUnit));
+
+				var rounded = Expression.Call(typeof(Math), roundUp ? nameof(Math.Ceiling) : nameof(Math.Floor), null, quotient);
+
+				return Expression.Convert(rounded, typeof(long));
+			});
+		}
+
+		/// <summary>
+		/// An ordinary <see cref="TimeSpan"/> operand as a whole number of <paramref name="perUnit"/>-tick units.
+		/// </summary>
+		/// <remarks>
+		/// Everything that is not an interval reaches here, not only a value: a member of a set operation whose
+		/// branches disagree arrives too, and it has no count to give. So the question is asked before anything
+		/// else, and asked without answering it - whether the operand could be worked out, not what it works out
+		/// to. What could not leaves the comparison untranslated, which is how it is refused rather than quietly
+		/// answered.
+		/// </remarks>
+		ISqlExpression? ValueIn(ITranslationContext translationContext, Expression operand, TranslationFlags translationFlags, long perUnit, bool roundUp)
+		{
+			if (!translationContext.CanBeEvaluated(operand))
+				return null;
+
+			var unwrapped = operand.UnwrapConvert();
+
+			if (unwrapped.Type != typeof(TimeSpan))
+				return null;
+
+			// The count is asked for as an expression rather than worked out here, so how the value travels stays
+			// the ordinary decision - it becomes a parameter, as an integer in the same position already does.
+			// Deciding it here would settle that by accident: the number would be written into the statement, and a
+			// query differing only by its duration would ask the previous one's question.
+			return translationContext.Translate(BoundIn(unwrapped, perUnit, roundUp), translationFlags) is SqlPlaceholderExpression placeholder
+				? placeholder.Sql
+				: null;
+		}
+
+		/// <summary>
+		/// A declared duration paired with the other operand expressed in its unit, or <see langword="null"/> when
+		/// the two are not that pair.
+		/// </summary>
+		(ISqlExpression Stored, ISqlExpression Bound, SqlPredicate.Operator Operator)? InDeclaredUnit(
+			ITranslationContext   translationContext,
+			ISqlExpression?       interval,
+			Expression            other,
+			TranslationFlags      translationFlags,
+			SqlPredicate.Operator comparison,
+			bool                  mirrored)
+		{
+			if (interval is not SqlIntervalExpression declared)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(declared.IntervalType.Resolution, out var perUnit, out var denominator) || denominator != 1)
+				return null;
+
+			// A value on the left asks the mirrored question, so the operator turns with it before the rounding is
+			// chosen from it.
+			var op = mirrored
+				? comparison switch
+				{
+					SqlPredicate.Operator.Greater        => SqlPredicate.Operator.Less,
+					SqlPredicate.Operator.GreaterOrEqual => SqlPredicate.Operator.LessOrEqual,
+					SqlPredicate.Operator.Less           => SqlPredicate.Operator.Greater,
+					SqlPredicate.Operator.LessOrEqual    => SqlPredicate.Operator.GreaterOrEqual,
+					_                                    => comparison,
+				}
+				: comparison;
+
+			// Above a duration means above everything at or below it, so the bound falls to the representable value
+			// underneath. At least a duration means at or above the representable value on top of it.
+			var roundUp = op is SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.Less;
+
+			var bound = ValueIn(translationContext, other, translationFlags, perUnit, roundUp);
+
+			return bound == null ? null : (declared.Value, bound, op);
+		}
+
+		/// <summary>
 		/// Compares two durations by their tick counts rather than by the numbers they happen to be stored as.
 		/// </summary>
 		/// <remarks>
@@ -489,8 +598,58 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var factory  = translationContext.ExpressionFactory;
 			var tickType = factory.GetDbDataType(typeof(long));
 
-			var leftTicks  = TicksOf(translationContext, binaryExpression.Left,  translationFlags, tickType);
-			var rightTicks = TicksOf(translationContext, binaryExpression.Right, translationFlags, tickType);
+			var leftInterval  = TranslateIntervalOperand(translationContext, binaryExpression.Left,  translationFlags);
+			var rightInterval = TranslateIntervalOperand(translationContext, binaryExpression.Right, translationFlags);
+
+			SqlPredicate.Operator? comparison = binaryExpression.NodeType switch
+			{
+				ExpressionType.Equal              => SqlPredicate.Operator.Equal,
+				ExpressionType.NotEqual           => SqlPredicate.Operator.NotEqual,
+				ExpressionType.GreaterThan        => SqlPredicate.Operator.Greater,
+				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
+				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
+				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
+				_                                 => null,
+			};
+
+			if (comparison == null)
+				return null;
+
+			// A declared duration against an ordinary value: the value goes into the column's unit rather than the
+			// column into ticks, so the column stays bare and whatever index it has is still reachable. Equality is
+			// left out - a duration the column cannot represent is equal to nothing, and saying so needs a constant
+			// rather than a bound, which a column that may be absent cannot carry.
+			if (comparison is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
+			{
+				var direct =
+					InDeclaredUnit(translationContext, leftInterval, binaryExpression.Right, translationFlags, comparison.Value, mirrored: false)
+					?? InDeclaredUnit(translationContext, rightInterval, binaryExpression.Left, translationFlags, comparison.Value, mirrored: true);
+
+				if (direct != null)
+				{
+					var (stored, bound, op) = direct.Value;
+
+					var scaled = op switch
+					{
+						SqlPredicate.Operator.Greater        => factory.Greater(stored, bound),
+						SqlPredicate.Operator.GreaterOrEqual => factory.GreaterOrEqual(stored, bound),
+						SqlPredicate.Operator.Less           => factory.Less(stored, bound),
+						SqlPredicate.Operator.LessOrEqual    => factory.LessOrEqual(stored, bound),
+						_                                    => (ISqlPredicate?)null,
+					};
+
+					if (scaled != null)
+					{
+						return translationContext.CreatePlaceholder(
+							translationContext.CurrentSelectQuery,
+							factory.SearchCondition().Add(scaled),
+							binaryExpression);
+					}
+				}
+			}
+
+			var leftTicks  = leftInterval  != null ? new SqlIntervalPartExpression(leftInterval,  SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType) : ValueIn(translationContext, binaryExpression.Left,  translationFlags, 1, roundUp: false);
+			var rightTicks = rightInterval != null ? new SqlIntervalPartExpression(rightInterval, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType) : ValueIn(translationContext, binaryExpression.Right, translationFlags, 1, roundUp: false);
 
 			if (leftTicks == null || rightTicks == null)
 			{
@@ -506,15 +665,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 			}
 
-			ISqlPredicate? predicate = binaryExpression.NodeType switch
+			var predicate = comparison.Value switch
 			{
-				ExpressionType.Equal              => factory.Equal(leftTicks, rightTicks),
-				ExpressionType.NotEqual           => factory.NotEqual(leftTicks, rightTicks),
-				ExpressionType.GreaterThan        => factory.Greater(leftTicks, rightTicks),
-				ExpressionType.GreaterThanOrEqual => factory.GreaterOrEqual(leftTicks, rightTicks),
-				ExpressionType.LessThan           => factory.Less(leftTicks, rightTicks),
-				ExpressionType.LessThanOrEqual    => factory.LessOrEqual(leftTicks, rightTicks),
-				_                                 => null,
+				SqlPredicate.Operator.Equal          => factory.Equal(leftTicks, rightTicks),
+				SqlPredicate.Operator.NotEqual       => factory.NotEqual(leftTicks, rightTicks),
+				SqlPredicate.Operator.Greater        => factory.Greater(leftTicks, rightTicks),
+				SqlPredicate.Operator.GreaterOrEqual => factory.GreaterOrEqual(leftTicks, rightTicks),
+				SqlPredicate.Operator.Less           => factory.Less(leftTicks, rightTicks),
+				SqlPredicate.Operator.LessOrEqual    => factory.LessOrEqual(leftTicks, rightTicks),
+				_                                    => (ISqlPredicate?)null,
 			};
 
 			if (predicate == null)

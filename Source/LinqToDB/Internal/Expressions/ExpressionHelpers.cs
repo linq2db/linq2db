@@ -24,6 +24,28 @@ namespace LinqToDB.Internal.Expressions
 		/// the two requests is underneath it.
 		/// </para>
 		/// </remarks>
+		/// <summary>
+		/// Moves a <c>Sql.Constant</c> or <c>Sql.Parameter</c> request outward through whatever
+		/// <paramref name="build"/> makes of its result.
+		/// </summary>
+		/// <remarks>
+		/// The member-chain form above cannot serve a translator that sends something computed rather than read -
+		/// a duration rounded down to whole seconds, say. Built inside the request the arithmetic would leave the
+		/// request wrapping an argument nobody reads, and the caller's choice would be dropped in silence, so the
+		/// request is rewritten around the computed value instead.
+		/// </remarks>
+		public static Expression MoveValueMarkerOutside(Expression expression, Func<Expression, Expression> build)
+		{
+			if (expression.UnwrapConvert() is MethodCallExpression call && IsValueMarker(call.Method))
+			{
+				var moved = build(call.Arguments[0]);
+
+				return Expression.Call(call.Method.GetGenericMethodDefinition().MakeGenericMethod(moved.Type), moved);
+			}
+
+			return build(expression);
+		}
+
 		public static Expression MoveValueMarkerOutside(Expression expression)
 		{
 			List<MemberInfo>? members = null;
