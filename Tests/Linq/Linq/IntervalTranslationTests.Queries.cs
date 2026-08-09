@@ -784,9 +784,9 @@ namespace Tests.Linq
 			Ids(t.Where(r => r.Grace == optional)).ShouldBe(Expected(v => v == optional), "equal to an optional bound");
 			Ids(t.Where(r => r.Grace != optional)).ShouldBe(Expected(v => v != optional), "other than an optional bound");
 
-			// A bound that is absent, against a column that can be. Two absences are equal to each other, which is
-			// the one thing a pair of bounds cannot say - nothing lies within a range that has no ends - so this is
-			// where a comparison rewritten into such a pair stops meaning what it was written as.
+			// A bound that is absent, against a column that can be. Two absences are equal to each other, and the
+			// range the equality is asked as has to be written in equalities to say so - a range spelled with bounds
+			// has no ends here and would drop the row whose duration is absent.
 			Ids(t.Where(r => r.Grace == absent)).ShouldBe(Expected(v => v == absent), "equal to an absent bound");
 			Ids(t.Where(r => r.Grace != absent)).ShouldBe(Expected(v => v != absent), "other than an absent bound");
 

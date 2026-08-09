@@ -558,6 +558,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// meet on it, and one it cannot makes them cross over and hold nothing. That is what equality means for a
 		/// column that cannot represent the duration asked about, and it is said by asking, not by deciding.
 		/// <para>
+		/// A duration that may itself be absent gets the same range written in equalities instead, because a range
+		/// spelled with bounds has no ends when the duration is absent and so matches nothing - where the language
+		/// has an absent duration equal to a column that is absent too.
+		/// </para>
+		/// <para>
 		/// Inequality is not asked this way. It is the complement of that pair, which is a disjunction - and one no
 		/// index is going to walk anyway, so the column is left to scale into ticks and the comparison stays a single
 		/// predicate.
@@ -617,14 +622,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				case SqlPredicate.Operator.Equal when perUnit == 1:
 					return Bounded(roundUp: false);
 
-				case SqlPredicate.Operator.Equal:
+				case SqlPredicate.Operator.Equal when IsPresentDuration(translationContext, other):
 				{
-					// The pair says what the equality says only about a duration that is certainly there. One that
-					// may be absent keeps the engine's reading, in which two absences are equal to each other - a
-					// pair of bounds answers no to that, since nothing lies within a range that has no ends.
-					if (!IsPresentDuration(translationContext, other))
-						return null;
-
 					var pair = Expression.AndAlso(
 						Expression.MakeBinary(ExpressionType.GreaterThanOrEqual, column, other),
 						Expression.MakeBinary(ExpressionType.LessThanOrEqual,    column, other));
@@ -633,6 +632,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						&& placeholder.Sql is ISqlPredicate asked
 							? asked
 							: null;
+				}
+
+				case SqlPredicate.Operator.Equal:
+				{
+					// The same range, written in equalities. A duration that may be absent needs it written that way:
+					// an equality is the only comparison whose absent operand the engine reads as asking for absence,
+					// so a range spelled with bounds would lose the row whose duration is absent, which the language
+					// has equal to an absent duration. Read as two conditions on one column the pair looks like a
+					// contradiction - it is the same two ends as above, and says the same three things: they meet on
+					// a duration the column can hold, fall either side of one it cannot, and both go absent together.
+					var atLeast = ValueIn(translationContext, other, translationFlags, perUnit, roundUp: true);
+					var atMost  = ValueIn(translationContext, other, translationFlags, perUnit, roundUp: false);
+
+					if (atLeast == null || atMost == null)
+						return null;
+
+					return translationContext.ExpressionFactory.SearchCondition()
+						.Add(Compare(translationContext, stored, SqlPredicate.Operator.Equal, atLeast))
+						.Add(Compare(translationContext, stored, SqlPredicate.Operator.Equal, atMost));
 				}
 
 				default:
@@ -645,8 +663,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// be absent.
 		/// </summary>
 		/// <remarks>
-		/// Only such a duration can stand in a pair of bounds for the equality it was written as. One that may be
-		/// absent has an answer of its own - it is equal to a column that is absent too - and no range says that.
+		/// Only such a duration can have its equality written as a range. One that may be absent is equal to a column
+		/// that is absent too, and a range spelled with bounds cannot say that.
 		/// </remarks>
 		static bool IsPresentDuration(ITranslationContext translationContext, Expression operand)
 		{
