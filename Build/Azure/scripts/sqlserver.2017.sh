@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# SQL Server 2017 (host port 1417) and 2019 (host port 1419) run as concurrent lanes in one job.
-# Each SQL Server listens on 1433 inside its container; the host port differentiates them.
+# SQL Server 2017 on host port 1417 (the container always listens on 1433 internally), matching the
+# SqlServer.2017/.MS connection strings in DataProviders.json.
 
 # Wait until $name accepts connections. The mssql-2017/2019 images intermittently fail to come up
 # on the CI agents (the SQL Server process crashes during startup, or the container exits early);
@@ -10,7 +10,7 @@
 # just waits on it and this adds no extra latency.
 wait_or_recreate() {
     local name=$1
-    local hostport=$2
+    local portargs=$2
     local image=$3
 
     local attempt
@@ -19,7 +19,7 @@ wait_or_recreate() {
             >&2 echo "Recreating $name (attempt $attempt/3)"
             docker logs $name 2>&1 | tail -n 40 || true
             docker rm -f $name > /dev/null 2>&1 || true
-            docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p $hostport:1433 -h $name --name=$name -d $image
+            docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' $portargs -h $name --name=$name -d $image
         fi
 
         local retries=0
@@ -51,16 +51,15 @@ wait_or_recreate() {
 }
 
 docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1417:1433 -h mssql2017 --name=mssql2017 -d linq2db/linq2db:mssql-2017
-docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Password12!' -p 1419:1433 -h mssql2019 --name=mssql2019 -d linq2db/linq2db:mssql-2019-fts
 docker ps -a
 
-wait_or_recreate mssql2017 1417 linq2db/linq2db:mssql-2017 || exit 1
-wait_or_recreate mssql2019 1419 linq2db/linq2db:mssql-2019-fts || exit 1
+wait_or_recreate mssql2017 "-p 1417:1433" linq2db/linq2db:mssql-2017 || exit 1
 
-for c in mssql2017 mssql2019; do
-    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
-    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestDataMS;'
-    # test-DB perf: SIMPLE recovery + delayed durability cut transaction-log-flush cost on the write-heavy suite
-    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'ALTER DATABASE TestData SET RECOVERY SIMPLE; ALTER DATABASE TestData SET DELAYED_DURABILITY = FORCED;'
-    docker exec $c /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'ALTER DATABASE TestDataMS SET RECOVERY SIMPLE; ALTER DATABASE TestDataMS SET DELAYED_DURABILITY = FORCED;'
-done
+docker exec mssql2017 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'SELECT @@Version'
+
+docker exec mssql2017 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestData;'
+docker exec mssql2017 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'CREATE DATABASE TestDataMS;'
+
+# test-DB perf: SIMPLE recovery + delayed durability cut transaction-log-flush cost on the write-heavy suite
+docker exec mssql2017 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'ALTER DATABASE TestData SET RECOVERY SIMPLE; ALTER DATABASE TestData SET DELAYED_DURABILITY = FORCED;'
+docker exec mssql2017 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q 'ALTER DATABASE TestDataMS SET RECOVERY SIMPLE; ALTER DATABASE TestDataMS SET DELAYED_DURABILITY = FORCED;'
