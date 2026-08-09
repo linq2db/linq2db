@@ -213,25 +213,21 @@ public class TestsInitialization
 	// before (a run stopped at 36 minutes had reached 2096 of 7861 tests, holding 13891 handles and slowing
 	// from 112 to 2-6 tests a minute), and completes in 13 minutes with this, handle count flat.
 	//
-	// Access over OLE DB has the same 0->1 transition with a worse symptom. The ACE OLE DB provider tears its
-	// engine down when the last connection to the file closes, and an open racing that teardown takes the whole
-	// process out with an access violation (0xC0000005) - a hard crash, not an exception, so nothing in the run
-	// can catch it and the leg loses every test it had already passed. The CI x86 ACE leg has been hitting it
-	// since well before the ODBC keep-alive existed, always with the fault inside ACE (ICommandText::Execute
-	// there, IDataInitialize::GetDataSource when reproduced here). Measured against a raw OleDbConnection with
-	// no linq2db on the path: 8 threads x 100 open/query/close crashed on 3 runs out of 3, the same loop on a
-	// single thread survived 9000 iterations, and with one connection held open it survived 4800 concurrent
-	// cycles over 6 runs. The query shape is irrelevant - a plain column crashes exactly like the GUID-literal
-	// one the CI stack happened to name - and OLE DB Services pooling does not help.
+	// Access over OLE DB pays that same 0->1 transition, and one held connection pays it once the same way.
+	// Measured over the full Access suite against the ACE build CI installs (2010 redistributable, x86): the
+	// OLE-DB-only leg takes 332s with a connection held open against 1866s without one. It shows nothing in a
+	// leg that runs both transports, because they drive one shared ACE engine core - the ODBC anchor above
+	// already keeps it warm for both - so this anchor only earns its place once the leg is split per provider,
+	// which it now is (see the Access_ACE_* entries in Build/Azure/pipelines/templates/test-matrix.yml).
 	//
-	// The same churn is also why that leg runs out of memory at the very end, in NUnit's own
-	// StringBuilder.ToString() over the whole run's result XML. It is not that the XML is large: the Jet leg
-	// runs the same ~14.9k tests through the same runner - Jet OLE DB included - and never hits it, so what
-	// differs is how much contiguous 32-bit address space is left by then. Each ACE OLE DB connect/disconnect
-	// cycle reserves address space it never returns: 2000 cycles cost 1122 MB and 1130 MB of reserved virtual
-	// memory across two runs, against 106 MB and 107 MB with one connection held open, while committed bytes
-	// were the same (~38 MB) either way. So the anchor is a ~10x cut in address-space growth, not only a
-	// crash guard.
+	// It is not a crash guard, despite what the leg's history suggests. That leg also takes a hard 0xC0000005
+	// inside ACE from time to time; that is dotnet/runtime#46187, it long pre-dates either keep-alive, it still
+	// happens with both anchors held, and the pipeline absorbs it with retry: true. Ruled out as causes while
+	// chasing it, so they are not re-attempted: connection churn (the anchored build crashed just the same),
+	// the query shape (SELECT TOP 1 CVar(?) over a DBTYPE_GUID parameter - what BuildSqlParameterCastExpression
+	// emits, since Access has no CAST - survives isolated hammering, as do a bare parameter and a literal), and
+	// pooling (ACE registers OLEDB_SERVICES = 0xFFFFFFFE, every service except resource pooling, so there is
+	// nothing for OleDbConnection.ReleaseObjectPool to release).
 	//
 	// Registered with the same keep-alive list the in-memory databases use: not an in-memory database, but the
 	// same lifetime - opened before the first test, disposed at assembly teardown.
@@ -242,8 +238,8 @@ public class TestsInitialization
 		// {...(*.mdb)} one is Jet, for OLE DB Microsoft.ACE.OLEDB.12.0 and Microsoft.Jet.OLEDB.4.0 likewise -
 		// and a connection string exists for both no matter which are enabled. Pinning that single file open
 		// through two Access engines for the whole run is not a supported combination, so the first config that
-		// opens wins and the rest of its group is left alone. The two transports are independent engines, so
-		// each needs its own anchor: the ODBC one does nothing for the OLE DB crash above.
+		// opens wins and the rest of its group is left alone. Each transport still gets an anchor of its own:
+		// they share an engine core, so either one would warm both, but a split leg enables only one of them.
 		KeepOneAccessConnectionAlive("ODBC",   new[] { "Access.Ace.Odbc",  "Access.Jet.Odbc"  }, static cs => new System.Data.Odbc.OdbcConnection(cs));
 		KeepOneAccessConnectionAlive("OLE DB", new[] { "Access.Ace.OleDb", "Access.Jet.OleDb" }, static cs => new System.Data.OleDb.OleDbConnection(cs));
 	}
