@@ -419,9 +419,64 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate NotEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, unknownValue);
+		}
+
 		public static ISqlPredicate NotEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
 			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null);
+		}
+
+		/// <summary>
+		/// An ordering comparison, saying what an operand that is absent makes of it.
+		/// </summary>
+		/// <param name="unknownValue">
+		/// What the comparison answers when an operand is absent and the answer has to be one of the two - or
+		/// <see langword="null"/> to leave it the third thing SQL has, which a <c>WHERE</c> reads as no and a value
+		/// position keeps as absent.
+		/// </param>
+		/// <remarks>
+		/// There is no reading that suits every caller, which is why this is asked for rather than assumed. A
+		/// comparison written as a filter wants the language's reading - a value that is not there is neither above
+		/// nor below anything, so <see langword="false"/>. A comparison written as the test of a
+		/// <see cref="Condition(ISqlExpressionFactory, ISqlPredicate, ISqlExpression, ISqlExpression)"/> often wants
+		/// the opposite, because <c>CASE</c> reads the third answer as no and would hand back the other branch's
+		/// value where the absence should have carried through; <see langword="true"/> steers it to the branch that
+		/// carries it.
+		/// <para>
+		/// The overload without this parameter picks the second reading for <c>&gt;=</c> and <c>&lt;=</c> and the
+		/// first for <c>&gt;</c> and <c>&lt;</c>. That is worth knowing before using it as a filter: taken as a
+		/// filter, the second reading lets a row whose value is absent through.
+		/// </para>
+		/// </remarks>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate Greater(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, unknownValue);
+		}
+
+		/// <inheritdoc cref="Greater(ISqlExpressionFactory, ISqlExpression, ISqlExpression, bool?)"/>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate GreaterOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, unknownValue);
+		}
+
+		/// <inheritdoc cref="Greater(ISqlExpressionFactory, ISqlExpression, ISqlExpression, bool?)"/>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate Less(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, unknownValue);
+		}
+
+		/// <inheritdoc cref="Greater(ISqlExpressionFactory, ISqlExpression, ISqlExpression, bool?)"/>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlPredicate LessOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2, bool? unknownValue)
+		{
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, unknownValue);
 		}
 
 		public static ISqlPredicate Greater(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)

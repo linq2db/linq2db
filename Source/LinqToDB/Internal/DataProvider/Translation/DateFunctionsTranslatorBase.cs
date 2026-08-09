@@ -465,8 +465,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// A duration operand expressed in <paramref name="unit"/> rather than in ticks, rounded the way the
-		/// comparison needs.
+		/// A duration operand counted in units of <paramref name="perUnit"/> ticks rather than in ticks, rounded the
+		/// way the comparison needs.
 		/// </summary>
 		/// <remarks>
 		/// Taking both sides to ticks makes a comparison mean the same thing on both, but it puts the arithmetic on
@@ -516,13 +516,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </remarks>
 		ISqlExpression? ValueIn(ITranslationContext translationContext, Expression operand, TranslationFlags translationFlags, long perUnit, bool roundUp)
 		{
-			if (!translationContext.CanBeEvaluated(operand))
+			if (!IsPresentDuration(translationContext, operand))
 				return null;
 
 			var unwrapped = operand.UnwrapConvert();
-
-			if (unwrapped.Type != typeof(TimeSpan))
-				return null;
 
 			// The count is asked for as an expression rather than worked out here, so how the value travels stays
 			// the ordinary decision - it becomes a parameter, as an integer in the same position already does.
@@ -534,12 +531,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// A declared duration paired with the other operand expressed in its unit, or <see langword="null"/> when
-		/// the two are not that pair.
+		/// A comparison asked of the bare declared column, or <see langword="null"/> when the operands are not a
+		/// declared duration against a value, or when the operator cannot be asked that way.
 		/// </summary>
-		(ISqlExpression Stored, ISqlExpression Bound, SqlPredicate.Operator Operator)? InDeclaredUnit(
+		/// <remarks>
+		/// Equality is asked as the two comparisons it is made of - at least the duration, and at most it - rather
+		/// than built here. Those two round in the directions equality needs without being told to: at least takes
+		/// the representable value above and at most the one below, so a duration the column can hold makes them
+		/// meet on it, and one it cannot makes them cross over and hold nothing. That is what equality means for a
+		/// column that cannot represent the duration asked about, and it is said by asking, not by deciding.
+		/// <para>
+		/// Inequality is not asked this way. It is the complement of that pair, which is a disjunction - and one no
+		/// index is going to walk anyway, so the column is left to scale into ticks and the comparison stays a single
+		/// predicate.
+		/// </para>
+		/// </remarks>
+		ISqlPredicate? InDeclaredUnit(
 			ITranslationContext   translationContext,
 			ISqlExpression?       interval,
+			Expression            column,
 			Expression            other,
 			TranslationFlags      translationFlags,
 			SqlPredicate.Operator comparison,
@@ -564,13 +574,96 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				}
 				: comparison;
 
+			var stored = declared.Value;
+
 			// Above a duration means above everything at or below it, so the bound falls to the representable value
 			// underneath. At least a duration means at or above the representable value on top of it.
-			var roundUp = op is SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.Less;
+			ISqlPredicate? Bounded(bool roundUp)
+			{
+				var bound = ValueIn(translationContext, other, translationFlags, perUnit, roundUp);
 
-			var bound = ValueIn(translationContext, other, translationFlags, perUnit, roundUp);
+				return bound == null ? null : Compare(translationContext, stored, op, bound);
+			}
 
-			return bound == null ? null : (declared.Value, bound, op);
+			switch (op)
+			{
+				case SqlPredicate.Operator.Greater:
+				case SqlPredicate.Operator.LessOrEqual:
+					return Bounded(roundUp: false);
+
+				case SqlPredicate.Operator.GreaterOrEqual:
+				case SqlPredicate.Operator.Less:
+					return Bounded(roundUp: true);
+
+				// A column counting ticks represents every duration there is, so the two comparisons would be one
+				// written twice.
+				case SqlPredicate.Operator.Equal when perUnit == 1:
+					return Bounded(roundUp: false);
+
+				case SqlPredicate.Operator.Equal:
+				{
+					// The pair says what the equality says only about a duration that is certainly there. One that
+					// may be absent keeps the engine's reading, in which two absences are equal to each other - a
+					// pair of bounds answers no to that, since nothing lies within a range that has no ends.
+					if (!IsPresentDuration(translationContext, other))
+						return null;
+
+					var pair = Expression.AndAlso(
+						Expression.MakeBinary(ExpressionType.GreaterThanOrEqual, column, other),
+						Expression.MakeBinary(ExpressionType.LessThanOrEqual,    column, other));
+
+					return translationContext.Translate(pair, translationFlags) is SqlPlaceholderExpression placeholder
+						&& placeholder.Sql is ISqlPredicate asked
+							? asked
+							: null;
+				}
+
+				default:
+					return null;
+			}
+		}
+
+		/// <summary>
+		/// Whether the operand is a duration whose value is settled before the statement runs and cannot turn out to
+		/// be absent - the only kind that can be converted into a column's unit.
+		/// </summary>
+		/// <remarks>
+		/// Everything that is not an interval reaches here, not only a value: a member of a set operation whose
+		/// branches disagree arrives too, and it has no duration to give. So the question is asked before anything
+		/// else, and asked without answering it - whether the operand could be worked out, not what it works out to.
+		/// </remarks>
+		static bool IsPresentDuration(ITranslationContext translationContext, Expression operand)
+		{
+			return translationContext.CanBeEvaluated(operand) && operand.UnwrapConvert().Type == typeof(TimeSpan);
+		}
+
+		/// <summary>
+		/// A comparison between two durations, reading one that is absent the way the language reads it.
+		/// </summary>
+		/// <remarks>
+		/// Every comparison here is written as a filter, and a duration that is not there is neither above nor below
+		/// anything - which is what the language says of it, and what the pair standing in for an equality has to say
+		/// too: read the other way, an absent duration would come out equal to every duration asked about. The
+		/// factory's shorter overloads read <c>&gt;=</c> and <c>&lt;=</c> the other way, for callers putting the
+		/// comparison in a <c>CASE</c>, so the reading is stated here rather than taken.
+		/// </remarks>
+		static ISqlPredicate Compare(ITranslationContext translationContext, ISqlExpression left, SqlPredicate.Operator op, ISqlExpression right)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			// The absence of a duration answers no, unless nothing is being read into absence at all.
+			var unknownValue = factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : (bool?)null;
+
+			return op switch
+			{
+				SqlPredicate.Operator.Equal          => factory.Equal(left, right, unknownValue),
+				SqlPredicate.Operator.NotEqual       => factory.NotEqual(left, right, unknownValue),
+				SqlPredicate.Operator.Greater        => factory.Greater(left, right, unknownValue),
+				SqlPredicate.Operator.GreaterOrEqual => factory.GreaterOrEqual(left, right, unknownValue),
+				SqlPredicate.Operator.Less           => factory.Less(left, right, unknownValue),
+				SqlPredicate.Operator.LessOrEqual    => factory.LessOrEqual(left, right, unknownValue),
+				_                                    => throw new InvalidOperationException($"Cannot compare durations with {op}."),
+			};
 		}
 
 		/// <summary>
@@ -616,36 +709,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			// A declared duration against an ordinary value: the value goes into the column's unit rather than the
-			// column into ticks, so the column stays bare and whatever index it has is still reachable. Equality is
-			// left out - a duration the column cannot represent is equal to nothing, and saying so needs a constant
-			// rather than a bound, which a column that may be absent cannot carry.
-			if (comparison is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
+			// column into ticks, so the column stays bare and whatever index it has is still reachable.
+			var direct =
+				InDeclaredUnit(translationContext, leftInterval, binaryExpression.Left, binaryExpression.Right, translationFlags, comparison.Value, mirrored: false)
+				?? InDeclaredUnit(translationContext, rightInterval, binaryExpression.Right, binaryExpression.Left, translationFlags, comparison.Value, mirrored: true);
+
+			if (direct != null)
 			{
-				var direct =
-					InDeclaredUnit(translationContext, leftInterval, binaryExpression.Right, translationFlags, comparison.Value, mirrored: false)
-					?? InDeclaredUnit(translationContext, rightInterval, binaryExpression.Left, translationFlags, comparison.Value, mirrored: true);
-
-				if (direct != null)
-				{
-					var (stored, bound, op) = direct.Value;
-
-					var scaled = op switch
-					{
-						SqlPredicate.Operator.Greater        => factory.Greater(stored, bound),
-						SqlPredicate.Operator.GreaterOrEqual => factory.GreaterOrEqual(stored, bound),
-						SqlPredicate.Operator.Less           => factory.Less(stored, bound),
-						SqlPredicate.Operator.LessOrEqual    => factory.LessOrEqual(stored, bound),
-						_                                    => (ISqlPredicate?)null,
-					};
-
-					if (scaled != null)
-					{
-						return translationContext.CreatePlaceholder(
-							translationContext.CurrentSelectQuery,
-							factory.SearchCondition().Add(scaled),
-							binaryExpression);
-					}
-				}
+				return translationContext.CreatePlaceholder(
+					translationContext.CurrentSelectQuery,
+					factory.SearchCondition().Add(direct),
+					binaryExpression);
 			}
 
 			var leftTicks  = leftInterval  != null ? new SqlIntervalPartExpression(leftInterval,  SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType) : ValueIn(translationContext, binaryExpression.Left,  translationFlags, 1, roundUp: false);
@@ -665,23 +739,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 			}
 
-			var predicate = comparison.Value switch
-			{
-				SqlPredicate.Operator.Equal          => factory.Equal(leftTicks, rightTicks),
-				SqlPredicate.Operator.NotEqual       => factory.NotEqual(leftTicks, rightTicks),
-				SqlPredicate.Operator.Greater        => factory.Greater(leftTicks, rightTicks),
-				SqlPredicate.Operator.GreaterOrEqual => factory.GreaterOrEqual(leftTicks, rightTicks),
-				SqlPredicate.Operator.Less           => factory.Less(leftTicks, rightTicks),
-				SqlPredicate.Operator.LessOrEqual    => factory.LessOrEqual(leftTicks, rightTicks),
-				_                                    => (ISqlPredicate?)null,
-			};
-
-			if (predicate == null)
-				return null;
-
 			return translationContext.CreatePlaceholder(
 				translationContext.CurrentSelectQuery,
-				factory.SearchCondition().Add(predicate),
+				factory.SearchCondition().Add(Compare(translationContext, leftTicks, comparison.Value, rightTicks)),
 				binaryExpression);
 		}
 
