@@ -213,17 +213,46 @@ public class TestsInitialization
 	// before (a run stopped at 36 minutes had reached 2096 of 7861 tests, holding 13891 handles and slowing
 	// from 112 to 2-6 tests a minute), and completes in 13 minutes with this, handle count flat.
 	//
+	// Access over OLE DB has the same 0->1 transition with a worse symptom. The ACE OLE DB provider tears its
+	// engine down when the last connection to the file closes, and an open racing that teardown takes the whole
+	// process out with an access violation (0xC0000005) - a hard crash, not an exception, so nothing in the run
+	// can catch it and the leg loses every test it had already passed. The CI x86 ACE leg has been hitting it
+	// since well before the ODBC keep-alive existed, always with the fault inside ACE (ICommandText::Execute
+	// there, IDataInitialize::GetDataSource when reproduced here). Measured against a raw OleDbConnection with
+	// no linq2db on the path: 8 threads x 100 open/query/close crashed on 3 runs out of 3, the same loop on a
+	// single thread survived 9000 iterations, and with one connection held open it survived 4800 concurrent
+	// cycles over 6 runs. The query shape is irrelevant - a plain column crashes exactly like the GUID-literal
+	// one the CI stack happened to name - and OLE DB Services pooling does not help.
+	//
+	// The same churn is also why that leg runs out of memory at the very end, in NUnit's own
+	// StringBuilder.ToString() over the whole run's result XML. It is not that the XML is large: the Jet leg
+	// runs the same ~14.9k tests through the same runner - Jet OLE DB included - and never hits it, so what
+	// differs is how much contiguous 32-bit address space is left by then. Each ACE OLE DB connect/disconnect
+	// cycle reserves address space it never returns: 2000 cycles cost 1122 MB and 1130 MB of reserved virtual
+	// memory across two runs, against 106 MB and 107 MB with one connection held open, while committed bytes
+	// were the same (~38 MB) either way. So the anchor is a ~10x cut in address-space growth, not only a
+	// crash guard.
+	//
 	// Registered with the same keep-alive list the in-memory databases use: not an in-memory database, but the
 	// same lifetime - opened before the first test, disposed at assembly teardown.
 	static void SetupAccessKeepAlive()
 	{
-		foreach (var name in new[] { "Access.Ace.Odbc", "Access.Jet.Odbc" })
+		// One anchor per transport, not per config. Within a transport both configs point at the same file
+		// through different engines - for ODBC {Microsoft Access Driver (*.mdb, *.accdb)} is ACE and the
+		// {...(*.mdb)} one is Jet, for OLE DB Microsoft.ACE.OLEDB.12.0 and Microsoft.Jet.OLEDB.4.0 likewise -
+		// and a connection string exists for both no matter which are enabled. Pinning that single file open
+		// through two Access engines for the whole run is not a supported combination, so the first config that
+		// opens wins and the rest of its group is left alone. The two transports are independent engines, so
+		// each needs its own anchor: the ODBC one does nothing for the OLE DB crash above.
+		KeepOneAccessConnectionAlive("ODBC",   new[] { "Access.Ace.Odbc",  "Access.Jet.Odbc"  }, static cs => new System.Data.Odbc.OdbcConnection(cs));
+		KeepOneAccessConnectionAlive("OLE DB", new[] { "Access.Ace.OleDb", "Access.Jet.OleDb" }, static cs => new System.Data.OleDb.OleDbConnection(cs));
+	}
+
+	static void KeepOneAccessConnectionAlive(string transport, string[] names, Func<string, DbConnection> create)
+	{
+		foreach (var name in names)
 		{
-			// Only what this run actually tests. Both configs point at the same TestData.ODBC.mdb but through
-			// different engines - {Microsoft Access Driver (*.mdb, *.accdb)} is ACE, the {...(*.mdb)} one is
-			// Jet - and a connection string exists for both no matter which are enabled. Opening the one that
-			// is not under test pinned that single file open through two Access engines for the whole run,
-			// which is not a supported combination.
+			// Only what this run actually tests.
 			if (!TestConfiguration.UserProviders.Contains(name))
 				continue;
 
@@ -236,7 +265,7 @@ public class TestsInitialization
 			if (string.IsNullOrWhiteSpace(cs))
 				continue;
 
-			var keep = new System.Data.Odbc.OdbcConnection(cs);
+			var keep = create(cs);
 
 			try
 			{
@@ -256,7 +285,9 @@ public class TestsInitialization
 			}
 
 			TestInMemoryDatabases.AddKeepAlive(keep);
-			TestContext.Progress.WriteLine($"[access-keepalive] holding a connection open for {name}");
+			TestContext.Progress.WriteLine($"[access-keepalive] holding an open {transport} connection for {name}");
+
+			return;
 		}
 	}
 
