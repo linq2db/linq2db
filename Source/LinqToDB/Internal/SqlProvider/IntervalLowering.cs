@@ -111,12 +111,22 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Built as whole units plus the leftover, never as one division of a tick count: a century in ticks
 		/// exceeds <see cref="long"/>, so the undivided form is not representable at all. The leftover is measured
 		/// between the anchor and the end, a window shorter than one unit, so the fine count is always small.
+		/// <para>
+		/// The raw boundary count, uncorrected, for the reason the elapsed tick count gives: the leftover is
+		/// measured from wherever the anchor landed, so a count that overshot by one unit comes back as a leftover
+		/// of the same size pointing the other way, and the two telescope. Correcting it first would change nothing
+		/// about the answer and would put the correction - three comparisons and two arithmetic terms - into the
+		/// expression twice over, once as the whole part and once inside the anchor.
+		/// </para>
+		/// <para>
+		/// A component is the other case and does need the correction, because there the whole number is the answer
+		/// and nothing follows it to make up the difference.
+		/// </para>
 		/// </remarks>
 		public static ISqlExpression? ElapsedTotal(
 			ISqlExpressionFactory                                                 factory,
 			SqlIntervalDifferenceExpression                                       difference,
 			SqlIntervalUnit                                                       unit,
-			ISqlExpression                                                        wholeUnits,
 			SqlIntervalUnit?                                                      finestUnit,
 			Func<SqlIntervalUnit, ISqlExpression, ISqlExpression, ISqlExpression?> countBoundaries,
 			Func<SqlIntervalUnit, ISqlExpression, ISqlExpression, ISqlExpression?> shiftDate)
@@ -130,6 +140,10 @@ namespace LinqToDB.Internal.SqlProvider
 			// The fine unit may be finer than a tick - a nanosecond is a hundredth of one - so its ratio is taken
 			// whole rather than requiring a denominator of one.
 			if (!SqlIntervalUnits.TryGetTicksRatio(finestUnit.Value, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			var wholeUnits = countBoundaries(unit, difference.Start, difference.End);
+			if (wholeUnits == null)
 				return null;
 
 			var anchor = shiftDate(unit, wholeUnits, difference.Start);

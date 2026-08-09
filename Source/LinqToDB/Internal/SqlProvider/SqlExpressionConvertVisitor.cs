@@ -1427,15 +1427,21 @@ namespace LinqToDB.Internal.SqlProvider
 				if (ElapsedTicksResolveMembers && ElapsedTicks(difference) is { } exact)
 					return IntervalLowering.FromTicks(Factory, exact, element, TruncateDivide, TruncateRemainder);
 
-				var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
-
-				if (whole != null)
+				// The two ask for different counts. A component is the whole number itself, so it needs the
+				// corrected one - nothing follows it to absorb an overshoot. A total is followed by its leftover,
+				// which is measured from wherever the anchor landed and cancels the overshoot, so it takes the raw
+				// count and leaves the correction out of the expression entirely.
+				if (element.Kind == SqlIntervalPartKind.Component)
 				{
-					if (element.Kind == SqlIntervalPartKind.Component)
-						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, element.Within, TruncateRemainder), element.Type);
+					var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
 
+					if (whole != null)
+						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, element.Within, TruncateRemainder), element.Type);
+				}
+				else
+				{
 					var total = IntervalLowering.ElapsedTotal(
-						Factory, difference, element.Unit, whole, FinestDateUnit, CountDateBoundaries, ShiftDate);
+						Factory, difference, element.Unit, FinestDateUnit, CountDateBoundaries, ShiftDate);
 
 					if (total != null)
 						return Factory.Cast(total, element.Type);
