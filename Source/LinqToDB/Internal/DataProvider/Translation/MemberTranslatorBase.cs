@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 			}
-			else if (memberExpression is BinaryExpression { Method: not null } binaryExpression)
+			else if (memberExpression is BinaryExpression binaryExpression)
 			{
 				// Operand-typed lookup, distinct from the MemberInfo registry. Avoids collision
 				// with `string.Concat(string, string)` which is registered as a *method* translator

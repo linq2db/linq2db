@@ -672,6 +672,156 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
+		/// Every expression the registries did not claim passes here, which is where a comparison against a
+		/// duration's total can be caught.
+		/// </summary>
+		protected override Expression? TranslateOverrideHandler(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
+		{
+			if (memberExpression is BinaryExpression binaryExpression
+				&& TranslateTotalComparison(translationContext, binaryExpression, translationFlags) is { } translated)
+			{
+				return translated;
+			}
+
+			return base.TranslateOverrideHandler(translationContext, memberExpression, translationFlags);
+		}
+
+		/// <summary>
+		/// The duration unit a <c>Total*</c> member counts in, when the member is one.
+		/// </summary>
+		static bool TryGetTotalUnit(MemberInfo member, out SqlIntervalUnit unit)
+		{
+			unit = default;
+
+			if (member.DeclaringType != typeof(TimeSpan))
+				return false;
+
+			switch (member.Name)
+			{
+				case nameof(TimeSpan.TotalDays)         : unit = SqlIntervalUnit.Day;         return true;
+				case nameof(TimeSpan.TotalHours)        : unit = SqlIntervalUnit.Hour;        return true;
+				case nameof(TimeSpan.TotalMinutes)      : unit = SqlIntervalUnit.Minute;      return true;
+				case nameof(TimeSpan.TotalSeconds)      : unit = SqlIntervalUnit.Second;      return true;
+				case nameof(TimeSpan.TotalMilliseconds) : unit = SqlIntervalUnit.Millisecond; return true;
+#if NET8_0_OR_GREATER
+				case nameof(TimeSpan.TotalMicroseconds) : unit = SqlIntervalUnit.Microsecond; return true;
+				case nameof(TimeSpan.TotalNanoseconds)  : unit = SqlIntervalUnit.Nanosecond;  return true;
+#endif
+				default                                 :                                     return false;
+			}
+		}
+
+		/// <summary>
+		/// A bound written as a count of one unit, counted in another - the column's - and rounded the way the
+		/// comparison needs.
+		/// </summary>
+		static Expression BoundInUnit(Expression total, long perMember, long perUnit, bool roundUp)
+		{
+			return ExpressionHelpers.MoveValueMarkerOutside(total, value =>
+			{
+				var scaled = Expression.Divide(
+					Expression.Multiply(Expression.Convert(value, typeof(decimal)), Expression.Constant((decimal)perMember)),
+					Expression.Constant((decimal)perUnit));
+
+				var rounded = Expression.Call(typeof(Math), roundUp ? nameof(Math.Ceiling) : nameof(Math.Floor), null, scaled);
+
+				return Expression.Convert(rounded, typeof(long));
+			});
+		}
+
+		/// <summary>
+		/// A comparison between a duration's total in some unit and a number, asked of the bare declared column.
+		/// </summary>
+		Expression? TranslateTotalComparison(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			var comparison = binaryExpression.NodeType switch
+			{
+				ExpressionType.GreaterThan        => SqlPredicate.Operator.Greater,
+				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
+				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
+				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
+				_                                 => (SqlPredicate.Operator?)null,
+			};
+
+			if (comparison == null)
+				return null;
+
+			if (!IsDurationTotal(binaryExpression.Left) && !IsDurationTotal(binaryExpression.Right))
+				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			var direct =
+				TotalInDeclaredUnit(translationContext, binaryExpression.Left, binaryExpression.Right, translationFlags, comparison.Value, mirrored: false)
+				?? TotalInDeclaredUnit(translationContext, binaryExpression.Right, binaryExpression.Left, translationFlags, comparison.Value, mirrored: true);
+
+			if (direct == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(
+				translationContext.CurrentSelectQuery,
+				translationContext.ExpressionFactory.SearchCondition().Add(direct),
+				binaryExpression);
+
+			static bool IsDurationTotal(Expression operand)
+			{
+				return operand.UnwrapConvert() is MemberExpression { Expression: not null } member && TryGetTotalUnit(member.Member, out _);
+			}
+		}
+
+		/// <summary>
+		/// The comparison asked of the column the total was read from, or <see langword="null"/> when the operands
+		/// are not a declared duration's total against a number.
+		/// </summary>
+		ISqlPredicate? TotalInDeclaredUnit(
+			ITranslationContext   translationContext,
+			Expression            total,
+			Expression            other,
+			TranslationFlags      translationFlags,
+			SqlPredicate.Operator comparison,
+			bool                  mirrored)
+		{
+			if (total.UnwrapConvert() is not MemberExpression { Expression: { } duration } member
+				|| !TryGetTotalUnit(member.Member, out var memberUnit))
+			{
+				return null;
+			}
+
+			var unwrapped = other.UnwrapConvert();
+
+			if (unwrapped.Type != typeof(double) || !translationContext.CanBeEvaluated(unwrapped))
+				return null;
+
+			if (TranslateIntervalOperand(translationContext, duration, translationFlags) is not SqlIntervalExpression declared)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(declared.IntervalType.Resolution, out var perUnit, out var storedDenominator) || storedDenominator != 1)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(memberUnit, out var perMember, out var memberDenominator) || memberDenominator != 1)
+				return null;
+
+			var op = mirrored
+				? comparison switch
+				{
+					SqlPredicate.Operator.Greater        => SqlPredicate.Operator.Less,
+					SqlPredicate.Operator.GreaterOrEqual => SqlPredicate.Operator.LessOrEqual,
+					SqlPredicate.Operator.Less           => SqlPredicate.Operator.Greater,
+					SqlPredicate.Operator.LessOrEqual    => SqlPredicate.Operator.GreaterOrEqual,
+					_                                    => comparison,
+				}
+				: comparison;
+
+			var roundUp = op is SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.Less;
+
+			var bound = translationContext.Translate(BoundInUnit(unwrapped, perMember, perUnit, roundUp), translationFlags) is SqlPlaceholderExpression placeholder
+				? placeholder.Sql
+				: null;
+
+			return bound == null ? null : Compare(translationContext, declared.Value, op, bound);
+		}
+
+		/// <summary>
 		/// A comparison between two durations, reading one that is absent the way the language reads it.
 		/// </summary>
 		/// <remarks>

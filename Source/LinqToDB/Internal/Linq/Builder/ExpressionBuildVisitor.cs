@@ -2892,12 +2892,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
-			if (node.Method != null && IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
+			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
+				// Offered to the translators whether or not the operator is a method: a comparison between numbers
+				// carries none, and a translator can still have something to say about it - a duration's total
+				// compared against a bound is a comparison of doubles, and the scaling it puts on the column can
+				// move to the other side only where the comparison is in view.
 				if (TranslateMember(BuildContext, node, out var translatedMember))
 					return Visit(translatedMember);
 
-				if (HandleExtension(BuildContext, node, out translatedMember))
+				// The attribute machinery reads its instructions off a member, so it is asked only where there is
+				// one to read them off.
+				if (node.Method != null && HandleExtension(BuildContext, node, out translatedMember))
 					return Visit(translatedMember);
 			}
 
