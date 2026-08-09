@@ -142,7 +142,7 @@ jobs:
 # tests, both exit 0, no OOM. It costs no wall-clock either - the halves take 360s + 332s against 741s for the
 # combined run - but only because TestsInitialization now holds one connection open per transport: splitting
 # also takes away the ODBC anchor that used to keep the shared ACE engine warm for both, and without an OLE DB
-# anchor of its own that half alone takes 1866s. The EF.Core step is not provider-scoped, so it runs in both.
+# anchor of its own that half alone takes 1866s.
         - name: Access_ACE_Odbc
           title: Access ACE (ODBC) x86
           config_win: access.ace.odbc
