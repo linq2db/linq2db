@@ -1935,6 +1935,17 @@ namespace LinqToDB.Internal.SqlProvider
 			if (testDescriptor?.DurationUnit is not { } testUnit || columnDescriptor?.DurationUnit is not { } columnUnit || testUnit == columnUnit)
 				return null;
 
+			// The two meet in the finer of their units, not in ticks. Either way the coarser one is the one that
+			// moves - a coarser unit converts into a finer exactly, while the other direction has a remainder to
+			// drop - so the finer column keeps the amount it was stored as and stays a column an index can be
+			// walked by, and only one side is multiplied rather than both.
+			//
+			// Ticks are the fallback and were the whole rule before: they are finer than anything a column can be
+			// declared in, so meeting there is always safe. It is simply further than the two need to go.
+			var meeting = SqlIntervalUnits.IsFinerThan(SqlIntervalType.ToIntervalUnit(columnUnit), SqlIntervalType.ToIntervalUnit(testUnit))
+				? columnUnit
+				: testUnit;
+
 			var subQuery = predicate.SubQuery;
 
 			if (GetVisitMode(subQuery) == VisitMode.Transform)
@@ -1942,20 +1953,24 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var subQueryColumn = subQuery.Select.Columns[0];
 
-			subQueryColumn.Expression = TotalTicks(subQueryColumn.Expression, columnDescriptor, columnUnit);
+			subQueryColumn.Expression = TotalIn(subQueryColumn.Expression, columnDescriptor, columnUnit, meeting);
 
 			return new SqlPredicate.InSubQuery(
-				TotalTicks(predicate.Expr1, testDescriptor, testUnit),
+				TotalIn(predicate.Expr1, testDescriptor, testUnit, meeting),
 				predicate.IsNot,
 				subQuery,
 				predicate.DoNotConvert);
 		}
 
-		ISqlExpression TotalTicks(ISqlExpression expression, ColumnDescriptor descriptor, DurationUnit unit)
+		/// <summary>
+		/// A declared duration counted in <paramref name="meeting"/> rather than in the unit it is stored as. Where
+		/// the two are the same the count is the stored amount, and the column is left as it is.
+		/// </summary>
+		ISqlExpression TotalIn(ISqlExpression expression, ColumnDescriptor descriptor, DurationUnit unit, DurationUnit meeting)
 		{
 			var interval = new SqlIntervalExpression(expression, descriptor.GetDbDataType(true), SqlIntervalType.ForDuration(unit));
 
-			return new SqlIntervalPartExpression(interval, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, Factory.GetDbDataType(typeof(long)));
+			return new SqlIntervalPartExpression(interval, SqlIntervalType.ToIntervalUnit(meeting), SqlIntervalPartKind.Total, Factory.GetDbDataType(typeof(long)));
 		}
 
 		ISqlPredicate ConvertToExists(SqlPredicate.InSubQuery inPredicate)

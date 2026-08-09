@@ -1088,6 +1088,45 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// Two columns held in different units, neither of them ticks, meet in the finer of the two.
+		/// </summary>
+		/// <remarks>
+		/// Ticks are finer than any unit a column can be declared in, so bringing both there is always safe - and
+		/// further than the two need to go. Whichever is finer already serves, and going only that far leaves the
+		/// finer column holding the amount it was stored as, which is a column an index can still be walked by,
+		/// and multiplies one side instead of both.
+		/// <para>
+		/// The duration is a whole number of days so that neither column drops anything: what is being pinned is
+		/// which unit they meet in, and a value the day column had to truncate would answer the question with
+		/// storage loss instead. Both directions are asked, since the finer unit is on the far side in one and on
+		/// the near side in the other.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ContainsAcrossTwoCoarseUnitsMeetsInTheFiner([DataSources(false, TestProvName.AllAccess)] string context)
+		{
+			var duration = TimeSpan.FromDays(2);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<UnitSpreadRow>();
+
+			db.Insert(new UnitSpreadRow { Id = 1, InDays = duration, InMilliseconds = duration, InNanoseconds = duration });
+
+			var daysInMilliseconds = t
+				.Where(r => t.Select(x => x.InMilliseconds).Contains(r.InDays))
+				.Select(r => r.Id)
+				.ToArray();
+
+			var millisecondsInDays = t
+				.Where(r => t.Select(x => x.InDays).Contains(r.InMilliseconds))
+				.Select(r => r.Id)
+				.ToArray();
+
+			daysInMilliseconds.ShouldBe([1]);
+			millisecondsInDays.ShouldBe([1]);
+		}
+
+		/// <summary>
 		/// A local collection used as a source carries its durations into the query on the column's terms.
 		/// </summary>
 		/// <remarks>
