@@ -25,10 +25,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			return provider switch
 			{
-				// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
+				// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it.
+				// CommandTimeout raised from Npgsql's 30s default: under a full parallel run's real host
+				// contention, EnsureDeleted's DROP DATABASE / EnsureCreated's CREATE DATABASE can genuinely
+				// run past 30s (confirmed: a real run's first EnsureCreated call timed out at 30.6s). That
+				// timeout is a *different* exception than the "invalid database" one InitializeDatabase's
+				// catch recovers from (a plain Npgsql timeout, not PostgresException/55000), so it isn't
+				// caught there - it propagates, InitializeDatabase never marks the connection initialized,
+				// and every later test re-attempts setup against whatever state that timeout left the
+				// database in. Complementary to the catch-based recovery, not a replacement for it: this
+				// buys the normal path enough headroom that the timeout - and therefore the interrupted-DDL
+				// state the recovery path exists for - is far less likely to happen at all.
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
 					=> optionsBuilder
-					.UseNpgsql(connectionString, o => o.UseNodaTime())
+					.UseNpgsql(connectionString, o => o.UseNodaTime().CommandTimeout(120))
 					.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
 #if !NET10_0
 				_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
