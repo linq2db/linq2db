@@ -149,6 +149,17 @@ namespace LinqToDB.Internal.SqlProvider
 			if (wholeUnits == null)
 				return null;
 
+			var doubleType  = factory.GetDbDataType(typeof(double));
+			var finePerUnit = (double)ticksPerUnit * fineDenominator / ticksPerFine;
+
+			// Asked for the very unit the provider counts in, the count is the whole answer and there is nothing
+			// left to add. Counting is a difference of truncated dates, and shifting by a whole number of that same
+			// unit moves the truncated date by exactly that number - so the anchor lands on the end's own unit and
+			// the leftover between them is zero, always. Written out it would be a second count of nothing, divided
+			// by one, with both counts sent through a floating type to say it.
+			if (finePerUnit == 1)
+				return factory.Cast(wholeUnits, doubleType);
+
 			var anchor = shiftDate(unit, wholeUnits, difference.Start);
 			if (anchor == null)
 				return null;
@@ -156,9 +167,6 @@ namespace LinqToDB.Internal.SqlProvider
 			var leftover = countBoundaries(finestUnit.Value, anchor, difference.End);
 			if (leftover == null)
 				return null;
-
-			var doubleType = factory.GetDbDataType(typeof(double));
-			var finePerUnit = (double)ticksPerUnit * fineDenominator / ticksPerFine;
 
 			return factory.Add(doubleType,
 				factory.Cast(wholeUnits, doubleType, true),
