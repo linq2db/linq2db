@@ -14,7 +14,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// is exact. It is only ever applied to a sub-unit window, well inside the roughly 292 years at which the
 		/// nanosecond form would overflow.
 		/// </summary>
-		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Nanosecond;
+		/// <remarks>
+		/// The nanosecond datepart arrived with <c>datetime2</c> in 2008 - <c>DATEADD</c> on 2005 answers <em>is not
+		/// a recognized dateadd option</em> - so that version counts in milliseconds instead, which is as fine as its
+		/// own <c>datetime</c> resolves anyway. Version-checked here rather than overridden on the 2005 visitor,
+		/// because the 2008 one derives from it and would inherit the wrong answer.
+		/// </remarks>
+		protected override SqlIntervalUnit? FinestDateUnit =>
+			_sqlServerVersion >= SqlServerVersion.v2008 ? SqlIntervalUnit.Nanosecond : SqlIntervalUnit.Millisecond;
 
 		static string? DatePartName(SqlIntervalUnit unit)
 		{

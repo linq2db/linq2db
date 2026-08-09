@@ -134,8 +134,17 @@ namespace Tests.Linq
 			// The precision is asked for because several providers default to whole seconds for a timestamp -
 			// MySQL among them - and a difference measured on a column that dropped its fractional part would be
 			// testing the column type rather than the translation.
-			[Column(Precision = 6)] public DateTimeOffset StartedOn  { get; set; }
-			[Column(Precision = 6)] public DateTimeOffset FinishedOn { get; set; }
+			// Nullable on MySQL 5.7 alone, and only so the table can be created: it lands a DateTimeOffset in
+			// TIMESTAMP and hands the second such column an implicit DEFAULT '0000-00-00', which its own strict
+			// mode then rejects. A nullable column gets no implicit default. Declared per configuration rather
+			// than for everyone, so every other provider still states that neither value is ever absent.
+			[Column(Precision = 6)]
+			[Column(Configuration = ProviderName.MySql57, Precision = 6, CanBeNull = true)]
+			public DateTimeOffset StartedOn  { get; set; }
+
+			[Column(Precision = 6)]
+			[Column(Configuration = ProviderName.MySql57, Precision = 6, CanBeNull = true)]
+			public DateTimeOffset FinishedOn { get; set; }
 		}
 
 		/// <summary>

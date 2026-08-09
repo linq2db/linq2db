@@ -287,15 +287,26 @@ namespace Tests.Linq
 				})
 				.Single();
 
-			row.TotalHours.ShouldBe(value.TotalHours);
+			// Every provider but one lands on the same double as .NET, so that is what they are held to - a
+			// tolerance granted to all of them would stop anyone noticing the day one starts drifting.
+			//
+			// MySQL 5.7 is the exception, and not because of the order anything is done in: the lowering divides
+			// the tick count as a double, but MySQL has no DOUBLE to cast to before 8.0.17, so the cast lands on
+			// DECIMAL and the division is decimal. 5.7 rounds that a ulp away from where 8.0 does, on a value 8.0
+			// gets exactly.
+			if (context.IsAnyOf(TestProvName.AllMySql57))
+				row.TotalHours.ShouldBe(value.TotalHours, Tolerance(value.TotalHours));
+			else
+				row.TotalHours.ShouldBe(value.TotalHours);
+
 			row.Hours.ShouldBe(value.Hours);
 
-			// Access stores the tick count as DECIMAL - it has no 64-bit integer type - so dividing it happens in
-			// decimal arithmetic and the last bit of the resulting double need not match .NET's binary division.
-			// Every provider that holds the count in BIGINT does match exactly, so the tolerance is granted only
-			// where the storage makes exactness impossible, not everywhere.
-			if (context.IsAnyOf(TestProvName.AllAccess))
-				row.TotalMinutes.ShouldBe(value.TotalMinutes, tolerance: 1e-9);
+			// Two providers cannot match the last bit here, and they are named rather than covered by a blanket
+			// tolerance. Both reach it the same way - the division ends up decimal rather than binary - but for
+			// different reasons: Access has no 64-bit integer so the count is held as DECIMAL to begin with, and
+			// MySQL 5.7 has no DOUBLE to cast to. Everyone else divides a double and lands on .NET's exactly.
+			if (context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllMySql57))
+				row.TotalMinutes.ShouldBe(value.TotalMinutes, Tolerance(value.TotalMinutes));
 			else
 				row.TotalMinutes.ShouldBe(value.TotalMinutes);
 		}
