@@ -442,8 +442,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// is exact for a representable duration too, where the two agree.
 		/// </para>
 		/// </remarks>
-		static Expression BoundIn(Expression duration, long perUnit, bool roundUp)
+		static Expression? BoundIn(ITranslationContext translationContext, Expression duration, long perUnit, bool roundUp)
 		{
+			// Everything below is written to be run rather than rendered, and the count for a duration that may be
+			// absent is a call, which has no rendering at all. So what reaches here has to be a duration that can be
+			// worked out without asking the database - and that is not only a value: an operand this translator
+			// cannot settle arrives too, a member of a set operation whose branches disagree among them, and it has
+			// no count to give. The question is asked before anything is built, and asked without answering it.
+			if (!translationContext.CanBeEvaluated(duration))
+				return null;
+
 			return ExpressionHelpers.MoveValueMarkerOutside(duration, value =>
 			{
 				// One that may be absent is counted by a call instead. Written out, the parts it needs - asking
@@ -509,11 +517,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// <paramref name="perUnit"/>-tick units.
 		/// </summary>
 		/// <remarks>
-		/// Everything that is not an interval reaches here, not only a value: a member of a set operation whose
-		/// branches disagree arrives too, and it has no count to give. So the question is asked before anything
-		/// else, and asked without answering it - whether the operand could be worked out, not what it works out
-		/// to. What could not leaves the comparison untranslated, which is how it is refused rather than quietly
-		/// answered.
+		/// An operand that could not be worked out leaves the comparison untranslated, which is how it is refused
+		/// rather than quietly answered.
 		/// <para>
 		/// One that may be absent is counted here too, and that is not a convenience. Refused, it would fall back on
 		/// the conversion the column carries for reading and writing, which divides and keeps the whole part - right
@@ -523,19 +528,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </remarks>
 		ISqlExpression? ValueIn(ITranslationContext translationContext, Expression operand, TranslationFlags translationFlags, long perUnit, bool roundUp)
 		{
-			if (!translationContext.CanBeEvaluated(operand))
-				return null;
-
 			var unwrapped = operand.UnwrapConvert();
 
 			if (unwrapped.Type != typeof(TimeSpan) && unwrapped.Type != typeof(TimeSpan?))
+				return null;
+
+			var bound = BoundIn(translationContext, unwrapped, perUnit, roundUp);
+
+			if (bound == null)
 				return null;
 
 			// The count is asked for as an expression rather than worked out here, so how the value travels stays
 			// the ordinary decision - it becomes a parameter, as an integer in the same position already does.
 			// Deciding it here would settle that by accident: the number would be written into the statement, and a
 			// query differing only by its duration would ask the previous one's question.
-			return translationContext.Translate(BoundIn(unwrapped, perUnit, roundUp), translationFlags) is SqlPlaceholderExpression placeholder
+			return translationContext.Translate(bound, translationFlags) is SqlPlaceholderExpression placeholder
 				? placeholder.Sql
 				: null;
 		}
