@@ -132,19 +132,25 @@ public class TestsInitialization
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
-		// Cap the process-wide query cache to bound test-process memory. The CI NETFX legs run two
-		// SQL Server versions' full suites in a single process and were hitting OutOfMemoryException;
-		// the default cap is 10000 entries but a full run only produces ~1700 distinct queries.
+		// Cap the process-wide query cache to bound test-process memory. A full suite in one process
+		// was hitting OutOfMemoryException; the default cap is 10000 entries but a full run only
+		// produces ~1700 distinct queries, so it never trims and every distinct query is retained.
 		{
-			// net10 legs keep the default cap (10000): a small cap trims freshly-added, low-hit entries
-			// mid-test, breaking the exact-miss-count cache tests on the merged multi-provider legs (e.g.
-			// the 3-provider ClickHouse leg). NETFX stays capped to bound memory. Overridable per leg.
-			int? qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n) ? n
-#if NETFRAMEWORK
-				: 100;
-#else
-				: null;
-#endif
+			// The guard is the process's bitness, not its TFM. What runs out is the 32-bit address
+			// space: ~14.6k tests in one x86 process reach ~1.8GB of the 2GB limit, and NUnit's
+			// end-of-run result serialization then needs one contiguous string it cannot get. The cap
+			// is worth ~45MB of that, which is the difference between failing and passing - measured on
+			// the combined Access MDB leg, which OOMs at the default cap and passes at 100.
+			//
+			// 64-bit legs keep the default: a small cap trims freshly-added, low-hit entries mid-test,
+			// which breaks the exact-miss-count cache tests on merged multi-provider legs (e.g. the
+			// 3-provider ClickHouse leg), and there the address space is not the constraint. Before,
+			// this read #if NETFRAMEWORK, which covered the netfx legs only because they happen to be
+			// the x86 ones - it left the x86 net8/9/10 Access legs uncapped. Overridable per leg.
+			int? qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n)
+				? n
+				: IntPtr.Size == 4 ? 100 : (int?)null;
+
 			if (qcMax != null)
 				LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
 		}
