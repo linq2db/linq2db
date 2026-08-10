@@ -35,7 +35,16 @@ stages:
         enabled: succeeded()
         with_baselines: true
         mac_enabled: false
-        full_run: false
+        # TEMPORARY (PR #5614): make test-all mirror the release run - every TFM's main suite rather
+        # than net10 alone, plus the metrics leg - so the reworked workflow templates and the 300-min
+        # release timeout are exercised on the full matrix. default.yml only enables that combination
+        # for PRs targeting the release branch, which this PR is not. REVERT BEFORE MERGE: restore
+        # the plain `full_run: false` below and drop the test-all db_filter entry.
+        ${{ if eq(variables['Build.DefinitionName'], 'test-all') }}:
+          full_run: true
+          db_filter: '[all][metrics]'
+        ${{ if ne(variables['Build.DefinitionName'], 'test-all') }}:
+          full_run: false
         # db_filter parameter. [] wrap used to avoid potential naming conflicts
         ${{ if eq(variables['Build.DefinitionName'], 'test-access') }}:
           db_filter: '[access.all]'
