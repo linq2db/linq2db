@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		/// </summary>
 		protected override ISqlExpression TruncateRemainder(ISqlExpression value, long divisor)
 		{
-			return Factory.Mod(value, TypedDivisor(divisor));
+			return Factory.Mod(Factory.GetDbDataType(typeof(long)), value, TypedDivisor(divisor));
 		}
 
 		ISqlExpression TypedDivisor(long divisor)
@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				{
 					var exprType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 
-					if (!exprType.SystemType.IsIntegerType)
+					if (!IsRemainderable(exprType))
 					{
 						return new SqlBinaryExpression(
 							typeof(int),
@@ -129,6 +129,22 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		/// <summary>
+		/// Whether SQL CE will take a remainder of the value as it stands - "Modulo is not supported on real, float,
+		/// money, and numeric data types".
+		/// </summary>
+		/// <remarks>
+		/// A column carrying a value converter is read as something its storage does not say - a duration read from a
+		/// <c>BIGINT</c> - and the remainder is taken of what is stored, so the stored type answers here as well as the
+		/// read one. Reading only the latter casts such a column to <c>INT</c>, which a duration in ticks overflows
+		/// after a little over three minutes.
+		/// </remarks>
+		static bool IsRemainderable(DbDataType type)
+		{
+			return type.SystemType.IsIntegerType
+				|| (type.DataType != DataType.Undefined && SqlDataType.GetDataType(type.DataType).Type.SystemType.IsIntegerType);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

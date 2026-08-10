@@ -1485,7 +1485,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </remarks>
 		protected virtual ISqlExpression TruncateRemainder(ISqlExpression value, long divisor)
 		{
-			return Factory.Mod(value, divisor);
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Mod(longType, value, Factory.Value(longType, divisor));
 		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
