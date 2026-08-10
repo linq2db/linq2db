@@ -257,17 +257,42 @@ public class TestsInitialization
 	// before (a run stopped at 36 minutes had reached 2096 of 7861 tests, holding 13891 handles and slowing
 	// from 112 to 2-6 tests a minute), and completes in 13 minutes with this, handle count flat.
 	//
+	// Access over OLE DB pays that same 0->1 transition, and one held connection pays it once the same way.
+	// Measured over the full Access suite against the ACE build CI installs (2010 redistributable, x86): the
+	// OLE-DB-only leg takes 332s with a connection held open against 1866s without one. It shows nothing in a
+	// leg that runs both transports, because they drive one shared ACE engine core - the ODBC anchor above
+	// already keeps it warm for both - so this anchor only earns its place once the leg is split per provider,
+	// which it now is (see the Access_ACE_* entries in Build/Azure/pipelines/templates/test-matrix.yml).
+	//
+	// It is not a crash guard, despite what the leg's history suggests. That leg also takes a hard 0xC0000005
+	// inside ACE from time to time; that is dotnet/runtime#46187, it long pre-dates either keep-alive, it still
+	// happens with both anchors held, and the pipeline absorbs it with retry: true. Ruled out as causes while
+	// chasing it, so they are not re-attempted: connection churn (the anchored build crashed just the same),
+	// the query shape (SELECT TOP 1 CVar(?) over a DBTYPE_GUID parameter - what BuildSqlParameterCastExpression
+	// emits, since Access has no CAST - survives isolated hammering, as do a bare parameter and a literal), and
+	// pooling (ACE registers OLEDB_SERVICES = 0xFFFFFFFE, every service except resource pooling, so there is
+	// nothing for OleDbConnection.ReleaseObjectPool to release).
+	//
 	// Registered with the same keep-alive list the in-memory databases use: not an in-memory database, but the
 	// same lifetime - opened before the first test, disposed at assembly teardown.
 	static void SetupAccessKeepAlive()
 	{
-		foreach (var name in new[] { "Access.Ace.Odbc", "Access.Jet.Odbc" })
+		// One anchor per transport, not per config. Within a transport both configs point at the same file
+		// through different engines - for ODBC {Microsoft Access Driver (*.mdb, *.accdb)} is ACE and the
+		// {...(*.mdb)} one is Jet, for OLE DB Microsoft.ACE.OLEDB.12.0 and Microsoft.Jet.OLEDB.4.0 likewise -
+		// and a connection string exists for both no matter which are enabled. Pinning that single file open
+		// through two Access engines for the whole run is not a supported combination, so the first config that
+		// opens wins and the rest of its group is left alone. Each transport still gets an anchor of its own:
+		// they share an engine core, so either one would warm both, but a split leg enables only one of them.
+		KeepOneAccessConnectionAlive("ODBC",   new[] { "Access.Ace.Odbc",  "Access.Jet.Odbc"  }, static cs => new System.Data.Odbc.OdbcConnection(cs));
+		KeepOneAccessConnectionAlive("OLE DB", new[] { "Access.Ace.OleDb", "Access.Jet.OleDb" }, static cs => new System.Data.OleDb.OleDbConnection(cs));
+	}
+
+	static void KeepOneAccessConnectionAlive(string transport, string[] names, Func<string, DbConnection> create)
+	{
+		foreach (var name in names)
 		{
-			// Only what this run actually tests. Both configs point at the same TestData.ODBC.mdb but through
-			// different engines - {Microsoft Access Driver (*.mdb, *.accdb)} is ACE, the {...(*.mdb)} one is
-			// Jet - and a connection string exists for both no matter which are enabled. Opening the one that
-			// is not under test pinned that single file open through two Access engines for the whole run,
-			// which is not a supported combination.
+			// Only what this run actually tests.
 			if (!TestConfiguration.UserProviders.Contains(name))
 				continue;
 
@@ -280,7 +305,7 @@ public class TestsInitialization
 			if (string.IsNullOrWhiteSpace(cs))
 				continue;
 
-			var keep = new System.Data.Odbc.OdbcConnection(cs);
+			var keep = create(cs);
 
 			try
 			{
@@ -300,7 +325,9 @@ public class TestsInitialization
 			}
 
 			TestInMemoryDatabases.AddKeepAlive(keep);
-			TestContext.Progress.WriteLine($"[access-keepalive] holding a connection open for {name}");
+			TestContext.Progress.WriteLine($"[access-keepalive] holding an open {transport} connection for {name}");
+
+			return;
 		}
 	}
 

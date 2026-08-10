@@ -121,9 +121,36 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
-        - name: Access_ACE
-          title: Access ACE (OLEDB/ODBC) x86
-          config_win: access.ace
+# The two ACE providers run as separate entries, one provider each. Together they put ~14.9k tests through a
+# single x86 process, which reaches ~1.7GB of reserved address space by the end - and NUnit's last act is to
+# serialize the whole result document into one contiguous string, which then fails with OutOfMemoryException.
+# That failure is deterministic, so unlike the random AV below it survives every retry and the leg stays red.
+# Halving the run removes it: measured locally against the CI ACE build (2010 redist, x86), 7731 and 7715
+# tests, both exit 0, no OOM. It costs no wall-clock either - the halves take 360s + 332s against 741s for the
+# combined run - but only because TestsInitialization now holds one connection open per transport: splitting
+# also takes away the ODBC anchor that used to keep the shared ACE engine warm for both, and without an OLE DB
+# anchor of its own that half alone takes 1866s.
+        - name: Access_ACE_Odbc
+          title: Access ACE (ODBC) x86
+          config_win: access.ace.odbc
+          psscript_win_global: access.ace.ps1
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          x86: true
+          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: Access_ACE_OleDb
+          title: Access ACE (OLEDB) x86
+          config_win: access.ace.oledb
           psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
