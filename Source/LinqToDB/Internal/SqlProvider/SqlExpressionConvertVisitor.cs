@@ -1137,11 +1137,22 @@ namespace LinqToDB.Internal.SqlProvider
 			return WrapBooleanExpression(newItem, includeFields: false);
 		}
 
+		/// <remarks>
+		/// Over integral storage an interval is its stored amount, so the node simply disappears here. The read path
+		/// turns the amount back into a <see cref="TimeSpan"/> through the operand's column descriptor, which
+		/// <see cref="QueryHelper.GetColumnDescriptor(ISqlExpression)"/> reaches by looking through this node.
+		/// <para>
+		/// Which makes reaching that descriptor an invariant rather than a convenience: past this point the SQL value
+		/// no longer says what unit it counts, so whatever wraps or rewrites it - a cast, a function, a projection
+		/// into a derived table, a branch of a set operation - has to leave the descriptor reachable from the result.
+		/// Where it does not, the statement stays valid and the value is read through the wrong conversion, which is
+		/// the one failure the lowering cannot see for itself. <see cref="BasicSqlBuilder"/> refuses this node rather
+		/// than rendering its operand for the same reason: a provider that never lowered it away should say so, not
+		/// quietly emit a bare number where a duration was meant.
+		/// </para>
+		/// </remarks>
 		protected internal override IQueryElement VisitSqlIntervalExpression(SqlIntervalExpression element)
 		{
-			// Over integral storage an interval *is* its stored amount, so the node simply disappears here. The
-			// read path turns the amount back into a TimeSpan through the operand's column descriptor, which
-			// QueryHelper.GetColumnDescriptor reaches by looking through this node.
 			return Visit(element.Value);
 		}
 
