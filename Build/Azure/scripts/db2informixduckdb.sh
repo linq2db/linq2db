@@ -46,5 +46,11 @@ until docker logs informix | grep -q 'Informix container login information'; do
     fi;
 done
 
+# AUTO_STMT_STATS (real-time statistics) makes the optimizer synchronously profile a table's stats
+# during query compilation whenever they're missing/stale - our tests constantly create/drop small
+# tables and immediately query them, so this fires on nearly every fresh table. Measured 3.7x slower
+# with it on (confirmed via a controlled run: identical test counts, only this setting differed).
+docker exec -u db2inst1 db2 bash -lc "db2 connect to testdb && db2 UPDATE DB CFG FOR testdb USING AUTO_STMT_STATS OFF"
+
 docker logs db2
 docker logs informix
