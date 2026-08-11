@@ -121,6 +121,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// connection's perspective, already exists. A handful of short retries absorbs that window. Nothing
 		// is swallowed: only SchemeError is retried, and once the attempts run out the exception propagates
 		// unchanged, so a genuine scheme failure is delayed by at most a few hundred milliseconds.
+		//
+		// TODO: this is really a driver-level bug, not something a consumer should have to work around -
+		// Ydb.Sdk.Ado.YdbSchema.GetColumns lists tables and then calls DescribeTable per name as two
+		// separate, non-atomic steps, so concurrent DDL between the two steps races regardless of any
+		// retry we add here (confirmed with a minimal Ydb.Sdk-only repro, no linq2db involved). Filed
+		// upstream as https://github.com/ydb-platform/ydb-dotnet-sdk/issues/687 - once fixed there and
+		// released, re-check whether this retry is still needed and remove it if not.
 		static DataTable GetSchemaWithRetry(DbConnection connection, string collectionName)
 		{
 			const int maxAttempts = 5;
