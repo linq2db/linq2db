@@ -46,6 +46,7 @@
 	<ItemGroup Label="Build: Analyzers and Tools">
 		<PackageVersion Include="AsyncFixer"                                            Version="2.1.0"                        />
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="2.0.5"                        />
+		<PackageVersion Include="LargeAddressAware"                                     Version="1.0.6"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.138"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.158"                      />
@@ -129,7 +130,16 @@
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.23.0"                      />
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.300"                    />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
-		<PackageVersion Include="System.Data.OleDb"                                     Version="$(Net10Latest)"               />
+		<!-- Pinned below Net10Latest (10.0.8): 10.0.0+ has a confirmed regression where COM error-wrapper
+		     objects (IErrorInfo/IErrorRecords) skip GC.SuppressFinalize() after Marshal.Release(), so the
+		     finalizer later double-releases an already-freed pointer - AccessViolationException/
+		     NullReferenceException in ComObject.Finalize(), intermittent (depends on GC timing relative to
+		     accumulated OLEDB errors). Only OLE DB providers hit it, which here means Access: the tests
+		     deliberately provoke driver errors, so the wrappers accumulate. net462 is unaffected (it uses
+		     the Framework-native OleDb, not this package). Fixed upstream (dotnet/runtime#125221, PR
+		     #130906) but only ships in .NET 11.0.0; 9.0.10 is the newest version confirmed NOT to have the
+		     regression. Revert to $(Net10Latest) once either .NET 11 ships or a patched 10.x is released. -->
+		<PackageVersion Include="System.Data.OleDb"                                     Version="9.0.10"                       />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.1"                        />
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.3"                        />
 		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.53.4"                       />

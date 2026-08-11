@@ -7,6 +7,24 @@
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
+	<!-- An x86 test host is capped at 2GB of address space regardless of how much RAM the machine has,
+	     and NUnit3's classic engine spends part of that budget on a second AppDomain per assembly. On a
+	     suite this size that cap is what the run ends up bounded by, not memory - see the Access_ACE_*
+	     entries in Build/Azure/pipelines/templates/test-matrix.yml, whose leg had to be split in two to
+	     stay under it. This raises the cap to 4GB under WOW64 instead, by setting
+	     IMAGE_FILE_LARGE_ADDRESS_AWARE in the built exe's COFF header.
+
+	     Gated on $(RuntimeIdentifier) rather than $(PlatformTarget), which isn't resolved this early;
+	     win-x86 is what `dotnet publish -a x86` (build-job.yml) resolves to, so this covers exactly the
+	     legs that build 32-bit and nothing else. -->
+	<ItemGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
+		<PackageReference Include="LargeAddressAware" PrivateAssets="all" />
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x86'">
+		<LargeAddressAware>true</LargeAddressAware>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 	</ItemGroup>
