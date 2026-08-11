@@ -2832,6 +2832,46 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void AgressiveCteOptimization([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var dateFrom = TestData.DateTime.Date;
+			var dateTo   = dateFrom.AddDays(10);
+
+			var cte = db.GetCte<DateRangeHelper>(
+				x =>
+				   db
+					   .SelectQuery(() => new DateRangeHelper { Counter = 1, Date = dateFrom.Date })
+					   .Concat
+					   (
+						   x
+							   .Select(_ => new DateRangeHelper { Counter = _.Counter + 1, Date = _.Date.AddDays(1) })
+							   .Where(_ => _.Date < dateTo)
+					   ));
+
+			var subQuery = cte.Select(_ => new
+			{
+				Date  = _.Date,
+				Year  = Sql.MakeDateTime(_.Date.Year,            1, 1),
+				Month = Sql.MakeDateTime(_.Date.Year, _.Date.Month, 1)
+			});
+
+			AreEqual(
+					Enumerable.Range(0, 10)
+						.Select(i => dateFrom.AddDays(i))
+						.Select(_ => new
+						{
+							Date  = _.Date,
+							Year  = Sql.MakeDateTime(_.Date.Year,            1, 1),
+							Month = Sql.MakeDateTime(_.Date.Year, _.Date.Month, 1)
+						}),
+					subQuery
+					);
+
+		}
+
+		[Test]
 		public void GroupByOverCteField([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
