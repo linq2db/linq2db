@@ -2165,5 +2165,68 @@ namespace Tests.xUpdate
 				.Where(p => p.ID == -1)
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
 		}
+
+		class ChildView : Child;
+
+		class ChildDto
+		{
+			public required Child Child { get; set; }
+		}
+
+		[Test, Theory]
+		public void UpdateFromNamedDto([DataSources] string context, bool useAnonymousDto)
+		{
+			using var db = GetDataContext(context);
+			using var tr = db.BeginTransaction();
+
+			if (useAnonymousDto)
+			{
+				var childs = from c in db.Child
+							 from p in db.Parent.InnerJoin(_ => _.ParentID == c.ParentID)
+							 select new ChildView
+							 {
+								 ChildID  = c.ChildID,
+								 ParentID = c.ParentID
+							 };
+
+				var subQry = from c in childs
+							 select new
+							 {
+								 Child = c
+							 };
+
+				var records = subQry
+					.Where(_ => _.Child.ChildID == int.MinValue)
+					.Select(_ => _.Child)
+					.Set(_ => _.ParentID, _ => _.ParentID)
+					.Update();
+
+				Assert.That(records, Is.Zero);
+			}
+			else
+			{
+				var childs = from c in db.Child
+							 from p in db.Parent.InnerJoin(_ => _.ParentID == c.ParentID)
+							 select new ChildView
+							 {
+								 ChildID  = c.ChildID,
+								 ParentID = c.ParentID
+							 };
+
+				var subQry = from c in childs
+							 select new ChildDto
+							 {
+								 Child = c
+							 };
+
+				var records = subQry
+					.Where(_ => _.Child.ChildID == int.MinValue)
+					.Select(_ => _.Child)
+					.Set(_ => _.ParentID, _ => _.ParentID)
+					.Update();
+
+				Assert.That(records, Is.Zero);
+			}
+		}
 	}
 }
