@@ -46,12 +46,12 @@ namespace Tests.DataProvider
 		{
 			paramCount = dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc) ? 3 : 1;
 			return dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc)
-				? "SELECT ID FROM {1} WHERE ? IS NULL AND {0} IS NULL OR ? IS NOT NULL AND {0} = ? ORDER BY ID"
+				? "SELECT ID FROM {1} WHERE ? IS NULL AND {0} IS NULL OR ? IS NOT NULL AND {0} = ?"
 				: base.PassNullSql(dc, out paramCount);
 		}
 		protected override string PassValueSql(DataConnection dc) =>
 			dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc)
-				? "SELECT ID FROM {1} WHERE {0} = ? ORDER BY ID"
+				? "SELECT ID FROM {1} WHERE {0} = ?"
 				: base.PassValueSql(dc);
 
 		[Test]
