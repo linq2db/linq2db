@@ -147,9 +147,16 @@ public class TestsInitialization
 			// 3-provider ClickHouse leg), and there the address space is not the constraint. Before,
 			// this read #if NETFRAMEWORK, which covered the netfx legs only because they happen to be
 			// the x86 ones - it left the x86 net8/9/10 Access legs uncapped. Overridable per leg.
+			// netfx legs need it too regardless of bitness - the net462 x64 SQL Server EXTRAS leg OOMs
+			// without it - so this is a union of the two conditions, not a replacement of one by the other.
+#if NETFRAMEWORK
+			var capByDefault = true;
+#else
+			var capByDefault = IntPtr.Size == 4;
+#endif
 			int? qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n)
 				? n
-				: IntPtr.Size == 4 ? 100 : (int?)null;
+				: capByDefault ? 100 : (int?)null;
 
 			if (qcMax != null)
 				LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
