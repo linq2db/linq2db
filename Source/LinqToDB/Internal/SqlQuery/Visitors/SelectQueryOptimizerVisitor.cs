@@ -668,6 +668,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
+		/// Where the column for one target position of a set operation comes from: a column the set
+		/// query already projects, a shared stateless expression synthesised into every leg, or an
+		/// expression each leg recomputes from what it projects itself.
+		/// </summary>
+		enum SetColumnSource
+		{
+			Existing,
+			Constant,
+			Derived,
+		}
+
+		/// <summary>
 		/// Reorders (and, for <see cref="SetOperation.UnionAll"/>, trims/augments) the columns of
 		/// <paramref name="setQuery"/> and every one of its <see cref="SelectQuery.SetOperators"/>
 		/// legs so that column <c>i</c> corresponds to the expression whose target position is
@@ -720,78 +732,59 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			foreach (var pair in newIndexes)
 			{
-				var targetIdx = pair.Value;
+				var             targetIdx     = pair.Value;
+				var             existingIndex = -1;
+				SetColumnSource source;
 
-				if (currentByRef.TryGetValue(pair.Key, out var oldIdx))
+				// Decide once per target position where its column comes from ...
+				if (currentByRef.TryGetValue(pair.Key, out var foundIndex))
 				{
-					newMain[targetIdx]   = mainColumns[oldIdx];
-					consumedOld![oldIdx] = true;
-
-					if (newLegs != null)
-					{
-						for (var li = 0; li < legs.Count; li++)
-						{
-							var legCols = legs[li].SelectQuery.Select.Columns;
-							if (oldIdx >= legCols.Count)
-							{
-								// Mis-aligned leg. UnionAll with a short leg is handled like a
-								// missing column (original behaviour); any other operation is a
-								// hard error and we must leave the query unchanged.
-								if (setOperation != SetOperation.UnionAll)
-									return false;
-
-								newLegs[li][targetIdx] = new SqlColumn(legs[li].SelectQuery, pair.Key);
-							}
-							else
-							{
-								newLegs[li][targetIdx] = legCols[oldIdx];
-							}
-						}
-					}
+					source                   = SetColumnSource.Existing;
+					existingIndex            = foundIndex;
+					consumedOld![foundIndex] = true;
 				}
 				else if (setOperation == SetOperation.UnionAll && QueryHelper.IsConstantFast(pair.Key))
 				{
-					// Missing column: synthesizable for UnionAll with a stateless (constant)
-					// expression. IsConstantFast guarantees no parent-dependent state, so the same
-					// ISqlExpression instance can be shared across the synthesised SqlColumns.
-					newMain[targetIdx] = new SqlColumn(setQuery, pair.Key);
-
-					if (newLegs != null)
-					{
-						for (var li = 0; li < legs.Count; li++)
-							newLegs[li][targetIdx] = new SqlColumn(legs[li].SelectQuery, pair.Key);
-					}
+					// IsConstantFast guarantees no parent-dependent state, so the same ISqlExpression
+					// instance can be shared across the synthesised SqlColumns.
+					source = SetColumnSource.Constant;
 				}
 				else if (allowDerivedColumns
 					&& setOperation == SetOperation.UnionAll
 					&& CanDeriveFromSetColumns(pair.Key, setQuery))
 				{
-					// Missing column computed from the set operation's own columns: every leg already
-					// projects those, so each can compute the expression for itself. Costs one copy of
-					// the expression per leg, which is why the caller has to ask for it.
-					var mainExpression = BuildSetLegExpression(pair.Key, setQuery, currentByRef, mainColumns);
-
-					if (mainExpression == null)
-						return false;
-
-					newMain[targetIdx] = new SqlColumn(setQuery, mainExpression);
-
-					if (newLegs != null)
-					{
-						for (var li = 0; li < legs.Count; li++)
-						{
-							var legExpression = BuildSetLegExpression(pair.Key, setQuery, currentByRef, legs[li].SelectQuery.Select.Columns);
-
-							if (legExpression == null)
-								return false;
-
-							newLegs[li][targetIdx] = new SqlColumn(legs[li].SelectQuery, legExpression);
-						}
-					}
+					// Computed from the set operation's own columns, which every leg projects, so each
+					// leg can compute it for itself. Costs one copy of the expression per leg, which is
+					// why the caller has to ask for it.
+					source = SetColumnSource.Derived;
 				}
 				else
 				{
 					return false;
+				}
+
+				// ... then apply that one decision to the main query and to every leg alike. They have
+				// to stay positionally aligned for the set operation to be valid SQL, so this is the
+				// only place that walks them.
+				var mainColumn = BuildColumn(source, existingIndex, pair.Key, setQuery, mainColumns);
+
+				if (mainColumn == null)
+					return false;
+
+				newMain[targetIdx] = mainColumn;
+
+				if (newLegs != null)
+				{
+					for (var li = 0; li < legs.Count; li++)
+					{
+						var legQuery  = legs[li].SelectQuery;
+						var legColumn = BuildColumn(source, existingIndex, pair.Key, legQuery, legQuery.Select.Columns);
+
+						if (legColumn == null)
+							return false;
+
+						newLegs[li][targetIdx] = legColumn;
+					}
 				}
 			}
 
@@ -847,6 +840,34 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return true;
+
+			// Produces the column that owner - the set query itself, or one of its legs - should
+			// project at the resolved position. Returns null when that owner cannot supply it, which
+			// is always a hard failure for the caller.
+			SqlColumn? BuildColumn(SetColumnSource columnSource, int existingIndex, ISqlExpression target, SelectQuery owner, IReadOnlyList<SqlColumn> ownerColumns)
+			{
+				switch (columnSource)
+				{
+					case SetColumnSource.Existing:
+					{
+						if (existingIndex < ownerColumns.Count)
+							return ownerColumns[existingIndex];
+
+						// Mis-aligned leg. UnionAll with a short leg is handled like a missing column
+						// (original behaviour); any other operation is a hard error.
+						return setOperation == SetOperation.UnionAll ? new SqlColumn(owner, target) : null;
+					}
+
+					case SetColumnSource.Constant:
+						return new SqlColumn(owner, target);
+
+					default:
+					{
+						var expression = BuildSetLegExpression(target, setQuery, currentByRef, ownerColumns);
+						return expression == null ? null : new SqlColumn(owner, expression);
+					}
+				}
+			}
 		}
 
 		/// <summary>
