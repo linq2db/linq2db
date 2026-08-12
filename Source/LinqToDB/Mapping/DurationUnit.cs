@@ -4,9 +4,11 @@
 	/// Unit in which a <see cref="System.TimeSpan"/> duration is stored in a database column.
 	/// </summary>
 	/// <remarks>
-	/// Only fixed-length units are listed. Calendar units such as month or year are deliberately absent:
-	/// a <see cref="System.TimeSpan"/> is a fixed-length duration and cannot represent them, because their
-	/// length depends on the point in time they are applied to.
+	/// Calendar units such as month or year cannot be listed: a <see cref="System.TimeSpan"/> is a fixed-length
+	/// duration and their length depends on the point in time they are applied to. The week is fixed-length and
+	/// absent for a different reason - a duration is not usually stored counted in weeks - so it is left out until
+	/// something asks for it rather than ruled out. Adding a unit is additive, and the lowering already knows the
+	/// ratio.
 	/// <para>
 	/// Members are ordered from the finest unit to the coarsest, but no arithmetic meaning is attached to
 	/// the underlying values - do not compare them to decide which unit is finer.

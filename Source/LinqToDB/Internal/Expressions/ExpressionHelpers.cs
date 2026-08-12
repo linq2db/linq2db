@@ -11,25 +11,11 @@ namespace LinqToDB.Internal.Expressions
 	public static class ExpressionHelpers
 	{
 		/// <summary>
-		/// Moves a <c>Sql.Constant</c> or <c>Sql.Parameter</c> request outward through the member accesses applied
-		/// to its result: <c>Sql.Constant(x).A.B</c> becomes <c>Sql.Constant(x.A.B)</c>.
-		/// </summary>
-		/// <remarks>
-		/// The request is written around the value the caller had in hand, but what a translator ends up sending is
-		/// often a member of it - a duration's tick count, a date's year. Left where it was written, the request
-		/// would sit inside an argument that nothing reads any more, and the caller's choice would be dropped in
-		/// silence. Moving it keeps it on the value that actually reaches the statement.
-		/// <para>
-		/// Anything else is returned unchanged, so this is safe to apply to a member access whether or not one of
-		/// the two requests is underneath it.
-		/// </para>
-		/// </remarks>
-		/// <summary>
 		/// Moves a <c>Sql.Constant</c> or <c>Sql.Parameter</c> request outward through whatever
 		/// <paramref name="build"/> makes of its result.
 		/// </summary>
 		/// <remarks>
-		/// The member-chain form above cannot serve a translator that sends something computed rather than read -
+		/// The member-chain overload below cannot serve a translator that sends something computed rather than read -
 		/// a duration rounded down to whole seconds, say. Built inside the request the arithmetic would leave the
 		/// request wrapping an argument nobody reads, and the caller's choice would be dropped in silence, so the
 		/// request is rewritten around the computed value instead.
@@ -46,6 +32,20 @@ namespace LinqToDB.Internal.Expressions
 			return build(expression);
 		}
 
+		/// <summary>
+		/// Moves a <c>Sql.Constant</c> or <c>Sql.Parameter</c> request outward through the member accesses applied
+		/// to its result: <c>Sql.Constant(x).A.B</c> becomes <c>Sql.Constant(x.A.B)</c>.
+		/// </summary>
+		/// <remarks>
+		/// The request is written around the value the caller had in hand, but what a translator ends up sending is
+		/// often a member of it - a duration's tick count, a date's year. Left where it was written, the request
+		/// would sit inside an argument that nothing reads any more, and the caller's choice would be dropped in
+		/// silence. Moving it keeps it on the value that actually reaches the statement.
+		/// <para>
+		/// Anything else is returned unchanged, so this is safe to apply to a member access whether or not one of
+		/// the two requests is underneath it.
+		/// </para>
+		/// </remarks>
 		public static Expression MoveValueMarkerOutside(Expression expression)
 		{
 			List<MemberInfo>? members = null;

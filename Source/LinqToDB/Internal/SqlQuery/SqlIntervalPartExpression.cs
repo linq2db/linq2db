@@ -69,7 +69,16 @@ namespace LinqToDB.Internal.SqlQuery
 			writer
 				.DebugAppendUniqueId(this)
 				.Append(Kind == SqlIntervalPartKind.Total ? "TOTAL_" : "PART_")
-				.Append(Unit.ToString().ToUpperInvariant())
+				.Append(Unit.ToString().ToUpperInvariant());
+
+			// Rendered because it is the one field the rest does not imply: the same unit counted within two
+			// different enclosing ones is two different questions, and both Equals and the hash separate them.
+			// Left out, two such nodes print identically, which a debug comparison of rendered text cannot tell
+			// apart.
+			if (Within is { } within)
+				writer.Append("_IN_").Append(within.ToString().ToUpperInvariant());
+
+			writer
 				.Append('(')
 				.AppendElement(Interval)
 				.Append(')');

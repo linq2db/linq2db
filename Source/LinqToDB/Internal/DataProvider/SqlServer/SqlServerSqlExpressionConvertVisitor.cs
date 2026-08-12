@@ -192,11 +192,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					if (type1 == typeof(double) || type1 == typeof(float))
 					{
+						// Precedence stated so this reads like every other remainder. Left unstated it takes the
+						// constructor default and the renderer brackets it, which is how a float % on this provider
+						// came to be parenthesised while the generated ones no longer are.
 						return new SqlBinaryExpression(
 							element.Expr2.SystemType!,
 							new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Convert", SqlDataType.Int32, element.Expr1),
 							element.Operation,
-							element.Expr2);
+							element.Expr2,
+							Precedence.Multiplicative);
 					}
 
 					break;

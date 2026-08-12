@@ -56,6 +56,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 			}
+			// Every binary, not only one carrying an operator method: a comparison between numbers has none, and a
+			// translator can still have something to say about it - a duration's total compared against a bound is a
+			// comparison of doubles. Widening this means every binary node reaches the translator chain now,
+			// primitives included, so an IMemberTranslator sees shapes it did not before. The unary arm below keeps
+			// its Method guard, which is why the two read differently.
 			else if (memberExpression is BinaryExpression binaryExpression)
 			{
 				// Operand-typed lookup, distinct from the MemberInfo registry. Avoids collision
