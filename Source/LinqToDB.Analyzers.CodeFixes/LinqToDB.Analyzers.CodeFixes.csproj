@@ -2,13 +2,16 @@
 
 	<PropertyGroup>
 		<!-- This is the packable project for the linq2db.Analyzers package (analyzer + code-fix assemblies).
+		     Consumers don't have to reference it: Source/LinqToDB/LinqToDB.csproj depends on it and flows its
+		     analyzer assets on, so the rules arrive with the linq2db package - directly or through a satellite
+		     package. A direct reference is only needed to run the rules against an older linq2db (see readme.md).
 		     Shared Roslyn-component settings + polyfills live in ..\Analyzers.Common.props. -->
 		<IsPackable>true</IsPackable>
 		<PackageId>linq2db.Analyzers</PackageId>
 		<Title>LINQ to DB Analyzers</Title>
 		<Description>Roslyn analyzers and code fixes for linq2db users: detect legacy API usage and offer automatic migrations to the current API.</Description>
 
-		<!-- Analyzer assemblies ship under analyzers/dotnet/cs, not lib/. -->
+		<!-- Analyzer assemblies ship under analyzers/dotnet/roslyn4.8/cs (see the item group below), not lib/. -->
 		<IncludeBuildOutput>false</IncludeBuildOutput>
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 		<DevelopmentDependency>true</DevelopmentDependency>
@@ -32,10 +35,17 @@
 		<ProjectReference Include="..\LinqToDB.Analyzers\LinqToDB.Analyzers.csproj" PrivateAssets="all" />
 	</ItemGroup>
 
+	<!-- The Roslyn-version-specific analyzer path makes NuGet deliver these only to hosts running Roslyn >= 4.8
+	     (the version they are compiled against) and silently skip them on older IDEs / SDKs, instead of emitting
+	     the CS9057 analyzer-version warning that a consumer's TreatWarningsAsErrors would turn into an error. -->
 	<ItemGroup Label="Analyzer package layout">
 		<None Include="readme.md"                                  Pack="true" PackagePath="\" />
-		<None Include="$(OutputPath)LinqToDB.Analyzers.dll"        Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
-		<None Include="$(OutputPath)$(AssemblyName).dll"           Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<None Include="$(OutputPath)LinqToDB.Analyzers.dll"        Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
+		<None Include="$(OutputPath)$(AssemblyName).dll"           Pack="true" PackagePath="analyzers/dotnet/roslyn4.8/cs" Visible="false" />
+
+		<!-- EnableLinqToDBAnalyzers opt-out. Packed to both folders: build/ serves a direct reference to
+		     this package, buildTransitive/ the normal delivery path through linq2db. -->
+		<None Include="build\linq2db.Analyzers.targets"             Pack="true" PackagePath="build;buildTransitive" />
 	</ItemGroup>
 
 </Project>

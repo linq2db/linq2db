@@ -958,9 +958,7 @@ namespace Tests.Linq
 			Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 		}
 
-		sealed class LocalClass
-		{
-		}
+		sealed class LocalClass;
 
 		[Test]
 		public void SelectLocalTest([DataSources] string context)

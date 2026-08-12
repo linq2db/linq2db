@@ -20,9 +20,7 @@ using NUnit.Framework;
 namespace Tests.Samples
 {
 	[AttributeUsage(AttributeTargets.Property)]
-	public class JsonContentAttribute : Attribute
-	{
-	}
+	public class JsonContentAttribute : Attribute;
 
 	public static class MappingHelper
 	{

@@ -3613,7 +3613,7 @@ namespace Tests.Linq
 			public LoadWithPassthroughLeaf[] Leaves { get; set; } = null!;
 		}
 
-		sealed class LoadWithPassthroughLeaf { }
+		sealed class LoadWithPassthroughLeaf;
 
 		static readonly LoadWithPassthroughRoot _passthroughRoot = new()
 		{

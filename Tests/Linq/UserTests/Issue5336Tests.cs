@@ -16,9 +16,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue5336Tests : TestBase
 	{
-		public class BasicDto
-		{
-		}
+		public class BasicDto;
 
 		[Table]
 		public class TestDtoWithPks : BasicDto

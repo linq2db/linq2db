@@ -478,7 +478,7 @@ namespace LinqToDB.Mapping
 		{
 			return SetTable(a =>
 			{
-				if ((tableOptions & TableOptions.None) != 0)
+				if (tableOptions.HasFlag(TableOptions.None))
 					a.TableOptions = tableOptions;
 				else
 					a.TableOptions |= tableOptions;

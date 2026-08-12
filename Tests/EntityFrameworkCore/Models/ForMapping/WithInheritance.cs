@@ -6,18 +6,9 @@
 		public string Discriminator { get; set; } = null!;
 	}
 
-	public class WithInheritanceA : WithInheritance
-	{
+	public class WithInheritanceA : WithInheritance;
 
-	}
+	public class WithInheritanceA1 : WithInheritanceA;
 
-	public class WithInheritanceA1 : WithInheritanceA
-	{
-
-	}
-
-	public class WithInheritanceA2 : WithInheritanceA
-	{
-
-	}
+	public class WithInheritanceA2 : WithInheritanceA;
 }

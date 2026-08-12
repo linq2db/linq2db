@@ -2625,10 +2625,10 @@ namespace LinqToDB.Internal.SqlProvider
 			if (selectQuery.Select.TakeHints == null)
 				return;
 
-			if ((selectQuery.Select.TakeHints.Value & TakeHints.Percent) != 0)
+			if (selectQuery.Select.TakeHints.Value.HasFlag(TakeHints.Percent))
 				StringBuilder.Append(' ').Append(TakePercent);
 
-			if ((selectQuery.Select.TakeHints.Value & TakeHints.WithTies) != 0)
+			if (selectQuery.Select.TakeHints.Value.HasFlag(TakeHints.WithTies))
 				StringBuilder.Append(' ').Append(TakeTies);
 		}
 
