@@ -2188,5 +2188,26 @@ namespace Tests.Linq
 
 			AreEqual(parentsQry, parents);
 		}
+
+		[Test]
+		public void LongAliasNameTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			var parentsQry =
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					where longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			var parents =
+					from parent in Parent
+					join child in Child on parent.ParentID equals child.ParentID
+					where parent.ParentID == parentId
+					select parent;
+
+			AreEqual(parentsQry, parents);
+		}
 	}
 }
