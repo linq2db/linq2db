@@ -64,15 +64,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 
 		protected class FirebirdDateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			/// <summary>
-			/// Elapsed time comes from <c>DATEDIFF</c> at millisecond resolution - see
-			/// <c>FirebirdSqlExpressionConvertVisitor.ElapsedTicks</c>.
-			/// </summary>
-			/// <remarks>
-			/// The same expression serves every version, at the fidelity each one offers: Firebird 4 answers with
-			/// a fractional millisecond, which is its hundred-microsecond storage quantum exactly, while earlier
-			/// versions answer with a whole one.
-			/// </remarks>
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory          = translationContext.ExpressionFactory;

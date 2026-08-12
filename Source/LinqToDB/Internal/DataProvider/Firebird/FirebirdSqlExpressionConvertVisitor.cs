@@ -29,8 +29,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		/// <para>
 		/// Every version comes through here, including 2.5 - this class is what <c>FirebirdSqlOptimizer</c> builds,
 		/// and the later ones derive from it - so the count is taken at whatever fidelity the version offers rather
-		/// than being asked for by version. Firebird 4 answers the tenth of a millisecond, earlier ones a whole one,
-		/// and both are exact at the resolution their own timestamps keep.
+		/// than being asked for by version. From 3 on the answer carries that tenth and is exact against what the
+		/// timestamp stores. On 2.5 it is truncated to a whole millisecond, which is what
+		/// <see cref="IntervalResolution"/> below declares.
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
@@ -41,6 +42,20 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			return Factory.Cast(Factory.Multiply(longType, milliseconds, TimeSpan.TicksPerMillisecond), longType, true);
 		}
+
+		/// <summary>
+		/// 2.5 truncates the count to a whole millisecond, so a component asked for below one is identically zero
+		/// rather than merely imprecise, and is declined here instead. Overridden back to
+		/// <see cref="SqlIntervalUnit.Tick"/> on <see cref="Firebird3SqlExpressionConvertVisitor"/>, which is what
+		/// the provider builds from version 3 up.
+		/// </summary>
+		/// <remarks>
+		/// Measured rather than taken from the release notes: against engine 2.5.9 and 3.0.10, a gap of 0.4 ms
+		/// answers <c>0</c> and <c>0.4</c> respectively, and 1.5 ms answers <c>1</c> and <c>1.5</c>. The hundred
+		/// microseconds a <c>TIMESTAMP</c> stores has been so since 2.5 - what arrived later is the fractional
+		/// <c>DATEDIFF</c>, and it arrived in 3.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Millisecond;
 
 		#region LIKE
 
