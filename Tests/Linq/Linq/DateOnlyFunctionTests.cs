@@ -284,6 +284,11 @@ namespace Tests.Linq
 
 		#region DateDiff
 
+		// SQL Server before 2016 has no exact measure of elapsed time - DATEDIFF_BIG arrived there - and Sql.AsSql
+		// below asks for the value in SQL, so there is no client-side answer to fall back to. This used to be
+		// answered from DATEDIFF, which counts boundary crossings rather than elapsed time and was therefore wrong
+		// for unaligned inputs. Declared rather than excluded so it goes red the day the lowering reaches those
+		// versions.
 		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(

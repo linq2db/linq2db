@@ -387,7 +387,7 @@ namespace Tests.Linq
 		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
 		/// that matched everything or nothing.
 		/// </remarks>
-		[ActiveIssue(Details = ContainsSkipsIntervalTranslation)]
+		[ActiveIssue(5776, Details = ContainsSkipsIntervalTranslation)]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
