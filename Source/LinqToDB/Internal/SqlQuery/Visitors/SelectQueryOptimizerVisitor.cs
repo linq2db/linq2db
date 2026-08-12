@@ -1053,7 +1053,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						// is reached, never the verdict itself.
 						var probeLocally = !ReferenceEquals(_rootElement, selectQuery);
 
-						if (probeLocally && QueryHelper.IsDependsOnSources(selectQuery, sources, ignore)
+						if ((probeLocally && QueryHelper.IsDependsOnSources(selectQuery, sources, ignore))
 							|| QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
 						{
 							join.IsWeak = false;
