@@ -2195,8 +2195,6 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			var parentValue1 = 1;
 
-			// do not change names (!)
-			// SQLite fails between aliases [child] and [Child]
 			var parentsQry = db.Parent
 				.Where(_ => _.Value1 == parentValue1 * 1.0);
 
