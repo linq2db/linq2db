@@ -2831,8 +2831,9 @@ namespace Tests.Linq
 
 		}
 
+		[ActiveIssue("Wrong Date manipulations on Oracle 11 (ORA-01841), and DuckDB does not type a bare date parameter inside EXTRACT", Configurations = [TestProvName.AllOracle11, TestProvName.AllDuckDB])]
 		[Test]
-		public void AgressiveCteOptimization([CteContextSource] string context)
+		public void AgressiveCteOptimization([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2873,8 +2874,9 @@ namespace Tests.Linq
 
 		// AgressiveCteOptimization derives Year and Month from the same CTE column. This one reads two
 		// distinct ones, so folding the wrapper into the union has to substitute both per leg.
+		[ActiveIssue("Wrong Date manipulations on Oracle 11 (ORA-01841), and DuckDB does not type a bare date parameter inside EXTRACT", Configurations = [TestProvName.AllOracle11, TestProvName.AllDuckDB])]
 		[Test]
-		public void AgressiveCteOptimizationTwoColumns([CteContextSource] string context)
+		public void AgressiveCteOptimizationTwoColumns([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
