@@ -856,12 +856,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					case SetColumnSource.Existing:
 					{
-						if (existingIndex < ownerColumns.Count)
-							return ownerColumns[existingIndex];
-
-						// Mis-aligned leg. UnionAll with a short leg is handled like a missing column
-						// (original behaviour); any other operation is a hard error.
-						return setOperation == SetOperation.UnionAll ? new SqlColumn(owner, target) : null;
+						// A leg too short to hold this position cannot be widened: reaching Existing means
+						// target is one of setQuery's own columns, so projecting it from the leg would make
+						// that leg read a sibling query's column - a reference no table source backs, which
+						// dies in the SQL builder. Decline the rewrite and leave the query alone.
+						return existingIndex < ownerColumns.Count ? ownerColumns[existingIndex] : null;
 					}
 
 					case SetColumnSource.Constant:
