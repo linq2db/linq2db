@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		bool             _isExpression;
 		SelectQuery?     _applySelect;
 		SelectQuery?     _inSubquery;
-		bool             _isInRecursiveCte;
+		CteClause?       _recursiveCteClause;
 		CteClause?       _currentCteClause;
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_applySelect        = default!;
 			_isExpression       = false;
 			_version            = default;
-			_isInRecursiveCte   = false;
+			_recursiveCteClause = null;
 			_currentCteClause   = null;
 			_updateQuery        = default;
 			_updateTable        = default;
@@ -592,7 +592,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// every column is significant for INTERSECT/EXCEPT/UNION).
 		/// </para>
 		/// </summary>
-		static bool TryLiftSetOperatorsFromOperandFromSubquery(SelectQuery selectQuery)
+		bool TryLiftSetOperatorsFromOperandFromSubquery(SelectQuery selectQuery)
 		{
 			var isModified = false;
 
@@ -618,7 +618,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (!TryBuildOuterColumnIndexes(setOperator.SelectQuery.Select.Columns, out var newIndexes))
 					continue;
 
-				if (!TryReorderSetColumns(newIndexes, subQuery, setOperator.Operation, allowDerivedColumns : false))
+				if (!TryReorderSetColumns(newIndexes, subQuery, setOperator.Operation, AllowDerivedSetColumns(subQuery)))
 					continue;
 
 				setOperator.Modify(subQuery);
@@ -671,6 +671,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// Where the column for one target position of a set operation comes from: a column the set
 		/// query already projects, a shared stateless expression synthesised into every leg, or an
 		/// expression each leg recomputes from what it projects itself.
+		/// <para>
+		/// <see cref="Constant"/> and <see cref="Derived"/> build fresh columns, which carry no alias.
+		/// That is invisible while <see cref="AllowDerivedSetColumns"/> confines derivation to a
+		/// recursive CTE body, where result names come from <see cref="CteClause.Fields"/> - widen that
+		/// gate and the first leg's aliases start naming the result columns.
+		/// </para>
 		/// </summary>
 		enum SetColumnSource
 		{
@@ -880,10 +886,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// wrapper has to go even when folding it duplicates work. Everywhere else the wrapper renders
 		/// fine and is cheaper than N copies of the expression, so derivation stays off.
 		/// </para>
+		/// <para>
+		/// Keyed on the enclosing recursive clause rather than <see cref="_currentCteClause"/>: a plain
+		/// CTE nested inside a recursive one would otherwise take its place and hide the reference.
+		/// </para>
 		/// </summary>
 		bool AllowDerivedSetColumns(SelectQuery setQuery)
 		{
-			return _isInRecursiveCte && QueryHelper.HasCteClauseReference(setQuery, _currentCteClause);
+			return QueryHelper.HasCteClauseReference(setQuery, _recursiveCteClause);
 		}
 
 		/// <summary>
@@ -898,36 +908,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (QueryHelper.ContainsAggregationOrWindowFunction(expression))
 				return false;
 
-			var readsSetColumn = false;
-			var isDerivable    = true;
+			// GetUsedSources is the AST's own account of what an expression reads from - listing the
+			// source-bearing node types here instead would silently pass any type it doesn't know, and
+			// a read from elsewhere copied into the legs is wrong SQL rather than a declined rewrite.
+			var usedSources = new HashSet<ISqlTableSource>();
 
-			expression.VisitParentFirstAll(e =>
-			{
-				if (!isDerivable)
-					return false;
+			QueryHelper.GetUsedSources(expression, usedSources);
 
-				switch (e)
-				{
-					case SqlColumn column when ReferenceEquals(column.Parent, setQuery):
-					{
-						// substituted as a whole, so what it projects stays inside the leg
-						readsSetColumn = true;
-						return false;
-					}
-
-					case SqlColumn or SelectQuery or SqlField or SqlCteTableField:
-					{
-						// a read from anything but the set operation cannot be moved into its legs
-						isDerivable = false;
-						return false;
-					}
-
-					default:
-						return true;
-				}
-			});
-
-			return isDerivable && readsSetColumn;
+			// Exactly one source, and it is the set operation itself: every leg projects its columns at
+			// the same positions, so each can recompute the expression from what it has.
+			return usedSources.Count == 1 && usedSources.Contains(setQuery);
 		}
 
 		/// <summary>
@@ -2981,7 +2971,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			var isModified = false;
 
-			if (!_providerFlags.IsRecursiveCTEJoinWithConditionSupported && _isInRecursiveCte)
+			if (!_providerFlags.IsRecursiveCTEJoinWithConditionSupported && _recursiveCteClause != null)
 			{
 				for (int i = 0; i < selectQuery.From.Tables.Count; i++)
 				{
@@ -3903,10 +3893,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
-			var saveIsInRecursiveCte = _isInRecursiveCte;
+			var saveRecursiveCte     = _recursiveCteClause;
 			var saveCurrentCteClause = _currentCteClause;
 			if (element.IsRecursive)
-				_isInRecursiveCte = true;
+				_recursiveCteClause = element;
 
 			var saveParent = _parentSelect;
 			_parentSelect = null;
@@ -3916,8 +3906,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			_parentSelect = saveParent;
 
-			_currentCteClause = saveCurrentCteClause;
-			_isInRecursiveCte = saveIsInRecursiveCte;
+			_currentCteClause   = saveCurrentCteClause;
+			_recursiveCteClause = saveRecursiveCte;
 
 			return newElement;
 		}

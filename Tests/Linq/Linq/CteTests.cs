@@ -2871,6 +2871,45 @@ namespace Tests.Linq
 
 		}
 
+		// AgressiveCteOptimization derives Year and Month from the same CTE column. This one reads two
+		// distinct ones, so folding the wrapper into the union has to substitute both per leg.
+		[Test]
+		public void AgressiveCteOptimizationTwoColumns([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var dateFrom = TestData.DateTime.Date;
+			var dateTo   = dateFrom.AddDays(10);
+
+			var cte = db.GetCte<DateRangeHelper>(
+				x =>
+				   db
+					   .SelectQuery(() => new DateRangeHelper { Counter = 1, Date = dateFrom.Date })
+					   .Concat
+					   (
+						   x
+							   .Select(r => new DateRangeHelper { Counter = r.Counter + 1, Date = r.Date.AddDays(1) })
+							   .Where(r => r.Date < dateTo)
+					   ));
+
+			var subQuery = cte.Select(r => new
+			{
+				Date  = r.Date,
+				Mixed = Sql.MakeDateTime(r.Date.Year, r.Date.Month, r.Counter)
+			});
+
+			AreEqual(
+					Enumerable.Range(0, 10)
+						.Select(i => new { Date = dateFrom.AddDays(i), Counter = i + 1 })
+						.Select(d => new
+						{
+							Date  = d.Date,
+							Mixed = Sql.MakeDateTime(d.Date.Year, d.Date.Month, d.Counter)
+						}),
+					subQuery
+					);
+		}
+
 		[Test]
 		public void GroupByOverCteField([CteContextSource] string context)
 		{
