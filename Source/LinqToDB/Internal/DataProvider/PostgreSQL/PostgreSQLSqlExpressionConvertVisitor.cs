@@ -172,16 +172,31 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			if (element.Kind == SqlIntervalPartKind.Total)
 			{
+				// A unit finer than a tick has no whole number of ticks for EPOCH to be divided by, but the base
+				// implementation answers it exactly from ElapsedTicks - so hand it over rather than refusing, the way
+				// the component branch below does for the fields EXTRACT cannot name.
 				if (!SqlIntervalUnits.TryGetTicksRatio(element.Unit, out var ticksPerUnit, out var denominator) || denominator != 1)
-					return null;
+					return base.LowerIntervalPart(element);
 
 				var doubleType = Factory.GetDbDataType(typeof(double));
 				var seconds    = Extract("epoch", elapsed, doubleType);
 
-				return Factory.Cast(
-					Factory.Div(doubleType, seconds,
-						Factory.Value(doubleType, (double)ticksPerUnit / TimeSpan.TicksPerSecond)),
-					element.Type);
+				// EPOCH already answers in seconds, so the scale is a whole number in either direction and never
+				// needs a fractional divisor: the second itself needs nothing, a coarser unit divides by a whole
+				// number of seconds, and a finer one multiplies by how many of it fit in one. Dividing throughout
+				// would put 0.001 and 9.9999999999999995E-07 into the statement, and an exponent-carrying literal is
+				// read as an exact numeric rather than as the double it came from - the trap .Ticks is routed around
+				// above.
+				ISqlExpression scaled;
+
+				if (ticksPerUnit == TimeSpan.TicksPerSecond)
+					scaled = seconds;
+				else if (ticksPerUnit > TimeSpan.TicksPerSecond)
+					scaled = Factory.Div(doubleType, seconds, Factory.Value(doubleType, (double)(ticksPerUnit / TimeSpan.TicksPerSecond)));
+				else
+					scaled = Factory.Multiply(doubleType, seconds, (double)(TimeSpan.TicksPerSecond / ticksPerUnit));
+
+				return Factory.Cast(scaled, element.Type);
 			}
 
 			var part = element.Unit switch

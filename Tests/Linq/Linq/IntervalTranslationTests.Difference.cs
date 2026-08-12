@@ -149,14 +149,14 @@ namespace Tests.Linq
 		/// hold them and still answers zero is lying, and only an expectation derived from the stored value can
 		/// tell those two apart. Excluding the coarse storages instead would have hidden the second case.
 		/// <para>
-		/// PostgreSQL is the one that refuses rather than answers: it extracts only <c>day</c>, <c>hour</c>,
-		/// <c>minute</c> and <c>second</c> from a native interval, so anything below a second has no expression.
+		/// PostgreSQL answers these away from the <c>EXTRACT</c> shortcut: that names no field below the second, so
+		/// the member falls to the shared decomposition, which is exact here because this provider sums the
+		/// interval's own fields into a tick count rather than dividing an epoch.
 		/// </para>
 		/// </remarks>
 		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "Oracle 11 measures the difference on the local reading although the storage kept the instant - the zone is lost in the CAST(x AS DATE) that the elapsed lowering uses.")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL, ErrorMessage = ErrorHelper.Error_Interval_Member)]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceSubMillisecondMembersMatchClr(
 			[SupportsDateTimeOffsetContext] string context)
