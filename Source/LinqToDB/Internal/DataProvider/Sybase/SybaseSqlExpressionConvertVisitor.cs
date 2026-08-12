@@ -23,6 +23,18 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		/// </summary>
 		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Millisecond;
 
+		/// <summary>
+		/// The measurement stops there as well, so a component asked for below the millisecond is identically zero
+		/// rather than merely imprecise - the count it is taken from was rounded to a coarser unit first.
+		/// </summary>
+		/// <remarks>
+		/// Declared for the reason SQLite declares the same limit: declining while the expression is still being
+		/// built leaves the member to .NET, which holds both dates and answers exactly. The three-and-a-third
+		/// millisecond step above is what makes a stored difference carry a sub-millisecond part at all, so
+		/// answering zero would be a wrong number rather than a coarse one.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Millisecond;
+
 		static string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch
