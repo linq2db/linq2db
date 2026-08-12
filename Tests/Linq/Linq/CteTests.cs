@@ -2846,25 +2846,25 @@ namespace Tests.Linq
 					   .Concat
 					   (
 						   x
-							   .Select(_ => new DateRangeHelper { Counter = _.Counter + 1, Date = _.Date.AddDays(1) })
-							   .Where(_ => _.Date < dateTo)
+							   .Select(r => new DateRangeHelper { Counter = r.Counter + 1, Date = r.Date.AddDays(1) })
+							   .Where(r => r.Date < dateTo)
 					   ));
 
-			var subQuery = cte.Select(_ => new
+			var subQuery = cte.Select(r => new
 			{
-				Date  = _.Date,
-				Year  = Sql.MakeDateTime(_.Date.Year,            1, 1),
-				Month = Sql.MakeDateTime(_.Date.Year, _.Date.Month, 1)
+				Date  = r.Date,
+				Year  = Sql.MakeDateTime(r.Date.Year,            1, 1),
+				Month = Sql.MakeDateTime(r.Date.Year, r.Date.Month, 1)
 			});
 
 			AreEqual(
 					Enumerable.Range(0, 10)
 						.Select(i => dateFrom.AddDays(i))
-						.Select(_ => new
+						.Select(d => new
 						{
-							Date  = _.Date,
-							Year  = Sql.MakeDateTime(_.Date.Year,            1, 1),
-							Month = Sql.MakeDateTime(_.Date.Year, _.Date.Month, 1)
+							Date  = d.Date,
+							Year  = Sql.MakeDateTime(d.Date.Year,            1, 1),
+							Month = Sql.MakeDateTime(d.Date.Year, d.Date.Month, 1)
 						}),
 					subQuery
 					);

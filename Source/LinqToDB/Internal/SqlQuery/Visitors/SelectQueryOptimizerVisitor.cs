@@ -533,7 +533,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!mainSubquery.SetOperators.TrueForAll(so => so.Operation == operation))
 				return false;
 
-			if (!TryReorderSetColumns(newIndexes, mainSubquery, operation))
+			if (!TryReorderSetColumns(newIndexes, mainSubquery, operation, AllowDerivedSetColumns(mainSubquery)))
 				return false;
 
 			selectQuery.SetOperators.InsertRange(0, mainSubquery.SetOperators);
@@ -618,7 +618,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (!TryBuildOuterColumnIndexes(setOperator.SelectQuery.Select.Columns, out var newIndexes))
 					continue;
 
-				if (!TryReorderSetColumns(newIndexes, subQuery, setOperator.Operation))
+				if (!TryReorderSetColumns(newIndexes, subQuery, setOperator.Operation, allowDerivedColumns : false))
 					continue;
 
 				setOperator.Modify(subQuery);
@@ -675,7 +675,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// untouched — when the requested layout cannot be realized:
 		/// <list type="bullet">
 		///   <item>a target expression is missing from <paramref name="setQuery"/> and the operation
-		///         forbids synthesis (non-UnionAll) or the expression is not a constant;</item>
+		///         forbids synthesis (non-UnionAll) or the expression is neither a constant nor,
+		///         when <paramref name="allowDerivedColumns"/> is set, derivable from the legs;</item>
 		///   <item>a leg has fewer columns than <paramref name="setQuery"/> for a non-UnionAll
 		///         operation (legs must be aligned).</item>
 		/// </list>
@@ -687,7 +688,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		static bool TryReorderSetColumns(
 			Dictionary<ISqlExpression, int> newIndexes,
 			SelectQuery                     setQuery,
-			SetOperation                    setOperation)
+			SetOperation                    setOperation,
+			bool                            allowDerivedColumns)
 		{
 			var mainColumns = setQuery.Select.Columns;
 
@@ -747,14 +749,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 				}
-				else
+				else if (setOperation == SetOperation.UnionAll && QueryHelper.IsConstantFast(pair.Key))
 				{
-					// Missing column: only synthesizable for UnionAll with a stateless (constant)
+					// Missing column: synthesizable for UnionAll with a stateless (constant)
 					// expression. IsConstantFast guarantees no parent-dependent state, so the same
 					// ISqlExpression instance can be shared across the synthesised SqlColumns.
-					if (setOperation != SetOperation.UnionAll || !QueryHelper.IsConstantFast(pair.Key))
-						return false;
-
 					newMain[targetIdx] = new SqlColumn(setQuery, pair.Key);
 
 					if (newLegs != null)
@@ -762,6 +761,37 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						for (var li = 0; li < legs.Count; li++)
 							newLegs[li][targetIdx] = new SqlColumn(legs[li].SelectQuery, pair.Key);
 					}
+				}
+				else if (allowDerivedColumns
+					&& setOperation == SetOperation.UnionAll
+					&& CanDeriveFromSetColumns(pair.Key, setQuery))
+				{
+					// Missing column computed from the set operation's own columns: every leg already
+					// projects those, so each can compute the expression for itself. Costs one copy of
+					// the expression per leg, which is why the caller has to ask for it.
+					var mainExpression = BuildSetLegExpression(pair.Key, setQuery, currentByRef, mainColumns);
+
+					if (mainExpression == null)
+						return false;
+
+					newMain[targetIdx] = new SqlColumn(setQuery, mainExpression);
+
+					if (newLegs != null)
+					{
+						for (var li = 0; li < legs.Count; li++)
+						{
+							var legExpression = BuildSetLegExpression(pair.Key, setQuery, currentByRef, legs[li].SelectQuery.Select.Columns);
+
+							if (legExpression == null)
+								return false;
+
+							newLegs[li][targetIdx] = new SqlColumn(legs[li].SelectQuery, legExpression);
+						}
+					}
+				}
+				else
+				{
+					return false;
 				}
 			}
 
@@ -817,6 +847,108 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return true;
+		}
+
+		/// <summary>
+		/// Whether an outer projection over <paramref name="setQuery"/> may be pushed down into its legs
+		/// at the cost of repeating the expression once per leg.
+		/// <para>
+		/// Only the body of a recursive CTE asks for it: SQL forbids the self-reference from sitting
+		/// inside a derived table, so a wrapping projection there is not merely redundant - it makes the
+		/// statement invalid ("circular reference" on SQLite, and its equivalents elsewhere), and the
+		/// wrapper has to go even when folding it duplicates work. Everywhere else the wrapper renders
+		/// fine and is cheaper than N copies of the expression, so derivation stays off.
+		/// </para>
+		/// </summary>
+		bool AllowDerivedSetColumns(SelectQuery setQuery)
+		{
+			return _isInRecursiveCte && QueryHelper.HasCteClauseReference(setQuery, _currentCteClause);
+		}
+
+		/// <summary>
+		/// Tests whether <paramref name="expression"/> - an outer projection with no matching column in
+		/// <paramref name="setQuery"/> - can be recomputed inside each leg of that set operation. It must
+		/// read nothing but <paramref name="setQuery"/>'s own columns, which every leg supplies at the
+		/// same position, and must not be sensitive to what it is evaluated over: an aggregate, a window
+		/// function or a subquery means something different per leg than it does over the whole union.
+		/// </summary>
+		static bool CanDeriveFromSetColumns(ISqlExpression expression, SelectQuery setQuery)
+		{
+			if (QueryHelper.ContainsAggregationOrWindowFunction(expression))
+				return false;
+
+			var readsSetColumn = false;
+			var isDerivable    = true;
+
+			expression.VisitParentFirstAll(e =>
+			{
+				if (!isDerivable)
+					return false;
+
+				switch (e)
+				{
+					case SqlColumn column when ReferenceEquals(column.Parent, setQuery):
+					{
+						// substituted as a whole, so what it projects stays inside the leg
+						readsSetColumn = true;
+						return false;
+					}
+
+					case SqlColumn or SelectQuery or SqlField or SqlCteTableField:
+					{
+						// a read from anything but the set operation cannot be moved into its legs
+						isDerivable = false;
+						return false;
+					}
+
+					default:
+						return true;
+				}
+			});
+
+			return isDerivable && readsSetColumn;
+		}
+
+		/// <summary>
+		/// Rewrites <paramref name="expression"/> for one leg of a set operation: every read of a
+		/// <paramref name="setQuery"/> column becomes the expression <paramref name="legColumns"/>
+		/// projects at the same position. Returns <see langword="null"/> when the leg is too narrow to
+		/// supply one of them.
+		/// </summary>
+		static ISqlExpression? BuildSetLegExpression(
+			ISqlExpression                  expression,
+			SelectQuery                     setQuery,
+			Dictionary<ISqlExpression, int> setColumnIndexes,
+			IReadOnlyList<SqlColumn>        legColumns)
+		{
+			var isValid = true;
+
+			expression.VisitParentFirstAll(e =>
+			{
+				if (!isValid)
+					return false;
+
+				if (e is SqlColumn column && ReferenceEquals(column.Parent, setQuery))
+				{
+					if (!setColumnIndexes.TryGetValue(column, out var index) || index >= legColumns.Count)
+						isValid = false;
+
+					return false;
+				}
+
+				return true;
+			});
+
+			if (!isValid)
+				return null;
+
+			return expression.Convert((setQuery, setColumnIndexes, legColumns), static (visitor, e) =>
+			{
+				if (e is SqlColumn column && ReferenceEquals(column.Parent, visitor.Context.setQuery))
+					return visitor.Context.legColumns[visitor.Context.setColumnIndexes[column]].Expression;
+
+				return e;
+			});
 		}
 
 		bool FinalizeAndValidateInternal(SelectQuery selectQuery)
@@ -1732,7 +1864,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				var operation = subQuery.SetOperators[0].Operation;
 
-				if (!TryReorderSetColumns(newIndexes, subQuery, operation))
+				if (!TryReorderSetColumns(newIndexes, subQuery, operation, AllowDerivedSetColumns(subQuery)))
 					return false;
 
 				parentQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
