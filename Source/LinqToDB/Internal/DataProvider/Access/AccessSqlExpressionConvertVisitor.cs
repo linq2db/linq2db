@@ -40,6 +40,19 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Second;
 
 		/// <summary>
+		/// A second is also as fine as the measurement resolves, so a component asked for below one is identically
+		/// zero rather than merely imprecise.
+		/// </summary>
+		/// <remarks>
+		/// Access refuses such a member either way - there is no millisecond date part to extract and no tick count
+		/// to divide - but where it refuses decides what a caller can do about it. Declined here, while the
+		/// expression is still being built, the message names the unit and the resolution, and a projection stays
+		/// free to fall back to .NET, which holds both dates and answers exactly. Left to the builder, the refusal
+		/// arrives as an exception with no such escape.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Second;
+
+		/// <summary>
 		/// Access counts seconds, and an OLE Automation date holds fractions of one, so a tick count derived from
 		/// it is only good to the second - which is why the members are counted instead.
 		/// </summary>

@@ -131,10 +131,11 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		const string AccessLongParameterOverflow =
-			"Access maps a 64-bit integer parameter to a 32-bit one and narrows it with a checked cast, so any value "
-			+ "above int.MaxValue throws OverflowException as the parameter is bound. A duration comparison travels in "
-			+ "ticks, where int.MaxValue is three and a half minutes, so any longer bound fails. Not an interval "
-			+ "defect - a plain long compared against an int column throws identically. See issue 5748.";
+			"The ODBC provider maps a 64-bit integer parameter to a 32-bit one and narrows it with a checked cast, so "
+			+ "any value above int.MaxValue throws OverflowException as the parameter is bound. A duration comparison "
+			+ "travels in ticks, where int.MaxValue is three and a half minutes, so any longer bound fails. The OleDb "
+			+ "branch does not narrow, so it is not gated. Not an interval defect - a plain long compared against an "
+			+ "int column throws identically. See issue 5748.";
 
 		// Here the duration is the difference between two dates. Most of these shapes are asked again in the block
 		// that follows, over a column whose unit comes from its declaration, and the repetition is deliberate rather
@@ -576,7 +577,7 @@ namespace Tests.Linq
 		/// converted correctly but rendered with the wrong operator is still caught.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -630,7 +631,7 @@ namespace Tests.Linq
 		/// CLR agree that nothing is greater than an absent bound - that is the answer being pinned.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void ComparisonAgainstAnOptionalValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -757,7 +758,7 @@ namespace Tests.Linq
 		/// second place the same question about the column has to be answered the same way.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void ComparingAnAbsentDurationMatchesClr([DataSources] string context)
 		{
@@ -835,7 +836,7 @@ namespace Tests.Linq
 		/// column lifted to ticks, or the value lowered to seconds - is the provider's business.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void DeclaredDurationFollowsTheRequestForHowItTravels([DataSources(false)] string context)
 		{
@@ -1184,7 +1185,7 @@ namespace Tests.Linq
 		/// to survive the round trip into the statement and back into a <see cref="TimeSpan"/>.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccess, Details = AccessLongParameterOverflow)]
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void LocalCollectionDrivingAQueryPerValueKeepsEachValue([DataSources] string context)
 		{
