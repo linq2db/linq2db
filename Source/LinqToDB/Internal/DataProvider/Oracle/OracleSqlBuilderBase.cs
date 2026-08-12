@@ -289,6 +289,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		}
 
 		SqlField? _identityField;
+		protected virtual bool UseNativeIdentity => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -299,7 +300,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 				case SqlCreateTableStatement createTable:
 					_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
-					if (_identityField != null)
+					if (_identityField != null && !UseNativeIdentity)
 						return 3;
 					break;
 			}
@@ -312,6 +313,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			var nullability = NullabilityContext.NonQuery;
 
 			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
+			if (identityField != null && UseNativeIdentity)
+				identityField = null;
 
 			if (identityField == null && !dropTable.Table.TableOptions.HasDropIfExists() && !dropTable.Table.TableOptions.HasIsTemporary())
 			{
