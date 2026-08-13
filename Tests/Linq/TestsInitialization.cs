@@ -215,7 +215,7 @@ public class TestsInitialization
 		if (maxLanes < 1)
 			maxLanes = 1;
 
-		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), new DelegateParallelDiagnostics(ParallelDiag.Log), maxLanes, out var workers))
+		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), diagnostics: null, maxLanes, out var workers))
 		{
 			TestBase.ParallelExecutionEnabled = true;
 			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (maxLanes={maxLanes} [{(configuredLanes.HasValue ? "from config" : "default 2xCPU")}], cpus={Environment.ProcessorCount}, nunitWorkers={workers})");
@@ -478,8 +478,6 @@ public class TestsInitialization
 	public void TestAssemblyTeardown()
 	{
 		TestInMemoryDatabases.DisposeAll();
-
-		ParallelDiag.Dump();
 
 		if (_doMetrics)
 		{

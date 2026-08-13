@@ -175,21 +175,14 @@ namespace Tests
 			// (CreateDatabase runs off-lane and signals readiness). Serial / filtered runs skip this.
 			if (ParallelExecutionEnabled && provider != null)
 			{
-				var isCreateDb = NUnitUtils.IsCreateDatabase(test);
-
-				if (isCreateDb)
-					ParallelDiag.Log($"createdb-start provider={provider} test={test.Name}");
-				else
+				if (!NUnitUtils.IsCreateDatabase(test))
 				{
-					var sw       = System.Diagnostics.Stopwatch.StartNew();
 					var signaled = CustomTestContext.AwaitDatabaseReady(provider);
 
 					// Backstop: if the wait timed out (no CreateDatabase ever signalled it), release the
 					// other waiters so they don't each pay the full timeout — one wait per provider, not per test.
 					if (!signaled)
 						CustomTestContext.MarkDatabaseReady(provider);
-
-					ParallelDiag.Log($"latch provider={provider} test={test.Name} signaled={signaled} waitedMs={sw.ElapsedMilliseconds}");
 				}
 			}
 
@@ -206,11 +199,7 @@ namespace Tests
 			// release any tests waiting on this provider's database: signalled after CreateDatabase
 			// runs (here, not inside the try, so a failed CreateDatabase still unblocks waiters)
 			if (provider != null && NUnitUtils.IsCreateDatabase(test))
-			{
-				var r = TestContext.CurrentContext.Result;
-				ParallelDiag.Log($"createdb-end provider={provider} test={test.Name} outcome={r.Outcome.Status} fails={r.FailCount}");
 				CustomTestContext.MarkDatabaseReady(provider);
-			}
 
 			try
 			{

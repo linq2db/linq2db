@@ -253,18 +253,6 @@ namespace Tests
 			{
 				_badState = true;
 
-				// Diagnostic: capture the session + shared-table state when drift is first detected, so the
-				// CI log shows which connection (SPID) saw it and how Person/Patient diverged.
-				try
-				{
-					var persons  = db.Person.Count();
-					var patients = db.Patient.Count();
-					var spid     = 0;
-					try { spid = db.Query<int>("SELECT @@SPID").FirstOrDefault(); } catch { /* provider without @@SPID */ }
-					ParallelDiag.Log($"assertstate-drift context={context} spid={spid} persons={persons} patients={patients}");
-				}
-				catch { /* diagnostics only */ }
-
 				throw new InvalidOperationException("SMOrc");
 			}
 		}
