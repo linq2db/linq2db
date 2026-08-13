@@ -103,7 +103,11 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				=> debugInfo["LinqToDB"] = "1";
 
 #if !EF31
-			public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other) => true;
+			// none of our options affect the service provider, but the answer is still only "yes"
+			// for another instance of this extension: EF compares extensions pairwise by position,
+			// so answering true for a foreign extension makes two different configurations look
+			// like one — both to EF's service provider cache and to our mapping schema cache.
+			public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other) => other is LinqToDBExtensionInfo;
 #endif
 		}
 	}
