@@ -89,7 +89,8 @@ namespace Tests.Mapping
 			public int MarkedOnType { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global MappingSchema.EntityDescriptorCreatedCallback; while it is set, any concurrent test building an entity descriptor gets lowercased table/column names.
+		[Test, NonParallelizable]
 		public void LowerCaseMappingTest()
 		{
 			var ms = new MappingSchema();
