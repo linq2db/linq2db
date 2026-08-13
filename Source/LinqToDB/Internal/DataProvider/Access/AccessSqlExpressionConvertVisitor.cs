@@ -112,6 +112,22 @@ namespace LinqToDB.Internal.DataProvider.Access
 				: Factory.Function(Factory.GetDbDataType(date), "DateAdd", Factory.Value(part), amount, date);
 		}
 
+		/// <summary>
+		/// Boundary counting through <c>DateDiff</c>, whose count is a 32-bit value.
+		/// </summary>
+		/// <remarks>
+		/// The fine count that completes a total is only taken across a window shorter than one of the requested
+		/// units, so it cannot overflow. The whole-unit count is taken across the entire span, and in seconds it
+		/// reaches the 32-bit limit at about sixty-eight years - past which the driver answers <c>Numeric value out
+		/// of range</c> rather than a number, because the cast below happens after Access has already computed the
+		/// count. Every coarser datepart is far from it: minutes reach the limit only after four thousand years.
+		/// <para>
+		/// This provider is the only one that gets here - it is the only override of
+		/// <see cref="SqlExpressionConvertVisitor.ElapsedTicksResolveMembers"/> to <see langword="false"/>, and
+		/// everywhere else a member is taken from the tick count instead. Removing the ceiling means counting days
+		/// first and the requested unit across the sub-day remainder, the way <c>ElapsedTicks</c> does.
+		/// </para>
+		/// </remarks>
 		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
 		{
 			var part = DatePartName(unit);

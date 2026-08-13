@@ -1024,7 +1024,8 @@ namespace Tests.Linq
 		/// </para>
 		/// <para>
 		/// The fourth route, where both sides are columns and neither number is known while the query is built, is
-		/// <c>ContainsAcrossUnitsReconcilesTheColumns</c> below - it does not work yet.
+		/// <c>ContainsAcrossUnitsReconcilesTheColumns</c> below - reconciled while the predicate is converted. The
+		/// same shape over a computed difference is not, and is recorded on <c>ContainsOverADifference</c> (5776).
 		/// </para>
 		/// </remarks>
 		[Test]

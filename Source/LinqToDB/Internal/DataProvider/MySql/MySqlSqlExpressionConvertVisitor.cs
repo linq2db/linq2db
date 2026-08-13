@@ -54,8 +54,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			var longType     = Factory.GetDbDataType(typeof(long));
-			var microseconds = Factory.Div(longType, element.Interval, Factory.Value(longType, TimeSpan.TicksPerMillisecond / 1000));
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// Through the truncating divide, for the reason TruncateDivide states above: MySQL's / is a decimal
+			// division even between two integers, so a tick count that is not a whole number of microseconds would
+			// reach INTERVAL as a fraction rather than truncating toward zero the way the rest of the lowering does.
+			var microseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond / 1000);
 
 			return Factory.Function(Factory.GetDbDataType(element.Temporal),
 				element.IsSubtract ? "Date_Sub" : "Date_Add",

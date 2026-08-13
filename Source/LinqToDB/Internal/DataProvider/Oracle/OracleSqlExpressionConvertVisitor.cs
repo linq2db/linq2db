@@ -36,6 +36,18 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		public override bool CanLowerIntervalDifference => true;
 
 		/// <summary>
+		/// The operands are narrowed to six fractional digits before they are subtracted, so a component below the
+		/// microsecond is identically zero rather than merely imprecise, and is declined instead.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="AsTimestamp"/> casts to <see cref="DataType.DateTime2"/> with no precision, which renders as a
+		/// bare <c>timestamp</c> - six digits - so the sub-microsecond tick cannot survive the subtraction whatever
+		/// the column holds. Declaring the floor makes the member fall back to .NET, which answers it from the two
+		/// dates, rather than depending on what the driver happens to round-trip.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Microsecond;
+
+		/// <summary>
 		/// Elapsed ticks summed field by field out of the interval two timestamps subtract to.
 		/// </summary>
 		/// <remarks>

@@ -49,8 +49,12 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		/// </summary>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			var longType     = Factory.GetDbDataType(typeof(long));
-			var microseconds = Factory.Div(longType, element.Interval, Factory.Value(longType, TimeSpan.TicksPerMillisecond / 1000));
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// Through the truncating divide, for the reason TruncateDivide states above: DuckDB's / produces a
+			// double even between two integers, and To_Microseconds takes a BIGINT - so a tick count that is not a
+			// whole number of microseconds would hand a fraction to an integer parameter.
+			var microseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond / 1000);
 			var interval     = Factory.Function(longType.WithDataType(DataType.Interval), "To_Microseconds", microseconds);
 			var type         = Factory.GetDbDataType(element.Temporal);
 

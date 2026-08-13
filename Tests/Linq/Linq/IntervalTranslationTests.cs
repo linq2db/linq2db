@@ -209,6 +209,13 @@ namespace Tests.Linq
 		/// <em>answer</em> rather than refuse: an error only propagates where SQL is required, so a projection, a set
 		/// operation or a grouping key read back is computed on the row and is exact.
 		/// </para>
+		/// <para>
+		/// The two entries are refused for different reasons. Informix has no exact measure to offer at all. SQL
+		/// Server below 2016 lacks <c>DATEDIFF_BIG</c>, which is a version boundary rather than a provider limit -
+		/// reaching those versions through the shared day-anchored decomposition, the way SQL CE and Sybase already
+		/// do, is issue 5777, and that is what would un-gate them here and the eleven
+		/// <c>ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)</c> sites outside this fixture.
+		/// </para>
 		/// </remarks>
 		const string UnsupportedDifferenceProviders =
 			TestProvName.AllInformix          + "," +

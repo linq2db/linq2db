@@ -625,6 +625,14 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlCastExpression   { Type: var t } => t,
 				SqlBinaryExpression { Type: var t } => t,
 
+				// Each carries the storage it was built against, which is the point of the node - falling to the
+				// CLR-type arm below would answer DataType.Undefined and let the mapping schema refill the rest
+				// from its default for that type, discarding the declared one.
+				SqlIntervalExpression           { Type: var t } => t,
+				SqlIntervalDifferenceExpression { Type: var t } => t,
+				SqlIntervalPartExpression       { Type: var t } => t,
+				SqlTemporalArithmeticExpression { Type: var t } => t,
+
 				// carries no type of its own - the provider picks one when rendering
 				SqlParameterCastExpression { Parameter: var p } => GetDbDataTypeImpl(p, visited),
 

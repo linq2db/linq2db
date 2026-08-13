@@ -20,6 +20,17 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		public override bool CanLowerIntervalDifference => true;
 
 		/// <summary>
+		/// The tick count is built from <c>MICROSECOND()</c> scaled by ten, so it is a multiple of ten by
+		/// construction and a component below the microsecond is identically zero rather than merely imprecise.
+		/// </summary>
+		/// <remarks>
+		/// Declared even though a column may be wider - <c>timestamp(7)</c> is what this fixture's model asks for -
+		/// because what the measurement can distinguish is what the count is taken from, not what the column holds.
+		/// The declined member falls back to .NET and answers from the two dates.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Microsecond;
+
+		/// <summary>
 		/// Elapsed ticks summed from the three fields a DB2 timestamp decomposes into.
 		/// </summary>
 		/// <remarks>
