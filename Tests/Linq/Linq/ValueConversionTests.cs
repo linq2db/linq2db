@@ -1379,5 +1379,58 @@ namespace Tests.Linq
 			rows.Count.ShouldBe(2);
 			rows.Select(r => r.Span).ShouldBe([value, value]);
 		}
+
+		sealed class ScaledValueRow
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column    ] public int Value { get; set; }
+
+			public static readonly ScaledValueRow[] Data =
+			{
+				new() { Id = 1, Value = 10 },
+				new() { Id = 2, Value = 20 },
+				new() { Id = 3, Value = 30 },
+			};
+		}
+
+		/// <summary>
+		/// A count over a column carrying a conversion answers how many rows there are, not a value of that column.
+		/// </summary>
+		/// <remarks>
+		/// The descriptor walk treats a single-argument aggregate as transparent, which is right for <c>MIN</c>,
+		/// <c>MAX</c> and <c>SUM</c> - they answer in the operand's own domain - and wrong for <c>COUNT</c>, which
+		/// answers in a type of its own. The type guard meant to separate them compares the result type with the
+		/// column's <em>member</em> type, so it cannot tell the two apart once that type is already <see cref="int"/>.
+		/// <para>
+		/// The conversion is deliberately <c>int</c> to <c>int</c> and lossy in a visible way: one mapping to a
+		/// different provider type would be stopped by that guard and hide the defect. Halving is what makes it
+		/// show - a running count of 1, 2, 3 came back as 0, 1, 1.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void CountOverAConvertedColumnIsNotConverted([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ScaledValueRow>()
+					.Property(e => e.Value)
+						.HasConversion(v => v * 2, p => p / 2)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ScaledValueRow.Data);
+
+			var counted = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.Window.Count(r.Value, w => w.OrderBy(r.Id)))
+				.ToArray();
+
+			counted.ShouldBe([1, 2, 3]);
+
+			// The aggregates that do answer in the column's own domain still read through the conversion.
+			t.Max(r => r.Value).ShouldBe(30);
+			t.Min(r => r.Value).ShouldBe(10);
+		}
 	}
 }

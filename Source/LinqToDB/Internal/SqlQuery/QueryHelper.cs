@@ -367,17 +367,16 @@ namespace LinqToDB.Internal.SqlQuery
 					return found;
 				}
 
-				// The same rule once more for the extended form, which is what an aggregate is built as. MIN and
-				// MAX answer with an element of their operand's own domain, so the operand's descriptor keeps
-				// describing the result.
+				// The same rule once more for the extended form, which is what an aggregate is built as. MIN and MAX
+				// answer with an element of their operand's own domain and SUM with a value of the same kind, so the
+				// operand's descriptor keeps describing the result.
 				//
-				// The guard compares the function's result type with the operand's *member* type, which is a proxy
-				// for staying in that domain rather than a proof of it. It stops COUNT over a column whose member
-				// type is not int, and does not stop COUNT over one whose member type is int - the descriptor is
-				// then returned for a value that is a row count. Reaching a wrong answer through that needs a
-				// converter whose provider type equals its model type, which is why nothing has surfaced. Narrowing
-				// this to an allow-set of the aggregates that genuinely preserve the domain would say it properly.
-				case SqlExtendedFunction { Arguments: [var singleArgument] } extendedFunction:
+				// Named rather than left to the type guard below, which compares the result type with the operand's
+				// *member* type and is therefore a proxy for staying in the domain rather than a proof of it: COUNT
+				// answers how many rows there are, in a type of its own, and over a column whose member type is
+				// already int the guard cannot tell the two apart - it would hand back a descriptor, and with it a
+				// value converter, for a row count.
+				case SqlExtendedFunction { Arguments: [var singleArgument], FunctionName: "MIN" or "MAX" or "SUM" } extendedFunction:
 				{
 					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements);
 					if (found?.GetDbDataType(true).SystemType != extendedFunction.SystemType)
