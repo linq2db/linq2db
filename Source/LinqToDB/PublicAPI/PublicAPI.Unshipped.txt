@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 ~override LinqToDB.Internal.SqlQuery.SqlIntervalType.Equals(object obj) -> bool
 ~override LinqToDB.Internal.SqlQuery.SqlIntervalType.ToString() -> string
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_ComponentBelowResolution = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated." -> string!
@@ -74,7 +74,8 @@ LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Type.get -> LinqToDB.
 LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference.get -> bool
 LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart.get -> bool
 LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
-LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart, LinqToDB.Internal.SqlQuery.SqlIntervalUnit intervalResolution = LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick) -> void
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart, bool canLowerIntervalShift, LinqToDB.Internal.SqlQuery.SqlIntervalUnit intervalResolution = LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick) -> void
 LinqToDB.Mapping.ColumnDescriptor.DurationUnit.get -> LinqToDB.Mapping.DurationUnit?
 LinqToDB.Mapping.DurationAttribute
 LinqToDB.Mapping.DurationAttribute.DurationAttribute(LinqToDB.Mapping.DurationUnit unit) -> void

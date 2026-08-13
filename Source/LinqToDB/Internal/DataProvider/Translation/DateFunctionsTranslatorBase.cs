@@ -349,6 +349,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// on PostgreSQL.
 			if (amount is SqlIntervalExpression)
 			{
+				// A declared duration is a real amount and nothing later removes it, so a provider that cannot spend
+				// one says so here rather than building a node the builder will refuse. Refused there it fails the
+				// whole query - this was the one interval path that did, while a member and a comparison both
+				// degrade to a client-side answer.
+				//
+				// Asked in this branch only. A shift by a computed difference is built regardless, because
+				// start + (end - start) cancels against the difference it came from and asks the provider for
+				// nothing at all - declining that here would sink a query that works everywhere today.
+				if (!translationContext.ProviderFlags.CanLowerIntervalShift)
+					return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_Shift);
+
 				amount = new SqlIntervalPartExpression(
 					amount,
 					SqlIntervalUnit.Tick,

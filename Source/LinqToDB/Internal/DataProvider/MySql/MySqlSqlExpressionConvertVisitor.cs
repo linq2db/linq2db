@@ -45,6 +45,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>Lowered below without going through <c>FinestDateUnit</c>, which the default reads.</remarks>
+		public override bool CanLowerIntervalShift => true;
+
 		/// <summary>
 		/// Shifts through <c>DATE_ADD</c> at microsecond resolution - the interval's own unit here.
 		/// </summary>

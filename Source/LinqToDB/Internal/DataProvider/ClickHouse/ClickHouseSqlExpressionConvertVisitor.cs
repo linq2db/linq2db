@@ -59,6 +59,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
 		}
 
+		/// <inheritdoc />
+		/// <remarks>Lowered below without going through <c>FinestDateUnit</c>, which the default reads.</remarks>
+		public override bool CanLowerIntervalShift => true;
+
 		/// <summary>
 		/// Shifts by the interval expressed in nanoseconds, the unit that matches what a tick is.
 		/// </summary>

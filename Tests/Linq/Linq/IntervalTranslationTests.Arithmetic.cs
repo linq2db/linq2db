@@ -137,8 +137,13 @@ namespace Tests.Linq
 			shifted.ShouldBe(when + elapsed);
 		}
 
+		/// <remarks>
+		/// Ungated although several providers cannot express the shift at all. The refusal is raised while the
+		/// expression is still being built, so a projection - which is what this is - falls back to .NET and answers
+		/// exactly. Asserting the value on every provider is what proves that fallback: a refusal assertion would
+		/// only have proved the refusal.
+		/// </remarks>
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDeclaredShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		public void ADeclaredDurationShiftsADate([DataSources(false)] string context)
 		{
 			// A shift whose interval is a declared column rather than a computed difference. The two reach the
@@ -169,8 +174,12 @@ namespace Tests.Linq
 			row.AddedTicks.ShouldBe(ShiftOrigin + value);
 		}
 
+		/// <remarks>
+		/// Ungated for the reason its non-nullable sibling above is: the shift is declined while the expression is
+		/// built, so this projection falls back to .NET everywhere and the absence is asserted on every provider
+		/// rather than only on those that can express the arithmetic.
+		/// </remarks>
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDeclaredShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		public void ADurationThatMayBeAbsentShiftsADate([DataSources(false)] string context)
 		{
 			// A shift by a nullable duration is a registration of its own, and the result is nullable with it: the

@@ -86,6 +86,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// Should a coarser hand-off ever exist, this is the override to drop.
 		/// </para>
 		/// </remarks>
+		/// <inheritdoc />
+		/// <remarks>
+		/// Declared false although <see cref="FinestDateUnit"/> is named: the base implementation would spend the
+		/// amount through <c>DateAdd</c>, and this provider refuses the shift outright below.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => false;
+
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
 			return null;

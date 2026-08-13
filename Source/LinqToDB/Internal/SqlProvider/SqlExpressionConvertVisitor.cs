@@ -1197,6 +1197,23 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </remarks>
 		public virtual SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Tick;
 
+		/// <summary>
+		/// Whether <see cref="LowerTemporalArithmetic"/> can express a date shifted by an interval at all.
+		/// </summary>
+		/// <remarks>
+		/// Read by the member translator so a declared duration added to a date is declined while the expression is
+		/// still being built, rather than reaching the builder as a node nothing can render - a refusal there has no
+		/// client-side fallback left. The default follows what the base implementation needs: it spends the amount
+		/// through <see cref="ShiftDate"/> at <see cref="FinestDateUnit"/>, so a provider that names no finest unit
+		/// cannot lower one.
+		/// <para>
+		/// Only the <em>declared</em> half is declined early. A shift by a computed difference is left to be built,
+		/// because <c>start + (end - start)</c> cancels against the difference it came from and asks the provider
+		/// for nothing - refusing it here would sink a query that works everywhere.
+		/// </para>
+		/// </remarks>
+		public virtual bool CanLowerIntervalShift => FinestDateUnit != null;
+
 		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
 		{
 			var lowered = LowerTemporalArithmetic(element);

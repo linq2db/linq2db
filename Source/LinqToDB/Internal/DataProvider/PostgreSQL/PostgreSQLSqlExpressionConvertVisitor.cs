@@ -26,6 +26,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return Elapsed(element);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>Lowered below without going through <c>FinestDateUnit</c>, which the default reads.</remarks>
+		public override bool CanLowerIntervalShift => true;
+
 		/// <summary>
 		/// A timestamp takes an interval directly, so the shift is the operator itself.
 		/// </summary>

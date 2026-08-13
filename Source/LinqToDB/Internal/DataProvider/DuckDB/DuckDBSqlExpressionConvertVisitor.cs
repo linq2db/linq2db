@@ -44,6 +44,10 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>Lowered below without going through <c>FinestDateUnit</c>, which the default reads.</remarks>
+		public override bool CanLowerIntervalShift => true;
+
 		/// <summary>
 		/// Shifts by an interval built from the microsecond count, which is what DuckDB stores.
 		/// </summary>
