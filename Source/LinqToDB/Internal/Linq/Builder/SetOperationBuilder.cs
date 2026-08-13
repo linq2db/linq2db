@@ -353,6 +353,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			/// </remarks>
 			static bool ReadsTheSameWay(SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)
 			{
+				// A NULL holds no stored value, so it has no terms to disagree in: the branch that does have one
+				// still decides how the shared column is read, and the padded row reads as absent under any
+				// conversion. Asked before the descriptors because a NULL has none, and answering from that absence
+				// refuses a branch that merely supplies nothing - which is what padding a set operation is. The same
+				// pairing is filled in by hand below for a member only one branch has, and MergeProjectionHelper
+				// merges it outright.
+				if (QueryHelper.UnwrapNullablity(placeholder1.Sql).IsNullValue || QueryHelper.UnwrapNullablity(placeholder2.Sql).IsNullValue)
+					return true;
+
 				var descriptor1 = QueryHelper.GetColumnDescriptor(placeholder1.Sql);
 				var descriptor2 = QueryHelper.GetColumnDescriptor(placeholder2.Sql);
 

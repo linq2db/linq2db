@@ -2557,5 +2557,55 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		#region Asymmetric branches
+
+		sealed class ConvertedFlagRow
+		{
+			[PrimaryKey] public int   Id   { get; set; }
+			[Column    ] public bool? Flag { get; set; }
+
+			public static readonly ConvertedFlagRow[] Data =
+			{
+				new() { Id = 1, Flag = true  },
+				new() { Id = 2, Flag = false },
+			};
+		}
+
+		/// <summary>
+		/// A branch supplying a plain <c>NULL</c> where the other reads a column through a conversion.
+		/// </summary>
+		/// <remarks>
+		/// The branches are deliberately not the same query. Every other set-operation test here unions a query with
+		/// itself, so both sides carry the same descriptor and agree by reference alone - which is exactly the shape
+		/// that cannot catch a divergence check reading too much into an absent descriptor. A <c>NULL</c> is stored
+		/// in no terms and read through no conversion, so it cannot disagree with what the other branch declares.
+		/// </remarks>
+		[Test]
+		public void UnionPadsAConvertedColumnWithNull([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var withValue = t.Select(x => new { x.Id, x.Flag });
+			var withNull  = t.Select(x => new { x.Id, Flag = (bool?)null });
+
+			var result = withValue.Union(withNull).ToArray();
+
+			result.Length.ShouldBe(4);
+			result.Count(r => r.Flag == null).ShouldBe(2);
+			result.Single(r => r.Id == 1 && r.Flag != null).Flag.ShouldBe(true);
+			result.Single(r => r.Id == 2 && r.Flag != null).Flag.ShouldBe(false);
+		}
+
+		#endregion
 	}
 }
