@@ -192,8 +192,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						rewrite = true;
 					}
 
+					// Precedence carried over from the operand being rebuilt. Left unstated it defaults to Unknown,
+					// which the renderer reads as binding loosest - bracketing this node wherever it sits, while
+					// wrapping nothing beneath it.
 					if (rewrite)
-						return PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
+						return PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right, element.Precedence), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
 
 					break;
 				}

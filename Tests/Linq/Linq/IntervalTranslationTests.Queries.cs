@@ -1283,7 +1283,14 @@ namespace Tests.Linq
 
 			var act = () => union.Where(r => r.Duration > TimeSpan.Zero).Select(r => r.Source).ToList();
 
-			act.ShouldThrow<LinqToDBException>();
+			// Pinned to the refused comparison rather than to the exception type: LinqToDBException stands for every
+			// untranslatable query, so a type-only assertion would also pass on an unrelated refusal elsewhere in the
+			// same query. The message is the generic one - this path does not reach the set-operation builder's own
+			// "in different terms" throw, which fires only where rows are compared.
+			var refusal = act.ShouldThrow<LinqToDBException>();
+
+			refusal.Message.ShouldContain("r.Duration");
+			refusal.Message.ShouldContain("could not be converted to SQL");
 		}
 
 		/// <summary>
