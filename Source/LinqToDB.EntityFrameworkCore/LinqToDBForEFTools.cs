@@ -103,7 +103,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 		static Lazy<IMetadataReader?> _defaultMetadataReader;
 
-		static readonly ConcurrentDictionary<(object ModelKey, DataOptions? DataOptions, bool Tracking), MappingSchema> _mappingSchemas = new();
+		static readonly ConcurrentDictionary<(object ModelKey, object ServiceKey, DataOptions? DataOptions, bool Tracking), MappingSchema> _mappingSchemas = new();
 
 		/// <summary>
 		/// Clears internal caches
@@ -243,12 +243,47 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 
 				return _mappingSchemas.GetOrAdd(
-					(modelKey, dataOptions, EnableChangeTracker),
+					(modelKey, GetServiceKey(context), dataOptions, EnableChangeTracker),
 					static (_, state) => BuildMappingSchema(state.model, state.accessor, state.dataOptions),
 					(model, accessor, dataOptions));
 			}
 
 			return BuildMappingSchema(model, accessor, dataOptions);
+		}
+
+		/// <summary>
+		/// Identifies the set of EF services the model and its type mappings were built from. The
+		/// model-cache key alone is not enough: it is unique only within one EF internal service
+		/// provider (EF's default key is the context type), while our schema cache is process-wide.
+		/// Without this component one context type used with two providers — or with two
+		/// service-affecting configurations — would share a single schema, and the first model
+		/// discovered would win for all of them.
+		/// </summary>
+		static object GetServiceKey(DbContext context)
+		{
+			var options = GetContextOptions(context);
+
+			if (options == null)
+				return context.GetType();
+
+#if EF31
+			// EF 3.1 has no DbContextOptions equality, so reproduce the key its own
+			// ServiceProviderCache uses (extension types + per-extension service-provider hash).
+			// The ordered type-name list is added so different providers can never collide on the
+			// aggregated hash alone.
+			return (
+				string.Join(",", options.Extensions.Select(static e => e.GetType().FullName).OrderBy(static n => n, StringComparer.Ordinal)),
+				options.Extensions
+					.OrderBy(static e => e.GetType().Name, StringComparer.Ordinal)
+					.Aggregate(0L, static (hash, e) => (hash * 397) ^ ((long)e.GetType().GetHashCode() * 397) ^ e.Info.GetServiceProviderHashCode()));
+#else
+			// DbContextOptions implements Equals/GetHashCode over exactly those options that
+			// require a distinct EF internal service provider (DbContextOptionsExtensionInfo's
+			// ShouldUseSameServiceProvider / GetServiceProviderHashCode) — the same key EF's own
+			// ServiceProviderCache uses. Being content-based, equivalent-but-distinct options
+			// objects still map to one schema, which is what the sharing above relies on.
+			return options;
+#endif
 		}
 
 		static MappingSchema BuildMappingSchema(IModel model, IInfrastructure<IServiceProvider>? accessor, DataOptions? dataOptions)
