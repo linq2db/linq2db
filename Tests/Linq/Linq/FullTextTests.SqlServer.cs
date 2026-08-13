@@ -856,8 +856,7 @@ namespace Tests.Linq
 			db.LastQuery!.ShouldContain("CONTAINSTABLE([Categories], ([Description]), @search, @top)");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ContainsTableByAll([IncludeDataSources(TestProvName.AllNorthwind)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = new NorthwindDB(context);
@@ -1047,8 +1046,7 @@ namespace Tests.Linq
 			db.LastQuery!.ShouldContain("CONTAINSTABLE([Categories], ([CategoryName], [Description]), @search, LANGUAGE @language, @top)");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ContainsTableByColumnsTop([IncludeDataSources(TestProvName.AllNorthwind)] string context, [Values(1, 2, 3)] int top)
 		{
 			using var db = new NorthwindDB(context);

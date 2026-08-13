@@ -369,8 +369,7 @@ namespace Tests.Linq
 		// different chars value is safe — asserting a miss there would lock in
 		// avoidable cache churn.
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void TrimStartCharsCacheTest([DataSources] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -392,8 +391,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void TrimEndCharsCacheTest([DataSources] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -418,8 +416,7 @@ namespace Tests.Linq
 		// stored type and accessor type must agree, otherwise the cache compare always
 		// returns false and trim-with-chars queries miss cache on every execution.
 		// Re-executing the same query must hit the cache.
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void TrimEndCharsCache_HitsOnSameContent([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -439,8 +436,7 @@ namespace Tests.Linq
 		// display-class type and same field layout, so structural compare matches.
 		// Sorted-string cache key gives set semantics, so a reordered chars argument
 		// must still hit the cache.
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void TrimEndCharsCache_LocalFunctionWithReorderedCharsHits([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -465,8 +461,7 @@ namespace Tests.Linq
 		// providers the translator returns null and the trim runs client-side, where
 		// the closure-captured chars is parameter-bound and the cache reuses the same
 		// plan across mutations (no stale SQL to worry about).
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void TrimEndCharsCache_MutationMissesCache([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);

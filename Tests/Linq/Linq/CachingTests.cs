@@ -234,8 +234,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue]
-		// NonParallelizable: asserts exact GetCacheMissCount deltas; the query cache is process-global, so a concurrent test's compilation would perturb the count.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -272,8 +271,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue]
-		// NonParallelizable: asserts exact GetCacheMissCount deltas; the query cache is process-global, so a concurrent test's compilation would perturb the count.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -359,8 +357,7 @@ namespace Tests.Linq
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, ServerSideOnly = true)]
 		private static bool InExtStruct<T>([ExprParameter] T field, [ExprParameter] IntArrayStruct values) where T : struct, IEquatable<int> => throw new NotImplementedException();
 
-		// NonParallelizable: asserts exact GetCacheMissCount deltas; the query cache is process-global, so a concurrent test's compilation would perturb the count.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void Issue4266Test_Class([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
@@ -399,8 +396,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// NonParallelizable: asserts exact GetCacheMissCount deltas; the query cache is process-global, so a concurrent test's compilation would perturb the count.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), NonParallelizable]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void Issue4266Test_Struct([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();

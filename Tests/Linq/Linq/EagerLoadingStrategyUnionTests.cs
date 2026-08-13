@@ -1742,9 +1742,7 @@ namespace Tests.Linq
 
 		#region Query cache validation — iteration 2 must hit cache with correct values
 
-		// NonParallelizable: asserts exact GetCacheMissCount deltas, which read the process-global
-		// Query<T>.CacheMissCount; a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void Cache_Union_ParentFilterChanged(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context,
 			[Values(1, 2)] int iteration)
@@ -1801,9 +1799,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// NonParallelizable: asserts exact GetCacheMissCount deltas, which read the process-global
-		// Query<T>.CacheMissCount; a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void Cache_Union_ChildFilterChanged(
 			[DataSources(true, TestProvName.AllFirebirdLess3)] string context,
 			[Values(1, 2)] int iteration)
@@ -1878,9 +1874,7 @@ namespace Tests.Linq
 
 		// TODO: Handle Clickhouse correlated subquery in join expression
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		// NonParallelizable: asserts exact GetCacheMissCount deltas, which read the process-global
-		// Query<T>.CacheMissCount; a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void Cache_Union_MultipleAssociationsFilterChanged(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllFirebirdLess3)] string context,
 			[Values(1, 2)] int iteration)

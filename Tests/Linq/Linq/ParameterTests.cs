@@ -530,8 +530,7 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -603,8 +602,7 @@ namespace Tests.Linq
 			};
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -698,8 +696,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_InsertObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -775,8 +772,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -850,8 +846,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -944,8 +939,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Update([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1039,8 +1033,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_UpdateObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1116,8 +1109,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1191,8 +1183,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1289,8 +1280,7 @@ namespace Tests.Linq
 		private int _cnt3;
 		private int _param;
 
-		// NonParallelizable: counts query compilations (expects 1) and clears the global query cache; concurrent cache activity inflates the count. Cache-counter category.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1436,8 +1426,7 @@ namespace Tests.Linq
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		// NonParallelizable: uses shared _cnt/_param instance fields and depends on query-cache state; concurrent cases corrupt results. Cache-counter category.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1603,8 +1592,7 @@ namespace Tests.Linq
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		// NonParallelizable: counts query compilations (expects 1); concurrent cache activity inflates the count. Cache-counter category.
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), NonParallelizable]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestSimpleParameterEvaluation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1669,8 +1657,7 @@ namespace Tests.Linq
 		/// Tests that we do not have cache hit for similar parameters
 		/// </summary>
 		/// <param name="context"></param>
-		// NonParallelizable: asserts the exact parameter count of a query rebuilt from process-global query-cache state; a concurrent test's compilation would perturb the plan reused here. Cache-counter category.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void Caching([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1887,8 +1874,7 @@ namespace Tests.Linq
 			public bool? Value5 { get; set; }
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);

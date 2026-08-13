@@ -40,8 +40,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Int([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -62,8 +61,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Long([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -84,8 +82,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Short([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -106,8 +103,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_String([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -128,8 +124,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Double([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -150,8 +145,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Decimal([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -172,8 +166,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Float([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -194,8 +187,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Guid([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -218,8 +210,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_DateTime([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
@@ -242,8 +233,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ArrayParameterCacheTest_Bool([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);

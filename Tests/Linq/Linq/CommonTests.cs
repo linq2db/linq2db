@@ -500,8 +500,7 @@ namespace Tests.Linq
 			return ++_i % 2 == 0 ? "John" : null;
 		}
 
-		// NonParallelizable: GetCustKey() increments _i inside the query predicate and the test asserts it ran exactly once; concurrent cache activity causes an extra expression evaluation/comparison. Cache-counter category.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void Issue288Test([DataSources] string context)
 		{
 			_i = 0;

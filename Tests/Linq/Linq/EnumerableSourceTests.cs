@@ -16,8 +16,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public partial class EnumerableSourceTests : TestBase
 	{
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ApplyJoinArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -54,8 +53,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinArray(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -81,8 +79,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinArray2(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -108,8 +105,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinArray3(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -142,8 +138,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinArray4(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -177,8 +172,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinArray5(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -208,8 +202,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinArray6(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllPostgreSQL9)] string context, [Values(1, 2)] int iteration)
 		{
@@ -234,8 +227,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinArray6Postgres([IncludeDataSources(TestProvName.AllPostgreSQL9, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -259,8 +251,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ApplyJoinAnonymousClassArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -297,8 +288,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ApplyJoinAnonymousClassArray2(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -335,8 +325,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void ApplyJoinClassArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -373,8 +362,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void OuterApplyJoinClassArray(
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
@@ -412,8 +400,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinClassArray(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -440,8 +427,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinAnonymousClassRecords(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -468,8 +454,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinClassRecords(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -499,8 +484,7 @@ namespace Tests.Linq
 			AreEqual(expected, result);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InnerJoinClassRecordsCache(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
 			[Values(1, 2)] int iteration)
@@ -544,8 +528,7 @@ namespace Tests.Linq
 			result2.Count.ShouldNotBe(result1.Count);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void Projection(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
 			[Values(1, 2)] int iteration)
@@ -565,8 +548,7 @@ namespace Tests.Linq
 				db.Person.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void NestingProperties(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context,
 			[Values(1, 2)]                                                                    int    iteration)
@@ -654,8 +636,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void InsertTest([DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -685,8 +666,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTest(
 			[DataSources(
@@ -729,8 +709,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void DeleteTest(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context,
 			[Values(1, 2)] int iteration)
@@ -762,8 +741,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void CTETest([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = new TableToInsert[]
@@ -789,8 +767,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void EmptyValues([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = Array.Empty<TableToInsert>();
@@ -829,8 +806,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void SubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = new TableToInsert[]
@@ -856,8 +832,7 @@ namespace Tests.Linq
 				table.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void EmptySubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -879,8 +854,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void StringSubQuery(
 			[DataSources(
 				TestProvName.AllAccess,

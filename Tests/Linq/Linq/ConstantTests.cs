@@ -140,8 +140,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void static_readonly_access_readonly_members ([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -167,8 +166,7 @@ namespace Tests.Linq
 		}
 
 #if SUPPORTS_READONLY
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void static_readonly_field_readonly_struct([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -193,8 +191,7 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void static_field_readonly_struct([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -220,8 +217,7 @@ namespace Tests.Linq
 		}
 #endif
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void static_field_readonly_members([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -246,8 +242,7 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-		// NonParallelizable: relies on process-global query-cache state (asserts exact GetCacheMissCount deltas); a concurrent test's compilation would perturb the count.
-		[Test, NonParallelizable]
+		[Test, QueryCacheTest]
 		public void instance_readonly_members([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
