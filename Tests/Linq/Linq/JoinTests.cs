@@ -3397,5 +3397,18 @@ namespace Tests.Linq
 			if (db is DataConnection { DataProvider: FirebirdDataProvider } dc && dc.TryGetDbConnection() is { } cn)
 				FirebirdTools.ClearPool(cn);
 		}
+
+		[Test]
+		public void NullableLeftJoinPredicateTest([DataSources]string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var qry = from p in db.Parent
+					  from pp in db.Parent.LeftJoin(_ => _.Value1 == p.ParentID)
+					  from ppp in db.Parent.LeftJoin(_ => _.Value1 == pp.ParentID)
+					  select p;
+			var sql = qry.ToSqlQuery();
+			Assert.That(sql.Sql, Is.Not.Contains("OR"));
+		}
 	}
 }
