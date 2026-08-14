@@ -103,10 +103,10 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				=> debugInfo["LinqToDB"] = "1";
 
 #if !EF31
-			// none of our options affect the service provider, but the answer is still only "yes"
-			// for another instance of this extension: EF compares extensions pairwise by position,
-			// so answering true for a foreign extension makes two different configurations look
-			// like one — both to EF's service provider cache and to our mapping schema cache.
+			// none of our options affect the service provider, so "yes" only for another instance of
+			// this extension — the shape EF's own RelationalExtensionInfo uses. Hardening rather than
+			// part of the #5778 fix: both service-provider caches fold the extension types into their
+			// hash, so configurations with different extension sets never reach this pairwise compare.
 			public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other) => other is LinqToDBExtensionInfo;
 #endif
 		}
