@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
 		{
-			return sb.Append('[').Append(value).Append(']');
+			return DelimitWithBrackets(sb, value);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)

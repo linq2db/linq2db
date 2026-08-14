@@ -197,6 +197,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				);
 		}
 
+		/// <summary>
+		/// Oracle quoted identifiers accept every character except the double quote itself, and it has
+		/// no escape for one. Emitting such a name produces invalid SQL, so refuse it here where the
+		/// cause is still visible rather than letting the server report a syntax error.
+		/// </summary>
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			if (value.Contains('"', StringComparison.Ordinal))
+				throw new LinqToDBException($"Oracle cannot represent the identifier '{value}': a quoted identifier cannot contain a double quote.");
+
+			return sb.Append('"').Append(value).Append('"');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			// needs proper list of reserved words and name validation

@@ -284,11 +284,6 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				|| value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c) || c > 127);
 		}
 
-		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
-		{
-			return sb.Append('"').Append(value).Append('"');
-		}
-
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYSIBM.SYSDUMMY1 FETCH FIRST 1 ROW ONLY");

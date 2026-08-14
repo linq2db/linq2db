@@ -225,12 +225,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				|| (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value));
 		}
 
-		// I wonder what to do if identifier has " in name?
-		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
-		{
-			return sb.Append('"').Append(value).Append('"');
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			return convertType switch

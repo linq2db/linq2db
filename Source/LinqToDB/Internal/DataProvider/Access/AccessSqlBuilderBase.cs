@@ -146,8 +146,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 			}
 		}
 
+		/// <summary>
+		/// Access delimits with brackets and has no escape for the characters that terminate or confuse
+		/// one, so a name containing them cannot be represented. Refuse it here rather than emitting SQL
+		/// the driver reports only as "syntax error in field definition".
+		/// </summary>
 		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
 		{
+			if (value.IndexOfAny(['[', ']', '"', '`']) >= 0)
+				throw new LinqToDBException($"Access cannot represent the identifier '{value}': a bracketed identifier cannot contain a bracket, quote or backtick.");
+
 			return sb.Append('[').Append(value).Append(']');
 		}
 

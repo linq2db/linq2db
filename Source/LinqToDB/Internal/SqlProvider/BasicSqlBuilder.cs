@@ -4810,6 +4810,15 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
+		/// Bracket-delimits a name, doubling a closing bracket inside it so the name cannot terminate
+		/// early. Shared by the T-SQL family, which all quote this way.
+		/// </summary>
+		protected static StringBuilder DelimitWithBrackets(StringBuilder sb, string value)
+		{
+			return sb.Append('[').Append(value.Replace("]", "]]", StringComparison.Ordinal)).Append(']');
+		}
+
+		/// <summary>
 		/// Writes an identifier, delimiting it only when <see cref="RequiresQuoting"/> says so. This is
 		/// the single place that decision is made, so a provider cannot forget one <see cref="ConvertType"/>
 		/// and silently emit a bare name - which is how table aliases went unquoted on more than one

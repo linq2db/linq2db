@@ -243,6 +243,32 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
+		// Oracle and Access cannot represent such a name at all - Oracle's quoted identifiers accept
+		// every character except the quote itself, and Access has no escape inside brackets - so they
+		// are asserted to refuse it rather than being excluded, which keeps this red if that changes.
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllOracle, TestProvName.AllAccess, ErrorMessage = "cannot represent the identifier")]
+		public void TestColumnName_WithDelimiterCharacter([DataSources] string context)
+		{
+			// A name carrying the provider's own delimiter has to be escaped rather than closing the
+			// delimited name early - SAP HANA, Db2, Firebird and Informix used to emit it raw, and
+			// SQLite bracket-quoted it with no way to escape the bracket.
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<Table>()
+					.Property(t => t.Component.Column1).HasColumnName("qu\"ote`d]name")
+					.Build();
+
+			using var db = GetDataContext(context, ms);
+
+			if (context.IsAnyOf(TestProvName.AllYdb))
+				Assert.Ignore("YDB does not support non-ASCII or delimiter characters in column identifiers.");
+
+			using var tb = db.CreateLocalTable<Table>();
+
+			tb.Where(t => t.Component.Column1 == 1).ToArray();
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
 		public void TestAliasName_NonAsciiOnly([DataSources] string context)
 		{
