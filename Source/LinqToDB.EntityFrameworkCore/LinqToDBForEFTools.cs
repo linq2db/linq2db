@@ -282,7 +282,12 @@ namespace LinqToDB.EntityFrameworkCore
 			// ShouldUseSameServiceProvider / GetServiceProviderHashCode) — the same key EF's own
 			// ServiceProviderCache uses. Being content-based, equivalent-but-distinct options
 			// objects still map to one schema, which is what the sharing above relies on.
-			return options;
+			// The application service provider takes no part in that equality, and this key lives for
+			// the process lifetime, so drop it first — as EF's own ServiceProviderCache does.
+			return options.FindExtension<CoreOptionsExtension>() is { ApplicationServiceProvider: not null } coreExtension
+				&& options is DbContextOptions contextOptions
+					? contextOptions.WithExtension(coreExtension.WithApplicationServiceProvider(null))
+					: options;
 #endif
 		}
 

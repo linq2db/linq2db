@@ -1,10 +1,14 @@
+using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using NUnit.Framework;
 
@@ -156,5 +160,48 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Columns
 				.Single(c => c.MemberName == nameof(ProviderSplitItem.Name))
 				.ColumnName;
+
+		public class RetentionContext(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Item> Items { get; set; } = null!;
+		}
+
+		/// <summary>
+		/// The process-wide caches must not outlive the application service provider of the context
+		/// that populated them. With <c>EnableServiceProviderCaching(false)</c> EF builds a fresh
+		/// <c>IModel</c> per context, so a strongly-keyed cache entry per model pins one application
+		/// scope per <see cref="DbContext"/> instance. EF avoids this in its own long-lived key:
+		/// <c>ServiceProviderCache.GetOrAdd</c> replaces the options' core extension with
+		/// <c>WithApplicationServiceProvider(null)</c> before storing it.
+		/// </summary>
+		[Test]
+		public void CachesDoNotRetainApplicationServiceProvider()
+		{
+			var applicationServices = BuildSchemaAndDiscardContext();
+
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			GC.Collect();
+
+			applicationServices.IsAlive.ShouldBeFalse();
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static WeakReference BuildSchemaAndDiscardContext()
+			{
+				var services = new ServiceCollection().BuildServiceProvider();
+
+				using (var ctx = new RetentionContext(
+					new DbContextOptionsBuilder<RetentionContext>()
+						.EnableServiceProviderCaching(false)
+						.UseApplicationServiceProvider(services)
+						.UseSqlite("Data Source=:memory:")
+						.Options))
+				{
+					LinqToDBForEFTools.GetMappingSchema(ctx.Model, ctx, null);
+				}
+
+				return new WeakReference(services);
+			}
+		}
 	}
 }

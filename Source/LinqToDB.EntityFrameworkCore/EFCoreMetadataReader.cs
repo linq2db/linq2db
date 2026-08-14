@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 #if !EF31
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 #endif
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -86,8 +87,21 @@ namespace LinqToDB.EntityFrameworkCore
 				_annotationProvider     = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
 				_annotationProvider     = accessor.GetService<IRelationalAnnotationProvider>();
-				_logger                 = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-				_databaseDependencies   = accessor.GetService<DatabaseDependencies>();
+
+				// Built from its parts rather than resolved: the context's own logger carries IInterceptors,
+				// which holds the CoreOptionsExtension and so the application service provider, and this
+				// reader is cached for the process lifetime. EF builds its loggers the same way.
+				_logger                 = new DiagnosticsLogger<DbLoggerCategory.Query>(
+					accessor.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()!,
+					accessor.GetService<ILoggingOptions>()!,
+					accessor.GetService<System.Diagnostics.DiagnosticSource>()!,
+					accessor.GetService<LoggingDefinitions>()!,
+					new NullDbContextLogger());
+
+				// Only Pomelo's translator provider reads it (see GetDbFunctionFromMethodCall), and it reaches
+				// this context's IDbContextOptions through QueryCompilationContextDependencies.
+				if (string.Equals(_dependencies?.MethodCallTranslatorProvider.GetType().Name, "MySqlMethodCallTranslatorProvider", StringComparison.Ordinal))
+					_databaseDependencies = accessor.GetService<DatabaseDependencies>();
 #endif
 			}
 
