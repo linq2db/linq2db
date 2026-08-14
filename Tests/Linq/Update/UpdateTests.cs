@@ -2179,53 +2179,48 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
 
+			var childViews =
+				from child in db.Child
+				from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID)
+				select new ChildView
+				{
+					ChildID  = child.ChildID,
+					ParentID = child.ParentID
+				};
+
 			if (useAnonymousDto)
 			{
-				var childs = from c in db.Child
-							 from p in db.Parent.InnerJoin(_ => _.ParentID == c.ParentID)
-							 select new ChildView
-							 {
-								 ChildID  = c.ChildID,
-								 ParentID = c.ParentID
-							 };
+				var dtos =
+					from childView in childViews
+					select new
+					{
+						Child = childView
+					};
 
-				var subQry = from c in childs
-							 select new
-							 {
-								 Child = c
-							 };
-
-				var records = subQry
-					.Where(_ => _.Child.ChildID == int.MinValue)
-					.Select(_ => _.Child)
-					.Set(_ => _.ParentID, _ => _.ParentID)
+				var records = dtos
+					.Where(dto => dto.Child.ChildID == int.MinValue)
+					.Select(dto => dto.Child)
+					.Set(child => child.ParentID, child => child.ParentID)
 					.Update();
 
-				Assert.That(records, Is.Zero);
+				records.ShouldBe(0);
 			}
 			else
 			{
-				var childs = from c in db.Child
-							 from p in db.Parent.InnerJoin(_ => _.ParentID == c.ParentID)
-							 select new ChildView
-							 {
-								 ChildID  = c.ChildID,
-								 ParentID = c.ParentID
-							 };
+				var dtos =
+					from childView in childViews
+					select new ChildDto
+					{
+						Child = childView
+					};
 
-				var subQry = from c in childs
-							 select new ChildDto
-							 {
-								 Child = c
-							 };
-
-				var records = subQry
-					.Where(_ => _.Child.ChildID == int.MinValue)
-					.Select(_ => _.Child)
-					.Set(_ => _.ParentID, _ => _.ParentID)
+				var records = dtos
+					.Where(dto => dto.Child.ChildID == int.MinValue)
+					.Select(dto => dto.Child)
+					.Set(child => child.ParentID, child => child.ParentID)
 					.Update();
 
-				Assert.That(records, Is.Zero);
+				records.ShouldBe(0);
 			}
 		}
 
@@ -2240,27 +2235,29 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
 
-			var childs = from c in db.Child
-						 from p in db.Parent.InnerJoin(_ => _.ParentID == c.ParentID)
-						 select new ChildView
-						 {
-							 ChildID  = c.ChildID,
-							 ParentID = c.ParentID
-						 };
+			var childViews =
+				from child in db.Child
+				from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID)
+				select new ChildView
+				{
+					ChildID  = child.ChildID,
+					ParentID = child.ParentID
+				};
 
 			// Same shape as UpdateFromNamedDto, except the DTO member is declared as the projected type rather
 			// than its base. That is what decides whether the target table resolves, not whether the DTO is
 			// named or anonymous, so this case works even without the fix.
-			var subQry = from c in childs
-						 select new ChildViewDto
-						 {
-							 Child = c
-						 };
+			var dtos =
+				from childView in childViews
+				select new ChildViewDto
+				{
+					Child = childView
+				};
 
-			var records = subQry
-				.Where(_ => _.Child.ChildID == int.MinValue)
-				.Select(_ => _.Child)
-				.Set(_ => _.ParentID, _ => _.ParentID)
+			var records = dtos
+				.Where(dto => dto.Child.ChildID == int.MinValue)
+				.Select(dto => dto.Child)
+				.Set(child => child.ParentID, child => child.ParentID)
 				.Update();
 
 			records.ShouldBe(0);
@@ -2272,26 +2269,28 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
 
-			var childs = from c in db.Child
-						 from p in db.Parent.InnerJoin(_ => _.ParentID == c.ParentID)
-						 select new ChildView
-						 {
-							 ChildID  = c.ChildID,
-							 ParentID = c.ParentID
-						 };
+			var childViews =
+				from child in db.Child
+				from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID)
+				select new ChildView
+				{
+					ChildID  = child.ChildID,
+					ParentID = child.ParentID
+				};
 
 			// The other side of the same boundary: an anonymous DTO carrying the base type. It resolves too,
 			// which rules out "anonymous types are what works" as an explanation.
-			var subQry = from c in childs
-						 select new
-						 {
-							 Child = (Child)c
-						 };
+			var dtos =
+				from childView in childViews
+				select new
+				{
+					Child = (Child)childView
+				};
 
-			var records = subQry
-				.Where(_ => _.Child.ChildID == int.MinValue)
-				.Select(_ => _.Child)
-				.Set(_ => _.ParentID, _ => _.ParentID)
+			var records = dtos
+				.Where(dto => dto.Child.ChildID == int.MinValue)
+				.Select(dto => dto.Child)
+				.Set(child => child.ParentID, child => child.ParentID)
 				.Update();
 
 			records.ShouldBe(0);
