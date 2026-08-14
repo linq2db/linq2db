@@ -2174,7 +2174,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test, Theory]
-		public void UpdateFromNamedDto([DataSources] string context, bool useAnonymousDto)
+		public void UpdateFromNamedDto([IncludeDataSources(TestProvName.AllSQLite)] string context, bool useAnonymousDto)
 		{
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
@@ -2235,7 +2235,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromDtoWithExactlyTypedMember([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void UpdateFromDtoWithExactlyTypedMember([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
@@ -2267,7 +2267,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromAnonymousDtoWithBaseTypedMember([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void UpdateFromAnonymousDtoWithBaseTypedMember([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
