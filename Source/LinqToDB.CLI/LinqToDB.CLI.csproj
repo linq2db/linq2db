@@ -43,6 +43,18 @@
 		<PackageProjectUrl>https://linq2db.github.io/</PackageProjectUrl>
 
 		<EnablePackageValidation>false</EnablePackageValidation>
+
+		<!--
+		NU5118: SDK 10.0.400 (dotnet/sdk#55107) packs the RID pointer package's DotnetToolSettings.xml
+		at a TFM-agnostic tools/any/any/ path, but PackTool runs once per TFM - so all three of our
+		TFMs emit that same package path and NuGet reports a collision (fatal under
+		TreatWarningsAsErrors). The three generated files are byte-identical: the pointer settings
+		carry only ToolCommandName plus the per-RID sub-package ids, nothing TFM-specific. So NuGet
+		keeping the first and skipping the rest is lossless, and the emitted package is exactly the
+		single-settings-file layout the new SDK intends. Scoped to the pointer package so the per-RID
+		packs keep NU5118 enforcement. Remove once the SDK stops emitting one copy per TFM.
+		-->
+		<NoWarn Condition="'$(RuntimeIdentifier)' == ''">$(NoWarn);NU5118</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
