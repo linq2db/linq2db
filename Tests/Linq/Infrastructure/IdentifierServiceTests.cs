@@ -38,6 +38,22 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
+		public void ByteLimit_TwoBytesPerCharacter()
+		{
+			// Japanese is three bytes per character; accented Latin is two, which is a separate
+			// boundary for the byte arithmetic - 40 characters is 80 bytes, so more characters
+			// survive a 63-byte limit than they would in a three-byte script.
+			var twoByte = new string('é', 40);
+			var service = new IdentifierServiceSimple(63, IdentifierLengthUnit.Utf8Bytes);
+
+			service.IsFit(IdentifierKind.Alias, twoByte, out var sizeDecrement).ShouldBeFalse();
+
+			var kept = twoByte.Length - sizeDecrement!.Value;
+			kept.ShouldBe(31);
+			Encoding.UTF8.GetByteCount(twoByte.Substring(0, kept)).ShouldBeLessThanOrEqualTo(63);
+		}
+
+		[Test]
 		public void ByteLimit_AsciiBehavesLikeCharacterLimit()
 		{
 			var ascii   = new string('a', 40);

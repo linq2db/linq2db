@@ -88,9 +88,14 @@ namespace LinqToDB.Remote
 
 			var serviceProvider = ((IInfrastructure<IServiceProvider>)ctx.DataProvider).Instance;
 
-			// Only the built-in service exposes its limit; a custom IIdentifierService leaves the
-			// client on its default, which is what it used before this member existed.
-			var identifierService = serviceProvider.GetRequiredService<IIdentifierService>() as IdentifierServiceSimple;
+			// Only the built-in service is described by a length and a unit alone. A derived one can
+			// also change which characters survive CorrectAlias, which this contract cannot carry, so
+			// match the exact type and leave anything else on the client's default rather than
+			// describing it inaccurately.
+			var identifierService = serviceProvider.GetRequiredService<IIdentifierService>() is IdentifierServiceSimple simple
+				&& simple.GetType() == typeof(IdentifierServiceSimple)
+					? simple
+					: null;
 
 			return Task.FromResult(new LinqServiceInfo()
 			{

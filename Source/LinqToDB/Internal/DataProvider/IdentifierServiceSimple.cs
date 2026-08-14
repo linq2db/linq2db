@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public sealed class IdentifierServiceSimple : IdentifierServiceBase
+	public class IdentifierServiceSimple : IdentifierServiceBase
 	{
 		public int                  MaxLength { get; }
 		public IdentifierLengthUnit Unit      { get; }

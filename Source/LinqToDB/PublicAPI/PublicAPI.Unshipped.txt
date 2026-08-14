@@ -6,6 +6,7 @@ override LinqToDB.Internal.DataProvider.Sybase.SybaseDataProvider.CreateIdentifi
 override LinqToDB.Internal.DataProvider.MySql.MySqlDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
 override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
 override LinqToDB.Internal.DataProvider.SapHana.SapHanaDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+virtual LinqToDB.Internal.DataProvider.IdentifierServiceBase.IsIdentifierChar(char c) -> bool
 LinqToDB.Internal.DataProvider.IdentifierLengthUnit
 LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Characters = 0 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
 LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Utf8Bytes = 1 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit

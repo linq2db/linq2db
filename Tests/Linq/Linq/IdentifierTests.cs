@@ -164,10 +164,10 @@ namespace Tests.Linq
 		}
 
 		/* C# accepts any Unicode character in an identifier, so the same long name can carry non-ASCII
-		 * characters well before the truncation point rather than only in the tail. Those sit inside
-		 * the part an alias keeps, which is where they interact with truncation - today CorrectAlias
-		 * drops everything outside [a-zA-Z0-9_] first, so what reaches the length check is the shorter
-		 * ASCII remainder, and the names still collide once truncated.
+		 * characters well before the truncation point rather than only in the tail. CorrectAlias keeps
+		 * letters and digits whatever the script, so those characters reach the length check and are
+		 * measured in the unit the provider actually counts - three UTF-8 bytes each here, which is
+		 * what makes these names collide at a byte limit that their character count would clear.
 		 */
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
 		public void LongAliasNameTest_Localized([DataSources] string context)
@@ -244,6 +244,30 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasName_NonAsciiOnly([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			// A name with no ASCII at all is the shape that decides whether a provider quotes the
+			// alias: a mixed name like long親Long carries lowercase ASCII, which some builders use
+			// as their quoting trigger, so it would pass even where a bare 顧客 does not.
+			var actual =
+					from 親 in db.Parent
+					from 子 in db.Child.InnerJoin(_ => _.ParentID == 親.ParentID)
+					where 親.ParentID == parentId
+					select 親;
+
+			var expected =
+					from parent in Parent
+					join child in Child on parent.ParentID equals child.ParentID
+					where parent.ParentID == parentId
+					select parent;
+
+			AreEqual(expected, actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
 		public void TestAliasLengthName_ThreeWayCollision_Localized([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -271,8 +295,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			// the Japanese characters sit ahead of the truncation point in both member names, so what
-			// the column uniquifier receives is the corrected ASCII remainder of each
+			// the Japanese characters sit ahead of the truncation point in both member names, so the
+			// column uniquifier sees them in the seed it truncates
 			var actual =
 					from p in db.Parent
 					select new

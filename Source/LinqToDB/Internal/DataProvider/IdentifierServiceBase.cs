@@ -6,6 +6,16 @@ namespace LinqToDB.Internal.DataProvider
 	{
 		public abstract bool   IsFit(IdentifierKind identifierKind, string identifier, [NotNullWhen(false)] out int? sizeDecrement);
 
+		/// <summary>
+		/// Characters <see cref="CorrectAlias"/> keeps; everything else is dropped. C# allows any
+		/// Unicode letter or digit in an identifier and the SQL builders quote an alias that needs it,
+		/// so those are kept by default - stripping to ASCII turned a name like <c>顧客</c> into an
+		/// empty string and the alias silently became <c>t1</c>. Punctuation, whitespace, control and
+		/// surrogate characters always go. A provider whose dialect cannot carry non-ASCII identifiers
+		/// overrides this to restrict aliases to ASCII.
+		/// </summary>
+		protected virtual bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+
 		public virtual string CorrectAlias(string alias)
 		{
 			alias = alias.TrimStart('_');
@@ -17,11 +27,7 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				var c = cs[i];
 
-				// C# allows any Unicode letter or digit in an identifier, and the SQL builders quote an
-				// alias that needs it, so keep those instead of dropping them - stripping to ASCII turned
-				// a name like "顧客" into an empty string and the alias silently became t1. Everything
-				// else (punctuation, whitespace, control and surrogate characters) still goes.
-				if (char.IsLetterOrDigit(c) || c == '_')
+				if (IsIdentifierChar(c))
 					continue;
 
 				cs[i]   = ' ';
