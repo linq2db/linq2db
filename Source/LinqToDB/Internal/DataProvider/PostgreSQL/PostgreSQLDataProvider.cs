@@ -110,6 +110,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 		}
 
+		// PostgreSQL truncates any identifier longer than NAMEDATALEN - 1 (63 by default) instead of
+		// raising an error, so two aliases differing only past byte 63 silently collapse into one and
+		// the server rejects the query with 42712 "specified more than once". Declaring the limit lets
+		// the alias uniquifier truncate first and suffix the duplicate.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(63, IdentifierLengthUnit.Utf8Bytes);
+		}
+
 		private void ConfigureTypes()
 		{
 			// https://www.postgresql.org/docs/current/static/datatype.html

@@ -1,1 +1,17 @@
 #nullable enable
+override LinqToDB.Internal.DataProvider.Access.AccessDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+override LinqToDB.Internal.DataProvider.DB2.DB2DataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+override LinqToDB.Internal.DataProvider.Informix.InformixDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+override LinqToDB.Internal.DataProvider.Sybase.SybaseDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+override LinqToDB.Internal.DataProvider.MySql.MySqlDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+override LinqToDB.Internal.DataProvider.SapHana.SapHanaDataProvider.CreateIdentifierService() -> LinqToDB.Internal.DataProvider.IIdentifierService!
+LinqToDB.Internal.DataProvider.IdentifierLengthUnit
+LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Characters = 0 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
+LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Utf8Bytes = 1 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
+LinqToDB.Internal.DataProvider.IdentifierServiceSimple.IdentifierServiceSimple(int maxLength, LinqToDB.Internal.DataProvider.IdentifierLengthUnit unit) -> void
+LinqToDB.Internal.DataProvider.IdentifierServiceSimple.Unit.get -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
+LinqToDB.Remote.LinqServiceInfo.IdentifierLengthUnit.get -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
+LinqToDB.Remote.LinqServiceInfo.IdentifierLengthUnit.set -> void
+LinqToDB.Remote.LinqServiceInfo.IdentifierMaxLength.get -> int
+LinqToDB.Remote.LinqServiceInfo.IdentifierMaxLength.set -> void

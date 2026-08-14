@@ -36,7 +36,7 @@ namespace Tests.Linq
 			// test '-'
 			"Test-Name",
 			// test non-ascii characters
-			"TestИмя",
+			"Test名前",
 			// test keywords
 			"from",
 			// test _
@@ -121,10 +121,10 @@ namespace Tests.Linq
 		[Test]
 		public void TestParameterLengthName_Localized([DataSources] string context)
 		{
-			var абвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиаz = 1;
+			var あいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこz = 1;
 			using var db = GetDataContext(context);
 			db.Person
-				.Where(r => r.ID == абвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиаz)
+				.Where(r => r.ID == あいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこz)
 				.ToArray();
 		}
 
@@ -133,8 +133,163 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			db.Person
-				.Where(абвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиаz => абвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиабвгдеёжзиаz.ID == 1)
+				.Where(あいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこz => あいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこあいうえおかきくけこz.ID == 1)
 				.ToArray();
+		}
+
+		/* The tests above use a single long name, so truncating it can never produce a duplicate.
+		 * The ones below use several names that differ only past the truncation point, which is what
+		 * actually breaks: a server that silently truncates (PostgreSQL, at 63 bytes) collapses them
+		 * into one and rejects the query. Aliases have to be uniquified *after* truncation.
+		 */
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void LongAliasNameTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			var parentsQry =
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					where longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			var parents =
+					from parent in Parent
+					join child in Child on parent.ParentID equals child.ParentID
+					where parent.ParentID == parentId
+					select parent;
+
+			AreEqual(parentsQry, parents);
+		}
+
+		/* C# accepts any Unicode character in an identifier, so the same long name can carry non-ASCII
+		 * characters well before the truncation point rather than only in the tail. Those sit inside
+		 * the part an alias keeps, which is where they interact with truncation - today CorrectAlias
+		 * drops everything outside [a-zA-Z0-9_] first, so what reaches the length check is the shorter
+		 * ASCII remainder, and the names still collide once truncated.
+		 */
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void LongAliasNameTest_Localized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			var parentsQry =
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					where long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			var parents =
+					from parent in Parent
+					join child in Child on parent.ParentID equals child.ParentID
+					where parent.ParentID == parentId
+					select parent;
+
+			AreEqual(parents, parentsQry);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ThreeWayCollision([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			// three sources sharing a prefix longer than the shortest provider limit, so the
+			// uniquifier has to hand out more than one suffix
+			var actual =
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					from longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestGrand in db.GrandChild.InnerJoin(_ => _.ChildID == longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild.ChildID)
+					where longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			var expected =
+					from parent in Parent
+					join child in Child on parent.ParentID equals child.ParentID
+					join grand in GrandChild on child.ChildID equals grand.ChildID
+					where parent.ParentID == parentId
+					select parent;
+
+			AreEqual(expected, actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ColumnAliasCollision([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Same shape as above but on column aliases, which AliasesHelper uniquifies separately.
+			// PostgreSQL tolerates duplicate output column names, so unlike the two tests above this
+			// one does not go red on the 63-byte limit; it guards the column uniquifier for providers
+			// that do reject duplicate root columns (SqlCe, YDB).
+			var actual =
+					from p in db.Parent
+					select new
+					{
+						longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParentId = p.ParentID,
+						longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestValueOne = p.Value1,
+					};
+
+			var expected =
+					from p in Parent
+					select new
+					{
+						longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParentId = p.ParentID,
+						longLongLongLongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestValueOne = p.Value1,
+					};
+
+			AreEqual(expected, actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ThreeWayCollision_Localized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			var actual =
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent in db.Parent
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild in db.Child.InnerJoin(_ => _.ParentID == long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID)
+					from long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestGrand in db.GrandChild.InnerJoin(_ => _.ChildID == long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestChild.ChildID)
+					where long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent.ParentID == parentId
+					select long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParent;
+
+			var expected =
+					from parent in Parent
+					join child in Child on parent.ParentID equals child.ParentID
+					join grand in GrandChild on child.ChildID equals grand.ChildID
+					where parent.ParentID == parentId
+					select parent;
+
+			AreEqual(expected, actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestAliasLengthName_ColumnAliasCollision_Localized([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// the Japanese characters sit ahead of the truncation point in both member names, so what
+			// the column uniquifier receives is the corrected ASCII remainder of each
+			var actual =
+					from p in db.Parent
+					select new
+					{
+						long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParentId = p.ParentID,
+						long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestValueOne = p.Value1,
+					};
+
+			var expected =
+					from p in Parent
+					select new
+					{
+						long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestParentId = p.ParentID,
+						long親Long子Long孫LongVeryLongVeryVeryLongVeryVeryLongLongAliasNameTestValueOne = p.Value1,
+					};
+
+			AreEqual(expected, actual);
 		}
 		#endregion
 	}

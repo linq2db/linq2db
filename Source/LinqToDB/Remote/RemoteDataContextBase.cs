@@ -105,11 +105,12 @@ namespace LinqToDB.Remote
 
 		sealed class ConfigurationInfo
 		{
-			public LinqServiceInfo   LinqServiceInfo  = null!;
-			public MappingSchema     MappingSchema    = null!;
-			public IMemberTranslator MemberTranslator = null!;
-			public IMemberConverter  MemberConverter  = null!;
-			public IDmlService?      DmlService;
+			public LinqServiceInfo    LinqServiceInfo   = null!;
+			public MappingSchema      MappingSchema     = null!;
+			public IMemberTranslator  MemberTranslator  = null!;
+			public IMemberConverter   MemberConverter   = null!;
+			public IIdentifierService IdentifierService = null!;
+			public IDmlService?       DmlService;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new(StringComparer.Ordinal);
@@ -271,13 +272,20 @@ namespace LinqToDB.Remote
 						dmlService         = RemoteDmlService.GetOrCreate(dmlServiceType);
 					}
 
+					// A server older than the IdentifierMaxLength member sends 0; keep the historical
+					// default there rather than letting the ctor's minimum-length guard throw.
+					var identifierService = new IdentifierServiceSimple(
+						info.IdentifierMaxLength > 4 ? info.IdentifierMaxLength : 128,
+						info.IdentifierLengthUnit);
+
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{
-						LinqServiceInfo  = info,
-						MappingSchema    = ms,
-						MemberTranslator = translator,
-						MemberConverter  = memberConverter,
-						DmlService       = dmlService,
+						LinqServiceInfo   = info,
+						MappingSchema     = ms,
+						MemberTranslator  = translator,
+						MemberConverter   = memberConverter,
+						IdentifierService = identifierService,
+						DmlService        = dmlService,
 					};
 				}
 				finally
@@ -413,6 +421,12 @@ namespace LinqToDB.Remote
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfoForPublicApi().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfoForPublicApi().LinqServiceInfo.SupportedTableOptions;
+
+		/// <summary>
+		/// Identifier service mirroring the server-side provider's limit, so client-side SQL preview
+		/// aliases a statement the same way the server does when it renders it for real.
+		/// </summary>
+		internal IIdentifierService IdentifierService => GetConfigurationInfoForPublicApi().IdentifierService;
 
 		Type IDataContext.DataReaderType => typeof(RemoteDataReader);
 

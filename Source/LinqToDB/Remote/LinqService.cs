@@ -88,8 +88,14 @@ namespace LinqToDB.Remote
 
 			var serviceProvider = ((IInfrastructure<IServiceProvider>)ctx.DataProvider).Instance;
 
+			// Only the built-in service exposes its limit; a custom IIdentifierService leaves the
+			// client on its default, which is what it used before this member existed.
+			var identifierService = serviceProvider.GetRequiredService<IIdentifierService>() as IdentifierServiceSimple;
+
 			return Task.FromResult(new LinqServiceInfo()
 			{
+				IdentifierMaxLength      = identifierService?.MaxLength ?? 0,
+				IdentifierLengthUnit     = identifierService?.Unit      ?? IdentifierLengthUnit.Characters,
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
 				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				MemberConverterType      = serviceProvider.GetRequiredService<IMemberConverter>().GetType().AssemblyQualifiedName!,

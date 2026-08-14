@@ -83,6 +83,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return new SapHanaMemberTranslator();
 		}
 
+		// SAP HANA caps table and column names at 127 characters.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(127);
+		}
+
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return Provider == SapHanaProvider.Unmanaged ? new SapHanaSchemaProvider() : new SapHanaOdbcSchemaProvider();

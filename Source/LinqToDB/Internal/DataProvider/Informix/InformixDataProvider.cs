@@ -73,6 +73,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return new InformixMemberTranslator();
 		}
 
+		// Informix counts its 128 in bytes, not characters.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(128, IdentifierLengthUnit.Utf8Bytes);
+		}
+
 		[ColumnReader(1)]
 		static float GetFloat(DbDataReader dr, int idx)
 		{

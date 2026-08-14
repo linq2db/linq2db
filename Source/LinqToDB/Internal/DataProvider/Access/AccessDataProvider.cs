@@ -99,6 +99,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 				: new AccessMemberTranslator();
 		}
 
+		// Both Jet and ACE cap table and field names at 64 characters.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(64);
+		}
+
 		protected override IDmlService CreateDmlService() => new AccessDmlService();
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

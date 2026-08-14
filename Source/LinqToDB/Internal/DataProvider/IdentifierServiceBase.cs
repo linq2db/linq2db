@@ -17,7 +17,11 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				var c = cs[i];
 
-				if (c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_')
+				// C# allows any Unicode letter or digit in an identifier, and the SQL builders quote an
+				// alias that needs it, so keep those instead of dropping them - stripping to ASCII turned
+				// a name like "顧客" into an empty string and the alias silently became t1. Everything
+				// else (punctuation, whitespace, control and surrogate characters) still goes.
+				if (char.IsLetterOrDigit(c) || c == '_')
 					continue;
 
 				cs[i]   = ' ';

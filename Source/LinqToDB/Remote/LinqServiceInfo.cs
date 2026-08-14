@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Remote
@@ -23,5 +24,19 @@ namespace LinqToDB.Remote
 		public string           MemberConverterType      { get; set; } = null!;
 		[DataMember(Order = 8)]
 		public string?          DmlServiceType           { get; set; }
+
+		/// <summary>
+		/// Identifier length limit the server-side provider declares, so client-side SQL preview
+		/// aliases the statement the same way the server does. Zero when the server predates this
+		/// member; the client then falls back to its historical default.
+		/// </summary>
+		[DataMember(Order = 9)]
+		public int                  IdentifierMaxLength  { get; set; }
+
+		/// <summary>
+		/// Unit <see cref="IdentifierMaxLength"/> is counted in.
+		/// </summary>
+		[DataMember(Order = 10)]
+		public IdentifierLengthUnit IdentifierLengthUnit { get; set; }
 	}
 }

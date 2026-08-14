@@ -118,6 +118,14 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			};
 		}
 
+		// MySQL and MariaDB cap schema object names at 64 characters. Aliases may be up to 256, but
+		// IdentifierKind is not distinguished here and the same path names CTE and merge-source
+		// columns, which are real column names — so the stricter limit applies to all of them.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(64);
+		}
+
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new MySqlSchemaProvider(this);

@@ -118,6 +118,12 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			return new SybaseMemberTranslator();
 		}
 
+		// ASE allows 255 bytes for most user identifiers, and counts bytes rather than characters.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(255, IdentifierLengthUnit.Utf8Bytes);
+		}
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new SybaseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
