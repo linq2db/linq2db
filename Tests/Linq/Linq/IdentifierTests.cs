@@ -160,7 +160,7 @@ namespace Tests.Linq
 					where parent.ParentID == parentId
 					select parent;
 
-			AreEqual(parentsQry, parents);
+			AreEqual(parents, parentsQry);
 		}
 
 		/* C# accepts any Unicode character in an identifier, so the same long name can carry non-ASCII

@@ -28,7 +28,7 @@ namespace Tests.Infrastructure
 		{
 			var service = new IdentifierServiceSimple(63, IdentifierLengthUnit.Utf8Bytes);
 
-			// 40 characters is under the limit, 80 bytes is not
+			// 40 characters is under the limit, 120 bytes is not
 			service.IsFit(IdentifierKind.Alias, Japanese40, out var sizeDecrement).ShouldBeFalse();
 			sizeDecrement.ShouldNotBeNull();
 

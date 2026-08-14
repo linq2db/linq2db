@@ -12,7 +12,8 @@
 
 		/// <summary>
 		/// The limit counts bytes of the UTF-8 encoded identifier, so a non-ASCII character
-		/// consumes two to four of them. Used by PostgreSQL, Oracle and Firebird 3 and below.
+		/// consumes two to four of them. Used by PostgreSQL, Oracle, Firebird 3 and below,
+		/// Db2, Informix and Sybase ASE.
 		/// </summary>
 		Utf8Bytes,
 	}
