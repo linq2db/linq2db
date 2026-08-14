@@ -128,6 +128,13 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			return ReservedWords.IsReserved(word, ProviderName.DuckDB);
 		}
 
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
+		{
+			return IsReserved(value)
+				|| (value[0] != '_' && !char.IsLetter(value[0]))
+				|| value.Skip(1).Any(c => !char.IsLetter(c) && !c.IsAsciiDigit() && c is not '_');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -144,17 +151,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
 				case ConvertType.SequenceName         :
-				{
-					var quote =
-						   IsReserved(value)
-						|| (value.Length > 0 && value[0] != '_' && !char.IsLetter(value[0]))
-						|| value.Skip(1).Any(c => !char.IsLetter(c) && !c.IsAsciiDigit() && c is not '_');
-
-					if (quote)
-						return sb.Append('"').Append(value.Replace("\"", "\"\"", StringComparison.Ordinal)).Append('"');
-
-					break;
-				}
+					return BuildIdentifier(sb, value, convertType);
 
 				case ConvertType.NameToQueryParameter:
 				case ConvertType.NameToSprocParameter:
