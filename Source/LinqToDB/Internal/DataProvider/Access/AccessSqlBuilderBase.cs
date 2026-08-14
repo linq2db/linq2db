@@ -153,6 +153,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </summary>
 		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
 		{
+			// The double quote is included deliberately: Microsoft's guidance lists it as permitted in a
+			// field name, but ACE rejects `CREATE TABLE ... [Say "Hi"]` with "syntax error in field
+			// definition", so the documented rule does not hold for this driver's DDL.
 			if (value.IndexOfAny(['[', ']', '"', '`']) >= 0)
 				throw new LinqToDBException($"Access cannot represent the identifier '{value}': a bracketed identifier cannot contain a bracket, quote or backtick.");
 

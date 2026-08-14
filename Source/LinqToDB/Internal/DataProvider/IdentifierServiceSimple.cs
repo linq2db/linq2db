@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.DataProvider
 			Unit       = unit;
 
 			if (maxLength <= 4)
-				throw new ArgumentOutOfRangeException(nameof(maxLength), maxLength, "MaxLength should be at least 4");
+				throw new ArgumentOutOfRangeException(nameof(maxLength), maxLength, "MaxLength should be greater than 4");
 		}
 
 		public override bool IsFit(IdentifierKind identifierKind, string identifier, [NotNullWhen(false)] out int? sizeDecrement)

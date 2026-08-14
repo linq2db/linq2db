@@ -187,8 +187,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return sb.Append(':')
-						.Append('"').Append(value).Append('"');
+					return DelimitIdentifier(sb.Append(':'), value);
 
 				case ConvertType.NameToCommandParameter:
 				case ConvertType.NameToSprocParameter:

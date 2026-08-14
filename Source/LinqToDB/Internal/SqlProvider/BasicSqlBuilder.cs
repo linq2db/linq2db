@@ -4797,6 +4797,10 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Providers that delimit unconditionally leave this alone; the rest express their unquoted
 		/// alphabet, case convention, reserved words and quoting mode here, in one place per provider
 		/// instead of once per <see cref="ConvertType"/>.
+		/// <para>
+		/// <paramref name="value"/> is never empty - <see cref="BuildIdentifier"/> is the only caller and
+		/// short-circuits first - so an override may index its first character without a length check.
+		/// </para>
 		/// </summary>
 		protected virtual bool RequiresQuoting(string value, ConvertType convertType) => true;
 

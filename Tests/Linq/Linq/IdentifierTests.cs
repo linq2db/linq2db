@@ -275,11 +275,10 @@ namespace Tests.Linq
 					.Property(t => t.Component.Column1).HasColumnName("qu\"ote`d]name")
 					.Build();
 
-			using var db = GetDataContext(context, ms);
-
 			if (context.IsAnyOf(TestProvName.AllYdb))
 				Assert.Ignore("YDB does not support non-ASCII or delimiter characters in column identifiers.");
 
+			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable<Table>();
 
 			tb.Where(t => t.Component.Column1 == 1).ToArray();
