@@ -6,14 +6,32 @@ namespace LinqToDB.Internal.DataProvider
 {
 	public class IdentifierServiceSimple : IdentifierServiceBase
 	{
+		/// <summary>
+		/// Longest identifier the server accepts, counted in <see cref="Unit"/>.
+		/// </summary>
 		public int                  MaxLength { get; }
+
+		/// <summary>
+		/// Unit <see cref="MaxLength"/> is counted in.
+		/// </summary>
 		public IdentifierLengthUnit Unit      { get; }
 
+		/// <summary>
+		/// Creates a service whose limit is counted in characters.
+		/// </summary>
+		/// <param name="maxLength">Longest identifier the server accepts; must be greater than four,
+		/// since truncation reserves four units for the suffix that makes a truncated name unique.</param>
 		public IdentifierServiceSimple(int maxLength)
 			: this(maxLength, IdentifierLengthUnit.Characters)
 		{
 		}
 
+		/// <summary>
+		/// Creates a service whose limit is counted in the given unit.
+		/// </summary>
+		/// <param name="maxLength">Longest identifier the server accepts; must be greater than four,
+		/// since truncation reserves four units for the suffix that makes a truncated name unique.</param>
+		/// <param name="unit">Whether the server counts characters or UTF-8 bytes.</param>
 		public IdentifierServiceSimple(int maxLength, IdentifierLengthUnit unit)
 		{
 			MaxLength  = maxLength;
