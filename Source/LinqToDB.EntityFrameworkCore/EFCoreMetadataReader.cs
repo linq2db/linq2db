@@ -92,10 +92,10 @@ namespace LinqToDB.EntityFrameworkCore
 				// which holds the CoreOptionsExtension and so the application service provider, and this
 				// reader is cached for the process lifetime. EF builds its loggers the same way.
 				_logger                 = new DiagnosticsLogger<DbLoggerCategory.Query>(
-					accessor.GetService<Microsoft.Extensions.Logging.ILoggerFactory>()!,
-					accessor.GetService<ILoggingOptions>()!,
-					accessor.GetService<System.Diagnostics.DiagnosticSource>()!,
-					accessor.GetService<LoggingDefinitions>()!,
+					accessor.GetService<Microsoft.Extensions.Logging.ILoggerFactory>(),
+					accessor.GetService<ILoggingOptions>(),
+					accessor.GetService<System.Diagnostics.DiagnosticSource>(),
+					accessor.GetService<LoggingDefinitions>(),
 					new NullDbContextLogger());
 
 				// Only Pomelo's translator provider reads it (see GetDbFunctionFromMethodCall), and it reaches
