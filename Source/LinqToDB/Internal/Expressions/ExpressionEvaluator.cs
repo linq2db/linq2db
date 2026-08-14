@@ -29,6 +29,9 @@ namespace LinqToDB.Internal.Expressions
 				{ NodeType: ExpressionType.Default } => true,
 				{ NodeType: ExpressionType.Constant } => true,
 
+				// our own default-value node reduces to a constant, so it needs no compiled lambda
+				DefaultValueExpression => true,
+
 				MemberExpression { NodeType: ExpressionType.MemberAccess } member =>
 					member.Member.MemberType is MemberTypes.Field or MemberTypes.Property
 					&& IsSimpleEvaluatable(member.Expression),
@@ -52,6 +55,11 @@ namespace LinqToDB.Internal.Expressions
 
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
+
+				// Reduce() is what produced this value before, via a compiled lambda - it honours a
+				// mapping schema's custom default, so reducing here keeps the result identical.
+				case ExpressionType.Extension when expr is DefaultValueExpression defaultValue:
+					return defaultValue.Reduce().EvaluateExpressionInternal();
 
 				case ExpressionType.MemberAccess:
 				{
