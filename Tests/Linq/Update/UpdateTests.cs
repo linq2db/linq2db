@@ -2173,8 +2173,8 @@ namespace Tests.xUpdate
 			public required Child Child { get; set; }
 		}
 
-		[Test, Theory]
-		public void UpdateFromNamedDto([IncludeDataSources(TestProvName.AllSQLite)] string context, bool useAnonymousDto)
+		[Test]
+		public void UpdateFromNamedDto([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useAnonymousDto)
 		{
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
