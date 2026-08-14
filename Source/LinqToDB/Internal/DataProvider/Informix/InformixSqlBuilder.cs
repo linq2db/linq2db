@@ -161,23 +161,28 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		}
 
 		/// <summary>
-		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
+		/// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1660.htm
+		/// TODO: add informix-specific reserved words list
+		/// TODO: Letter definitions is: In the default locale, must be an ASCII character in the range A to Z or a to z
+		/// add support for other locales later
 		/// </summary>
-		private bool IsValidIdentifier(string name)
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
 		{
-			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1660.htm
-			// TODO: add informix-specific reserved words list
-			// TODO: Letter definitions is: In the default locale, must be an ASCII character in the range A to Z or a to z
-			// add support for other locales later
-			return !IsReserved(name) &&
-				name[0] is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_' &&
-				name.All(c => c is
+			return IsReserved(value) ||
+				value[0] is not ((>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_') ||
+				!value.All(c => c is
 					(>= 'a' and <= 'z') or
 					(>= 'A' and <= 'Z') or
 					(>= '0' and <= '9') or
 					'$' or
 					'_'
 				);
+		}
+
+		// I wonder what to do if identifier has " in name?
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('"').Append(value).Append('"');
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -193,11 +198,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				case ConvertType.NameToServer         :
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
-					if (value.Length > 0 && !IsValidIdentifier(value))
-						// I wonder what to do if identifier has " in name?
-						return sb.Append('"').Append(value).Append('"');
-
-					break;
+					return BuildIdentifier(sb, value, convertType);
 
 				case ConvertType.NameToQueryParameter   :
 					return SqlProviderFlags.IsParameterOrderDependent

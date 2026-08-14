@@ -4790,6 +4790,40 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
+		#region Identifier quoting
+
+		/// <summary>
+		/// Whether <paramref name="value"/> has to be delimited to be read back as the name it is.
+		/// Providers that delimit unconditionally leave this alone; the rest express their unquoted
+		/// alphabet, case convention, reserved words and quoting mode here, in one place per provider
+		/// instead of once per <see cref="ConvertType"/>.
+		/// </summary>
+		protected virtual bool RequiresQuoting(string value, ConvertType convertType) => true;
+
+		/// <summary>
+		/// Writes <paramref name="value"/> delimited. The default is the SQL standard double quote with
+		/// doubling as the escape; providers using brackets or backticks override it.
+		/// </summary>
+		protected virtual StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('"').Append(value.Replace("\"", "\"\"", StringComparison.Ordinal)).Append('"');
+		}
+
+		/// <summary>
+		/// Writes an identifier, delimiting it only when <see cref="RequiresQuoting"/> says so. This is
+		/// the single place that decision is made, so a provider cannot forget one <see cref="ConvertType"/>
+		/// and silently emit a bare name - which is how table aliases went unquoted on more than one
+		/// provider.
+		/// </summary>
+		protected StringBuilder BuildIdentifier(StringBuilder sb, string value, ConvertType convertType)
+		{
+			return value.Length > 0 && RequiresQuoting(value, convertType)
+				? DelimitIdentifier(sb, value)
+				: sb.Append(value);
+		}
+
+		#endregion
+
 		#region Common Helper methods
 
 		protected ISqlExpression ConvertCaseToConditions(SqlCaseExpression caseExpression, int start)
