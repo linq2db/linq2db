@@ -720,14 +720,15 @@ namespace LinqToDB.EntityFrameworkCore
 
 #if !EF31
 						// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
-						if (string.Equals(ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name, "MySqlMethodCallTranslatorProvider", StringComparison.Ordinal))
+						// The field is non-null exactly when the constructor identified Pomelo's provider.
+						if (ctx.this_._databaseDependencies != null)
 						{
 							var contextProperty = ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().GetProperty("QueryCompilationContext")
 							?? throw new InvalidOperationException("MySqlMethodCallTranslatorProvider.QueryCompilationContext property not found");
 
 							if (contextProperty.GetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider) == null)
 							{
-								contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies!.QueryCompilationContextFactory.Create(false));
+								contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies.QueryCompilationContextFactory.Create(false));
 							}
 						}
 #endif
