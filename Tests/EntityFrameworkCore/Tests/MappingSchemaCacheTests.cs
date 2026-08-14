@@ -1,12 +1,14 @@
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -177,13 +179,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[Test]
 		public void CachesDoNotRetainApplicationServiceProvider()
 		{
-			var applicationServices = BuildSchemaAndDiscardContext();
-
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
-
-			applicationServices.IsAlive.ShouldBeFalse();
+			ShouldBeCollected(BuildSchemaAndDiscardContext());
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			static WeakReference BuildSchemaAndDiscardContext()
@@ -208,32 +204,49 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		/// The metadata-reader cache is keyed on the <c>IModel</c> instance, so it must not keep that
 		/// model alive. A configuration that defeats EF's model caching — <c>EnableServiceProviderCaching(false)</c>,
 		/// or a freshly built model passed to <c>UseModel</c> per context — would otherwise add one
-		/// never-evicted entry per <see cref="DbContext"/> instance.
+		/// never-evicted entry per <see cref="DbContext"/> instance. The cached reader references the
+		/// model it was built from, so only a weakly-keyed cache releases it.
 		/// </summary>
+		/// <remarks>
+		/// The model is built directly rather than taken from a <see cref="DbContext"/>: a context drags
+		/// in EF's internal service provider and the DI engine, whose background call-site compilation
+		/// keeps parts of that graph transiently rooted, and no amount of collecting releases them until
+		/// that work has run. Keying the assertion on the cache alone keeps it deterministic.
+		/// </remarks>
 		[Test]
 		public void MetadataReaderCacheDoesNotRetainModel()
 		{
-			var model = BuildReaderAndDiscardContext();
-
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
-
-			model.IsAlive.ShouldBeFalse();
+			ShouldBeCollected(BuildReaderAndDiscardModel());
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
-			static WeakReference BuildReaderAndDiscardContext()
+			static WeakReference BuildReaderAndDiscardModel()
 			{
-				using var ctx = new RetentionContext(
-					new DbContextOptionsBuilder<RetentionContext>()
-						.EnableServiceProviderCaching(false)
-						.UseSqlite("Data Source=:memory:")
-						.Options);
+				var model = new Model();
 
-				LinqToDBForEFTools.GetMetadataReader(ctx.Model, ctx);
+				LinqToDBForEFTools.GetMetadataReader(model, null);
 
-				return new WeakReference(ctx.Model);
+				return new WeakReference(model);
 			}
+		}
+
+		/// <summary>
+		/// Collects until <paramref name="reference"/> dies, giving up after a bounded number of rounds.
+		/// The pause matters as much as the collection: an EF object graph stays transiently rooted by
+		/// thread-pool work items queued while it was alive, which further collections cannot clear.
+		/// </summary>
+		static void ShouldBeCollected(WeakReference reference)
+		{
+			for (var i = 0; i < 20 && reference.IsAlive; i++)
+			{
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+				GC.Collect();
+
+				if (reference.IsAlive)
+					Thread.Sleep(50);
+			}
+
+			reference.IsAlive.ShouldBeFalse();
 		}
 	}
 }
