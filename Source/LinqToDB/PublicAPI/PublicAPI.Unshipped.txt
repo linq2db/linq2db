@@ -225,3 +225,5 @@ virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlInterval
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.AnswersInArgumentDomain.get -> bool

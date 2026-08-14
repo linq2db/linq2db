@@ -350,7 +350,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			SqlKeepClause? keepClause = null,
 			Sql.Nulls nullTreatment = Sql.Nulls.None,
 			Sql.From fromPosition = Sql.From.None,
-			bool isWindowFunction = false
+			bool isWindowFunction = false,
+			bool answersInArgumentDomain = false
 		)
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
@@ -366,7 +367,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				keepClause: keepClause,
 				nullTreatment: nullTreatment,
 				fromPosition: fromPosition,
-				isWindowFunction: isWindowFunction);
+				isWindowFunction: isWindowFunction,
+				answersInArgumentDomain: answersInArgumentDomain);
 		}
 
 		#region String functions

@@ -1908,6 +1908,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append((int)elem.NullTreatment);
 						Append((int)elem.FromPosition);
 						Append(elem.IsWindowFunction);
+						Append(elem.AnswersInArgumentDomain);
 						break;
 					}
 
@@ -3224,10 +3225,12 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var nullTreatment               = (Sql.Nulls)ReadInt();
 						var fromPosition                = (Sql.From)ReadInt();
 						var isWindowFunction            = ReadBool();
+						var answersInArgumentDomain     = ReadBool();
 
 						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
 							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeNullInAggregationQuery: canBeNullInAggregationQuery, canBeAffectedByOrderBy: canBeAffectedByOrderBy,
-							keepClause: keepClause, nullTreatment: nullTreatment, fromPosition: fromPosition, isWindowFunction: isWindowFunction);
+							keepClause: keepClause, nullTreatment: nullTreatment, fromPosition: fromPosition, isWindowFunction: isWindowFunction,
+							answersInArgumentDomain: answersInArgumentDomain);
 
 						break;
 					}

@@ -371,12 +371,11 @@ namespace LinqToDB.Internal.SqlQuery
 				// answer with an element of their operand's own domain and SUM with a value of the same kind, so the
 				// operand's descriptor keeps describing the result.
 				//
-				// Named rather than left to the type guard below, which compares the result type with the operand's
-				// *member* type and is therefore a proxy for staying in the domain rather than a proof of it: COUNT
-				// answers how many rows there are, in a type of its own, and over a column whose member type is
-				// already int the guard cannot tell the two apart - it would hand back a descriptor, and with it a
-				// value converter, for a row count.
-				case SqlExtendedFunction { Arguments: [var singleArgument], FunctionName: "MIN" or "MAX" or "SUM" } extendedFunction:
+				// MIN, MAX and SUM answer with a value of the argument's own domain, so the argument's descriptor
+				// keeps describing the result. COUNT and AVG answer in a domain of their own and stop here, which
+				// the node states directly - the type guard below only tells the two apart while the result type
+				// and the column's member type differ, and over an int column counted into an int they do not.
+				case SqlExtendedFunction { Arguments: [var singleArgument], AnswersInArgumentDomain: true } extendedFunction:
 				{
 					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements);
 					if (found?.GetDbDataType(true).SystemType != extendedFunction.SystemType)

@@ -353,7 +353,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							canBeNull: canBeNull,
 							isAggregate : true,
 							filter: filterCondition,
-							canBeAffectedByOrderBy : false
+							canBeAffectedByOrderBy : false,
+							// MIN and MAX answer with an element of the argument's domain, SUM with a value of the
+							// same kind. AVG does not, and neither does COUNT, which is built elsewhere.
+							answersInArgumentDomain : functionName is "MIN" or "MAX" or "SUM"
 						);
 
 						composer.SetResult(fn);
