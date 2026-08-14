@@ -647,6 +647,10 @@ namespace Tests.Data
 			}
 
 			// bulk copy
+			// AllTypes.ID is GENERATED ALWAYS, so the IDs set below are discarded and the server assigns
+			// its own - clean up by the high-water mark rather than by a value we think we inserted.
+			var maxId = db.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				db.BulkCopy(
@@ -657,7 +661,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				db.GetTable<ALLTYPE>().Delete(p => p.ID >= 2000);
+				db.GetTable<ALLTYPE>().Delete(p => p.ID > maxId);
 			}
 
 			// just check schema (no api used)

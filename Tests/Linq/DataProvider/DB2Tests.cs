@@ -40,8 +40,8 @@ namespace Tests.DataProvider
 
 		sealed class AllTypesLeftover
 		{
-			public int    ID        { get; set; }
-			public string Signature { get; set; } = null!;
+			public int     ID        { get; set; }
+			public string? Signature { get; set; }
 		}
 
 		// TEMPORARY (https://github.com/linq2db/linq2db/issues/5765): rows accumulate in AllTypes during a
@@ -65,7 +65,7 @@ SELECT
 	CASE WHEN decfloatDataType  IS NULL THEN '' ELSE 'decfloat '  END ||
 	CASE WHEN realDataType      IS NULL THEN '' ELSE 'real '      END ||
 	CASE WHEN doubleDataType    IS NULL THEN '' ELSE 'double '    END ||
-	CASE WHEN charDataType      IS NULL THEN '' ELSE 'char '      END ||
+	CASE WHEN charDataType      IS NULL THEN '' ELSE 'char=0x' || HEX(charDataType) || ' ' END ||
 	CASE WHEN char20DataType    IS NULL THEN '' ELSE 'char20=[' || RTRIM(char20DataType) || '] ' END ||
 	CASE WHEN varcharDataType   IS NULL THEN '' ELSE 'varchar=[' || RTRIM(varcharDataType) || '] ' END ||
 	CASE WHEN clobDataType      IS NULL THEN '' ELSE 'clob '      END ||
@@ -77,19 +77,21 @@ SELECT
 	CASE WHEN dateDataType      IS NULL THEN '' ELSE 'date '      END ||
 	CASE WHEN timeDataType      IS NULL THEN '' ELSE 'time '      END ||
 	CASE WHEN timestampDataType IS NULL THEN '' ELSE 'timestamp ' END ||
-	CASE WHEN xmlDataType       IS NULL THEN '' ELSE 'xml '       END AS Signature
+	CASE WHEN xmlDataType       IS NULL THEN '' ELSE 'xml '       END AS ""Signature""
 FROM AllTypes
 WHERE ID > 2
 ORDER BY ID
-FETCH FIRST 25 ROWS ONLY").ToList();
+FETCH FIRST 100 ROWS ONLY").ToList();
 
 				if (rows.Count == 0)
 					return;
 
-				TestContext.Out.WriteLine($"ALLTYPES-LEFTOVERS count(first 25)={rows.Count}");
+				var total = conn.Execute<int>("SELECT COUNT(*) FROM AllTypes WHERE ID > 2");
+
+				TestContext.Out.WriteLine($"ALLTYPES-LEFTOVERS total={total} shown={rows.Count}");
 
 				foreach (var row in rows)
-					TestContext.Out.WriteLine($"ALLTYPES-LEFTOVERS id={row.ID} columns=[{row.Signature.TrimEnd()}]");
+					TestContext.Out.WriteLine($"ALLTYPES-LEFTOVERS id={row.ID} columns=[{row.Signature?.TrimEnd()}]");
 			}
 			catch (Exception ex)
 			{
@@ -546,6 +548,11 @@ FETCH FIRST 25 ROWS ONLY").ToList();
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// AllTypes.ID is GENERATED ALWAYS, so the IDs set below are discarded and the server assigns
+			// its own - clean up by the high-water mark rather than by a value we think we inserted.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				conn.BulkCopy(
@@ -583,13 +590,17 @@ FETCH FIRST 25 ROWS ONLY").ToList();
 			}
 			finally
 			{
-				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				conn.GetTable<ALLTYPE>().Delete(p => p.ID > maxId);
 			}
 		}
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// see BulkCopyTest: the supplied IDs are discarded, so clean up by the high-water mark.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				await conn.BulkCopyAsync(
@@ -626,7 +637,7 @@ FETCH FIRST 25 ROWS ONLY").ToList();
 			}
 			finally
 			{
-				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.SMALLINTDATATYPE >= 5000);
+				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.ID > maxId);
 			}
 		}
 
