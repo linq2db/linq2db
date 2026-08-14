@@ -203,5 +203,37 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				return new WeakReference(services);
 			}
 		}
+
+		/// <summary>
+		/// The metadata-reader cache is keyed on the <c>IModel</c> instance, so it must not keep that
+		/// model alive. Contexts that build a fresh model each time — <c>EnableServiceProviderCaching(false)</c>,
+		/// pooled contexts, several providers — would otherwise add one never-evicted entry per
+		/// <see cref="DbContext"/> instance.
+		/// </summary>
+		[Test]
+		public void MetadataReaderCacheDoesNotRetainModel()
+		{
+			var model = BuildReaderAndDiscardContext();
+
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			GC.Collect();
+
+			model.IsAlive.ShouldBeFalse();
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static WeakReference BuildReaderAndDiscardContext()
+			{
+				using var ctx = new RetentionContext(
+					new DbContextOptionsBuilder<RetentionContext>()
+						.EnableServiceProviderCaching(false)
+						.UseSqlite("Data Source=:memory:")
+						.Options);
+
+				LinqToDBForEFTools.GetMetadataReader(ctx.Model, ctx);
+
+				return new WeakReference(ctx.Model);
+			}
+		}
 	}
 }

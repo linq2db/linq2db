@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -93,13 +94,17 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				ArgumentNullException.ThrowIfNull(value);
 				_implementation = value;
-				_metadataReaders.Clear();
+				_metadataReaders = new();
 				_mappingSchemas .Clear();
 				_defaultMetadataReader = new Lazy<IMetadataReader?>(() => Implementation.CreateMetadataReader(null, null));
 			}
 		}
 
-		static readonly ConcurrentDictionary<IModel, IMetadataReader?> _metadataReaders = new();
+		// Weak-keyed: a cached reader must not keep its model alive. Contexts that build a fresh model
+		// each time (EnableServiceProviderCaching(false), pooled contexts, several providers) would
+		// otherwise add one never-evicted entry per DbContext instance. Reassigned rather than cleared
+		// because ConditionalWeakTable.Clear() is not available on the netstandard2.0 / net462 builds.
+		static ConditionalWeakTable<IModel, IMetadataReader> _metadataReaders = new();
 
 		static Lazy<IMetadataReader?> _defaultMetadataReader;
 
@@ -110,7 +115,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		public static void ClearCaches()
 		{
-			_metadataReaders.Clear();
+			_metadataReaders = new();
 			_mappingSchemas .Clear();
 			Implementation.ClearCaches();
 			Query.ClearCaches();
@@ -136,7 +141,16 @@ namespace LinqToDB.EntityFrameworkCore
 			if (model == null)
 				return _defaultMetadataReader.Value;
 
-			return _metadataReaders.GetOrAdd(model, static (m, a) => Implementation.CreateMetadataReader(m, a), accessor);
+			var readers = _metadataReaders;
+
+			if (readers.TryGetValue(model, out var reader))
+				return reader;
+
+			// A null reader is not cached: ConditionalWeakTable cannot store one, and the shipped
+			// implementation never returns null.
+			var created = Implementation.CreateMetadataReader(model, accessor);
+
+			return created == null ? null : readers.GetValue(model, _ => created);
 		}
 
 		/// <summary>
