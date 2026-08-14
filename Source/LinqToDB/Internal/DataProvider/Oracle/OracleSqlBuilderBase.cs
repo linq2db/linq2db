@@ -181,16 +181,18 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// <summary>
 		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
 		/// </summary>
-		private bool IsValidIdentifier(string name)
+		/// <summary>
+		/// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
+		/// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
+		/// now we check only for latin letters
+		/// Also we should allow only uppercase letters:
+		/// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
+		/// </summary>
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
 		{
-			// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
-			// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
-			// now we check only for latin letters
-			// Also we should allow only uppercase letters:
-			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
-			return !IsReserved(name)                                                                                               &&
-				((ProviderOptions.DontEscapeLowercaseIdentifiers && name[0] is >= 'a' and <= 'z') || name[0] is >= 'A' and <= 'Z') &&
-				name.All(c =>
+			return IsReserved(value)                                                                                                  ||
+				!((ProviderOptions.DontEscapeLowercaseIdentifiers && value[0] is >= 'a' and <= 'z') || value[0] is >= 'A' and <= 'Z') ||
+				!value.All(c =>
 					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '$' or '#' or '_'
 				);
 		}
@@ -214,10 +216,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case ConvertType.SequenceName         :
 				case ConvertType.NameToSchema         :
 				case ConvertType.TriggerName          :
-					if (!IsValidIdentifier(value))
-						return sb.Append('"').Append(value).Append('"');
-
-					return sb.Append(value);
+					return BuildIdentifier(sb, value, convertType);
 			}
 
 			return sb.Append(value);

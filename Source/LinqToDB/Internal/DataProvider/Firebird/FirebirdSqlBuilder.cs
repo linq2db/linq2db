@@ -219,6 +219,18 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				);
 		}
 
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
+		{
+			return ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote
+				|| (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value));
+		}
+
+		// I wonder what to do if identifier has " in name?
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('"').Append(value).Append('"');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -231,14 +243,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :
-					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
-					{
-						// I wonder what to do if identifier has " in name?
-						return sb.Append('"').Append(value).Append('"');
-					}
-
-					break;
+					return BuildIdentifier(sb, value, convertType);
 
 				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
