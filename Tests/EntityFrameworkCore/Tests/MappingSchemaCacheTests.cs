@@ -206,9 +206,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		/// <summary>
 		/// The metadata-reader cache is keyed on the <c>IModel</c> instance, so it must not keep that
-		/// model alive. Contexts that build a fresh model each time — <c>EnableServiceProviderCaching(false)</c>,
-		/// pooled contexts, several providers — would otherwise add one never-evicted entry per
-		/// <see cref="DbContext"/> instance.
+		/// model alive. A configuration that defeats EF's model caching — <c>EnableServiceProviderCaching(false)</c>,
+		/// or a freshly built model passed to <c>UseModel</c> per context — would otherwise add one
+		/// never-evicted entry per <see cref="DbContext"/> instance.
 		/// </summary>
 		[Test]
 		public void MetadataReaderCacheDoesNotRetainModel()

@@ -100,10 +100,11 @@ namespace LinqToDB.EntityFrameworkCore
 			}
 		}
 
-		// Weak-keyed: a cached reader must not keep its model alive. Contexts that build a fresh model
-		// each time (EnableServiceProviderCaching(false), pooled contexts, several providers) would
-		// otherwise add one never-evicted entry per DbContext instance. Reassigned rather than cleared
-		// because ConditionalWeakTable.Clear() is not available on the netstandard2.0 / net462 builds.
+		// Weak-keyed: a cached reader must not keep its model alive. A configuration that defeats EF's
+		// model caching — EnableServiceProviderCaching(false), or a freshly built model passed to
+		// UseModel per context — would otherwise add one never-evicted entry per DbContext instance.
+		// Reassigned rather than cleared because ConditionalWeakTable.Clear() is not available on the
+		// netstandard2.0 / net462 builds.
 		static ConditionalWeakTable<IModel, IMetadataReader> _metadataReaders = new();
 
 		static Lazy<IMetadataReader?> _defaultMetadataReader;
@@ -244,9 +245,9 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			// Share one mapping schema — and therefore one ConfigurationID — across DbContext
 			// instances of the same model, keyed on EF's own model-cache key. A fresh IModel per
-			// context (pooled contexts, EnableServiceProviderCaching(false), multiple internal
-			// service providers) would otherwise yield a fresh schema identity and the linq2db
-			// query cache would miss on every context.
+			// context (EnableServiceProviderCaching(false), or any configuration that defeats EF's
+			// model caching) would otherwise yield a fresh schema identity and the linq2db query
+			// cache would miss on every context.
 			if (accessor is DbContext context)
 			{
 				var factory = context.GetService<IModelCacheKeyFactory>();
