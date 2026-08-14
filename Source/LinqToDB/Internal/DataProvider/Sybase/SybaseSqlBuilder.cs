@@ -224,10 +224,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					if (_skipBrackets || value.Length > 28 || (value.Length > 0 && (value[0] == '[' || value[0] == '#')))
 						return sb.Append(value);
 
-					if (value.IndexOf('.', StringComparison.Ordinal) > 0)
-						value = string.Join("].[", value.Split('.'));
-
-					return DelimitIdentifier(sb, value);
+					return DelimitQualifiedIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'

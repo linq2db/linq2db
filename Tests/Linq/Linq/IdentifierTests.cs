@@ -6,6 +6,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -241,6 +243,20 @@ namespace Tests.Linq
 					};
 
 			AreEqual(expected, actual);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5772")]
+		public void TestTableName_QualifiedRendersAsTwoParts([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllSqlCe, TestProvName.AllSybase)] string context)
+		{
+			// A dotted name is two parts, and each has to be delimited separately. Delimiting the joined
+			// string instead lets the delimiter escape the separator, collapsing schema.table into one
+			// name - which stays valid SQL and fails later as "no such table". Only these three split a
+			// dotted name; SQL Server carries the parts in SqlObjectName and treats a dot as literal.
+			using var db = GetDataContext(context);
+
+			var sql = db.GetTable<Table>().TableName("a.b").ToSqlQuery().Sql;
+
+			sql.ShouldContain("[a].[b]");
 		}
 
 		// Oracle and Access cannot represent such a name at all - Oracle's quoted identifiers accept

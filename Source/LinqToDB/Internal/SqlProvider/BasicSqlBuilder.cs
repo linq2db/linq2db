@@ -4819,6 +4819,29 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
+		/// Writes a possibly multi-part name, delimiting each part separately. Pre-joining the parts and
+		/// delimiting once would feed the separator through <see cref="DelimitIdentifier"/>, which
+		/// escapes it - turning <c>a.b</c> into the single name <c>a].[b</c>.
+		/// </summary>
+		protected StringBuilder DelimitQualifiedIdentifier(StringBuilder sb, string value)
+		{
+			if (value.IndexOf('.', StringComparison.Ordinal) <= 0)
+				return DelimitIdentifier(sb, value);
+
+			var parts = value.Split('.');
+
+			for (var i = 0; i < parts.Length; i++)
+			{
+				if (i > 0)
+					sb.Append('.');
+
+				DelimitIdentifier(sb, parts[i]);
+			}
+
+			return sb;
+		}
+
+		/// <summary>
 		/// Writes an identifier, delimiting it only when <see cref="RequiresQuoting"/> says so. This is
 		/// the single place that decision is made, so a provider cannot forget one <see cref="ConvertType"/>
 		/// and silently emit a bare name - which is how table aliases went unquoted on more than one
