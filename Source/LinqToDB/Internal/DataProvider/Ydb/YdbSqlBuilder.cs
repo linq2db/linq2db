@@ -237,37 +237,35 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				//}
 
 				case ConvertType.NameToCteName:
-				{
-					var quote = (value.Length > 0 && char.IsDigit(value[0]))
-					            || value.Any(c => !c.IsAsciiLetterOrDigit() && c is not '_');
-
 					sb.Append('$');
-
-					if (quote)
-						return sb.Append('`').Append(value.Replace("`", "\\`", StringComparison.Ordinal)).Append('`');
-
-					return sb.Append(value);
-				}
+					return BuildIdentifier(sb, value, convertType);
 
 				case ConvertType.NameToQueryField
 					or ConvertType.NameToQueryFieldAlias
 					or ConvertType.NameToQueryTable
 					or ConvertType.NameToQueryTableAlias:
-				{
-					// don't check for __ydb_ prefix as it is not allowed even in quoted mode
-					var quote = (value.Length > 0 && char.IsDigit(value[0]))
-						|| value.Any(c => !c.IsAsciiLetterOrDigit() && c is not '_')
-						|| IsReserved(value);
-
-					if (quote)
-						return sb.Append('`').Append(value.Replace("`", "\\`", StringComparison.Ordinal)).Append('`');
-
-					return sb.Append(value);
-				}
+					return BuildIdentifier(sb, value, convertType);
 
 				default:
 					return sb.Append(value);
 			}
+		}
+
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
+		{
+			var quote = char.IsDigit(value[0])
+				|| value.Any(c => !c.IsAsciiLetterOrDigit() && c is not '_');
+
+			// a parameter or CTE name is introduced rather than resolved, so a reserved word is fine
+			// there; elsewhere, don't check for the __ydb_ prefix as it is not allowed even quoted
+			return convertType is ConvertType.NameToQueryParameter or ConvertType.NameToCteName
+				? quote
+				: quote || IsReserved(value);
+		}
+
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('`').Append(value.Replace("`", "\\`", StringComparison.Ordinal)).Append('`');
 		}
 
 		protected override void BuildOutputColumnExpressions(IReadOnlyList<ISqlExpression> expressions)
