@@ -265,9 +265,13 @@ namespace LinqToDB.Internal.DataProvider.DB2
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
+						// A caseless script - CJK, Hangul, Thai - is neither upper nor lower, so it used to
+						// slip past this test and go out bare even though Db2's ordinary identifier
+						// alphabet is A-Z 0-9 _ @ # $. Quoting it is safe precisely because it has no
+						// case for Db2 to fold, so the quoted and folded forms resolve to the same name.
 						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
 						    value.StartsWith('_') ||
-						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c) || c > 127))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
