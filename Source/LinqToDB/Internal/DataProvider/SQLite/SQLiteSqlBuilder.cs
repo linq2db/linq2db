@@ -67,6 +67,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override bool IsNestedJoinParenthesisRequired => true;
 
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('[').Append(value).Append(']');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -82,7 +87,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
@@ -95,7 +100,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (value.IndexOf('.', StringComparison.Ordinal) > 0)
 						value = string.Join("].[", value.Split('.'));
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'

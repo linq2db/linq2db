@@ -146,6 +146,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 			}
 		}
 
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('[').Append(value).Append(']');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			// https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
@@ -162,7 +167,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
@@ -171,7 +176,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'

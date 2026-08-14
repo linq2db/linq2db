@@ -209,12 +209,18 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					return value switch
 					{
 						['"', ..] => sb.Append(value),
-						_ => sb.Append('"').Append(value).Append('"'),
+						_ => DelimitIdentifier(sb, value),
 					};
 				}
 			}
 
 			return sb.Append(value);
+		}
+
+		// note that, unlike the SQL standard default, a quote inside the name is not escaped here
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('"').Append(value).Append('"');
 		}
 
 		protected override void BuildCreateTableIdentityAttribute1(SqlField field)

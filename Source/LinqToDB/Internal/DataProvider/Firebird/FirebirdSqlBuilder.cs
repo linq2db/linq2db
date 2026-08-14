@@ -233,30 +233,27 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
+			return convertType switch
 			{
-				case ConvertType.NameToQueryFieldAlias :
-				case ConvertType.NameToQueryTableAlias :
-				case ConvertType.NameToQueryField      :
-				case ConvertType.NameToQueryTable      :
-				case ConvertType.NameToCteName         :
-				case ConvertType.NameToProcedure       :
-				case ConvertType.NameToPackage         :
-				case ConvertType.SequenceName          :
-					return BuildIdentifier(sb, value, convertType);
+				ConvertType.NameToQueryFieldAlias
+					or ConvertType.NameToQueryTableAlias
+					or ConvertType.NameToQueryField
+					or ConvertType.NameToQueryTable
+					or ConvertType.NameToCteName
+					or ConvertType.NameToProcedure
+					or ConvertType.NameToPackage
+					or ConvertType.SequenceName          => BuildIdentifier(sb, value, convertType),
 
-				case ConvertType.NameToQueryParameter  :
-				case ConvertType.NameToCommandParameter:
-				case ConvertType.NameToSprocParameter  :
-					return sb.Append('@').Append(value);
+				ConvertType.NameToQueryParameter
+					or ConvertType.NameToCommandParameter
+					or ConvertType.NameToSprocParameter  => sb.Append('@').Append(value),
 
-				case ConvertType.SprocParameterToName  :
-					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.AsSpan(1))
-						: sb.Append(value);
-			}
+				ConvertType.SprocParameterToName         => value.Length > 0 && value[0] == '@'
+					? sb.Append(value.AsSpan(1))
+					: sb.Append(value),
 
-			return sb.Append(value);
+				_                                        => sb.Append(value),
+			};
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)

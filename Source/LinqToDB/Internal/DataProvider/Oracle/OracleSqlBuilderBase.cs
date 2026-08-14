@@ -199,27 +199,26 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
+			// needs proper list of reserved words and name validation
+			// something like we did for Firebird
+			// right now reserved words list contains garbage
+			return convertType switch
 			{
-				case ConvertType.NameToQueryParameter :
-					return sb.Append(':').Append(value);
-				// needs proper list of reserved words and name validation
-				// something like we did for Firebird
-				// right now reserved words list contains garbage
-				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryField     :
-				case ConvertType.NameToQueryTable     :
-				case ConvertType.NameToCteName        :
-				case ConvertType.NameToProcedure      :
-				case ConvertType.NameToPackage        :
-				case ConvertType.NameToServer         :
-				case ConvertType.SequenceName         :
-				case ConvertType.NameToSchema         :
-				case ConvertType.TriggerName          :
-					return BuildIdentifier(sb, value, convertType);
-			}
+				ConvertType.NameToQueryParameter  => sb.Append(':').Append(value),
 
-			return sb.Append(value);
+				ConvertType.NameToQueryFieldAlias
+					or ConvertType.NameToQueryField
+					or ConvertType.NameToQueryTable
+					or ConvertType.NameToCteName
+					or ConvertType.NameToProcedure
+					or ConvertType.NameToPackage
+					or ConvertType.NameToServer
+					or ConvertType.SequenceName
+					or ConvertType.NameToSchema
+					or ConvertType.TriggerName    => BuildIdentifier(sb, value, convertType),
+
+				_                                 => sb.Append(value),
+			};
 		}
 
 		protected override StringBuilder BuildExpression(ISqlExpression expr,
