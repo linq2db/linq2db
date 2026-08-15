@@ -242,8 +242,8 @@ namespace Tests.Linq
 		/// <remarks>
 		/// The descriptor of the summed column describes how the sum is read back, and for a duration that is what
 		/// carries its unit - but it does not describe how wide the sum is, because a sum outgrows the column it is
-		/// taken from. Typing the literal from it narrowed <c>0.00005</c> to the column's four decimal places, which
-		/// is zero, and the addition vanished without an error.
+		/// taken from. A literal typed from that descriptor is narrowed to the column's own scale, and one finer than
+		/// the column holds rounds to zero, which makes the addition disappear with nothing raised to report it.
 		/// <para>
 		/// Asserted on ClickHouse because it writes the width into the literal itself - <c>toDecimal64(…, 4)</c>
 		/// against <c>toDecimal128(…, 10)</c> - so the narrowing is visible in the result rather than only in a plan.

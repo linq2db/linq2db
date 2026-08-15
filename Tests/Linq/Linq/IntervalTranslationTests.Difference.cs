@@ -303,20 +303,18 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// The same span again, asked only for members that counting can answer - which is what makes it the case the
-		/// test above cannot cover.
+		/// A span past the range of a second counter, asked only for members that counting can answer.
 		/// </summary>
 		/// <remarks>
-		/// <see cref="LongSpanMatchesClr"/> opens on <c>Ticks</c>, and Access has none to give, so the whole case is a
-		/// declared refusal there and never reaches a total. Access is also the one provider that answers members by
-		/// counting units instead of dividing a tick count, so it is the only one where a total is exposed to the width
-		/// of the counter rather than to the width of a tick - and that exposure is what went unmeasured.
+		/// Holds the totals and components of a seventy-five year span against the CLR. Access is what the unit list
+		/// is chosen for: it is the one provider that answers members by counting units rather than by dividing a tick
+		/// count, so its totals are bounded by the width of the counter rather than by the width of a tick. A count of
+		/// seconds is 32-bit and runs out after about sixty-eight years, which is inside a human lifetime, and a
+		/// difference between two columns has no .NET fallback to reach for.
 		/// <para>
-		/// A count of seconds is 32-bit, so it runs out after about sixty-eight years, which is inside a human
-		/// lifetime rather than safely far away. Taken across the whole span, <c>TotalSeconds</c> over these dates
-		/// returned <c>Numeric value out of range</c> from the driver - and a projection cannot fall back to .NET for
-		/// it, because the difference is between two columns. Counting days first and seconds only across what remains
-		/// keeps both counts small, and this pins the result rather than the shape that produces it.
+		/// <c>Ticks</c> is left out, which is what separates this from <see cref="LongSpanMatchesClr"/>: Access has no
+		/// tick count to give and declares that refusal by name, so a case opening on <c>Ticks</c> stops there and
+		/// says nothing about the totals behind it.
 		/// </para>
 		/// <para>
 		/// Every provider runs it, not Access alone: the members are ordinary ones, and a total that agrees with the
@@ -366,26 +364,27 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// The second component is the one member Access cannot reach across a span that long, and this records where
-		/// it stops.
+		/// Where a second component stops answering on Access, and that a shorter span still does.
 		/// </summary>
 		/// <remarks>
-		/// Three separate 32-bit ceilings stand between a second component and a span past sixty-eight years, and
-		/// clearing one only moves the failure to the next. <c>DateDiff</c> computes its count before any cast can
-		/// widen it; <c>DateAdd</c> takes the amount for the correction's anchor in 32 bits however it was computed;
-		/// and <c>MOD</c>, which turns the elapsed count into the component, coerces both operands to a 32-bit integer
-		/// before dividing. The first two can be split into a day part and a sub-day rest, but the third takes the
-		/// count whole, so the split has to happen before the component is formed rather than inside it - a day-anchored
-		/// component, which cannot use the boundary day count either, since an anchor that overshoots turns a positive
-		/// remainder negative and the sign survives the modulo.
+		/// Access forms the component as an elapsed count of seconds reduced by <c>MOD</c>, and every step of that is
+		/// 32-bit: <c>DateDiff</c> produces the count, <c>DateAdd</c> carries it as the anchor of the correction, and
+		/// <c>MOD</c> coerces both operands before dividing. The first two act on a value that can be split into whole
+		/// days and a sub-day rest, but <c>MOD</c> takes the elapsed count whole - so the reach of the component is the
+		/// reach of that count, about sixty-eight years.
 		/// <para>
-		/// A total is not affected, and the companion test above asserts that it is not - only the component is, and
-		/// only past the counter's range. Recorded rather than skipped: the query throws, and a test that pins the
-		/// throw goes red the day the component starts answering, which is the point at which this should be revisited.
+		/// Reaching further means forming the component over a day-anchored window instead, where a day is a whole
+		/// number of the unit and the modulo cannot see it. That needs the corrected elapsed day count rather than the
+		/// boundary one: an anchor that overshoots makes the remainder negative, and the sign survives the modulo.
 		/// </para>
 		/// <para>
-		/// The short-span row is asked first and by the same expression. Without it this would pass just as well if
-		/// the component were broken outright rather than only beyond its range.
+		/// Totals are not bounded this way, and the companion test above holds them over the same span. Pinned rather
+		/// than left undiscovered, and it goes red the day the component reaches further - which is when this is worth
+		/// revisiting.
+		/// </para>
+		/// <para>
+		/// The short-span row is asked first and through the same expression, so this cannot pass by the component
+		/// being broken outright rather than only beyond its range.
 		/// </para>
 		/// </remarks>
 		[Test]
