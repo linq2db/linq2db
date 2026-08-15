@@ -58,6 +58,73 @@ steps:
   displayName: Probe memory (top processes)
   condition: succeeded()
 
+# Free the image's idle desktop/telemetry processes before the test run. Measured over the 14 Windows
+# jobs of build 22810: ~2.4 GB resident in probed processes per job, ~750 MB of it in the list below,
+# which nothing in a headless test run needs. The netfx SQL Server legs die with OutOfMemoryException,
+# so this is reclaimed for the test process.
+#
+# Deliberately NOT killed: svchost (many unrelated services), Agent.* / pwsh / powershell (the job
+# itself), WaAppAgent + WindowsAzureGuestAgent (Azure VM management - killing them risks the platform
+# reaping the agent), dockerd (the container-backed legs need it), and the system processes
+# (Registry, lsass, WmiPrvSE, dwm). MsMpEng (Defender, up to 173 MB) is protected and cannot be
+# stopped this way - it would need path exclusions instead.
+#
+# The Windows Update / Search services are stopped as well: TiWorker, MoUsoCoreWorker and SearchHost
+# are their workers and would otherwise come straight back. The agent is ephemeral, so leaving those
+# services down for the rest of the job costs nothing.
+- task: PowerShell@2
+  inputs:
+    targetType: inline
+    pwsh: true
+    script: |
+      # Stopped first, so the workers they own do not respawn between the kill and the test run.
+      foreach ($svc in 'wuauserv', 'UsoSvc', 'WSearch', 'TrustedInstaller') {
+        try {
+          Stop-Service -Name $svc -Force -ErrorAction Stop
+          Write-Host "stopped service $svc"
+        }
+        catch {
+          Write-Host "skipped service $svc - $($_.Exception.Message)"
+        }
+      }
+
+      $names = @(
+        'explorer'                         # desktop shell
+        'StartMenuExperienceHost'          # start menu UI
+        'SearchHost'                       # search UI
+        'WindowsTerminal'                  # terminal UI left running by the image
+        'RuntimeBroker'                    # UWP/shell broker
+        'SMSvcHost'                        # .NET Net.Tcp port sharing
+        'ShellHost'
+        'ServiceFabricLocalClusterManager' # tray app from the image
+        'sihost'
+        'ctfmon'                           # text input / IME
+        'TiWorker'                         # Windows Modules Installer worker
+        'CompatTelRunner'                  # compatibility telemetry
+        'MoUsoCoreWorker'                  # update orchestrator
+      )
+
+      $freed = 0.0
+      foreach ($name in $names) {
+        foreach ($p in Get-Process -Name $name -ErrorAction SilentlyContinue) {
+          $mb = [math]::Round($p.WorkingSet64 / 1MB, 1)
+          try {
+            Stop-Process -Id $p.Id -Force -ErrorAction Stop
+            $freed += $mb
+            Write-Host "killed $name (pid $($p.Id)) - $mb MB"
+          }
+          catch {
+            Write-Host "skipped $name (pid $($p.Id)) - $($_.Exception.Message)"
+          }
+        }
+      }
+
+      Write-Host (">>> Reclaimed {0} MB; free memory now {1} MB" -f [math]::Round($freed, 0),
+        [math]::Round((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory / 1KB, 0))
+  displayName: Free idle agent memory
+  condition: succeeded()
+  continueOnError: true
+
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: $(artifact_test_scripts)
