@@ -15,10 +15,15 @@ namespace LinqToDB.Internal.Expressions
 		/// <paramref name="build"/> makes of its result.
 		/// </summary>
 		/// <remarks>
-		/// The member-chain overload below cannot serve a translator that sends something computed rather than read -
-		/// a duration rounded down to whole seconds, say. Built inside the request the arithmetic would leave the
-		/// request wrapping an argument nobody reads, and the caller's choice would be dropped in silence, so the
-		/// request is rewritten around the computed value instead.
+		/// The request is written around the value the caller had in hand, but what a translator ends up sending is
+		/// something made from it - a duration's tick count, a duration rounded down to whole seconds. Built inside
+		/// the request, that work would leave the request wrapping an argument nothing reads any more, and the
+		/// caller's choice of how the value should travel would be dropped in silence. Rewriting the request around
+		/// the built value keeps it on what actually reaches the statement.
+		/// <para>
+		/// An expression carrying no such request is handed to <paramref name="build"/> unchanged, so this is safe to
+		/// apply whether or not one of the two is underneath.
+		/// </para>
 		/// </remarks>
 		public static Expression MoveValueMarkerOutside(Expression expression, Func<Expression, Expression> build)
 		{
@@ -30,46 +35,6 @@ namespace LinqToDB.Internal.Expressions
 			}
 
 			return build(expression);
-		}
-
-		/// <summary>
-		/// Moves a <c>Sql.Constant</c> or <c>Sql.Parameter</c> request outward through the member accesses applied
-		/// to its result: <c>Sql.Constant(x).A.B</c> becomes <c>Sql.Constant(x.A.B)</c>.
-		/// </summary>
-		/// <remarks>
-		/// The request is written around the value the caller had in hand, but what a translator ends up sending is
-		/// often a member of it - a duration's tick count, a date's year. Left where it was written, the request
-		/// would sit inside an argument that nothing reads any more, and the caller's choice would be dropped in
-		/// silence. Moving it keeps it on the value that actually reaches the statement.
-		/// <para>
-		/// Anything else is returned unchanged, so this is safe to apply to a member access whether or not one of
-		/// the two requests is underneath it.
-		/// </para>
-		/// </remarks>
-		public static Expression MoveValueMarkerOutside(Expression expression)
-		{
-			List<MemberInfo>? members = null;
-
-			var current = expression;
-
-			while (current is MemberExpression { Expression: not null } member)
-			{
-				(members ??= new()).Add(member.Member);
-				current = member.Expression;
-			}
-
-			if (members == null)
-				return expression;
-
-			if (current.UnwrapConvert() is not MethodCallExpression call || !IsValueMarker(call.Method))
-				return expression;
-
-			var moved = call.Arguments[0];
-
-			for (var i = members.Count - 1; i >= 0; i--)
-				moved = Expression.MakeMemberAccess(moved, members[i]);
-
-			return Expression.Call(call.Method.GetGenericMethodDefinition().MakeGenericMethod(moved.Type), moved);
 		}
 
 		/// <summary>
