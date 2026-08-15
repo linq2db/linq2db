@@ -234,11 +234,27 @@ namespace Tests.Linq
 
 			db.Insert(new UnitSpreadRow { Id = 1, InNanoseconds = value });
 
-			// Asserted here rather than through ThrowsForProvider because there is no provider to name: the refusal
-			// comes from the shared lowering, so every one of them gives it.
+			// Left untranslated rather than refused, so a projection reads the column and answers from .NET - which
+			// is the whole of what the member means. Asserted first because it is the case a caller actually meets.
+			var members = t
+				.Select(r => new
+				{
+					r.InNanoseconds.Ticks,
+					r.InNanoseconds.Hours,
+					r.InNanoseconds.TotalSeconds,
+				})
+				.Single();
+
+			members.Ticks.ShouldBe(value.Ticks);
+			members.Hours.ShouldBe(value.Hours);
+			members.TotalSeconds.ShouldBe(value.TotalSeconds);
+
+			// Asked for in SQL, there is nothing to fall back to and it is refused. Asserted here rather than through
+			// ThrowsForProvider because there is no provider to name: no lowering anywhere takes a unit below a tick,
+			// so every one of them refuses. This goes red the day one learns to divide.
 			Action act = () => t.Select(r => Sql.AsSql(r.InNanoseconds.Ticks)).Single();
 
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("TimeSpan member");
+			act.ShouldThrow<LinqToDBException>();
 
 			// The conversion is untouched by that - only arithmetic on the stored number is refused.
 			t.Single().InNanoseconds.ShouldBe(value);

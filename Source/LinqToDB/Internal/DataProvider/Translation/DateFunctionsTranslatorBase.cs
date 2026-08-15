@@ -1091,6 +1091,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 			}
 
+			// A duration stored below a tick has no member lowering anywhere: reaching a tick count from it needs a
+			// division, and neither path that serves a member chooses a rounding rule for one, because providers
+			// disagree about which way a negative value goes.
+			//
+			// Left untranslated rather than refused by name, and that choice is what decides where the member still
+			// works. Untranslated, a projection reads the column and computes the member in .NET, which answers
+			// exactly; an error expression would take that away and refuse everywhere. What remains refused is the
+			// use that genuinely requires SQL - a predicate, an ordering, an explicit Sql.AsSql - and it is refused
+			// as an expression that could not be converted rather than as a limit of the current provider, which
+			// this is not.
+			if (QueryHelper.UnwrapNullablity(interval) is SqlIntervalExpression { IntervalType.Domain: SqlIntervalDomain.Duration } stored
+				&& (!SqlIntervalUnits.TryGetTicksRatio(stored.IntervalType.Resolution, out _, out var storedDenominator) || storedDenominator != 1))
+			{
+				return null;
+			}
+
 			var resolution = translationContext.ProviderFlags.IntervalResolution;
 
 			if (kind == SqlIntervalPartKind.Component
