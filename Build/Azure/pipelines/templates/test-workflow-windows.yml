@@ -77,17 +77,14 @@ steps:
     targetType: inline
     pwsh: true
     script: |
-      # Stopped first, so the workers they own do not respawn between the kill and the test run.
-      foreach ($svc in 'wuauserv', 'UsoSvc', 'WSearch', 'TrustedInstaller') {
-        try {
-          Stop-Service -Name $svc -Force -ErrorAction Stop
-          Write-Host "stopped service $svc"
-        }
-        catch {
-          Write-Host "skipped service $svc - $($_.Exception.Message)"
-        }
-      }
-
+      # BISECT MODE (build 22818): killing this list took every Windows agent down - each job was
+      # abandoned ("lost contact with the agent") during or right after this step. The agent runs
+      # inside the image's auto-logon interactive session, so killing a session-critical process
+      # takes the agent with it. Kill one at a time with a pause and flush after each, so the last
+      # line that reaches the server names the process that did it.
+      #
+      # The service stops are out for now: Stop-Service -Force TrustedInstaller has no -NoWait and
+      # blocks until the service stops, which is a second, independent way this step hung.
       $names = @(
         'explorer'                         # desktop shell
         'StartMenuExperienceHost'          # start menu UI
@@ -108,14 +105,23 @@ steps:
       foreach ($name in $names) {
         foreach ($p in Get-Process -Name $name -ErrorAction SilentlyContinue) {
           $mb = [math]::Round($p.WorkingSet64 / 1MB, 1)
+
+          # Announced before the kill: if the agent dies here, this is the last line uploaded.
+          Write-Host "BISECT about to kill $name (pid $($p.Id)) - $mb MB"
+          [Console]::Out.Flush()
+          Start-Sleep -Seconds 5
+
           try {
             Stop-Process -Id $p.Id -Force -ErrorAction Stop
             $freed += $mb
-            Write-Host "killed $name (pid $($p.Id)) - $mb MB"
+            Write-Host "BISECT survived $name"
           }
           catch {
-            Write-Host "skipped $name (pid $($p.Id)) - $($_.Exception.Message)"
+            Write-Host "BISECT skipped $name - $($_.Exception.Message)"
           }
+
+          [Console]::Out.Flush()
+          Start-Sleep -Seconds 5
         }
       }
 
