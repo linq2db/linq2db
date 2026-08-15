@@ -88,19 +88,18 @@ namespace LinqToDB.Remote
 
 			var serviceProvider = ((IInfrastructure<IServiceProvider>)ctx.DataProvider).Instance;
 
-			// Only the built-in service is described by a length and a unit alone. A derived one can
-			// also change which characters survive CorrectAlias, which this contract cannot carry, so
-			// match the exact type and leave anything else on the client's default rather than
-			// describing it inaccurately.
-			var identifierService = serviceProvider.GetRequiredService<IIdentifierService>() is IdentifierServiceSimple simple
-				&& simple.GetType() == typeof(IdentifierServiceSimple)
-					? simple
-					: null;
+			// Derived services are described too: excluding them left the client on its 128 default,
+			// which is further from the truth than their own numbers. The alias limit is read through
+			// IsFit rather than a property, so a provider that caps aliases differently from names -
+			// MySQL does - is carried accurately without the contract knowing the type.
+			var identifierService = serviceProvider.GetRequiredService<IIdentifierService>();
+			var lengthService     = identifierService as IdentifierServiceSimple;
 
 			return Task.FromResult(new LinqServiceInfo()
 			{
-				IdentifierMaxLength      = identifierService?.MaxLength ?? 0,
-				IdentifierLengthUnit     = identifierService?.Unit      ?? IdentifierLengthUnit.Characters,
+				IdentifierMaxLength      = lengthService?.MaxLength ?? 0,
+				IdentifierAliasMaxLength = lengthService == null ? 0 : GetAliasLimit(identifierService),
+				IdentifierLengthUnit     = lengthService?.Unit      ?? IdentifierLengthUnit.Characters,
 				MappingSchemaType        = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
 				MethodCallTranslatorType = serviceProvider.GetRequiredService<IMemberTranslator>().GetType().AssemblyQualifiedName!,
 				MemberConverterType      = serviceProvider.GetRequiredService<IMemberConverter>().GetType().AssemblyQualifiedName!,
@@ -110,6 +109,22 @@ namespace LinqToDB.Remote
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions    = ctx.DataProvider.SupportedTableOptions,
 			});
+		}
+
+		/// <summary>
+		/// Longest alias the service accepts, obtained by asking it to measure one that is certainly too
+		/// long. Going through <see cref="IIdentifierService.IsFit"/> keeps this working for a service
+		/// that caps aliases differently from other names, without exposing a per-kind accessor. The
+		/// probe is ASCII, so the answer is the same number whether the service counts characters or
+		/// bytes.
+		/// </summary>
+		static int GetAliasLimit(IIdentifierService service)
+		{
+			const int probe = 1024;
+
+			return service.IsFit(IdentifierKind.Alias, new string('a', probe), out var decrement)
+				? probe
+				: probe - decrement.Value;
 		}
 
 		public async Task<int> ExecuteNonQueryAsync(

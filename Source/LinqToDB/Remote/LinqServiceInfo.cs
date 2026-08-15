@@ -38,5 +38,13 @@ namespace LinqToDB.Remote
 		/// </summary>
 		[DataMember(Order = 10)]
 		public IdentifierLengthUnit IdentifierLengthUnit { get; set; }
+
+		/// <summary>
+		/// Alias length limit, which several providers set higher than <see cref="IdentifierMaxLength"/>
+		/// - MySQL caps a name at 64 and an alias at 255. Zero when the server predates this member, in
+		/// which case the client applies <see cref="IdentifierMaxLength"/> to aliases too.
+		/// </summary>
+		[DataMember(Order = 11)]
+		public int                  IdentifierAliasMaxLength { get; set; }
 	}
 }

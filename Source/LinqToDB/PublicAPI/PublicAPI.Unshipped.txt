@@ -16,3 +16,6 @@ LinqToDB.Remote.LinqServiceInfo.IdentifierLengthUnit.get -> LinqToDB.Internal.Da
 LinqToDB.Remote.LinqServiceInfo.IdentifierLengthUnit.set -> void
 LinqToDB.Remote.LinqServiceInfo.IdentifierMaxLength.get -> int
 LinqToDB.Remote.LinqServiceInfo.IdentifierMaxLength.set -> void
+LinqToDB.Remote.LinqServiceInfo.IdentifierAliasMaxLength.get -> int
+LinqToDB.Remote.LinqServiceInfo.IdentifierAliasMaxLength.set -> void
+virtual LinqToDB.Internal.DataProvider.IdentifierServiceSimple.GetMaxLength(LinqToDB.Internal.DataProvider.IdentifierKind identifierKind) -> int

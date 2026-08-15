@@ -103,6 +103,17 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		/// <summary>
+		/// Mirrors the server's identifier limits for client-side SQL preview, including the separate
+		/// alias cap that several providers set higher than their name cap.
+		/// </summary>
+		sealed class RemoteIdentifierService(int maxLength, IdentifierLengthUnit unit, int aliasMaxLength)
+			: IdentifierServiceSimple(maxLength, unit)
+		{
+			protected override int GetMaxLength(IdentifierKind identifierKind)
+				=> identifierKind == IdentifierKind.Alias ? aliasMaxLength : base.GetMaxLength(identifierKind);
+		}
+
 		sealed class ConfigurationInfo
 		{
 			public LinqServiceInfo    LinqServiceInfo   = null!;
@@ -274,9 +285,10 @@ namespace LinqToDB.Remote
 
 					// A server older than the IdentifierMaxLength member sends 0; keep the historical
 					// default there rather than letting the ctor's minimum-length guard throw.
-					var identifierService = new IdentifierServiceSimple(
-						info.IdentifierMaxLength > 4 ? info.IdentifierMaxLength : 128,
-						info.IdentifierLengthUnit);
+					var maxLength      = info.IdentifierMaxLength      > 4 ? info.IdentifierMaxLength      : 128;
+					var aliasMaxLength = info.IdentifierAliasMaxLength > 4 ? info.IdentifierAliasMaxLength : maxLength;
+
+					var identifierService = new RemoteIdentifierService(maxLength, info.IdentifierLengthUnit, aliasMaxLength);
 
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{
