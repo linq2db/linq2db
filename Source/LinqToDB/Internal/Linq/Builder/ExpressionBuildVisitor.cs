@@ -1600,8 +1600,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						// the answer: TableContext maps a member access onto the table that owns the column.
 						// Dropping it there asks the whole-entity question instead, which a projection over
 						// several sources cannot answer.
-						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot
-							&& node.Member.DeclaringType?.IsSameOrParentOf(root.Type) != true)
+						//
+						// Scoped to Table on purpose. AggregationRoot resolves its root through Visit rather
+						// than BuildRoot (above), staying in its own purpose instead of descending under Root,
+						// so the type never changes here and this branch is unreachable for it.
+						if (root.Type != node.Expression!.Type
+							&& (_buildPurpose is BuildPurpose.AggregationRoot
+								|| (_buildPurpose is BuildPurpose.Table && node.Member.DeclaringType?.IsSameOrParentOf(root.Type) != true)))
 						{
 							return Visit(root);
 						}
