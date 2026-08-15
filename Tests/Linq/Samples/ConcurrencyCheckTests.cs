@@ -142,8 +142,7 @@ namespace Tests.Samples
 		}
 
 		[AttributeUsage(AttributeTargets.Property)]
-		public class RowVersionAttribute: Attribute
-		{ }
+		public class RowVersionAttribute : Attribute;
 
 		[Table("TestTable")]
 		public class TestTable

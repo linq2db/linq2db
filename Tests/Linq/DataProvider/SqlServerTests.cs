@@ -2354,6 +2354,21 @@ DROP TABLE IF EXISTS TemporalTable3History
 		}
 
 		[Test]
+		public void TestIgnoreSystemHistoryTablesKeepsViews([IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			var options = new GetSchemaOptions()
+			{
+				IgnoreSystemHistoryTables = true
+			};
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
+
+			// views are not present in sys.tables, so the temporal history filter must not discard them
+			schema.Tables.Where(t => t.IsView).Select(t => t.TableName).ShouldContain("ParentView");
+		}
+
+		[Test]
 		public void GetDataConnectionTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);

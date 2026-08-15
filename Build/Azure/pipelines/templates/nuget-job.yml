@@ -21,6 +21,13 @@ jobs:
       filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/verify-nuget-sizes.ps1'
       arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/nugets" -WarnMB 180 -FailMB 200'
 
+  - task: PowerShell@2
+    displayName: Verify analyzer delivery metadata (fail-fast before publish)
+    inputs:
+      pwsh: true
+      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/verify-analyzer-delivery.ps1'
+      arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/nugets"'
+
   - task: NuGetCommand@2
     inputs:
       command: 'push'

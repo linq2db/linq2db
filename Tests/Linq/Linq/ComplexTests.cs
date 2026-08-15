@@ -374,9 +374,7 @@ namespace Tests.Linq
 			#endregion
 		}
 
-		public class TestEntity2 : TestEntityBase
-		{
-		}
+		public class TestEntity2 : TestEntityBase;
 
 		public enum SuperAccountType { Client, Organization }
 
@@ -1082,9 +1080,7 @@ namespace Tests.Linq
 			sealed class ComplexTypeConverter() : ValueConverter<ComplexType, string>(
 				obj => JsonSerializer.Serialize(obj, JsonSerializerOptions.Default),
 				json => JsonSerializer.Deserialize<ComplexType>(json, JsonSerializerOptions.Default)!,
-				false)
-			{
-			}
+				false);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]

@@ -1,6 +1,9 @@
 #!/bin/bash
 
-docker run -d --name ydb -p 2136:2136 -e YDB_FEATURE_FLAGS=enable_temp_tables ydbplatform/local-ydb:latest
+# YDB_USE_IN_MEMORY_PDISKS: RAM-backed storage instead of file-backed disks, so commits skip real
+# fsync/disk I/O - YDB's own recommended setting for test environments; CI containers are destroyed
+# after every run anyway, so there's no data to lose by skipping durability.
+docker run -d --name ydb -p 2136:2136 -e YDB_FEATURE_FLAGS=enable_temp_tables -e YDB_USE_IN_MEMORY_PDISKS=1 ydbplatform/local-ydb:latest
 
 retries=0
 until docker logs ydb 2>&1 | grep -q 'Table profiles were not loaded'; do

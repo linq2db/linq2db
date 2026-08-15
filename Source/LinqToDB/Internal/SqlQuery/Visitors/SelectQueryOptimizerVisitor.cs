@@ -1012,7 +1012,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (join.JoinType is JoinType.Left or JoinType.OuterApply)
 			{
-				if ((join.Cardinality & SourceCardinality.One) != 0)
+				if (join.Cardinality.HasFlag(SourceCardinality.One))
 					return true;
 
 				if (join.Table.Source is SelectQuery joinQuery)
@@ -1045,7 +1045,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var sources = QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						var ignore  = new[] { join };
-						if (QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
+
+						// Probe the enclosing query before walking the whole statement: 99% of kept joins are
+						// referenced from their own query, and reaching them from the statement root wastes the
+						// whole descent. selectQuery is reachable from _rootElement without passing through join,
+						// so a local hit is necessarily a root hit as well - this changes how quickly the verdict
+						// is reached, never the verdict itself.
+						var probeLocally = !ReferenceEquals(_rootElement, selectQuery);
+
+						if ((probeLocally && QueryHelper.IsDependsOnSources(selectQuery, sources, ignore))
+							|| QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
 						{
 							join.IsWeak = false;
 							continue;
@@ -2731,7 +2740,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			bool MoveJoinConditionsToWhere(SqlStatement root, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 			{
-				var modified                   = false;
+				var moved                      = false;
 				var isLeft                     = join.JoinType == JoinType.Left;
 				List<ISqlTableSource>? sources = null;
 
@@ -2762,7 +2771,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								{
 									QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
 									nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
-									modified = true;
+									moved = true;
 								}
 								else if (join.Table.Source is SqlTable t)
 								{
@@ -2785,7 +2794,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 										_rootElement.Replace(toReplace, subQuery.Select);
 									}
 
-									modified = true;
+									moved = true;
 								}
 							}
 
@@ -2820,7 +2829,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 
 				// this could result in empty condition, but it is fine - user created unsupported query
-				return modified;
+				return moved;
 			}
 		}
 

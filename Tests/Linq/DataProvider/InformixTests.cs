@@ -30,7 +30,7 @@ namespace Tests.DataProvider
 			paramCount = 1;
 			return null;
 		}
-		protected override string  PassValueSql(DataConnection dc) => "SELECT ID FROM {1} WHERE {0} = ?";
+		protected override string  PassValueSql(DataConnection dc) => "SELECT ID FROM {1} WHERE {0} = ? ORDER BY ID";
 
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)

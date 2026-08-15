@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 #if NETFRAMEWORK
 using System.Data.Linq.SqlClient;
 #else
@@ -318,7 +318,6 @@ namespace Tests.Linq
 				Assert.That(result.Len, Is.EqualTo(stringValue.Length));
 			}
 		}
-
 
 		static string CorrectValue(string value)
 		{

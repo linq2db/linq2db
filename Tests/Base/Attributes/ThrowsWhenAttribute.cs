@@ -88,6 +88,30 @@ namespace Tests
 
 			public override TestResult Execute(TestExecutionContext context)
 			{
+				// The TestProgressReporter heartbeat action runs *inside* this IWrapSetUpTearDown wrapper, so the
+				// outcome it samples is the pre-rewrite one. Hold the unit back for the duration of this wrapper and
+				// hand the tracker our final verdict instead, so no provisional result is ever counted or published.
+				// Deferrals nest: with several ThrowsWhen attributes on one test only the outermost wrapper — the one
+				// that sees the final result — books the unit.
+				var fullName = context.CurrentTest.FullName;
+
+				TestProgressTracker.BeginDeferred(fullName);
+
+				TestResult? testResult = null;
+
+				try
+				{
+					testResult = ExecuteInner(context);
+					return testResult;
+				}
+				finally
+				{
+					TestProgressTracker.CommitDeferred(fullName, testResult);
+				}
+			}
+
+			TestResult ExecuteInner(TestExecutionContext context)
+			{
 				var expectsException = false;
 				var expectsFirst     = true;
 

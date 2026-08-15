@@ -1598,13 +1598,13 @@ namespace LinqToDB.Internal.Linq.Builder
 							return Visit(root);
 
 						var updated = node.Update(root);
-						var result  = Visit(updated);
-						if (result is SqlPlaceholderExpression placeholder)
+						var visited = Visit(updated);
+						if (visited is SqlPlaceholderExpression placeholder)
 						{
-							result = placeholder.WithTrackingPath(updated);
+							visited = placeholder.WithTrackingPath(updated);
 						}
 
-						return result;
+						return visited;
 					}
 
 					if (root is SqlErrorExpression error)
@@ -3751,30 +3751,30 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (originalExpression != null)
 					return originalExpression;
 
-				var rightExpr = right;
-				var leftExpr  = left;
-				if (rightExpr.Type != leftExpr.Type)
+				var origRight = right;
+				var origLeft  = left;
+				if (origRight.Type != origLeft.Type)
 				{
-					if (rightExpr.Type.CanConvertTo(leftExpr.Type))
-						rightExpr = Expression.Convert(rightExpr, leftExpr.Type);
-					else if (left.Type.CanConvertTo(leftExpr.Type))
-						leftExpr = Expression.Convert(leftExpr, right.Type);
+					if (origRight.Type.CanConvertTo(origLeft.Type))
+						origRight = Expression.Convert(origRight, origLeft.Type);
+					else if (left.Type.CanConvertTo(origLeft.Type))
+						origLeft = Expression.Convert(origLeft, right.Type);
 				}
 				else
 				{
 					if (nodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
 						// Fore generating Path for SqlPlaceholderExpression
-						if (!rightExpr.Type.IsPrimitive)
+						if (!origRight.Type.IsPrimitive)
 						{
 							return new SqlPathExpression(
-								new[] { leftExpr, Expression.Constant(nodeType), rightExpr },
+								new[] { origLeft, Expression.Constant(nodeType), origRight },
 								typeof(bool));
 						}
 					}
 				}
 
-				return Expression.MakeBinary(nodeType, leftExpr, rightExpr);
+				return Expression.MakeBinary(nodeType, origLeft, origRight);
 			}
 
 			Expression GenerateNullComparison(Expression placeholdersExpression, bool isNot)

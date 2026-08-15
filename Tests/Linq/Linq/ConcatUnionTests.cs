@@ -1018,9 +1018,7 @@ namespace Tests.Linq
 		}
 
 		[Table("ConcatTest")]
-		sealed class DerivedEntity : BaseEntity
-		{
-		}
+		sealed class DerivedEntity : BaseEntity;
 
 		[Test]
 		public void TestConcatInheritance1([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)

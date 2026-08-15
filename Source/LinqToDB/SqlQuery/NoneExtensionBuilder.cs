@@ -2,7 +2,5 @@
 
 namespace LinqToDB.SqlQuery
 {
-	sealed class NoneExtensionBuilder : ISqlExtensionBuilder
-	{
-	}
+	sealed class NoneExtensionBuilder : ISqlExtensionBuilder;
 }
