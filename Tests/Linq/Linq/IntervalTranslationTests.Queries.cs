@@ -319,12 +319,8 @@ namespace Tests.Linq
 		/// <c>Min</c> and <c>Max</c> put the lowered arithmetic inside an aggregate, which is where a provider that
 		/// renders the difference as a multi-part expression is most likely to object.
 		/// </remarks>
-		[ActiveIssue(Configuration = NoTickTotalProviders, Details = "An aggregate whose body cannot be translated falls back to client evaluation, and the fallback builds a LinqExtensions.AggregateExecute call that EnumerableQuery cannot rewrite: 'There is no method AggregateExecute ... that matches the specified arguments'. Not an interval defect - reproduced on SQLite with Min(r => r.Stamp.ToBinary()), no interval code on the path - so the refusal Access should report is masked by a pre-existing core failure.")]
+		[ActiveIssue(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders], Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access, on Informix and on SQL Server 2014-minus, all three giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
 		[Test]
-		// An aggregate whose selector could not be translated is refused by the aggregate machinery rather than by
-		// the interval code, and it throws its own exception type - so the refusal is declared by that type here
-		// instead of by one of the interval messages. It is still a refusal, and still loud.
-		[ThrowsForProvider(typeof(InvalidOperationException), UnsupportedDifferenceProviders)]
 		public void AggregatesOverADifference([DataSources(false)] string context)
 		{
 			var shorter = TimeSpan.FromHours(1);
