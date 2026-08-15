@@ -113,11 +113,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override IIdentifierService CreateIdentifierService()
 		{
-			// Firebird 3 and below store metadata as UNICODE_FSS and cap it at 31 bytes; Firebird 4
-			// switched to UTF8 metadata with a 63 character cap.
 			return Version <= FirebirdVersion.v3
-				? new IdentifierServiceSimple(31, IdentifierLengthUnit.Utf8Bytes)
-				: new IdentifierServiceSimple(63);
+				? new Firebird3IdentifierService()
+				: new FirebirdIdentifierService();
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

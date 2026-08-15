@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		// length is 127", and a table alias is what aliasing generates most.
 		protected override IIdentifierService CreateIdentifierService()
 		{
-			return new IdentifierServiceSimple(127);
+			return new SapHanaIdentifierService();
 		}
 
 		public override ISchemaProvider GetSchemaProvider()

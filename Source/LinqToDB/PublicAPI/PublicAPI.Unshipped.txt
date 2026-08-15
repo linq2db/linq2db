@@ -12,10 +12,30 @@ LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Characters = 0 -> LinqToDB.I
 LinqToDB.Internal.DataProvider.IdentifierLengthUnit.Utf8Bytes = 1 -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
 LinqToDB.Internal.DataProvider.IdentifierServiceSimple.IdentifierServiceSimple(int maxLength, LinqToDB.Internal.DataProvider.IdentifierLengthUnit unit) -> void
 LinqToDB.Internal.DataProvider.IdentifierServiceSimple.Unit.get -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
-LinqToDB.Remote.LinqServiceInfo.IdentifierLengthUnit.get -> LinqToDB.Internal.DataProvider.IdentifierLengthUnit
-LinqToDB.Remote.LinqServiceInfo.IdentifierLengthUnit.set -> void
-LinqToDB.Remote.LinqServiceInfo.IdentifierMaxLength.get -> int
-LinqToDB.Remote.LinqServiceInfo.IdentifierMaxLength.set -> void
-LinqToDB.Remote.LinqServiceInfo.IdentifierAliasMaxLength.get -> int
-LinqToDB.Remote.LinqServiceInfo.IdentifierAliasMaxLength.set -> void
 virtual LinqToDB.Internal.DataProvider.IdentifierServiceSimple.GetMaxLength(LinqToDB.Internal.DataProvider.IdentifierKind identifierKind) -> int
+LinqToDB.Remote.LinqServiceInfo.IdentifierServiceType.get -> string?
+LinqToDB.Remote.LinqServiceInfo.IdentifierServiceType.set -> void
+LinqToDB.Internal.DataProvider.DefaultIdentifierService
+LinqToDB.Internal.DataProvider.DefaultIdentifierService.DefaultIdentifierService() -> void
+LinqToDB.Internal.DataProvider.Access.AccessIdentifierService
+LinqToDB.Internal.DataProvider.Access.AccessIdentifierService.AccessIdentifierService() -> void
+LinqToDB.Internal.DataProvider.DB2.DB2IdentifierService
+LinqToDB.Internal.DataProvider.DB2.DB2IdentifierService.DB2IdentifierService() -> void
+LinqToDB.Internal.DataProvider.Firebird.FirebirdIdentifierService
+LinqToDB.Internal.DataProvider.Firebird.FirebirdIdentifierService.FirebirdIdentifierService() -> void
+LinqToDB.Internal.DataProvider.Firebird.Firebird3IdentifierService
+LinqToDB.Internal.DataProvider.Firebird.Firebird3IdentifierService.Firebird3IdentifierService() -> void
+LinqToDB.Internal.DataProvider.Informix.InformixIdentifierService
+LinqToDB.Internal.DataProvider.Informix.InformixIdentifierService.InformixIdentifierService() -> void
+LinqToDB.Internal.DataProvider.MySql.MySqlIdentifierService
+LinqToDB.Internal.DataProvider.MySql.MySqlIdentifierService.MySqlIdentifierService() -> void
+LinqToDB.Internal.DataProvider.Oracle.OracleIdentifierService
+LinqToDB.Internal.DataProvider.Oracle.OracleIdentifierService.OracleIdentifierService() -> void
+LinqToDB.Internal.DataProvider.Oracle.Oracle11IdentifierService
+LinqToDB.Internal.DataProvider.Oracle.Oracle11IdentifierService.Oracle11IdentifierService() -> void
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLIdentifierService
+LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLIdentifierService.PostgreSQLIdentifierService() -> void
+LinqToDB.Internal.DataProvider.SapHana.SapHanaIdentifierService
+LinqToDB.Internal.DataProvider.SapHana.SapHanaIdentifierService.SapHanaIdentifierService() -> void
+LinqToDB.Internal.DataProvider.Sybase.SybaseIdentifierService
+LinqToDB.Internal.DataProvider.Sybase.SybaseIdentifierService.SybaseIdentifierService() -> void

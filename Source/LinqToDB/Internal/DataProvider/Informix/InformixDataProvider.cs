@@ -73,22 +73,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return new InformixMemberTranslator();
 		}
 
-		// Informix counts its 128 in bytes, not characters.
 		protected override IIdentifierService CreateIdentifierService()
 		{
 			return new InformixIdentifierService();
-		}
-
-		/// <summary>
-		/// Informix's default locale cannot represent a non-ASCII identifier even delimited: the server
-		/// drops those characters while parsing the name, so two aliases that differ only in them
-		/// collapse into one and it reports a duplicate table name. Keep aliases ASCII for this
-		/// provider until the locale-aware identifier rules are implemented.
-		/// </summary>
-		sealed class InformixIdentifierService() : IdentifierServiceSimple(128, IdentifierLengthUnit.Utf8Bytes)
-		{
-			protected override bool IsIdentifierChar(char c)
-				=> c is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '_';
 		}
 
 		[ColumnReader(1)]

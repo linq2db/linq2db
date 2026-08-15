@@ -136,7 +136,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		// bytes its encoding needs.
 		protected override IIdentifierService CreateIdentifierService()
 		{
-			return new IdentifierServiceSimple(128, IdentifierLengthUnit.Utf8Bytes);
+			return new DB2IdentifierService();
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

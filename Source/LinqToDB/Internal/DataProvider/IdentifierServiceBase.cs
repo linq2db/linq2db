@@ -7,12 +7,13 @@ namespace LinqToDB.Internal.DataProvider
 		public abstract bool   IsFit(IdentifierKind identifierKind, string identifier, [NotNullWhen(false)] out int? sizeDecrement);
 
 		/// <summary>
-		/// Characters <see cref="CorrectAlias"/> keeps; everything else is dropped. C# allows any
-		/// Unicode letter or digit in an identifier and the SQL builders quote an alias that needs it,
-		/// so those are kept by default - stripping to ASCII turned a name like <c>顧客</c> into an
-		/// empty string and the alias silently became <c>t1</c>. Punctuation, whitespace, control and
-		/// surrogate characters always go. A provider whose dialect cannot carry non-ASCII identifiers
-		/// overrides this to restrict aliases to ASCII.
+		/// Characters <see cref="CorrectAlias"/> keeps; everything else is dropped. Unicode letters and
+		/// digits are kept because the provider's builder delimits a name that needs it, so the decision
+		/// of whether such a name can be emitted belongs to the provider rather than to this filter -
+		/// stripping to ASCII turned a name like <c>顧客</c> into an empty string and the alias silently
+		/// became <c>t1</c>. Punctuation, whitespace, control and surrogate characters always go, and a
+		/// provider whose dialect cannot carry non-ASCII identifiers at all overrides this to restrict
+		/// aliases to ASCII, as Informix does.
 		/// </summary>
 		protected virtual bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
 

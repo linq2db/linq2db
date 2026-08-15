@@ -103,15 +103,20 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		/// <summary>
-		/// Mirrors the server's identifier limits for client-side SQL preview, including the separate
-		/// alias cap that several providers set higher than their name cap.
-		/// </summary>
-		sealed class RemoteIdentifierService(int maxLength, IdentifierLengthUnit unit, int aliasMaxLength)
-			: IdentifierServiceSimple(maxLength, unit)
+		static class RemoteIdentifierService
 		{
-			protected override int GetMaxLength(IdentifierKind identifierKind)
-				=> identifierKind == IdentifierKind.Alias ? aliasMaxLength : base.GetMaxLength(identifierKind);
+			static readonly MemoryCache<Type, IIdentifierService> _cache = new (new ());
+
+			public static IIdentifierService GetOrCreate(Type identifierServiceType)
+			{
+				return _cache.GetOrCreate(
+					identifierServiceType,
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return ActivatorExt.CreateInstance<IIdentifierService>(entry.Key);
+					});
+			}
 		}
 
 		sealed class ConfigurationInfo
@@ -283,12 +288,10 @@ namespace LinqToDB.Remote
 						dmlService         = RemoteDmlService.GetOrCreate(dmlServiceType);
 					}
 
-					// A server older than the IdentifierMaxLength member sends 0; keep the historical
-					// default there rather than letting the ctor's minimum-length guard throw.
-					var maxLength      = info.IdentifierMaxLength      > 4 ? info.IdentifierMaxLength      : 128;
-					var aliasMaxLength = info.IdentifierAliasMaxLength > 4 ? info.IdentifierAliasMaxLength : maxLength;
-
-					var identifierService = new RemoteIdentifierService(maxLength, info.IdentifierLengthUnit, aliasMaxLength);
+					// A server older than IdentifierServiceType sends null; keep the historical default there.
+					IIdentifierService identifierService = info.IdentifierServiceType != null
+						? RemoteIdentifierService.GetOrCreate(Type.GetType(info.IdentifierServiceType)!)
+						: new DefaultIdentifierService();
 
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{

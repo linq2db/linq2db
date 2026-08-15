@@ -4,6 +4,13 @@ using System.Text;
 
 namespace LinqToDB.Internal.DataProvider
 {
+	/// <summary>
+	/// Length-only identifier rules, and the base each provider's own service derives from - the same
+	/// shape the provider-specific mapping schemas and member translators use. A provider whose rules go
+	/// beyond a single length overrides <see cref="GetMaxLength"/> or
+	/// <see cref="IdentifierServiceBase.IsIdentifierChar"/> rather than carrying extra state here, which
+	/// keeps the type transportable to a remote client by name alone.
+	/// </summary>
 	public class IdentifierServiceSimple : IdentifierServiceBase
 	{
 		/// <summary>

@@ -506,7 +506,7 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected abstract IMemberTranslator  CreateMemberTranslator();
 		protected virtual  IMemberConverter   CreateMemberConverter()   => new LegacyMemberConverterBase();
-		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
+		protected virtual  IIdentifierService CreateIdentifierService() => new DefaultIdentifierService();
 
 		/// <summary>
 		/// Override to opt-in to provider-specific DML mechanics (currently: "is this exception a

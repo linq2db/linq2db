@@ -26,25 +26,13 @@ namespace LinqToDB.Remote
 		public string?          DmlServiceType           { get; set; }
 
 		/// <summary>
-		/// Identifier length limit the server-side provider declares, so client-side SQL preview
-		/// aliases the statement the same way the server does. Zero when the server predates this
+		/// Identifier service the server-side provider uses, so client-side SQL preview aliases a
+		/// statement the same way the server does when it renders it for real. Carried as a type name
+		/// like the other provider services, which reproduces the whole policy rather than the few
+		/// numbers a scalar contract could hold. <see langword="null"/> when the server predates this
 		/// member; the client then falls back to its historical default.
 		/// </summary>
 		[DataMember(Order = 9)]
-		public int                  IdentifierMaxLength  { get; set; }
-
-		/// <summary>
-		/// Unit <see cref="IdentifierMaxLength"/> is counted in.
-		/// </summary>
-		[DataMember(Order = 10)]
-		public IdentifierLengthUnit IdentifierLengthUnit { get; set; }
-
-		/// <summary>
-		/// Alias length limit, which several providers set higher than <see cref="IdentifierMaxLength"/>
-		/// - MySQL caps a name at 64 and an alias at 255. Zero when the server predates this member, in
-		/// which case the client applies <see cref="IdentifierMaxLength"/> to aliases too.
-		/// </summary>
-		[DataMember(Order = 11)]
-		public int                  IdentifierAliasMaxLength { get; set; }
+		public string?          IdentifierServiceType    { get; set; }
 	}
 }
