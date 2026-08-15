@@ -245,9 +245,27 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
 		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
+		/// <summary>
+		/// The column an expression's value is read from, when there is one - the descriptor that says how to turn
+		/// what the database returns back into the member's value.
+		/// </summary>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
-			return GetColumnDescriptor(expr, new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default));
+			return GetColumnDescriptor(expr, new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default), forTyping: false);
+		}
+
+		/// <summary>
+		/// The column whose declared type may be given to a value written down beside this expression, when there
+		/// is one.
+		/// </summary>
+		/// <remarks>
+		/// Stricter than <see cref="GetColumnDescriptor(ISqlExpression)"/>: a result that is merely of its
+		/// argument's kind rather than one of its argument's values - a <c>SUM</c> - is read through the argument's
+		/// column but cannot lend that column's width to anything, because the sum outgrows it.
+		/// </remarks>
+		public static ColumnDescriptor? GetColumnDescriptorForTyping(ISqlExpression? expr)
+		{
+			return GetColumnDescriptor(expr, new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default), forTyping: true);
 		}
 
 		/// <summary>
@@ -255,13 +273,25 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
 		/// <param name="alreadyVisitedElements">Set of already visited elements to avoid infinite recursion.</param>
+		/// <param name="forTyping">
+		/// What the descriptor is wanted for, which decides how much of an aggregate the walk sees through.
+		/// <see langword="false"/> asks how the value is read back - the converter and the unit it is stored in -
+		/// and passes through any aggregate answering in its argument's terms. <see langword="true"/> asks for the
+		/// column whose declared type may be given to a value written down beside this expression, and stops at an
+		/// aggregate that can outgrow its argument's width.
+		/// <para>
+		/// Threaded through the recursion rather than tested at the top, because the aggregate need not be the
+		/// outermost node: a grouped <c>SUM</c> is lifted into a column of the enclosing query, and the walk reaches
+		/// it through that column.
+		/// </para>
+		/// </param>
 		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
-		static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements)
+		static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements, bool forTyping)
 		{
 			if (expr != null && !alreadyVisitedElements.Add(expr))
 				return null;
 
-			var result = GetColumnDescriptorCore(expr, alreadyVisitedElements);
+			var result = GetColumnDescriptorCore(expr, alreadyVisitedElements, forTyping);
 
 			// Remove after traversal so the guard only prevents cycles along the current path,
 			// not legitimate re-visits from sibling branches (e.g. UNION ALL, CASE, COALESCE).
@@ -271,13 +301,13 @@ namespace LinqToDB.Internal.SqlQuery
 			return result;
 		}
 
-		static ColumnDescriptor? GetColumnDescriptorCore(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements)
+		static ColumnDescriptor? GetColumnDescriptorCore(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements, bool forTyping)
 		{
 			switch (expr)
 			{
 				case SqlColumn column:
 				{
-					var result = GetColumnDescriptor(column.Expression, alreadyVisitedElements);
+					var result = GetColumnDescriptor(column.Expression, alreadyVisitedElements, forTyping);
 
 					if (result != null)
 						return result;
@@ -289,7 +319,7 @@ namespace LinqToDB.Internal.SqlQuery
 						{
 							foreach (var setOperator in column.Parent.SetOperators)
 							{
-								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression, alreadyVisitedElements);
+								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression, alreadyVisitedElements, forTyping);
 								if (result is not null)
 									return result;
 							}
@@ -303,34 +333,34 @@ namespace LinqToDB.Internal.SqlQuery
 					return field.ColumnDescriptor;
 
 				case SqlCteTableField cteTableField:
-					return GetColumnDescriptor(cteTableField.CteField, alreadyVisitedElements);
+					return GetColumnDescriptor(cteTableField.CteField, alreadyVisitedElements, forTyping);
 
 				case SqlCteField cteField:
-					return GetColumnDescriptor(cteField.Column, alreadyVisitedElements);
+					return GetColumnDescriptor(cteField.Column, alreadyVisitedElements, forTyping);
 
 				case SqlExpression sqlExpr when sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal):
-					return GetColumnDescriptor(sqlExpr.Parameters[0], alreadyVisitedElements);
+					return GetColumnDescriptor(sqlExpr.Parameters[0], alreadyVisitedElements, forTyping);
 
 				case SelectQuery { Select.Columns: [var singleColumn] }:
-					return GetColumnDescriptor(singleColumn, alreadyVisitedElements);
+					return GetColumnDescriptor(singleColumn, alreadyVisitedElements, forTyping);
 
 				case SqlBinaryExpression binary:
 				{
-					var found = GetColumnDescriptor(binary.Expr1, alreadyVisitedElements) ?? GetColumnDescriptor(binary.Expr2, alreadyVisitedElements);
+					var found = GetColumnDescriptor(binary.Expr1, alreadyVisitedElements, forTyping) ?? GetColumnDescriptor(binary.Expr2, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
 						return null;
 					return found;
 				}
 
 				case SqlNullabilityExpression nullability:
-					return GetColumnDescriptor(nullability.SqlExpression, alreadyVisitedElements);
+					return GetColumnDescriptor(nullability.SqlExpression, alreadyVisitedElements, forTyping);
 
 				// Same rule as the binary branch above: the operand's descriptor still describes the result as
 				// long as the operation left the type alone. Without this, negating a column with a value
 				// converter loses the converter and the value is read as its raw provider representation.
 				case SqlUnaryExpression unary:
 				{
-					var found = GetColumnDescriptor(unary.Expr, alreadyVisitedElements);
+					var found = GetColumnDescriptor(unary.Expr, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != unary.SystemType)
 						return null;
 					return found;
@@ -342,7 +372,7 @@ namespace LinqToDB.Internal.SqlQuery
 				// statement, so without this the converter is found on the client and lost on the server.
 				case SqlFunction { Parameters: [var singleArgument] } function:
 				{
-					var found = GetColumnDescriptor(singleArgument, alreadyVisitedElements);
+					var found = GetColumnDescriptor(singleArgument, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != function.SystemType)
 						return null;
 					return found;
@@ -361,23 +391,27 @@ namespace LinqToDB.Internal.SqlQuery
 				// same one the neighbouring arms rely on.
 				case SqlFunction { Parameters: [var coalesced, SqlValue { Value: null }] } function:
 				{
-					var found = GetColumnDescriptor(coalesced, alreadyVisitedElements);
+					var found = GetColumnDescriptor(coalesced, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != function.SystemType)
 						return null;
 					return found;
 				}
 
-				// The same rule once more for the extended form, which is what an aggregate is built as. MIN and MAX
-				// answer with an element of their operand's own domain and SUM with a value of the same kind, so the
-				// operand's descriptor keeps describing the result.
+				// The same rule once more for the extended form, which is what an aggregate is built as. The node
+				// states how its result relates to its argument, and the two callers want different amounts of it:
+				// reading a value goes through the argument's converter whether the aggregate returned one of its
+				// values or merely one of the same kind, while typing a value beside it needs the stricter of the
+				// two - a SUM outgrows the width its argument is declared with, and a literal typed from that
+				// argument would be narrowed to fit a column it never came from.
 				//
-				// MIN, MAX and SUM answer with a value of the argument's own domain, so the argument's descriptor
-				// keeps describing the result. COUNT and AVG answer in a domain of their own and stop here, which
-				// the node states directly - the type guard below only tells the two apart while the result type
-				// and the column's member type differ, and over an int column counted into an int they do not.
-				case SqlExtendedFunction { Arguments: [var singleArgument], AnswersInArgumentDomain: true } extendedFunction:
+				// COUNT and AVG stop here either way. The type guard below cannot do this on its own: it separates
+				// them only while the result type and the column's member type differ, which over an int column
+				// counted into an int they do not.
+				case SqlExtendedFunction { Arguments: [var singleArgument] } extendedFunction
+					when extendedFunction.ArgumentDomain == SqlArgumentDomain.Element
+						|| (extendedFunction.ArgumentDomain == SqlArgumentDomain.SameKind && !forTyping):
 				{
-					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements);
+					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != extendedFunction.SystemType)
 						return null;
 					return found;
@@ -387,13 +421,13 @@ namespace LinqToDB.Internal.SqlQuery
 				// converter the read path needs - still describes the result. This is why a computed interval
 				// needs no converter attached to the expression itself.
 				case SqlIntervalExpression interval:
-					return GetColumnDescriptor(interval.Value, alreadyVisitedElements);
+					return GetColumnDescriptor(interval.Value, alreadyVisitedElements, forTyping);
 
 				case SqlCoalesceExpression coalesce:
 				{
 					foreach (var expression in coalesce.Expressions)
 					{
-						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements);
+						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements, forTyping);
 						if (descriptor != null)
 							return descriptor;
 					}
@@ -402,14 +436,14 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				case SqlConditionExpression condition:
-					return GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements) ??
-					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements);
+					return GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements, forTyping) ??
+					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements, forTyping);
 
 				case SqlConcatExpression concat:
 				{
 					foreach (var expression in concat.Expressions)
 					{
-						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements);
+						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements, forTyping);
 						if (descriptor != null)
 							return descriptor;
 					}
@@ -421,16 +455,16 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					foreach (var caseItem in caseExpression.Cases)
 					{
-						var descriptor = GetColumnDescriptor(caseItem.ResultExpression, alreadyVisitedElements);
+						var descriptor = GetColumnDescriptor(caseItem.ResultExpression, alreadyVisitedElements, forTyping);
 						if (descriptor != null)
 							return descriptor;
 					}
 
-					return GetColumnDescriptor(caseExpression.ElseExpression, alreadyVisitedElements);
+					return GetColumnDescriptor(caseExpression.ElseExpression, alreadyVisitedElements, forTyping);
 				}
 
 				case SqlAnchor anchor:
-					return GetColumnDescriptor(anchor.SqlExpression, alreadyVisitedElements);
+					return GetColumnDescriptor(anchor.SqlExpression, alreadyVisitedElements, forTyping);
 
 				// A scalar sub-query lifted into a CTE and referred to as a value still describes what its body
 				// projects, exactly as the SelectQuery case above does for the shape before the lowering. A
@@ -446,7 +480,7 @@ namespace LinqToDB.Internal.SqlQuery
 				// SqlCteTable documents as meaning exactly the scalar use - is not safe: neither the Transform
 				// nor the Clone visitor copies it, so a rebuilt table silently stops being recognised.
 				case SqlCteTable { Fields.Count: 0, Cte: { IsRecursive: false, Body: { Select.Columns: [_] } cteBody } }:
-					return GetColumnDescriptor(cteBody, alreadyVisitedElements);
+					return GetColumnDescriptor(cteBody, alreadyVisitedElements, forTyping);
 			}
 
 			return null;

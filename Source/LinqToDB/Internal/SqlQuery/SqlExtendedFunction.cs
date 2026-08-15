@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.SqlQuery
 			Sql.Nulls                         nullTreatment               = Sql.Nulls.None,
 			Sql.From                          fromPosition                = Sql.From.None,
 			bool                              isWindowFunction            = false,
-			bool                              answersInArgumentDomain     = false)
+			SqlArgumentDomain                 argumentDomain              = SqlArgumentDomain.None)
 		{
 			Type                        = dbDataType;
 			FunctionName                = functionName;
@@ -47,7 +47,7 @@ namespace LinqToDB.Internal.SqlQuery
 			NullTreatment               = nullTreatment;
 			FromPosition                = fromPosition;
 			_isWindowFunction           = isWindowFunction;
-			AnswersInArgumentDomain     = answersInArgumentDomain;
+			ArgumentDomain              = argumentDomain;
 		}
 
 		public DbDataType                Type                        { get; }
@@ -68,8 +68,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public Sql.From                  FromPosition                { get; }
 
 		/// <summary>
-		/// Whether the function answers with a value drawn from its argument's own domain. True of <c>MIN</c>,
-		/// <c>MAX</c> and <c>SUM</c>; false of <c>COUNT</c> and <c>AVG</c>, which answer in a domain of their own.
+		/// How this function's result relates to the domain of its argument.
 		/// </summary>
 		/// <remarks>
 		/// Set by whoever builds the node, where the function's meaning is known, and read where a column descriptor
@@ -80,7 +79,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// free to spell the same function its own way.
 		/// </para>
 		/// </remarks>
-		public bool                      AnswersInArgumentDomain     { get; }
+		public SqlArgumentDomain         ArgumentDomain              { get; }
 
 		public void Modify(List<SqlFunctionArgument> arguments,
 			List<SqlWindowOrderItem>?                withinGroup,
@@ -119,7 +118,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithFunctionName(string functionName)
@@ -142,7 +141,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -165,7 +164,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -188,7 +187,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -211,7 +210,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -234,7 +233,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithFilter(SqlSearchCondition? filter)
@@ -257,7 +256,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
@@ -280,7 +279,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
 				isWindowFunction: IsWindowFunction,
-				answersInArgumentDomain: AnswersInArgumentDomain);
+				argumentDomain: ArgumentDomain);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)

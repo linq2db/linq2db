@@ -2862,7 +2862,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (converted is not SqlPlaceholderExpression placeholderTest)
 				return null;
 
-			var descriptor = QueryHelper.GetColumnDescriptor(placeholderTest.Sql);
+			// Asked for typing: whatever is written down on the other side of this expression takes its terms from
+			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered.
+			var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql);
 			return descriptor;
 		}
 

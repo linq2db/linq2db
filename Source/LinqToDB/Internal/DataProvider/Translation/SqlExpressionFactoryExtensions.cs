@@ -351,7 +351,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Sql.Nulls nullTreatment = Sql.Nulls.None,
 			Sql.From fromPosition = Sql.From.None,
 			bool isWindowFunction = false,
-			bool answersInArgumentDomain = false
+			SqlArgumentDomain argumentDomain = SqlArgumentDomain.None
 		)
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
@@ -368,7 +368,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				nullTreatment: nullTreatment,
 				fromPosition: fromPosition,
 				isWindowFunction: isWindowFunction,
-				answersInArgumentDomain: answersInArgumentDomain);
+				argumentDomain: argumentDomain);
 		}
 
 		#region String functions

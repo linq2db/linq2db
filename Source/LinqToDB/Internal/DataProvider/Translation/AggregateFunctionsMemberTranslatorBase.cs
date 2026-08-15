@@ -354,9 +354,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							isAggregate : true,
 							filter: filterCondition,
 							canBeAffectedByOrderBy : false,
-							// MIN and MAX answer with an element of the argument's domain, SUM with a value of the
-							// same kind. AVG does not, and neither does COUNT, which is built elsewhere.
-							answersInArgumentDomain : functionName is "MIN" or "MAX" or "SUM"
+							// MIN and MAX return a row's value unchanged, so the argument's column describes the
+							// result completely. SUM answers in the same terms but can outgrow the width that column
+							// is declared with. AVG is neither, and COUNT is built elsewhere.
+							argumentDomain : functionName switch
+							{
+								"MIN" or "MAX" => SqlArgumentDomain.Element,
+								"SUM"          => SqlArgumentDomain.SameKind,
+								_              => SqlArgumentDomain.None,
+							}
 						);
 
 						composer.SetResult(fn);
