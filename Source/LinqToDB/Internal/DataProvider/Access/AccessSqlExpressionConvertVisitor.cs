@@ -98,6 +98,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return null;
 		}
 
+		const string DateDiffFunction = "DateDiff";
+		const string DateAddFunction  = "DateAdd";
+		const string ToDoubleFunction = "CDbl";
+
+		const int SecondsPerDay = 24 * 60 * 60;
+
 		static string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch
@@ -116,34 +122,64 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			return part == null
 				? null
-				: Factory.Function(Factory.GetDbDataType(date), "DateAdd", Factory.Value(part), amount, date);
+				: Factory.Function(Factory.GetDbDataType(date), DateAddFunction, Factory.Value(part), amount, date);
 		}
 
 		/// <summary>
-		/// Boundary counting through <c>DateDiff</c>, whose count is a 32-bit value.
+		/// Boundary counting through <c>DateDiff</c>, whose count is a 32-bit value - so a count in seconds is taken
+		/// across the sub-day remainder rather than across the whole span.
 		/// </summary>
 		/// <remarks>
-		/// The fine count that completes a total is only taken across a window shorter than one of the requested
-		/// units, so it cannot overflow. The whole-unit count is taken across the entire span, and in seconds it
-		/// reaches the 32-bit limit at about sixty-eight years - past which the driver answers <c>Numeric value out
-		/// of range</c> rather than a number, because the cast below happens after Access has already computed the
-		/// count. Every coarser datepart is far from it: minutes reach the limit only after four thousand years.
+		/// A second count reaches the 32-bit limit after about sixty-eight years, which is inside the range a person's
+		/// age can reach. Past it Access answers <c>Numeric value out of range</c> instead of a number, and it does so
+		/// before any cast here can widen the result - the overflow happens while Access computes the count. Counting
+		/// days first and seconds only from there keeps both counts small: days stay 32-bit for any date Access can
+		/// hold, and the remainder spans at most a day. Every coarser datepart is counted directly, being far from the
+		/// limit - minutes reach it only after four thousand years.
+		/// <para>
+		/// The two counts telescope, so the split is exact rather than an approximation. <c>DateDiff</c> truncates both
+		/// operands to the unit and subtracts, which makes it additive through any intermediate point, and shifting by
+		/// whole days leaves the time of day alone - so the day count contributes exactly its own seconds. That holds
+		/// even when the day count overshoots the end, as it does between an evening and the following morning: the
+		/// remainder comes back negative by the same amount.
+		/// </para>
+		/// <para>
+		/// <c>CDbl</c> is what keeps the product from overflowing in turn - Access multiplies in 32-bit integers and a
+		/// century of days is past that once scaled to seconds. A cast to a wider integer would not do: Access has none
+		/// to name, and a cast to a floating type renders as nothing here.
+		/// </para>
 		/// <para>
 		/// This provider is the only one that gets here - it is the only override of
 		/// <see cref="SqlExpressionConvertVisitor.ElapsedTicksResolveMembers"/> to <see langword="false"/>, and
-		/// everywhere else a member is taken from the tick count instead. Removing the ceiling means counting days
-		/// first and the requested unit across the sub-day remainder, the way <c>ElapsedTicks</c> does.
+		/// everywhere else a member is taken from the tick count instead.
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
 		{
 			var part = DatePartName(unit);
 
-			return part == null
-				? null
-				: Factory.Cast(
-					Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff", Factory.Value(part), start, end),
-					Factory.GetDbDataType(typeof(long)), true);
+			if (part == null)
+				return null;
+
+			var intType  = Factory.GetDbDataType(typeof(int));
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			if (unit != SqlIntervalUnit.Second)
+			{
+				return Factory.Cast(
+					Factory.Function(intType, DateDiffFunction, Factory.Value(part), start, end),
+					longType, true);
+			}
+
+			var days   = Factory.Function(intType, DateDiffFunction, Factory.Value("d"), start, end);
+			var anchor = Factory.Function(Factory.GetDbDataType(start), DateAddFunction, Factory.Value("d"), days, start);
+
+			var remainder  = Factory.Function(intType, DateDiffFunction, Factory.Value(part), anchor, end);
+			var doubleType = Factory.GetDbDataType(typeof(double));
+
+			return Factory.Add(doubleType,
+				Factory.Multiply(doubleType, Factory.Function(doubleType, ToDoubleFunction, days), SecondsPerDay),
+				remainder);
 		}
 
 		static readonly string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};

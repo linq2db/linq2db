@@ -303,6 +303,118 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The same span again, asked only for members that counting can answer - which is what makes it the case the
+		/// test above cannot cover.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="LongSpanMatchesClr"/> opens on <c>Ticks</c>, and Access has none to give, so the whole case is a
+		/// declared refusal there and never reaches a total. Access is also the one provider that answers members by
+		/// counting units instead of dividing a tick count, so it is the only one where a total is exposed to the width
+		/// of the counter rather than to the width of a tick - and that exposure is what went unmeasured.
+		/// <para>
+		/// A count of seconds is 32-bit, so it runs out after about sixty-eight years, which is inside a human
+		/// lifetime rather than safely far away. Taken across the whole span, <c>TotalSeconds</c> over these dates
+		/// returned <c>Numeric value out of range</c> from the driver - and a projection cannot fall back to .NET for
+		/// it, because the difference is between two columns. Counting days first and seconds only across what remains
+		/// keeps both counts small, and this pins the result rather than the shape that produces it.
+		/// </para>
+		/// <para>
+		/// Every provider runs it, not Access alone: the members are ordinary ones, and a total that agrees with the
+		/// CLR over a span this long is worth holding everywhere.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ALongSpanIsMeasuredWhereCountingAnswersIt([DataSources] string context, [Values(1, -1)] int direction)
+		{
+			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
+			var later   = new DateTime(2045, 6, 5, 4, 3, 2);
+
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
+
+			var expected = end - start;
+
+			// The same guard the test above carries: brought closer together, these dates stop crossing the boundary
+			// the case exists for.
+			Math.Abs(expected.TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var row = t.Select(r => new
+			{
+				TotalDays    = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalDays),
+				TotalHours   = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours),
+				TotalMinutes = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes),
+				TotalSeconds = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds),
+				Days         = Sql.AsSql((r.FinishedOn - r.StartedOn).Days),
+				Hours        = Sql.AsSql((r.FinishedOn - r.StartedOn).Hours),
+				Minutes      = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
+			}).Single();
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.TotalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+			row.TotalMinutes.ShouldBe(expected.TotalMinutes, Tolerance(expected.TotalMinutes));
+			row.TotalSeconds.ShouldBe(expected.TotalSeconds, Tolerance(expected.TotalSeconds));
+
+			row.Days.ShouldBe(expected.Days);
+			row.Hours.ShouldBe(expected.Hours);
+			row.Minutes.ShouldBe(expected.Minutes);
+		}
+
+		/// <summary>
+		/// The second component is the one member Access cannot reach across a span that long, and this records where
+		/// it stops.
+		/// </summary>
+		/// <remarks>
+		/// Three separate 32-bit ceilings stand between a second component and a span past sixty-eight years, and
+		/// clearing one only moves the failure to the next. <c>DateDiff</c> computes its count before any cast can
+		/// widen it; <c>DateAdd</c> takes the amount for the correction's anchor in 32 bits however it was computed;
+		/// and <c>MOD</c>, which turns the elapsed count into the component, coerces both operands to a 32-bit integer
+		/// before dividing. The first two can be split into a day part and a sub-day rest, but the third takes the
+		/// count whole, so the split has to happen before the component is formed rather than inside it - a day-anchored
+		/// component, which cannot use the boundary day count either, since an anchor that overshoots turns a positive
+		/// remainder negative and the sign survives the modulo.
+		/// <para>
+		/// A total is not affected, and the companion test above asserts that it is not - only the component is, and
+		/// only past the counter's range. Recorded rather than skipped: the query throws, and a test that pins the
+		/// throw goes red the day the component starts answering, which is the point at which this should be revisited.
+		/// </para>
+		/// <para>
+		/// The short-span row is asked first and by the same expression. Without it this would pass just as well if
+		/// the component were broken outright rather than only beyond its range.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ASecondComponentPastItsCountersRangeIsRefused([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		{
+			var start = new DateTime(1970, 1, 2, 0, 0, 0);
+
+			var shortSpanEnd = start.AddSeconds(125);
+			var longSpanEnd  = new DateTime(2045, 6, 5, 4, 3, 2);
+
+			Math.Abs((longSpanEnd - start).TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = shortSpanEnd });
+			db.Insert(new EventRow { Id = 2, StartedOn = start, FinishedOn = longSpanEnd  });
+
+			int SecondsOf(int id) => t
+				.Where (r => r.Id == id)
+				.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Seconds))
+				.Single();
+
+			SecondsOf(1).ShouldBe((shortSpanEnd - start).Seconds);
+
+			Shouldly.Should.Throw<Exception>(() => SecondsOf(2));
+		}
+
+		/// <summary>
 		/// Carries dates on a column wide enough for the whole CLR range, which on YDB is not the default.
 		/// </summary>
 		[Table]
