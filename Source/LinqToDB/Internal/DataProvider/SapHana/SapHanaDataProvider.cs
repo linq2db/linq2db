@@ -83,7 +83,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return new SapHanaMemberTranslator();
 		}
 
-		// SAP HANA caps table and column names at 127 characters.
+		// 127 for every kind. A column alias may be up to 255 - IdentifierLimitProbeTests measures that -
+		// but a table alias may not: HANA answers a longer one with "identifier is too long ... Maximum
+		// length is 127", and a table alias is what aliasing generates most.
 		protected override IIdentifierService CreateIdentifierService()
 		{
 			return new IdentifierServiceSimple(127);

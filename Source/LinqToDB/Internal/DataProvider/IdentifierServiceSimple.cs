@@ -41,13 +41,22 @@ namespace LinqToDB.Internal.DataProvider
 				throw new ArgumentOutOfRangeException(nameof(maxLength), maxLength, "MaxLength should be greater than 4");
 		}
 
+		/// <summary>
+		/// Limit for a particular kind of name. Providers whose cap differs by kind override this -
+		/// MySQL, for instance, caps an object name at 64 but an alias at 256, and applying the smaller
+		/// one truncates aliases the server would have accepted.
+		/// </summary>
+		protected virtual int GetMaxLength(IdentifierKind identifierKind) => MaxLength;
+
 		public override bool IsFit(IdentifierKind identifierKind, string identifier, [NotNullWhen(false)] out int? sizeDecrement)
 		{
+			var maxLength = GetMaxLength(identifierKind);
+
 			if (Unit == IdentifierLengthUnit.Characters)
 			{
-				if (identifier.Length > MaxLength)
+				if (identifier.Length > maxLength)
 				{
-					sizeDecrement = identifier.Length - MaxLength;
+					sizeDecrement = identifier.Length - maxLength;
 					return false;
 				}
 
@@ -55,7 +64,7 @@ namespace LinqToDB.Internal.DataProvider
 				return true;
 			}
 
-			if (Encoding.UTF8.GetByteCount(identifier) <= MaxLength)
+			if (Encoding.UTF8.GetByteCount(identifier) <= maxLength)
 			{
 				sizeDecrement = null;
 				return true;
@@ -72,11 +81,11 @@ namespace LinqToDB.Internal.DataProvider
 
 #if SUPPORTS_SPAN
 			// allocate memory on the stack if possible - every real provider's limit is far below this
-			Span<byte> buffer = MaxLength < 500 ? stackalloc byte[MaxLength] : new byte[MaxLength];
+			Span<byte> buffer = maxLength < 500 ? stackalloc byte[maxLength] : new byte[maxLength];
 			encoder.Convert(identifier.AsSpan(), buffer, false, out charsUsed, out _, out _);
 #else
-			var buffer = new byte[MaxLength];
-			encoder.Convert(identifier.ToCharArray(), 0, identifier.Length, buffer, 0, MaxLength, false, out charsUsed, out _, out _);
+			var buffer = new byte[maxLength];
+			encoder.Convert(identifier.ToCharArray(), 0, identifier.Length, buffer, 0, maxLength, false, out charsUsed, out _, out _);
 #endif
 
 			sizeDecrement = identifier.Length - charsUsed;

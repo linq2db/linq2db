@@ -118,12 +118,21 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			};
 		}
 
-		// MySQL and MariaDB cap schema object names at 64 characters. Aliases may be up to 256, but
-		// IdentifierKind is not distinguished here and the same path names CTE and merge-source
-		// columns, which are real column names — so the stricter limit applies to all of them.
 		protected override IIdentifierService CreateIdentifierService()
 		{
-			return new IdentifierServiceSimple(64);
+			return new MySqlIdentifierService();
+		}
+
+		/// <summary>
+		/// MySQL and MariaDB cap a schema object name at 64 characters but an alias far higher, so
+		/// declaring the smaller one for everything truncated aliases the server accepts - baselines
+		/// showed a 124 character alias rendering fine before and being cut to 60 after. Measured by
+		/// <c>IdentifierLimitProbeTests</c>: MySQL stores 256, MariaDB 255, so take the lower.
+		/// </summary>
+		sealed class MySqlIdentifierService() : IdentifierServiceSimple(64)
+		{
+			protected override int GetMaxLength(IdentifierKind identifierKind)
+				=> identifierKind == IdentifierKind.Alias ? 255 : base.GetMaxLength(identifierKind);
 		}
 
 		public override ISchemaProvider GetSchemaProvider()
