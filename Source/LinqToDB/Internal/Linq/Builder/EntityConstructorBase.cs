@@ -364,6 +364,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var associationMember = association.MemberInfo;
 
+					// Expression.MakeMemberAccess only accepts an instance property/field; a method-based
+					// association (AssociationAttribute also supports methods) would throw. Skip it — such an
+					// association can't be projected as a plain member read onto the key entity.
+					if (associationMember.MemberType is not (MemberTypes.Property or MemberTypes.Field))
+						continue;
+
 					var alreadyPresent = false;
 					foreach (var assignment in generic.Assignments)
 					{
@@ -384,7 +390,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				if (withAssociations != null)
-					generic = new SqlGenericConstructorExpression(generic.ConstructType, generic.ObjectType, generic.Parameters, withAssociations.AsReadOnly(), generic.MappingSchema, generic.ConstructionRoot);
+					generic = generic.ReplaceAssignments(withAssociations.AsReadOnly());
 			}
 
 			return generic;
