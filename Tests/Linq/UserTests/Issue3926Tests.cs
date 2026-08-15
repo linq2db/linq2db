@@ -44,14 +44,9 @@ namespace Tests.UserTests
 			public DIALOG_CATEGORY DialogCategory   { get; set; } = null!;
 		}
 
-		public class CALL_RECORD : GuidDataObject
-		{
-		}
+		public class CALL_RECORD : GuidDataObject;
 
-		public class CALL_TRANSCRIPTION : GuidDataObject
-		{
-
-		}
+		public class CALL_TRANSCRIPTION : GuidDataObject;
 
 		public class DIALOG_CATEGORY: GuidDataObject
 		{

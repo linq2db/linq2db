@@ -1,6 +1,16 @@
+using System;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
+using Microsoft.Extensions.DependencyInjection;
 
 using NUnit.Framework;
 
@@ -56,6 +66,187 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				id2 = ((IConfigurationID)db.MappingSchema).ConfigurationID;
 
 			id2.ShouldBe(id1);
+		}
+
+		const string SqliteNameColumn    = "name_sqlite";
+		const string SqlServerNameColumn = "name_mssql";
+
+		public class ProviderSplitItem
+		{
+			public int     Id   { get; set; }
+			public string? Name { get; set; }
+		}
+
+		/// <summary>
+		/// One context type mapping a property differently per provider — the shape reported in
+		/// <a href="https://github.com/linq2db/linq2db/issues/5778">#5778</a>. EF's default model
+		/// cache key is the context type alone, so it cannot tell the two models apart.
+		/// </summary>
+		public class ProviderSplitContext(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<ProviderSplitItem> Items { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<ProviderSplitItem>()
+					.Property(e => e.Name)
+					.HasColumnName(Database.IsSqlite() ? SqliteNameColumn : SqlServerNameColumn);
+			}
+		}
+
+		/// <summary>
+		/// The schema cache must not share a schema between contexts of the same type running on
+		/// different providers: the model, and therefore the schema, differs per provider. Neither
+		/// context connects — only the model and the mapping schema are built.
+		/// </summary>
+		[Test]
+		public void MappingSchemaNotSharedBetweenProviders()
+		{
+			using var sqlite = new ProviderSplitContext(
+				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.UseSqlite("Data Source=:memory:")
+					.Options);
+
+			using var sqlServer = new ProviderSplitContext(
+				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.UseSqlServer("Server=.;Database=MappingSchemaCacheTests;Integrated Security=SSPI;TrustServerCertificate=true")
+					.Options);
+
+			var sqliteSchema    = LinqToDBForEFTools.GetMappingSchema(sqlite   .Model, sqlite   , null);
+			var sqlServerSchema = LinqToDBForEFTools.GetMappingSchema(sqlServer.Model, sqlServer, null);
+
+			GetNameColumn(sqliteSchema   ).ShouldBe(SqliteNameColumn);
+			GetNameColumn(sqlServerSchema).ShouldBe(SqlServerNameColumn);
+		}
+
+		const string CustomizedNameColumn = "name_customized";
+
+		sealed class RenamingModelCustomizer(ModelCustomizerDependencies dependencies) : ModelCustomizer(dependencies)
+		{
+			public override void Customize(ModelBuilder modelBuilder, DbContext context)
+			{
+				base.Customize(modelBuilder, context);
+
+				modelBuilder.Entity<ProviderSplitItem>()
+					.Property(e => e.Name)
+					.HasColumnName(CustomizedNameColumn);
+			}
+		}
+
+		/// <summary>
+		/// Same context type, same provider, but a replaced service that changes the model. EF treats
+		/// a replaced service as requiring its own internal service provider (and therefore its own
+		/// model), so the schema cache must keep the two apart as well — which the provider name
+		/// alone could not express.
+		/// </summary>
+		[Test]
+		public void MappingSchemaNotSharedBetweenReplacedServices()
+		{
+			using var plain = new ProviderSplitContext(
+				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.UseSqlite("Data Source=:memory:")
+					.Options);
+
+			using var customized = new ProviderSplitContext(
+				new DbContextOptionsBuilder<ProviderSplitContext>()
+					.UseSqlite("Data Source=:memory:")
+					.ReplaceService<IModelCustomizer, RenamingModelCustomizer>()
+					.Options);
+
+			GetNameColumn(LinqToDBForEFTools.GetMappingSchema(plain     .Model, plain     , null)).ShouldBe(SqliteNameColumn);
+			GetNameColumn(LinqToDBForEFTools.GetMappingSchema(customized.Model, customized, null)).ShouldBe(CustomizedNameColumn);
+		}
+
+		static string? GetNameColumn(MappingSchema schema)
+			=> schema.GetEntityDescriptor(typeof(ProviderSplitItem))
+				.Columns
+				.Single(c => c.MemberName == nameof(ProviderSplitItem.Name))
+				.ColumnName;
+
+		public class RetentionContext(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Item> Items { get; set; } = null!;
+		}
+
+		/// <summary>
+		/// The process-wide caches must not outlive the application service provider of the context
+		/// that populated them. With <c>EnableServiceProviderCaching(false)</c> EF builds a fresh
+		/// <c>IModel</c> per context, so a strongly-keyed cache entry per model pins one application
+		/// scope per <see cref="DbContext"/> instance. EF avoids this in its own long-lived key:
+		/// <c>ServiceProviderCache.GetOrAdd</c> replaces the options' core extension with
+		/// <c>WithApplicationServiceProvider(null)</c> before storing it.
+		/// </summary>
+		[Test]
+		public void CachesDoNotRetainApplicationServiceProvider()
+		{
+			ShouldBeCollected(BuildSchemaAndDiscardContext());
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static WeakReference BuildSchemaAndDiscardContext()
+			{
+				var services = new ServiceCollection().BuildServiceProvider();
+
+				using (var ctx = new RetentionContext(
+					new DbContextOptionsBuilder<RetentionContext>()
+						.EnableServiceProviderCaching(false)
+						.UseApplicationServiceProvider(services)
+						.UseSqlite("Data Source=:memory:")
+						.Options))
+				{
+					LinqToDBForEFTools.GetMappingSchema(ctx.Model, ctx, null);
+				}
+
+				return new WeakReference(services);
+			}
+		}
+
+		/// <summary>
+		/// The metadata-reader cache is keyed on the <c>IModel</c> instance, so it must not keep that
+		/// model alive. A configuration that defeats EF's model caching — <c>EnableServiceProviderCaching(false)</c>,
+		/// or a freshly built model passed to <c>UseModel</c> per context — would otherwise add one
+		/// never-evicted entry per <see cref="DbContext"/> instance. The cached reader references the
+		/// model it was built from, so only a weakly-keyed cache releases it.
+		/// </summary>
+		/// <remarks>
+		/// The model is built directly rather than taken from a <see cref="DbContext"/>: a context drags
+		/// in EF's internal service provider and the DI engine, whose background call-site compilation
+		/// keeps parts of that graph transiently rooted, and no amount of collecting releases them until
+		/// that work has run. Keying the assertion on the cache alone keeps it deterministic.
+		/// </remarks>
+		[Test]
+		public void MetadataReaderCacheDoesNotRetainModel()
+		{
+			ShouldBeCollected(BuildReaderAndDiscardModel());
+
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static WeakReference BuildReaderAndDiscardModel()
+			{
+				var model = new Model();
+
+				LinqToDBForEFTools.GetMetadataReader(model, null);
+
+				return new WeakReference(model);
+			}
+		}
+
+		/// <summary>
+		/// Collects until <paramref name="reference"/> dies, giving up after a bounded number of rounds.
+		/// The pause matters as much as the collection: an EF object graph stays transiently rooted by
+		/// thread-pool work items queued while it was alive, which further collections cannot clear.
+		/// </summary>
+		static void ShouldBeCollected(WeakReference reference)
+		{
+			for (var i = 0; i < 20 && reference.IsAlive; i++)
+			{
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+				GC.Collect();
+
+				if (reference.IsAlive)
+					Thread.Sleep(50);
+			}
+
+			reference.IsAlive.ShouldBeFalse();
 		}
 	}
 }

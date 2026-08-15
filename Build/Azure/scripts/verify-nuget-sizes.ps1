@@ -21,9 +21,11 @@ Usage:
   -PackagesDir   directory to scan recursively for *.nupkg (required)
   -WarnMB        warn-threshold in MB (default 180)
   -FailMB        fail-threshold in MB (default 200)
-  -AzdoLogs      emit Azure DevOps `##vso[task.logissue]` lines for warnings
-                 and errors. Default true (the script's primary caller is
-                 the AzDO publish pipeline). Disable for local invocation.
+  -NoAzdoLogs    suppress the Azure DevOps `##vso[task.logissue]` lines for warnings and
+                 errors, which are on by default (the script's primary caller is the AzDO
+                 publish pipeline). Use it for local invocation. A switch rather than a
+                 [bool], because `pwsh -File` passes every argument as a string and a [bool]
+                 parameter rejects strings outright.
 
 Exit codes:
   0  no packages over WarnMB and FailMB — clean
@@ -35,9 +37,9 @@ Exit codes:
 param(
     [Parameter(Mandatory = $true)]
     [string] $PackagesDir,
-    [int]    $WarnMB   = 180,
-    [int]    $FailMB   = 200,
-    [bool]   $AzdoLogs = $true
+    [int]    $WarnMB = 180,
+    [int]    $FailMB = 200,
+    [switch] $NoAzdoLogs
 )
 
 $ErrorActionPreference = 'Stop'
@@ -74,7 +76,7 @@ Write-Output ""
 $failed | Sort-Object sizeMB -Descending | ForEach-Object {
     $msg = "{0}: {1} MB — exceeds {2} MB project ceiling (well under nuget.org's 250 MB hard cap, but past the size we ship); audit native-asset / dependency growth" -f $_.name, $_.sizeMB, $FailMB
     Write-Output ("  [FAIL]  $msg")
-    if ($AzdoLogs) {
+    if (-not $NoAzdoLogs) {
         Write-Output ("##vso[task.logissue type=error;sourcepath={0}]{1}" -f $_.path, $msg)
     }
 }
@@ -82,7 +84,7 @@ $failed | Sort-Object sizeMB -Descending | ForEach-Object {
 $warned | Sort-Object sizeMB -Descending | ForEach-Object {
     $msg = "{0}: {1} MB — exceeds {2} MB sanity threshold; verify the size growth is intentional before it hits the {3} MB ceiling" -f $_.name, $_.sizeMB, $WarnMB, $FailMB
     Write-Output ("  [WARN]  $msg")
-    if ($AzdoLogs) {
+    if (-not $NoAzdoLogs) {
         Write-Output ("##vso[task.logissue type=warning;sourcepath={0}]{1}" -f $_.path, $msg)
     }
 }
