@@ -7,13 +7,16 @@ using System.Reflection;
 using LinqToDB.Data;
 
 using Microsoft.Data.SqlClient;
-using Microsoft.SqlServer.Types;
 
 #if NETFRAMEWORK
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+using Microsoft.SqlServer.Types;
 #else
+using LINQPad.Extensibility.DataContext;
+
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
 #endif
@@ -62,7 +65,11 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 	{
 	}
 
+#if NETFRAMEWORK
 	private static readonly IReadOnlyList<Assembly> _additionalAssemblies = [typeof(SqlHierarchyId).Assembly];
+#else
+	private static IReadOnlyList<Assembly>? _additionalAssemblies;
+#endif
 
 	public override void ClearAllPools(string providerName)
 	{
@@ -71,8 +78,32 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 
 	public override IReadOnlyCollection<Assembly> GetAdditionalReferences(string providerName)
 	{
+#if NETFRAMEWORK
 		return _additionalAssemblies;
+#else
+		// spatial types package is provisioned only for SQL Server connections, so the assembly cannot be
+		// referenced from a static field - that would load it for a connection to any other database too
+		if (_additionalAssemblies == null)
+		{
+			try
+			{
+				_additionalAssemblies = [DataContextDriver.LoadAssemblySafely("Microsoft.SqlServer.Types.dll")];
+			}
+			catch (Exception ex)
+			{
+				Notification.Error(ex, "Failed to load Microsoft.SqlServer.Types assembly.", "SQL Server Provider");
+				_additionalAssemblies = [];
+			}
+		}
+
+		return _additionalAssemblies;
+#endif
 	}
+
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+		=> [("Microsoft.Data.SqlClient", NuGetPackageVersions.Microsoft_Data_SqlClient), ("Microsoft.SqlServer.Types", NuGetPackageVersions.Microsoft_SqlServer_Types)];
+#endif
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{

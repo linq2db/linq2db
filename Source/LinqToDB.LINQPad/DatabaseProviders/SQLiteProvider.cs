@@ -41,6 +41,16 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
+			return [("System.Data.SQLite", NuGetPackageVersions.System_Data_SQLite), ("SourceGear.sqlite3", NuGetPackageVersions.SourceGear_sqlite3)];
+
+		return [("Microsoft.Data.Sqlite", NuGetPackageVersions.Microsoft_Data_Sqlite), ("SQLitePCLRaw.lib.e_sqlite3", NuGetPackageVersions.SQLitePCLRaw_lib_e_sqlite3)];
+	}
+#endif
+
 	public override void ClearAllPools(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))

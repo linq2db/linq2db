@@ -28,6 +28,19 @@ internal interface IDatabaseProvider
 	bool SupportsSecondaryConnection { get; }
 
 	/// <summary>
+	/// When <see langword="false"/>, database cannot be used on current host operating system and is not offered by connection settings UI.
+	/// </summary>
+	bool IsPlatformSupported { get; }
+
+#if !NETFRAMEWORK
+	/// <summary>
+	/// Returns NuGet packages required by specified provider at runtime. LINQPad provisions them per-connection,
+	/// which is why they are not declared as static dependencies of the driver package.
+	/// </summary>
+	IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName);
+#endif
+
+	/// <summary>
 	/// Release all connections.
 	/// </summary>
 	void ClearAllPools(string providerName);

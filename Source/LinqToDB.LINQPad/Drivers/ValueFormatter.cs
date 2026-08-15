@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.SqlTypes;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
@@ -69,58 +71,16 @@ internal static class ValueFormatter
 		typeConverters.Add(typeof(SqlBytes) , ConvertSqlBytes);
 		typeConverters.Add(typeof(SqlBinary), ConvertSqlBinary);
 
-		// ClickHouse.Client
-		typeConverters.Add(typeof(ClickHouseDecimal), ConvertToString);
-
-		// Firebird
-		typeConverters.Add(typeof(FbZonedTime)    , ConvertToString);
-		typeConverters.Add(typeof(FbZonedDateTime), ConvertToString);
-		typeConverters.Add(typeof(FbDecFloat)     , ConvertFbDecFloat);
-
-		// Sybase ASE
-		typeConverters.Add(typeof(AseDecimal), ConvertToString);
-
-		// MySqlConnector
-		typeConverters.Add(typeof(MySqlDateTime), ConvertToString);
-		typeConverters.Add(typeof(MySqlDecimal) , ConvertToString);
-		typeConverters.Add(typeof(MySqlGeometry), ConvertMySqlGeometry);
-
-		// sql server spatial types
-		typeConverters.Add(typeof(SqlGeography), ConvertToString);
-		typeConverters.Add(typeof(SqlGeometry) , ConvertToString);
-
-		// npgsql
-		baseTypeConverters.Add(typeof(NpgsqlTsQuery)      , ConvertToString);
-#pragma warning disable CS0618 // Type or member is obsolete
-		typeConverters.Add(typeof(NpgsqlInet)             , ConvertToString);
-#pragma warning restore CS0618 // Type or member is obsolete
-		typeConverters.Add(typeof(NpgsqlInterval)         , ConvertNpgsqlInterval);
-		typeConverters.Add(typeof(NpgsqlLogSequenceNumber), ConvertToString);
-		typeConverters.Add(typeof(NpgsqlTid)              , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlTsVector)         , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlLine)             , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlCircle)           , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlPolygon)          , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlPath)             , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlBox)              , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlLSeg)             , ConvertToString);
-		typeConverters.Add(typeof(NpgsqlPoint)            , ConvertToString);
-
-		// oracle
-		typeConverters.Add(typeof(OracleClob)        , ConvertOracleClob);
-		typeConverters.Add(typeof(OracleBinary)      , ConvertOracleBinary);
-		typeConverters.Add(typeof(OracleBoolean)     , ConvertOracleBoolean);
-		typeConverters.Add(typeof(OracleDate)        , ConvertToString);
-		typeConverters.Add(typeof(OracleDecimal)     , ConvertToString);
-		typeConverters.Add(typeof(OracleIntervalDS)  , ConvertToString);
-		typeConverters.Add(typeof(OracleIntervalYM)  , ConvertToString);
-		typeConverters.Add(typeof(OracleString)      , ConvertToString);
-		typeConverters.Add(typeof(OracleTimeStamp)   , ConvertToString);
-		typeConverters.Add(typeof(OracleTimeStampLTZ), ConvertToString);
-		typeConverters.Add(typeof(OracleTimeStampTZ) , ConvertToString);
-		typeConverters.Add(typeof(OracleBlob)        , ConvertOracleBlob);
-		typeConverters.Add(typeof(OracleBFile)       , ConvertOracleBFile);
-		typeConverters.Add(typeof(OracleXmlType)     , ConvertOracleXmlType);
+		// each provider registers from a separate method: a provider assembly is loaded when the method
+		// referencing its types is JIT-compiled, and only packages of the database used by the connection
+		// are provisioned (see IDatabaseProvider.GetNuGetPackages)
+		Register(AddClickHouseConverters);
+		Register(AddFirebirdConverters  );
+		Register(AddSybaseConverters    );
+		Register(AddMySqlConverters     );
+		Register(AddSqlServerConverters );
+		Register(AddNpgsqlConverters    );
+		Register(AddOracleConverters    );
 
 		// sap hana
 		byTypeNameConverters.Add("Sap.Data.Hana.HanaDecimal", ConvertToString);
@@ -151,6 +111,93 @@ internal static class ValueFormatter
 		_typeConverters       = typeConverters.ToFrozenDictionary();
 		_baseTypeConverters   = baseTypeConverters.ToFrozenDictionary();
 		_byTypeNameConverters = byTypeNameConverters.ToFrozenDictionary();
+
+		void Register(Action<Dictionary<Type, Func<object, object>>, Dictionary<Type, Func<object, object>>> register)
+		{
+			try
+			{
+				register(typeConverters, baseTypeConverters);
+			}
+			catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or TypeLoadException or BadImageFormatException)
+			{
+				// provider assembly is not available to this connection
+			}
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void AddClickHouseConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
+	{
+		typeConverters.Add(typeof(ClickHouseDecimal), ConvertToString);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void AddFirebirdConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
+	{
+		typeConverters.Add(typeof(FbZonedTime)    , ConvertToString);
+		typeConverters.Add(typeof(FbZonedDateTime), ConvertToString);
+		typeConverters.Add(typeof(FbDecFloat)     , ConvertFbDecFloat);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void AddSybaseConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
+	{
+		typeConverters.Add(typeof(AseDecimal), ConvertToString);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void AddMySqlConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
+	{
+		typeConverters.Add(typeof(MySqlDateTime), ConvertToString);
+		typeConverters.Add(typeof(MySqlDecimal) , ConvertToString);
+		typeConverters.Add(typeof(MySqlGeometry), ConvertMySqlGeometry);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void AddSqlServerConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
+	{
+		// spatial types
+		typeConverters.Add(typeof(SqlGeography), ConvertToString);
+		typeConverters.Add(typeof(SqlGeometry) , ConvertToString);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void AddNpgsqlConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
+	{
+		baseTypeConverters.Add(typeof(NpgsqlTsQuery)      , ConvertToString);
+#pragma warning disable CS0618 // Type or member is obsolete
+		typeConverters.Add(typeof(NpgsqlInet)             , ConvertToString);
+#pragma warning restore CS0618 // Type or member is obsolete
+		typeConverters.Add(typeof(NpgsqlInterval)         , ConvertNpgsqlInterval);
+		typeConverters.Add(typeof(NpgsqlLogSequenceNumber), ConvertToString);
+		typeConverters.Add(typeof(NpgsqlTid)              , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlTsVector)         , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlLine)             , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlCircle)           , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlPolygon)          , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlPath)             , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlBox)              , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlLSeg)             , ConvertToString);
+		typeConverters.Add(typeof(NpgsqlPoint)            , ConvertToString);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void AddOracleConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
+	{
+		typeConverters.Add(typeof(OracleClob)        , ConvertOracleClob);
+		typeConverters.Add(typeof(OracleBinary)      , ConvertOracleBinary);
+		typeConverters.Add(typeof(OracleBoolean)     , ConvertOracleBoolean);
+		typeConverters.Add(typeof(OracleDate)        , ConvertToString);
+		typeConverters.Add(typeof(OracleDecimal)     , ConvertToString);
+		typeConverters.Add(typeof(OracleIntervalDS)  , ConvertToString);
+		typeConverters.Add(typeof(OracleIntervalYM)  , ConvertToString);
+		typeConverters.Add(typeof(OracleString)      , ConvertToString);
+		typeConverters.Add(typeof(OracleTimeStamp)   , ConvertToString);
+		typeConverters.Add(typeof(OracleTimeStampLTZ), ConvertToString);
+		typeConverters.Add(typeof(OracleTimeStampTZ) , ConvertToString);
+		typeConverters.Add(typeof(OracleBlob)        , ConvertOracleBlob);
+		typeConverters.Add(typeof(OracleBFile)       , ConvertOracleBFile);
+		typeConverters.Add(typeof(OracleXmlType)     , ConvertOracleXmlType);
 	}
 
 	public static object Format(object value)
@@ -193,10 +240,15 @@ internal static class ValueFormatter
 
 		// INullable implemented by System.Data.SqlTypes.Sql* types
 		return (value is System.Data.SqlTypes.INullable nullable && nullable.IsNull)
-			|| (value is Oracle.ManagedDataAccess.Types.INullable onull && onull.IsNull)
-			|| (value.GetType().FullName!.StartsWith("IBM.Data.DB2Types.", StringComparison.Ordinal) && IsDB2Null(value));
+			|| (value.GetType().FullName!.StartsWith("Oracle.ManagedDataAccess.Types.", StringComparison.Ordinal) && IsOracleNull(value))
+			|| (value.GetType().FullName!.StartsWith("IBM.Data.DB2Types."             , StringComparison.Ordinal) && IsDB2Null   (value));
 
-		// moved to function to avoid assembly load errors when loaded with wrong process bitness
+		// moved to functions to avoid assembly load errors when provider is not available to the connection
+		// or, for DB2, is loaded with wrong process bitness
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		static bool IsOracleNull(object value) => value is Oracle.ManagedDataAccess.Types.INullable onull && onull.IsNull;
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		static bool IsDB2Null(object value) => value is IBM.Data.DB2Types.INullable db2null && db2null.IsNull;
 	}
 

@@ -31,6 +31,19 @@ internal sealed class ClickHouseProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.ClickHouseMySql, StringComparison.Ordinal))
+			return [("MySqlConnector", NuGetPackageVersions.MySqlConnector)];
+
+		if (string.Equals(providerName, ProviderName.ClickHouseOctonica, StringComparison.Ordinal))
+			return [("Octonica.ClickHouseClient", NuGetPackageVersions.Octonica_ClickHouseClient)];
+
+		return [("ClickHouse.Driver", NuGetPackageVersions.ClickHouse_Driver)];
+	}
+#endif
+
 	public override void ClearAllPools(string providerName)
 	{
 		// octonica provider doesn't implement connection pooling

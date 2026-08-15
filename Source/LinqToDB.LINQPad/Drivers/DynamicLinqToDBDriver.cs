@@ -61,7 +61,12 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 	public override bool ShowConnectionDialog(IConnectionInfo cxInfo, ConnectionDialogOptions dialogOptions) => DriverHelper.ShowConnectionDialog(cxInfo, true);
 
 #if !NETFRAMEWORK
-	[GeneratedRegex(@"^.+\\(?<token>[^\\]+)\\[^\\]+$", RegexOptions.ExplicitCapture | RegexOptions.Compiled)]
+	/// <inheritdoc/>
+	public override void OverrideDriverDependencies(DriverDependencyInfo dependencyInfo) => DriverHelper.OverrideDriverDependencies(dependencyInfo, true);
+#endif
+
+#if !NETFRAMEWORK
+	[GeneratedRegex(@"^.+[\\/](?<token>[^\\/]+)[\\/][^\\/]+$", RegexOptions.ExplicitCapture | RegexOptions.Compiled)]
 	private static partial Regex RuntimeTokenExtractor();
 
 	private static IEnumerable<string> GetFallbackTokens(string forToken)
@@ -100,14 +105,15 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 
 	private PortableExecutableReference MakeReferenceByRuntime(string runtimeToken, string reference)
 	{
-		var token = RuntimeTokenExtractor().Match(reference).Groups["token"].Value;
+		var token     = RuntimeTokenExtractor().Match(reference).Groups["token"].Value;
+		var separator = Path.DirectorySeparatorChar;
 
 		foreach (var fallback in GetFallbackTokens(runtimeToken))
 		{
 			if (string.Equals(token, fallback, StringComparison.Ordinal))
 				return MetadataReference.CreateFromFile(reference);
 
-			var newReference = reference.Replace($"\\{token}\\", $"\\{fallback}\\", StringComparison.Ordinal);
+			var newReference = reference.Replace($"{separator}{token}{separator}", $"{separator}{fallback}{separator}", StringComparison.Ordinal);
 
 			if (File.Exists(newReference))
 				return MetadataReference.CreateFromFile(newReference);
@@ -190,7 +196,7 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 		}
 		catch (Exception ex)
 		{
-			Notification.Error($"{ex}\n{ex.StackTrace}", "Schema Build Error");
+			Notification.Error(ex, "Failed to build data model.", "Schema Build Error");
 			throw;
 		}
 	}

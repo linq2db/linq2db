@@ -10,7 +10,6 @@ using LinqToDB.Mapping;
 
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Text;
 using System.Globalization;
 
 #if NETFRAMEWORK
@@ -206,16 +205,27 @@ internal static class DriverHelper
 	public static bool ShowConnectionDialog(IConnectionInfo cxInfo, bool isDynamic)
 	{
 		var settings = ConnectionSettings.Load(cxInfo);
-		var model    = new SettingsModel(settings, !isDynamic);
 
-		if (SettingsDialog.Show(
-			model,
-			isDynamic ? TestDynamicConnection : TestStaticConnection,
-			isDynamic ? "Connection to database failed." : "Invalid configuration."))
+		// WPF is available to a driver only from this method, see Notification
+		Notification.BeginConnectionDialog();
+
+		try
 		{
-			model.Save();
-			settings.Save(cxInfo);
-			return true;
+			var model = new SettingsModel(settings, !isDynamic);
+
+			if (SettingsDialog.Show(
+				model,
+				isDynamic ? TestDynamicConnection : TestStaticConnection,
+				isDynamic ? "Connection to database failed." : "Invalid configuration."))
+			{
+				model.Save();
+				settings.Save(cxInfo);
+				return true;
+			}
+		}
+		finally
+		{
+			Notification.EndConnectionDialog();
 		}
 
 		return false;
@@ -289,23 +299,49 @@ internal static class DriverHelper
 		}
 	}
 
+#if !NETFRAMEWORK
+	/// <summary>
+	/// Implements <see cref="DataContextDriver.OverrideDriverDependencies(DriverDependencyInfo)"/> method.
+	/// Database clients are not declared as dependencies of the driver package, so a user downloads only
+	/// the client libraries for databases he actually connects to.
+	/// </summary>
+	public static void OverrideDriverDependencies(DriverDependencyInfo dependencyInfo, bool isDynamic)
+	{
+		try
+		{
+			var settings = ConnectionSettings.Load(dependencyInfo.CxInfo);
+			var packages = new HashSet<(string Id, string Version)>();
+
+			// a static context configures its own provider, and a connection being created doesn't have one yet:
+			// in both cases the client is unknown and all of them are provisioned, as they were before
+			if (isDynamic && settings.Connection.Database != null && settings.Connection.Provider != null)
+			{
+				var provider = DatabaseProviders.GetProvider(settings.Connection.Database);
+
+				packages.UnionWith(provider.GetNuGetPackages(settings.Connection.Provider));
+
+				if (settings.Connection.SecondaryProvider != null)
+					packages.UnionWith(provider.GetNuGetPackages(settings.Connection.SecondaryProvider));
+			}
+			else
+			{
+				packages.UnionWith(DatabaseProviders.GetAllNuGetPackages());
+			}
+
+			if (packages.Count > 0)
+				dependencyInfo.AddNuGetPackages(packages);
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex, nameof(OverrideDriverDependencies));
+		}
+	}
+#endif
+
 	// intercepts exceptions from driver to linqpad
 	public static void HandleException(Exception ex, string method)
 	{
-		var error = new StringBuilder();
-
-		error.AppendLine(string.Create(CultureInfo.InvariantCulture, $"Unhandled error in method '{method}':"));
-
-		var currEx = ex;
-
-		while (currEx != null)
-		{
-			error.AppendLine(currEx.Message);
-			error.AppendLine(currEx.StackTrace);
-			currEx = currEx.InnerException;
-		}
-
-		Notification.Error(error.ToString(), "Linq To DB Driver Error");
+		Notification.Error(ex, string.Create(CultureInfo.InvariantCulture, $"Unhandled error in method '{method}':"), "Linq To DB Driver Error");
 	}
 
 	public static IEnumerable<string> GetAssembliesToAdd(IConnectionInfo cxInfo)

@@ -26,6 +26,18 @@ internal sealed class AccessProvider : DatabaseProviderBase
 
 	public override bool SupportsSecondaryConnection => true;
 	public override bool AutomaticProviderSelection  => true;
+	// OLE DB is not implemented outside of Windows and there is no ODBC driver for Access on other systems
+	public override bool IsPlatformSupported         => Platform.IsWindows;
+
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
+			return [("System.Data.Odbc", NuGetPackageVersions.System_Data_Odbc)];
+
+		return [("System.Data.OleDb", NuGetPackageVersions.System_Data_OleDb)];
+	}
+#endif
 
 	public override string? GetProviderDownloadUrl(string? providerName)
 	{

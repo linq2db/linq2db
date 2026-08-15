@@ -77,6 +77,20 @@ internal static class DatabaseProviders
 #endif
 	}
 
+#if !NETFRAMEWORK
+	/// <summary>
+	/// Returns NuGet packages of all known providers, used when the client needed by a connection cannot be
+	/// identified (see <see cref="DriverHelper.OverrideDriverDependencies"/>).
+	/// </summary>
+	public static IEnumerable<(string Id, string Version)> GetAllNuGetPackages()
+	{
+		foreach (var provider in Providers.Values)
+			foreach (var info in provider.Providers)
+				foreach (var package in provider.GetNuGetPackages(info.Name))
+					yield return package;
+	}
+#endif
+
 	public static DbConnection CreateConnection(ConnectionSettings settings)
 	{
 		return GetDataProvider(settings).CreateConnection(settings.Connection.GetFullConnectionString()!);

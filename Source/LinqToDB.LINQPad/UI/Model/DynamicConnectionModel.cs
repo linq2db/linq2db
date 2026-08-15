@@ -10,7 +10,7 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 	public DynamicConnectionModel(ConnectionSettings settings, bool enabled)
 		: base(settings, enabled)
 	{
-		foreach (var db in DatabaseProviders.Providers.Values.OrderBy(static db => db.Description, System.StringComparer.Ordinal))
+		foreach (var db in DatabaseProviders.Providers.Values.Where(static db => db.IsPlatformSupported).OrderBy(static db => db.Description, System.StringComparer.Ordinal))
 			Databases.Add(db);
 
 		UpdateProviders();

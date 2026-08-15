@@ -28,6 +28,17 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	// native provider assembly is supplied by the user (provider path), only ODBC needs a package from us
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
+			return [("System.Data.Odbc", NuGetPackageVersions.System_Data_Odbc)];
+
+		return [];
+	}
+#endif
+
 	public override string? GetProviderDownloadUrl(string? providerName)
 	{
 		return "https://tools.hana.ondemand.com/#hanatools";

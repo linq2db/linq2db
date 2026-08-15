@@ -1,1 +1,3 @@
-﻿#nullable enable
+#nullable enable
+override LinqToDB.LINQPad.LinqToDBDriver.OverrideDriverDependencies(LINQPad.Extensibility.DataContext.DriverDependencyInfo! dependencyInfo) -> void
+override LinqToDB.LINQPad.LinqToDBStaticDriver.OverrideDriverDependencies(LINQPad.Extensibility.DataContext.DriverDependencyInfo! dependencyInfo) -> void
