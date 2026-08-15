@@ -1319,6 +1319,11 @@ namespace Tests.Linq
 
 			message.ShouldContain("Union");
 			message.ShouldContain("in different terms");
+
+			// The member that diverged, not the anonymous type carrying it: the type name a projection gets is
+			// generated, so a reader who is told only that has to work out which of its members is at fault.
+			message.ShouldContain("Duration");
+			message.ShouldNotContain("AnonymousType");
 		}
 
 		/// <summary>

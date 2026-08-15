@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
@@ -131,6 +132,43 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool IsKeptApart(Expression[] path)
 			{
 				return _setOperation == SetOperation.UnionAll && _divergentPaths?.Contains(path) == true;
+			}
+
+			/// <summary>
+			/// The members <see cref="_divergentPaths"/> holds, written the way the query names them, for a refusal to
+			/// quote back.
+			/// </summary>
+			/// <remarks>
+			/// A path is a sequence of constants describing how the value is reached - a marker, the constructed type,
+			/// the member taken from it - repeated once per level, so the member names alone spell the reachable path
+			/// and everything else is scaffolding. A projection that is a bare value carries no member at all, and
+			/// there the type is all there is to say.
+			/// <para>
+			/// The constructed type is skipped by asking for a property or a field rather than for a member, because
+			/// <see cref="Type"/> is itself a <see cref="MemberInfo"/> and would otherwise put the generated name of an
+			/// anonymous projection in front of every member it holds. A step that arrived as a member access rather
+			/// than as a constant answers from the member it reads, so either spelling names the same thing.
+			/// </para>
+			/// </remarks>
+			string DescribeDivergentMembers(Expression fallbackPath)
+			{
+				var names = (_divergentPaths ?? Enumerable.Empty<Expression[]>())
+					.Select(p => string.JoinStrings('.', p
+						.Select(e => e switch
+						{
+							ConstantExpression { Value: PropertyInfo or FieldInfo } c => ((MemberInfo)c.Value).Name,
+							MemberExpression m                                        => m.Member.Name,
+							_                                                         => null,
+						})
+						.OfType<string>()))
+					.Where(n => n.Length > 0)
+					.Distinct(StringComparer.Ordinal)
+					.OrderBy(n => n, StringComparer.Ordinal)
+					.ToList();
+
+				return names.Count == 0
+					? $"'{fallbackPath.Type.Name}'"
+					: string.Join(", ", names.Select(n => $"'{n}'"));
 			}
 
 			/// <summary>
@@ -401,7 +439,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// differently are not comparable at all.
 					throw new LinqToDBException(sameWay
 						? $"Could not decide which construction type to use `query.Select(x => new {projection1.Type.Name} {{ ... }})` to specify projection."
-						: $"Branches of {_setOperation} store '{path.Type.Name}' in different terms, so the operation would compare values that do not mean the same thing. Project both branches to one representation first.");
+						: $"Branches of {_setOperation} store {DescribeDivergentMembers(path)} in different terms, so the operation would compare values that do not mean the same thing. Project both branches to one representation first.");
 				}
 
 				// Whichever way the row is told apart - a constant that differs between the branches, a column one
