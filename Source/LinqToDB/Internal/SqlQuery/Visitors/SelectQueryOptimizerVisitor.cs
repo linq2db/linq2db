@@ -1044,7 +1044,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var sources = QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						var ignore  = new[] { join };
-						if (QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
+
+						// Probe the enclosing query before walking the whole statement: 99% of kept joins are
+						// referenced from their own query, and reaching them from the statement root wastes the
+						// whole descent. selectQuery is reachable from _rootElement without passing through join,
+						// so a local hit is necessarily a root hit as well - this changes how quickly the verdict
+						// is reached, never the verdict itself.
+						var probeLocally = !ReferenceEquals(_rootElement, selectQuery);
+
+						if ((probeLocally && QueryHelper.IsDependsOnSources(selectQuery, sources, ignore))
+							|| QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
 						{
 							join.IsWeak = false;
 							continue;
