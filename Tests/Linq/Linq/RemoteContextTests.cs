@@ -230,7 +230,7 @@ namespace Tests.Linq
 
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(context.ClientsCreated, Is.GreaterThan(0), "the runner never asked for a client - the test no longer exercises the path it was written for");
+					Assert.That(context.NonQueryExecutions, Is.EqualTo(2), "the two-query InsertOrReplace plan did not run - the test no longer exercises the path it was written for");
 					Assert.That(context.ClientsDisposed, Is.EqualTo(context.ClientsCreated), "every client the runner obtained must be disposed");
 				}
 			}
@@ -275,8 +275,9 @@ namespace Tests.Linq
 				_backendOptions = backend.Options;
 			}
 
-			public int ClientsCreated  { get; private set; }
-			public int ClientsDisposed { get; private set; }
+			public int ClientsCreated     { get; private set; }
+			public int ClientsDisposed    { get; private set; }
+			public int NonQueryExecutions { get; private set; }
 
 			protected override string ContextIDPrefix => "Test.CountingRemote";
 
@@ -317,8 +318,14 @@ namespace Tests.Linq
 
 				public void Dispose() => _owner.ClientsDisposed++;
 
+				public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+				{
+					_owner.NonQueryExecutions++;
+
+					return _inner.ExecuteNonQueryAsync(configuration, queryData, cancellationToken);
+				}
+
 				public Task<LinqServiceInfo> GetInfoAsync        (string? configuration, CancellationToken cancellationToken = default) => _inner.GetInfoAsync(configuration, cancellationToken);
-				public Task<int>             ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteNonQueryAsync(configuration, queryData, cancellationToken);
 				public Task<string?>         ExecuteScalarAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteScalarAsync(configuration, queryData, cancellationToken);
 				public Task<string>          ExecuteReaderAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteReaderAsync(configuration, queryData, cancellationToken);
 				public Task<int>             ExecuteBatchAsync   (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteBatchAsync(configuration, queryData, cancellationToken);
