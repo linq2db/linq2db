@@ -129,7 +129,17 @@
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.23.0"                      />
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.300"                    />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
-		<PackageVersion Include="System.Data.OleDb"                                     Version="$(Net10Latest)"               />
+		<!-- Pinned below Net10Latest: 10.0.0+ has a confirmed regression where COM error-wrapper objects
+		     (IErrorInfo/IErrorRecords) skip GC.SuppressFinalize() after Marshal.Release(), so the finalizer
+		     later double-releases an already-freed pointer - AccessViolationException/NullReferenceException
+		     in ComObject.Finalize(), intermittent (it depends on GC timing relative to accumulated OLEDB
+		     errors) and raised on the finalizer thread where nothing can catch it. Only OLE DB providers
+		     hit it, which here means Access: the tests deliberately provoke driver errors, so the wrappers
+		     accumulate. net462 is unaffected - it uses the Framework-native OleDb, not this package. Fixed
+		     upstream (dotnet/runtime#125221, PR #130906) but shipping only in .NET 11.0.0; 9.0.10 is the
+		     newest version confirmed without the regression. Revert to $(Net10Latest) once .NET 11 ships or
+		     a patched 10.x is released. Copied from #5761. -->
+		<PackageVersion Include="System.Data.OleDb"                                     Version="9.0.10"                       />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.1"                        />
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.3"                        />
 		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.53.4"                       />

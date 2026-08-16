@@ -510,11 +510,10 @@ jobs:
           script_linux_local: db2.provider.sh
           script_macos_local: mac.db2.provider.sh
           install_docker_macos: true
-          # TEMPORARY (bisecting the "Free idle agent memory" agent loss, build 22818): normally the
-          # Windows DuckDB leg is full-run-only, but the step being bisected is Windows-only, and this
-          # is the cheapest Windows job in the matrix (embedded DuckDB - no container, no setup).
-          # RESTORE the full_run gate below once the culprit process is identified.
-          enable_os_windows: true
+          ${{ if eq(parameters.full_run, true) }}:
+            enable_os_windows: true
+          ${{ if not(eq(parameters.full_run, true)) }}:
+            enable_os_windows: false
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: false
