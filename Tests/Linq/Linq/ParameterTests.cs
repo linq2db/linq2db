@@ -530,7 +530,7 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -602,7 +602,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -696,7 +696,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_InsertObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -772,7 +772,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -846,7 +846,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -939,7 +939,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Update([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1033,7 +1033,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_UpdateObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1109,7 +1109,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1183,7 +1183,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1280,7 +1280,7 @@ namespace Tests.Linq
 		private int _cnt3;
 		private int _param;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1876,7 +1876,7 @@ namespace Tests.Linq
 			public bool? Value5 { get; set; }
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -1972,6 +1972,35 @@ namespace Tests.Linq
 			var record = tb.Single();
 
 			Assert.That(record.Field, Is.EqualTo(1));
+		}
+
+		sealed class ParameterCastUnderCastTable
+		{
+			[PrimaryKey]                        public int     Id    { get; set; }
+			[Column(Length = 50)]               public string? Value { get; set; }
+			[Column(Precision = 10, Scale = 2)] public decimal Money { get; set; }
+		}
+
+		// A constant fold whose source usage carried a per-usage cast folds to a cast-wrapped parameter
+		// (QueryHelper.CreateSqlValue). When that fold sits directly under an explicit cast, the marker
+		// reaches BuildTypedExpression, whose provider overrides match only SqlValue / SqlParameter - so
+		// Firebird dropped the declared cast entirely for a string target and skipped the decimal facet
+		// correction for a numeric one. The captured SQL baseline is what pins the rendering.
+		[Test]
+		public void ParameterCastDirectlyUnderExplicitCast([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new[] { new ParameterCastUnderCastTable() { Id = 1, Value = "4", Money = 4m } });
+
+			var name = "john";
+
+			// Sql.AsSql keeps the length evaluation on the server, so the optimizer folds it - and the fold's
+			// basedOn carries the cast-wrapped @name usage, so the folded parameter is cast-wrapped in turn.
+			var byString = tb.Where(t => t.Value == Sql.Convert<string, int>(Sql.AsSql(name).Length)).ToArray();
+			var byNumber = tb.Where(t => t.Money == Sql.Convert<decimal, int>(Sql.AsSql(name).Length)).ToArray();
+
+			byString.Length.ShouldBe(1);
+			byNumber.Length.ShouldBe(1);
 		}
 	}
 }

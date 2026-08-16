@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.CommandLine
+using System;
+
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Base data type for CLI option.

@@ -191,8 +191,8 @@ namespace LinqToDB.Benchmarks.Models
 			[Association(ThisKey="SupplierID", OtherKey="SupplierID")] public Supplier?         Supplier;
 		}
 
-		public class ActiveProduct       : Product {}
-		public class DiscontinuedProduct : Product {}
+		public class ActiveProduct       : Product;
+		public class DiscontinuedProduct : Product;
 
 		[Table(Name="Region")]
 		public class Region

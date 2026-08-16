@@ -1,0 +1,7 @@
+#!/bin/sh
+# After a BRANCH checkout (arg 3 == 1), refresh .claude to the corpus tip.
+# arg 3 == 0 means a file checkout (`git checkout -- <path>`) - skip those.
+# Also fires for `git clone` and `git worktree add`.
+[ "$3" = "1" ] || exit 0
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+exec "$(dirname "$0")/_refresh-corpus.sh"
