@@ -270,7 +270,10 @@ namespace Tests.Linq
 		{
 			readonly DataOptions _backendOptions;
 
-			public CountingRemoteDataContext(DataConnection backend) : base(new DataOptions())
+			// RemoteDataContextBase caches ConfigurationInfo process-wide keyed on ConfigurationString, so a
+			// context left without one writes SQLite-with-upsert-disabled under the key every configuration-less
+			// remote context shares. The name resolves to nothing - BackendLinqService ignores it.
+			public CountingRemoteDataContext(DataConnection backend) : base(new DataOptions().UseConfiguration("Test.CountingRemote"))
 			{
 				_backendOptions = backend.Options;
 			}
