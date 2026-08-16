@@ -77,11 +77,14 @@ steps:
     targetType: inline
     pwsh: true
     script: |
-      # BISECT MODE (build 22818): killing this list took every Windows agent down - each job was
-      # abandoned ("lost contact with the agent") during or right after this step. The agent runs
-      # inside the image's auto-logon interactive session, so killing a session-critical process
-      # takes the agent with it. Kill one at a time with a pause and flush after each, so the last
-      # line that reaches the server names the process that did it.
+      # BISECT MODE, round 2. Round 1 (build 22835) identified WindowsTerminal: the log ends on
+      # "survived WindowsTerminal" and never announces the next kill, so the agent died in the pause
+      # right after it - the hosted image runs the agent inside Windows Terminal, so killing it kills
+      # the agent's own process tree. It is out of the list now. explorer, StartMenuExperienceHost
+      # and SearchHost were killed in that run without harm.
+      #
+      # This round clears the rest of the list the same way: announce, flush, pause either side, so
+      # the last line that reaches the server names any remaining offender.
       #
       # The service stops are out for now: Stop-Service -Force TrustedInstaller has no -NoWait and
       # blocks until the service stops, which is a second, independent way this step hung.
@@ -89,7 +92,6 @@ steps:
         'explorer'                         # desktop shell
         'StartMenuExperienceHost'          # start menu UI
         'SearchHost'                       # search UI
-        'WindowsTerminal'                  # terminal UI left running by the image
         'RuntimeBroker'                    # UWP/shell broker
         'SMSvcHost'                        # .NET Net.Tcp port sharing
         'ShellHost'
