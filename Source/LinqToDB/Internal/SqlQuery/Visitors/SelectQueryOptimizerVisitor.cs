@@ -696,7 +696,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		///         forbids synthesis (non-UnionAll) or the expression is neither a constant nor,
 		///         when <paramref name="allowDerivedColumns"/> is set, derivable from the legs;</item>
 		///   <item>a leg has fewer columns than <paramref name="setQuery"/> for a non-UnionAll
-		///         operation (legs must be aligned).</item>
+		///         operation (legs must be aligned);</item>
+		///   <item>a leg is too short to hold a position that resolved to an existing
+		///         <paramref name="setQuery"/> column — for any operation, since widening the leg
+		///         would make it read a column of a sibling query.</item>
 		/// </list>
 		/// <para>
 		/// Runs in O(N + M·L) where N is the setQuery column count, M is the target column count,
