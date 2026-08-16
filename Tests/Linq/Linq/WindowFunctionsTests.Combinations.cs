@@ -368,7 +368,8 @@ namespace Tests.Linq
 		[Test]
 		public void FunctionWithoutColumnReference([SupportsAnalyticFunctionsContext] string context)
 		{
-			var data = WindowFunctionTestEntity.Seed();
+			var data     = WindowFunctionTestEntity.Seed();
+			var rowCount = data.Length;
 
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
@@ -378,7 +379,8 @@ namespace Tests.Linq
 				{
 					CountAll   = Sql.Window.Count(w => w),
 					CountConst = Sql.Window.Count(1, w => w),
-					AllRows    = Sql.Window.Count(w => w) == data.Length && Sql.Window.Sum(t.IntValue, w => w) > 0,
+					AllRows    = Sql.Window.Count(w => w) == rowCount     && Sql.Window.Sum(t.IntValue, w => w) > 0,
+					WrongCount = Sql.Window.Count(w => w) == rowCount + 1 && Sql.Window.Sum(t.IntValue, w => w) > 0,
 				};
 
 			var result = query.ToList();
@@ -387,6 +389,7 @@ namespace Tests.Linq
 			result.ShouldAllBe(r => r.CountAll   == data.Length);
 			result.ShouldAllBe(r => r.CountConst == data.Length);
 			result.ShouldAllBe(r => r.AllRows);
+			result.ShouldAllBe(r => !r.WrongCount);
 		}
 
 		[Test]
