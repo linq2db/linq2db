@@ -55,13 +55,13 @@ namespace Tests.DataProvider
 		{
 			paramCount = 1;
 			return dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND ? IS NULL ORDER BY \"ID\""
-				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND :p IS NULL ORDER BY \"ID\"";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND ? IS NULL"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" IS NULL AND :p IS NULL";
 		}
 		protected override string  PassValueSql(DataConnection dc) =>
 			dc.DataProvider.Name == ProviderName.SapHanaOdbc
-				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" = ? ORDER BY \"ID\""
-				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" = :p ORDER BY \"ID\"";
+				? "SELECT \"ID\" FROM {1} WHERE \"{0}\" = ?"
+				: "SELECT \"ID\" FROM {1} WHERE \"{0}\" = :p";
 
 		[Test]
 		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
