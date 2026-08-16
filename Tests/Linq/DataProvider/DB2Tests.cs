@@ -484,6 +484,11 @@ namespace Tests.DataProvider
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// AllTypes.ID is GENERATED ALWAYS, so the IDs set below are discarded and the server assigns
+			// its own - clean up by the high-water mark rather than by a value we think we inserted.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				conn.BulkCopy(
@@ -521,13 +526,17 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				conn.GetTable<ALLTYPE>().Delete(p => p.ID > maxId);
 			}
 		}
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// see BulkCopyTest: the supplied IDs are discarded, so clean up by the high-water mark.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				await conn.BulkCopyAsync(
@@ -564,7 +573,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.SMALLINTDATATYPE >= 5000);
+				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.ID > maxId);
 			}
 		}
 
