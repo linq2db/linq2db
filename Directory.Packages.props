@@ -33,6 +33,19 @@
 		<!--used by VersionOverride in project files-->
 		<OracleManagedLinqPadVersion>23.26.300</OracleManagedLinqPadVersion>
 
+		<!--
+		used by VersionOverride in project files (tests only - linq2db.cli and the LINQPad driver stay on $(Net10Latest))
+		10.0.0+ has a confirmed regression where COM error-wrapper objects (IErrorInfo/IErrorRecords) skip
+		GC.SuppressFinalize() after Marshal.Release(), so the finalizer later double-releases an already-freed
+		pointer - AccessViolationException/NullReferenceException in ComObject.Finalize(), intermittent (depends on
+		GC timing relative to accumulated OLEDB errors). Only OLE DB providers hit it, which here means Access: the
+		tests deliberately provoke driver errors, so the wrappers accumulate. net462 is unaffected (it uses the
+		Framework-native OleDb, not this package). Fixed upstream (dotnet/runtime#125221, PR #130906) but only ships
+		in .NET 11.0.0; 9.0.10 is the newest version confirmed NOT to have the regression. Drop the override once
+		either .NET 11 ships or a patched 10.x is released.
+		-->
+		<OleDbTestsVersion>9.0.10</OleDbTestsVersion>
+
 		<!--bundled version for legacy SignalR packages (net462 + SignalR.Client !net8+ + SignalR.Core)-->
 		<SignalRLegacyVersion>1.2.11</SignalRLegacyVersion>
 		<!--bundled version for legacy AspNetCore [net462] packages (Microsoft.AspNetCore + Kestrel.Core)-->
@@ -129,16 +142,8 @@
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.23.0"                      />
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.300"                    />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
-		<!-- Pinned below Net10Latest (10.0.8): 10.0.0+ has a confirmed regression where COM error-wrapper
-		     objects (IErrorInfo/IErrorRecords) skip GC.SuppressFinalize() after Marshal.Release(), so the
-		     finalizer later double-releases an already-freed pointer - AccessViolationException/
-		     NullReferenceException in ComObject.Finalize(), intermittent (depends on GC timing relative to
-		     accumulated OLEDB errors). Only OLE DB providers hit it, which here means Access: the tests
-		     deliberately provoke driver errors, so the wrappers accumulate. net462 is unaffected (it uses
-		     the Framework-native OleDb, not this package). Fixed upstream (dotnet/runtime#125221, PR
-		     #130906) but only ships in .NET 11.0.0; 9.0.10 is the newest version confirmed NOT to have the
-		     regression. Revert to $(Net10Latest) once either .NET 11 ships or a patched 10.x is released. -->
-		<PackageVersion Include="System.Data.OleDb"                                     Version="9.0.10"                       />
+		<!--tests override this via VersionOverride, see $(OleDbTestsVersion) above-->
+		<PackageVersion Include="System.Data.OleDb"                                     Version="$(Net10Latest)"               />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.1"                        />
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.3"                        />
 		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.53.4"                       />
