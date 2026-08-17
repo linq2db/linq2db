@@ -46,7 +46,6 @@
 	<ItemGroup Label="Build: Analyzers and Tools">
 		<PackageVersion Include="AsyncFixer"                                            Version="2.1.0"                        />
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="2.0.5"                        />
-		<PackageVersion Include="LargeAddressAware"                                     Version="1.0.6"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.138"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.158"                      />
