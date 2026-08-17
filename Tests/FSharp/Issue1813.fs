@@ -51,6 +51,15 @@ type NominationValid =
       [<Column>]
       ReceiptParcelID: int }
 
+// Encodes a trade/delivery/receipt row set as a sorted "tradeId-deliveryId-receiptId" string (0 = no match),
+// so the chained-join tests can compare their results order-tolerantly.
+let private encodeJoins (result: (TradeValid * (NominationValid | null) * (NominationValid | null))[]) =
+    let key (n: NominationValid | null) = match n with | null -> 0 | nn -> nn.Id
+    result
+    |> Array.map (fun (tr, x, y) -> sprintf "%d-%d-%d" tr.Id (key x) (key y))
+    |> Array.sort
+    |> String.concat ","
+
 let Issue1813Test1(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
@@ -144,14 +153,7 @@ let Issue1813Test4(db : IDataContext) =
 
     // trade LEFT JOIN nom (Delivery) then LEFT JOIN nom (Receipt); x = Delivery match, y = Receipt match.
     // Same result set as Test5 (join order does not change it): 6 rows. Compared order-tolerantly within a trade.
-    let key (n: NominationValid | null) = match n with | null -> 0 | nn -> nn.Id
-    let actual =
-        result
-        |> Array.map (fun (tr, x, y) -> sprintf "%d-%d-%d" tr.Id (key x) (key y))
-        |> Array.sort
-        |> String.concat ","
-
-    Assert.That(actual, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
+    Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
 
 let Issue1813Test5(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
@@ -190,14 +192,7 @@ let Issue1813Test5(db : IDataContext) =
     // x = Delivery match, y = Receipt match (0 = no match). Trade 1 has two Delivery matches (N1,N4) and
     // trade 2 two Receipt matches (N2,N3), so the correct LEFT-join result is 6 rows. Encoded and sorted so the
     // comparison is order-tolerant within a trade (only tr.Id is ordered).
-    let key (n: NominationValid | null) = match n with | null -> 0 | nn -> nn.Id
-    let actual =
-        result
-        |> Array.map (fun (tr, x, y) -> sprintf "%d-%d-%d" tr.Id (key x) (key y))
-        |> Array.sort
-        |> String.concat ","
-
-    Assert.That(actual, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
+    Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
 
 let Issue1813Test6(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
@@ -237,14 +232,7 @@ let Issue1813Test6(db : IDataContext) =
 
     // Same shape as Test5 (Receipt LEFT JOIN via .LeftJoin, then Delivery groupJoin): x = Delivery match,
     // y = Receipt match. Correct result is 6 rows; encoded and sorted for order-tolerant comparison.
-    let key (n: NominationValid | null) = match n with | null -> 0 | nn -> nn.Id
-    let actual =
-        result
-        |> Array.map (fun (tr, x, y) -> sprintf "%d-%d-%d" tr.Id (key x) (key y))
-        |> Array.sort
-        |> String.concat ","
-
-    Assert.That(actual, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
+    Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-2,2-0-3,3-0-0,4-3-4")
 
 let Issue1813Test7(db : IDataContext) =
     use table1 = db.CreateLocalTable<TradeValid>()
@@ -286,14 +274,7 @@ let Issue1813Test7(db : IDataContext) =
 
     // Both joins are on Receipt (as written): x and y are each a Receipt match. Trade 2 has two Receipt
     // matches (N2,N3), so it yields the 2x2 cross (4 rows); total 7. Encoded and sorted for order-tolerance.
-    let key (n: NominationValid | null) = match n with | null -> 0 | nn -> nn.Id
-    let actual =
-        result
-        |> Array.map (fun (tr, x, y) -> sprintf "%d-%d-%d" tr.Id (key x) (key y))
-        |> Array.sort
-        |> String.concat ","
-
-    Assert.That(actual, Is.EqualTo "1-0-0,2-2-2,2-2-3,2-3-2,2-3-3,3-0-0,4-4-4")
+    Assert.That(encodeJoins result, Is.EqualTo "1-0-0,2-2-2,2-2-3,2-3-2,2-3-3,3-0-0,4-4-4")
 
 // Regression pin: a captured interface-typed *local* used inside an F# join predicate translates
 // correctly. Such a local is an ordinary closure capture rather than a SubstHelper free variable, so it
