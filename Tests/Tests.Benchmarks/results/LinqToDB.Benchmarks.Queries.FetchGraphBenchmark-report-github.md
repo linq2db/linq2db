@@ -13,15 +13,15 @@ Jit=RyuJit  Platform=X64
 ```
 | Method        | Runtime              | Mean       | Allocated |
 |-------------- |--------------------- |-----------:|----------:|
-| Linq          | .NET 8.0             | 1,113.4 μs |   1.26 MB |
-| LinqAsync     | .NET 8.0             | 1,466.2 μs |   1.26 MB |
-| Compiled      | .NET 8.0             | 1,012.6 μs |   1.26 MB |
-| CompiledAsync | .NET 8.0             | 1,684.5 μs |   1.26 MB |
-| Linq          | .NET 9.0             | 1,171.6 μs |   1.26 MB |
-| LinqAsync     | .NET 9.0             | 1,450.5 μs |   1.26 MB |
-| Compiled      | .NET 9.0             |   935.0 μs |   1.26 MB |
-| CompiledAsync | .NET 9.0             | 1,252.9 μs |   1.26 MB |
-| Linq          | .NET Framework 4.6.2 | 3,119.5 μs |   1.28 MB |
-| LinqAsync     | .NET Framework 4.6.2 | 5,754.2 μs |   1.53 MB |
-| Compiled      | .NET Framework 4.6.2 | 2,351.4 μs |   1.27 MB |
-| CompiledAsync | .NET Framework 4.6.2 | 4,916.4 μs |   1.52 MB |
+| Linq          | .NET 8.0             |   831.7 μs |   1.26 MB |
+| LinqAsync     | .NET 8.0             | 1,139.0 μs |   1.26 MB |
+| Compiled      | .NET 8.0             |   524.8 μs |   1.26 MB |
+| CompiledAsync | .NET 8.0             | 1,401.8 μs |   1.26 MB |
+| Linq          | .NET 9.0             |   537.9 μs |   1.26 MB |
+| LinqAsync     | .NET 9.0             | 1,408.6 μs |   1.26 MB |
+| Compiled      | .NET 9.0             | 1,111.3 μs |   1.26 MB |
+| CompiledAsync | .NET 9.0             | 1,208.0 μs |   1.26 MB |
+| Linq          | .NET Framework 4.6.2 | 3,143.5 μs |   1.28 MB |
+| LinqAsync     | .NET Framework 4.6.2 | 3,885.0 μs |   1.28 MB |
+| Compiled      | .NET Framework 4.6.2 | 2,351.1 μs |   1.27 MB |
+| CompiledAsync | .NET Framework 4.6.2 | 4,272.1 μs |   1.27 MB |
