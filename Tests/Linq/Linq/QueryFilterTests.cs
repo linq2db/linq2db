@@ -193,7 +193,7 @@ namespace Tests.Linq
 			Assert.That(currentMissCount, Is.EqualTo(query.GetCacheMissCount()), () => "Caching is wrong.");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2, 3)] int iteration, [Values] bool filtered)
 		{
 			var testData = GenerateTestData();
