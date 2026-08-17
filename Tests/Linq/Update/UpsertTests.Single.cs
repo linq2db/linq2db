@@ -482,7 +482,7 @@ namespace Tests.xUpdate
 
 		#region Query-cache parameterisation smoke tests
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Single_QueryCache_Parameterises_ItemValues_NativePath([InsertOrUpdateDataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -507,7 +507,7 @@ namespace Tests.xUpdate
 			rows[1].Version.ShouldBe(20);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
 			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
