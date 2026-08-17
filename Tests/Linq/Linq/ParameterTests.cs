@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -1488,7 +1489,15 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
-		public void TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		// Async by necessity, not preference. The remote (LinqService) contexts route every sync call
+		// through SafeAwaiter.Run - Task.Run(...).GetAwaiter().GetResult() - so a blocking runner holds
+		// two thread-pool threads per worker, 60 for the 30 below, while the in-process Kestrel/gRPC
+		// host serving those same calls needs pool threads of its own. Nothing raises the pool floor,
+		// so it starts at processor count and grows ~1 thread/sec: on CI this test sat for 11 minutes
+		// on SqlServer.2017.MS.LinqService (build 22779) and was killed by --hangdump-timeout 5m on
+		// SqlServer.Contained.LinqService (22810), starving unrelated tests meanwhile. Awaiting frees
+		// the thread for the duration of the round-trip, so the burst no longer exhausts the pool.
+		public async Task TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var _ = new DisableBaseline("multi-threading");
 
@@ -1500,25 +1509,25 @@ namespace Tests.Linq
 			for (var i = 0; i < tasks.Length; i++)
 			{
 				var thread = i;
-				tasks[i] = Task.Run(() => TestRunner(context, paramValues, thread));
+				tasks[i] = TestRunnerAsync(context, paramValues, thread);
 			}
 
-			Task.WaitAll(tasks);
+			await Task.WhenAll(tasks);
 		}
 
-		private void TestRunner(string context, int[] paramValues, int thread)
+		private async Task TestRunnerAsync(string context, int[] paramValues, int thread)
 		{
 			// don't use Assert.Multiple in multi-threading tests
 #pragma warning disable NUnit2045 // Use Assert.Multiple
 			using var db = GetDataContext(context);
 			paramValues[thread] = 1;
-			var persons = Query(db, thread);
+			var persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(1));
 			Assert.That(persons[0].ID, Is.EqualTo(1));
 
 			paramValues[thread] = 2;
-			persons = Query(db, thread);
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(3));
 			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
@@ -1526,41 +1535,41 @@ namespace Tests.Linq
 			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
 			paramValues[thread] = 3;
-			persons = Query(db, thread);
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(2));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
 			paramValues[thread] = 1;
-			persons = Query(db, thread);
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(1));
 			Assert.That(persons[0].ID, Is.EqualTo(1));
 
 			paramValues[thread] = 3;
-			persons = Query(db, thread);
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(2));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
 			paramValues[thread] = 2;
-			persons = Query(db, thread);
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(3));
 			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
-			List<Person> Query(ITestDataContext db, int thread)
+			Task<List<Person>> QueryAsync(ITestDataContext db, int thread)
 			{
 				return db.Person
 					.Where(_ =>
 					 GetQueryT1(db, paramValues, thread).Select(p => p.ID).Contains(_.ID) &&
 					(GetQueryT2(db, paramValues, thread).Select(p => p.ID).Contains(_.ID) ||
 					 GetQueryT3(db, paramValues, thread).Select(p => p.ID).Contains(_.ID)))
-					.ToList();
+					.ToListAsync();
 			}
 #pragma warning restore NUnit2045 // Use Assert.Multiple
 		}
