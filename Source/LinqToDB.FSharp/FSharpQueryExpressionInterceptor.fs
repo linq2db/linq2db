@@ -274,7 +274,6 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                 let coll   = this.AsLambda node.Arguments.[1]
                 let a      = coll.Parameters.[0]
 
-                // locate the GroupJoin whose source is `a.<member>.DefaultIfEmpty()`
                 let rec findGj (e: Expression) : MethodCallExpression option =
                     match e with
                     | :? MethodCallExpression as mc ->
@@ -299,7 +298,6 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                     let pairType    = a.Type.GetGenericTypeDefinition().MakeGenericType([| a.Type; xType |])
                     let pairCtor    = pairType.GetConstructors() |> Array.find (fun c -> c.GetParameters().Length = 2)
 
-                    // flat left join: X.SelectMany(a => leftJoinSeq, (a, x) => AnonObj(a, x))
                     let flatMethod  = Methods.Queryable.SelectManyProjection.MakeGenericMethod(a.Type, xType, pairType)
                     let collLambda  = Expression.Lambda(leftJoinSeq, [| a |])
                     let resLambda   = Expression.Lambda(Expression.New(pairCtor, [| (a :> Expression); (x :> Expression) |]), [| a; x |])
@@ -318,7 +316,6 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                     let gjMethod    = Methods.Queryable.GroupJoin.MakeGenericMethod(pairType, gjArgs.[1], gjArgs.[2], gjArgs.[3])
                     let gPrime      = Expression.Call(gjMethod, flatSM, g.Arguments.[1], Expression.Quote ko', Expression.Quote ki, Expression.Quote kr') :> Expression
 
-                    // re-express an Enumerable.* tail operator (over the group) as its Queryable.* counterpart
                     let toQueryable (mc: MethodCallExpression) (newSource: Expression) : Expression =
                         let def  = mc.Method.GetGenericMethodDefinition()
                         let qDef =
@@ -337,7 +334,6 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                                       | other                    -> other |]
                         Expression.Call(qMethod, args) :> Expression
 
-                    // rethread the tail (everything wrapping the GroupJoin) onto gPrime, converting each op to Queryable
                     let rec requery (e: Expression) : Expression =
                         if obj.ReferenceEquals(e, g) then gPrime
                         else
