@@ -295,7 +295,16 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                     let leftJoinSeq = g.Arguments.[0]                          // a.<member>.DefaultIfEmpty()
                     let xType       = g.Method.GetGenericArguments().[0]       // element of leftJoinSeq
                     let x           = Expression.Parameter(xType, "x")
-                    let pairType    = a.Type.GetGenericTypeDefinition().MakeGenericType([| a.Type; xType |])
+                    // The pair always carries exactly two fields, but a.Type's own arity grows with the number of
+                    // range variables in scope (F# widens AnonymousObject`2 to `4, `6, ... from the third chained
+                    // join onwards), so re-close the two-argument definition from the same assembly rather than
+                    // a.Type's. Closing a.Type's own definition over two arguments throws for any wider arity,
+                    // which the handler below swallows - leaving the un-flattened shape that #1813 is about.
+                    let pairDef     =
+                        let d = a.Type.GetGenericTypeDefinition()
+                        if d.GetGenericArguments().Length = 2 then d
+                        else d.Assembly.GetType((nonNull d.FullName).Substring(0, (nonNull d.FullName).LastIndexOf '`') + "`2") |> nonNull
+                    let pairType    = pairDef.MakeGenericType([| a.Type; xType |])
                     let pairCtor    = pairType.GetConstructors() |> Array.find (fun c -> c.GetParameters().Length = 2)
 
                     let flatMethod  = Methods.Queryable.SelectManyProjection.MakeGenericMethod(a.Type, xType, pairType)

@@ -329,6 +329,54 @@ let Issue1813Test9(db : IDataContext) =
     Assert.That(result[0], Is.EqualTo( (System.Nullable<int> 1, {Addresses.Id=1; Text="address"}) ) )
     Assert.That(result[1], Is.EqualTo( (System.Nullable<int> 2, null) ) )
 
+// Regression pin: THREE chained groupJoin/DefaultIfEmpty blocks. From the third join onwards F# widens the
+// accumulated element from AnonymousObject`2 to `4, so a flatten that re-closes the outer element's own
+// generic definition over two arguments throws and silently leaves the un-flattened shape - which drops
+// unmatched rows on providers with LATERAL and does not translate at all on those without.
+let Issue1813Test11(db : IDataContext) =
+    use table1 = db.CreateLocalTable<TradeValid>()
+    use table2 = db.CreateLocalTable<NominationValid>()
+
+    db.Insert({TradeValid.Id=1; DealNumber=2;ParcelGroupID=3;ParcelID=4}) |> ignore
+    db.Insert({TradeValid.Id=2; DealNumber=3;ParcelGroupID=4;ParcelID=5}) |> ignore
+    db.Insert({TradeValid.Id=3; DealNumber=5;ParcelGroupID=6;ParcelID=7}) |> ignore
+    db.Insert({TradeValid.Id=4; DealNumber=8;ParcelGroupID=6;ParcelID=9}) |> ignore
+    db.Insert({NominationValid.Id=1; DeliveryDealNumber=2;DeliveryParcelGroup=3;DeliveryParcelID=4; ReceiptDealNumber=9;ReceiptParcelGroup=9;ReceiptParcelID=9}) |> ignore
+    db.Insert({NominationValid.Id=2; DeliveryDealNumber=9;DeliveryParcelGroup=9;DeliveryParcelID=9; ReceiptDealNumber=3;ReceiptParcelGroup=4;ReceiptParcelID=5}) |> ignore
+    db.Insert({NominationValid.Id=3; DeliveryDealNumber=8;DeliveryParcelGroup=6;DeliveryParcelID=9; ReceiptDealNumber=3;ReceiptParcelGroup=4;ReceiptParcelID=5}) |> ignore
+    db.Insert({NominationValid.Id=4; DeliveryDealNumber=2;DeliveryParcelGroup=3;DeliveryParcelID=4; ReceiptDealNumber=8;ReceiptParcelGroup=6;ReceiptParcelID=9}) |> ignore
+
+    let query = query {
+        for tr in db.GetTable<TradeValid>() do
+        groupJoin n_del in db.GetTable<NominationValid>()
+            on ((tr.DealNumber,tr.ParcelGroupID, tr.ParcelID) = (n_del.DeliveryDealNumber, n_del.DeliveryParcelGroup, n_del.DeliveryParcelID)) into n_del_g
+        for x in n_del_g.DefaultIfEmpty() do
+        groupJoin n_rec in db.GetTable<NominationValid>()
+            on ((tr.DealNumber,tr.ParcelGroupID, tr.ParcelID) = (n_rec.ReceiptDealNumber, n_rec.ReceiptParcelGroup, n_rec.ReceiptParcelID)) into n_rec_g
+        for y in n_rec_g.DefaultIfEmpty() do
+        groupJoin tr2 in db.GetTable<TradeValid>()
+            on (tr.DealNumber = tr2.Id) into tr2_g
+        for z in tr2_g.DefaultIfEmpty() do
+        sortBy tr.Id
+        yield (tr, x, y, z)
+    }
+
+    let result = query.Take(90) |> Seq.toArray
+
+    // Third join deliberately does NOT match every trade: DealNumbers are 2,3,5,8 and trade ids are 1..4, so
+    // trades 1 and 2 match (z = 2, 3) while trades 3 and 4 do not (z = 0). Under a correct LEFT JOIN that is
+    // Test4's 6 rows with a fourth field; if the third join degrades to INNER JOIN LATERAL, the two unmatched
+    // rows (3-0-0-0 and 4-3-4-0) disappear and only 4 rows come back.
+    let key (n: NominationValid | null) = match n with | null -> 0 | nn -> nn.Id
+    let keyT (t: TradeValid | null) = match t with | null -> 0 | tt -> tt.Id
+    let actual =
+        result
+        |> Array.map (fun (tr, x, y, z) -> sprintf "%d-%d-%d-%d" tr.Id (key x) (key y) (keyT z))
+        |> Array.sort
+        |> String.concat ","
+
+    Assert.That(actual, Is.EqualTo "1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3,3-0-0-0,4-3-4-0")
+
 // Regression pin: the outer query range variable is a string projected from an IQueryable - a type no
 // placeholder instance can be built for, which is why the reduction substitutes marker calls.
 let Issue1813Test10(db : IDataContext) =
