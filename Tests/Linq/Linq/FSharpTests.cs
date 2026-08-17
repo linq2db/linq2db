@@ -427,8 +427,12 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test9(db);
 		}
 
+		// The nullable-string join key makes linq2db emit the null-aware equality
+		// (ON a.Text = b.Name OR a.Text IS NULL AND b.Name IS NULL), which YDB rejects ("JOIN ON expression must be
+		// a conjunction of equality predicates"). IsComplexJoinConditionSupported=false only relocates INNER JOIN
+		// conditions to WHERE; an outer join cannot.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test10([DataSources] string context)
+		public void Issue1813Test10([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test10(db);
