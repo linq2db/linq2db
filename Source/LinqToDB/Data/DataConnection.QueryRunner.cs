@@ -321,7 +321,9 @@ namespace LinqToDB.Data
 					// interceptor), else the concat command (Concat) is used. Rendered for BOTH non-parameter-dependent (cached)
 					// and parameter-dependent (rebuilt per run) queries so the resulting BakedQuery has every slot materialized
 					// and never needs the statement at execution.
-					if (dataConnection.CanUseDbBatch)
+					// Skipped outright when the master switch is off: the plan is then all-singleton, so every group would be
+					// rejected by the <= 1 step test inside and we would allocate an array of nulls per prepare for nothing.
+					if (options.LinqOptions.UseCombinedCommands && dataConnection.CanUseDbBatch)
 						batchCommands = RenderBatchTemplates(dataConnection, structure.Scenario, structure.Plan, parameterValues);
 #endif
 

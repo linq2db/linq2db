@@ -60,13 +60,10 @@ namespace Tests.UserTests
 				var order = query.FirstOrDefault();
 
 				// A First/Single over an eager LoadWith batches the main query and the eager query into one combined
-				// multi-result-set command on providers that support multi-statement batches + multiple result sets
-				// (SQLite here); ClickHouse and remote contexts lack that and still run them as two separate commands.
-				var combined = db is DataConnection dc
-					&& dc.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
-					&& dc.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported;
-
-				Assert.That(interceptor.Count, Is.EqualTo(combined ? 1 : 2));
+				// multi-result-set command — when the UseCombinedCommands policy switch is on (off by default in 6.x) AND
+				// the provider supports multi-statement batches + multiple result sets. Otherwise, and on remote contexts,
+				// they still run as two separate commands.
+				Assert.That(interceptor.Count, Is.EqualTo(db.UsesCombinedEagerLoading() ? 1 : 2));
 			}
 		}
 

@@ -221,14 +221,7 @@ namespace LinqToDB.Internal.DataProvider
 			var steps = scenario.Steps;
 
 			if (!flags.IsMultiStatementBatchSupported)
-			{
-				var singletons = new SqlCommandGroup[steps.Count];
-
-				for (var i = 0; i < steps.Count; i++)
-					singletons[i] = new SqlCommandGroup { StepIndexes = [i] };
-
-				return new SqlCommandGroupPlan { Groups = singletons };
-			}
+				return SqlCommandGroupPlan.Sequential(steps.Count);
 
 			var multipleResultSets = flags.IsMultipleResultSetsSupported;
 

@@ -1028,6 +1028,12 @@ namespace LinqToDB.Internal.Linq
 			if (harvesters == null || harvesters.Length == 0)
 				return null;
 
+			// Master switch (off by default in 6.x): combining is observable, not merely faster — it introduces the
+			// implicit read-consistency transaction and changes the emitted SQL. Provider capability is checked on top of
+			// it, never instead of it.
+			if (!dataContext.Options.LinqOptions.UseCombinedCommands)
+				return null;
+
 			if (dataContext is not DataConnection dataConnection
 				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultiStatementBatchSupported
 				|| !dataConnection.DataProvider.SqlProviderFlags.IsMultipleResultSetsSupported)

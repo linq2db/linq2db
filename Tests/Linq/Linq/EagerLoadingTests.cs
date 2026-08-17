@@ -21,9 +21,22 @@ using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture]
-	public class EagerLoadingTests : TestBase
+	// Runs twice: once with combined multi-statement execution off (the 6.x default) and once with it on. Eager loading on
+	// the Default strategy is the combinable one, so this is where both shapes need real coverage — the engine must not go
+	// untested just because it does not ship enabled.
+	[TestFixture(false)]
+	[TestFixture(true)]
+	public class EagerLoadingTests(bool combinedCommands) : TestBase
 	{
+		// Overrides the base helper by overload resolution — the base declares GetDataContext(string, MappingSchema? = null,
+		// ...), so this exact-arity one wins for every plain GetDataContext(context) call and the fixture parameter reaches
+		// all ~70 of them without editing any. The two sites passing their own options builder or mapping schema keep their
+		// existing behaviour.
+		protected ITestDataContext GetDataContext(string configuration)
+		{
+			return base.GetDataContext(configuration, o => o.UseCombinedCommands(combinedCommands));
+		}
+
 		[Table]
 		sealed class MasterClass
 		{
@@ -3792,7 +3805,9 @@ namespace Tests.Linq
 		{
 			var (masters, correlated, detached) = GenerateMixedEagerData();
 
-			using var db = GetDataContext(context);
+			// This test exists to assert the combined engine merges heterogeneous children, so it opts into the policy
+			// switch explicitly rather than relying on the default (off in 6.x).
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(true));
 
 			var counter = new CombinedCommandCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);

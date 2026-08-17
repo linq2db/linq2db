@@ -315,9 +315,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void DataConnection_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DataConnection_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
 			using var table = db.CreateTempTable<InterceptorsTestsTable>();
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -335,24 +335,30 @@ namespace Tests.Data
 			table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
 			using (Assert.EnterMultipleScope())
 			{
-				// SQLite supports multi-statement batches returning multiple result sets, so the identity insert
-				// (INSERT + SELECT last_insert_rowid()) runs as ONE combined command via ExecuteReader — rows-affected
-				// and the identity are harvested from the reader, so ExecuteScalar / ExecuteNonQuery are never called;
-				// ExecuteReader + AfterExecuteReader fire instead.
-				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				// Which callbacks fire depends on whether the identity insert runs combined. Combined: INSERT + SELECT
+				// last_insert_rowid() go as ONE command via ExecuteReader, with rows-affected and the identity harvested
+				// from the reader — so ExecuteScalar / ExecuteNonQuery are never called. Sequential: two commands, the
+				// INSERT as a non-query and the identity SELECT as a scalar.
+				//
+				// Read back from the context rather than reused from combinedCommands, so the expectation cannot drift from
+				// the engine's own gate: it also accounts for provider capability and for contexts the combined executor
+				// cannot serve at all.
+				var combined = db.UsesCombinedCommands();
+
+				Assert.That(interceptor.ExecuteScalarTriggered,             Is.EqualTo(!combined));
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered,             Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.EqualTo(!combined));
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.False);
 			}
 		}
 
 		[Test]
-		public async Task DataConnection_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DataConnection_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
-			await using var db = GetDataContext(context);
+			await using var db = GetDataContext(context, o => o.UseCombinedCommands(combinedCommands));
 			await using var table = await db.CreateTempTableAsync<InterceptorsTestsTable>();
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -371,14 +377,17 @@ namespace Tests.Data
 			using (Assert.EnterMultipleScope())
 			{
 				// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
-				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync.
-				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync. Sequential instead runs a non-query INSERT and a
+				// scalar identity SELECT.
+				var combined = db.UsesCombinedCommands();
+
+				Assert.That(interceptor.ExecuteScalarTriggered,             Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.EqualTo(!combined));
+				Assert.That(interceptor.ExecuteReaderTriggered,             Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.EqualTo(!combined));
 			}
 		}
 
@@ -507,10 +516,10 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void DataContext_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void DataContext_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			using var db = new DataContext(context);
+			using var db = new DataContext(new DataOptions().UseConfiguration(context).UseCombinedCommands(combinedCommands));
 			using var table = db.CreateTempTable<InterceptorsTestsTable>(tableOptions: TableOptions.None);
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -529,22 +538,24 @@ namespace Tests.Data
 			using (Assert.EnterMultipleScope())
 			{
 				// Combined into ONE command via ExecuteReader (see DataConnection_ExecuteScalar): reader interceptors
-				// fire, not ExecuteScalar / ExecuteNonQuery.
-				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				// fire, not ExecuteScalar / ExecuteNonQuery. Sequential runs the two commands separately instead.
+				var combined = db.UsesCombinedCommands();
+
+				Assert.That(interceptor.ExecuteScalarTriggered,             Is.EqualTo(!combined));
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered,             Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.EqualTo(!combined));
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.False);
 			}
 		}
 
 		[Test]
-		public async Task DataContext_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DataContext_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool combinedCommands)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			await using var db = new DataContext(context);
+			await using var db = new DataContext(new DataOptions().UseConfiguration(context).UseCombinedCommands(combinedCommands));
 			await using var table = await db.CreateTempTableAsync<InterceptorsTestsTable>(tableOptions: TableOptions.None);
 			var interceptor = new TestCommandInterceptor();
 			db.AddInterceptor(interceptor);
@@ -563,14 +574,16 @@ namespace Tests.Data
 			using (Assert.EnterMultipleScope())
 			{
 				// Combined into ONE command via ExecuteReaderAsync (see the sync test): the async reader interceptors
-				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync.
-				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
-				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+				// fire, not ExecuteScalarAsync / ExecuteNonQueryAsync. Sequential runs the two commands separately.
+				var combined = db.UsesCombinedCommands();
+
+				Assert.That(interceptor.ExecuteScalarTriggered,             Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered,        Is.EqualTo(!combined));
+				Assert.That(interceptor.ExecuteReaderTriggered,             Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered,        Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.EqualTo(combined));
+				Assert.That(interceptor.ExecuteNonQueryTriggered,           Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered,      Is.EqualTo(!combined));
 			}
 		}
 

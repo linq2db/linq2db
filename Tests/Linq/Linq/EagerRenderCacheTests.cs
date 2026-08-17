@@ -51,7 +51,10 @@ namespace Tests.Linq
 		[Test]
 		public void ParameterDependentDetailReRenders([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db       = GetDataContext(context);
+			// Forced on: this fixture's whole subject is the COMBINED per-command render cache. With the policy switch off
+			// (the 6.x default) the eager load runs sequentially and every assertion below still holds for unrelated
+			// reasons — the test would pass while testing nothing.
+			using var db       = GetDataContext(context, o => o.UseCombinedCommands(true));
 			using var parents  = db.CreateLocalTable<RcParent>();
 			using var children = db.CreateLocalTable<RcChild>();
 
@@ -91,7 +94,10 @@ namespace Tests.Linq
 		[Test]
 		public void StableEagerLoadFullyCached([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db       = GetDataContext(context);
+			// Forced on: this fixture's whole subject is the COMBINED per-command render cache. With the policy switch off
+			// (the 6.x default) the eager load runs sequentially and every assertion below still holds for unrelated
+			// reasons — the test would pass while testing nothing.
+			using var db       = GetDataContext(context, o => o.UseCombinedCommands(true));
 			using var parents  = db.CreateLocalTable<RcParent>();
 			using var children = db.CreateLocalTable<RcChild>();
 

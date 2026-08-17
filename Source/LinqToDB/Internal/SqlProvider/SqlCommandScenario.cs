@@ -108,6 +108,22 @@ namespace LinqToDB.Internal.SqlProvider
 	{
 		/// <summary>The ordered command groups.</summary>
 		public required IReadOnlyList<SqlCommandGroup> Groups { get; init; }
+
+		/// <summary>
+		/// The sequential plan: every step becomes its own physical command, i.e. one round-trip per statement. This is
+		/// what a provider without multi-statement support yields, and what the engine falls back to when
+		/// <see cref="LinqToDB.LinqOptions.UseCombinedCommands"/> is off.
+		/// </summary>
+		/// <param name="stepCount">Number of steps in the scenario.</param>
+		public static SqlCommandGroupPlan Sequential(int stepCount)
+		{
+			var groups = new SqlCommandGroup[stepCount];
+
+			for (var i = 0; i < stepCount; i++)
+				groups[i] = new SqlCommandGroup { StepIndexes = [i] };
+
+			return new SqlCommandGroupPlan { Groups = groups };
+		}
 	}
 
 	/// <summary>

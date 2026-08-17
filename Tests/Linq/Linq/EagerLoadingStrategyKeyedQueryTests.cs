@@ -650,7 +650,11 @@ namespace Tests.Linq
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
-			using var db = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery));
+			// Combining forced on: the ORDERING INVARIANT this test guards exists only in BuildPlan's combined path, so with
+			// the policy switch off (the 6.x default) everything runs sequentially and there is no ordering left to violate.
+			using var db = GetDataContext(context, o => o
+				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery)
+				.UseCombinedCommands(true));
 
 			var counter = new SelectQueryCounter();
 			if (!context.IsRemote()) db.AddInterceptor(counter);

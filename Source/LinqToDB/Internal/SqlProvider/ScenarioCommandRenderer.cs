@@ -259,8 +259,13 @@ namespace LinqToDB.Internal.SqlProvider
 			// already-prepared main statement are skipped.
 			scenario = FinalizeScenarioSteps(scenario, statement, sqlOptimizer, options, dataConnection.MappingSchema, optimizationContext);
 
-			// Plan: group the scenario's steps into physical commands (round-trips), size-aware.
-			var plan = dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags);
+			// Plan: group the scenario's steps into physical commands (round-trips), size-aware. The master switch is
+			// checked here rather than inside the provider's PlanScenario, because that method answers "what can this
+			// provider merge" (capability) while this answers "should we merge at all" (policy) — conflating them would
+			// have a provider misreport its own abilities.
+			var plan = options.LinqOptions.UseCombinedCommands
+				? dmlService.PlanScenario(scenario, dataConnection.DataProvider.SqlProviderFlags)
+				: SqlCommandGroupPlan.Sequential(scenario.Steps.Count);
 
 			return new QueryStructure(scenario, plan, statement, aliases);
 		}

@@ -674,6 +674,22 @@ namespace LinqToDB
 			return options.WithOptions<LinqOptions>(o => o with { OptimizeForSequentialAccess = optimizeForSequentialAccess });
 		}
 
+		/// <summary>
+		/// Enables combined multi-statement execution: several statements of one logical operation are sent as a single
+		/// database round-trip and their result sets read in order. Drives both eager loading (a main query plus its child
+		/// collections collapse from N+1 round-trips to 1) and multi-step DML.
+		/// <para>
+		/// Enabling this is observable, not merely faster — see <see cref="LinqOptions.UseCombinedCommands"/> for what
+		/// changes. A provider that does not report the required capabilities stays sequential regardless.
+		/// </para>
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseCombinedCommands(this DataOptions options, bool useCombinedCommands)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { UseCombinedCommands = useCombinedCommands });
+		}
+
 		#endregion
 
 		#region ConnectionOptions

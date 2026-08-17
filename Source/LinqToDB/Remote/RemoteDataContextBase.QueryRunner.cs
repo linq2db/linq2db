@@ -93,7 +93,11 @@ namespace LinqToDB.Remote
 
 				scenario = ScenarioCommandRenderer.FinalizeScenarioSteps(scenario, statement, sqlOptimizer, DataContext.Options, DataContext.MappingSchema, optimizationContext);
 
-				var plan     = dmlService.PlanScenario(scenario, flags);
+				// Same master-switch gate as the direct runner (ScenarioCommandRenderer.PrepareStructure), so the SQL text
+				// this reports matches what the server will actually execute for these options.
+				var plan     = DataContext.Options.LinqOptions.UseCombinedCommands
+					? dmlService.PlanScenario(scenario, flags)
+					: SqlCommandGroupPlan.Sequential(scenario.Steps.Count);
 				var commands = ScenarioCommandRenderer.RenderScenarioGroups(scenario, plan, statement, aliases, sqlBuilder, optimizationContext, serviceProvider, sqlStringBuilder.Value, 0);
 
 				var queries = new QuerySql[commands.Length];
