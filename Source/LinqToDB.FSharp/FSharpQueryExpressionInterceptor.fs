@@ -11,6 +11,14 @@ open LinqToDB.Mapping
 open LinqToDB.Reflection
 open LinqToDB.Internal.Reflection
 
+/// Stands in for a captured free variable while the quotation is converted back to an expression tree: the
+/// call survives the conversion as an ordinary MethodCallExpression carrying the variable's index, which the
+/// reduction then replaces with the captured outer value-expression. A marker *call* rather than a placeholder
+/// *instance* because no instance can be built for a string / interface / abstract free-variable type.
+type private FreeVarMarker =
+    static member Get<'T> (index: int) : 'T =
+        raise (NotSupportedException(sprintf "F# free variable marker %d was not substituted" index))
+
 /// Rewrites F#-specific expression-tree shapes the core translator does not understand:
 ///   * reduces the F# quotation machinery a captured-variable lambda compiles to -
 ///       LeafExpressionConverter.QuotationToLambdaExpression(SubstHelper(quotation, freeVars, capturedValues))
@@ -34,6 +42,14 @@ open LinqToDB.Internal.Reflection
 /// (Kept out of core so F# quirks live in the F# library.)
 type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
     inherit ExpressionVisitor()
+
+    // FreeVarMarker is private, so its member compiles as assembly-visible - NonPublic is required here.
+    static let markerMethod =
+        typeof<FreeVarMarker>.GetMethod(
+            "Get",
+            System.Reflection.BindingFlags.Static ||| System.Reflection.BindingFlags.Public ||| System.Reflection.BindingFlags.NonPublic)
+        |> nonNull
+    static let exprCast = typeof<Expr>.GetMethod "Cast" |> nonNull
 
     // Rewrites an F# Update(... , setter) call into a Where(...)?.Set(...).Update() chain that assigns
     // only the members whose ctor argument is not a self-copy `row.SameMember`.
@@ -156,20 +172,6 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
     member private _.Eval (e: Expression) : obj =
         Expression.Lambda(e).Compile().DynamicInvoke() |> nonNull
 
-    // Distinct placeholder instance for a free var's type, matched later by reference identity. GetUninitializedObject
-    // lives on RuntimeHelpers (net5+) or FormatterServices (netfx / netstandard fallback); resolve it by reflection
-    // so this assembly compiles for every TFM (net462 / netstandard2.0 / net8-10) without a direct reference.
-    member private _.CreateSentinel (t: Type) : obj =
-        let getMethod (typeName: string) =
-            match Type.GetType typeName with
-            | null -> null
-            | ty   -> ty.GetMethod("GetUninitializedObject", [| typeof<Type> |])
-        let m =
-            match getMethod "System.Runtime.CompilerServices.RuntimeHelpers" with
-            | null -> getMethod "System.Runtime.Serialization.FormatterServices"
-            | m    -> m
-        (nonNull m).Invoke(null, [| box t |]) |> nonNull
-
     // Strip the Convert(_, obj) box F# wraps captured values in, then re-Convert to the reduced parameter's
     // type when they differ, so the substituted value-expression is assignment-compatible with the parameter.
     member private _.StripBox (e: Expression) (targetType: Type) : Expression =
@@ -183,11 +185,13 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
         else Expression.Convert(operand, targetType) :> Expression
 
     // Reduce QuotationToLambdaExpression(SubstHelper(q, freeVars, capturedValues)) - or a bare
-    // QuotationToLambdaExpression(q) with no captures - to Quote(lambda). We re-run F#'s own SubstHelper and
-    // QuotationToLambdaExpression (the exact MethodInfos from the tree, already closed over the predicate
-    // delegate type) but substitute each free var with a distinct uninitialized sentinel instance; that yields
-    // a real Expression<Func<..>> whose free-var sites are sentinel constants, which we then replace with the
-    // captured outer value-expressions - reproducing the correlated predicate a C# lambda would have emitted.
+    // QuotationToLambdaExpression(q) with no captures - to Quote(lambda). We substitute each free var in the
+    // quotation with a FreeVarMarker.Get<'T>(i) call and re-run F#'s own QuotationToLambdaExpression (the exact
+    // MethodInfo from the tree, already closed over the predicate delegate type); that yields a real
+    // Expression<Func<..>> whose free-var sites are marker calls, which we then replace with the captured outer
+    // value-expressions - reproducing the correlated predicate a C# lambda would have emitted. The marker call
+    // keeps the substitution independent of the free var's type: a string / interface / abstract / Nullable<'T>
+    // range variable has no constructible placeholder instance.
     member private this.TryReduceFSharpQuotation (node: MethodCallExpression) : Expression option =
         if not (this.IsLeafCall node.Method "QuotationToLambdaExpression") || node.Arguments.Count <> 1 then
             None
@@ -200,7 +204,7 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                         | :? NewArrayExpression as na -> Array.ofSeq na.Expressions
                         | _                           -> [||]
                     // Evaluate the quotation and the Var[] in a single execution so a shared free-var node keeps
-                    // its identity (SubstHelper matches free vars by reference).
+                    // its identity (free vars are matched by reference).
                     let boxed =
                         Expression.NewArrayInit(
                             typeof<obj>,
@@ -210,20 +214,24 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                     let vars = arr.[1] :?> Var[]
                     if vars.Length = 0 || vars.Length <> valueExprs.Length then None
                     else
-                        let sentinels = vars |> Array.map (fun v -> this.CreateSentinel v.Type)
-                        let subst  = sh.Method.Invoke(null, [| arr.[0]; box vars; box sentinels |])
-                        let lam    = (node.Method.Invoke(null, [| subst |]) |> nonNull) :?> LambdaExpression
-                        let map    = System.Collections.Generic.Dictionary<obj, Expression>(HashIdentity.Reference)
-                        for i in 0 .. sentinels.Length - 1 do
-                            map.[sentinels.[i]] <- this.StripBox valueExprs.[i] vars.[i].Type
+                        let index = System.Collections.Generic.Dictionary<Var, int>(HashIdentity.Reference)
+                        vars |> Array.iteri (fun i v -> index.[v] <- i)
+                        let marked =
+                            (arr.[0] :?> Expr).Substitute(fun v ->
+                                match index.TryGetValue v with
+                                | true, i -> Some (Expr.Call(markerMethod.MakeGenericMethod v.Type, [ Expr.Value i ]))
+                                | _       -> None)
+                        let typed  = exprCast.MakeGenericMethod(node.Method.GetGenericArguments()).Invoke(null, [| box marked |])
+                        let lam    = (node.Method.Invoke(null, [| typed |]) |> nonNull) :?> LambdaExpression
                         let replaced =
                             lam.Transform(fun e ->
                                 match e with
-                                | :? ConstantExpression as c ->
-                                    match c.Value with
-                                    | null -> e
-                                    | v when map.ContainsKey v -> map.[v]
-                                    | _ -> e
+                                | :? MethodCallExpression as mc when
+                                        mc.Method.IsGenericMethod
+                                        && mc.Method.GetGenericMethodDefinition() = markerMethod
+                                        && (mc.Arguments.[0] :? ConstantExpression) ->
+                                    let i = (mc.Arguments.[0] :?> ConstantExpression).Value :?> int
+                                    this.StripBox valueExprs.[i] vars.[i].Type
                                 | _ -> e)
                             |> nonNull
                         // Re-normalize any residual F# shapes, then wrap the way the translator's UnwrapLambda

@@ -296,10 +296,8 @@ let Issue1813Test7(db : IDataContext) =
     Assert.That(actual, Is.EqualTo "1-0-0,2-2-2,2-2-3,2-3-2,2-3-3,3-0-0,4-4-4")
 
 // Regression pin: a captured interface-typed *local* used inside an F# join predicate translates
-// correctly. Such a local is an ordinary closure capture, not a SubstHelper free variable - those are
-// the outer query range variables, which are always entity reference types - so its type never reaches
-// FSharpRewriteVisitor.CreateSentinel. Confirms the sentinel path's inability to build interface /
-// abstract / Nullable<'T> instances is unreachable through F# query shapes.
+// correctly. Such a local is an ordinary closure capture rather than a SubstHelper free variable, so it
+// takes the closure path and not the quotation reduction.
 let Issue1813Test8(db : IDataContext) =
     use table1 = db.CreateLocalTable<Names>()
     use table2 = db.CreateLocalTable<Addresses>()
@@ -322,4 +320,58 @@ let Issue1813Test8(db : IDataContext) =
     Assert.That(result, Has.Length.EqualTo(2))
     Assert.That(result[0], Is.EqualTo( (1, "name1", {Addresses.Id=1; Text="address"}) ) )
     Assert.That(result[1], Is.EqualTo( (2, "name2", null) ) )
+
+// Regression pin: the outer query range variable is a Nullable<int> projected from an IQueryable, so the
+// quotation reduction gets a SubstHelper free variable that is a value type rather than an entity.
+let Issue1813Test9(db : IDataContext) =
+    use table1 = db.CreateLocalTable<Names>()
+    use table2 = db.CreateLocalTable<Addresses>()
+
+    db.Insert({Names.Id=1; Name="name1"}) |> ignore
+    db.Insert({Names.Id=2; Name="name2"}) |> ignore
+    db.Insert({Addresses.Id=1; Text="address"}) |> ignore
+
+    let ids = query {
+        for n in db.GetTable<Names>() do
+        select (System.Nullable<int> n.Id)
+    }
+
+    let query = query {
+        for id in ids do
+        for a in db.GetTable<Addresses>().Where(fun a1 -> System.Nullable<int> a1.Id = id).DefaultIfEmpty() do
+        select (id, a)
+    }
+
+    let result = query |> Seq.toArray |> Array.sortBy (fun (id: System.Nullable<int>, _) -> id.Value)
+
+    Assert.That(result, Has.Length.EqualTo(2))
+    Assert.That(result[0], Is.EqualTo( (System.Nullable<int> 1, {Addresses.Id=1; Text="address"}) ) )
+    Assert.That(result[1], Is.EqualTo( (System.Nullable<int> 2, null) ) )
+
+// Regression pin: the outer query range variable is a string projected from an IQueryable - a type no
+// placeholder instance can be built for, which is why the reduction substitutes marker calls.
+let Issue1813Test10(db : IDataContext) =
+    use table1 = db.CreateLocalTable<Names>()
+    use table2 = db.CreateLocalTable<Addresses>()
+
+    db.Insert({Names.Id=1; Name="address"}) |> ignore
+    db.Insert({Names.Id=2; Name="other"}) |> ignore
+    db.Insert({Addresses.Id=1; Text="address"}) |> ignore
+
+    let names = query {
+        for n in db.GetTable<Names>() do
+        select n.Name
+    }
+
+    let query = query {
+        for nm in names do
+        for a in db.GetTable<Addresses>().Where(fun a1 -> a1.Text = nm).DefaultIfEmpty() do
+        select (nm, a)
+    }
+
+    let result = query |> Seq.toArray |> Array.sortBy fst
+
+    Assert.That(result, Has.Length.EqualTo(2))
+    Assert.That(result[0], Is.EqualTo( ("address", {Addresses.Id=1; Text="address"}) ) )
+    Assert.That(result[1], Is.EqualTo( ("other", null) ) )
 
