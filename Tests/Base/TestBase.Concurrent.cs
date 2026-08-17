@@ -2,6 +2,7 @@
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -29,8 +30,9 @@ namespace Tests
 
 			using var semaphore = new Semaphore(0, poolCount);
 
-			var threads = new Thread[threadCount];
-			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
+			var threads     = new Thread[threadCount];
+			var results     = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
+			var queryFailed = new bool[threadCount];
 
 			for (var i = 0; i < threadCount; i++)
 			{
@@ -48,11 +50,25 @@ namespace Tests
 							threadDb.AddInterceptor(commandInterceptor);
 
 							var result = queryFunc(threadDb, param);
-							results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
+
+							// Check here rather than after every thread joined: a passing result is dropped
+							// immediately instead of being retained until the whole run finishes. Retaining
+							// all of them peaked at ~570MB for one EagerLoadMultiLevel lane, and the SQL
+							// Server legs run four lanes at once.
+							try
+							{
+								checkAction(result, param);
+								results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, (Exception?)null)!;
+							}
+							catch (Exception checkFailure)
+							{
+								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)checkFailure);
+							}
 						}
 						catch (Exception e)
 						{
 							results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, e)!;
+							queryFailed[n] = true;
 						}
 
 					}
@@ -78,37 +94,33 @@ namespace Tests
 			for (var i = 0; i < threads.Length; i++)
 			{
 				var result = results[i];
-				if (result.Item5 != null)
+				if (queryFailed[i])
 				{
 					TestContext.Out.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
-					throw result.Item5;
+					throw result.Item5!;
 				}
 
-				try
+				if (result.Item5 == null)
+					continue;
+
+				var testResult = queryFunc(dc, result!.Item1);
+
+				TestContext.Out.WriteLine($"Failed query ({result.Item1}):\n");
+				if (result.Item4 != null)
 				{
-					checkAction(result.Item2, result.Item1);
+					var sb = new StringBuilder();
+					dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
+					TestContext.Out.WriteLine(sb);
 				}
-				catch
-				{
-					var testResult = queryFunc(dc, result!.Item1);
 
-					TestContext.Out.WriteLine($"Failed query ({result.Item1}):\n");
-					if (result.Item4 != null)
-					{
-						var sb = new StringBuilder();
-						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
-						TestContext.Out.WriteLine(sb);
-					}
+				TestContext.Out.WriteLine();
+				TestContext.Out.WriteLine(result.Item3);
 
-					TestContext.Out.WriteLine();
-					TestContext.Out.WriteLine(result.Item3);
+				DumpObject(result.Item2);
 
-					DumpObject(result.Item2);
+				DumpObject(testResult);
 
-					DumpObject(testResult);
-
-					throw;
-				}
+				ExceptionDispatchInfo.Capture(result.Item5).Throw();
 			}
 		}
 
