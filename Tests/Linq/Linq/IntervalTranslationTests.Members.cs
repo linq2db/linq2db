@@ -254,7 +254,11 @@ namespace Tests.Linq
 			// so every one of them refuses. This goes red the day one learns to divide.
 			Action act = () => t.Select(r => Sql.AsSql(r.InNanoseconds.Ticks)).Single();
 
-			act.ShouldThrow<LinqToDBException>();
+			// The message as well as the type: LinqToDBException stands for every untranslatable query, so a
+			// type-only assertion would also be satisfied by an unrelated refusal inside this same one. What is
+			// raised here is the generic conversion failure - no refusal names a sub-tick unit - so that is what
+			// is pinned, and pinning it is what would notice one being introduced.
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("could not be converted to SQL");
 
 			// The conversion is untouched by that - only arithmetic on the stored number is refused.
 			t.Single().InNanoseconds.ShouldBe(value);

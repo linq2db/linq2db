@@ -241,14 +241,12 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
+		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/> - the column an expression's value is
+		/// read from, when there is one, which is the descriptor that says how to turn what the database returns
+		/// back into the member's value.
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
 		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
-		/// <summary>
-		/// The column an expression's value is read from, when there is one - the descriptor that says how to turn
-		/// what the database returns back into the member's value.
-		/// </summary>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
 			return GetColumnDescriptor(expr, new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default), forTyping: false);
