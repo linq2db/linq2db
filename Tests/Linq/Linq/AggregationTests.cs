@@ -269,7 +269,10 @@ namespace Tests.Linq
 			// below without exercising anything.
 			sums.ShouldNotBeEmpty();
 
-			shifted.ShouldBe(sums.Select(s => s + 0.00005m));
+			// Order-insensitive because nothing here is about order: the two queries are executed separately and
+			// grouped without one, and ClickHouse aggregates in parallel, so a positional match would hold by
+			// accident. What is asserted is that the addend keeps its own scale, which is per-value.
+			shifted.ShouldBe(sums.Select(s => s + 0.00005m), ignoreOrder: true);
 		}
 	}
 }
