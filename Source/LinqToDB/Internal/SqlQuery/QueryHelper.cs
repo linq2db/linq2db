@@ -364,6 +364,27 @@ namespace LinqToDB.Internal.SqlQuery
 					return found;
 				}
 
+				// A cast is transparent on the same terms as the operator above, and it is here because the
+				// invariant this walk exists for names one: whatever wraps an expression has to leave the
+				// descriptor reachable from the result. The type guard is what makes that safe - a cast that
+				// changed the type is describing something else and the operand's column no longer speaks for it,
+				// while one that did not is a restatement the reader can see straight through.
+				//
+				// Ordinary queries reach this, which is worth saying because it was assumed they did not: over the
+				// SQLite suite the arm resolves for Convert.ToDecimal and its money variants, for string
+				// concatenation and for interpolation - measured by making it throw and counting who arrived.
+				// None of them changes answer, because the columns underneath carry no conversion for the
+				// descriptor to matter to; what changes is that a column that does carry one is no longer hidden
+				// by a cast that kept its type. The failure that guards against is silent by construction: the
+				// statement stays valid and the value is read through the wrong conversion.
+				case SqlCastExpression cast:
+				{
+					var found = GetColumnDescriptor(cast.Expression, alreadyVisitedElements, forTyping);
+					if (found?.GetDbDataType(true).SystemType != cast.SystemType)
+						return null;
+					return found;
+				}
+
 				// A single-argument function that keeps its operand's type is transparent for this purpose, the
 				// same way a unary operator is. Providers rewrite operators into functions - ClickHouse turns
 				// negation into negate(x) - and the remote path resolves the descriptor from the *lowered*
