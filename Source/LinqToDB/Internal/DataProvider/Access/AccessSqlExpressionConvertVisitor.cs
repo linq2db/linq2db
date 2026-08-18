@@ -104,6 +104,45 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		const int SecondsPerDay = 24 * 60 * 60;
 
+		/// <summary>
+		/// Forms a component of an elapsed difference over the last day of it rather than over the whole span.
+		/// </summary>
+		/// <remarks>
+		/// Everything this provider counts with is 32-bit, and a component asks for all three of it: the count, the
+		/// amount the correction's anchor is shifted by, and <c>MOD</c>, which coerces both operands before dividing.
+		/// A second count crosses that range after about sixty-eight years - inside a human lifetime - and the last
+		/// of the three takes the elapsed count whole, so no split made inside the component can help.
+		/// <para>
+		/// Made outside it instead. A component wraps at a divisor of a day - twenty-four hours, sixty minutes, sixty
+		/// seconds - so whole days contribute nothing to it, and the same answer comes from the part of the span that
+		/// is left after them. That part is under a day, which every count and every shift here holds comfortably.
+		/// </para>
+		/// <para>
+		/// The day count has to be the elapsed one rather than the boundary one, which is the whole reason this is
+		/// not simply <c>DateDiff</c>. A boundary count overshoots between an evening and the following morning, and
+		/// an anchor past the end turns the remainder negative - a sign the modulo keeps, answering -20 where 40 was
+		/// meant.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
+		{
+			if (element.Kind == SqlIntervalPartKind.Component
+				&& element.Unit is SqlIntervalUnit.Hour or SqlIntervalUnit.Minute or SqlIntervalUnit.Second
+				&& QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
+			{
+				var days = IntervalLowering.ElapsedUnits(Factory, difference, SqlIntervalUnit.Day, CountDateBoundaries, ShiftDate);
+
+				if (days != null && ShiftDate(SqlIntervalUnit.Day, days, difference.Start) is { } anchor)
+				{
+					var lastDay = new SqlIntervalDifferenceExpression(anchor, difference.End, difference.Type, difference.IntervalType);
+
+					element = new SqlIntervalPartExpression(lastDay, element.Unit, element.Kind, element.Type, element.Within);
+				}
+			}
+
+			return base.LowerIntervalPart(element);
+		}
+
 		static string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch

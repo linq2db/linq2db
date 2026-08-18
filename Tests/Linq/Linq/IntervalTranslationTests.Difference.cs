@@ -364,53 +364,66 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// Where a second component stops answering on Access, and that a shorter span still does.
+		/// Components of a span far past the range of the counters they are formed with.
 		/// </summary>
 		/// <remarks>
-		/// Access forms the component as an elapsed count of seconds reduced by <c>MOD</c>, and every step of that is
-		/// 32-bit: <c>DateDiff</c> produces the count, <c>DateAdd</c> carries it as the anchor of the correction, and
-		/// <c>MOD</c> coerces both operands before dividing. The first two act on a value that can be split into whole
-		/// days and a sub-day rest, but <c>MOD</c> takes the elapsed count whole - so the reach of the component is the
-		/// reach of that count, about sixty-eight years.
+		/// Access counts and shifts in 32-bit values and reduces with <c>MOD</c>, which coerces both its operands
+		/// before dividing - so a component formed over the whole span runs out after about sixty-eight years, which
+		/// is inside a human lifetime. The reduction takes the elapsed count whole, so no split made inside the
+		/// component reaches past that.
 		/// <para>
-		/// Reaching further means forming the component over a day-anchored window instead, where a day is a whole
-		/// number of the unit and the modulo cannot see it. That needs the corrected elapsed day count rather than the
-		/// boundary one: an anchor that overshoots makes the remainder negative, and the sign survives the modulo.
+		/// It is formed over the last day of the span instead, which is exact rather than an approximation: a
+		/// component wraps at a divisor of a day, so whole days contribute nothing to it. Every provider runs this,
+		/// not Access alone - the members are ordinary ones, and a component that agrees with the CLR over a span
+		/// this long is worth holding everywhere.
 		/// </para>
 		/// <para>
-		/// Totals are not bounded this way, and the companion test above holds them over the same span. Pinned rather
-		/// than left undiscovered, and it goes red the day the component reaches further - which is when this is worth
-		/// revisiting.
-		/// </para>
-		/// <para>
-		/// The short-span row is asked first and through the same expression, so this cannot pass by the component
-		/// being broken outright rather than only beyond its range.
+		/// Both directions, because the day count the anchor is taken from is signed, and the modulo keeps whatever
+		/// sign reaches it. The shorter span is asked through the same expression, so a component broken outright
+		/// could not pass as one that merely reaches far.
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void ASecondComponentPastItsCountersRangeIsRefused([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ComponentsHoldPastTheRangeOfTheirCounters([DataSources] string context, [Values(1, -1)] int direction)
 		{
-			var start = new DateTime(1970, 1, 2, 0, 0, 0);
+			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
+			var later   = new DateTime(2045, 6, 5, 4, 3, 2);
 
-			var shortSpanEnd = start.AddSeconds(125);
-			var longSpanEnd  = new DateTime(2045, 6, 5, 4, 3, 2);
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
 
-			Math.Abs((longSpanEnd - start).TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
+			var expected = end - start;
+
+			// The guard against the case quietly ceasing to test anything: brought closer together, these dates stop
+			// crossing the range the components are formed with.
+			Math.Abs(expected.TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
 
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable<EventRow>();
 
-			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = shortSpanEnd });
-			db.Insert(new EventRow { Id = 2, StartedOn = start, FinishedOn = longSpanEnd  });
+			db.Insert(new EventRow { Id = 1, StartedOn = start,   FinishedOn = end });
+			db.Insert(new EventRow { Id = 2, StartedOn = earlier, FinishedOn = earlier.AddSeconds(125) });
 
-			int SecondsOf(int id) => t
-				.Where (r => r.Id == id)
-				.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Seconds))
-				.Single();
+			// One member per query rather than three in one projection. Forming a component this way costs a
+			// corrected day count, a shift and a correction of its own, and Access answers "Query is too complex"
+			// when three of them meet in a single SELECT - a limit of that parser, not of the arithmetic.
+			var shortSpan = TimeSpan.FromSeconds(125);
 
-			SecondsOf(1).ShouldBe((shortSpanEnd - start).Seconds);
+			var hours = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Hours)).ToList();
 
-			Shouldly.Should.Throw<Exception>(() => SecondsOf(2));
+			hours[0].ShouldBe(expected.Hours);
+			hours[1].ShouldBe(shortSpan.Hours);
+
+			var minutes = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes)).ToList();
+
+			minutes[0].ShouldBe(expected.Minutes);
+			minutes[1].ShouldBe(shortSpan.Minutes);
+
+			var seconds = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Seconds)).ToList();
+
+			seconds[0].ShouldBe(expected.Seconds);
+			seconds[1].ShouldBe(shortSpan.Seconds);
 		}
 
 		/// <summary>
