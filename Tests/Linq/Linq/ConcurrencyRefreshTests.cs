@@ -166,6 +166,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UpdateViaQueryWithFilterOnUpdatedColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount
+			if (db.SqlProviderFlags.IsUpdateOutputSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
+
+			using var _ = new DisableBaseline("guid used");
+			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			db.Insert(record);
+			record.Stamp = t.Single().Stamp;
+			var before   = record.Stamp;
+
+			// the caller's filter tests a column the update itself rewrites, so the row no longer matches it
+			// after the UPDATE commits - the read-back must still find the row it just updated
+			record.Value = "updated";
+			var cnt = t.Where(r => r.Value == "initial").UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(1);
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.Single().Stamp);
+		}
+
+		[Test]
 		public void UpdateRefreshesAutoIncrement([DataSources] string context)
 		{
 			var skipCnt = !context.SupportsRowcount();

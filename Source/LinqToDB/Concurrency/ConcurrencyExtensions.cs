@@ -342,14 +342,26 @@ namespace LinqToDB.Concurrency
 			return Expression.Lambda<Func<T, T>>(InitLockColumns(objType, lockColumns, x), x);
 		}
 
-		private static async Task<List<TItem>> ToListAsync<TItem>(IAsyncEnumerable<TItem> source, CancellationToken cancellationToken)
+		// Table-shaping calls on the caller's source (TableName / SchemaName / ...) are kept so the read-back hits
+		// the same table the UPDATE targeted; the caller's query operators are dropped, because their predicates
+		// may test columns the UPDATE itself rewrites - the updated row would then no longer match and the
+		// refresh would silently not happen.
+		private static IQueryable<T> ReadBackSource<T>(IQueryable<T> source, IDataContext dc)
+			where T : class
 		{
-			var list = new List<TItem>();
+			var expression = source.Expression;
 
-			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(false))
-				list.Add(item);
+			while (expression is MethodCallExpression call
+				&& call.Method.DeclaringType == typeof(Queryable)
+				&& call.Arguments.Count > 0
+				&& typeof(IQueryable<T>).IsAssignableFrom(call.Arguments[0].Type))
+			{
+				expression = call.Arguments[0];
+			}
 
-			return list;
+			return ReferenceEquals(expression, source.Expression)
+				? source
+				: Internals.CreateExpressionQueryInstance<T>(dc, expression);
 		}
 
 		private static int UpdateOptimisticWithRefreshCore<T>(IQueryable<T> source, IDataContext dc, T obj)
@@ -367,7 +379,7 @@ namespace LinqToDB.Concurrency
 			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
 			{
 				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
-				// new-values-only providers (SQLite / PostgreSQL < 18 / Firebird < 5)
+				// providers that cannot return the old row (SQLite / DuckDB / YDB / PostgreSQL < 18)
 				var refreshed = updatable.UpdateWithOutput(LockColumnsOutput<T>(objType, lockColumns)).ToList();
 
 				if (refreshed.Count > 0)
@@ -386,9 +398,7 @@ namespace LinqToDB.Concurrency
 			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
 			if (count > 0)
 			{
-				// read back through source (not dc.GetTable<T>()) so the read-back hits the same table the UPDATE
-				// targeted, honoring any source-level table mapping (e.g. TableName override)
-				var fresh = FilterByPrimaryKey(source, obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
+				var fresh = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
@@ -412,8 +422,8 @@ namespace LinqToDB.Concurrency
 			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
 			{
 				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
-				// new-values-only providers (SQLite / PostgreSQL < 18 / Firebird < 5)
-				var refreshed = await ToListAsync(updatable.UpdateWithOutputAsync(LockColumnsOutput<T>(objType, lockColumns)), cancellationToken).ConfigureAwait(false);
+				// providers that cannot return the old row (SQLite / DuckDB / YDB / PostgreSQL < 18)
+				var refreshed = await updatable.UpdateWithOutputAsync(LockColumnsOutput<T>(objType, lockColumns)).ToListAsync(cancellationToken).ConfigureAwait(false);
 
 				if (refreshed.Count > 0)
 					CopyColumns(lockColumns, refreshed[0], obj);
@@ -431,9 +441,7 @@ namespace LinqToDB.Concurrency
 			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
 			if (count > 0)
 			{
-				// read back through source (not dc.GetTable<T>()) so the read-back hits the same table the UPDATE
-				// targeted, honoring any source-level table mapping (e.g. TableName override)
-				var fresh = await FilterByPrimaryKey(source, obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+				var fresh = await FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
@@ -446,12 +454,21 @@ namespace LinqToDB.Concurrency
 		/// Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on
 		/// <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
 		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <returns>
-		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
+		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
@@ -470,13 +487,22 @@ namespace LinqToDB.Concurrency
 		/// Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s)
 		/// on <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
 		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
+		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
@@ -495,12 +521,21 @@ namespace LinqToDB.Concurrency
 		/// Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on
 		/// <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
 		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <returns>
-		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
+		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
@@ -521,13 +556,22 @@ namespace LinqToDB.Concurrency
 		/// Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s)
 		/// on <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
 		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of updated records. <c>0</c> indicates an optimistic-concurrency failure; the entity is left untouched.
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
+		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
