@@ -301,6 +301,13 @@ namespace LinqToDB.Internal.SqlQuery
 			if (IsAggregate != otherFunction.IsAggregate)
 				return false;
 
+			// Compared although it is currently decided by the name above, which is compared too. That makes this
+			// redundant only for as long as the mapping stays one-to-one, and the cost of it not being compared is
+			// paid silently: two nodes alike in everything else would be interchangeable under hash-keyed reuse,
+			// and one call site would take the other's answer about what its argument describes.
+			if (ArgumentDomain != otherFunction.ArgumentDomain)
+				return false;
+
 			if (Arguments.Count != otherFunction.Arguments.Count)
 				return false;
 
@@ -557,6 +564,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(FrameClause?.GetElementHashCode());
 			hash.Add(Filter?.GetElementHashCode());
 			hash.Add(IsAggregate);
+			hash.Add(ArgumentDomain);
 			hash.Add(CanBeAffectedByOrderBy);
 			hash.Add(KeepClause?.GetElementHashCode());
 			hash.Add(NullTreatment);

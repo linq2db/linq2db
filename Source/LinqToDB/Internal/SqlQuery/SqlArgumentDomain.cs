@@ -1,4 +1,4 @@
-namespace LinqToDB.Internal.SqlQuery
+﻿namespace LinqToDB.Internal.SqlQuery
 {
 	/// <summary>
 	/// How a function's result relates to the domain of its argument.
