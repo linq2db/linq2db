@@ -37,13 +37,22 @@ namespace Tests.Linq
 			return ms;
 		}
 
+		// the capability UpdateOptimisticWithRefresh actually requires: the provider must be able to report the
+		// concurrency result, either through UPDATE OUTPUT/RETURNING or through a reliable affected-rows count
+		private static void SkipIfRefreshUnsupported(IDataContext db)
+		{
+			if (!db.SqlProviderFlags.IsUpdateOutputSupported && !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("UpdateOptimisticWithRefresh is unsupported when the provider reports neither UPDATE OUTPUT/RETURNING nor affected-row counts.");
+		}
+
 		[Test]
 		public void UpdateRefreshesVersion([DataSources] string context)
 		{
-			var skipCnt = !context.SupportsRowcount();
-
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			SkipIfRefreshUnsupported(db);
+
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -56,7 +65,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) cnt.ShouldBe(1);
+			cnt.ShouldBe(1);
 
 			// the regenerated version is written back onto the entity (issue #4194) ...
 			record.Stamp.ShouldNotBe(before);
@@ -67,10 +76,11 @@ namespace Tests.Linq
 		[Test]
 		public async Task UpdateRefreshesVersionAsync([DataSources] string context)
 		{
-			var skipCnt = !context.SupportsRowcount();
-
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			SkipIfRefreshUnsupported(db);
+
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -82,7 +92,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = await db.UpdateOptimisticWithRefreshAsync(record);
 
-			if (!skipCnt) cnt.ShouldBe(1);
+			cnt.ShouldBe(1);
 
 			record.Stamp.ShouldNotBe(before);
 			record.Stamp.ShouldBe(t.Single().Stamp);
@@ -91,10 +101,11 @@ namespace Tests.Linq
 		[Test]
 		public void UpdateViaQueryRefreshesVersion([DataSources] string context)
 		{
-			var skipCnt = !context.SupportsRowcount();
-
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			SkipIfRefreshUnsupported(db);
+
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -106,7 +117,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = t.Where(r => r.Id == 1).UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) cnt.ShouldBe(1);
+			cnt.ShouldBe(1);
 			record.Stamp.ShouldNotBe(before);
 			record.Stamp.ShouldBe(t.Single().Stamp);
 		}
@@ -114,10 +125,11 @@ namespace Tests.Linq
 		[Test]
 		public async Task UpdateViaQueryRefreshesVersionAsync([DataSources] string context)
 		{
-			var skipCnt = !context.SupportsRowcount();
-
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			SkipIfRefreshUnsupported(db);
+
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -129,7 +141,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = await t.Where(r => r.Id == 1).UpdateOptimisticWithRefreshAsync(record);
 
-			if (!skipCnt) cnt.ShouldBe(1);
+			cnt.ShouldBe(1);
 			record.Stamp.ShouldNotBe(before);
 			record.Stamp.ShouldBe(t.Single().Stamp);
 		}
@@ -139,7 +151,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
-			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount (e.g. DuckDB)
+			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount
+			// (e.g. MySQL, Oracle, DB2)
 			if (db.SqlProviderFlags.IsUpdateOutputSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
@@ -195,8 +208,7 @@ namespace Tests.Linq
 		[Test]
 		public void UpdateRefreshesAutoIncrement([DataSources] string context)
 		{
-			var skipCnt = !context.SupportsRowcount();
-			var ms      = new MappingSchema();
+			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
 				.Entity<RefreshTable<int>>()
 					.HasTableName("ConcurrencyRefreshAutoInc")
@@ -205,6 +217,9 @@ namespace Tests.Linq
 				.Build();
 
 			using var db = GetDataContext(context, ms);
+
+			SkipIfRefreshUnsupported(db);
+
 			using var t  = db.CreateLocalTable<RefreshTable<int>>();
 
 			var record = new RefreshTable<int> { Id = 1, Stamp = 5, Value = "initial" };
@@ -213,7 +228,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) cnt.ShouldBe(1);
+			cnt.ShouldBe(1);
 
 			record.Stamp.ShouldBe(6);
 			record.Stamp.ShouldBe(t.Single().Stamp);
@@ -222,8 +237,7 @@ namespace Tests.Linq
 		[Test]
 		public void UpdateRefreshesDatabaseGenerated([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			var skipCnt = !context.SupportsRowcount();
-			var ms      = new MappingSchema();
+			var ms = new MappingSchema();
 			new FluentMappingBuilder(ms)
 				.Entity<RefreshTable<byte[]>>()
 					.HasTableName("ConcurrencyRefreshRowVersion")
@@ -245,7 +259,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
 
-			if (!skipCnt) cnt.ShouldBe(1);
+			cnt.ShouldBe(1);
 
 			// rowversion is purely database-generated and only obtainable via OUTPUT / SELECT
 			record.Stamp.ShouldNotBe(before);
@@ -255,11 +269,11 @@ namespace Tests.Linq
 		[Test]
 		public void UpdateConcurrencyFailureLeavesEntityUnchanged([DataSources] string context)
 		{
-			if (!context.SupportsRowcount())
-				Assert.Ignore("Affected-records count required to detect concurrency failure.");
-
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			SkipIfRefreshUnsupported(db);
+
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
 
 			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
@@ -271,6 +285,30 @@ namespace Tests.Linq
 
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(0);
+			record.Stamp.ShouldBe(stale, "entity must not be touched on concurrency failure");
+		}
+
+		[Test]
+		public async Task UpdateConcurrencyFailureLeavesEntityUnchangedAsync([DataSources] string context)
+		{
+			using var _  = new DisableBaseline("guid used");
+			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			SkipIfRefreshUnsupported(db);
+
+			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			await db.InsertAsync(record);
+
+			// stale stamp -> no row matches the optimistic filter
+			record.Stamp = TestData.Guid1;
+			var stale    = record.Stamp;
+
+			record.Value = "updated";
+			var cnt = await db.UpdateOptimisticWithRefreshAsync(record);
 
 			cnt.ShouldBe(0);
 			record.Stamp.ShouldBe(stale, "entity must not be touched on concurrency failure");
@@ -296,6 +334,30 @@ namespace Tests.Linq
 			// including no-OUTPUT + no-rowcount ones (must not throw)
 			record.Value = "updated";
 			var cnt = db.UpdateOptimisticWithRefresh(record);
+
+			if (!skipCnt) cnt.ShouldBe(1);
+
+			t.Single(r => r.Id == 1).Value.ShouldBe("updated");
+		}
+
+		[Test]
+		public async Task UpdateWithoutLockColumnBehavesLikePlainUpdateAsync([DataSources] string context)
+		{
+			var skipCnt = !context.SupportsRowcount();
+			var ms      = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RefreshTable<int>>()
+					.HasTableName("ConcurrencyRefreshNoLock")
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<RefreshTable<int>>();
+
+			var record = new RefreshTable<int> { Id = 1, Stamp = 5, Value = "initial" };
+			await db.InsertAsync(record);
+
+			record.Value = "updated";
+			var cnt = await db.UpdateOptimisticWithRefreshAsync(record);
 
 			if (!skipCnt) cnt.ShouldBe(1);
 
@@ -328,6 +390,27 @@ namespace Tests.Linq
 			act.ShouldThrow<LinqToDBException>();
 		}
 
+		[Test]
+		public async Task UpdateOnUnsupportedProviderThrowsAsync([DataSources] string context)
+		{
+			using var _  = new DisableBaseline("guid used");
+			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			if (db.SqlProviderFlags.IsUpdateOutputSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("UpdateOptimisticWithRefresh is unsupported only where the provider reports neither UPDATE OUTPUT/RETURNING nor affected-row counts.");
+
+			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			await db.InsertAsync(record);
+			record.Stamp = t.Single().Stamp;
+
+			record.Value = "updated";
+
+			Func<Task> act = () => db.UpdateOptimisticWithRefreshAsync(record);
+			await act.ShouldThrowAsync<LinqToDBException>();
+		}
+
 		// Guard test: keep SqlProviderFlags.IsUpdateOutputSupported honest. It probes the provider's actual UPDATE
 		// OUTPUT support and fails when reality diverges from the declared flag, signalling that the provider's flag
 		// (set in its DataProvider) needs updating.
@@ -346,10 +429,14 @@ namespace Tests.Linq
 
 		private static bool ProbeUpdateOutput(IDataContext db)
 		{
+			// setup stays outside the try: a table-creation / insert failure must surface as a test error rather than
+			// be swallowed into a "provider has no UPDATE OUTPUT" verdict, which for the many providers whose flag is
+			// false would make the guard pass vacuously
+			using var t = db.CreateLocalTable<RefreshTable<int>>("ConcurrencyRefreshProbe");
+			db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "x" }, tableName: "ConcurrencyRefreshProbe");
+
 			try
 			{
-				using var t = db.CreateLocalTable<RefreshTable<int>>("ConcurrencyRefreshProbe");
-				db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "x" }, tableName: "ConcurrencyRefreshProbe");
 				_ = t.Where(r => r.Id == 1).UpdateWithOutput(r => new RefreshTable<int> { Stamp = 2 }, (deleted, inserted) => inserted.Stamp).ToList();
 				return true;
 			}
@@ -377,10 +464,12 @@ namespace Tests.Linq
 
 		private static bool ProbeAffectedRows(IDataContext db)
 		{
+			// setup stays outside the try - see ProbeUpdateOutput
+			using var t = db.CreateLocalTable<RefreshTable<int>>("ConcurrencyRowcountProbe");
+			db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "x" }, tableName: "ConcurrencyRowcountProbe");
+
 			try
 			{
-				using var t = db.CreateLocalTable<RefreshTable<int>>("ConcurrencyRowcountProbe");
-				db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "x" }, tableName: "ConcurrencyRowcountProbe");
 				return t.Where(r => r.Id == 1).Set(r => r.Stamp, 2).Update() == 1;
 			}
 			catch
