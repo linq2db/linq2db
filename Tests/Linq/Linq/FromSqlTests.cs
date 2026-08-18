@@ -227,7 +227,7 @@ namespace Tests.Linq
 			Assert.That(projection, Is.EqualTo(expected));
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(1, 2)] int iteration, [Values(14, 15)] int endId)
 		{
 			using var db = GetDataContext(context);
@@ -490,7 +490,7 @@ namespace Tests.Linq
 			public string Value { get; set; } = default!;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestSplitStringParametrized(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
@@ -518,7 +518,7 @@ namespace Tests.Linq
 			query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestSplitStringParametrizedExplicitParameter(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
@@ -562,7 +562,7 @@ namespace Tests.Linq
 			Shouldly.Should.Throw<Npgsql.PostgresException>(() => query.ToArray());
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Interpolated_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -585,7 +585,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Interpolated_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -608,7 +608,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_InterpolatedCache_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -633,7 +633,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Format_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -659,7 +659,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Format_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -685,7 +685,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Format_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -785,7 +785,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_ByParameter_Formatted2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test

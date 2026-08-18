@@ -1492,7 +1492,7 @@ namespace Tests.Linq
 		record MappingTypingByConstant<T>(int Id, T Value);
 
 		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB and MySQL 5.7", Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true)]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
 		{
 			using var db = GetDataContext(context);
@@ -1537,7 +1537,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1ul)] ulong? first)
 		{
 			using var db = GetDataContext(context);
@@ -1581,7 +1581,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_UInt32([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1u)] uint? first)
 		{
 			using var db = GetDataContext(context);
@@ -1625,7 +1625,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Decimal([DataSources(TestProvName.AllAccess)] string context, [Values] bool isNull)
 		{
 			using var db = GetDataContext(context);
@@ -1669,7 +1669,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Double([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0D)] double? first)
 		{
 			using var db = GetDataContext(context);
@@ -1713,7 +1713,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Float([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0F)] float? first)
 		{
 			using var db = GetDataContext(context);
