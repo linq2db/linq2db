@@ -3580,12 +3580,11 @@ namespace Tests.Linq
 
 			// CteUnion emits a single UNION ALL. On non-CTE providers this falls back to KeyedQuery, but the two
 			// collections are independent (not parent-keyed), so the combined engine batches them and the root into
-			// one multi-result-set command wherever the provider supports it — still one command. Only a non-CTE
-			// provider that can't batch (e.g. SqlCe) runs the buffer + 2 child queries as 3 separate commands.
+			// one multi-result-set command — but only when combining is enabled (UseCombinedCommands is opt-in in 6.x)
+			// and the provider supports it. Otherwise the buffer + 2 child queries run as 3 separate commands.
 			if (!context.IsRemote())
 			{
-				var oneCommand = IsCteSupported(context)
-					|| (db.SqlProviderFlags.IsMultiStatementBatchSupported && db.SqlProviderFlags.IsMultipleResultSetsSupported);
+				var oneCommand = IsCteSupported(context) || db.UsesCombinedEagerLoading();
 				counter.Count.ShouldBe(oneCommand ? 1 : 3);
 			}
 		}
@@ -3630,12 +3629,11 @@ namespace Tests.Linq
 
 			// CteUnion emits a single UNION ALL. On non-CTE providers this falls back to KeyedQuery, but the two
 			// collections are independent (not parent-keyed) and the scalar folds into the root, so the combined
-			// engine batches them into one multi-result-set command wherever the provider supports it — still one
-			// command. Only a non-CTE provider that can't batch (e.g. SqlCe) runs the 3 statements separately.
+			// engine batches them into one multi-result-set command — but only when combining is enabled
+			// (UseCombinedCommands is opt-in in 6.x) and the provider supports it. Otherwise the 3 statements run separately.
 			if (!context.IsRemote())
 			{
-				var oneCommand = IsCteSupported(context)
-					|| (db.SqlProviderFlags.IsMultiStatementBatchSupported && db.SqlProviderFlags.IsMultipleResultSetsSupported);
+				var oneCommand = IsCteSupported(context) || db.UsesCombinedEagerLoading();
 				counter.Count.ShouldBe(oneCommand ? 1 : 3);
 			}
 		}
