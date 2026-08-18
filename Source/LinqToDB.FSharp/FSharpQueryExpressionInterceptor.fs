@@ -5,10 +5,12 @@ open System.Linq.Expressions
 
 open Microsoft.FSharp.Quotations
 
+open LinqToDB.Common
 open LinqToDB.Expressions
 open LinqToDB.Interceptors
 open LinqToDB.Mapping
 open LinqToDB.Reflection
+open LinqToDB.Internal.Common
 open LinqToDB.Internal.Reflection
 
 /// Stands in for a captured free variable while the quotation is converted back to an expression tree: the
@@ -170,7 +172,7 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
     // Evaluate a self-contained builder sub-expression (the quotation / the Var[]) to its runtime value.
     // Never used on the captured-values array - those reference outer query parameters with no value here.
     member private _.Eval (e: Expression) : obj =
-        Expression.Lambda(e).Compile().DynamicInvoke() |> nonNull
+        Expression.Lambda(e).CompileExpression().DynamicInvokeExt() |> nonNull
 
     // Strip the Convert(_, obj) box F# wraps captured values in, then re-Convert to the reduced parameter's
     // type when they differ, so the substituted value-expression is assignment-compatible with the parameter.
@@ -221,8 +223,8 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                                 match index.TryGetValue v with
                                 | true, i -> Some (Expr.Call(markerMethod.MakeGenericMethod v.Type, [ Expr.Value i ]))
                                 | _       -> None)
-                        let typed  = exprCast.MakeGenericMethod(node.Method.GetGenericArguments()).Invoke(null, [| box marked |])
-                        let lam    = (node.Method.Invoke(null, [| typed |]) |> nonNull) :?> LambdaExpression
+                        let typed  = exprCast.MakeGenericMethod(node.Method.GetGenericArguments()).InvokeExt(null, [| box marked |])
+                        let lam    = (node.Method.InvokeExt(null, [| typed |]) |> nonNull) :?> LambdaExpression
                         let replaced =
                             lam.Transform(fun e ->
                                 match e with
@@ -240,7 +242,7 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                 | bare ->
                     // No captured variables: convert the quotation directly with F#'s own method.
                     let q   = this.Eval bare
-                    let lam = (node.Method.Invoke(null, [| q |]) |> nonNull) :?> LambdaExpression
+                    let lam = (node.Method.InvokeExt(null, [| q |]) |> nonNull) :?> LambdaExpression
                     Some (Expression.Quote(this.Visit lam |> nonNull))
             // Fail safe: any unexpected shape/evaluation surprise leaves the node untouched (no worse than
             // before this rewrite existed), so only genuinely-matching F# quotation predicates are transformed.
