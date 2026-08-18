@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
@@ -218,9 +219,10 @@ namespace Tests
 		// helper to detect tests that leave database in inconsistent state
 		// enable only for debug to not slowdown tests
 		bool _badState;
-#pragma warning disable CA1805 // Do not initialize unnecessarily
-		bool _assertStateEnabled = false;
-#pragma warning restore CA1805 // Do not initialize unnecessarily
+		// Diagnostic toggle: set env var LINQ2DB_ASSERT_STATE=1 (e.g. in CI) to detect tests that leave the
+		// shared tables (Person/Patient/Doctor/Parent/Child/Inheritance/Types2) mutated - the polluting
+		// test's teardown then throws "SMOrc". Off by default because the per-test comparison is slow.
+		readonly bool _assertStateEnabled = Environment.GetEnvironmentVariable("LINQ2DB_ASSERT_STATE") == "1";
 		void AssertState(string context)
 		{
 			// don't fail tests if database is not consistent already
