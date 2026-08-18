@@ -1091,10 +1091,10 @@ namespace Tests.Linq
 		/// Two columns held in different units, neither of them ticks, meet in the finer of the two.
 		/// </summary>
 		/// <remarks>
-		/// Ticks are finer than any unit a column can be declared in, so bringing both there is always safe - and
-		/// further than the two need to go. Whichever is finer already serves, and going only that far leaves the
-		/// finer column holding the amount it was stored as, which is a column an index can still be walked by,
-		/// and multiplies one side instead of both.
+		/// Ticks are finer than every unit a column can be declared in but <see cref="DurationUnit.Nanosecond"/>, so
+		/// bringing both there is safe for the units here - and further than the two need to go. Whichever is finer
+		/// already serves, and going only that far leaves the finer column holding the amount it was stored as,
+		/// which is a column an index can still be walked by, and multiplies one side instead of both.
 		/// <para>
 		/// The duration is a whole number of days so that neither column drops anything: what is being pinned is
 		/// which unit they meet in, and a value the day column had to truncate would answer the question with
@@ -1124,6 +1124,53 @@ namespace Tests.Linq
 
 			daysInMilliseconds.ShouldBe([1]);
 			millisecondsInDays.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// A column declared finer than a tick has no unit to meet another in, so a membership test across the two
+		/// is refused rather than answered.
+		/// </summary>
+		/// <remarks>
+		/// The pairing the case above leaves out, and the one that behaves differently. Two units coarser than a tick
+		/// meet in the finer of them by multiplying one side, which is exact.
+		/// <see cref="DurationUnit.Nanosecond"/> is the one unit finer than a tick, so meeting it means dividing the
+		/// other side - and no lowering divides, because integer division rounds a negative value differently from
+		/// one provider to the next. There is no unit left to move to, in either direction.
+		/// <para>
+		/// Both orders are asked because the finer column is the subject in one and the source in the other, and
+		/// nothing about the refusal should depend on which.
+		/// </para>
+		/// <para>
+		/// The refusal names an interval member although this query has none - what is left over from the meeting is
+		/// a member node, and that is the message its builder gives. Pinned as it is rather than as it should read:
+		/// the message is worth improving, and a test that agreed with a better one would be failing today.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ContainsAcrossASubTickUnitIsRefused([DataSources(false, TestProvName.AllAccess)] string context)
+		{
+			var duration = TimeSpan.FromSeconds(7);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<UnitSpreadRow>();
+
+			db.Insert(new UnitSpreadRow { Id = 1, InDays = duration, InMilliseconds = duration, InNanoseconds = duration });
+
+			Action nanosecondsInMilliseconds = () => t
+				.Where(r => t.Select(x => x.InMilliseconds).Contains(r.InNanoseconds))
+				.Select(r => r.Id)
+				.ToArray();
+
+			Action millisecondsInNanoseconds = () => t
+				.Where(r => t.Select(x => x.InNanoseconds).Contains(r.InMilliseconds))
+				.Select(r => r.Id)
+				.ToArray();
+
+			nanosecondsInMilliseconds.ShouldThrow<LinqToDBException>().Message.ShouldContain("TimeSpan member");
+			millisecondsInNanoseconds.ShouldThrow<LinqToDBException>().Message.ShouldContain("TimeSpan member");
+
+			// The conversion itself is untouched by that - only arithmetic on the stored number is refused.
+			t.Select(r => r.InNanoseconds).Single().ShouldBe(duration);
 		}
 
 		/// <summary>

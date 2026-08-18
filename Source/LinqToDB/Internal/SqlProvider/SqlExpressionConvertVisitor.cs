@@ -1970,8 +1970,13 @@ namespace LinqToDB.Internal.SqlProvider
 			// drop - so the finer column keeps the amount it was stored as and stays a column an index can be
 			// walked by, and only one side is multiplied rather than both.
 			//
-			// Ticks are the fallback and were the whole rule before: they are finer than anything a column can be
-			// declared in, so meeting there is always safe. It is simply further than the two need to go.
+			// Ticks are the fallback and were the whole rule before: they are finer than every unit a column can be
+			// declared in but one, so meeting there is nearly always safe and is simply further than the two need to
+			// go. The exception is DurationUnit.Nanosecond, which is finer still - a tick is a hundred of them - so
+			// the meeting below can land under a tick, and no lowering takes a sub-tick amount. What reaches the
+			// builder then is a node it refuses, and the refusal it gives names an interval member although this is
+			// a membership test. Recorded rather than worked around: bringing such a column to any coarser unit is
+			// the division that DurationUnit.Nanosecond documents as unavailable, so there is no meeting to move to.
 			var meeting = SqlIntervalUnits.IsFinerThan(SqlIntervalType.ToIntervalUnit(columnUnit), SqlIntervalType.ToIntervalUnit(testUnit))
 				? columnUnit
 				: testUnit;

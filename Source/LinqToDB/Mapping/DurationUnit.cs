@@ -20,6 +20,15 @@
 		/// Nanoseconds. Note that <see cref="System.TimeSpan"/> resolution is 100 nanoseconds, so stored
 		/// values are always multiples of 100 and reading a finer value cannot be represented exactly.
 		/// </summary>
+		/// <remarks>
+		/// The only unit finer than a tick, and the one the server cannot compute with. A value stored in it round
+		/// trips, but reaching a tick count from it is a division, and no lowering performs one - integer division
+		/// rounds a negative value differently from one provider to the next, so a chosen rule would answer
+		/// differently depending on the database. In consequence a member asked for in SQL is refused rather than
+		/// answered, and so is a comparison or a membership test against a column declared in any other unit, since
+		/// the two have no unit they can meet in. A plain projection is unaffected: the column is read and the
+		/// member computed in .NET, which answers exactly.
+		/// </remarks>
 		Nanosecond,
 
 		/// <summary>
