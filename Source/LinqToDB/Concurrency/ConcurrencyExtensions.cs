@@ -325,13 +325,24 @@ namespace LinqToDB.Concurrency
 			return Expression.MemberInit(Expression.New(objType), bindings);
 		}
 
+		// `new T { ... }` needs a parameterless constructor, which a constructor-mapped entity does not have.
+		// Those are projected whole instead and materialized through the usual constructor mapping.
+		private static bool CanInitLockColumns(Type objType)
+		{
+			return objType.GetConstructor(Type.EmptyTypes) != null;
+		}
+
 		// (deleted, inserted) => new T { lockCol = inserted.lockCol, ... } — OUTPUT projection of new lock value(s)
 		private static Expression<Func<T, T, T>> LockColumnsOutput<T>(Type objType, ColumnDescriptor[] lockColumns)
 		{
 			var deleted  = Expression.Parameter(objType, "deleted");
 			var inserted = Expression.Parameter(objType, "inserted");
 
-			return Expression.Lambda<Func<T, T, T>>(InitLockColumns(objType, lockColumns, inserted), deleted, inserted);
+			Expression body = CanInitLockColumns(objType)
+				? InitLockColumns(objType, lockColumns, inserted)
+				: inserted;
+
+			return Expression.Lambda<Func<T, T, T>>(body, deleted, inserted);
 		}
 
 		// x => new T { lockCol = x.lockCol, ... } — SELECT projection of the lock value(s) for the fallback read-back
@@ -339,7 +350,11 @@ namespace LinqToDB.Concurrency
 		{
 			var x = Expression.Parameter(objType, "x");
 
-			return Expression.Lambda<Func<T, T>>(InitLockColumns(objType, lockColumns, x), x);
+			Expression body = CanInitLockColumns(objType)
+				? InitLockColumns(objType, lockColumns, x)
+				: x;
+
+			return Expression.Lambda<Func<T, T>>(body, x);
 		}
 
 		// Table-shaping calls on the caller's source (TableName / SchemaName / ...) are kept so the read-back hits

@@ -15,13 +15,26 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ConcurrencyRefreshTests : TestBase
 	{
-		// table name overriden for each test to workaround
+		// table name overridden for each test to work around
 		// https://github.com/linq2db/linq2db/issues/3894
 		public class RefreshTable<TStamp>
 			where TStamp : notnull
 		{
 			[PrimaryKey] public int     Id    { get; set; }
 			[Column]     public TStamp  Stamp { get; set; } = default!;
+			[Column]     public string? Value { get; set; }
+		}
+
+		// mapped entity without a parameterless constructor - linq2db materializes these through constructor mapping
+		public sealed class RefreshNoCtorTable
+		{
+			public RefreshNoCtorTable(int id)
+			{
+				Id = id;
+			}
+
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column]     public Guid    Stamp { get; set; }
 			[Column]     public string? Value { get; set; }
 		}
 
@@ -199,6 +212,37 @@ namespace Tests.Linq
 			// after the UPDATE commits - the read-back must still find the row it just updated
 			record.Value = "updated";
 			var cnt = t.Where(r => r.Value == "initial").UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(1);
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.Single().Stamp);
+		}
+
+		[Test]
+		public void UpdateRefreshesEntityWithoutDefaultConstructor([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RefreshNoCtorTable>()
+					.HasTableName("ConcurrencyRefreshNoCtor")
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
+				.Build();
+
+			using var _  = new DisableBaseline("guid used");
+			using var db = GetDataContext(context, ms);
+
+			SkipIfRefreshUnsupported(db);
+
+			using var t = db.CreateLocalTable<RefreshNoCtorTable>();
+
+			var record = new RefreshNoCtorTable(1) { Stamp = default, Value = "initial" };
+			db.Insert(record);
+			record.Stamp = t.Single().Stamp;
+			var before   = record.Stamp;
+
+			record.Value = "updated";
+			var cnt = db.UpdateOptimisticWithRefresh(record);
 
 			cnt.ShouldBe(1);
 			record.Stamp.ShouldNotBe(before);
