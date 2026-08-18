@@ -475,7 +475,7 @@ namespace Tests.Linq
 		// is the SQL-generation assertion that the right server function is used. The returned value
 		// itself is non-deterministic, so only its version is asserted.
 		[Test]
-		public void NewGuid7_Native([IncludeDataSources(true, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		public void NewGuid7_Native([IncludeDataSources(true, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus, TestProvName.AllFirebird6Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -488,7 +488,7 @@ namespace Tests.Linq
 		// Providers without a native generator fall back to client-side generation, embedding a
 		// random literal in the SQL — non-deterministic, so the baseline is disabled.
 		[Test]
-		public void NewGuid7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		public void NewGuid7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus, TestProvName.AllFirebird6Plus)] string context)
 		{
 			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
 			using (var db = GetDataContext(context))
@@ -502,7 +502,7 @@ namespace Tests.Linq
 
 #if NET9_0_OR_GREATER
 		[Test]
-		public void CreateVersion7_Native([IncludeDataSources(true, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		public void CreateVersion7_Native([IncludeDataSources(true, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus, TestProvName.AllFirebird6Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -513,7 +513,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CreateVersion7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus)] string context)
+		public void CreateVersion7_Emulated([DataSources(TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllMariaDB, TestProvName.AllPostgreSQL18Plus, TestProvName.AllFirebird6Plus)] string context)
 		{
 			using (new DisableBaseline("Non-deterministic UUIDv7 value"))
 			using (var db = GetDataContext(context))

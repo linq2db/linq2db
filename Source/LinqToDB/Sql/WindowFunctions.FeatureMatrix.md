@@ -14,6 +14,8 @@ Legend: **✓** native · **~** emulated · **✗** rejected at translate time (
 > §2–4 show **current behaviour** (what the API does today). Cells marked **✗†** are rejected today
 > but proven (or strongly suspected) to be a *fidelity gap* — the engine supports the feature.
 > Cells marked **✓ᵗ** / **✗ᵗ** were proven against a live instance.
+> A cell like **✗ / ✓⁶** means unsupported on FB 4/5 but supported on **Firebird 6** — the "FB 4–6" column
+> is annotated in-place only where FB 6 diverges (GROUPS frame, frame `EXCLUDE`, `PERCENTILE_CONT/DISC`).
 
 ---
 
@@ -30,7 +32,7 @@ Dialect splits that matter:
 | Provider | Dialects with distinct capabilities |
 |---|---|
 | SQL Server | **≤2008** (none) · **2012–2019** · **2022/2025** (adds `IGNORE`/`RESPECT NULLS`) |
-| Firebird   | **2.5** (none) · **3** · **4 / 5 / 6** (adds ROWS/RANGE frames, NTILE, PERCENT_RANK, CUME_DIST) |
+| Firebird   | **2.5** (none) · **3** · **4 / 5** (adds ROWS/RANGE frames, NTILE, PERCENT_RANK, CUME_DIST) · **6** (adds GROUPS frame, frame EXCLUDE, PERCENTILE_CONT/DISC, GEN_UUID(7)) |
 | MySQL      | **5.7** (none) · **8.0** · **MariaDB 10.3+** (adds windowed PERCENTILE_* and MEDIAN) |
 
 ---
@@ -38,7 +40,7 @@ Dialect splits that matter:
 ## 2. Ranking & navigation functions
 
 | Function | SqlSrv 2012+ | PG | Oracle | MySQL 8 | MariaDB | SQLite | ClickHouse | DuckDB | DB2 | SAP HANA | Informix | FB 3 | FB 4–6 | YDB |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ROW_NUMBER | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | RANK / DENSE_RANK | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | PERCENT_RANK | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | ✓ |
@@ -66,7 +68,7 @@ Notes: SQL Server has no `NTH_VALUE` (any version). MariaDB & YDB reject the LEA
 | REGR_* (9 functions) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | MEDIAN | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗† | ✓ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ |
 | RATIO_TO_REPORT | ~ | ~ | ✓ | ~ | ~ | ~ | ~ | ~ | ✓ | ~ | ~ | ~ | ~ | ~ |
-| PERCENTILE_CONT/DISC — `WITHIN GROUP` (group) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| PERCENTILE_CONT/DISC — `WITHIN GROUP` (group) | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ / ✓⁶ | ✗ |
 | PERCENTILE_CONT/DISC — windowed `OVER` | ✓ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
 | Hypothetical-set RANK/… `WITHIN GROUP` | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | KEEP (DENSE_RANK FIRST/LAST) | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
@@ -100,8 +102,8 @@ The grouped statistical rows hide per-function asymmetry, marked above:
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | ROWS frame | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **✓ᵗ** | ✓ | ✗ | ✓ | ✓ |
 | RANGE frame | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | **✗ᵗ** | ✓ | ✗ | ✓ | ✗ |
-| GROUPS frame | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Frame `EXCLUDE` | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| GROUPS frame | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ / ✓⁶ | ✗ |
+| Frame `EXCLUDE` | ✗ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ / ✓⁶ | ✗ |
 | `FILTER (WHERE …)` | ~ | ✓ | ~ | ~ | ~ | ~ | ~ | ✓ | ~ | ~ | ~ | ~ | ~ | ~ |
 | `FILTER` on ordered-set agg | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | `IGNORE/RESPECT NULLS` — LEAD/LAG | ✓²² | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ | ✗ | ✓ | ✗ | ✗ | ✗ |

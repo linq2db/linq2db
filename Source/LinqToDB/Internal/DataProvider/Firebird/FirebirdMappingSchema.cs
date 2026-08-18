@@ -273,12 +273,23 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 		}
 
+		public sealed class Firebird6MappingSchema : LockedMappingSchema
+		{
+			public Firebird6MappingSchema()
+				: base(ProviderName.Firebird6, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			{
+				// see above
+				//SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, _, v) => BuildDateTimeOffset(sb, dt, (DateTimeOffset)v));
+			}
+		}
+
 		sealed class FirebirdRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
 
 		static readonly Firebird25MappingSchemaBase _firebird25MappingSchema = new (Instance);
 		static readonly FirebirdRemoteMappingSchema _firebird3MappingSchema  = new (ProviderName.Firebird3);
 		static readonly FirebirdRemoteMappingSchema _firebird4MappingSchema  = new (ProviderName.Firebird4);
 		static readonly FirebirdRemoteMappingSchema _firebird5MappingSchema  = new (ProviderName.Firebird5);
+		static readonly FirebirdRemoteMappingSchema _firebird6MappingSchema  = new (ProviderName.Firebird6);
 
 		internal static MappingSchema GetRemoteMappingSchema(Type type)
 		{
@@ -286,6 +297,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			if (type == typeof(Firebird3MappingSchema))  return _firebird3MappingSchema;
 			if (type == typeof(Firebird4MappingSchema))  return _firebird4MappingSchema;
 			if (type == typeof(Firebird5MappingSchema))  return _firebird5MappingSchema;
+			if (type == typeof(Firebird6MappingSchema))  return _firebird6MappingSchema;
 
 			throw new InvalidOperationException($"Unknown Firebird mapping schema type: {type.FullName}");
 		}

@@ -570,6 +570,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 fails with 'Malformed string' reading a Guid stored as CHAR(16) OCTETS under a non-NONE connection charset. FB6 prerelease 6.0.0.2068 / FbClient 10.3.4; re-check when a newer Firebird 6 is released.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
 		public void ClientConversion_UnmappedOperators([DataSources(false)] string context)
 		{
@@ -688,6 +689,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configurations = new[] { ProviderName.Firebird6 }, Details = "Firebird 6 fails with 'Malformed string' reading a Guid stored as CHAR(16) OCTETS under a non-NONE connection charset. FB6 prerelease 6.0.0.2068 / FbClient 10.3.4; re-check when a newer Firebird 6 is released.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
 		public void ClientConversion_MappedOperators([DataSources(false)] string context)
 		{

@@ -18,6 +18,7 @@ namespace LinqToDB.DataProvider.Firebird
 				"3"   => FirebirdVersion.v3,
 				"4"   => FirebirdVersion.v4,
 				"5"   => FirebirdVersion.v5,
+				"6"   => FirebirdVersion.v6,
 				_     => FirebirdVersion.AutoDetect,
 			};
 

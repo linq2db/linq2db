@@ -23,6 +23,7 @@
 			//"Firebird.3",
 			//"Firebird.4",
 			//"Firebird.5",
+			//"Firebird.6",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -154,6 +155,7 @@
 			//"Firebird.3",
 			//"Firebird.4",
 			//"Firebird.5",
+			//"Firebird.6",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -281,6 +283,7 @@
 			//"Firebird.3",
 			//"Firebird.4",
 			//"Firebird.5",
+			//"Firebird.6",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -408,6 +411,7 @@
 			//"Firebird.3",
 			//"Firebird.4",
 			//"Firebird.5",
+			//"Firebird.6",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -644,6 +648,9 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Firebird.5": {
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Firebird.6": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Informix": {
