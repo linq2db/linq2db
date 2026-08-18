@@ -14,6 +14,103 @@ namespace Tests.Linq
 	public partial class IntervalTranslationTests
 	{
 		/// <summary>
+		/// A date shifted by a duration that was computed rather than stored.
+		/// </summary>
+		/// <remarks>
+		/// The composition the two cases above do not reach: their result is read, here it is spent. A shift takes
+		/// its amount from a declared column everywhere else in this fixture, so nothing said whether an amount that
+		/// was reconciled from two units is still one a shift can take.
+		/// <para>
+		/// It is, and the refusals line up with the ones a shift already declares - no provider answers this wrongly,
+		/// and the ones that decline are exactly those that decline any shift. Asked in both forms for the reason the
+		/// combination cases give: plain, the value is what a caller reads however it was arrived at.
+		/// </para>
+		/// <para>
+		/// Subtracting the computed amount is asked alongside adding it, since the sign is applied to a value the
+		/// shift lowering never saw built.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
+		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
+		public void ADateShiftsByAComputedDuration([DataSources(false)] string context)
+		{
+			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
+
+			var taken  = TimeSpan.FromHours(1);
+			var budget = TimeSpan.FromHours(3);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+			SeedTasks(db, (taken, budget));
+
+			// Read rather than assumed, so the case does not depend on how the seed picks its start.
+			var started = t.Select(r => r.StartedOn).Single();
+
+			var row = t
+				.Select(r => new Shifted
+				{
+					Forward  = r.StartedOn + ((r.FinishedOn - r.StartedOn) + r.Budget),
+					Lopsided = r.StartedOn + ((r.Budget + r.Budget) - (r.FinishedOn - r.StartedOn)),
+					Backward = r.StartedOn - ((r.FinishedOn - r.StartedOn) + r.Budget),
+				})
+				.Single();
+
+			row.Forward.ShouldBe(started + taken + budget);
+			row.Lopsided.ShouldBe(started + budget + budget - taken);
+			row.Backward.ShouldBe(started - taken - budget);
+		}
+
+		/// <summary>
+		/// The same shift asked in SQL, where a provider that cannot measure a difference has nothing to fall back
+		/// to.
+		/// </summary>
+		/// <remarks>
+		/// The forced half of the case above, and its own method for the reason the combination cases give: the two
+		/// do not refuse on the same providers. Informix answers the plain form from .NET and refuses this one, so a
+		/// shared set of gates would be wrong about one of them.
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
+		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders + "," + UnsupportedDifferenceProviders)]
+		public void ADateShiftsByAComputedDurationInSql([DataSources(false)] string context)
+		{
+			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
+
+			var taken  = TimeSpan.FromHours(1);
+			var budget = TimeSpan.FromHours(3);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+			SeedTasks(db, (taken, budget));
+
+			var started = t.Select(r => r.StartedOn).Single();
+
+			var row = t
+				.Select(r => new Shifted
+				{
+					Forward  = Sql.AsSql(r.StartedOn + ((r.FinishedOn - r.StartedOn) + r.Budget)),
+					Lopsided = Sql.AsSql(r.StartedOn + ((r.Budget + r.Budget) - (r.FinishedOn - r.StartedOn))),
+					Backward = Sql.AsSql(r.StartedOn - ((r.FinishedOn - r.StartedOn) + r.Budget)),
+				})
+				.Single();
+
+			row.Forward.ShouldBe(started + taken + budget);
+			row.Lopsided.ShouldBe(started + budget + budget - taken);
+			row.Backward.ShouldBe(started - taken - budget);
+		}
+
+		/// <summary>
+		/// Carries what the two shift cases above assert, so both share one set of assertions.
+		/// </summary>
+		sealed class Shifted
+		{
+			public DateTime Forward  { get; set; }
+			public DateTime Lopsided { get; set; }
+			public DateTime Backward { get; set; }
+		}
+
+		/// <summary>
 		/// Two durations that were declared in different units combine as the durations they are, not as the numbers
 		/// they are stored as.
 		/// </summary>
