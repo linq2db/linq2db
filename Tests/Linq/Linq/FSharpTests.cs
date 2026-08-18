@@ -445,6 +445,14 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test11(db);
 		}
 
+		[ActiveIssue(5794)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5794")]
+		public void Issue5794Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue5794Test(db);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
 		public void ExpressionFunctionInCteTranslationTest1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
