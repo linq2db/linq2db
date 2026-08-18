@@ -13,6 +13,210 @@ namespace Tests.Linq
 {
 	public partial class IntervalTranslationTests
 	{
+		/// <summary>
+		/// Two durations that were declared in different units combine as the durations they are, not as the numbers
+		/// they are stored as.
+		/// </summary>
+		/// <remarks>
+		/// The unit a stored duration counts in lives in its column descriptor, so both operands reach the
+		/// translation as bare numbers - ninety minutes is 5400 in one column and 54000000000 in the other. Combined
+		/// as they stand the answer is the sum of two unrelated counts, read back through whichever descriptor is
+		/// reached first, and nothing raises: 5400 + 54000000000 comes back as 625000.01:30:00.
+		/// <para>
+		/// Asked in both forms. Plain, the value is what a caller reads however it was arrived at; through
+		/// <c>Sql.AsSql</c>, the arithmetic has to be the database's, so a fallback to .NET fails the case rather
+		/// than answering it. The assertions are the same either way - what changes is what a pass means.
+		/// </para>
+		/// <para>
+		/// Subtraction is asked in both directions because the two fail differently: one overshoots by the whole tick
+		/// count, the other lands at 01:29:59.9994600, close enough to the right answer to pass a careless eye. The
+		/// same-unit pairs are asked alongside them - they are already correct, and they are what would break if
+		/// reconciling reached further than the mixed case.
+		/// </para>
+		/// <para>
+		/// Access refuses in both forms rather than answering: a duration is kept as money there, since it has no
+		/// 64-bit integer, and a tick count in money is not one the reader can turn back into a duration.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsCannotBeConverted(NoTickTotalProviders)]
+		public void DurationsInDifferentUnitsCombineAsDurations([DataSources] string context, [Values] bool inSql)
+		{
+			// Direct and remote fold the operand casts differently - remote folds them into the enclosing cast,
+			// direct keeps them - so the two traces differ by cast placement alone while denoting the same
+			// arithmetic. The values are asserted in both contexts, which is what this case is here to hold.
+			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
+
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			// The two shapes differ only in whether the arithmetic is forced into SQL. A bare column on each side
+			// states the rule; the rest are the shapes a query actually takes - an operand that is itself computed,
+			// one that arrives negated, one chosen by a condition, and both sides computed at once. The nested case
+			// additionally says that what this produces is usable as an operand again, and the lopsided subtraction
+			// that two sides of equal magnitude cannot cancel a wrong scaling into a right answer.
+			var row = inSql
+				? t.Select(r => new Combination
+					{
+						SameSeconds     = Sql.AsSql(r.InSeconds + r.InSeconds),
+						SameTicks       = Sql.AsSql(r.InTicks   + r.InTicks),
+						MixedAdd        = Sql.AsSql(r.InSeconds + r.InTicks),
+						MixedSub        = Sql.AsSql(r.InSeconds - r.InTicks),
+						MixedSubRev     = Sql.AsSql(r.InTicks   - r.InSeconds),
+						Nested          = Sql.AsSql((r.InSeconds + r.InTicks) + r.InSeconds),
+						Negated         = Sql.AsSql(-r.InSeconds + r.InTicks),
+						Conditional     = Sql.AsSql((r.Id > 0 ? r.InSeconds : r.InSeconds) + r.InTicks),
+						BothComputed    = Sql.AsSql((r.InSeconds + r.InTicks) + (r.InTicks + r.InTicks)),
+						BothComputedSub = Sql.AsSql((r.InSeconds + r.InSeconds + r.InTicks) - (r.InTicks + r.InTicks)),
+						NegatedSub      = Sql.AsSql(-r.InSeconds - r.InTicks),
+					}).Single()
+				: t.Select(r => new Combination
+					{
+						SameSeconds     = r.InSeconds + r.InSeconds,
+						SameTicks       = r.InTicks   + r.InTicks,
+						MixedAdd        = r.InSeconds + r.InTicks,
+						MixedSub        = r.InSeconds - r.InTicks,
+						MixedSubRev     = r.InTicks   - r.InSeconds,
+						Nested          = (r.InSeconds + r.InTicks) + r.InSeconds,
+						Negated         = -r.InSeconds + r.InTicks,
+						Conditional     = (r.Id > 0 ? r.InSeconds : r.InSeconds) + r.InTicks,
+						BothComputed    = (r.InSeconds + r.InTicks) + (r.InTicks + r.InTicks),
+						BothComputedSub = (r.InSeconds + r.InSeconds + r.InTicks) - (r.InTicks + r.InTicks),
+						NegatedSub      = -r.InSeconds - r.InTicks,
+					}).Single();
+
+			row.SameSeconds.ShouldBe(value + value);
+			row.SameTicks.ShouldBe(value + value);
+			row.MixedAdd.ShouldBe(value + value);
+			row.MixedSub.ShouldBe(TimeSpan.Zero);
+			row.MixedSubRev.ShouldBe(TimeSpan.Zero);
+
+			row.Nested.ShouldBe(value + value + value);
+			row.Negated.ShouldBe(TimeSpan.Zero);
+			row.Conditional.ShouldBe(value + value);
+
+			row.BothComputed.ShouldBe(value + value + value + value);
+			row.BothComputedSub.ShouldBe(value);
+			row.NegatedSub.ShouldBe(-(value + value));
+
+			// The operands carried through a projection, where each side reaches the arithmetic as a reference into
+			// the anonymous type rather than as the column itself.
+			var projected = inSql
+				? t.Select(r => new { Seconds = r.InSeconds, Ticks = r.InTicks }).Select(x => Sql.AsSql(x.Seconds + x.Ticks)).Single()
+				: t.Select(r => new { Seconds = r.InSeconds, Ticks = r.InTicks }).Select(x => x.Seconds + x.Ticks).Single();
+
+			projected.ShouldBe(value + value);
+		}
+
+		/// <summary>
+		/// Carries the combinations <see cref="DurationsInDifferentUnitsCombineAsDurations"/> asserts, so its two
+		/// query shapes share one set of assertions.
+		/// </summary>
+		sealed class Combination
+		{
+			public TimeSpan SameSeconds     { get; set; }
+			public TimeSpan SameTicks       { get; set; }
+			public TimeSpan MixedAdd        { get; set; }
+			public TimeSpan MixedSub        { get; set; }
+			public TimeSpan MixedSubRev     { get; set; }
+			public TimeSpan Nested          { get; set; }
+			public TimeSpan Negated         { get; set; }
+			public TimeSpan Conditional     { get; set; }
+			public TimeSpan BothComputed    { get; set; }
+			public TimeSpan BothComputedSub { get; set; }
+			public TimeSpan NegatedSub      { get; set; }
+		}
+
+		/// <summary>
+		/// A computed difference and a declared duration combine as the durations they are, in either order.
+		/// </summary>
+		/// <remarks>
+		/// The mixed-unit case with the operand that carries no declaration of its own: a difference is a tick count
+		/// by construction, while the budget beside it is declared in seconds.
+		/// <para>
+		/// Plain, with the forced half below rather than a parameter on this one: the two do not refuse on the same
+		/// providers. A provider that cannot measure a difference answers this case from .NET and refuses that one,
+		/// so they cannot share a set of gates.
+		/// </para>
+		/// <para>
+		/// Two differences added together take the other path - they already agree on a unit, so nothing reconciles
+		/// them. Asserted so the reconciliation cannot start reaching cases it should leave alone.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsCannotBeConverted(NoTickTotalProviders)]
+		public void ADifferenceAndADeclaredDurationCombineAsDurations([DataSources(false)] string context)
+		{
+			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
+
+			var taken  = TimeSpan.FromHours(1);
+			var budget = TimeSpan.FromHours(3);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+			SeedTasks(db, (taken, budget));
+
+			var row = t
+				.Select(r => new
+				{
+					DiffPlusBudgets  = (r.FinishedOn - r.StartedOn) + (r.Budget + r.Budget),
+					BudgetsMinusDiff = (r.Budget + r.Budget) - (r.FinishedOn - r.StartedOn),
+					DiffPlusDiff     = (r.FinishedOn - r.StartedOn) + (r.FinishedOn - r.StartedOn),
+					DiffMinusBudget  = (r.FinishedOn - r.StartedOn) - r.Budget,
+				})
+				.Single();
+
+			row.DiffPlusBudgets.ShouldBe(taken + budget + budget);
+			row.BudgetsMinusDiff.ShouldBe(budget + budget - taken);
+			row.DiffPlusDiff.ShouldBe(taken + taken);
+			row.DiffMinusBudget.ShouldBe(taken - budget);
+		}
+
+		/// <summary>
+		/// The same combinations asked in SQL, where a provider that cannot measure a difference has nothing to fall
+		/// back to.
+		/// </summary>
+		/// <remarks>
+		/// The forced half of the case above, and the reason it is worth its own method: plain, a difference the
+		/// provider cannot measure is computed in .NET and the values still come out right, so the case would pass on
+		/// a provider that translated none of it. Informix reaches exactly that, and so does SQL Server before 2016.
+		/// <para>
+		/// The subtraction is lopsided and one case is negative, for the reason the sibling above gives.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsCannotBeConverted(NoTickTotalProviders)]
+		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
+		public void ADifferenceAndADeclaredDurationCombineInSql([DataSources(false)] string context)
+		{
+			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
+
+			var taken  = TimeSpan.FromHours(1);
+			var budget = TimeSpan.FromHours(3);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+			SeedTasks(db, (taken, budget));
+
+			var row = t
+				.Select(r => new
+				{
+					DiffPlusBudgets  = Sql.AsSql((r.FinishedOn - r.StartedOn) + (r.Budget + r.Budget)),
+					BudgetsMinusDiff = Sql.AsSql((r.Budget + r.Budget) - (r.FinishedOn - r.StartedOn)),
+					DiffPlusDiff     = Sql.AsSql((r.FinishedOn - r.StartedOn) + (r.FinishedOn - r.StartedOn)),
+					DiffMinusBudget  = Sql.AsSql((r.FinishedOn - r.StartedOn) - r.Budget),
+				})
+				.Single();
+
+			row.DiffPlusBudgets.ShouldBe(taken + budget + budget);
+			row.BudgetsMinusDiff.ShouldBe(budget + budget - taken);
+			row.DiffPlusDiff.ShouldBe(taken + taken);
+			row.DiffMinusBudget.ShouldBe(taken - budget);
+		}
+
 		[Test]
 		public void DifferenceAddedBackToADate([DataSources] string context)
 		{

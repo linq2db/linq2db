@@ -282,6 +282,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				Registration.RegisterBinaryInternal(comparison, typeof(TimeSpan?), typeof(TimeSpan?), TranslateIntervalComparison);
 			}
 
+			// Adding or subtracting two durations needs a handler for the reason the comparisons above give: without
+			// one the two stored numbers are combined as they stand, which is only right when both were declared in
+			// the same unit.
+			foreach (var interval in new[] { typeof(TimeSpan), typeof(TimeSpan?) })
+			{
+				Registration.RegisterBinaryInternal(ExpressionType.Add,      interval, interval, TranslateIntervalArithmetic);
+				Registration.RegisterBinaryInternal(ExpressionType.Subtract, interval, interval, TranslateIntervalArithmetic);
+			}
+
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime),        typeof(DateTime),        TranslateDateTimeDifference);
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime?),       typeof(DateTime?),       TranslateDateTimeDifference);
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTimeOffset),  typeof(DateTimeOffset),  TranslateDateTimeDifference);
@@ -295,6 +304,112 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					Registration.RegisterBinaryInternal(ExpressionType.Subtract, temporal, interval, TranslateTemporalArithmetic);
 				}
 			}
+		}
+
+		/// <summary>
+		/// Adds or subtracts two durations, bringing them to a common unit first.
+		/// </summary>
+		/// <remarks>
+		/// A duration lowers to the number it is stored as, and the unit that number is in lives in the column
+		/// descriptor rather than in the expression. Two durations declared in different units therefore arrive here
+		/// as plain numbers that are not commensurable - ninety minutes held as 1800 seconds and as 18000000000 ticks
+		/// - and combining them as they stand answers with the sum of two unrelated counts, read back through
+		/// whichever descriptor the walk reaches first.
+		/// <para>
+		/// Both sides are taken to ticks instead, which is the representation every duration shares and the one a
+		/// computed difference already carries. The result is marked as a tick count rather than left bare, so the
+		/// reader builds a <see cref="TimeSpan"/> from it through the constructor rather than looking for a column
+		/// descriptor that a computed value does not have.
+		/// </para>
+		/// <para>
+		/// Operands already agreeing on a unit are left to the generic binary handling. Their stored numbers are
+		/// commensurable as they are, and taking them to ticks would put a multiplication on the column and lose
+		/// whatever index it has - the same reason the comparison path converts the other side rather than the
+		/// column when it can.
+		/// </para>
+		/// </remarks>
+		Expression? TranslateIntervalArithmetic(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			// Dropped for the reason the comparison gives: what this sends is a tick count, and the column the
+			// result is assigned to has nothing to say about how one is written.
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			var left  = TranslateIntervalOperand(translationContext, binaryExpression.Left,  translationFlags);
+			var right = TranslateIntervalOperand(translationContext, binaryExpression.Right, translationFlags);
+
+			if (left == null || right == null)
+				return null;
+
+			var leftUnit  = IntervalResolutionOf(left);
+			var rightUnit = IntervalResolutionOf(right);
+
+			if (leftUnit == null || rightUnit == null || leftUnit == rightUnit)
+				return null;
+
+			// The reconciled value is a tick count, and it has to come back as one: nothing turns a fractional number
+			// into a TimeSpan, so a storage that cannot hold a tick count as a whole number leaves the arithmetic
+			// right and the read impossible. Access is the case - it has no 64-bit integer, so a duration is kept as
+			// money there and the sum arrives as a decimal the reader cannot make a duration of.
+			//
+			// Refused by name rather than left to the generic handling, which is what produced the wrong answer this
+			// exists to stop. It joins the tick-count refusals that provider already declares for every other path.
+			if (!CarriesWholeTicks(left) || !CarriesWholeTicks(right))
+				return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_Operation);
+
+			var factory  = translationContext.ExpressionFactory;
+			var tickType = factory.GetDbDataType(typeof(long));
+
+			var leftTicks  = new SqlIntervalPartExpression(left,  SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
+			var rightTicks = new SqlIntervalPartExpression(right, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
+
+			var combined = binaryExpression.NodeType == ExpressionType.Add
+				? factory.Add(tickType, leftTicks, rightTicks)
+				: factory.Sub(tickType, leftTicks, rightTicks);
+
+			// Pinned to the tick type rather than left to whatever the provider's own arithmetic produces. Adding two
+			// integers is not integer addition everywhere - Firebird answers a wider integer than it was given and
+			// Informix a decimal - and the only thing that turns the result back into a TimeSpan is a whole tick
+			// count, so the type has to be stated rather than assumed.
+			combined = factory.Cast(combined, tickType, true);
+
+			var resultType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+
+			return translationContext.CreatePlaceholder(
+				translationContext.CurrentSelectQuery,
+				new SqlIntervalExpression(combined, resultType, SqlIntervalType.ClrTimeSpan),
+				binaryExpression);
+		}
+
+		/// <summary>
+		/// Whether an operand's storage can hold a tick count as a whole number.
+		/// </summary>
+		/// <remarks>
+		/// A computed difference is a tick count already and needs nothing. A declared duration is whatever its
+		/// column is, and only an integral column can carry the reconciled result back - a duration kept as money,
+		/// which is how a provider without a 64-bit integer keeps one, produces a decimal that no conversion turns
+		/// into a <see cref="TimeSpan"/>.
+		/// </remarks>
+		static bool CarriesWholeTicks(ISqlExpression expression)
+		{
+			if (expression is not SqlIntervalExpression interval)
+				return true;
+
+			return interval.Type.DataType is
+				DataType.Int64  or DataType.Int32  or DataType.Int16  or DataType.SByte or
+				DataType.UInt64 or DataType.UInt32 or DataType.UInt16 or DataType.Byte;
+		}
+
+		/// <summary>
+		/// The unit an interval operand counts in, whichever of the two interval shapes it is.
+		/// </summary>
+		static SqlIntervalUnit? IntervalResolutionOf(ISqlExpression expression)
+		{
+			return expression switch
+			{
+				SqlIntervalExpression           interval   => interval.IntervalType.Resolution,
+				SqlIntervalDifferenceExpression difference => difference.IntervalType.Resolution,
+				_                                          => null,
+			};
 		}
 
 		/// <summary>
