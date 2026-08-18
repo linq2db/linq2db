@@ -958,9 +958,7 @@ namespace Tests.Linq
 			Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 		}
 
-		sealed class LocalClass
-		{
-		}
+		sealed class LocalClass;
 
 		[Test]
 		public void SelectLocalTest([DataSources] string context)
@@ -1088,7 +1086,7 @@ namespace Tests.Linq
 			public Child? Child    { get; set; }
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values] bool includeChild,
@@ -1837,7 +1835,7 @@ namespace Tests.Linq
 
 		#region Caching Tests
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116"), QueryCacheTest]
 		public void CachedObjectRefence([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

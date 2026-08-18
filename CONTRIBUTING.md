@@ -4,18 +4,24 @@ uid: contributing
 
 # Contributing guide
 
-## Cloning on Windows: the `.claude` symlink
+## Cloning: the `.claude/` agent-instruction submodule
 
-AI coding-agent instructions live under `.agents/` (a single source shared by Claude Code, GitHub Copilot, and OpenAI Codex). Because Claude Code discovers its skills / subagents / hooks / settings under `.claude/`, the repository tracks **`.claude` as a symlink to `.agents/`**.
+AI coding-agent instructions (shared by Claude Code, GitHub Copilot and OpenAI Codex) live in their own repository, [linq2db/agents](https://github.com/linq2db/agents), mounted here as a git submodule at **`.claude/`**. Keeping them out of this repo keeps instruction churn out of linq2db's history. The root `AGENTS.md` and `CLAUDE.md` are one-screen pointers into it.
 
-On **Windows**, git only materializes that symlink when symlink support is enabled. Without it the working tree gets `.claude` as a tiny text file containing `.agents`, and Claude Code tooling silently stops working (everything else — build, tests — is unaffected, since all paths reference `.agents/` directly). Before cloning, enable **both**:
+Nothing about building or testing linq2db depends on the submodule — clone it only if you use an AI agent on this codebase:
 
-- **Developer Mode** (*Settings → Privacy & security → For developers*), or run git elevated, so the OS permits symlink creation.
-- `git config --global core.symlinks true` (or pass `-c core.symlinks=true` to `git clone`).
+```
+git clone --recurse-submodules https://github.com/linq2db/linq2db.git
+git config core.hooksPath .githooks
+```
 
-If you already cloned without these, enable them and run `git checkout -- .claude` from the repo root to replace the placeholder with the real symlink. As a fallback when Developer Mode is unavailable, create a directory junction manually — `cmd /c mklink /J .claude .agents` from the repo root (local-only; git may show it as a pending change, which can be ignored).
+Already cloned? `git submodule update --init`, then `git -C .claude switch master` (init checks out a detached HEAD, and a corpus commit made there would go nowhere useful), then the same `core.hooksPath` line. Note that a plain `git clone` leaves `.claude/` as an **empty directory** and `git status` still reads clean — an unpopulated submodule is not a deletion — so the only symptom is that your agent loads no instructions.
 
-macOS / Linux materialize the symlink with no extra configuration.
+**Restart your agent after populating the submodule.** Claude Code resolves the `CLAUDE.md` import set — the always-loaded project instructions — **once, at session start**, and does not re-read it when `.claude/` appears. A session that was already open while the submodule was empty keeps running with no project instructions however many files land on disk afterwards. Skill discovery *may* refresh mid-session, but it isn't guaranteed to, so don't rely on either: restart is the only way to be sure the session matches what's on disk.
+
+`core.hooksPath .githooks` is what keeps the corpus current and safe: `post-checkout` / `post-merge` / `post-rewrite` fast-forward `.claude/` to the agents repo's tip (skipping any checkout with uncommitted corpus edits), and `pre-commit` refuses two things that would otherwise slip in unnoticed — a `.claude` submodule-pointer bump, and edits to the root `AGENTS.md` / `CLAUDE.md` pointers. Both are overridable with `git commit --no-verify` when deliberate.
+
+**Editing the instructions:** commit inside `.claude/` and push to the agents repo (`git -C .claude commit`, `git -C .claude push`). Corpus changes never land on a linq2db branch.
 
 ## Project structure
 

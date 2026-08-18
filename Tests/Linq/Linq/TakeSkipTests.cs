@@ -44,7 +44,7 @@ namespace Tests.Linq
 			CheckTakeSkipParams(dc, false, additional);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Take1([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -65,7 +65,7 @@ namespace Tests.Linq
 			Assert.That(db.Child.GetCacheMissCount(), Is.EqualTo(currentCacheMissCount));
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public async Task Take1Async([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -220,7 +220,7 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Skip1([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -646,7 +646,7 @@ namespace Tests.Linq
 			CheckTakeSkipParameterized(db);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -1113,7 +1113,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void MultipleSkip2([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -1346,7 +1346,7 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void SkipTakeCaching([DataSources] string context, [Values(1, 2)] int skip, [Values(1, 2)] int take)
 		{
 			using var db = GetDataContext(context);

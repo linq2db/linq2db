@@ -450,9 +450,7 @@ namespace Tests.Model
 		}
 	}
 
-	public class ParentInheritanceNull : ParentInheritanceBase
-	{
-	}
+	public class ParentInheritanceNull : ParentInheritanceBase;
 
 	public class ParentInheritance1 : ParentInheritanceBase, IEquatable<ParentInheritance1>
 	{
