@@ -2606,6 +2606,68 @@ namespace Tests.Linq
 			result.Single(r => r.Id == 2 && r.Flag != null).Flag.ShouldBe(false);
 		}
 
+		/// <summary>
+		/// A branch supplying a constant where the other reads a column through a conversion is refused rather than
+		/// compared on unequal terms.
+		/// </summary>
+		/// <remarks>
+		/// The companion to the <c>NULL</c> case above, and the one that behaves differently. A <c>NULL</c> is stored
+		/// in no terms and read through none, so it cannot disagree with what the other branch declares. A constant
+		/// has terms of its own and no descriptor to state them, and a set operation other than <c>UNION ALL</c>
+		/// decides which rows survive by comparing values in the database - where a raw <c>true</c> and a column
+		/// written as <c>'Y'</c> are two different values.
+		/// <para>
+		/// Which is what that comparison did: before this the query answered two rows where the CLR says one, the
+		/// constant and the column each coming back through the converter as though they had matched nothing. A
+		/// refusal replaces a wrong answer here rather than a right one, so the loud form is the improvement.
+		/// </para>
+		/// <para>
+		/// What neither form does is convert the constant through the column's descriptor and answer the single
+		/// correct row. That is a design question about descriptor-less branches rather than a defect in the
+		/// refusal, and it is left open.
+		/// </para>
+		/// <para>
+		/// <c>UNION ALL</c> is asked alongside, since it hands every row back and reads each on its own branch's
+		/// terms - so it is the one set operation that has no comparison to get wrong.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void UnionRefusesAConstantBranchAgainstAConvertedColumn([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
+
+			Action union = () => fromColumn.Union(fromConstant).ToArray();
+
+			union.ShouldThrow<LinqToDBException>().Message.ShouldContain("in different terms");
+
+			// Read a branch at a time, so each side keeps its own reading and nothing is compared in the database.
+			//
+			// Not asked of Sybase, and the reason is the same gap seen from the other side: the constant is emitted
+			// as the value it is rather than through the column's conversion, so it arrives as BIT against a column
+			// stored as a character - which that provider rejects outright instead of comparing. Where the storage
+			// tolerates both, the rows come back read on their own branch's terms.
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				return;
+
+			var all = fromColumn.UnionAll(fromConstant).ToArray();
+
+			all.Length.ShouldBe(4);
+			all.Count(r => r.Flag == true).ShouldBe(3);
+			all.Count(r => r.Flag == false).ShouldBe(1);
+		}
+
 		#endregion
 	}
 }
