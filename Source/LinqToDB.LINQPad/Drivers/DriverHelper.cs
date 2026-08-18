@@ -249,7 +249,7 @@ internal static class DriverHelper
 			}
 		}
 
-		static Exception? TestDynamicConnection(SettingsModel model)
+		Exception? TestDynamicConnection(SettingsModel model)
 		{
 			try
 			{
@@ -275,27 +275,70 @@ internal static class DriverHelper
 						throw new LinqToDBLinqPadException($"Cannot access provider assembly at {model.DynamicConnection.ProviderPath}");
 				}
 
-				var connectionString = PasswordManager.ResolvePasswordManagerFields(model.DynamicConnection.ConnectionString);
-				var provider         = DatabaseProviders.GetDataProvider(model.DynamicConnection.Provider.Name, connectionString, model.DynamicConnection.ProviderPath);
-				using (var con       = provider.CreateConnection(connectionString))
-					con.Open();
-
-				if (model.DynamicConnection.Database.SupportsSecondaryConnection
-					&& model.DynamicConnection.SecondaryProvider != null
-					&& model.DynamicConnection.SecondaryConnectionString != null)
-				{
-					var secondaryConnectionString = PasswordManager.ResolvePasswordManagerFields(model.DynamicConnection.SecondaryConnectionString);
-					var secondaryProvider         = DatabaseProviders.GetDataProvider(model.DynamicConnection.SecondaryProvider.Name, secondaryConnectionString, null);
-					using var con                 = secondaryProvider.CreateConnection(secondaryConnectionString);
-					con.Open();
-				}
+#if NETFRAMEWORK
+				// LINQPad 5 ships every database client with the driver, so the connection can be opened here
+				OpenConnections(settings);
 
 				return null;
+#else
+				// This dialog runs in LINQPad's own process, which has only the driver's static dependencies:
+				// database clients are provisioned per connection (see OverrideDriverDependencies) and resolve
+				// in the driver process, so the connection must be opened there. LINQPad rolls back changes to
+				// cxInfo when the dialog is cancelled, so saving before the test is safe.
+				settings.Save(cxInfo);
+
+				var error = DataContextDriver.TestConnection(cxInfo, out _);
+
+				return error == null ? null : new LinqToDBLinqPadException(error);
+#endif
 			}
 			catch (Exception ex)
 			{
 				return ex;
 			}
+		}
+	}
+
+#if !NETFRAMEWORK
+	/// <summary>
+	/// Implements <see cref="DataContextDriver.TestConnectionCore(IConnectionInfo)"/>. Runs in the driver
+	/// process, where the database clients provisioned for the connection can be loaded.
+	/// </summary>
+	public static string? TestConnection(IConnectionInfo cxInfo)
+	{
+		try
+		{
+			OpenConnections(ConnectionSettings.Load(cxInfo));
+
+			return null;
+		}
+		catch (Exception ex)
+		{
+			Notification.Error(ex, "Connection test failed.", "Connection Test");
+
+			return Notification.FormatMessages(ex);
+		}
+	}
+#endif
+
+	private static void OpenConnections(ConnectionSettings settings)
+	{
+		var database         = DatabaseProviders.GetProvider(settings.Connection.Database);
+		var connectionString = PasswordManager.ResolvePasswordManagerFields(settings.Connection.ConnectionString!);
+		var provider         = DatabaseProviders.GetDataProvider(settings.Connection.Provider, connectionString, settings.Connection.ProviderPath);
+
+		using (var cn = provider.CreateConnection(connectionString))
+			cn.Open();
+
+		if (database.SupportsSecondaryConnection
+			&& settings.Connection.SecondaryProvider != null
+			&& settings.Connection.SecondaryConnectionString != null)
+		{
+			var secondaryConnectionString = PasswordManager.ResolvePasswordManagerFields(settings.Connection.SecondaryConnectionString);
+			var secondaryProvider         = DatabaseProviders.GetDataProvider(settings.Connection.SecondaryProvider, secondaryConnectionString, null);
+
+			using var cn = secondaryProvider.CreateConnection(secondaryConnectionString);
+			cn.Open();
 		}
 	}
 

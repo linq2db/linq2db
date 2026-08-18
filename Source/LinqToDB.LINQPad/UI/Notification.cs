@@ -58,6 +58,32 @@ internal static class Notification
 		MessageBox.Show(owner, message, title, MessageBoxButton.OK, MessageBoxImage.Error);
 	}
 
+	public static void Error(Window owner, Exception ex, string title = "Error")
+	{
+		Log(ex, title);
+
+		MessageBox.Show(owner, FormatMessages(ex), title, MessageBoxButton.OK, MessageBoxImage.Error);
+	}
+
+	/// <summary>
+	/// Returns messages of the exception and all its inner exceptions: the message of a wrapper such as
+	/// <see cref="System.Reflection.TargetInvocationException"/> says nothing about the actual failure.
+	/// </summary>
+	public static string FormatMessages(Exception ex)
+	{
+		var messages = new StringBuilder();
+
+		for (var currEx = ex; currEx != null; currEx = currEx.InnerException)
+		{
+			if (messages.Length > 0)
+				messages.AppendLine().AppendLine();
+
+			messages.Append(currEx.Message);
+		}
+
+		return messages.ToString();
+	}
+
 	public static void Warning(Window owner, string message, string title = "Warning")
 	{
 		Log(message, title);

@@ -63,6 +63,9 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 #if !NETFRAMEWORK
 	/// <inheritdoc/>
 	public override void OverrideDriverDependencies(DriverDependencyInfo dependencyInfo) => DriverHelper.OverrideDriverDependencies(dependencyInfo, true);
+
+	/// <inheritdoc/>
+	protected override string? TestConnectionCore(IConnectionInfo cxInfo) => DriverHelper.TestConnection(cxInfo);
 #endif
 
 #if !NETFRAMEWORK
