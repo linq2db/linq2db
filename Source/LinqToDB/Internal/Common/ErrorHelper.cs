@@ -57,7 +57,13 @@
 		public const string Error_WindowFunction_NotSupported                     = "Window functions are not supported by current provider.";
 
 		public const string Error_Interval_Operation                              = "This TimeSpan operation is not supported by current provider.";
-		public const string Error_Interval_Difference                             = "Subtracting one date/time value from another is not supported by current provider.";
+		/// <summary>
+		/// Spelled out rather than terse, unlike its neighbours, because this one describes a capability that was
+		/// taken away rather than one that never existed: before 6.5 the same expression was rewritten into
+		/// <c>Sql.DateDiff</c>, which counts crossed boundaries instead of measuring elapsed time. Provider-neutral
+		/// wording because more than one provider reaches it.
+		/// </summary>
+		public const string Error_Interval_Difference                             = "Subtracting one date/time value from another is not supported by current provider. Compute the difference in .NET, or use Sql.DateDiff where a count of crossed unit boundaries answers the question.";
 		public const string Error_Interval_Member                                 = "This TimeSpan member is not supported by current provider.";
 		public const string Error_Interval_Shift                                  = "Adding a TimeSpan to a date/time value is not supported by current provider.";
 		/// <summary><c>{0}</c> - the requested component unit, <c>{1}</c> - the finest unit the provider resolves.</summary>
