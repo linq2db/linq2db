@@ -114,8 +114,10 @@
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.1.123"                     />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="1.3.0"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
-		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                        />
-		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
+		<!--managed reimplementation of Microsoft.SqlServer.Types, provisioned by the LINQPad driver on hosts where
+		    Microsoft's package has no native spatial library (it ships win-* runtimes only). Tests reference a
+		    self-signed copy from Tests/Redist instead, because this nuget is not strong-named.-->
+		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                        />
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.0.2"                        />

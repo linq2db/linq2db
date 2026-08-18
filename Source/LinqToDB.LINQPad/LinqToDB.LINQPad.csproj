@@ -160,26 +160,27 @@ namespace LinqToDB.LINQPad%3B
 
 internal static class NuGetPackageVersions
 {
-	public const string AdoNetCore_AseClient            = "@(PackageVersion->WithMetadataValue('Identity', 'AdoNetCore.AseClient')->'%(Version)')"%3B
-	public const string ClickHouse_Driver               = "@(PackageVersion->WithMetadataValue('Identity', 'ClickHouse.Driver')->'%(Version)')"%3B
-	public const string DuckDB_NET_Data_Full            = "@(PackageVersion->WithMetadataValue('Identity', 'DuckDB.NET.Data.Full')->'%(Version)')"%3B
-	public const string FirebirdSql_Data_FirebirdClient = "@(PackageVersion->WithMetadataValue('Identity', 'FirebirdSql.Data.FirebirdClient')->'%(Version)')"%3B
-	public const string Microsoft_Data_SqlClient        = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.SqlClient')->'%(Version)')"%3B
-	public const string Microsoft_Data_Sqlite           = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.Sqlite')->'%(Version)')"%3B
-	public const string Microsoft_SqlServer_Types       = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.SqlServer.Types')->'%(Version)')"%3B
-	public const string MySqlConnector                  = "@(PackageVersion->WithMetadataValue('Identity', 'MySqlConnector')->'%(Version)')"%3B
-	public const string Net_IBM_Data_Db2                = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2')->'%(Version)')"%3B
-	public const string Net_IBM_Data_Db2_lnx            = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2-lnx')->'%(Version)')"%3B
-	public const string Net_IBM_Data_Db2_osx            = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2-osx')->'%(Version)')"%3B
-	public const string Npgsql                          = "@(PackageVersion->WithMetadataValue('Identity', 'Npgsql')->'%(Version)')"%3B
-	public const string Octonica_ClickHouseClient       = "@(PackageVersion->WithMetadataValue('Identity', 'Octonica.ClickHouseClient')->'%(Version)')"%3B
-	public const string Oracle_ManagedDataAccess_Core   = "@(PackageVersion->WithMetadataValue('Identity', 'Oracle.ManagedDataAccess.Core')->'%(Version)')"%3B
-	public const string SourceGear_sqlite3              = "@(PackageVersion->WithMetadataValue('Identity', 'SourceGear.sqlite3')->'%(Version)')"%3B
-	public const string SQLitePCLRaw_lib_e_sqlite3      = "@(PackageVersion->WithMetadataValue('Identity', 'SQLitePCLRaw.lib.e_sqlite3')->'%(Version)')"%3B
-	public const string System_Data_Odbc                = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.Odbc')->'%(Version)')"%3B
-	public const string System_Data_OleDb               = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.OleDb')->'%(Version)')"%3B
-	public const string System_Data_SQLite              = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.SQLite')->'%(Version)')"%3B
-	public const string Ydb_Sdk                         = "@(PackageVersion->WithMetadataValue('Identity', 'Ydb.Sdk')->'%(Version)')"%3B
+	public const string AdoNetCore_AseClient                = "@(PackageVersion->WithMetadataValue('Identity', 'AdoNetCore.AseClient')->'%(Version)')"%3B
+	public const string ClickHouse_Driver                   = "@(PackageVersion->WithMetadataValue('Identity', 'ClickHouse.Driver')->'%(Version)')"%3B
+	public const string dotMorten_Microsoft_SqlServer_Types = "@(PackageVersion->WithMetadataValue('Identity', 'dotMorten.Microsoft.SqlServer.Types')->'%(Version)')"%3B
+	public const string DuckDB_NET_Data_Full                = "@(PackageVersion->WithMetadataValue('Identity', 'DuckDB.NET.Data.Full')->'%(Version)')"%3B
+	public const string FirebirdSql_Data_FirebirdClient     = "@(PackageVersion->WithMetadataValue('Identity', 'FirebirdSql.Data.FirebirdClient')->'%(Version)')"%3B
+	public const string Microsoft_Data_SqlClient            = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.SqlClient')->'%(Version)')"%3B
+	public const string Microsoft_Data_Sqlite               = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.Sqlite')->'%(Version)')"%3B
+	public const string Microsoft_SqlServer_Types           = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.SqlServer.Types')->'%(Version)')"%3B
+	public const string MySqlConnector                      = "@(PackageVersion->WithMetadataValue('Identity', 'MySqlConnector')->'%(Version)')"%3B
+	public const string Net_IBM_Data_Db2                    = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2')->'%(Version)')"%3B
+	public const string Net_IBM_Data_Db2_lnx                = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2-lnx')->'%(Version)')"%3B
+	public const string Net_IBM_Data_Db2_osx                = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2-osx')->'%(Version)')"%3B
+	public const string Npgsql                              = "@(PackageVersion->WithMetadataValue('Identity', 'Npgsql')->'%(Version)')"%3B
+	public const string Octonica_ClickHouseClient           = "@(PackageVersion->WithMetadataValue('Identity', 'Octonica.ClickHouseClient')->'%(Version)')"%3B
+	public const string Oracle_ManagedDataAccess_Core       = "@(PackageVersion->WithMetadataValue('Identity', 'Oracle.ManagedDataAccess.Core')->'%(Version)')"%3B
+	public const string SourceGear_sqlite3                  = "@(PackageVersion->WithMetadataValue('Identity', 'SourceGear.sqlite3')->'%(Version)')"%3B
+	public const string SQLitePCLRaw_lib_e_sqlite3          = "@(PackageVersion->WithMetadataValue('Identity', 'SQLitePCLRaw.lib.e_sqlite3')->'%(Version)')"%3B
+	public const string System_Data_Odbc                    = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.Odbc')->'%(Version)')"%3B
+	public const string System_Data_OleDb                   = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.OleDb')->'%(Version)')"%3B
+	public const string System_Data_SQLite                  = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.SQLite')->'%(Version)')"%3B
+	public const string Ydb_Sdk                             = "@(PackageVersion->WithMetadataValue('Identity', 'Ydb.Sdk')->'%(Version)')"%3B
 }
 			</_NuGetPackageVersionsSource>
 		</PropertyGroup>

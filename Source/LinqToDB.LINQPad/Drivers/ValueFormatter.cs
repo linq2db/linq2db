@@ -25,8 +25,6 @@ using IBM.Data.DB2Types;
 
 using LINQPad;
 
-using Microsoft.SqlServer.Types;
-
 using MySqlConnector;
 
 using NpgsqlTypes;
@@ -78,9 +76,14 @@ internal static class ValueFormatter
 		Register(AddFirebirdConverters  );
 		Register(AddSybaseConverters    );
 		Register(AddMySqlConverters     );
-		Register(AddSqlServerConverters );
 		Register(AddNpgsqlConverters    );
 		Register(AddOracleConverters    );
+
+		// sql server spatial types
+		// use strings: on Windows the types come from Microsoft.SqlServer.Types and elsewhere from
+		// dotMorten.Microsoft.SqlServer.Types, and the two assemblies have incompatible versions
+		byTypeNameConverters.Add("Microsoft.SqlServer.Types.SqlGeography", ConvertToString);
+		byTypeNameConverters.Add("Microsoft.SqlServer.Types.SqlGeometry" , ConvertToString);
 
 		// sap hana
 		byTypeNameConverters.Add("Sap.Data.Hana.HanaDecimal", ConvertToString);
@@ -151,14 +154,6 @@ internal static class ValueFormatter
 		typeConverters.Add(typeof(MySqlDateTime), ConvertToString);
 		typeConverters.Add(typeof(MySqlDecimal) , ConvertToString);
 		typeConverters.Add(typeof(MySqlGeometry), ConvertMySqlGeometry);
-	}
-
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	private static void AddSqlServerConverters(Dictionary<Type, Func<object, object>> typeConverters, Dictionary<Type, Func<object, object>> baseTypeConverters)
-	{
-		// spatial types
-		typeConverters.Add(typeof(SqlGeography), ConvertToString);
-		typeConverters.Add(typeof(SqlGeometry) , ConvertToString);
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]

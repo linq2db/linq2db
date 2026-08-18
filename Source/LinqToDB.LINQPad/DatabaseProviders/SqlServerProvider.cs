@@ -102,7 +102,16 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 
 #if !NETFRAMEWORK
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
-		=> [("Microsoft.Data.SqlClient", NuGetPackageVersions.Microsoft_Data_SqlClient), ("Microsoft.SqlServer.Types", NuGetPackageVersions.Microsoft_SqlServer_Types)];
+	{
+		yield return ("Microsoft.Data.SqlClient", NuGetPackageVersions.Microsoft_Data_SqlClient);
+
+		// Microsoft's spatial types need SqlServerSpatial*.dll, shipped for Windows only, so other systems get
+		// the managed reimplementation instead. Both provide the Microsoft.SqlServer.Types assembly, and neither
+		// is referenced at compile time by this build, so linq2db and LINQPad load whichever one is provisioned.
+		yield return Platform.IsWindows
+			? ("Microsoft.SqlServer.Types"        , NuGetPackageVersions.Microsoft_SqlServer_Types)
+			: ("dotMorten.Microsoft.SqlServer.Types", NuGetPackageVersions.dotMorten_Microsoft_SqlServer_Types);
+	}
 #endif
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)

@@ -34,15 +34,11 @@ Following databases supported:
 
 ## Database clients
 
-The driver doesn't bundle database client libraries. LINQPad downloads the client of a database when a connection to it is first used, so using a database type for the first time needs an internet connection.
+This nuget package doesn't bundle database client libraries. LINQPad downloads the client of a database when a connection to it is first used, so using a database type for the first time needs an internet connection. The LINQPad 5 `.lpx` plugin is unaffected — it ships every client in the bundle.
 
 ## macOS
 
-Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. For the rest:
-
-* **DB2 / Informix**: the macOS build of the IBM client is used, but its native CLI driver is not part of the client package on any platform and has to be installed separately.
-* **Microsoft SQL Server**: connections work, but `Microsoft.SqlServer.Types` values (`geometry`, `geography`, `hierarchyid`) need Windows-only native libraries and cannot be rendered.
-* **SAP HANA**: needs the macOS HANA client installed, same as on Windows.
+Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. Everything else uses the macOS build of its client, including IBM DB2 and Informix. SQL Server spatial values (`geometry`, `geography`, `hierarchyid`) are handled by the managed [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) implementation, as Microsoft's package ships its native spatial library for Windows only.
 
 ## Troubleshooting
 
