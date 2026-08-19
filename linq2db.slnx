@@ -90,7 +90,6 @@
     <File Path="Build/Azure/net100/sqlserver.2017.json" />
     <File Path="Build/Azure/net100/sqlserver.2019.json" />
     <File Path="Build/Azure/net100/sqlserver.2022.json" />
-    <File Path="Build/Azure/net100/sqlserver.2022.metrics.json" />
     <File Path="Build/Azure/net100/sqlserver.2025.json" />
     <File Path="Build/Azure/net100/sqlserver.extras.json" />
     <File Path="Build/Azure/net100/sqlserver.fts.2019.json" />
@@ -137,7 +136,6 @@
     <File Path="Build/Azure/net80/sqlserver.2017.json" />
     <File Path="Build/Azure/net80/sqlserver.2019.json" />
     <File Path="Build/Azure/net80/sqlserver.2022.json" />
-    <File Path="Build/Azure/net80/sqlserver.2022.metrics.json" />
     <File Path="Build/Azure/net80/sqlserver.2025.json" />
     <File Path="Build/Azure/net80/sqlserver.extras.json" />
     <File Path="Build/Azure/net80/sqlserver.fts.2019.json" />
@@ -184,7 +182,6 @@
     <File Path="Build/Azure/net90/sqlserver.2017.json" />
     <File Path="Build/Azure/net90/sqlserver.2019.json" />
     <File Path="Build/Azure/net90/sqlserver.2022.json" />
-    <File Path="Build/Azure/net90/sqlserver.2022.metrics.json" />
     <File Path="Build/Azure/net90/sqlserver.2025.json" />
     <File Path="Build/Azure/net90/sqlserver.extras.json" />
     <File Path="Build/Azure/net90/sqlserver.fts.2019.json" />
@@ -206,7 +203,6 @@
     <File Path="Build/Azure/netfx/sqlserver.2017.json" />
     <File Path="Build/Azure/netfx/sqlserver.2019.json" />
     <File Path="Build/Azure/netfx/sqlserver.2022.json" />
-    <File Path="Build/Azure/netfx/sqlserver.2022.metrics.json" />
     <File Path="Build/Azure/netfx/sqlserver.2025.json" />
     <File Path="Build/Azure/netfx/sqlserver.extras.json" />
   </Folder>
