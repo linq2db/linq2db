@@ -22,9 +22,7 @@ namespace Tests
 		// case-insensitive to support windoze file system
 		static readonly Dictionary<string, BaselineType> _baselines = new Dictionary<string, BaselineType>(StringComparer.OrdinalIgnoreCase);
 
-		static string? _context;
-
-		// guards _baselines, _context and the baseline file writes against concurrent
+		// guards _baselines and the baseline file writes against concurrent
 		// access when tests run in parallel across providers
 		static readonly Lock _sync = new();
 
@@ -67,14 +65,12 @@ namespace Tests
 				.Replace("DisposeTransactionAsync\n", string.Empty)
 				;
 
-			// Serialize access to the shared overwrite-detection map, _context and the
-			// per-baseline files: under parallel runs this is hit from multiple provider
-			// threads (direct + remote of one provider stay on a single lane, so the two
-			// writes to the same baseline path remain ordered).
+			// Serialize access to the shared overwrite-detection map and the per-baseline
+			// files: under parallel runs this is hit from multiple provider threads
+			// (direct + remote of one provider stay on a single lane, so the two writes
+			// to the same baseline path remain ordered).
 			lock (_sync)
 			{
-				_context = context;
-
 				Directory.CreateDirectory(fixturePath);
 
 				if (_baselines.TryGetValue(fullPath, out var type))
@@ -136,8 +132,13 @@ namespace Tests
 
 		public static void WriteMetrics(string baselinesPath, string baseline)
 		{
-			if (_context == null)
-				return;
+			// Nothing to report for a run that captured no baselines - the condition the removed
+			// last-writer-wins _context slot used to express.
+			lock (_sync)
+			{
+				if (_baselines.Count == 0)
+					return;
+			}
 
 			var target = TestUtils.GetConfigName();
 
@@ -145,7 +146,10 @@ namespace Tests
 
 			Directory.CreateDirectory(fixturePath);
 
-			var fileName = $"{_context}.{Environment.OSVersion.Platform}.Metrics.txt";
+			// The ActivityStatistics report is process-wide, so the configuration name identifies it on its
+			// own. It used to be prefixed with whichever provider wrote a baseline most recently, which under
+			// a parallel multi-provider run named an arbitrary one, differently from run to run.
+			var fileName = $"{Environment.OSVersion.Platform}.Metrics.txt";
 
 			var fullPath = Path.Combine(fixturePath, fileName);
 
