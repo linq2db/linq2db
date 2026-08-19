@@ -142,6 +142,15 @@ public class Test: TestBase
 }
 ```
 
+### Test-run environment variables
+
+Optional switches, read once when the test assembly starts. All are unset by default.
+
+| Variable | Effect |
+|---|---|
+| `L2DB_TEST_QUERYCACHE` | Maximum number of entries kept in the query cache. Defaults to `100` on x86 and .NET Framework legs, where the 32-bit address space is the binding constraint, and to the library default (10000) everywhere else. Raise it if a test asserting exact cache miss counts sees its entries trimmed. |
+| `LINQ2DB_ASSERT_STATE` | Set to `1` to compare the shared test tables (`Person`, `Patient`, `Doctor`, `Parent`, `Child`, `GrandChild`, `Inheritance*`, `Types2`) with their expected contents after every test, so a test that leaves data behind fails in its own teardown with `SMOrc` instead of breaking whatever runs next. Off by default because the comparison is slow. |
+
 ### Configure data providers for tests
 
 `DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken
