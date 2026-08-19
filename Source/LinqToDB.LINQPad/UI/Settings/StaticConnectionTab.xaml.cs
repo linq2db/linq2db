@@ -123,6 +123,15 @@ internal sealed partial class StaticConnectionTab
 
 	private void ReportContextLoadFailure(Exception ex)
 	{
+		// a dialog only where the user is actually stuck: with a context class in the list they can carry on,
+		// so that case goes to the log, as everything else the driver recovers from does
+		if (Model.ContextTypes.Count > 0)
+		{
+			Notification.Log(ex, "Some types of the data context assembly could not be loaded.");
+
+			return;
+		}
+
 		// the driver no longer ships the database clients, so a context assembly that references one has to
 		// bring it along - which a build output folder does, but a hand-assembled one may not
 		var message = new StringBuilder(Notification.FormatMessages(ex));
@@ -134,9 +143,6 @@ internal sealed partial class StaticConnectionTab
 			.AppendLine("Database client libraries are not shipped with the driver - LINQPad downloads them per")
 			.Append("connection and they cannot be loaded here, so copy the missing assembly next to the context ")
 			.Append("one, or type the context class name instead of picking it from the list.");
-
-		if (Model.ContextTypes.Count > 0)
-			message.AppendLine().AppendLine().Append("Data contexts found so far are still listed.");
 
 		Notification.Error(Window.GetWindow(this), message.ToString(), "Context assembly load error");
 	}
