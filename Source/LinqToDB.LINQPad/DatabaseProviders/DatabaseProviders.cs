@@ -85,9 +85,15 @@ internal static class DatabaseProviders
 	public static IEnumerable<(string Id, string Version)> GetAllNuGetPackages()
 	{
 		foreach (var provider in Providers.Values)
+		{
+			// a database that cannot work on this host needs no client (e.g. Access OLE DB on macOS)
+			if (!provider.IsPlatformSupported)
+				continue;
+
 			foreach (var info in provider.Providers)
 				foreach (var package in provider.GetNuGetPackages(info.Name))
 					yield return package;
+		}
 	}
 #endif
 
