@@ -82,6 +82,57 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		sealed class RatioRow
+		{
+			[Column]                            public int      Id      { get; set; }
+			[Column(DataType = DataType.Int64)]
+			[Duration(DurationUnit.Second)]     public TimeSpan Half    { get; set; }
+			[Column(DataType = DataType.Int64)]
+			[Duration(DurationUnit.Second)]     public TimeSpan Whole   { get; set; }
+			[Column(DataType = DataType.Int64)]
+			[Duration(DurationUnit.Millisecond)] public TimeSpan WholeMs { get; set; }
+		}
+
+		/// <summary>
+		/// One duration divided by another, which answers how many of the second fit in the first.
+		/// </summary>
+		/// <remarks>
+		/// Two ways to get this wrong, and the storage supplies both. Declared in different units the stored numbers
+		/// count different things, so 1800 seconds over 1800000 milliseconds answered a thousandth of the truth -
+		/// and because both are integral the provider divided them as integers, so what came back was not 0.001 but
+		/// 0. Declared in the <em>same</em> unit the numbers are commensurable and it is still wrong for the second
+		/// reason alone: fifteen minutes over thirty is a half, which integer division reports as none.
+		/// <para>
+		/// Scoped to the two providers whose duration storage is a 64-bit integer. Where a provider has none - Access
+		/// keeps a duration as money - a tick count is not a whole number and the ratio is refused rather than
+		/// answered, which is the trade the sum already makes.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void OneDurationDividedByAnother([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<RatioRow>();
+
+			db.Insert(new RatioRow
+			{
+				Id      = 1,
+				Half    = TimeSpan.FromMinutes(15),
+				Whole   = TimeSpan.FromMinutes(30),
+				WholeMs = TimeSpan.FromMinutes(30),
+			});
+
+			var row = t.Select(r => new
+			{
+				CrossUnit = Sql.AsSql(r.Whole / r.WholeMs),
+				SameUnit  = Sql.AsSql(r.Half  / r.Whole),
+			}).Single();
+
+			row.CrossUnit.ShouldBe(1d);
+			row.SameUnit .ShouldBe(0.5d);
+		}
+
+		[Table]
 		sealed class NativeIntervalRow
 		{
 			[Column] public int      Id         { get; set; }

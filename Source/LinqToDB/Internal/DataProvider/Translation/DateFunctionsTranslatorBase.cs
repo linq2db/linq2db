@@ -289,6 +289,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				Registration.RegisterBinaryInternal(ExpressionType.Add,      interval, interval, TranslateIntervalArithmetic);
 				Registration.RegisterBinaryInternal(ExpressionType.Subtract, interval, interval, TranslateIntervalArithmetic);
+
+				// A ratio needs a handler of its own for two reasons the sum does not have: it answers a number
+				// rather than a duration, and the division is a floating one - so even two durations declared in the
+				// same unit, whose stored numbers are already commensurable, divide wrongly when the provider does
+				// what their integral storage asks and truncates.
+				Registration.RegisterBinaryInternal(ExpressionType.Divide, interval, interval, TranslateIntervalRatio);
 			}
 
 			Registration.RegisterBinaryInternal(ExpressionType.Subtract, typeof(DateTime),        typeof(DateTime),        TranslateDateTimeDifference);
@@ -420,6 +426,56 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				translationContext.CurrentSelectQuery,
 				new SqlIntervalExpression(combined, resultType, SqlIntervalType.ClrTimeSpan),
 				binaryExpression);
+		}
+
+		/// <summary>
+		/// Divides one duration by another, which asks how many of the second fit in the first.
+		/// </summary>
+		/// <remarks>
+		/// Kept apart from <see cref="TranslateIntervalArithmetic"/> because the answer is not a duration: a ratio is
+		/// dimensionless, so it comes back as a bare number and cannot be marked as a tick count the way a sum is.
+		/// <para>
+		/// Both sides are taken to ticks and the ratio formed there, and the division is a floating one on both
+		/// counts. Two durations declared in the same unit are <em>not</em> left to the generic handling, which is
+		/// where this differs from the sum: their stored numbers are commensurable, but they are also integral, so a
+		/// provider divides them as integers - fifteen minutes over thirty answered zero rather than one half.
+		/// </para>
+		/// <para>
+		/// An ordinary value on either side is left alone. The generic handling writes it through the other operand's
+		/// column descriptor, which puts it in that column's unit, so the two numbers already count the same thing.
+		/// </para>
+		/// </remarks>
+		Expression? TranslateIntervalRatio(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
+		{
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			var left  = TranslateIntervalOperand(translationContext, binaryExpression.Left,  translationFlags);
+			var right = TranslateIntervalOperand(translationContext, binaryExpression.Right, translationFlags);
+
+			if (left == null || right == null)
+				return null;
+
+			if (IntervalResolutionOf(left) == null || IntervalResolutionOf(right) == null)
+				return null;
+
+			// The same limit the sum has: a tick count that cannot be held as a whole number is one the reader cannot
+			// turn back into anything, and here it would also be a ratio taken of a rounded value.
+			if (!CarriesWholeTicks(left) || !CarriesWholeTicks(right))
+				return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_Operation);
+
+			var factory    = translationContext.ExpressionFactory;
+			var tickType   = factory.GetDbDataType(typeof(long));
+			var ratioType  = factory.GetDbDataType(binaryExpression.Type);
+
+			var leftTicks  = new SqlIntervalPartExpression(left,  SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
+			var rightTicks = new SqlIntervalPartExpression(right, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
+
+			var ratio = factory.Div(
+				ratioType,
+				factory.Cast(leftTicks,  ratioType, true),
+				factory.Cast(rightTicks, ratioType, true));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, ratio, binaryExpression);
 		}
 
 		/// <summary>
