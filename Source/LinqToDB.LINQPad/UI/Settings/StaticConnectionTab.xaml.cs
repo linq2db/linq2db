@@ -4,6 +4,8 @@ using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Navigation;
@@ -37,11 +39,6 @@ internal sealed partial class StaticConnectionTab
 		Model.PropertyChanged += Model_PropertyChanged;
 	}
 
-	private void Click_ClearDatabase(object sender, RoutedEventArgs e)
-	{
-		Model.Database = null;
-	}
-
 	private void Model_PropertyChanged(object? sender, PropertyChangedEventArgs e)
 	{
 		switch (e.PropertyName)
@@ -69,27 +66,79 @@ internal sealed partial class StaticConnectionTab
 				Mouse.OverrideCursor = Cursors.Wait;
 
 				var assembly = DataContextDriver.LoadAssemblySafely(Model.ContextAssemblyPath);
-				// as referenced linq2db assembly from context could be different version than
-				// linq2db assembly from current process
-				// we cannot compare types directly and should use by-name comparison
-				foreach (var type in assembly.GetExportedTypes())
+
+				// GetExportedTypes() would give up on the whole assembly when a single type cannot be loaded, and
+				// a context assembly's own dependencies often cannot be loaded here: this dialog runs in LINQPad's
+				// process, which has only the driver's static dependencies, while database clients are provisioned
+				// per connection. Take the types that did load and report the rest.
+				Type?[] types;
+				Exception? loadFailure = null;
+
+				try
 				{
-					foreach (var iface in type.GetInterfaces())
+					types = assembly.GetTypes();
+				}
+				catch (ReflectionTypeLoadException ex)
+				{
+					types       = ex.Types;
+					loadFailure = ex.LoaderExceptions.FirstOrDefault(static e => e != null) ?? ex;
+				}
+
+				foreach (var type in types)
+				{
+					if (type == null || (!type.IsPublic && !type.IsNestedPublic))
+						continue;
+
+					try
 					{
-						if (string.Equals(iface.FullName, IDATACONTEXT_NAME, StringComparison.Ordinal))
-							Model.ContextTypes.Add(type.FullName!);
+						// as referenced linq2db assembly from context could be different version than
+						// linq2db assembly from current process
+						// we cannot compare types directly and should use by-name comparison
+						foreach (var iface in type.GetInterfaces())
+						{
+							if (string.Equals(iface.FullName, IDATACONTEXT_NAME, StringComparison.Ordinal))
+								Model.ContextTypes.Add(type.FullName!);
+						}
+					}
+					catch (Exception ex)
+					{
+						// a type whose base type or interfaces live in an assembly we cannot load
+						loadFailure ??= ex;
 					}
 				}
+
+				if (loadFailure != null)
+					ReportContextLoadFailure(loadFailure);
 			}
 			catch (Exception ex)
 			{
-				Notification.Error(Window.GetWindow(this), ex.Message, "Context assembly load error");
+				ReportContextLoadFailure(ex);
 			}
 			finally
 			{
 				Mouse.OverrideCursor = oldCursor;
 			}
 		}
+	}
+
+	private void ReportContextLoadFailure(Exception ex)
+	{
+		// the driver no longer ships the database clients, so a context assembly that references one has to
+		// bring it along - which a build output folder does, but a hand-assembled one may not
+		var message = new StringBuilder(Notification.FormatMessages(ex));
+
+		message
+			.AppendLine()
+			.AppendLine()
+			.AppendLine("The data context assembly and everything it references must be loadable from its folder.")
+			.AppendLine("Database client libraries are not shipped with the driver - LINQPad downloads them per")
+			.Append("connection and they cannot be loaded here, so copy the missing assembly next to the context ")
+			.Append("one, or type the context class name instead of picking it from the list.");
+
+		if (Model.ContextTypes.Count > 0)
+			message.AppendLine().AppendLine().Append("Data contexts found so far are still listed.");
+
+		Notification.Error(Window.GetWindow(this), message.ToString(), "Context assembly load error");
 	}
 
 	void LoadConfigurations()

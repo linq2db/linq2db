@@ -22,9 +22,9 @@
 					<TextBox Padding="5" Text="{Binding ContextAssemblyPath}" />
 				</DockPanel>
 
-				<DockPanel Margin="0 5 0 0" ToolTip="Full name of data model context class. Class must be public class, based on LinqToDB.Data.DataConnection, LinqToDB.DataContext or any other class implementing LinqToDB.IDataContext with default constructor or constructor that accepts configuration name">
+				<DockPanel Margin="0 5 0 0" ToolTip="Full name of data model context class. Class must be public class, based on LinqToDB.Data.DataConnection, LinqToDB.DataContext or any other class implementing LinqToDB.IDataContext with default constructor or constructor that accepts configuration name. Editable: type the name when the assembly cannot be inspected here, e.g. because a library it references is missing from its folder">
 					<Label>Context</Label>
-					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding ContextTypes}" SelectedItem="{Binding ContextTypeName}" HorizontalAlignment="Right" />
+					<ComboBox Width="380" Margin="10 0 0 0" IsEditable="True" ItemsSource="{Binding ContextTypes}" Text="{Binding ContextTypeName}" HorizontalAlignment="Right" />
 				</DockPanel>
 
 				<Label>
@@ -44,10 +44,9 @@
 					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Configurations}" SelectedItem="{Binding ConfigurationName}" HorizontalAlignment="Right" />
 				</DockPanel>
 
-				<DockPanel Margin="0 5 0 0" Visibility="{Binding ClientDownloadVisibility}" ToolTip="Database this context connects to. LINQPad then downloads only that database's client for this connection instead of the clients of all supported databases. Leave empty if the context connects to more than one, or to keep downloading all of them.">
-					<Button DockPanel.Dock="Right" Margin="5 0 0 0" Padding="10 5" Content="Clear" Click="Click_ClearDatabase" />
-					<Label>Database client</Label>
-					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Databases}" SelectedValue="{Binding Database}" DisplayMemberPath="Description" HorizontalAlignment="Right" />
+				<DockPanel Margin="0 5 0 0" Visibility="{Binding ClientDownloadVisibility}" ToolTip="Database this context connects to. LINQPad then downloads only that database's client for this connection instead of the clients of all supported databases. Pick &quot;(all databases)&quot; if the context connects to more than one, or to keep downloading all of them.">
+					<Label>Database</Label>
+					<ComboBox Width="380" Margin="10 0 0 0" ItemsSource="{Binding Databases}" SelectedItem="{Binding SelectedDatabase}" DisplayMemberPath="Description" HorizontalAlignment="Right" />
 				</DockPanel>
 			</StackPanel>
 		</GroupBox>

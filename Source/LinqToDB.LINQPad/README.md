@@ -34,7 +34,9 @@ Following databases supported:
 
 ## Database clients
 
-This nuget package doesn't bundle database client libraries. LINQPad downloads the client of a database when a connection to it is first used, so using a database type for the first time needs an internet connection. A static data context selects its provider itself, so the driver cannot detect which client it needs: such a connection downloads all of them unless you name its database in the "Database client" field of the connection dialog. The LINQPad 5 `.lpx` plugin is unaffected — it ships every client in the bundle.
+This nuget package doesn't bundle database client libraries. LINQPad downloads the client of a database when a connection to it is first used, so using a database type for the first time needs an internet connection. A static data context selects its provider itself, so the driver cannot detect which client it needs: such a connection downloads all of them unless you pick its database in the "Database" field of the connection dialog. Note that a context assembly which references a client library must be able to load it from its own folder — a build output folder has it, a hand-assembled one may not — because the connection dialog inspects that assembly before any client has been downloaded. The "Context" field is editable if the list cannot be built.
+
+The LINQPad 5 `.lpx` plugin is unaffected by any of this — it ships every client in the bundle.
 
 ## macOS
 

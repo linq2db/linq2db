@@ -114,57 +114,72 @@ internal sealed class StaticConnectionModel(ConnectionSettings settings, bool en
 	}
 
 	/// <summary>
-	/// Database the context connects to. Only limits which clients LINQPad downloads for this connection,
-	/// so <see langword="null"/> is valid and means all of them.
+	/// One entry of <see cref="Databases"/>. A <see langword="null"/> <paramref name="Database"/> is the
+	/// "all of them" choice, which is why the list carries this instead of the provider itself.
 	/// </summary>
-	public IDatabaseProvider? Database
+	/// <param name="Description">Text shown in the combo.</param>
+	/// <param name="Database">Database to limit client downloads to, or <see langword="null"/> for all.</param>
+	public sealed record DatabaseChoice(string Description, IDatabaseProvider? Database);
+
+	/// <summary>
+	/// Database the context connects to, limiting which clients LINQPad downloads for this connection.
+	/// </summary>
+	public DatabaseChoice? SelectedDatabase
 	{
 		get
 		{
-			if (string.IsNullOrWhiteSpace(Settings.StaticContext.Database)
-				|| !DatabaseProviders.Providers.TryGetValue(Settings.StaticContext.Database!, out var provider))
-			{
+			if (Databases.Count == 0)
 				return null;
+
+			var database = Settings.StaticContext.Database;
+
+			foreach (var choice in Databases)
+			{
+				if (string.Equals(choice.Database?.Database, database, StringComparison.Ordinal))
+					return choice;
 			}
 
-			return provider;
+			// a database that is no longer registered: fall back to "all", which is what will be provisioned
+			return Databases[0];
 		}
 		set
 		{
-			if (!string.Equals(Settings.StaticContext.Database, value?.Database, StringComparison.Ordinal))
+			if (!string.Equals(Settings.StaticContext.Database, value?.Database?.Database, StringComparison.Ordinal))
 			{
-				Settings.StaticContext.Database = value?.Database;
-				OnPropertyChanged(_databaseChangedEventArgs);
+				Settings.StaticContext.Database = value?.Database?.Database;
+				OnPropertyChanged(_selectedDatabaseChangedEventArgs);
 			}
 		}
 	}
 
-	private static readonly PropertyChangedEventArgs _databaseChangedEventArgs = new (nameof(Database));
+	private static readonly PropertyChangedEventArgs _selectedDatabaseChangedEventArgs = new (nameof(SelectedDatabase));
 
 	public ObservableCollection<string> ContextTypes { get; } = new();
 
 	public ObservableCollection<string> Configurations { get; } = new();
 
 	/// <summary>
-	/// Databases offered for <see cref="Database"/>. Empty on the LINQPad 5 build, whose plugin bundles every
-	/// client, so there is nothing to limit there.
+	/// Databases offered for <see cref="SelectedDatabase"/>, the first being "all of them". Empty on the
+	/// LINQPad 5 build, whose plugin bundles every client, so there is nothing to limit there.
 	/// </summary>
-	public ObservableCollection<IDatabaseProvider> Databases { get; } = CreateDatabases(settings);
+	public ObservableCollection<DatabaseChoice> Databases { get; } = CreateDatabases(settings);
 
-	private static ObservableCollection<IDatabaseProvider> CreateDatabases(ConnectionSettings settings)
+	private static ObservableCollection<DatabaseChoice> CreateDatabases(ConnectionSettings settings)
 	{
-		var databases = new ObservableCollection<IDatabaseProvider>();
+		var databases = new ObservableCollection<DatabaseChoice>();
 
 #if !NETFRAMEWORK
+		databases.Add(new DatabaseChoice("(all databases)", null));
+
 		// as in DynamicConnectionModel, one already configured is kept listed even where it cannot work, so
-		// that the combo doesn't push a null back over it
+		// that the combo doesn't silently drop it
 		var current = settings.StaticContext.Database;
 
 		foreach (var db in DatabaseProviders.Providers.Values
 			.Where(db => db.IsPlatformSupported || string.Equals(db.Database, current, StringComparison.Ordinal))
 			.OrderBy(static db => db.Description, StringComparer.Ordinal))
 		{
-			databases.Add(db);
+			databases.Add(new DatabaseChoice(db.Description, db));
 		}
 #endif
 
