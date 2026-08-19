@@ -53,6 +53,34 @@ namespace Tests.Linq
 			bare  .ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
 		}
 
+		/// <summary>
+		/// The same pairing, compared rather than combined.
+		/// </summary>
+		/// <remarks>
+		/// A comparison is where the two stored numbers meet most quietly - nothing about
+		/// <c>InSeconds == Undeclared</c> reads as arithmetic - and the generic handling compared 5400 against
+		/// 54000000000 for the same ninety minutes, answering no rows where the CLR answers every one. The
+		/// arithmetic refused this pairing while the comparison registered beside it, over the same two type pairs
+		/// and the same operand shapes, let it through.
+		/// <para>
+		/// Refused whether or not SQL is demanded, as the combination is and for the reason it gives: the error is
+		/// the pairing itself, so there is no half of it left for a projection to read the two sides through.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ADeclaredDurationRefusesComparisonWithAnUndeclaredOne([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, TimeSpan.FromMinutes(90));
+
+			var filtered  = () => t.Where (r => r.InSeconds == r.Undeclared).ToArray();
+			var projected = () => t.Select(r => r.InSeconds == r.Undeclared).ToArray();
+
+			filtered .ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
+			projected.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
+		}
+
 		[Table]
 		sealed class NativeIntervalRow
 		{

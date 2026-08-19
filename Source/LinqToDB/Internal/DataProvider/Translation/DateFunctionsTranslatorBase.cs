@@ -1105,6 +1105,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_Difference);
 				}
 
+				// The pairing the arithmetic refuses is no more comparable than it is combinable: one side counts a
+				// unit the model declared and the other counts whatever a hand-written converter chose, so there is
+				// nothing to bring them onto common terms with. Left to the generic handling the two stored numbers
+				// are compared as they stand - 1800 seconds against 18000000000 ticks for the same ninety minutes,
+				// which answers no rows where the CLR answers one.
+				//
+				// Refused whether or not SQL is demanded, as the arithmetic is and for the same reason: the error is
+				// the pairing itself, so there is no half of it left for a projection to read the two sides through.
+				if (leftInterval  != null && IsUndeclaredStorage(translationContext, binaryExpression.Right, translationFlags)
+					|| rightInterval != null && IsUndeclaredStorage(translationContext, binaryExpression.Left,  translationFlags))
+				{
+					return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_UndeclaredOperand);
+				}
+
 				return null;
 			}
 
