@@ -139,7 +139,7 @@ namespace Tests.Linq
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void EntityFilterTests([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -223,7 +223,7 @@ namespace Tests.Linq
 				}
 			}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -250,7 +250,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void AssociationToFilteredEntityFunc([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -293,7 +293,7 @@ namespace Tests.Linq
 			return query;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void AssociationToFilteredEntityMethod([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -383,7 +383,7 @@ namespace Tests.Linq
 
 		int Issue4508Test_Id;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508"), QueryCacheTest]
 		public void Issue4508Test([DataSources] string context)
 		{
 			Test(context);
