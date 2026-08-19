@@ -279,6 +279,47 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A component below the provider's measurement resolution, asked for in a plain projection.
+		/// </summary>
+		/// <remarks>
+		/// The component is declined rather than built, because the count it would be taken from was rounded to a
+		/// coarser unit first and the answer would be identically zero. Declining names the unit and the resolution
+		/// where SQL is required - and leaves the member readable where it is not, which is the half that was
+		/// missing: an error expression refuses everywhere, so a projection lost the exact .NET answer along with
+		/// the SQL one.
+		/// <para>
+		/// The expected value is taken from the dates the query read back rather than from the ones inserted, so
+		/// the assertion does not depend on what this provider's storage keeps of a fraction of a second.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void AComponentBelowTheResolutionStaysReadable([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow
+			{
+				Id         = 1,
+				StartedOn  = new DateTime(2026, 1, 1, 10, 0, 0),
+				FinishedOn = new DateTime(2026, 1, 1, 11, 0, 0),
+			});
+
+			var row = t.Select(r => new
+			{
+				r.StartedOn,
+				r.FinishedOn,
+				Milliseconds = (r.FinishedOn - r.StartedOn).Milliseconds,
+			}).Single();
+
+			row.Milliseconds.ShouldBe((row.FinishedOn - row.StartedOn).Milliseconds);
+
+			var forced = () => t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds)).ToArray();
+
+			forced.ShouldThrow<LinqToDBException>().Message.ShouldContain("is always zero and is not translated");
+		}
+
+		/// <summary>
 		/// A span longer than sixty-eight years measures what it measures in the CLR.
 		/// </summary>
 		/// <remarks>

@@ -1288,6 +1288,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				&& QueryHelper.UnwrapNullablity(interval) is SqlIntervalDifferenceExpression
 				&& !SqlIntervalUnits.IsFinerThan(resolution, enclosing))
 			{
+				// Only where SQL is required, for the reason the total below gives: an error expression refuses
+				// everywhere, so raising one unconditionally takes the .NET answer away from a projection along
+				// with the SQL one - which is the opposite of what naming the reason here was for.
+				if (!translationFlags.HasFlag(TranslationFlags.Sql))
+					return null;
+
 				return translationContext.CreateErrorExpression(
 					memberExpression,
 					string.Format(
