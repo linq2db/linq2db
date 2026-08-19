@@ -123,6 +123,32 @@ public class TestsInitialization
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
+		// Cap the process-wide query cache to bound test-process memory. The default cap is 10000
+		// entries but a full run only produces ~1700 distinct queries, so it never trims and every
+		// distinct query is retained.
+		{
+			// The guard is the process's bitness, not its TFM. What runs out is the 32-bit address
+			// space: a full x86 run reaches ~1.8GB of the 2GB limit, and NUnit's end-of-run result
+			// serialization then needs one contiguous string it cannot get. The cap is worth ~45MB of
+			// that. netfx legs are capped regardless of bitness - the net462 x64 SQL Server EXTRAS leg
+			// runs out without it - so this is a union of the two conditions.
+			//
+			// 64-bit non-netfx legs keep the default: a small cap trims freshly-added, low-hit entries
+			// mid-test, which breaks the exact-miss-count cache tests, and there the address space is
+			// not the constraint. Overridable per leg via L2DB_TEST_QUERYCACHE.
+#if NETFRAMEWORK
+			var capByDefault = true;
+#else
+			var capByDefault = IntPtr.Size == 4;
+#endif
+			int? qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n)
+				? n
+				: capByDefault ? 100 : (int?)null;
+
+			if (qcMax != null)
+				LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
+		}
+
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
 		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
