@@ -28,7 +28,9 @@ internal interface IDatabaseProvider
 	bool SupportsSecondaryConnection { get; }
 
 	/// <summary>
-	/// When <see langword="false"/>, database cannot be used on current host operating system and is not offered by connection settings UI.
+	/// When <see langword="false"/>, database cannot be used on current host operating system and is not offered by
+	/// connection settings UI - except when it is the database the connection is already configured with, which stays
+	/// listed so that the combo does not clear it.
 	/// </summary>
 	bool IsPlatformSupported { get; }
 
