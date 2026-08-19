@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using LinqToDB.DataProvider;
@@ -44,14 +45,23 @@ internal sealed class AccessProvider : DatabaseProviderBase
 		return "https://www.microsoft.com/en-us/download/details.aspx?id=54920";
 	}
 
+	// each client is touched from its own non-inlined method: the assembly is loaded when a method
+	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
+	// are provisioned (see GetNuGetPackages), so a shared body would load the one that is missing
 	public override void ClearAllPools(string providerName)
 	{
 		if (OperatingSystem.IsWindows() && string.Equals(providerName, ProviderName.Access, StringComparison.Ordinal))
-			OleDbConnection.ReleaseObjectPool();
+			ReleaseOleDbPool();
 
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
-			OdbcConnection.ReleaseObjectPool();
+			ReleaseOdbcPool();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ReleaseOleDbPool() => OleDbConnection.ReleaseObjectPool();
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ReleaseOdbcPool() => OdbcConnection.ReleaseObjectPool();
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
@@ -69,6 +79,12 @@ internal sealed class AccessProvider : DatabaseProviderBase
 		else
 			provider = DatabaseProviders.GetDataProvider(settings.Connection.SecondaryProvider, connectionString, null);
 
+		return ReadOleDbSchemaUpdate(provider, connectionString);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DateTime? ReadOleDbSchemaUpdate(IDataProvider provider, string connectionString)
+	{
 		using var cn = (OleDbConnection)provider.CreateConnection(connectionString);
 		cn.Open();
 
@@ -91,8 +107,14 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
-			return OdbcFactory.Instance;
+			return GetOdbcFactory();
 
-		return OleDbFactory.Instance;
+		return GetOleDbFactory();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetOdbcFactory() => OdbcFactory.Instance;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetOleDbFactory() => OleDbFactory.Instance;
 }

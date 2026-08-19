@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Data.Sqlite;
 
@@ -51,13 +52,22 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	}
 #endif
 
+	// each client is touched from its own non-inlined method: the assembly is loaded when a method
+	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
+	// are provisioned (see GetNuGetPackages), so a shared body would load the one that is missing
 	public override void ClearAllPools(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
-			SQLiteConnection.ClearAllPools();
+			ClearClassicPools();
 		else
-			SqliteConnection.ClearAllPools();
+			ClearMicrosoftPools();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ClearClassicPools() => SQLiteConnection.ClearAllPools();
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ClearMicrosoftPools() => SqliteConnection.ClearAllPools();
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
@@ -68,14 +78,22 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
-			return SQLiteFactory.Instance;
+			return GetClassicFactory();
 		else
 #if NETFRAMEWORK
 			return MsDbProviderFactory.Instance;
 #else
-			return SqliteFactory.Instance;
+			return GetMicrosoftFactory();
 #endif
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetClassicFactory() => SQLiteFactory.Instance;
+
+#if !NETFRAMEWORK
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetMicrosoftFactory() => SqliteFactory.Instance;
+#endif
 
 #if NETFRAMEWORK
 	sealed class MsDbProviderFactory : DbProviderFactory

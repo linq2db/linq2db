@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 using ClickHouse.Driver.ADO;
 
@@ -44,13 +45,19 @@ internal sealed class ClickHouseProvider : DatabaseProviderBase
 	}
 #endif
 
+	// each client is touched from its own non-inlined method: the assembly is loaded when a method
+	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
+	// are provisioned (see GetNuGetPackages), so a shared body would load the ones that are missing
 	public override void ClearAllPools(string providerName)
 	{
 		// octonica provider doesn't implement connection pooling
 		// client provider use http connections pooling
 		if (string.Equals(providerName, ProviderName.ClickHouseMySql, StringComparison.Ordinal))
-			MySqlConnection.ClearAllPools();
+			ClearMySqlPools();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ClearMySqlPools() => MySqlConnection.ClearAllPools();
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
@@ -61,12 +68,23 @@ internal sealed class ClickHouseProvider : DatabaseProviderBase
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.ClickHouseDriver, StringComparison.Ordinal))
-			return new ClickHouseConnectionFactory();
+			return GetDriverFactory();
 #if !NETFRAMEWORK
 		if (string.Equals(providerName, ProviderName.ClickHouseOctonica, StringComparison.Ordinal))
-			return new ClickHouseDbProviderFactory();
+			return GetOctonicaFactory();
 #endif
 
-		return MySqlConnectorFactory.Instance;
+		return GetMySqlFactory();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetDriverFactory() => new ClickHouseConnectionFactory();
+
+#if !NETFRAMEWORK
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetOctonicaFactory() => new ClickHouseDbProviderFactory();
+#endif
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetMySqlFactory() => MySqlConnectorFactory.Instance;
 }
