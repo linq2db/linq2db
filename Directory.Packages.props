@@ -42,6 +42,13 @@
 		    newer compiler.-->
 		<RoslynLinqPadVersion>4.13.0</RoslynLinqPadVersion>
 
+		<!--version of dotMorten.Microsoft.SqlServer.Types the LINQPad driver provisions at runtime on hosts where
+		    Microsoft's package has no native spatial library. Deliberately NOT a PackageVersion: 1.5.0 depends on
+		    System.Data.SqlClient and 2.5.0 on Microsoft.Data.SqlClient, and the driver uses the Microsoft client, so
+		    it needs 2.5.0 - while the repo keeps building against the 1.5.0 self-signed copy in Redist that the
+		    System.Data.SqlClient tests need. The two assembly versions are incompatible, so they stay apart.-->
+		<DotMortenSqlServerTypesLinqPadVersion>2.5.0</DotMortenSqlServerTypesLinqPadVersion>
+
 		<!--bundled version for legacy SignalR packages (net462 + SignalR.Client !net8+ + SignalR.Core)-->
 		<SignalRLegacyVersion>1.2.11</SignalRLegacyVersion>
 		<!--bundled version for legacy AspNetCore [net462] packages (Microsoft.AspNetCore + Kestrel.Core)-->
@@ -114,10 +121,8 @@
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.1.123"                     />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="1.3.0"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
-		<!--managed reimplementation of Microsoft.SqlServer.Types, provisioned by the LINQPad driver on hosts where
-		    Microsoft's package has no native spatial library (it ships win-* runtimes only). Tests reference a
-		    self-signed copy from Tests/Redist instead, because this nuget is not strong-named.-->
-		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                        />
+		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                        />
+		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="7.0.2"                        />

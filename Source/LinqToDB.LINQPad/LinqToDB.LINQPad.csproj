@@ -162,7 +162,7 @@ internal static class NuGetPackageVersions
 {
 	public const string AdoNetCore_AseClient                = "@(PackageVersion->WithMetadataValue('Identity', 'AdoNetCore.AseClient')->'%(Version)')"%3B
 	public const string ClickHouse_Driver                   = "@(PackageVersion->WithMetadataValue('Identity', 'ClickHouse.Driver')->'%(Version)')"%3B
-	public const string dotMorten_Microsoft_SqlServer_Types = "@(PackageVersion->WithMetadataValue('Identity', 'dotMorten.Microsoft.SqlServer.Types')->'%(Version)')"%3B
+	public const string dotMorten_Microsoft_SqlServer_Types = "$(DotMortenSqlServerTypesLinqPadVersion)"%3B
 	public const string DuckDB_NET_Data_Full                = "@(PackageVersion->WithMetadataValue('Identity', 'DuckDB.NET.Data.Full')->'%(Version)')"%3B
 	public const string FirebirdSql_Data_FirebirdClient     = "@(PackageVersion->WithMetadataValue('Identity', 'FirebirdSql.Data.FirebirdClient')->'%(Version)')"%3B
 	public const string Microsoft_Data_SqlClient            = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.SqlClient')->'%(Version)')"%3B
