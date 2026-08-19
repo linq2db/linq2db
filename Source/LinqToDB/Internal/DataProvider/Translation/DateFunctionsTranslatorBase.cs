@@ -364,6 +364,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// here, the way the comparison path counts one.
 			if (left == null || right == null)
 			{
+				// A stored duration that never declared its unit is a different case again, and the only one of the
+				// three with nothing to work with. Its number counts whatever a hand-written converter decided, and
+				// nothing in the model says what - so it cannot be brought onto the other side's terms, and adding
+				// the two raw numbers is a wrong duration rather than a refused one. Refused by name, which also
+				// leaves a projection free to answer it in .NET, where both sides are real durations again.
+				var undeclared = left == null ? binaryExpression.Left : binaryExpression.Right;
+
+				if (IsUndeclaredStorage(translationContext, undeclared, translationFlags))
+					return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_UndeclaredOperand);
+
 				var declared = left ?? right!;
 
 				if (declared is not SqlIntervalDifferenceExpression)
@@ -410,6 +420,23 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				translationContext.CurrentSelectQuery,
 				new SqlIntervalExpression(combined, resultType, SqlIntervalType.ClrTimeSpan),
 				binaryExpression);
+		}
+
+		/// <summary>
+		/// Whether an operand is a stored value that carries no declared unit.
+		/// </summary>
+		/// <remarks>
+		/// The question separates the two things that reach here having failed to become an interval. A literal or a
+		/// parameter is a real <see cref="TimeSpan"/> and can be counted into any unit asked of it. A column mapped
+		/// through a hand-written value converter cannot: what is stored is a number the converter chose, and only a
+		/// <see cref="LinqToDB.Mapping.DurationAttribute"/> would say what it counts.
+		/// </remarks>
+		static bool IsUndeclaredStorage(ITranslationContext translationContext, Expression operand, TranslationFlags translationFlags)
+		{
+			if (translationContext.Translate(operand, translationFlags) is not SqlPlaceholderExpression placeholder)
+				return false;
+
+			return QueryHelper.GetColumnDescriptor(placeholder.Sql) is { DurationUnit: null };
 		}
 
 		/// <summary>

@@ -14,6 +14,46 @@ namespace Tests.Linq
 	public partial class IntervalTranslationTests
 	{
 		/// <summary>
+		/// A declared duration paired with one stored through a hand-written converter, which never said what its
+		/// number counts.
+		/// </summary>
+		/// <remarks>
+		/// The two stored numbers are not commensurable and nothing in the model can make them so: <c>InSeconds</c>
+		/// holds 5400 and <c>InTicks</c> holds 54000000000 for the same duration, and only the declared one says
+		/// which it is. Adding them as they stand answered 01:30:00.0005400 for a sum that is three hours - the
+		/// converted column's 5400 taken as ticks - which is wrong by a factor of ten million and silent.
+		/// <para>
+		/// Refused whether or not SQL is demanded, which is asserted rather than assumed because the other refusals
+		/// in this fixture behave the other way: a member that cannot be lowered leaves the column readable and the
+		/// projection answers it in .NET. Here the error is the combination itself, so there is no half of it left
+		/// to read the two sides through, and a bare projection is refused too. A named refusal for a wrong duration
+		/// is the trade, and the message names both ways out - declare the column, or combine the two in .NET.
+		/// </para>
+		/// <para>
+		/// Only the mixed pairing is refused. Two converted columns are left exactly as they have always been -
+		/// neither declares a unit, so there is no disagreement to detect and no behaviour to change.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ADeclaredDurationRefusesAnUndeclaredOne([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, TimeSpan.FromMinutes(90));
+
+			var forced = () => t
+				.Select(r => Sql.AsSql(r.InTicks + r.UndeclaredSeconds))
+				.ToArray();
+
+			var bare = () => t
+				.Select(r => r.InTicks + r.UndeclaredSeconds)
+				.ToArray();
+
+			forced.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
+			bare  .ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
+		}
+
+		/// <summary>
 		/// A duration paired with an ordinary <see cref="TimeSpan"/> value rather than with another stored one.
 		/// </summary>
 		/// <remarks>
