@@ -25,3 +25,4 @@ goto:eof
 :fail
 echo "Fail"
 docker logs mssql
+exit /b 1
