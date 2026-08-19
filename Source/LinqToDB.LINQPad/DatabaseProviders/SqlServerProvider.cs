@@ -91,8 +91,11 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 			}
 			catch (Exception ex)
 			{
-				Notification.Error(ex, "Failed to load Microsoft.SqlServer.Types assembly.", "SQL Server Provider");
-				_additionalAssemblies = [];
+				// the model just compiles without spatial types, so don't interrupt the user - and don't
+				// cache the failure, a later call may succeed
+				Notification.Log(ex, "Failed to load Microsoft.SqlServer.Types assembly.");
+
+				return [];
 			}
 		}
 
