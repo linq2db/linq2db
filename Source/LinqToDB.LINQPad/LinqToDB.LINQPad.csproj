@@ -33,7 +33,10 @@
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="linq2db4iSeries" Condition="$(DefineConstants.Contains('WITH_ISERIES'))" />
-		<PackageReference Include="Microsoft.SqlServer.Types" />
+		<!-- netfx only on purpose: the .NET build must not bind this assembly at compile time, so that a
+		     connection can be given either Microsoft's package or dotMorten's managed reimplementation of it -
+		     see SqlServerProvider.GetNuGetPackages -->
+		<PackageReference Include="Microsoft.SqlServer.Types" Condition=" '$(TargetFramework)' == 'net472' " />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472'">
