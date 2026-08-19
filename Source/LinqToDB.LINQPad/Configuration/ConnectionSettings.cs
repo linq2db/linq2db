@@ -583,5 +583,12 @@ internal sealed class ConnectionSettings
 		/// </summary>
 		[JsonIgnore]
 		public string? ContextAssemblyPath { get; set; }
+
+		/// <summary>
+		/// Optional database the context connects to, used only to limit which database clients LINQPad
+		/// downloads for this connection. A static context selects its provider itself, so this cannot be
+		/// detected: when not set, the clients of every database are provisioned.
+		/// </summary>
+		public string? Database { get; set; }
 	}
 }

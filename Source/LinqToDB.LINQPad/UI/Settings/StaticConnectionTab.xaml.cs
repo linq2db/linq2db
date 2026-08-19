@@ -37,6 +37,11 @@ internal sealed partial class StaticConnectionTab
 		Model.PropertyChanged += Model_PropertyChanged;
 	}
 
+	private void Click_ClearDatabase(object sender, RoutedEventArgs e)
+	{
+		Model.Database = null;
+	}
+
 	private void Model_PropertyChanged(object? sender, PropertyChangedEventArgs e)
 	{
 		switch (e.PropertyName)

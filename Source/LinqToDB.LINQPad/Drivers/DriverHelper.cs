@@ -355,8 +355,6 @@ internal static class DriverHelper
 			var settings = ConnectionSettings.Load(dependencyInfo.CxInfo);
 			var packages = new HashSet<(string Id, string Version)>();
 
-			// a static context configures its own provider, and a connection being created doesn't have one yet:
-			// in both cases the client is unknown and all of them are provisioned, as they were before
 			if (isDynamic && settings.Connection.Database != null && settings.Connection.Provider != null)
 			{
 				var provider = DatabaseProviders.GetProvider(settings.Connection.Database);
@@ -366,6 +364,16 @@ internal static class DriverHelper
 				if (settings.Connection.SecondaryProvider != null)
 					packages.UnionWith(provider.GetNuGetPackages(settings.Connection.SecondaryProvider));
 			}
+			// a static context selects its provider itself, so it cannot be detected - but the connection may
+			// name the database, and then the clients of that one are enough
+			else if (!isDynamic
+				&& settings.StaticContext.Database != null
+				&& DatabaseProviders.Providers.TryGetValue(settings.StaticContext.Database, out var staticProvider))
+			{
+				packages.UnionWith(DatabaseProviders.GetNuGetPackages(staticProvider));
+			}
+			// a connection being created has no provider selected yet, and a static context that names no
+			// database could be any of them: the client is unknown, so all are provisioned, as before
 			else
 			{
 				packages.UnionWith(DatabaseProviders.GetAllNuGetPackages());

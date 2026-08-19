@@ -90,10 +90,20 @@ internal static class DatabaseProviders
 			if (!provider.IsPlatformSupported)
 				continue;
 
-			foreach (var info in provider.Providers)
-				foreach (var package in provider.GetNuGetPackages(info.Name))
-					yield return package;
+			foreach (var package in GetNuGetPackages(provider))
+				yield return package;
 		}
+	}
+
+	/// <summary>
+	/// Returns NuGet packages of every provider of one database. Which of them a connection will use is not
+	/// always known, and the sets differ only for the databases that have more than one client.
+	/// </summary>
+	public static IEnumerable<(string Id, string Version)> GetNuGetPackages(IDatabaseProvider provider)
+	{
+		foreach (var info in provider.Providers)
+			foreach (var package in provider.GetNuGetPackages(info.Name))
+				yield return package;
 	}
 #endif
 
