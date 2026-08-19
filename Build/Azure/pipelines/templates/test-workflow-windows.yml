@@ -60,8 +60,8 @@ steps:
 
 # Free the image's idle desktop/telemetry processes before the test run. Measured over the 14 Windows
 # jobs of build 22810: ~2.4 GB resident in probed processes per job, and this list accounts for 637 MB
-# of it (build 22845), which nothing in a headless test run needs. The netfx SQL Server legs die with
-# OutOfMemoryException, so it is reclaimed for the test process.
+# of it (build 22845), which nothing in a headless test run needs, so it is reclaimed for the test
+# process - which matters most on the x86 legs, where a 2 GB address space is the binding constraint.
 #
 # NEVER add WindowsTerminal (84 MB, and it looks like an idle UI app): the hosted image runs the
 # pipeline agent inside it, so killing it kills the agent's own process tree. Every Windows job in
