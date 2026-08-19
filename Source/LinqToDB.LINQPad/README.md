@@ -5,11 +5,11 @@ This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer
 Following databases supported:
 
 * **ClickHouse**: using Binary, HTTP and MySQL interfaces
-* **DB2** (LUW, z/OS, iSeries): x64-bit version of LINQPad only
+* **DB2** (LUW, z/OS, iSeries): 64-bit LINQPad only
 * **DB2 iSeries**: check release notes to see which version supports this database
 * **DuckDB**
 * **Firebird**
-* **Informix**: x64-bit version of LINQPad only
+* **Informix**: 64-bit LINQPad only
 * **Microsoft Access**: both OLE DB and ODBC drivers *(Windows only)*
 * **Microsoft SQL Server** 2005+ *(including **Microsoft SQL Azure**)*
 * **Microsoft SQL Server Compact (SQL CE)** *(Windows only)*
@@ -42,4 +42,9 @@ Databases that need Windows-only components — Microsoft Access and SQL Server 
 
 ## Troubleshooting
 
-Driver errors are written to `linq2db.LINQPad.log` in LINQPad's log folder (`%localappdata%\LINQPad\Logs.LINQPad<version>` on Windows). On macOS the connection dialog is rendered by LINQPad through Avalonia XPF; errors raised outside of it are written to the log only.
+Driver errors are written to `linq2db.LINQPad.log`, in the `Logs.LINQPad<version>` folder of LINQPad's application data directory:
+
+* Windows: `%localappdata%\LINQPad`
+* macOS: `~/Library/Application Support/LINQPad`
+
+Errors raised outside of the connection dialog are reported in that log only, without a message box. LINQPad renders a driver's dialogs through Avalonia XPF on macOS, and that is available to a driver just while the dialog is open, so anything reported from elsewhere has nowhere to draw.
