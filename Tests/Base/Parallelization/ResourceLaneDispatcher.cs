@@ -248,6 +248,7 @@ namespace NUnit.ParallelByResource
 			readonly SemaphoreSlim                                       _laneThrottle;
 			readonly IParallelDiagnostics                                _diag;
 			readonly LaneGating                                          _gating;
+			readonly string                                              _name;
 
 			public SerialLane(string name, ReaderWriterLockSlim gate, SemaphoreSlim secondaryMutex, SemaphoreSlim laneThrottle, IParallelDiagnostics diag, LaneGating gating)
 			{
@@ -256,6 +257,7 @@ namespace NUnit.ParallelByResource
 				_laneThrottle   = laneThrottle;
 				_diag           = diag;
 				_gating         = gating;
+				_name           = name;
 
 				var thread = new Thread(Run)
 				{
@@ -266,7 +268,15 @@ namespace NUnit.ParallelByResource
 				thread.Start();
 			}
 
-			public void Enqueue(WorkItem work, bool secondary = false) => _queue.Add((work, secondary));
+			public void Enqueue(WorkItem work, bool secondary = false)
+			{
+				// Complete() has been called (CancelRun), so nothing will consume this item and Add would
+				// throw on an NUnit worker. Run it inline instead: the run is ending, and a work item that
+				// never executes never raises WorkItemComplete, which would hang the parent countdown
+				// rather than let the cancellation finish.
+				if (!_queue.TryAdd((work, secondary)))
+					work.Execute();
+			}
 
 			public void Complete() => _queue.CompleteAdding();
 
@@ -274,62 +284,79 @@ namespace NUnit.ParallelByResource
 			{
 				foreach (var (work, secondary) in _queue.GetConsumingEnumerable())
 				{
-					// Acquire the global secondary mutex before taking the per-run gate, so a lane
-					// waiting for its turn at a secondary-resource item doesn't pin a read lock meanwhile.
-					var holdsSecondary = _gating == LaneGating.Read && secondary;
-					if (holdsSecondary)
-						_secondaryMutex.Wait();
-
-					// Cap concurrent resource lanes (acquired after the secondary mutex, before the gate,
-					// for the same reason the gate is taken last: a lane waiting its turn must not pin a
-					// throttle permit while blocked on the secondary mutex). The exclusive lane is not
-					// throttled — it already runs alone under the write lock — and an ungated lane must
-					// not be, or it could not run while the throttle is saturated.
-					var holdsThrottle = _gating == LaneGating.Read;
-					if (holdsThrottle)
-						_laneThrottle.Wait();
-
-					if (_gating == LaneGating.Write)
-						_gate.EnterWriteLock();
-					else if (_gating == LaneGating.Read)
-						_gate.EnterReadLock();
-
-					// Left false on an ungated lane: it holds no lock, so a nested dispatch from its item
-					// must go through the normal routing rather than being run inline as already-covered.
-					if (_gating != LaneGating.None)
-						_gateHeld.Value = true;
-
-					var exclusive = _gating == LaneGating.Write;
-					var diagSw    = exclusive ? System.Diagnostics.Stopwatch.StartNew() : null;
-					if (exclusive)
-						_diag.Log($"exclusive-writelock-acquired test={work.Test.Name}");
-
+					// An exception escaping the body would end this loop and kill the lane thread. Nothing
+					// would report it - the thread is a background thread - and the queue would keep
+					// accepting items nobody consumes, so their WorkItemComplete never fires and the run
+					// hangs on a child countdown that cannot reach zero. Contain it per item instead.
 					try
 					{
-						// WorkItem.Execute() runs the item synchronously to completion and
-						// raises WorkItemComplete (handled-error paths included), which drives
-						// the parent countdown and run termination.
-						work.Execute();
+						RunItem(work, secondary);
 					}
-					finally
+					catch (Exception ex)
 					{
-						if (diagSw != null)
-							_diag.Log($"exclusive-writelock-released test={work.Test.Name} heldMs={diagSw.ElapsedMilliseconds}");
-
-						if (_gating != LaneGating.None)
-							_gateHeld.Value = false;
-
-						if (_gating == LaneGating.Write)
-							_gate.ExitWriteLock();
-						else if (_gating == LaneGating.Read)
-							_gate.ExitReadLock();
-
-						if (holdsThrottle)
-							_laneThrottle.Release();
-
-						if (holdsSecondary)
-							_secondaryMutex.Release();
+						_diag.Log($"lane-item-failed test={work.Test.Name} error={ex}");
+						TestContext.Progress.WriteLine($"[parallel] lane '{_name}' failed to run {work.Test.Name}, continuing: {ex}");
 					}
+				}
+			}
+
+			void RunItem(WorkItem work, bool secondary)
+			{
+				// Acquire the global secondary mutex before taking the per-run gate, so a lane
+				// waiting for its turn at a secondary-resource item doesn't pin a read lock meanwhile.
+				var holdsSecondary = _gating == LaneGating.Read && secondary;
+				if (holdsSecondary)
+					_secondaryMutex.Wait();
+
+				// Cap concurrent resource lanes (acquired after the secondary mutex, before the gate,
+				// for the same reason the gate is taken last: a lane waiting its turn must not pin a
+				// throttle permit while blocked on the secondary mutex). The exclusive lane is not
+				// throttled — it already runs alone under the write lock — and an ungated lane must
+				// not be, or it could not run while the throttle is saturated.
+				var holdsThrottle = _gating == LaneGating.Read;
+				if (holdsThrottle)
+					_laneThrottle.Wait();
+
+				if (_gating == LaneGating.Write)
+					_gate.EnterWriteLock();
+				else if (_gating == LaneGating.Read)
+					_gate.EnterReadLock();
+
+				// Left false on an ungated lane: it holds no lock, so a nested dispatch from its item
+				// must go through the normal routing rather than being run inline as already-covered.
+				if (_gating != LaneGating.None)
+					_gateHeld.Value = true;
+
+				var exclusive = _gating == LaneGating.Write;
+				var diagSw    = exclusive ? System.Diagnostics.Stopwatch.StartNew() : null;
+				if (exclusive)
+					_diag.Log($"exclusive-writelock-acquired test={work.Test.Name}");
+
+				try
+				{
+					// WorkItem.Execute() runs the item synchronously to completion and
+					// raises WorkItemComplete (handled-error paths included), which drives
+					// the parent countdown and run termination.
+					work.Execute();
+				}
+				finally
+				{
+					if (diagSw != null)
+						_diag.Log($"exclusive-writelock-released test={work.Test.Name} heldMs={diagSw.ElapsedMilliseconds}");
+
+					if (_gating != LaneGating.None)
+						_gateHeld.Value = false;
+
+					if (_gating == LaneGating.Write)
+						_gate.ExitWriteLock();
+					else if (_gating == LaneGating.Read)
+						_gate.ExitReadLock();
+
+					if (holdsThrottle)
+						_laneThrottle.Release();
+
+					if (holdsSecondary)
+						_secondaryMutex.Release();
 				}
 			}
 		}
