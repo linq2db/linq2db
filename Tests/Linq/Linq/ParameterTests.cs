@@ -35,6 +35,27 @@ namespace Tests.Linq
 			Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 		}
 
+		// A provider may rewrite the name of the DbParameter it is handed (managed Sybase; YDB prefixes it with '$').
+		// That name must never be written back onto the SqlParameter of the CACHED statement, which every later
+		// execution and every concurrent thread shares - the Transform-mode mutation guard reports such a write as
+		// "convert mutated the element it was given". The name the query builder assigned must survive execution.
+		[Test]
+		public void ExecutionDoesNotRenameCachedParameters([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id    = 1;
+			var query = db.GetTable<Parent>().Where(p => p.ParentID == id);
+
+			query.ToArray();
+
+			var parameters = new List<SqlParameter>();
+
+			QueryHelper.CollectParametersAndValues(query.GetStatement(), parameters, new List<SqlValue>());
+
+			parameters.Select(p => p.Name).ShouldBe(new[] { "id" });
+		}
+
 		[Test]
 		public void TestQueryCacheWithNullParameters([DataSources] string context)
 		{
@@ -530,7 +551,7 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -602,7 +623,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -696,7 +717,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_InsertObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -772,7 +793,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -846,7 +867,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -939,7 +960,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Update([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1033,7 +1054,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_UpdateObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1109,7 +1130,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1183,7 +1204,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1280,7 +1301,7 @@ namespace Tests.Linq
 		private int _cnt3;
 		private int _param;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1876,7 +1897,7 @@ namespace Tests.Linq
 			public bool? Value5 { get; set; }
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
