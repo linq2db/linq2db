@@ -160,7 +160,15 @@
 
 	<!-- Provider packages are not static dependencies of the driver nuget: LINQPad provisions them per connection
 	     via DataContextDriver.OverrideDriverDependencies, so driver code needs their ids and versions. Versions are
-	     generated from central package management instead of being duplicated in code, where they would drift. -->
+	     generated from central package management instead of being duplicated in code, where they would drift.
+
+	     Watch the TFM branches when bumping a client. These expand against *this* project's TargetFramework
+	     (net8.0-windows7.0), so a PackageVersion split across TFMs contributes only its net8.0-compatible entry:
+	     Net.IBM.Data.Db2 and its -lnx/-osx siblings resolve to 9.0.0.400, never to the 10.0.0.200 the net10.0
+	     entries carry. That is required rather than incidental - those 10.x packages ship a net10.0-only
+	     dependency group, and the driver assembly is lib/net8.0 - but it means bumping a net10.0-conditioned
+	     entry alone never reaches the driver, which then keeps provisioning the old client with nothing to say
+	     so. Bump the net8.0 branch in the same change, or confirm deliberately that the driver stays behind. -->
 	<Target Name="GenerateNuGetPackageVersions" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)' != 'net472'">
 		<PropertyGroup>
 			<_NuGetPackageVersionsFile>$(IntermediateOutputPath)NuGetPackageVersions.g.cs</_NuGetPackageVersionsFile>
