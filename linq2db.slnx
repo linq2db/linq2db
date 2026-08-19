@@ -200,8 +200,6 @@
     <File Path="Build/Azure/scripts/sqlserver.2016.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2017_2019.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2017_2019.sh" />
-    <File Path="Build/Azure/scripts/sqlserver.2022.cmd" />
-    <File Path="Build/Azure/scripts/sqlserver.2022.sh" />
     <File Path="Build/Azure/scripts/sqlserver.2022_2025.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2022_2025.sh" />
     <File Path="Build/Azure/scripts/sqlserver.extras.cmd" />
