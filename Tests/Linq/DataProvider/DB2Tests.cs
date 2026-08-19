@@ -38,67 +38,6 @@ namespace Tests.DataProvider
 	{
 		const string CurrentProvider = ProviderName.DB2;
 
-		sealed class AllTypesLeftover
-		{
-			public int     ID        { get; set; }
-			public string? Signature { get; set; }
-		}
-
-		// TEMPORARY (https://github.com/linq2db/linq2db/issues/5765): rows accumulate in AllTypes during a
-		// run - DB2's ResetAllTypesIdentity only restarts the identity, it never deletes - and TestType's
-		// "SELECT ID FROM AllTypes WHERE <field> IS NULL / = @p" then returns a leftover instead of the
-		// seeded row 1/2. Logs each leftover's ID plus the set of columns it has values in; that column
-		// signature identifies which test wrote the row. Remove once the writer is fixed.
-		static void DumpAllTypesLeftovers(DataConnection conn)
-		{
-			using var _ = new DisableBaseline("diagnostics");
-
-			try
-			{
-				var rows = conn.Query<AllTypesLeftover>(@"
-SELECT
-	ID,
-	CASE WHEN bigintDataType    IS NULL THEN '' ELSE 'bigint '    END ||
-	CASE WHEN intDataType       IS NULL THEN '' ELSE 'int '       END ||
-	CASE WHEN smallintDataType  IS NULL THEN '' ELSE 'smallint '  END ||
-	CASE WHEN decimalDataType   IS NULL THEN '' ELSE 'decimal '   END ||
-	CASE WHEN decfloatDataType  IS NULL THEN '' ELSE 'decfloat '  END ||
-	CASE WHEN realDataType      IS NULL THEN '' ELSE 'real '      END ||
-	CASE WHEN doubleDataType    IS NULL THEN '' ELSE 'double '    END ||
-	CASE WHEN charDataType      IS NULL THEN '' ELSE 'char=0x' || HEX(charDataType) || ' ' END ||
-	CASE WHEN char20DataType    IS NULL THEN '' ELSE 'char20=[' || RTRIM(char20DataType) || '] ' END ||
-	CASE WHEN varcharDataType   IS NULL THEN '' ELSE 'varchar=[' || RTRIM(varcharDataType) || '] ' END ||
-	CASE WHEN clobDataType      IS NULL THEN '' ELSE 'clob '      END ||
-	CASE WHEN dbclobDataType    IS NULL THEN '' ELSE 'dbclob '    END ||
-	CASE WHEN binaryDataType    IS NULL THEN '' ELSE 'binary '    END ||
-	CASE WHEN varbinaryDataType IS NULL THEN '' ELSE 'varbinary ' END ||
-	CASE WHEN blobDataType      IS NULL THEN '' ELSE 'blob '      END ||
-	CASE WHEN graphicDataType   IS NULL THEN '' ELSE 'graphic '   END ||
-	CASE WHEN dateDataType      IS NULL THEN '' ELSE 'date '      END ||
-	CASE WHEN timeDataType      IS NULL THEN '' ELSE 'time '      END ||
-	CASE WHEN timestampDataType IS NULL THEN '' ELSE 'timestamp ' END ||
-	CASE WHEN xmlDataType       IS NULL THEN '' ELSE 'xml '       END AS ""Signature""
-FROM AllTypes
-WHERE ID > 2
-ORDER BY ID
-FETCH FIRST 100 ROWS ONLY").ToList();
-
-				if (rows.Count == 0)
-					return;
-
-				var total = conn.Execute<int>("SELECT COUNT(*) FROM AllTypes WHERE ID > 2");
-
-				TestContext.Out.WriteLine($"ALLTYPES-LEFTOVERS total={total} shown={rows.Count}");
-
-				foreach (var row in rows)
-					TestContext.Out.WriteLine($"ALLTYPES-LEFTOVERS id={row.ID} columns=[{row.Signature?.TrimEnd()}]");
-			}
-			catch (Exception ex)
-			{
-				TestContext.Out.WriteLine($"ALLTYPES-LEFTOVERS dump failed: {ex.Message}");
-			}
-		}
-
 		[Test]
 		public void TestParameters([IncludeDataSources(CurrentProvider)] string context)
 		{
@@ -195,9 +134,6 @@ FETCH FIRST 100 ROWS ONLY").ToList();
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
 			using var conn = GetDataConnection(context);
-
-			DumpAllTypesLeftovers(conn);
-
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64, "ALLTYPES"), Is.EqualTo(1000000L));
