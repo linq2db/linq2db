@@ -16,8 +16,10 @@ namespace NUnit.ParallelByResource
 		public LaneDisposition Disposition { get; }
 
 		/// <summary>
-		/// The shared-resource key. Required for <see cref="LaneDisposition.SerialLane"/>; carried for
-		/// <see cref="LaneDisposition.Ungated"/> (diagnostics only); <see langword="null"/> otherwise.
+		/// The shared-resource key. Required for both <see cref="LaneDisposition.SerialLane"/> and
+		/// <see cref="LaneDisposition.Ungated"/> - each selects a lane by it, and the two keyspaces are
+		/// separate so a resource's preparation never queues behind the items waiting on it.
+		/// <see langword="null"/> otherwise.
 		/// </summary>
 		public string? ResourceKey { get; }
 
@@ -35,8 +37,11 @@ namespace NUnit.ParallelByResource
 		public static LaneAssignment Serial(string resourceKey, bool requiresSecondaryMutex = false)
 			=> new(LaneDisposition.SerialLane, resourceKey, requiresSecondaryMutex);
 
-		/// <summary>Run immediately, ungated and off-lane (resource preparation).</summary>
-		public static LaneAssignment Ungated(string? resourceKey = null)
+		/// <summary>
+		/// Run on the ungated lane for <paramref name="resourceKey"/> (resource preparation) - its own
+		/// thread, taking neither the gate nor a throttle permit.
+		/// </summary>
+		public static LaneAssignment Ungated(string resourceKey)
 			=> new(LaneDisposition.Ungated, resourceKey, false);
 	}
 }

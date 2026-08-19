@@ -55,6 +55,10 @@ namespace NUnit.ParallelByResource
 
 		readonly Lock                            _lanesLock     = new();
 		readonly Dictionary<string, SerialLane>  _resourceLanes = new Dictionary<string, SerialLane>(StringComparer.OrdinalIgnoreCase);
+		// Separate keyspace from _resourceLanes: a resource's preparation and its ordinary tests share a
+		// key but must run on different threads, or the preparation queues behind the very items waiting
+		// on it.
+		readonly Dictionary<string, SerialLane>  _ungatedLanes  = new Dictionary<string, SerialLane>(StringComparer.OrdinalIgnoreCase);
 		readonly SerialLane                      _exclusiveLane;
 
 		public ResourceLaneDispatcher(IWorkItemDispatcher original, IResourceLaneStrategy strategy, int maxLanes, IParallelDiagnostics? diagnostics = null)
@@ -65,7 +69,7 @@ namespace NUnit.ParallelByResource
 			_strategy      = strategy;
 			_diag          = diagnostics ?? NullParallelDiagnostics.Instance;
 			_laneThrottle  = new SemaphoreSlim(lanes, lanes);
-			_exclusiveLane = new SerialLane("exclusive", _gate, _secondaryMutex, _laneThrottle, _diag, exclusive: true);
+			_exclusiveLane = new SerialLane("exclusive", _gate, _secondaryMutex, _laneThrottle, _diag, LaneGating.Write);
 		}
 
 		public int LevelOfParallelism => _original.LevelOfParallelism;
@@ -119,16 +123,25 @@ namespace NUnit.ParallelByResource
 					GetResourceLane(assignment.ResourceKey!).Enqueue(work, assignment.RequiresSecondaryMutex);
 					return;
 
-				// Ungated: run immediately, off-lane and outside the gate. Used for resource
-				// preparation (e.g. create/seed) that the resource's other items wait on via a
-				// readiness latch; running it under the read lock would let a long-held exclusive
-				// write lock (a slow [NonParallelizable] fixture running its whole subtree inline)
-				// starve it, deadlocking the latch. The preparation touches only its own resource,
-				// none of the shared global state the exclusive lane guards, so running it
-				// concurrently is safe.
+				// Ungated: run on the key's own dedicated thread, taking neither the gate nor a throttle
+				// permit. Used for resource preparation (e.g. create/seed) that the resource's other
+				// items wait on via a readiness latch. Two things have to be true for that latch not to
+				// deadlock, and they need different mechanisms:
+				//
+				//  - it must not take the read lock, or a long-held exclusive write lock (a slow
+				//    [NonParallelizable] fixture running its whole subtree inline) would starve it, and
+				//  - it must not occupy an NUnit worker either. Running it inline on the dispatching
+				//    worker satisfied the first but not the second: every worker can be parked in
+				//    RunGated behind a waiting writer, leaving nobody to reach this branch.
+				//
+				// Its own thread also lets each resource's preparation overlap the others, instead of
+				// CompositeWorkItem.RunChildren driving them one at a time on a single worker - which is
+				// what made the waiters' timeout budget cumulative across every provider in the run.
+				// The preparation touches only its own resource, none of the shared global state the
+				// exclusive lane guards, so running it concurrently is safe.
 				case LaneDisposition.Ungated:
 					_diag.Log($"dispatch->ungated key={assignment.ResourceKey} test={work.Test.Name}");
-					work.Execute();
+					GetUngatedLane(assignment.ResourceKey!).Enqueue(work);
 					return;
 
 				// Unkeyed leaf, Direct / SingleThreaded content: run on the calling thread under the
@@ -183,29 +196,50 @@ namespace NUnit.ParallelByResource
 			{
 				foreach (var lane in _resourceLanes.Values)
 					lane.Complete();
+
+				foreach (var lane in _ungatedLanes.Values)
+					lane.Complete();
 			}
 
 			_exclusiveLane.Complete();
 		}
 
-		SerialLane GetResourceLane(string key)
+		SerialLane GetResourceLane(string key) => GetLane(_resourceLanes, key, LaneGating.Read, key);
+
+		SerialLane GetUngatedLane(string key) => GetLane(_ungatedLanes, key, LaneGating.None, $"ungated:{key}");
+
+		SerialLane GetLane(Dictionary<string, SerialLane> lanes, string key, LaneGating gating, string name)
 		{
 			lock (_lanesLock)
 			{
-				if (!_resourceLanes.TryGetValue(key, out var lane))
+				if (!lanes.TryGetValue(key, out var lane))
 				{
-					lane = new SerialLane(key, _gate, _secondaryMutex, _laneThrottle, _diag, exclusive: false);
-					_resourceLanes.Add(key, lane);
+					lane = new SerialLane(name, _gate, _secondaryMutex, _laneThrottle, _diag, gating);
+					lanes.Add(key, lane);
 				}
 
 				return lane;
 			}
 		}
 
-		// A single dedicated thread that executes its queued work items one at a time. Items
-		// run under the shared read/write gate: resource lanes (read) run concurrently with
-		// each other, the exclusive lane (write) runs alone. Items flagged for the secondary
-		// mutex on a resource lane additionally take it so only one runs globally at a time.
+		// How a lane's items relate to the shared gate.
+		enum LaneGating
+		{
+			// Resource lane: takes the read lock, so it runs concurrently with the other resource lanes
+			// and is excluded by the exclusive lane. Throttled, and honours the secondary mutex.
+			Read,
+			// Globally-exclusive lane: takes the write lock, so it runs alone. Not throttled - it already
+			// runs alone - and the secondary mutex is redundant for the same reason.
+			Write,
+			// Ungated: no lock, no throttle permit. For resource preparation that other items wait on via
+			// a readiness latch, which must be reachable while the write lock is held and must not depend
+			// on an NUnit worker being free.
+			None,
+		}
+
+		// A single dedicated thread that executes its queued work items one at a time, under the gating
+		// its LaneGating prescribes. Items flagged for the secondary mutex on a resource lane
+		// additionally take it so only one runs globally at a time.
 		sealed class SerialLane
 		{
 			readonly BlockingCollection<(WorkItem work, bool secondary)> _queue = new BlockingCollection<(WorkItem, bool)>();
@@ -213,15 +247,15 @@ namespace NUnit.ParallelByResource
 			readonly SemaphoreSlim                                       _secondaryMutex;
 			readonly SemaphoreSlim                                       _laneThrottle;
 			readonly IParallelDiagnostics                                _diag;
-			readonly bool                                                _exclusive;
+			readonly LaneGating                                          _gating;
 
-			public SerialLane(string name, ReaderWriterLockSlim gate, SemaphoreSlim secondaryMutex, SemaphoreSlim laneThrottle, IParallelDiagnostics diag, bool exclusive)
+			public SerialLane(string name, ReaderWriterLockSlim gate, SemaphoreSlim secondaryMutex, SemaphoreSlim laneThrottle, IParallelDiagnostics diag, LaneGating gating)
 			{
 				_gate           = gate;
 				_secondaryMutex = secondaryMutex;
 				_laneThrottle   = laneThrottle;
 				_diag           = diag;
-				_exclusive      = exclusive;
+				_gating         = gating;
 
 				var thread = new Thread(Run)
 				{
@@ -242,27 +276,32 @@ namespace NUnit.ParallelByResource
 				{
 					// Acquire the global secondary mutex before taking the per-run gate, so a lane
 					// waiting for its turn at a secondary-resource item doesn't pin a read lock meanwhile.
-					var holdsSecondary = !_exclusive && secondary;
+					var holdsSecondary = _gating == LaneGating.Read && secondary;
 					if (holdsSecondary)
 						_secondaryMutex.Wait();
 
 					// Cap concurrent resource lanes (acquired after the secondary mutex, before the gate,
 					// for the same reason the gate is taken last: a lane waiting its turn must not pin a
 					// throttle permit while blocked on the secondary mutex). The exclusive lane is not
-					// throttled — it already runs alone under the write lock.
-					var holdsThrottle = !_exclusive;
+					// throttled — it already runs alone under the write lock — and an ungated lane must
+					// not be, or it could not run while the throttle is saturated.
+					var holdsThrottle = _gating == LaneGating.Read;
 					if (holdsThrottle)
 						_laneThrottle.Wait();
 
-					if (_exclusive)
+					if (_gating == LaneGating.Write)
 						_gate.EnterWriteLock();
-					else
+					else if (_gating == LaneGating.Read)
 						_gate.EnterReadLock();
 
-					_gateHeld.Value = true;
+					// Left false on an ungated lane: it holds no lock, so a nested dispatch from its item
+					// must go through the normal routing rather than being run inline as already-covered.
+					if (_gating != LaneGating.None)
+						_gateHeld.Value = true;
 
-					var diagSw = _exclusive ? System.Diagnostics.Stopwatch.StartNew() : null;
-					if (_exclusive)
+					var exclusive = _gating == LaneGating.Write;
+					var diagSw    = exclusive ? System.Diagnostics.Stopwatch.StartNew() : null;
+					if (exclusive)
 						_diag.Log($"exclusive-writelock-acquired test={work.Test.Name}");
 
 					try
@@ -277,11 +316,12 @@ namespace NUnit.ParallelByResource
 						if (diagSw != null)
 							_diag.Log($"exclusive-writelock-released test={work.Test.Name} heldMs={diagSw.ElapsedMilliseconds}");
 
-						_gateHeld.Value = false;
+						if (_gating != LaneGating.None)
+							_gateHeld.Value = false;
 
-						if (_exclusive)
+						if (_gating == LaneGating.Write)
 							_gate.ExitWriteLock();
-						else
+						else if (_gating == LaneGating.Read)
 							_gate.ExitReadLock();
 
 						if (holdsThrottle)

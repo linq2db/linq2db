@@ -8,8 +8,8 @@ namespace NUnit.ParallelByResource
 	/// A per-key one-shot readiness gate. One item prepares a shared resource and calls
 	/// <see cref="MarkReady"/>; every other item that needs the resource calls
 	/// <see cref="WaitReady"/> until then. Pairs with <see cref="LaneDisposition.Ungated"/>: the
-	/// preparing item runs off-lane so it can't be blocked by, or block, the lane whose other items
-	/// wait here.
+	/// preparing item runs on its own ungated lane, so it can neither be blocked by, nor block, the lane
+	/// whose other items wait here.
 	/// </summary>
 	/// <remarks>
 	/// Coordination only - it does not run anything and is independent of the dispatcher; a host

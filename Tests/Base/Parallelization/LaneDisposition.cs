@@ -20,9 +20,13 @@ namespace NUnit.ParallelByResource
 		SerialLane,
 
 		/// <summary>
-		/// Run immediately, outside the gate and off any lane. Used for items that prepare a shared
-		/// resource (e.g. create/seed it) and so must not be serialized behind, or block, the lane
-		/// whose other items wait on that resource's readiness.
+		/// Run on a dedicated lane keyed by <see cref="LaneAssignment.ResourceKey"/> in a keyspace of its
+		/// own, outside the gate and outside the lane throttle. Used for items that prepare a shared
+		/// resource (e.g. create/seed it) and so must not be serialized behind, or block, the lane whose
+		/// other items wait on that resource's readiness. Distinct from
+		/// <see cref="GatedInline"/>/<see cref="SerialLane"/> in both respects: taking no lock keeps it
+		/// reachable while a globally-exclusive item holds the write lock, and having its own thread keeps
+		/// it from occupying a dispatching worker - so different resources' preparation also overlaps.
 		/// </summary>
 		Ungated,
 	}
