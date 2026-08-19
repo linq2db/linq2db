@@ -31,7 +31,9 @@ namespace Tests.Linq
 		/// </para>
 		/// <para>
 		/// Only the mixed pairing is refused. Two converted columns are left exactly as they have always been -
-		/// neither declares a unit, so there is no disagreement to detect and no behaviour to change.
+		/// neither declares a unit, so there is no disagreement to detect and nothing here changes for them. That
+		/// they add their stored numbers even where the two converters disagree is issue 5798, which predates this
+		/// and is not addressed by it.
 		/// </para>
 		/// </remarks>
 		[Test]
