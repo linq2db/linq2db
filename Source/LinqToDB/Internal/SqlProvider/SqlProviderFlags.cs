@@ -702,14 +702,24 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsDistinctOnSupported { get; set; }
 
 		/// <summary>
-		/// Provider supports single-row <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> of the new (post-update) values.
-		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c> overloads
-		/// to read the regenerated optimistic-lock value back in the same statement; when <see langword="false"/> the
-		/// value is read with a follow-up <c>SELECT</c> instead.
+		/// Provider's <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> returns the new (post-update) values as a result set of
+		/// the rows the statement actually updated — so an <c>UPDATE</c> matching no row returns no rows.
+		/// <para>
+		/// This is narrower than "the provider has some form of UPDATE output". A provider whose <c>RETURNING</c> is a
+		/// singleton, yielding one record whatever the statement matched, does <b>not</b> qualify: a zero-row update is
+		/// then indistinguishable from a one-row update. Firebird before v5 behaves that way and is therefore
+		/// <see langword="false"/> here even though it can return new values for a matched row.
+		/// </para>
+		/// <para>
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads to read the regenerated optimistic-lock value back in the same statement, and to take the number
+		/// of returned rows as the affected-row count. When <see langword="false"/> the value is read with a follow-up
+		/// <c>SELECT</c> instead, gated on <see cref="IsAffectedRowsCountSupported"/>.
+		/// </para>
 		/// Default: <see langword="false"/>.
 		/// </summary>
 		[DataMember(Order = 77), DefaultValue(false)]
-		public bool IsUpdateOutputSupported { get; set; }
+		public bool IsUpdateOutputRowsSupported { get; set; }
 
 		/// <summary>
 		/// Provider reports the number of affected rows from <c>UPDATE</c> / <c>DELETE</c> execution.
@@ -821,7 +831,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
-				^ IsUpdateOutputSupported                              .GetHashCode()
+				^ IsUpdateOutputRowsSupported                          .GetHashCode()
 				^ IsAffectedRowsCountSupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
@@ -904,7 +914,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
-				&& IsUpdateOutputSupported                               == other.IsUpdateOutputSupported
+				&& IsUpdateOutputRowsSupported                           == other.IsUpdateOutputRowsSupported
 				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}

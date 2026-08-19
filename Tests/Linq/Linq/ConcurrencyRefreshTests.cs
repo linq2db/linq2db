@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -54,7 +54,7 @@ namespace Tests.Linq
 		// concurrency result, either through UPDATE OUTPUT/RETURNING or through a reliable affected-rows count
 		private static void SkipIfRefreshUnsupported(IDataContext db)
 		{
-			if (!db.SqlProviderFlags.IsUpdateOutputSupported && !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+			if (!db.SqlProviderFlags.IsUpdateOutputRowsSupported && !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("UpdateOptimisticWithRefresh is unsupported when the provider reports neither UPDATE OUTPUT/RETURNING nor affected-row counts.");
 		}
 
@@ -166,7 +166,7 @@ namespace Tests.Linq
 
 			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount
 			// (e.g. MySQL, Oracle, DB2)
-			if (db.SqlProviderFlags.IsUpdateOutputSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
 			using var _        = new DisableBaseline("guid used");
@@ -197,7 +197,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
 			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount
-			if (db.SqlProviderFlags.IsUpdateOutputSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
 
 			using var _ = new DisableBaseline("guid used");
@@ -419,7 +419,7 @@ namespace Tests.Linq
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
-			if (db.SqlProviderFlags.IsUpdateOutputSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("UpdateOptimisticWithRefresh is unsupported only where the provider reports neither UPDATE OUTPUT/RETURNING nor affected-row counts.");
 
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
@@ -440,7 +440,7 @@ namespace Tests.Linq
 			using var _  = new DisableBaseline("guid used");
 			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
 
-			if (db.SqlProviderFlags.IsUpdateOutputSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || db.SqlProviderFlags.IsAffectedRowsCountSupported)
 				Assert.Ignore("UpdateOptimisticWithRefresh is unsupported only where the provider reports neither UPDATE OUTPUT/RETURNING nor affected-row counts.");
 
 			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
@@ -455,7 +455,7 @@ namespace Tests.Linq
 			await act.ShouldThrowAsync<LinqToDBException>();
 		}
 
-		// Guard test: keep SqlProviderFlags.IsUpdateOutputSupported honest. It probes the provider's actual UPDATE
+		// Guard test: keep SqlProviderFlags.IsUpdateOutputRowsSupported honest. It probes the provider's actual UPDATE
 		// OUTPUT support and fails when reality diverges from the declared flag, signalling that the provider's flag
 		// (set in its DataProvider) needs updating.
 		[Test]
@@ -467,8 +467,8 @@ namespace Tests.Linq
 			var actual = ProbeUpdateOutput(db);
 
 			actual.ShouldBe(
-				db.SqlProviderFlags.IsUpdateOutputSupported,
-				$"UPDATE OUTPUT support for '{context}' diverged from SqlProviderFlags.IsUpdateOutputSupported; update the provider's flag.");
+				db.SqlProviderFlags.IsUpdateOutputRowsSupported,
+				$"UPDATE OUTPUT support for '{context}' diverged from SqlProviderFlags.IsUpdateOutputRowsSupported; update the provider's flag.");
 		}
 
 		private static bool ProbeUpdateOutput(IDataContext db)
@@ -481,8 +481,17 @@ namespace Tests.Linq
 
 			try
 			{
-				_ = t.Where(r => r.Id == 1).UpdateWithOutput(r => new RefreshTable<int> { Stamp = 2 }, (deleted, inserted) => inserted.Stamp).ToList();
-				return true;
+				var updated = t.Where(r => r.Id == 1).UpdateWithOutput(r => new RefreshTable<int> { Stamp = 2 }, (deleted, inserted) => inserted.Stamp).ToList();
+
+				if (updated.Count != 1)
+					return false;
+
+				// the output must be a result set of the rows actually updated, so a non-matching UPDATE returns none.
+				// Firebird before v5 returns one record regardless, which makes a zero-row update indistinguishable
+				// from a one-row update - that does not qualify as support.
+				var notMatched = t.Where(r => r.Id == -1).UpdateWithOutput(r => new RefreshTable<int> { Stamp = 3 }, (deleted, inserted) => inserted.Stamp).ToList();
+
+				return notMatched.Count == 0;
 			}
 			catch
 			{

@@ -303,7 +303,7 @@ namespace LinqToDB.Concurrency
 
 		private const string UpdateWithRefreshNotSupportedMessage =
 			"UpdateOptimisticWithRefresh requires the provider to support UPDATE OUTPUT / RETURNING " +
-			"(SqlProviderFlags.IsUpdateOutputSupported) or a reliable affected-rows count " +
+			"(SqlProviderFlags.IsUpdateOutputRowsSupported) or a reliable affected-rows count " +
 			"(SqlProviderFlags.IsAffectedRowsCountSupported); the current provider supports neither, so the " +
 			"optimistic-concurrency result cannot be guaranteed.";
 
@@ -391,7 +391,7 @@ namespace LinqToDB.Concurrency
 			if (lockColumns.Length == 0)
 				return updatable.Update();
 
-			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
+			if (dc.SqlProviderFlags.IsUpdateOutputRowsSupported)
 			{
 				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
 				// providers that cannot return the old row (SQLite / DuckDB / YDB / PostgreSQL < 18)
@@ -434,7 +434,7 @@ namespace LinqToDB.Concurrency
 			if (lockColumns.Length == 0)
 				return await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
 
-			if (dc.SqlProviderFlags.IsUpdateOutputSupported)
+			if (dc.SqlProviderFlags.IsUpdateOutputRowsSupported)
 			{
 				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
 				// providers that cannot return the old row (SQLite / DuckDB / YDB / PostgreSQL < 18)
