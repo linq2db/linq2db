@@ -179,14 +179,15 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
-		/// </summary>
-		/// <summary>
+		/// Oracle reads a nonquoted identifier as uppercase and accepts only a restricted alphabet in one,
+		/// so a name outside that alphabet - or a reserved word - has to be delimited.
+		/// <para>
+		/// TODO: the documented rule is wider than what is checked here. Oracle allows "alphanumeric
+		/// characters from your database character set", while this accepts latin letters only, so a name
+		/// the server would have taken bare gets delimited instead. That direction is safe; matching the
+		/// rule exactly needs the database character set, which the builder does not have.
 		/// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
-		/// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
-		/// now we check only for latin letters
-		/// Also we should allow only uppercase letters:
-		/// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
+		/// </para>
 		/// </summary>
 		protected override bool RequiresQuoting(string value, ConvertType convertType)
 		{
