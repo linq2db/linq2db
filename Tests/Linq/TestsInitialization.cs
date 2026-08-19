@@ -2,6 +2,7 @@ using System;
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using LinqToDB.Common;
@@ -220,6 +221,16 @@ public class TestsInitialization
 		{
 			TestContext.Progress.WriteLine($"[parallel] not installed; dispatcher is {TestExecutionContext.CurrentContext.Dispatcher?.GetType().Name ?? "null"}");
 		}
+
+		// A provider only gets a CreateDatabase case when it is in TestConfiguration.Providers, but the
+		// IncludeDataSources family selects test arguments from UserProviders alone - so the Northwind
+		// contexts and TestNoopProvider reach tests, and become resource-lane keys, with nothing that
+		// will ever signal their readiness latch. Left unmarked, each of those lanes blocks its first
+		// test for the full latch timeout while holding the dispatcher's read lock.
+		var createDatabaseProviders = TestConfiguration.GetCreateDatabaseProviders(Array.Empty<string>());
+
+		foreach (var provider in TestConfiguration.UserProviders.Except(createDatabaseProviders, StringComparer.OrdinalIgnoreCase))
+			CustomTestContext.MarkDatabaseReady(provider);
 
 		// Set up in-memory databases (SQLite/DuckDB) for any provider configured with an in-memory
 		// connection string (CI), before a_CreateData seeds them. No-op for the normal file-based setup.

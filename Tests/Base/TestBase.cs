@@ -49,7 +49,7 @@ namespace Tests
 		}
 
 		// Set when the parallel dispatcher is installed (TestsInitialization). Gates the
-		// per-provider database-readiness wait below, so serial / filtered runs are unaffected.
+		// per-provider database-readiness wait below, so a serial run is unaffected.
 		public static bool ParallelExecutionEnabled;
 
 		static TestBase()
@@ -172,7 +172,9 @@ namespace Tests
 			CustomTestContext.Begin(isRemote, provider);
 
 			// Under parallel execution, wait until this provider's database has been created
-			// (CreateDatabase runs off-lane and signals readiness). Serial / filtered runs skip this.
+			// (CreateDatabase runs off-lane and signals readiness). A serial run skips this; providers
+			// that get no CreateDatabase case are pre-marked ready in TestsInitialization, so only
+			// providers this run actually creates are waited on.
 			if (ParallelExecutionEnabled && provider != null)
 			{
 				if (!NUnitUtils.IsCreateDatabase(test))

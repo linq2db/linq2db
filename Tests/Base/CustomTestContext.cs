@@ -76,6 +76,9 @@ namespace Tests
 		// Bounded wait for a provider's CreateDatabase to finish; returns false on timeout.
 		public static bool AwaitDatabaseReady(string provider) => _databaseReady.WaitReady(provider, TimeSpan.FromMinutes(2));
 
+		// Non-blocking state probe. Lets a test assert readiness without paying AwaitDatabaseReady's timeout.
+		public static bool IsDatabaseReady(string provider) => _databaseReady.WaitReady(provider, TimeSpan.Zero);
+
 		public static CustomTestContext Get()
 		{
 			// On a LinqService server execution flow, _serverProvider (set per-request in

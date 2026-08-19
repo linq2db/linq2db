@@ -232,6 +232,31 @@ namespace Tests
 			TestProvName.AllDuckDB,
 		}.SplitAll()).ToList();
 
+		/// <summary>
+		/// The providers <c>a_CreateData.CreateDatabase</c> generates a case for, and therefore the only
+		/// ones whose readiness latch is ever signalled. Note this is narrower than
+		/// <see cref="UserProviders"/>: the <see cref="IncludeDataSourcesAttribute"/> family selects test
+		/// arguments from <see cref="UserProviders"/> alone, so a provider outside <see cref="Providers"/>
+		/// (the Northwind contexts, TestNoopProvider) reaches tests - and becomes a parallel resource-lane
+		/// key - without ever getting a CreateDatabase case. Single source of truth for both
+		/// <see cref="CreateDatabaseSourcesAttribute"/> and the readiness wait in TestBase.OnBeforeTest,
+		/// so the two cannot drift apart.
+		/// </summary>
+		/// <param name="exclude">Providers the caller has already ruled out.</param>
+		public static List<string> GetCreateDatabaseProviders(IReadOnlyCollection<string> exclude)
+		{
+			var list = new List<string>();
+
+			// initialize default database, even if we don't run tests against it
+			// because it is used as source of test data
+			if (!UserProviders.Contains(DefaultProvider!))
+				list.Add(DefaultProvider!);
+
+			list.AddRange(UserProviders.Where(p => !exclude.Contains(p) && Providers.Contains(p)));
+
+			return list;
+		}
+
 		public static readonly IReadOnlyList<string> EFProviders = ApplyEFProviderOverride(CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 			ProviderName.SQLiteMS,
