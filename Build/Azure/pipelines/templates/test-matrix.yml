@@ -94,9 +94,13 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          # On Windows, run only the EF.Core tests (which need netfx / EF Core 3.1) for non-release
-          # runs; the main-library SQLite tests run on Linux. Release runs (full_run) still run the
-          # main-library tests on Windows too.
+          # On Windows, run only the EF.Core tests (which need netfx / EF Core 3.1) for non-release runs.
+          # The main-library tests then run on Linux alone, which means net8/9/10: netfx runs nowhere but
+          # Windows, so this config's netfx main suite is release-run only. That is a deliberate CI-time
+          # trade-off, not an oversight - netfx main coverage on PR runs comes from Access, SqlCE and SQL
+          # Server 2005-2016. Note this config also carries TestNoopProvider, so the provider-agnostic
+          # tests are in the same position. Release runs (full_run) run the main suite on Windows for
+          # every TFM.
           win_efcore_only: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -359,8 +363,9 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          # 2017+: on Windows run only EF.Core for non-release runs (EF.Core needs netfx); main library
-          # runs on Linux. Release runs (full_run) still run the main library on Windows.
+          # 2017+: on Windows run only EF.Core for non-release runs (EF.Core needs netfx). The main
+          # library then runs on Linux alone, i.e. net8/9/10 - this config's netfx main suite is
+          # release-run only, deliberately. Release runs (full_run) run it on Windows for every TFM.
           win_efcore_only: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
