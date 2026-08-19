@@ -86,7 +86,9 @@ internal sealed partial class StaticConnectionTab
 
 				foreach (var type in types)
 				{
-					if (type == null || (!type.IsPublic && !type.IsNestedPublic))
+					// IsVisible is the predicate GetExportedTypes applied: public all the way up the nesting
+					// chain, where IsNestedPublic is true for a public type inside an internal container
+					if (type == null || !type.IsVisible)
 						continue;
 
 					try
