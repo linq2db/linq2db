@@ -125,7 +125,7 @@ internal static class Notification
 	}
 
 	// logging must never replace the error it reports
-	private static void Log(Exception ex, string context)
+	public static void Log(Exception ex, string context)
 	{
 		try
 		{

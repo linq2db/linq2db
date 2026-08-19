@@ -387,6 +387,15 @@ internal static class DriverHelper
 		Notification.Error(ex, string.Create(CultureInfo.InvariantCulture, $"Unhandled error in method '{method}':"), "Linq To DB Driver Error");
 	}
 
+	/// <summary>
+	/// Same as <see cref="HandleException"/> for failures the driver recovers from: they go to the log
+	/// without interrupting the user with a dialog.
+	/// </summary>
+	private static void LogException(Exception ex, string method)
+	{
+		Notification.Log(ex, string.Create(CultureInfo.InvariantCulture, $"Recovered error in method '{method}':"));
+	}
+
 	public static IEnumerable<string> GetAssembliesToAdd(IConnectionInfo cxInfo)
 	{
 #if !NETFRAMEWORK
@@ -407,7 +416,10 @@ internal static class DriverHelper
 		}
 		catch (Exception ex)
 		{
-			HandleException(ex, nameof(GetAssembliesToAdd));
+			// LINQPad also asks for these while the connection dialog is open, from its own process, where the
+			// database client provisioned for the connection cannot be loaded. The list is advisory - the call
+			// made from the query process returns the full set - so this must not interrupt the user.
+			LogException(ex, nameof(GetAssembliesToAdd));
 			yield break;
 		}
 
