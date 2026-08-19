@@ -38,12 +38,21 @@ namespace Tests
 		private static readonly AsyncLocal<string?> _serverProvider = new();
 
 		// Fallback for writes that happen outside any test (assembly init, stray logging).
-		private static readonly CustomTestContext _shared = new CustomTestContext();
+		private static readonly CustomTestContext _shared = new CustomTestContext(isFallback: true);
 
 		private readonly ConcurrentDictionary<string, object?> _state = new ConcurrentDictionary<string, object?>();
 
+		// True only for _shared. It lives for the whole process, so unlike a per-test context it must not
+		// retain the trace / baseline buffers - see Set.
+		private readonly bool _isFallback;
+
 		// the provider this context was published under (remote tests only); used by Release
 		private string? _remoteProvider;
+
+		private CustomTestContext(bool isFallback = false)
+		{
+			_isFallback = isFallback;
+		}
 
 		// Establish a fresh per-test context. Call from [SetUp]. A remote (LinqService) test also
 		// publishes it under its provider so the shared server can resolve it.
@@ -120,6 +129,16 @@ namespace Tests
 
 		public void Set<TValue>(string name, TValue value)
 		{
+			// The fallback context is never released, so anything it retains is retained for the whole run -
+			// and nothing ever dumps or clears its trace / baseline buffers. Writes that resolve to it (a
+			// fixture's one-time setup, a non-TestBase fixture, logging arriving after Release) therefore
+			// grow without bound. Refusing to store the buffers makes the writer's append land on an
+			// instance it drops, which is what the pre-parallel code did too: Release() cleared the single
+			// global context after every test, so out-of-test capture was never surfaced either. The
+			// DisableBaseline / DisableLogging flags are still stored, so one-time setup can suppress.
+			if (_isFallback && (name == TRACE || name == BASELINE))
+				return;
+
 			_state.AddOrUpdate(name, value, (key, old) => value);
 		}
 	}
