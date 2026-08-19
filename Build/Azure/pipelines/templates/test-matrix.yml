@@ -281,8 +281,12 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-# 2008-2016 run one version per job: batching two versions in a single netfx process
-# exhausts memory (unbounded per-MappingSchema attribute cache), so keep them separate.
+# 2008-2016 run one version per job. The original reason was that batching two versions in a single
+# netfx process exhausted memory (unbounded per-MappingSchema attribute cache). That no longer
+# reproduces: the merged 2017+2019 and 2022+2025 jobs put four providers through one netfx process and
+# their NETFX main suites have completed on full_run builds 22779, 22810, 22850 and 22863. So the split
+# is kept here conservatively, not as a measured limit - it simply has not been retested for these
+# versions.
         - name: SqlServer2008
           title: SQL Server 2008
           config_win: sqlserver.2008
