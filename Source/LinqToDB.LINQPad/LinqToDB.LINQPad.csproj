@@ -71,6 +71,14 @@
 		     System.Reflection.Metadata win over ours, so Roslyn's floor for them has to stay at 8.0.0 -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynLinqPadVersion)" />
 
+		<!-- Roslyn's API is expressed in ImmutableArray (EmitResult.Diagnostics), so this reference cannot be
+		     avoided - but the version stamped on it has to be the lowest supported host's, for the same reason:
+		     the assembly is in the shared framework, so a .NET 8 host offers 8.0.0.0 and cannot satisfy a higher
+		     reference. Oracle's client pulls the package to 10.x transitively, which stamped 10.0.0.0 and is the
+		     load failure reported in #5768. NU1605 is expected: the downgrade only decides what this assembly
+		     compiles against, and LINQPad restores the Oracle client's own closure when it provisions it. -->
+		<PackageReference Include="System.Collections.Immutable" VersionOverride="$(Net8LatestForNuget)" NoWarn="NU1605" />
+
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
