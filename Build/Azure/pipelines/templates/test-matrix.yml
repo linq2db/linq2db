@@ -18,8 +18,8 @@ parameters:
 # - '[sqlce.all]' - SqlCE targets supported
 # - '[sqlite.all]' - SQLite targets supported
 # - '[sqlserver.all]' - SQL Server targets supported
-# - '[sqlserver.2019]' - SQL Server 2019 targets supported
-# - '[sqlserver.2022]' - SQL Server 2022 targets supported
+# - '[sqlserver.2019]' - SQL Server 2017 + 2019 targets supported (one job covers both versions)
+# - '[sqlserver.2022]' - SQL Server 2022 + 2025 targets supported (one job covers both versions)
 # - '[sybase.ase.all]' - SAP/Sybase ASE targets supported
 # - '[duckdb.all]' - DuckDB targets supported
 # - '[clickhouse.all]' - Yandex ClickHouse targets supported
@@ -72,6 +72,9 @@ parameters:
 
 # MISC
 # - install_docker_macos (true/false string) : enables pre-installation of docker for macos testruns
+# - win_efcore_only (true/false string, optional) : windows-only, run just the EF.Core suite on non-release
+#   runs and leave the main suite to the linux legs. Since netfx runs only on windows, that also makes the
+#   entry's netfx main suite release-run only. Release runs (full_run) run the main suite for every TFM.
 
 jobs:
   - template: test-jobs.yml
