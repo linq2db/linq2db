@@ -216,7 +216,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				convertVisitor.CanLowerIntervalDifference,
 				convertVisitor.CanLowerIntervalPart,
 				convertVisitor.CanLowerIntervalShift,
-				convertVisitor.IntervalResolution);
+				convertVisitor.IntervalResolution,
+				convertVisitor.CanMeasureDifferenceInTicks);
 		}
 
 		#endregion

@@ -58,6 +58,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </summary>
 		protected override bool ElapsedTicksResolveMembers => false;
 
+		/// <summary>
+		/// And no tick count either, for the reason <see cref="ElapsedTicks"/> gives, which is what leaves a total
+		/// below the resolution with nowhere to come from rather than merely quantised.
+		/// </summary>
+		public override bool CanMeasureDifferenceInTicks => false;
+
 		/// <inheritdoc />
 		public override bool CanLowerIntervalPart => true;
 

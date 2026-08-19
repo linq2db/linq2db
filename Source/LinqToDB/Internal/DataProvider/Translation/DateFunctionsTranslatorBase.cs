@@ -1297,6 +1297,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						resolution.ToString().ToLowerInvariant()));
 			}
 
+			// A total below the resolution is quantised rather than meaningless, so it is built - except where the
+			// provider cannot reach one at all. Without a tick count to divide there is nothing to scale and no date
+			// part fine enough to name, so every lowering declines and the node reaches the SQL builder, whose only
+			// answer is to throw.
+			//
+			// Which of the two refusals it is depends on what the caller asked for, because an error expression
+			// refuses everywhere - measured, not assumed. Where SQL is genuinely required the member cannot be
+			// answered at all, so it is refused by name. Where it is not, returning null leaves the member readable
+			// and a projection computes it in .NET from both dates, exactly.
+			if (kind == SqlIntervalPartKind.Total
+				&& !translationContext.ProviderFlags.CanMeasureDifferenceInTicks
+				&& QueryHelper.UnwrapNullablity(interval) is SqlIntervalDifferenceExpression
+				&& SqlIntervalUnits.IsFinerThan(unit, resolution))
+			{
+				return translationFlags.HasFlag(TranslationFlags.Sql)
+					? translationContext.CreateErrorExpression(memberExpression, ErrorHelper.Error_Interval_Member)
+					: null;
+			}
+
 			var resultType = translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);
 			var part       = new SqlIntervalPartExpression(interval, unit, kind, resultType, within);
 

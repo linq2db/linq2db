@@ -73,10 +73,11 @@ LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.SqlTemporalArithmetic
 LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Temporal.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Type.get -> LinqToDB.DbDataType
 LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanMeasureDifferenceInTicks.get -> bool
 LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart.get -> bool
 LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift.get -> bool
-LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart, bool canLowerIntervalShift, LinqToDB.Internal.SqlQuery.SqlIntervalUnit intervalResolution = LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick) -> void
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart, bool canLowerIntervalShift, LinqToDB.Internal.SqlQuery.SqlIntervalUnit intervalResolution = LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick, bool canMeasureDifferenceInTicks = true) -> void
 LinqToDB.Mapping.ColumnDescriptor.DurationUnit.get -> LinqToDB.Mapping.DurationUnit?
 LinqToDB.Mapping.DurationAttribute
 LinqToDB.Mapping.DurationAttribute.DurationAttribute(LinqToDB.Mapping.DurationUnit unit) -> void
@@ -93,6 +94,7 @@ LinqToDB.Mapping.DurationUnit.Second = 4 -> LinqToDB.Mapping.DurationUnit
 LinqToDB.Mapping.DurationUnit.Tick = 1 -> LinqToDB.Mapping.DurationUnit
 LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>.HasDuration(LinqToDB.Mapping.DurationUnit unit) -> LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>!
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanMeasureDifferenceInTicks.get -> bool
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicksResolveMembers.get -> bool
@@ -211,6 +213,7 @@ virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalPartExpres
 virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> void
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanMeasureDifferenceInTicks.get -> bool
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicksResolveMembers.get -> bool

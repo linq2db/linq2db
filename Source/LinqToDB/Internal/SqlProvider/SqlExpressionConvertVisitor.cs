@@ -1198,6 +1198,24 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Tick;
 
 		/// <summary>
+		/// Whether an elapsed date difference can become a tick count here. Defaults to yes.
+		/// </summary>
+		/// <remarks>
+		/// A provider answering no has no way to reach a unit finer than <see cref="IntervalResolution"/> at all:
+		/// <see cref="ElapsedTicks"/> leaves it nothing to divide, and its own difference function cannot name such
+		/// a unit either. Access is the case - its <c>DateDiff</c> is a 32-bit count that overflows once scaled to
+		/// ticks.
+		/// <para>
+		/// Read by the member translator, which declines to build a <em>total</em> in a unit finer than the
+		/// resolution when this is false. Left to be built, that node reaches the SQL builder, which can only
+		/// throw - and a throw there takes with it the projection's fall back to .NET, the one place the member can
+		/// still be answered exactly. A total is otherwise left alone, because a coarser measurement makes one
+		/// quantised rather than meaningless, which is why this is asked rather than the resolution alone.
+		/// </para>
+		/// </remarks>
+		public virtual bool CanMeasureDifferenceInTicks => true;
+
+		/// <summary>
 		/// Whether <see cref="LowerTemporalArithmetic"/> can express a date shifted by an interval at all.
 		/// </summary>
 		/// <remarks>

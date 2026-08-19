@@ -241,6 +241,44 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A total the provider cannot reach at all, asked for in a plain projection.
+		/// </summary>
+		/// <remarks>
+		/// Access counts elapsed seconds and its <c>DateDiff</c> is a 32-bit count, so a tick count is out of reach
+		/// and no date part names anything finer than a second. Every lowering therefore declines, and the part node
+		/// reached the SQL builder - whose only answer is to throw, which fails the whole query rather than the one
+		/// member. Left untranslated instead, the projection reads both dates and computes the member in .NET,
+		/// exactly, which is what this provider answered before a tick total was translated at all.
+		/// <para>
+		/// Where SQL is genuinely required the member still cannot be answered, so it is refused there by name -
+		/// both halves are asserted, because the whole point of the distinction is that the same member behaves
+		/// differently according to what the caller asked for.
+		/// </para>
+		/// <para>
+		/// A total the provider <em>can</em> reach is asserted beside them, because the guard is keyed on the
+		/// resolution and must not reach <c>TotalSeconds</c>, which Access names as a date part.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ATickTotalTheProviderCannotReachStaysReadable([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		{
+			var start = new DateTime(2026, 1, 1, 10, 0, 0);
+			var end   = new DateTime(2026, 1, 1, 11, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			t.Select(r => (r.FinishedOn - r.StartedOn).Ticks).Single().ShouldBe((end - start).Ticks);
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds)).Single().ShouldBe((end - start).TotalSeconds);
+
+			var forced = () => t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).ToArray();
+
+			forced.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_Member);
+		}
+
+		/// <summary>
 		/// A span longer than sixty-eight years measures what it measures in the CLR.
 		/// </summary>
 		/// <remarks>

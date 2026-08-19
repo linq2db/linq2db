@@ -24,20 +24,23 @@ namespace LinqToDB.Linq.Translation
 		/// <param name="canLowerIntervalPart">Whether a member of an elapsed date difference can be lowered.</param>
 		/// <param name="canLowerIntervalShift">Whether a date shifted by an interval can be lowered.</param>
 		/// <param name="intervalResolution">The finest unit the provider can resolve when measuring elapsed time.</param>
+		/// <param name="canMeasureDifferenceInTicks">Whether an elapsed date difference can become a tick count.</param>
 		public TranslationProviderFlags(
 			NullsDefaultOrdering defaultNullsOrdering,
 			bool                 isNullsOrderingSupported,
 			bool                 canLowerIntervalDifference,
 			bool                 canLowerIntervalPart,
 			bool                 canLowerIntervalShift,
-			SqlIntervalUnit      intervalResolution = SqlIntervalUnit.Tick)
+			SqlIntervalUnit      intervalResolution          = SqlIntervalUnit.Tick,
+			bool                 canMeasureDifferenceInTicks = true)
 		{
-			DefaultNullsOrdering       = defaultNullsOrdering;
-			IsNullsOrderingSupported   = isNullsOrderingSupported;
-			CanLowerIntervalDifference = canLowerIntervalDifference;
-			CanLowerIntervalPart       = canLowerIntervalPart;
-			CanLowerIntervalShift      = canLowerIntervalShift;
-			IntervalResolution         = intervalResolution;
+			DefaultNullsOrdering        = defaultNullsOrdering;
+			IsNullsOrderingSupported    = isNullsOrderingSupported;
+			CanLowerIntervalDifference  = canLowerIntervalDifference;
+			CanLowerIntervalPart        = canLowerIntervalPart;
+			CanLowerIntervalShift       = canLowerIntervalShift;
+			IntervalResolution          = intervalResolution;
+			CanMeasureDifferenceInTicks = canMeasureDifferenceInTicks;
 		}
 
 		/// <summary>The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</summary>
@@ -73,5 +76,13 @@ namespace LinqToDB.Linq.Translation
 		/// and leaves the member to .NET.
 		/// </summary>
 		public SqlIntervalUnit IntervalResolution { get; }
+
+		/// <summary>
+		/// Whether an elapsed date difference can become a tick count. Where it cannot, a <em>total</em> asked for
+		/// in a unit finer than <see cref="IntervalResolution"/> has nowhere to come from, so the translator
+		/// declines to build it and leaves the member to .NET rather than letting the SQL builder fail the whole
+		/// query. A total is otherwise built: a coarser measurement quantises one without making it meaningless.
+		/// </summary>
+		public bool CanMeasureDifferenceInTicks { get; }
 	}
 }
