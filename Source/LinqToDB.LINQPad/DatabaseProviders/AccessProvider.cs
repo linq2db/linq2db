@@ -50,7 +50,7 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	// are provisioned (see GetNuGetPackages), so a shared body would load the one that is missing
 	public override void ClearAllPools(string providerName)
 	{
-		if (OperatingSystem.IsWindows() && string.Equals(providerName, ProviderName.Access, StringComparison.Ordinal))
+		if (Platform.IsWindows && string.Equals(providerName, ProviderName.Access, StringComparison.Ordinal))
 			ReleaseOleDbPool();
 
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
@@ -69,7 +69,7 @@ internal sealed class AccessProvider : DatabaseProviderBase
 			: string.Equals(settings.Connection.SecondaryProvider, ProviderName.Access, StringComparison.Ordinal) ? settings.Connection.GetFullSecondaryConnectionString()
 				: null;
 
-		if (connectionString == null || !OperatingSystem.IsWindows())
+		if (connectionString == null || !Platform.IsWindows)
 			return null;
 
 		// only OLE DB schema has required information

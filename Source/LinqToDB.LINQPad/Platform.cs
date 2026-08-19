@@ -1,7 +1,9 @@
 namespace LinqToDB.LINQPad;
 
 /// <summary>
-/// Host operating system checks. LINQPad 5 (net472 build) runs on Windows only and has no <see cref="System.OperatingSystem"/> helpers.
+/// Host operating system checks. On the net472 (LINQPad 5) build they fold to constants, because LINQPad 5
+/// runs on Windows only - <see cref="System.OperatingSystem"/>'s helpers are available there too, through
+/// the Meziantou.Polyfill entries in Directory.Build.props, so the guard is a simplification.
 /// </summary>
 internal static class Platform
 {
