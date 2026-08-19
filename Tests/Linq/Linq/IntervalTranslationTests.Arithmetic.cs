@@ -83,6 +83,8 @@ namespace Tests.Linq
 			projected.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
 		}
 
+		// TimeSpan / TimeSpan arrived in .NET Core 3.0; on net462 the operator does not exist to be translated.
+#if !NETFRAMEWORK
 		[Table]
 		sealed class RatioRow
 		{
@@ -133,6 +135,7 @@ namespace Tests.Linq
 			row.CrossUnit.ShouldBe(1d);
 			row.SameUnit .ShouldBe(0.5d);
 		}
+#endif
 
 		[Table]
 		sealed class NativeIntervalRow
