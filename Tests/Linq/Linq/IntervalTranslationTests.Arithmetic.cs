@@ -382,8 +382,14 @@ namespace Tests.Linq
 
 			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
 
-			// Only the cancelling forms here, which the optimizer resolves before any provider is asked - so this
-			// runs everywhere. A shift off an unrelated base needs real lowering and is tested separately.
+			// Only the cancelling forms here, and every provider answers them - by one of two routes. Where the
+			// difference can be lowered, the optimizer folds start + (end - start) back to end, so the statement
+			// carries neither the difference nor the shift and the provider is asked for nothing: SQLite selects
+			// the two columns and reads the hour off one of them. Where it cannot - Access, which leaves
+			// CanLowerIntervalDifference false - the difference is never built, so there is nothing to fold and
+			// the projection is answered in .NET from the two columns.
+			//
+			// A shift off an unrelated base needs real lowering and is tested separately.
 			var row = t
 				.Select(r => new
 				{
