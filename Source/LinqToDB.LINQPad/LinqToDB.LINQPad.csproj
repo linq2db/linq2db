@@ -185,6 +185,11 @@ internal static class NuGetPackageVersions
 			</_NuGetPackageVersionsSource>
 		</PropertyGroup>
 
+		<!-- an id with no PackageVersion entry expands to an empty string, which would compile and ship:
+		     three of the ids above are referenced by no project on this build, so NU1008 doesn't cover them -->
+		<Error Condition="$(_NuGetPackageVersionsSource.Contains('&quot;&quot;'))"
+		       Text="GenerateNuGetPackageVersions: a package id has no matching PackageVersion in Directory.Packages.props (its version expanded to an empty string)." />
+
 		<WriteLinesToFile File="$(_NuGetPackageVersionsFile)" Lines="$(_NuGetPackageVersionsSource)" Overwrite="true" WriteOnlyWhenDifferent="true" />
 
 		<ItemGroup>
