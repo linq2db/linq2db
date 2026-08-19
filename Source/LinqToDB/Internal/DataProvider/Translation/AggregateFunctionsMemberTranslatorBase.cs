@@ -347,7 +347,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } && !hasFilter ? (bool?)null : true;
 
-						var fn = factory.Function(resultType, functionName,
+						// MIN/MAX over a boolean is invalid well beyond the SupportsBooleanType == false set
+						// (MAX(bit), max(boolean), ...), so the flag is folded into 1/0 and the function typed as
+						// int. Done here, where the function's semantics are known, rather than late in the
+						// convert visitor: the argument then reaches SqlExpressionConvertVisitor as a value
+						// expression, so the generic boolean-argument wrapping has nothing left to fold and the
+						// two mechanisms cannot interfere.
+						//
+						var functionType = resultType;
+
+						if (functionName is "MIN" or "MAX" && resultType.SystemType?.ToUnderlying() == typeof(bool))
+						{
+							functionType = factory.GetDbDataType(typeof(int));
+
+							var predicate = argumentValue as ISqlPredicate ?? new SqlPredicate.Expr(argumentValue);
+
+							argumentValue = factory.Condition(predicate, factory.Value(functionType, 1), factory.Value(functionType, 0));
+						}
+
+						var fn = factory.Function(functionType, functionName,
 							[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
 							[true, true],
 							canBeNull: canBeNull,

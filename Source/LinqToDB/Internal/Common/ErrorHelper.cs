@@ -33,7 +33,9 @@
 		public const string Error_WindowFunction_NthValue                         = "NTH_VALUE is not supported by current provider.";
 		public const string Error_WindowFunction_LeadLag                          = "LEAD/LAG is not supported by current provider.";
 		public const string Error_WindowFunction_FirstLastValue                   = "FIRST_VALUE/LAST_VALUE is not supported by current provider.";
+		public const string Error_WindowFunction_FirstLastValueBoolean            = "FIRST_VALUE/LAST_VALUE over a boolean value is not supported by current provider.";
 		public const string Error_WindowFunction_PercentileCont                   = "PERCENTILE_CONT is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileContBooleanOrderBy     = "PERCENTILE_CONT over a boolean sort key is not supported by current provider.";
 		public const string Error_WindowFunction_PercentileDisc                   = "PERCENTILE_DISC is not supported by current provider.";
 		public const string Error_WindowFunction_Variance                         = "STDDEV/VARIANCE is not supported by current provider.";
 		public const string Error_WindowFunction_Correlation                      = "COVAR/CORR is not supported by current provider.";

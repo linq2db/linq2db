@@ -214,6 +214,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
+		/// Visit of a single <c>PARTITION BY</c> item of <see cref="SqlExtendedFunction"/>. Unlike <c>ORDER BY</c>
+		/// items, which are <see cref="SqlWindowOrderItem"/> and get their own visitor, partition items are plain
+		/// expressions — this hook gives derived visitors the owning function as context.
+		/// </summary>
+		protected virtual ISqlExpression VisitSqlExtendedFunctionPartition(SqlExtendedFunction function, ISqlExpression partition)
+		{
+			return (ISqlExpression)Visit(partition);
+		}
+
+		/// <summary>
 		/// Visitor for <see cref="SqlExtendedFunction"/>.
 		/// </summary>
 		protected internal virtual IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
@@ -224,7 +234,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					VisitElements(element.Arguments, VisitMode.ReadOnly);
 					VisitElements(element.WithinGroup, VisitMode.ReadOnly);
-					VisitElements(element.PartitionBy, VisitMode.ReadOnly);
+					VisitElements(element.PartitionBy, VisitMode.ReadOnly, p => VisitSqlExtendedFunctionPartition(element, p));
 					VisitElements(element.OrderBy, VisitMode.ReadOnly);
 					Visit(element.FrameClause);
 					Visit(element.Filter);
@@ -236,7 +246,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					element.Modify(
 						VisitElements(element.Arguments, VisitMode.Modify),
 						VisitElements(element.WithinGroup, VisitMode.Modify),
-						VisitElements(element.PartitionBy, VisitMode.Modify),
+						VisitElements(element.PartitionBy, VisitMode.Modify, p => VisitSqlExtendedFunctionPartition(element, p)),
 						VisitElements(element.OrderBy, VisitMode.Modify),
 						(SqlSearchCondition?)Visit(element.Filter),
 						(SqlFrameClause?)Visit(element.FrameClause),
@@ -247,7 +257,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					var arguments   = VisitElements(element.Arguments, VisitMode.Transform);
 					var withinGroup = VisitElements(element.WithinGroup, VisitMode.Transform);
-					var partitionBy = VisitElements(element.PartitionBy, VisitMode.Transform);
+					var partitionBy = VisitElements(element.PartitionBy, VisitMode.Transform, p => VisitSqlExtendedFunctionPartition(element, p));
 					var orderBy     = VisitElements(element.OrderBy, VisitMode.Transform);
 					var frameClause = (SqlFrameClause?)Visit(element.FrameClause);
 					var filter      = (SqlSearchCondition?)Visit(element.Filter);

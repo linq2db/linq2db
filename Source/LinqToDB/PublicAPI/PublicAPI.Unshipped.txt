@@ -1,1 +1,3 @@
 #nullable enable
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition.set -> void
