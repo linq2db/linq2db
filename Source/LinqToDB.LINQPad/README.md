@@ -1,6 +1,6 @@
 # LINQ to DB LINQPad Driver
 
-This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer, on Windows and macOS (LINQPad 9 recommended). LINQPad 5 is supported by the `.lpx` plugin published with each [release](https://github.com/linq2db/linq2db/releases). Support for older versions of LINQPad is available via older versions drivers.
+This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer, on Windows and macOS (LINQPad 9 recommended). LINQPad 5 is supported by the `.lpx` plugin published with each [release](https://github.com/linq2db/linq2db/releases). Support for older LINQPad versions is available in older driver versions.
 
 Following databases supported:
 
