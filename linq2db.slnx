@@ -161,6 +161,7 @@
     <File Path="Build/Azure/pipelines/templates/build-job.yml" />
     <File Path="Build/Azure/pipelines/templates/build-vars.yml" />
     <File Path="Build/Azure/pipelines/templates/nuget-job.yml" />
+    <File Path="Build/Azure/pipelines/templates/test-cli.yml" />
     <File Path="Build/Azure/pipelines/templates/test-jobs.yml" />
     <File Path="Build/Azure/pipelines/templates/test-matrix.yml" />
     <File Path="Build/Azure/pipelines/templates/test-workflow-linux.yml" />
