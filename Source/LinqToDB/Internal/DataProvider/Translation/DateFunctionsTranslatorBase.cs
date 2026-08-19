@@ -337,14 +337,38 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var left  = TranslateIntervalOperand(translationContext, binaryExpression.Left,  translationFlags);
 			var right = TranslateIntervalOperand(translationContext, binaryExpression.Right, translationFlags);
 
+			if (left == null && right == null)
+				return null;
+
+			var leftUnit  = left  == null ? null : IntervalResolutionOf(left);
+			var rightUnit = right == null ? null : IntervalResolutionOf(right);
+
+			// An interval whose unit cannot be read is not something to reconcile against anything.
+			if (left != null && leftUnit == null || right != null && rightUnit == null)
+				return null;
+
+			// Both sides declared and already counting in the same unit: their stored numbers are commensurable as
+			// they stand, so the generic handling adds them without putting arithmetic on either column.
+			if (left != null && right != null && leftUnit == rightUnit)
+				return null;
+
+			// One side is an ordinary TimeSpan rather than a stored duration, and what happens to it depends on what
+			// it is beside. Against a declared column the generic handling already writes it through that column's
+			// converter - the value goes into the column's unit and the column stays bare, which is both right and
+			// the cheaper shape - so that pairing is left alone.
+			//
+			// Against a computed difference there is no column and no converter to be written through, and the value
+			// reaches the statement as whatever the provider maps a bare TimeSpan to, beside a tick count. Providers
+			// that cannot compare the two say so - SQL Server calls it an operand type clash - which is loud rather
+			// than wrong, but the query is an ordinary one and it should answer. So the value is counted in ticks
+			// here, the way the comparison path counts one.
 			if (left == null || right == null)
-				return null;
+			{
+				var declared = left ?? right!;
 
-			var leftUnit  = IntervalResolutionOf(left);
-			var rightUnit = IntervalResolutionOf(right);
-
-			if (leftUnit == null || rightUnit == null || leftUnit == rightUnit)
-				return null;
+				if (declared is not SqlIntervalDifferenceExpression)
+					return null;
+			}
 
 			// The reconciled value is a tick count, and it has to come back as one: nothing turns a fractional number
 			// into a TimeSpan, so a storage that cannot hold a tick count as a whole number leaves the arithmetic
@@ -353,14 +377,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			//
 			// Refused by name rather than left to the generic handling, which is what produced the wrong answer this
 			// exists to stop. It joins the tick-count refusals that provider already declares for every other path.
-			if (!CarriesWholeTicks(left) || !CarriesWholeTicks(right))
+			if (left != null && !CarriesWholeTicks(left) || right != null && !CarriesWholeTicks(right))
 				return translationContext.CreateErrorExpression(binaryExpression, ErrorHelper.Error_Interval_Operation);
 
 			var factory  = translationContext.ExpressionFactory;
 			var tickType = factory.GetDbDataType(typeof(long));
 
-			var leftTicks  = new SqlIntervalPartExpression(left,  SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
-			var rightTicks = new SqlIntervalPartExpression(right, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType);
+			var leftTicks = left != null
+				? new SqlIntervalPartExpression(left, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType)
+				: ValueIn(translationContext, binaryExpression.Left, translationFlags, 1, roundUp: false);
+
+			var rightTicks = right != null
+				? new SqlIntervalPartExpression(right, SqlIntervalUnit.Tick, SqlIntervalPartKind.Total, tickType)
+				: ValueIn(translationContext, binaryExpression.Right, translationFlags, 1, roundUp: false);
+
+			if (leftTicks == null || rightTicks == null)
+				return null;
 
 			var combined = binaryExpression.NodeType == ExpressionType.Add
 				? factory.Add(tickType, leftTicks, rightTicks)
@@ -1056,9 +1088,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// The expression as a subtraction of two date/time values of the same type, or <see langword="null"/>.
-		/// </summary>
-		/// <summary>
 		/// Whether an operand is the difference between two date/time values, in either the shape it was written
 		/// in or the one a projection leaves behind.
 		/// </summary>
@@ -1071,6 +1100,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				|| AsDateDifference(translationContext.Translate(operand, TranslationFlags.Expand)) != null;
 		}
 
+		/// <summary>
+		/// The expression as a subtraction of two date/time values of the same type, or <see langword="null"/>.
+		/// </summary>
 		static BinaryExpression? AsDateDifference(Expression? expression)
 		{
 			if (expression is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction)

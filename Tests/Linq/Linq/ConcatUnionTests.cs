@@ -2614,7 +2614,7 @@ namespace Tests.Linq
 		/// The companion to the <c>NULL</c> case above, and the one that behaves differently. A <c>NULL</c> is stored
 		/// in no terms and read through none, so it cannot disagree with what the other branch declares. A constant
 		/// has terms of its own and no descriptor to state them, and a set operation other than <c>UNION ALL</c>
-		/// decides which rows survive by comparing values in the database - where a raw <c>true</c> and a column
+		/// decides which rows survive by comparing values in the database - where a raw <see langword="true"/> and a column
 		/// written as <c>'Y'</c> are two different values.
 		/// <para>
 		/// Which is what that comparison did: before this the query answered two rows where the CLR says one, the

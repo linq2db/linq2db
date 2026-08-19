@@ -363,11 +363,16 @@ namespace Tests.Linq
 			value.Days.ShouldBe(-1);
 			value.Hours.ShouldBe(-1);
 
+			// The two integral components are forced into SQL: this case exists to pin the server's rounding rule,
+			// and a bare projection would answer from .NET the moment a provider declined the member - passing
+			// while asserting nothing about the thing it is named for. TotalHours stays plain deliberately, since
+			// a forced Total* needs a relative tolerance on Access and MySQL 5.7, where the division lands on
+			// decimal rather than binary, while the integral components carry no such caveat and stay exact.
 			var row = t
 				.Select(r => new
 				{
-					r.InSeconds.Days,
-					r.InSeconds.Hours,
+					Days  = Sql.AsSql(r.InSeconds.Days),
+					Hours = Sql.AsSql(r.InSeconds.Hours),
 					r.InSeconds.TotalHours,
 				})
 				.Single();

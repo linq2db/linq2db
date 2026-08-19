@@ -14,6 +14,61 @@ namespace Tests.Linq
 	public partial class IntervalTranslationTests
 	{
 		/// <summary>
+		/// A duration paired with an ordinary <see cref="TimeSpan"/> value rather than with another stored one.
+		/// </summary>
+		/// <remarks>
+		/// The two pairings reach the value differently, and only one of them had anywhere to reach.
+		/// <para>
+		/// Beside a <em>declared column</em> the value is written through that column's own converter - it goes into
+		/// the column's unit and the column stays bare, which is both correct and the shape an index can still be
+		/// walked by. Nothing here changes that, and it is asserted so that nothing starts to.
+		/// </para>
+		/// <para>
+		/// Beside a <em>computed difference</em> there is no column and no converter, so the value used to reach the
+		/// statement as whatever the provider maps a bare <see cref="TimeSpan"/> to, set against a tick count. That
+		/// was loud rather than wrong - SQL Server called it an operand type clash, SQLite refused the cast - but it
+		/// refused an ordinary query, and on a provider with a native interval type the same query answered. It is
+		/// counted in ticks now, the way the comparison path counts one.
+		/// </para>
+		/// <para>
+		/// Both orders and both operators, since the value sits on the near side in one and the far side in the
+		/// other, and subtraction is where a sign can go missing.
+		/// </para>
+		/// </remarks>
+		[Test]
+		// Access refuses by name rather than generically: the difference is asked for its tick total, which is the
+		// one thing it has no way to produce, so the refusal comes from the member rather than from the conversion.
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
+		public void ADurationCombinesWithAPlainValue([DataSources(false)] string context)
+		{
+			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
+
+			var taken  = TimeSpan.FromHours(1);
+			var budget = TimeSpan.FromHours(3);
+			var extra  = TimeSpan.FromMinutes(5);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+			SeedTasks(db, (taken, budget));
+
+			var row = t
+				.Select(r => new
+				{
+					ColumnPlusValue     = Sql.AsSql(r.Budget + extra),
+					DifferencePlusValue = Sql.AsSql((r.FinishedOn - r.StartedOn) + extra),
+					ValuePlusDifference = Sql.AsSql(extra + (r.FinishedOn - r.StartedOn)),
+					DifferenceLessValue = Sql.AsSql((r.FinishedOn - r.StartedOn) - extra),
+				})
+				.Single();
+
+			row.ColumnPlusValue.ShouldBe(budget + extra);
+			row.DifferencePlusValue.ShouldBe(taken + extra);
+			row.ValuePlusDifference.ShouldBe(taken + extra);
+			row.DifferenceLessValue.ShouldBe(taken - extra);
+		}
+
+		/// <summary>
 		/// A date shifted by a duration that was computed rather than stored.
 		/// </summary>
 		/// <remarks>

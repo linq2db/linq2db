@@ -19,6 +19,55 @@ namespace Tests.Linq
 	public partial class IntervalTranslationTests
 	{
 		/// <summary>
+		/// An aggregate over a declared duration answers the same after the statement has been cloned.
+		/// </summary>
+		/// <remarks>
+		/// Aggregates were asked only of a freshly built statement. These are the shapes that rebuild one instead:
+		/// the same query twice, so the second is served from the cache, and one whose predicate carries a
+		/// parameter. A correlated sub-query is a third and is left out, since ClickHouse cannot express one.
+		/// <para>
+		/// Said plainly, because a green test is worth what it can fail on: this does <em>not</em> catch the
+		/// propagation bug it was written for. The rebuild really does drop the aggregate's argument domain -
+		/// measured by making that branch throw, which it does for both <c>SUM</c> and <c>MIN</c> - and the value
+		/// still comes back right, because the descriptor is resolved before the clone reaches the read path. The
+		/// field is carried through anyway: it takes part in equality and hashing, so a rebuilt node that lost it
+		/// stops matching the node it was cloned from although nothing about it changed.
+		/// </para>
+		/// <para>
+		/// What this does hold is the shapes themselves. A value read back as its stored number would be sixty times
+		/// what is asserted here, which is a duration nothing else in this fixture would produce.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void AnAggregateKeepsItsDomainThroughAClone([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			var first  = t.Select(r => new { Min = t.Min(x => x.InSeconds), Max = t.Max(x => x.InSeconds) }).First();
+			var second = t.Select(r => new { Min = t.Min(x => x.InSeconds), Max = t.Max(x => x.InSeconds) }).First();
+
+			first.Min.ShouldBe(value);
+			first.Max.ShouldBe(value);
+
+			// The second execution is served from the query cache, which clones rather than rebuilds from scratch.
+			second.Min.ShouldBe(value);
+			second.Max.ShouldBe(value);
+
+			var bound = TimeSpan.FromMinutes(1);
+
+			var filtered = t
+				.Where (r => r.InSeconds > bound)
+				.Select(r => t.Min(x => x.InSeconds))
+				.First();
+
+			filtered.ShouldBe(value);
+		}
+
+		/// <summary>
 		/// Carries a date pair and a declared duration in one row, so a difference and a stored duration can be
 		/// compared against each other - which is the case neither model alone can express.
 		/// </summary>
@@ -426,7 +475,7 @@ namespace Tests.Linq
 		/// values. Making them equal would let a branch that took another branch's conversion pass unnoticed.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatSurroundsADifferenceWithColumns([DataSources(false)] string context)
 		{
@@ -465,7 +514,7 @@ namespace Tests.Linq
 		/// same would make a column mix-up look identical to a correct answer.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatMixesTwoDurationsPerRow([DataSources(false)] string context)
 		{
