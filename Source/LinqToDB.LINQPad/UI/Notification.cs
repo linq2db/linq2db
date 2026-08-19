@@ -18,7 +18,7 @@ internal static class Notification
 
 	// On macOS LINQPad renders the connection dialog through Avalonia XPF, and XPF is available only for the
 	// duration of the ShowConnectionDialog call - touching a WPF type anywhere else fails to load
-	// PresentationFramework, which then masks the error being reported. Outside the dialog we log only.
+	// PresentationFramework, which then masks the error being reported. There we log only outside the dialog.
 #if NETFRAMEWORK
 	// LINQPad 5 is Windows-only, WPF is always available there
 	public static void BeginConnectionDialog() { }
@@ -36,7 +36,10 @@ internal static class Notification
 	public static void BeginConnectionDialog() => _connectionDialogScope = true;
 	public static void EndConnectionDialog  () => _connectionDialogScope = false;
 
-	private static bool CanShowMessageBox => _connectionDialogScope;
+	// Windows hosts WPF in every driver and query process, so only macOS is limited to the dialog: suppressing
+	// it there too would leave the driver methods that swallow and continue - InitializeContext,
+	// GetContextConstructorArguments, PreprocessObjectToWrite and the rest - with no user-visible signal at all
+	private static bool CanShowMessageBox => _connectionDialogScope || Platform.IsWindows;
 #endif
 
 	public static void Error(Exception ex, string context, string title = "Error")
