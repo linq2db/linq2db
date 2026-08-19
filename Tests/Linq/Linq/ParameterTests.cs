@@ -35,6 +35,27 @@ namespace Tests.Linq
 			Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
 		}
 
+		// A provider may rewrite the name of the DbParameter it is handed (managed Sybase; YDB prefixes it with '$').
+		// That name must never be written back onto the SqlParameter of the CACHED statement, which every later
+		// execution and every concurrent thread shares - the Transform-mode mutation guard reports such a write as
+		// "convert mutated the element it was given". The name the query builder assigned must survive execution.
+		[Test]
+		public void ExecutionDoesNotRenameCachedParameters([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id    = 1;
+			var query = db.GetTable<Parent>().Where(p => p.ParentID == id);
+
+			query.ToArray();
+
+			var parameters = new List<SqlParameter>();
+
+			QueryHelper.CollectParametersAndValues(query.GetStatement(), parameters, new List<SqlValue>());
+
+			parameters.Select(p => p.Name).ShouldBe(new[] { "id" });
+		}
+
 		[Test]
 		public void TestQueryCacheWithNullParameters([DataSources] string context)
 		{
