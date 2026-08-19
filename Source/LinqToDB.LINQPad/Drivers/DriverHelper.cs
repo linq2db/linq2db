@@ -316,7 +316,9 @@ internal static class DriverHelper
 		}
 		catch (Exception ex)
 		{
-			Notification.Error(ex, "Connection test failed.", "Connection Test");
+			// the returned message is what LINQPad reports and the dialog renders, so a box here would
+			// duplicate it - and this runs in the driver process, where it would have no owner window
+			Notification.Log(ex, "Connection test failed.");
 
 			return Notification.FormatMessages(ex);
 		}
