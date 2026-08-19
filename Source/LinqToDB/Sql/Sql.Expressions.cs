@@ -292,13 +292,13 @@ namespace LinqToDB
 					{
 						var tableName = new SqlObjectName(
 							tableHelper.TableName,
-							Server  : (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
-							Database: (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
-							Schema  : (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null);
+							Server  : qualified.HasFlag(TableQualification.ServerName)   ? tableHelper.ServerName   : null,
+							Database: qualified.HasFlag(TableQualification.DatabaseName) ? tableHelper.DatabaseName : null,
+							Schema  : qualified.HasFlag(TableQualification.SchemaName)   ? tableHelper.SchemaName   : null);
 						var table = new SqlTable(builder.Mapping.GetEntityDescriptor(tableType, builder.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated))
 						{
 							TableName    = tableName,
-							TableOptions = (qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet,
+							TableOptions = qualified.HasFlag(TableQualification.TableOptions) ? tableHelper.TableOptions : TableOptions.NotSet,
 						};
 
 						builder.ResultExpression = table;
@@ -315,12 +315,12 @@ namespace LinqToDB
 							sb.Value,
 							new SqlObjectName(
 								name,
-								Server  : (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
-								Database: (qualified & TableQualification.DatabaseName) != 0 ? tableHelper.DatabaseName : null,
-								Schema  : (qualified & TableQualification.SchemaName)   != 0 ? tableHelper.SchemaName   : null),
+								Server  : qualified.HasFlag(TableQualification.ServerName)   ? tableHelper.ServerName   : null,
+								Database: qualified.HasFlag(TableQualification.DatabaseName) ? tableHelper.DatabaseName : null,
+								Schema  : qualified.HasFlag(TableQualification.SchemaName)   ? tableHelper.SchemaName   : null),
 							ConvertType.NameToQueryTable,
 							true,
-							(qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet);
+							qualified.HasFlag(TableQualification.TableOptions) ? tableHelper.TableOptions : TableOptions.NotSet);
 						name = sb.Value.ToString();
 					}
 
@@ -349,16 +349,18 @@ namespace LinqToDB
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
+					var tableOptions = (sqlTable as SqlTable)?.TableOptions ?? TableOptions.NotSet;
+
 					builder.DataContext.CreateSqlBuilder().BuildObjectName(
 						sb.Value,
 						new SqlObjectName(
 							sqlTable.TableName.Name,
-							Server  : (qualified & TableQualification.ServerName)   != 0 ? sqlTable.TableName.Server       : null,
-							Database: (qualified & TableQualification.DatabaseName) != 0 ? sqlTable.TableName.Database     : null,
-							Schema  : (qualified & TableQualification.SchemaName)   != 0 ? sqlTable.TableName.Schema       : null),
+							Server  : qualified.HasFlag(TableQualification.ServerName)   ? sqlTable.TableName.Server       : null,
+							Database: qualified.HasFlag(TableQualification.DatabaseName) ? sqlTable.TableName.Database     : null,
+							Schema  : qualified.HasFlag(TableQualification.SchemaName)   ? sqlTable.TableName.Schema       : null),
 						sqlTable.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable,
 						true,
-						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
+						qualified.HasFlag(TableQualification.TableOptions) ? tableOptions : TableOptions.NotSet);
 
 					name = sb.Value.ToString();
 				}
@@ -439,12 +441,12 @@ namespace LinqToDB
 					sb.Value,
 					new SqlObjectName(
 						table.TableName,
-						Server  : (qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
-						Database: (qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
-						Schema  : (qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null),
+						Server  : qualification.HasFlag(TableQualification.ServerName)   ? table.ServerName   : null,
+						Database: qualification.HasFlag(TableQualification.DatabaseName) ? table.DatabaseName : null,
+						Schema  : qualification.HasFlag(TableQualification.SchemaName)   ? table.SchemaName   : null),
 					ConvertType.NameToQueryTable,
 					true,
-					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
+					qualification.HasFlag(TableQualification.TableOptions) ? table.TableOptions : TableOptions.NotSet);
 				result = sb.Value.ToString();
 			}
 
@@ -481,12 +483,12 @@ namespace LinqToDB
 					sb.Value,
 					new SqlObjectName(
 						table.TableName,
-						Server  : (qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
-						Database: (qualification & TableQualification.DatabaseName) != 0 ? table.DatabaseName : null,
-						Schema  : (qualification & TableQualification.SchemaName)   != 0 ? table.SchemaName   : null),
+						Server  : qualification.HasFlag(TableQualification.ServerName)   ? table.ServerName   : null,
+						Database: qualification.HasFlag(TableQualification.DatabaseName) ? table.DatabaseName : null,
+						Schema  : qualification.HasFlag(TableQualification.SchemaName)   ? table.SchemaName   : null),
 					ConvertType.NameToQueryTable,
 					true,
-					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
+					qualification.HasFlag(TableQualification.TableOptions) ? table.TableOptions : TableOptions.NotSet);
 
 				name = sb.Value.ToString();
 			}
@@ -564,8 +566,8 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(
-			[SqlQueryDependent]              RawSqlString sql,
-			[SqlQueryDependentParams] params object[]     parameters
+			[SqlQueryDependent] RawSqlString sql,
+			params object[]     parameters
 			)
 			=> throw new ServerSideOnlyException(nameof(Expr));
 

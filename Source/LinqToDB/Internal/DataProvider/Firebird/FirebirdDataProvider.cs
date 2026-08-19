@@ -9,6 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Internal.DataProvider.Firebird.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -32,6 +33,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsIdentityParameterRequired       = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsNullsOrderingSupported          = true;
+			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // Firebird 2.0+ sorts NULL as the smallest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
@@ -51,6 +54,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
 			SqlProviderFlags.IsDistinctFromSupported   = true;
 
+			// Firebird 2.5 MERGE has no WHEN MATCHED [AND <cond>] form (added in Firebird 3),
+			// and no UPDATE SET ... WHERE form either. For single-item Upsert.Update.When we must
+			// route through the 3-query alt-path (SetIfExistsUpdateElseInsert); for Upsert
+			// configurations that require MERGE lowering with a predicate we surface a descriptive
+			// Error_Upsert_MergeWithPredicate_NotSupported instead of emitting invalid SQL.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported = Version > FirebirdVersion.v25;
+			SqlProviderFlags.IsUpsertMergeWithPredicateSupported    = Version > FirebirdVersion.v25;
+
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 2;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -58,6 +69,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1970, 1, 1));
 			SetProviderField<DbDataReader, DateTime, DateTime>((r,i) => GetDateTime(r.GetDateTime(i)));
+
+			if (Adapter.FbZonedDateTimeType != null)
+				SetProviderField<DbDataReader, DateTimeOffset>(Adapter.FbZonedDateTimeType, (r, i) => new DateTimeOffset(GetDateTime(r.GetDateTime(i)), default), "TIMESTAMP WITH TIME ZONE");
 
 			SetToType<DbDataReader, byte[], string>("VARCHAR", (r, i) => r.GetFieldValue<byte[]>(i));
 			SetToType<DbDataReader, Binary, string>("VARCHAR", (r, i) => new Binary(r.GetFieldValue<byte[]>(i)));
@@ -88,7 +102,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return Version == FirebirdVersion.v5 ? new Firebird5MemberTranslator() : new FirebirdMemberTranslator();
+			return Version switch
+			{
+				FirebirdVersion.v25   => new Firebird25MemberTranslator(),
+				>= FirebirdVersion.v5 => new Firebird5MemberTranslator(),
+				>= FirebirdVersion.v4 => new Firebird4MemberTranslator(),
+				_                     => new FirebirdMemberTranslator(),
+			};
 		}
 
 		protected override IIdentifierService CreateIdentifierService()

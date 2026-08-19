@@ -61,7 +61,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void LetTest1([DataSources(TestProvName.AllAccess)] string context)
+		public void LetTest1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Table1>();
@@ -83,7 +83,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void LetTest2([DataSources(TestProvName.AllAccess)] string context)
+		public void LetTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Table1>();

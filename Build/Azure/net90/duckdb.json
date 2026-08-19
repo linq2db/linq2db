@@ -1,0 +1,7 @@
+{
+	"NET90.Azure": {
+		"Providers": [
+			"DuckDB"
+		]
+	}
+}

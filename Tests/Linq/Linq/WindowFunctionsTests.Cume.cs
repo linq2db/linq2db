@@ -1,6 +1,7 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -9,14 +10,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void CumeDistWithMultiplePartitions([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		public void CumeDistWithMultiplePartitions([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -34,21 +29,12 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void CumeDistWithMultiplePartitionsWithDefineWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		public void CumeDistWithMultiplePartitionsWithDefineWindow([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -75,16 +61,12 @@ namespace Tests.Linq
 				orderby s.Entity.Id
 				select s;
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void CumeDistWithNulls([IncludeDataSources(
-			true,
-			TestProvName.AllOracle12Plus)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		public void CumeDistWithNulls([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -98,21 +80,12 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void CumeDistWithoutPartition([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_CumeDist)]
+		public void CumeDistWithoutPartition([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -130,10 +103,7 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 	}
 

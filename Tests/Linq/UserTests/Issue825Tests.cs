@@ -50,9 +50,9 @@ namespace Tests.UserTests
 			public int UserId { get; set; }
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var userId  = 32;

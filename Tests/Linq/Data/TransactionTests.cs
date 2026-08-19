@@ -8,6 +8,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.DuckDB;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.MySql;
@@ -17,6 +18,7 @@ using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
+using LinqToDB.DataProvider.Ydb;
 
 using NUnit.Framework;
 
@@ -326,6 +328,8 @@ namespace Tests.Data
 				var ctx when ctx.IsAnyOf(TestProvName.AllSQLite)     => SQLiteTools    .GetDataProvider(connectionString: connectionString, connection: db.OpenDbConnection(), transaction: db.Transaction),
 				var ctx when ctx.IsAnyOf(TestProvName.AllSqlServer)  => SqlServerTools .GetDataProvider(connectionString: connectionString, connection: db.OpenDbConnection(), transaction: db.Transaction),
 				var ctx when ctx.IsAnyOf(TestProvName.AllSybase)     => SybaseTools    .GetDataProvider(connectionString: connectionString, connection: db.OpenDbConnection(), transaction: db.Transaction),
+				var ctx when ctx.IsAnyOf(TestProvName.AllDuckDB)     => DuckDBTools    .GetDataProvider(connectionString: connectionString, connection: db.OpenDbConnection(), transaction: db.Transaction),
+				var ctx when ctx.IsAnyOf(TestProvName.AllYdb)        => YdbTools       .GetDataProvider(connectionString: connectionString, connection: db.OpenDbConnection(), transaction: db.Transaction),
 				_                                                    => throw new NotImplementedException($"Missing case for provider {context}")
 			};
 		}

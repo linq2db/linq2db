@@ -16,6 +16,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -235,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, includeConvert : true, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, ParameterValues, expression, optimizeConditions : false, compactBinary : false, isSingleConvert: true);
 
 			return result;
 		}
@@ -369,6 +370,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var result = _optimizationContext.CanBeEvaluatedOnClient(expr);
 			return result;
+		}
+
+		internal bool IsServerSideOnly(Expression expr)
+		{
+			return _optimizationContext.IsServerSideOnly(expr);
 		}
 
 		Expression? _currentlyTestingForTranslation;
@@ -780,16 +786,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.NamedTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
 				if (obj.Type != ttype)
 					obj = Expression.Convert(expression.Expression, ttype);
 
-				var memberInfo = ttype.GetMemberEx(field.ColumnDescriptor.MemberInfo) ?? throw new InvalidOperationException();
-
-				var left = Expression.MakeMemberAccess(obj, memberInfo);
+				var left = field.ColumnDescriptor.GetMemberAccessExpression(obj);
 				var code = m.m.Code;
 
 				if (code == null)
@@ -850,13 +854,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!forSearch)
 					return type.IsNullableOrReferenceType;
 
-				if (MappingSchema.IsCollectionType(type))
-					return true;
-
-				if (!MappingSchema.IsScalarType(type))
-					return true;
-
-				return false;
+				return MappingSchema.IsCollectionType(type)
+					|| !MappingSchema.IsScalarType(type);
 			}
 
 			// Do not modify parameters
@@ -1139,12 +1138,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilters(disabledFilters), true);
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(null, disabledFilters)), true);
+		}
+
+		public void PushDisabledQueryFilters(string[] filterKeys, Type[] entityTypes)
+		{
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(filterKeys, entityTypes)), true);
 		}
 
 		public bool IsFilterDisabled(Type entityType)
 		{
 			return GetTranslationModifier().IsFilterDisabled(entityType);
+		}
+
+		public bool IsFilterDisabled(Type entityType, string filterKey)
+		{
+			return GetTranslationModifier().IsFilterDisabled(entityType, filterKey);
 		}
 
 		public void PopDisabledFilter()
@@ -1203,8 +1212,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (memberExpression.Expression!.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
-					// going deeper
-					return Project(context, ((UnaryExpression)memberExpression.Expression).Operand, nextPath, nextPath.Count - 1, flags, body, strict);
+					var operand = ((UnaryExpression)memberExpression.Expression).Operand;
+
+					// Going deeper preserves a member chain wrapped in Convert (e.g. ((T)foo.bar).baz).
+					// Otherwise the Convert wraps the sequence root (ContextRefExpression and friends),
+					// so the cast is just a type change — make the path projection so member resolution
+					// runs against the body and resolves interface members on the concrete type.
+					if (operand is MemberExpression)
+						return Project(context, operand, nextPath, nextPath.Count - 1, flags, body, strict);
+
+					return Project(context, null, nextPath, nextPath.Count - 1, flags, body, strict);
 				}
 
 				// make path projection
@@ -1298,6 +1315,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (body is SqlPlaceholderExpression placeholder)
 					{
+						// Placeholder is a terminal SQL expression. If there are remaining path members
+						// (e.g., navigating .Length on a column), it cannot be resolved through projection.
+						// Return error so caller falls back to member translation pipeline.
+						if (next != null && member != null)
+						{
+							if (strict)
+								return CreateSqlError(nextPath![0]);
+							return new DefaultValueExpression(null, nextPath![0].Type, true);
+						}
+
 						return placeholder;
 					}
 
@@ -1437,6 +1464,16 @@ namespace LinqToDB.Internal.Linq.Builder
 						//throw new InvalidOperationException();
 					}
 
+					// Body is a terminal expression (e.g. SqlPathExpression) that cannot be navigated further.
+					// If there are remaining path members (e.g., .Length on a column), return error
+					// so caller falls back to member translation pipeline.
+					if (next != null && member != null && body is SqlPathExpression)
+					{
+						if (strict)
+							return CreateSqlError(nextPath![0]);
+						return new DefaultValueExpression(null, nextPath![0].Type, true);
+					}
+
 					return body;
 				}
 
@@ -1525,7 +1562,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
+					return new DefaultValueExpression(null, nextPath![0].Type, true);
 				}
 
 				case ExpressionType.MemberInit:
@@ -1628,7 +1665,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
+					return new DefaultValueExpression(null, nextPath![0].Type, true);
 
 				}
 				case ExpressionType.Conditional:

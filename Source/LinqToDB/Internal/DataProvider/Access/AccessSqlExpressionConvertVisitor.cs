@@ -134,6 +134,15 @@ namespace LinqToDB.Internal.DataProvider.Access
 			if (element.SystemType == null)
 				return element;
 
+			// Strip NULL-literal operands before folding to IIF, matching base ConvertCoalesce —
+			// otherwise a no-op guard like Coalesce(x, NULL) folds to IIF(x IS NULL, NULL, x)
+			// (issue #5531).
+			var reduced = RemoveNullValues(element);
+			if (reduced is not SqlCoalesceExpression coalesce)
+				return reduced;
+
+			element = coalesce;
+
 			if (element.Expressions.Length == 2)
 			{
 				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], false), element.Expressions[1], element.Expressions[0]);

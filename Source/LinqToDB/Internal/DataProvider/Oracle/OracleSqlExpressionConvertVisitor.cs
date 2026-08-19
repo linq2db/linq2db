@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -19,7 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		#region LIKE
 
-		protected static string[] OracleLikeCharactersToEscape = {"%", "_"};
+		protected static readonly string[] OracleLikeCharactersToEscape = ["%", "_"];
 
 		public override string[] LikeCharactersToEscape => OracleLikeCharactersToEscape;
 
@@ -127,8 +129,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					element.SystemType
 				),
 
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -169,59 +169,58 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			};
 		}
 
-		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (NeedsCharTypeCorrection(MappingSchema, element.Expressions))
+			if (MappingSchema.HasInconsistentCharset(element.Expressions))
 			{
+				// The charset fix goes into a new node: on a Transform pass the element handed to
+				// this visitor is the query's cached statement, and a write reaching it corrupts
+				// every later render, including the remote path.
+				var expressions = new ISqlExpression[element.Expressions.Length];
+				var replaced    = false;
+
 				for (var i = 0; i < element.Expressions.Length; i++)
 				{
-					var type = QueryHelper.GetDbDataType(element.Expressions[i], MappingSchema);
-
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						element.Expressions[i] = new SqlCastExpression(
-							element.Expressions[i],
-							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-							null,
-							isMandatory: true);
-					}
+					expressions[i] = MappingSchema.FixCharset(element.Expressions[i]);
+					replaced      |= !ReferenceEquals(expressions[i], element.Expressions[i]);
 				}
+
+				if (replaced)
+					return base.ConvertCoalesce(new SqlCoalesceExpression(expressions));
 			}
 
-			return base.VisitSqlCoalesceExpression(element);
+			return base.ConvertCoalesce(element);
+		}
+
+		// Oracle's `||` auto-coerces non-string operands — explicit CAST is redundant.
+		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		public override ISqlExpression ConvertConcat(SqlConcatExpression element)
+		{
+			// On Oracle `''` IS NULL, so the base `Coalesce(x, '')` wrap (added when
+			// PreserveNull=false to match C# null-as-empty semantics) is functionally a
+			// no-op AND introduces ORA-12704 character-set mismatches when wrapping
+			// NVARCHAR operands (`''` defaults to CHAR_CS, conflicts with NCHAR_CS).
+			// Oracle's native `||` already treats NULL operands as empty for non-all-null
+			// concats — equivalent to C# null-as-empty for everything except the all-null
+			// case (which yields NULL on Oracle, vs `""` in C#; the well-known empty=NULL
+			// quirk is already accommodated by tests via the EmptyAsNullConcat helper).
+			// Skip the Coalesce wrap and let `||` emission handle the rest.
+
+			if (element.Expressions.Length == 1)
+				return element.Expressions[0];
+
+			return element;
 		}
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			if (NeedsCharTypeCorrection(MappingSchema, [element.TrueValue, element.FalseValue]))
+			if (MappingSchema.HasInconsistentCharset([element.TrueValue, element.FalseValue]))
 			{
-				var type = QueryHelper.GetDbDataType(element.TrueValue, MappingSchema);
-
-				if (type.DataType is DataType.Char or DataType.VarChar)
-				{
-					var trueValue = new SqlCastExpression(
-						element.TrueValue,
-						type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-						null,
-						isMandatory: true);
-
-					return new SqlConditionExpression(element.Condition, trueValue, element.FalseValue);
-				}
-				else
-				{
-					type = QueryHelper.GetDbDataType(element.FalseValue, MappingSchema);
-
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						var falseValue = new SqlCastExpression(
-							element.FalseValue,
-							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-							null,
-							isMandatory: true);
-
-						return new SqlConditionExpression(element.Condition, element.TrueValue, falseValue);
-					}
-				}
+				return new SqlConditionExpression(
+					element.Condition,
+					MappingSchema.FixCharset(element.TrueValue),
+					MappingSchema.FixCharset(element.FalseValue));
 			}
 
 			return base.ConvertSqlCondition(element);
@@ -229,105 +228,80 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 		{
+			// A VALUES column mixing VARCHAR2 and NVARCHAR2 rows raises ORA-12704, so the charset
+			// has to be unified per column. The affected columns are collected first so the fix can
+			// be applied according to the visit mode: on a Transform pass the element belongs to the
+			// query's cached statement, which is re-rendered on every execution and by the remote
+			// path, so a write reaching it surfaces as a failure in some later render.
+			List<int>? inconsistent = null;
+
 			if (element.Rows?.Count > 1)
 			{
 				for (var i = 0; i < element.Rows[0].Count; i++)
 				{
-					if (NeedsCharTypeCorrection(MappingSchema, element.Rows.Select(r => r[i])))
-					{
-						foreach (var row in element.Rows)
-						{
-							var type = QueryHelper.GetDbDataType(row[i], MappingSchema);
-							if (type.DataType is DataType.Char or DataType.VarChar)
-							{
-								row[i] = new SqlCastExpression(
-									row[i],
-									type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-									null,
-									isMandatory: true);
-							}
-						}
-					}
+					if (MappingSchema.HasInconsistentCharset(element.Rows.Select(r => r[i])))
+						(inconsistent ??= new List<int>()).Add(i);
 				}
 			}
 
-			return base.VisitSqlValuesTable(element);
+			if (inconsistent == null)
+				return base.VisitSqlValuesTable(element);
+
+			switch (GetVisitMode(element))
+			{
+				// Nothing to rewrite when only inspecting.
+				case VisitMode.ReadOnly:
+					return base.VisitSqlValuesTable(element);
+
+				// We own this element, so an in-place fix is licensed.
+				case VisitMode.Modify:
+				{
+					foreach (var row in element.Rows!)
+						foreach (var i in inconsistent)
+							row[i] = MappingSchema.FixCharset(row[i]);
+
+					return base.VisitSqlValuesTable(element);
+				}
+			}
+
+			var newRows = new List<List<ISqlExpression>>(element.Rows!.Count);
+
+			foreach (var row in element.Rows)
+			{
+				var newRow = new List<ISqlExpression>(row);
+
+				foreach (var i in inconsistent)
+					newRow[i] = MappingSchema.FixCharset(newRow[i]);
+
+				newRows.Add(newRow);
+			}
+
+			var newTable = new SqlValuesTable(element.Source, element.ValueBuilders, CopyFields(element.Fields), newRows);
+
+			return NotifyReplaced(base.VisitSqlValuesTable(newTable), element);
 		}
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
-			if (NeedsCharTypeCorrection(MappingSchema, element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
+			var expressions = element.Cases.Select(c => c.ResultExpression);
+			if (element.ElseExpression is {} elseCase)
+				expressions = expressions.Append(elseCase);
+
+			if (MappingSchema.HasInconsistentCharset(expressions))
 			{
-				ISqlExpression? elseExpr = null;
-				List<SqlCaseExpression.CaseItem>? cases = null;
-
-				for (var i = 0; i < element.Cases.Count; i++)
+				var cases = element.Cases.MapList(x =>
 				{
-					var caseItem = element.Cases[i];
-					var type = QueryHelper.GetDbDataType(caseItem.ResultExpression, MappingSchema);
+					var caseExpr = x.ResultExpression;
+					var fixedExpr = MappingSchema.FixCharset(caseExpr);
+					return ReferenceEquals(caseExpr, fixedExpr) ? x : new SqlCaseExpression.CaseItem(x.Condition, fixedExpr);
+				});
 
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						if (cases == null)
-						{
-							cases = new(element.Cases.Count);
-							cases.AddRange(element.Cases.Take(i));
-						}
+				var elseExpr = element.ElseExpression is {} expr ? MappingSchema.FixCharset(expr) : null;
 
-						cases.Add(new SqlCaseExpression.CaseItem(
-							caseItem.Condition,
-							new SqlCastExpression(
-								caseItem.ResultExpression,
-								type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-								null,
-								isMandatory: true)));
-					}
-					else if (cases != null)
-					{
-						cases.Add(caseItem);
-					}
-				}
-
-				if (element.ElseExpression != null)
-				{
-					var type = QueryHelper.GetDbDataType(element.ElseExpression, MappingSchema);
-
-					if (type.DataType is DataType.Char or DataType.VarChar)
-					{
-						elseExpr = new SqlCastExpression(
-							element.ElseExpression,
-							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-							null,
-							isMandatory: true);
-					}
-				}
-
-				if (elseExpr != null || cases != null)
-				{
-					return new SqlCaseExpression(element.Type, cases ?? element.Cases, elseExpr ?? element.ElseExpression);
-				}
+				return new SqlCaseExpression(element.Type, cases, elseExpr);
 			}
 
 			return base.ConvertSqlCaseExpression(element);
-		}
-
-		internal static bool NeedsCharTypeCorrection(MappingSchema mappingSchema, IEnumerable<ISqlExpression> expressions)
-		{
-			var hasChar = false;
-			var hasNChar = false;
-
-			foreach (var expr in expressions)
-			{
-				var type = QueryHelper.GetDbDataType(expr, mappingSchema);
-
-				hasChar  = hasChar  || type.DataType is DataType.Char or DataType.VarChar;
-				hasNChar = hasNChar || type.DataType is DataType.NChar or DataType.NVarChar;
-
-				if (hasChar && hasNChar)
-					return true;
-			}
-
-			return false;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
@@ -360,7 +334,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						return new SqlFunction(cast.Type, "Trunc", argument, new SqlValue("DD"));
 					}
 
-					return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
 				}
 
 				if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
@@ -371,29 +346,32 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					if (ftype == typeof(DateTimeOffset))
 						return argument;
 
-					return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					if (argument.SystemType == typeof(string))
+						return new SqlFunction(cast.Type, "TO_TIMESTAMP_TZ", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 				}
 
-				return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+				if (argument.SystemType == typeof(string))
+					return new SqlFunction(cast.Type, "TO_TIMESTAMP", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
 			}
 			else if (ftype == typeof(string))
 			{
 				var stype = argument.SystemType!.ToUnderlying();
-
-				if (stype == typeof(DateTimeOffset))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
-				}
-				else if (stype == typeof(DateTime))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD HH24:MI:SS"));
-				}
+				var format =
+					stype == typeof(DateTimeOffset) ? "YYYY-MM-DD HH24:MI:SS TZH:TZM" :
+					stype == typeof(DateTime)       ? "YYYY-MM-DD HH24:MI:SS" :
 #if SUPPORTS_DATEONLY
-				else if (stype == typeof(DateOnly))
-				{
-					return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("YYYY-MM-DD"));
-				}
+					stype == typeof(DateOnly)       ? "YYYY-MM-DD" :
 #endif
+					null;
+
+				if (format != null)
+				{
+					return new SqlFunction(
+						cast.Type,
+						cast.Type.DataType is DataType.NChar or DataType.NVarChar ? "To_NChar" : "To_Char",
+						argument,
+						new SqlValue(format));
+				}
 			}
 
 			return FloorBeforeConvert(cast);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -165,28 +165,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				var factory = translationContext.ExpressionFactory;
-				var cast    = factory.Cast(dateExpression, factory.GetDbDataType(dateExpression).WithDataType(DataType.Date), true);
-
-				return cast;
-			}
-
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				return TranslateDateTimeTruncationToDate(translationContext, dateExpression, translationFlags);
 			}
 
-			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+				// cannot be translated as server 'don't know client's timezone
+				return null;
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				return translationContext.ExpressionFactory.Function(dbDataType, "SYSUTCDATETIME");
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				return factory.Function(dbDataType, "GETUTCDATE");
 			}
 		}
 
@@ -205,6 +199,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServerStringMemberTranslator : StringMemberTranslatorBase
 		{
+			public override ISqlExpression? TranslateTrimStart(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimStart(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
+			public override ISqlExpression? TranslateTrimEnd(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression? trimChars)
+			{
+				if (trimChars != null)
+					return null;
+
+				return base.TranslateTrimEnd(translationContext, methodCall, translationFlags, value, trimChars);
+			}
+
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
 				/*
@@ -220,35 +230,50 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				var symbolsToAdd = factory.Sub(valueTypeInt, padding, lengthValue);
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
-				
-				return factory.Add(valueTypeString, stringToAdd, value);
+
+				return factory.Concat(stringToAdd, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
-				
-				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
-				{
-					var intDbType = factory.GetDbDataType(typeof(int));
-					var substring = factory.Function(valueType, "SUBSTRING",
-						valuesExpr,
-						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
-						factory.Value(intDbType, int.MaxValue));
 
-					return substring;
-				}); 
-				
-				return builder.Build(translationContext, methodCall);
+				if (withoutSeparator)
+				{
+					ConfigureConcat(builder, wrapByCoalesce: true);
+				}
+				else
+				{
+					ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+					{
+						var intDbType = factory.GetDbDataType(typeof(int));
+						var substring = factory.Function(valueType, "SUBSTRING",
+							valuesExpr,
+							factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
+							factory.Value(intDbType, int.MaxValue));
+
+						return substring;
+					}, withoutSeparator);
+				}
+
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
+			}
+
+			// {value} IS NULL OR {value} NOT LIKE N'%[^WHITESPACES]%'
+			public override ISqlExpression? TranslateIsNullOrWhiteSpace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var pattern   = factory.Value(new DbDataType(typeof(string), DataType.NVarChar), $"%[^{WHITESPACES}]%");
+				var predicate = factory.LikePredicate(value, true, pattern);
+
+				return WrapIsNullOrWhiteSpaceResult(translationContext, value, predicate);
 			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -265,6 +290,56 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return lower;
 			}
+		}
+
+		protected class SqlServerPre2012WindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// SQL Server 2005/2008 supports ROW_NUMBER, RANK, DENSE_RANK, NTILE natively
+			// but not LEAD/LAG, FIRST_VALUE/LAST_VALUE, NTH_VALUE, frames, or statistical functions.
+			// Aggregate window functions (SUM/AVG/MIN/MAX/COUNT OVER) are technically supported without
+			// ORDER BY/frames on 2005/2008, but are rejected here because the translator always emits an
+			// ORDER BY inside OVER — and ORDER BY inside OVER is only allowed for aggregates starting with
+			// SQL Server 2012. Without finer-grained flags this conservative rejection avoids emitting SQL
+			// that would fail at runtime on 2005/2008.
+			protected override bool IsLeadLagSupported                  => false;
+			protected override bool IsFirstLastValueSupported           => false;
+			protected override bool IsPercentRankSupported              => false;
+			protected override bool IsCumeDistSupported                 => false;
+			protected override bool IsNthValueSupported                 => false;
+			protected override bool IsAggregateWindowFunctionsSupported => false;
+			protected override bool IsFrameRowsSupported                => false;
+			protected override bool IsFrameRangeSupported               => false;
+			protected override bool IsFrameGroupsSupported              => false;
+			protected override bool IsFrameExclusionSupported           => false;
+			protected override bool IsPercentileContSupported           => false;
+			protected override bool IsPercentileDiscSupported           => false;
+		}
+
+		protected class SqlServerWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsNthValueSupported           => false;
+			protected override bool IsFrameGroupsSupported        => false;
+			protected override bool IsFrameExclusionSupported     => false;
+			protected override bool IsPercentileContSupported     => false;
+			protected override bool IsPercentileDiscSupported     => false;
+			// SQL Server (2012+) supports PERCENTILE_CONT/DISC only in the windowed (OVER) form, not the GROUP BY ordered-set form.
+			protected override bool IsOrderedSetWindowedSupported => true;
+			// SQL Server (2012+) spells the statistical aggregates STDEV/STDEVP/VAR/VARP, not the standard STDDEV*/VAR* names;
+			// pre-2012 has no window aggregates and stays gated by SqlServerPre2012WindowFunctionsMemberTranslator.
+			protected override bool IsVarianceBareSupported       => true;
+			protected override bool IsVarianceSupported           => true;
+			protected override string StdDevFunctionName          => "STDEV";
+			protected override string StdDevPopFunctionName       => "STDEVP";
+			protected override string StdDevSampFunctionName      => "STDEV";
+			protected override string VarianceFunctionName        => "VAR";
+			protected override string VarPopFunctionName          => "VARP";
+			protected override string VarSampFunctionName         => "VAR";
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			// Base SqlServerMemberTranslator is used for SQL Server 2008
+			return new SqlServerPre2012WindowFunctionsMemberTranslator();
 		}
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
@@ -30,7 +31,7 @@ namespace LinqToDB.Internal.Mapping
 			base.ResetID();
 		}
 
-		public bool Equals(LockedMappingSchemaInfo? other)
+		public bool Equals([NotNullWhen(true)] LockedMappingSchemaInfo? other)
 		{
 			if (other is null)                return false;
 			if (ReferenceEquals(this, other)) return true;
@@ -38,7 +39,7 @@ namespace LinqToDB.Internal.Mapping
 			return _mappingSchema.GetType() == other._mappingSchema.GetType();
 	}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (obj is null)                return false;
 			if (ReferenceEquals(this, obj)) return true;

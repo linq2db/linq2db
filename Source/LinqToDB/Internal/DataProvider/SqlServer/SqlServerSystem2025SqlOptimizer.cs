@@ -1,13 +1,12 @@
-﻿using System;
+using System;
 
-using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	public class SqlServerSystem2025SqlOptimizer(SqlProviderFlags sqlProviderFlags) : SqlServer2022SqlOptimizer(sqlProviderFlags, SqlServerVersion.v2025)
+	public class SqlServerSystem2025SqlOptimizer(SqlProviderFlags sqlProviderFlags) : SqlServer2025SqlOptimizer(sqlProviderFlags)
 	{
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{

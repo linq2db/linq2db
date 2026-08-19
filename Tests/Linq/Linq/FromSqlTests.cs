@@ -227,7 +227,7 @@ namespace Tests.Linq
 			Assert.That(projection, Is.EqualTo(expected));
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(1, 2)] int iteration, [Values(14, 15)] int endId)
 		{
 			using var db = GetDataContext(context);
@@ -490,7 +490,7 @@ namespace Tests.Linq
 			public string Value { get; set; } = default!;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestSplitStringParametrized(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
@@ -518,7 +518,7 @@ namespace Tests.Linq
 			query.GetSelectQuery().HasQueryParameter().ShouldBeTrue();
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestSplitStringParametrizedExplicitParameter(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)]
 			string context, [Values(1, 2)] int iteration)
@@ -556,10 +556,13 @@ namespace Tests.Linq
 					from c in db.FromSql<int>($"select {1} {Sql.AliasExpr()}")
 					select c;
 
-			Assert.Throws<InvalidOperationException>(() => query.ToArray());
+			// Sql.AliasExpr() placed where it cannot become a table alias produces invalid SQL that the
+			// database rejects (there is no build-time validation for placeholder position in raw SQL).
+			// Fully-qualified: the test-local Tests.Should type shadows Shouldly.Should here.
+			Shouldly.Should.Throw<Npgsql.PostgresException>(() => query.ToArray());
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Interpolated_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -582,7 +585,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Interpolated_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -605,7 +608,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_InterpolatedCache_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -630,7 +633,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Format_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -656,7 +659,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Format_ValueParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -682,7 +685,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_Format_BySqlExpressionParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -782,7 +785,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestQueryCaching_ByParameter_Formatted2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			// important: comment added to avoid use of cached query from other test
@@ -1023,10 +1026,12 @@ namespace Tests.Linq
 
 			tableName = QuoteTableName(tableName, context);
 
-			var sql            = $"SELECT 1 AS \"value\" FROM {tableName}";
+			// YDB uses backtick identifier quoting; ANSI double-quote is read as a string literal there.
+			var alias          = context.IsAnyOf(TestProvName.AllYdb) ? "`value`" : "\"value\"";
+			var sql            = $"SELECT 1 AS {alias} FROM {tableName}";
 			var formattableSql = FormattableStringFactory.Create(sql);
 
-			var query = 
+			var query =
 				from p in db.Person
 				from s in db.FromSqlScalar<int>(formattableSql)
 					.Where(s => s == p.ID)
@@ -1045,7 +1050,8 @@ namespace Tests.Linq
 			TestProvName.AllSQLite,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSapHana,
-			TestProvName.AllOracle
+			TestProvName.AllOracle,
+			TestProvName.AllYdb
 			)] string context)
 		{
 			using var db = GetDataContext(context);

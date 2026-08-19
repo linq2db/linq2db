@@ -103,7 +103,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue649Test1([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void Issue649Test1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<VBTests.Activity649>())
@@ -114,7 +115,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue649Test2([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void Issue649Test2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<VBTests.Activity649>())
@@ -125,7 +127,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue649Test3([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void Issue649Test3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<VBTests.Activity649>())

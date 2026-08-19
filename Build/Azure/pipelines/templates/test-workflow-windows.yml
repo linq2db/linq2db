@@ -52,6 +52,27 @@ steps:
     packageType: sdk
     version: 10.x
 
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_scripts)
+    targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, succeeded())
+  displayName: Extract test scripts
+
+# Re-create the baselines branch if a previous completed run deleted it (empty-branch
+# cleanup). Without this, a "rerun failed jobs" restart fails on the clone below because
+# create_baselines_branch is not re-run on a partial restart. See build 21555.
+- task: PowerShell@2
+  inputs:
+    pwsh: true
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/ensure-baselines-branch.ps1'
+    arguments: -Branch "$(baselines_branch)" -BaselinesMaster "$(baselines_master)" -BaseHash "$(baselines_head)"
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Ensure test baselines branch
+  condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
+  env:
+    GITHUB_TOKEN: $(BASELINES_GH_PAT)
+
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
@@ -66,13 +87,6 @@ steps:
   condition: and(variables.title, succeeded())
   displayName: Extract test configs
 
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifactName: $(artifact_test_scripts)
-    targetPath: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, succeeded())
-  displayName: Extract test scripts
-
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_global)'
@@ -86,6 +100,18 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
   condition: and(variables.title, variables.psscript_global, succeeded())
   displayName: Execute Global PowerShell Setup Script
+
+# Optional RAM disk mount (actions/runner-images#7193): built-in iSCSI Target ramdisk, verified
+# SqlCe-usable but with no measured suite speedup (the ~4 min feature install outweighs the I/O
+# gain), so it's DORMANT -- gated behind the `use_ramdisk` variable, undefined by default. Set
+# use_ramdisk=true to enable; consuming the mounted volume (relocating TestData.sdf onto it) is
+# left to the future I/O-bound use case that justifies turning it on.
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/ramdisk.ps1'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, eq(variables.psscript_global, 'sqlce.ps1'), eq(variables.use_ramdisk, 'true'), succeeded())
+  displayName: 'Mount RAM disk (opt-in)'
 
 - task: DownloadPipelineArtifact@2
   inputs:
@@ -121,16 +147,16 @@ steps:
   condition: and(variables.title, variables.pre_test_win_local, succeeded())
   displayName: Execute Pre-test Script
 
-- script: dotnet test $(netfx_tfm)/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
+- script: $(netfx_tfm)\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x86\.runsettings --report-trx --report-trx-filename netfx-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (NETFX): $(title)'
   condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test $(netfx_tfm)/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
+- script: $(netfx_tfm)\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x86\.runsettings --report-trx --report-trx-filename netfx-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (NETFX): $(title)'
   condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
-- script: dotnet test $(netfx_tfm)/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
+- script: $(netfx_tfm)\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\efcore\x86\.runsettings --report-trx --report-trx-filename netfx-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (NETFX): $(title)'
   condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
@@ -162,16 +188,16 @@ steps:
   condition: and(variables.title, variables.pre_test_win_local, succeeded())
   displayName: Execute Pre-test Script
 
-- script: dotnet test $(netfx_tfm)/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
+- script: $(netfx_tfm)\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x64\.runsettings --report-trx --report-trx-filename netfx-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test $(netfx_tfm)/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
+- script: $(netfx_tfm)\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\main\x64\.runsettings --report-trx --report-trx-filename netfx-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
-- script: dotnet test $(netfx_tfm)/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
+- script: $(netfx_tfm)\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings $(netfx_tfm)\efcore\x64\.runsettings --report-trx --report-trx-filename netfx-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
@@ -184,7 +210,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\$(netfx_tfm) /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\$(netfx_tfm) rmdir $(System.DefaultWorkingDirectory)\$(netfx_tfm) /S /Q'
   displayName: Remove NETFX test binaries
   condition: and(variables.title, eq(variables.netfx, 'true'))
 
@@ -236,29 +262,29 @@ steps:
   condition: and(variables.title, variables.pre_test_win_local, succeeded())
   displayName: Execute Pre-test Script
 
-- script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: net8.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x64\.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: net8.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x64\.runsettings --report-trx --report-trx-filename net8.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
-- script: dotnet test net8.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: net8.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x86\.runsettings --report-trx --report-trx-filename net8.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net8.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: net8.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\main\x86\.runsettings --report-trx --report-trx-filename net8.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
-- script: dotnet test net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: net8.0\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\efcore\x64\.runsettings --report-trx --report-trx-filename net8.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-- script: dotnet test net8.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx --blame-hang-timeout 5m
+- script: net8.0\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net8.0\efcore\x86\.runsettings --report-trx --report-trx-filename net8.0-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
@@ -271,7 +297,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\net8.0 /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\net8.0 rmdir $(System.DefaultWorkingDirectory)\net8.0 /S /Q'
   displayName: Remove NET 8 test binaries
   condition: and(variables.title, eq(variables.net80, 'true'))
 
@@ -323,29 +349,29 @@ steps:
   condition: and(variables.title, variables.pre_test_win_local, succeeded())
   displayName: Execute Pre-test Script
 
-- script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: net9.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x64\.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (.NET 9 x64): $(title)'
   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: net9.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x64\.runsettings --report-trx --report-trx-filename net9.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 9 x64): $(title)'
   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
-- script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: net9.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x86\.runsettings --report-trx --report-trx-filename net9.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (.NET 9 x86): $(title)'
   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
-- script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: net9.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\main\x86\.runsettings --report-trx --report-trx-filename net9.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 9 x86): $(title)'
   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
-- script: dotnet test net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: net9.0\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\efcore\x64\.runsettings --report-trx --report-trx-filename net9.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (.NET 9 x64): $(title)'
   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-- script: dotnet test net9.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx --blame-hang-timeout 5m
+- script: net9.0\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net9.0\efcore\x86\.runsettings --report-trx --report-trx-filename net9.0-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (.NET 9 x86): $(title)'
   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
@@ -358,7 +384,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\net9.0 /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\net9.0 rmdir $(System.DefaultWorkingDirectory)\net9.0 /S /Q'
   displayName: Remove NET 9 test binaries
   condition: and(variables.title, eq(variables.net90, 'true'))
 
@@ -403,29 +429,29 @@ steps:
   condition: and(variables.title, variables.pre_test_win_local, succeeded())
   displayName: Execute Pre-test Script
 
-- script: dotnet test net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: net10.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x64\.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: net10.0\main\x64\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x64\.runsettings --report-trx --report-trx-filename net10.0-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
-- script: dotnet test net10.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: net10.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x86\.runsettings --report-trx --report-trx-filename net10.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'Tests (.NET 10 x86): $(title)'
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
-- script: dotnet test net10.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: net10.0\main\x86\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\main\x86\.runsettings --report-trx --report-trx-filename net10.0-main-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
   displayName: 'Tests (.NET 10 x86): $(title)'
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
-- script: dotnet test net10.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: net10.0\efcore\x64\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\efcore\x64\.runsettings --report-trx --report-trx-filename net10.0-efcore-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-- script: dotnet test net10.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+- script: net10.0\efcore\x86\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings net10.0\efcore\x86\.runsettings --report-trx --report-trx-filename net10.0-efcore-x86.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
   displayName: 'EF.Core Tests (.NET 10 x86): $(title)'
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
@@ -438,7 +464,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'RMDIR $(System.DefaultWorkingDirectory)\net10.0 /S /Q'
+    script: 'if exist $(System.DefaultWorkingDirectory)\net10.0 rmdir $(System.DefaultWorkingDirectory)\net10.0 /S /Q'
   displayName: Remove NET 10 test binaries
   condition: and(variables.title, eq(variables.net100, 'true'))
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Extensions;
@@ -27,7 +28,7 @@ namespace LinqToDB.Internal.Expressions
 
 			if (null != sql.Find(e => e is SelectQuery sc && ReferenceEquals(sc, selectQuery)))
 			{
-				throw new InvalidOperationException($"Wrong select query.");
+				throw new InvalidOperationException("Wrong select query.");
 			}
 
 #endif
@@ -201,9 +202,9 @@ namespace LinqToDB.Internal.Expressions
 			return result;
 		}
 
-		public bool Equals(SqlPlaceholderExpression? other)
+		public bool Equals([NotNullWhen(true)] SqlPlaceholderExpression? other)
 		{
-			return 
+			return
 				other != null                                                &&
 				Equals(SelectQuery, other.SelectQuery)                       &&
 			    ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&
@@ -211,7 +212,7 @@ namespace LinqToDB.Internal.Expressions
 			    ConvertType == other.ConvertType;
 		}
 
-		public override bool Equals(object? obj)
+		public override bool Equals([NotNullWhen(true)] object? obj)
 		{
 			if (ReferenceEquals(null, obj))
 			{

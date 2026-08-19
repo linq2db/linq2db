@@ -86,9 +86,7 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 
 		public override DbDataAdapter CreateDataAdapter() => new SqliteDataAdapter();
 
-		sealed class SqliteDataAdapter : DbDataAdapter
-		{
-		}
+		sealed class SqliteDataAdapter : DbDataAdapter;
 	}
 #endif
 }

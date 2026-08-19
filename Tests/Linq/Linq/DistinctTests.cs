@@ -51,7 +51,7 @@ namespace Tests.Linq
 				(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = p.Value1 }).Distinct());
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Distinct5([DataSources] string context, [Values(2, 3)] int id, [Values(0, 1)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -69,7 +69,7 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Distinct6([DataSources] string context, [Values(2, 3)] int id, [Values(0, 1)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -139,6 +139,25 @@ namespace Tests.Linq
 			AreEqual(
 				   Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch),
 				db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
+		}
+
+		[Test]
+		public void DistinctOrderByNulls(
+			[DataSources] string context,
+			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,
+			[Values] bool descending)
+		{
+			using var db = GetDataContext(context);
+
+			// DISTINCT + NULLS: the emulation CASE key must stay valid under DISTINCT (sub-query wrapping where
+			// the database requires ORDER BY items to appear in the select list).
+			var distinct = db.Parent.Select(p => p.Value1).Distinct();
+
+			var ordered = descending
+				? distinct.OrderByDescending(x => x, nulls)
+				: distinct.OrderBy          (x => x, nulls);
+
+			AssertQuery(ordered.Take(3));
 		}
 
 		[Test]
@@ -308,6 +327,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void DistinctWithOneToManyAssociation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -629,7 +649,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [ProviderName.Ydb, TestProvName.AllAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllYdb, TestProvName.AllAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipFirst([DataSources] string context)
 		{

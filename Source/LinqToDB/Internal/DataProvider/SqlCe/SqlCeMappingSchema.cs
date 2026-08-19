@@ -15,6 +15,12 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 {
 	public sealed class SqlCeMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATETIME_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
+#else
+		private const string DATETIME_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+#endif
+
 		public SqlCeMappingSchema() : base(ProviderName.SqlCe)
 		{
 			SetConvertExpression<SqlXml,XmlReader>(
@@ -42,10 +48,17 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			// in SQLCE DECIMAL=DECIMAL(18,0)
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
-			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char),   (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string),         (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
+			SetValueToSqlConverter(typeof(char),           (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),         (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),         (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,_,_,v) => BuildDateTime(sb, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,_,_,v) => BuildDateTime(sb, ((DateTimeOffset)v).DateTime));
+		}
+
+		static void BuildDateTime(StringBuilder stringBuilder, DateTime value)
+		{
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

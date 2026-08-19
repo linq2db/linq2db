@@ -5,35 +5,31 @@
     <BuildType Name="Release" />
     <BuildType Name="Testing" />
   </Configurations>
-  <Folder Name="/.github/">
-    <File Path=".github/CODEOWNERS" />
-    <File Path=".github/copilot-instructions.md" />
-  </Folder>
-  <Folder Name="/.github/ISSUE_TEMPLATE/">
-    <File Path=".github/ISSUE_TEMPLATE/01_bug_report_linq2db.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/02_bug_report_linq2db.efcore.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/03_bug_report_linq2db.cli.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/04_bug_report_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.linqpad.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/09_bug_report_linq2db.other.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/11_feture_request_linq2db.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/12_feture_request_linq2db.efcore.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/13_feture_request_linq2db.cli.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/14_feture_request_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.linqpad.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/19_feture_request_linq2db.other.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/config.yml" />
+  <Folder Name="/.agents/">
+    <Project Path=".github/.github.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
+    <File Path="AGENTS.md" />
+    <File Path="CLAUDE.md" />
+    <Project Path=".claude/.claude.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/.root/">
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
+    <File Path=".gitmodules" />
     <File Path=".runsettings" />
+    <File Path="AGENTS.md" />
     <File Path="Build.cmd" />
+    <File Path="CLAUDE.md" />
     <File Path="Clean.cmd" />
     <File Path="Compile.cmd" />
     <File Path="CONTRIBUTING.md" />
     <File Path="DataProviders.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <File Path="global.json" />
     <File Path="linq2db.Benchmarks.slnf" />
     <File Path="linq2db.playground.slnf" />
@@ -42,6 +38,7 @@
     <File Path="README.md" />
     <File Path="SQLite.Runtime.props" />
     <File Path="Test.cmd" />
+    <File Path="UpdateBaselines.cmd" />
   </Folder>
   <Folder Name="/Build/">
     <File Path="Build/linq2db.snk" />
@@ -53,7 +50,8 @@
     <File Path="Build/Azure/README.md" />
   </Folder>
   <Folder Name="/Build/Azure/net100/">
-    <File Path="Build/Azure/net100/access.ace.json" />
+    <File Path="Build/Azure/net100/access.ace.odbc.json" />
+    <File Path="Build/Azure/net100/access.ace.oledb.json" />
     <File Path="Build/Azure/net100/access.ace.x64.json" />
     <File Path="Build/Azure/net100/access.mdb.json" />
     <File Path="Build/Azure/net100/clickhouse.driver.json" />
@@ -99,7 +97,8 @@
     <File Path="Build/Azure/net100/sybase.json" />
   </Folder>
   <Folder Name="/Build/Azure/net80/">
-    <File Path="Build/Azure/net80/access.ace.json" />
+    <File Path="Build/Azure/net80/access.ace.odbc.json" />
+    <File Path="Build/Azure/net80/access.ace.oledb.json" />
     <File Path="Build/Azure/net80/access.ace.x64.json" />
     <File Path="Build/Azure/net80/access.mdb.json" />
     <File Path="Build/Azure/net80/clickhouse.driver.json" />
@@ -145,7 +144,8 @@
     <File Path="Build/Azure/net80/sybase.json" />
   </Folder>
   <Folder Name="/Build/Azure/net90/">
-    <File Path="Build/Azure/net90/access.ace.json" />
+    <File Path="Build/Azure/net90/access.ace.odbc.json" />
+    <File Path="Build/Azure/net90/access.ace.oledb.json" />
     <File Path="Build/Azure/net90/access.ace.x64.json" />
     <File Path="Build/Azure/net90/access.mdb.json" />
     <File Path="Build/Azure/net90/clickhouse.driver.json" />
@@ -191,7 +191,8 @@
     <File Path="Build/Azure/net90/sybase.json" />
   </Folder>
   <Folder Name="/Build/Azure/netfx/">
-    <File Path="Build/Azure/netfx/access.ace.json" />
+    <File Path="Build/Azure/netfx/access.ace.odbc.json" />
+    <File Path="Build/Azure/netfx/access.ace.oledb.json" />
     <File Path="Build/Azure/netfx/access.ace.x64.json" />
     <File Path="Build/Azure/netfx/access.mdb.json" />
     <File Path="Build/Azure/netfx/sqlce.json" />
@@ -286,6 +287,8 @@
     <File Path="Build/Azure/scripts/sybase.sh" />
     <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
+    <File Path="Build/Azure/scripts/verify-analyzer-delivery.ps1" />
+    <File Path="Build/Azure/scripts/verify-nuget-sizes.ps1" />
   </Folder>
   <Folder Name="/Build/Local/">
     <File Path="Data/Setup Scripts/all.cmd" />
@@ -392,11 +395,12 @@
   </Folder>
   <Folder Name="/Source/">
     <File Path="Source/BannedSymbols.txt" />
+    <File Path="Source/CodeMetricsConfig.txt" />
     <File Path="Source/Directory.Build.props" />
     <Project Path="Source/CodeGenerators/CodeGenerators.csproj" />
-    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj">
-      <Build Solution="Testing|*" Project="false" />
-    </Project>
+    <Project Path="Source/LinqToDB.Analyzers/LinqToDB.Analyzers.csproj" />
+    <Project Path="Source/LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj" />
+    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj" />
     <Project Path="Source/LinqToDB.Compat/LinqToDB.Compat.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
@@ -475,12 +479,19 @@
       <Build Solution="Testing|*" Project="false" />
     </Project>
     <Project Path="Tests/FSharp/Tests.FSharp.fsproj" />
+    <Project Path="Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj" />
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />
+    <Project Path="Tests/Tests.Analyzers/Tests.Analyzers.csproj" />
     <Project Path="Tests/Tests.Benchmarks/linq2db.Benchmarks.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
     <Project Path="Tests/Tests.Playground/Tests.Playground.csproj">
+      <Build Solution="Azure|*" Project="false" />
+      <Build Solution="Release|*" Project="false" />
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="Tests/Tests.SingleFile/Tests.SingleFile.csproj">
       <Build Solution="Azure|*" Project="false" />
       <Build Solution="Release|*" Project="false" />
       <Build Solution="Testing|*" Project="false" />

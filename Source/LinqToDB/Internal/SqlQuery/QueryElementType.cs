@@ -112,5 +112,22 @@
 		SqlWindowOrderItem,
 		SqlFrameClause,
 		SqlFrameBoundary,
+
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 move next to SqlCast / SqlCoalesce where it belongs logically.
+		SqlConcat,
+
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 move next to SqlCteTable where they belong logically.
+		SqlCteField,
+		SqlCteTableField,
+
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 move next to SqlCast / SqlCoalesce where it belongs logically.
+		SqlKeepClause,
+
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 move next to SqlCast where it belongs logically.
+		SqlParameterCast,
 	}
 }

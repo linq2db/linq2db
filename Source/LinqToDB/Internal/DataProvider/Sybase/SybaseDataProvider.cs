@@ -13,6 +13,7 @@ using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Internal.DataProvider.Sybase.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -44,6 +45,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			// TODO: add versioning as it is available since 16SP3 or just ignore old versions?
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			SqlProviderFlags.IsWindowFunctionsSupported       = false;
+			SqlProviderFlags.DefaultNullsOrdering             = NullsDefaultOrdering.Smallest; // Sybase ASE sorts NULL as the smallest value (ascending => first, descending => last)
 			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
 			SqlProviderFlags.IsOrderBySubQuerySupported       = false;
 			SqlProviderFlags.IsUpdateTakeSupported            = true;
@@ -53,10 +55,17 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
 			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid         = true;
 
+			// Sybase emits InsertOrUpdate as a single-statement UPDATE + IF @@ROWCOUNT=0 INSERT,
+			// which can't honor an extra UPDATE predicate (Upsert.Update.When). Route those
+			// through the alternative UPDATE→INSERT emulation instead.
+			SqlProviderFlags.IsInsertOrUpdateWithPredicateSupported    = false;
+
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char",  DataTools.GetCharExpression);
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
+
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default));
 
 			SetProviderField<DbDataReader, TimeSpan,DateTime>((r,i) => r.GetDateTime(i) - new DateTime(1900, 1, 1));
 			SetField<DbDataReader, DateTime>("time", (r,i) => GetDateTimeAsTime(r.GetDateTime(i)));

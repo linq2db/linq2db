@@ -69,7 +69,6 @@ namespace Tests.Linq
 
 		#endregion
 
-		[YdbCteAsSource]
 		[Test]
 		public void InTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -83,12 +82,9 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void InTest2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			var query =
@@ -100,7 +96,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void InConstTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -128,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllSQLite)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void InWithSkipTest([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, TestProvName.AllSQLite, TestProvName.AllYdb)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
@@ -195,7 +190,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ContainsTest([DataSources(TestProvName.AllAccess)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -214,7 +208,6 @@ namespace Tests.Linq
 				Assert.That(LastQuery, Is.Not.Contains("EXISTS").And.Contains(" IN "));
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ContainsExprTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -230,13 +223,67 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void ContainsNullTest([DataSources] string context, [Values] bool preferExists)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
 
 			_ = db.Parent.Select(c => c.Value1).Contains(null);
+		}
+
+		[Test]
+		public void ContainsWithUnionKeepsProjectionTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var __ = db.UseOptions(o => o.UsePreferExistsForScalar(true));
+
+			var union = db.Parent
+				.Where(p => p.ParentID <= 2)
+				.Select(p => p.ParentID)
+				.Union(
+					db.Child
+						.Where(c => c.ParentID >= 3)
+						.Select(c => c.ParentID));
+
+			var query = db.Parent.Where(p => union.Contains(p.ParentID));
+
+			var actual = query.OrderBy(p => p.ParentID).ToArray();
+
+			var expected = Parent
+				.Where(p =>
+					Parent.Where(p1 => p1.ParentID <= 2).Select(p1 => p1.ParentID)
+						.Union(Child.Where(c => c.ParentID >= 3).Select(c => c.ParentID))
+						.Contains(p.ParentID))
+				.OrderBy(p => p.ParentID)
+				.ToArray();
+
+			AreEqual(expected, actual);
+		}
+
+		[Test]
+		public void ContainsWithGroupByKeepsProjectionTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var __ = db.UseOptions(o => o.UsePreferExistsForScalar(true));
+
+			var grouped = db.Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => g.Key);
+
+			var query = db.Parent.Where(p => grouped.Contains(p.ParentID));
+
+			var actual = query.OrderBy(p => p.ParentID).ToArray();
+
+			var groupedKeys = Child
+				.GroupBy(c => c.ParentID)
+				.Select(g => g.Key);
+
+			var expected = Parent
+				.Where(p => groupedKeys.Contains(p.ParentID))
+				.OrderBy(p => p.ParentID)
+				.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		sealed class TestRecord
@@ -254,7 +301,6 @@ namespace Tests.Linq
 			public int? GV { get; set; }
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void NotNull_In_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -268,7 +314,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void NotNull_NotIn_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -282,7 +327,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -296,7 +340,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_NotNull_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -310,7 +353,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_NotNull_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -324,7 +366,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void NotNull_In_Null_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -338,12 +379,9 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, o => o
 				.UsePreferExistsForScalar(preferExists)
 				.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql)
@@ -357,12 +395,9 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
@@ -373,7 +408,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Test3([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -387,7 +421,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_In_Null_Aggregation([DataSources] string context)
 		{
@@ -407,12 +440,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
@@ -423,7 +453,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
@@ -437,7 +466,6 @@ namespace Tests.Linq
 			AssertTest(query, true);
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public void Null_NotIn_Null_Test3([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{

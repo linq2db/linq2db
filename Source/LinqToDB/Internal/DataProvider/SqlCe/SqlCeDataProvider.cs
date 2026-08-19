@@ -12,6 +12,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.Internal.DataProvider.SqlCe.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -32,9 +33,13 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			SqlProviderFlags.IsCountSubQuerySupported            = false;
 			SqlProviderFlags.IsApplyJoinSupported                = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
+			// SQL CE has no MERGE statement — Upsert configurations that require MERGE lowering
+			// surface a descriptive error via Error_Upsert_MergeLowering_NotSupported.
+			SqlProviderFlags.IsUpsertWithMergeLoweringSupported  = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported    = false;
 			SqlProviderFlags.IsUpdateFromSupported               = false;
 			SqlProviderFlags.SupportsBooleanType                 = false;
+			SqlProviderFlags.DefaultNullsOrdering                = NullsDefaultOrdering.Smallest; // SQL CE sorts NULL as the smallest value
 			SqlProviderFlags.IsWindowFunctionsSupported          = false;
 			SqlProviderFlags.IsOrderByAggregateFunctionSupported = false;
 
@@ -56,6 +61,8 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		{
 			return new SqlCeMemberTranslator();
 		}
+
+		protected override IDmlService CreateDmlService() => new SqlCeDmlService();
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -80,6 +87,9 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			if (value is DateOnly d)
 				value = d.ToDateTime(TimeOnly.MinValue);
 #endif
+
+			if (value is DateTimeOffset dto)
+				value = dto.LocalDateTime;
 
 			switch (dataType.DataType)
 			{
@@ -124,22 +134,23 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 			switch (dataType.DataType)
 			{
-				case DataType.SByte      : parameter.DbType = DbType.Int16;             return;
-				case DataType.UInt16     : parameter.DbType = DbType.Int32;             return;
-				case DataType.UInt32     : parameter.DbType = DbType.Int64;             return;
-				case DataType.UInt64     : parameter.DbType = DbType.Decimal;           return;
-				case DataType.VarNumeric : parameter.DbType = DbType.Decimal;           return;
-				case DataType.Char       :
-				case DataType.NChar      : parameter.DbType = DbType.String;            return;
-				case DataType.Date       :
-				case DataType.DateTime2  : parameter.DbType = DbType.DateTime;          return;
-				case DataType.Money      : parameter.DbType = DbType.Currency;          return;
-				case DataType.Text       :
-				case DataType.VarChar    :
-				case DataType.NText      : parameter.DbType = DbType.String;            return;
-				case DataType.Timestamp  :
-				case DataType.Binary     :
-				case DataType.Image      : parameter.DbType = DbType.Binary;            return;
+				case DataType.SByte         : parameter.DbType = DbType.Int16;             return;
+				case DataType.UInt16        : parameter.DbType = DbType.Int32;             return;
+				case DataType.UInt32        : parameter.DbType = DbType.Int64;             return;
+				case DataType.UInt64        : parameter.DbType = DbType.Decimal;           return;
+				case DataType.VarNumeric    : parameter.DbType = DbType.Decimal;           return;
+				case DataType.Char          :
+				case DataType.NChar         : parameter.DbType = DbType.String;            return;
+				case DataType.Date          :
+				case DataType.DateTimeOffset:
+				case DataType.DateTime2     : parameter.DbType = DbType.DateTime;          return;
+				case DataType.Money         : parameter.DbType = DbType.Currency;          return;
+				case DataType.Text          :
+				case DataType.VarChar       :
+				case DataType.NText         : parameter.DbType = DbType.String;            return;
+				case DataType.Timestamp     :
+				case DataType.Binary        :
+				case DataType.Image         : parameter.DbType = DbType.Binary;            return;
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

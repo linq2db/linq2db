@@ -268,6 +268,7 @@ namespace Tests.xUpdate
 			Assert.That(tableExists, Is.False);
 		}
 
+		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
@@ -396,6 +397,7 @@ namespace Tests.xUpdate
 			Assert.That(list, Is.EquivalentTo(data));
 		}
 
+		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
 		[Test]
 		public void CreateTable_NoDisposeError([DataSources(false)] string context)
 		{
@@ -407,6 +409,7 @@ namespace Tests.xUpdate
 			table2.Drop();
 		}
 
+		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
 		[Test]
 		public async Task CreateTable_NoDisposeErrorAsync([DataSources(false)] string context)
 		{
@@ -424,6 +427,7 @@ namespace Tests.xUpdate
 			[PrimaryKey] public int Key { get; set; }
 		}
 
+		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
 		[Test]
 		public void CreateTempTableWithPrimaryKey([DataSources] string context)
 		{
@@ -431,6 +435,7 @@ namespace Tests.xUpdate
 			using var t  = db.CreateTempTable<TableWithPrimaryKey>(tableOptions: TableOptions.IsTemporary);
 		}
 
+		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
 		[Test]
 		public void InsertIntoTempTableWithPrimaryKey([DataSources(false)] string context)
 		{
@@ -581,6 +586,7 @@ namespace Tests.xUpdate
 			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
+		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
 		[Test]
 		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCS)] string context)
 		{

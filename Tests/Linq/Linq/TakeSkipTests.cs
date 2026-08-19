@@ -44,7 +44,7 @@ namespace Tests.Linq
 			CheckTakeSkipParams(dc, false, additional);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Take1([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -65,7 +65,7 @@ namespace Tests.Linq
 			Assert.That(db.Child.GetCacheMissCount(), Is.EqualTo(currentCacheMissCount));
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public async Task Take1Async([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -220,7 +220,7 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Skip1([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -288,7 +288,7 @@ namespace Tests.Linq
 		public void SkipCount([DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllAccess)]
 			string context,
 			[Values] bool withParameters)
@@ -646,7 +646,7 @@ namespace Tests.Linq
 			CheckTakeSkipParameterized(db);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -731,6 +731,7 @@ namespace Tests.Linq
 			Assert.Throws<LinqToDBException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
+		[ActiveIssue("https://github.com/ydb-platform/ydb/issues/46197", Configuration = TestProvName.AllYdb, Details = "YDB 26.1.1.20 server optimizer assertion (dq_opt_phy_finalizing.cpp:540 'requirement false failed') on a LEFT JOIN of two LIMIT-ed UNION ALL subqueries; regression from the release's Shuffle Elimination.")]
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
@@ -875,7 +876,6 @@ namespace Tests.Linq
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
 		[Test]
-		[YdbCteAsSource]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -1113,7 +1113,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void MultipleSkip2([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
@@ -1346,7 +1346,7 @@ namespace Tests.Linq
 			CheckTakeGlobalParams(db);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void SkipTakeCaching([DataSources] string context, [Values(1, 2)] int skip, [Values(1, 2)] int take)
 		{
 			using var db = GetDataContext(context);

@@ -32,9 +32,7 @@ namespace Tests.UserTests
 			[Column] public int? ParentId { get; set; }
 		}
 
-		public class PrimaryKeyEquality<T>
-		{
-		}
+		public class PrimaryKeyEquality<T>;
 
 		[Table]
 		public class Deviation : PrimaryKeyEquality<Deviation>
@@ -66,6 +64,7 @@ namespace Tests.UserTests
 			throw new NotImplementedException();
 		}
 
+		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
 		[Test]
 		public void TestIssue2832([DataSources] string context)
 		{

@@ -122,23 +122,50 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							if (canPopulateUpperLevel && parentSelectQuery.Select.IsDistinct)
 							{
-								canPopulateUpperLevel = parentSelectQuery.Select.Columns.Exists(c =>
-								{
-									if (c.Expression is SqlColumn column)
-										return QueryHelper.SameWithoutNullablity(column.Expression, orderByItem.Expression);
-									return false;
-								});
+								// The order can move above a DISTINCT parent only when its expression is built entirely
+								// from columns/fields the DISTINCT projects (#5626). Then it is functionally determined by
+								// the DISTINCT output, so ordering by it above the DISTINCT is well-defined and exposing it
+								// as an extra output column cannot change which rows are distinct. Ordering by anything
+								// outside the projection stays unsupported and the order is dropped.
+								canPopulateUpperLevel = AllOrderColumnsProducedByDistinct(parentSelectQuery, orderByItem.Expression);
 							}
 
 							if (canPopulateUpperLevel && !parentSelectQuery.GroupBy.IsEmpty)
 							{
-								canPopulateUpperLevel = selectQuery.Select.Columns.Exists(c => QueryHelper.SameWithoutNullablity(c.Expression, orderByItem.Expression));
+								// The order can move above a GROUP BY parent only when its expression is built entirely
+								// from the grouping keys (#5626): `GROUP BY a, b ... ORDER BY a * 100 + b` is valid, but
+								// ordering by a non-grouped column is not. The exact-column form is kept for back-compat.
+								canPopulateUpperLevel =
+									selectQuery.Select.Columns.Exists(c => QueryHelper.SameWithoutNullablity(c.Expression, orderByItem.Expression))
+									|| AllOrderColumnsAreGroupingKeys(parentSelectQuery, orderByItem.Expression);
 							}
 
 							if (canPopulateUpperLevel)
 							{
-								var column = selectQuery.Select.AddColumn(orderByItem.Expression);
-								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned));
+								// Push the order up as-is (instead of materializing it as a synthetic column) when:
+								//  - it is a raw-template node (Sql.Expr / Sql.Fragment): wrapping it as a column would
+								//    capture trailing direction modifiers ("{0} NULLS FIRST") inside the column and emit
+								//    invalid SQL like `... END NULLS FIRST as c1`; or
+								//  - a DISTINCT / GROUP BY is involved and the order is a *computed* expression (not a plain
+								//    column/field) whose referenced columns the projection / grouping keys already produce
+								//    (#5626): materializing it would needlessly widen the DISTINCT key / projection with a
+								//    synthetic column. The nesting corrector re-levels it onto the existing output columns.
+								// A plain column/field stays on the AddColumn dedup path even under DISTINCT/GROUP BY - it
+								// resolves to an existing output column (no new column) and re-levels reliably through deep
+								// nesting, e.g. the master-key correlation order of eager-loading queries which the as-is
+								// path would otherwise drop.
+								var distinctOrGroupBy = parentSelectQuery.Select.IsDistinct || selectQuery.Select.IsDistinct || !parentSelectQuery.GroupBy.IsEmpty;
+
+								if (orderByItem.Expression is SqlExpression or SqlFragment
+									|| (distinctOrGroupBy && orderByItem.Expression is not (SqlColumn or SqlField)))
+								{
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(orderByItem.Expression, orderByItem.IsDescending, orderByItem.IsPositioned, orderByItem.NullsPosition));
+								}
+								else
+								{
+									var column = selectQuery.Select.AddColumn(orderByItem.Expression);
+									parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned, orderByItem.NullsPosition));
+								}
 
 								needsNestingUpdate = true;
 							}
@@ -202,6 +229,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (selectQuery.OrderBy.IsEmpty)
 				return false;
 
+			// A DISTINCT ON query's ORDER BY is semantically required: it selects the surviving row per ON key and
+			// must begin with the ON expressions. Never strip it or redistribute it to a parent.
+			if (selectQuery.Select.IsDistinctOn)
+				return false;
+
 			if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy))
 			{
 				if (needsOrderBy)
@@ -211,6 +243,85 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (selectQuery.IsLimited)
 				return false;
+			return true;
+		}
+
+		/// <summary>
+		/// Collects the <see cref="QueryElementType.Column"/> / <see cref="QueryElementType.SqlField"/> leaf
+		/// references of <paramref name="orderExpression"/> without descending into their definitions.
+		/// </summary>
+		static List<ISqlExpression> CollectReferencedColumns(ISqlExpression orderExpression)
+		{
+			var referenced = new List<ISqlExpression>();
+
+			orderExpression.VisitParentFirst(referenced, static (list, e) =>
+			{
+				if (e.ElementType is QueryElementType.Column or QueryElementType.SqlField)
+				{
+					list.Add((ISqlExpression)e);
+					return false; // leaf reference - don't descend into the column/field definition
+				}
+
+				return true;
+			});
+
+			return referenced;
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when every column/field referenced by <paramref name="orderExpression"/>
+		/// is produced as an output column of the DISTINCT <paramref name="distinctQuery"/>. In that case the
+		/// expression is functionally determined by the DISTINCT projection, so it can be ordered above the
+		/// DISTINCT and exposed as an additional output column without changing which rows are kept.
+		/// </summary>
+		static bool AllOrderColumnsProducedByDistinct(SelectQuery distinctQuery, ISqlExpression orderExpression)
+		{
+			var referenced = CollectReferencedColumns(orderExpression);
+
+			if (referenced.Count == 0)
+				return false;
+
+			foreach (var reference in referenced)
+			{
+				var produced = distinctQuery.Select.Columns.Exists(c =>
+					c.Expression is SqlColumn column
+						? QueryHelper.SameWithoutNullablity(column.Expression, reference)
+						: QueryHelper.SameWithoutNullablity(c.Expression, reference));
+
+				if (!produced)
+					return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when every column/field referenced by <paramref name="orderExpression"/>
+		/// is one of the grouping keys of <paramref name="groupedQuery"/>. In that case the expression is a function
+		/// of the grouping keys, so it can be ordered above the GROUP BY. Restricted to a plain GROUP BY -
+		/// ROLLUP/CUBE/GROUPING SETS emit super-aggregate rows where ordering by a key is not well-defined.
+		/// </summary>
+		static bool AllOrderColumnsAreGroupingKeys(SelectQuery groupedQuery, ISqlExpression orderExpression)
+		{
+			if (groupedQuery.GroupBy.GroupingType != GroupingType.Default)
+				return false;
+
+			var referenced = CollectReferencedColumns(orderExpression);
+
+			if (referenced.Count == 0)
+				return false;
+
+			foreach (var reference in referenced)
+			{
+				var isGroupingKey = groupedQuery.GroupBy.Items.Exists(k =>
+					k is SqlColumn column
+						? QueryHelper.SameWithoutNullablity(column.Expression, reference)
+						: QueryHelper.SameWithoutNullablity(k, reference));
+
+				if (!isGroupingKey)
+					return false;
+			}
+
 			return true;
 		}
 

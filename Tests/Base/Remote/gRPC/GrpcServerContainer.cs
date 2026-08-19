@@ -1,23 +1,18 @@
 ﻿#if !NETFRAMEWORK
 using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Security.Authentication;
-using System.Threading;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
-using LinqToDB.Remote;
-using LinqToDB.Remote.Grpc;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
-using NUnit.Framework;
 
 using ProtoBuf.Grpc.Server;
 
@@ -26,86 +21,66 @@ using Tests.Model.Remote.Grpc;
 
 namespace Tests.Remote.ServerContainer
 {
-	public class GrpcServerContainer : IServerContainer
+	internal sealed class GrpcServerContainer : ServerContainerBase<TestGrpcLinqService>
 	{
-		private const int Port = 22654;
+		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
 
-		private readonly Lock _syncRoot = new ();
+		// MTP runs tests as a bare executable, so the ASP.NET Core HTTPS development certificate
+		// that `dotnet test` used to provision is unavailable. Bind Kestrel to a throwaway self-signed
+		// cert instead — the gRPC client accepts any server cert (DangerousAcceptAnyServerCertificateValidator).
+		private static readonly X509Certificate2 _certificate = CreateServerCertificate();
 
-		//useful for async tests
-		public bool KeepSamePortBetweenThreads { get; set; } = true;
-
-		private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
-
-		private static string GetServiceUrl(int port)
+		private static X509Certificate2 CreateServerCertificate()
 		{
-			return $"https://localhost:{port}";
+			using var rsa = RSA.Create(2048);
+
+			var request = new CertificateRequest("CN=localhost", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+			request.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection { new Oid("1.3.6.1.5.5.7.3.1") }, false));
+
+			var san = new SubjectAlternativeNameBuilder();
+			san.AddDnsName("localhost");
+			request.CertificateExtensions.Add(san.Build());
+
+			using var cert = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(10));
+
+			// Round-trip through PKCS#12 so Kestrel's TLS stack can use the private key (required on Windows).
+			var pfx = cert.Export(X509ContentType.Pkcs12);
+#if NET9_0_OR_GREATER
+			return X509CertificateLoader.LoadPkcs12(pfx, null);
+#else
+			return new X509Certificate2(pfx);
+#endif
 		}
 
-		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
-
-		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
+		protected override TestGrpcLinqService StartHost(int port, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
-			_connectionFactory = connectionFactory;
-			var service = OpenHost();
+			var service = new TestGrpcLinqService(
+				new TestLinqService((c, ms) => connectionFactory(c, ms))
+				{
+					AllowUpdates    = true,
+					RemoteClientTag = "Grpc",
+				});
 
-			var url = GetServiceUrl(GetPort());
+			Startup.GrpcLinqService = service;
 
-			var dx = new TestGrpcDataContext(url, o => optionBuilder(service, o));
-
-			return dx;
-		}
-
-		private TestGrpcLinqService OpenHost()
-		{
-			var port = GetPort();
-
-			if (_openHosts.TryGetValue(port, out var service))
-				return service;
-
-			lock (_syncRoot)
-			{
-				if (_openHosts.TryGetValue(port, out service))
-					return service;
-
-				service = new TestGrpcLinqService(
-					new TestLinqService((c, ms) => _connectionFactory(c, ms))
-					{
-						AllowUpdates     = true,
-						RemoteClientTag = "Grpc",
-					});
-
-				Startup.GrpcLinqService = service;
-
-				var hb = Host.CreateDefaultBuilder();
-				var host = hb.ConfigureWebHostDefaults(
+			var host = Host.CreateDefaultBuilder().ConfigureWebHostDefaults(
 				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
-
-					var url = GetServiceUrl(port);
-					webBuilder.UseUrls(url);
+					webBuilder.ConfigureKestrel(o => o.ConfigureHttpsDefaults(h => h.ServerCertificate = _certificate));
+					webBuilder.UseUrls(GetServiceUrl(port));
 				}).Build();
 
-				host.Start();
-
-				_openHosts[port] = service;
-			}
+			host.Start();
 
 			TestExternals.Log("gRCP host opened");
 
 			return service;
 		}
 
-		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
-		public int GetPort()
+		protected override ITestDataContext CreateClientContext(TestGrpcLinqService service, int port, Func<ITestLinqService, DataOptions, DataOptions> optionBuilder)
 		{
-			if(KeepSamePortBetweenThreads)
-			{
-				return Port;
-			}
-
-			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
+			return new TestGrpcDataContext(GetServiceUrl(port), o => optionBuilder(service, o));
 		}
 
 		public class Startup

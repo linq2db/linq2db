@@ -177,6 +177,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression BitAnd(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
+		{
+			return new SqlBinaryExpression(dbDataType, x, "&", y, precedence: Precedence.Bitwise);
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Sub(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
 			return new SqlBinaryExpression(dbDataType, x, "-", y, Precedence.Subtraction);
@@ -185,19 +191,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Add(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
+			if (dbDataType.SystemType == typeof(string))
+				throw new InvalidOperationException("String concatenation must use factory.Concat(...) so it produces SqlConcatExpression. factory.Add is for numeric / temporal arithmetic only.");
+
 			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Binary(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string operation, ISqlExpression y)
 		{
+			if (dbDataType.SystemType == typeof(string) && (string.Equals(operation, "+", StringComparison.Ordinal) || string.Equals(operation, "||", StringComparison.Ordinal)))
+				throw new InvalidOperationException("String concatenation must use factory.Concat(...) so it produces SqlConcatExpression. factory.Binary is for non-concat operations.");
+
 			return new SqlBinaryExpression(dbDataType, x, operation, y, Precedence.Additive);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, ISqlExpression y)
 		{
-			var dbDataType = factory.GetDbDataType(x);
-			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
+			return new SqlConcatExpression(true, x, y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -206,15 +218,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (expressions.Length == 0)
 				throw new InvalidOperationException("At least one expression must be provided for concatenation.");
 
-			var result     = expressions[0];
-			var dbDataType = factory.GetDbDataType(result);
+			return new SqlConcatExpression(true, expressions);
+		}
 
-			for (var i = 1; i < expressions.Length; i++)
-			{
-				result = factory.Concat(dbDataType, result, expressions[i]);
-			}
-			
-			return result;
+		/// <summary>
+		/// Builds a <see cref="SqlConcatExpression"/> with the specified <paramref name="preserveNull"/>
+		/// semantic — <see langword="true"/> for strict any-null-→-null (e.g. <c>Sql.Concat</c>);
+		/// <see langword="false"/> for null-as-empty (each operand wrapped in <c>Coalesce(.., '')</c>
+		/// at the lowering layer; <c>string.Concat</c>).
+		/// </summary>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression Concat(this ISqlExpressionFactory factory, bool preserveNull, params ISqlExpression[] expressions)
+		{
+			if (expressions.Length == 0)
+				throw new InvalidOperationException("At least one expression must be provided for concatenation.");
+
+			return new SqlConcatExpression(preserveNull, expressions);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -233,22 +252,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
-		{
-			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Concatenate);
-		}
-
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string value)
-		{
-			return factory.Concat(dbDataType, x, factory.Value(dbDataType, value));
-		}
-
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, string value)
 		{
 			var dbDataType = factory.GetDbDataType(x);
-			return new SqlBinaryExpression(dbDataType, x, "+", factory.Value(dbDataType, value), Precedence.Concatenate);
+			return factory.Concat(x, factory.Value(dbDataType, value));
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -333,7 +340,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			SqlFrameClause? frameClause = null,
 			SqlSearchCondition? filter = null,
 			bool isAggregate = false,
-			bool canBeAffectedByOrderBy = false
+			bool canBeAffectedByOrderBy = false,
+			SqlKeepClause? keepClause = null,
+			Sql.Nulls nullTreatment = Sql.Nulls.None,
+			Sql.From fromPosition = Sql.From.None,
+			bool isWindowFunction = false
 		)
 		{
 			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
@@ -345,7 +356,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				filter: filter,
 				frameClause: frameClause,
 				isAggregate: isAggregate,
-				canBeAffectedByOrderBy : canBeAffectedByOrderBy);
+				canBeAffectedByOrderBy: canBeAffectedByOrderBy,
+				keepClause: keepClause,
+				nullTreatment: nullTreatment,
+				fromPosition: fromPosition,
+				isWindowFunction: isWindowFunction);
 		}
 
 		#region String functions
@@ -388,9 +403,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static SqlPredicate.Like LikePredicate(this ISqlExpressionFactory factory, ISqlExpression value, bool isNull, ISqlExpression template, ISqlExpression? escape = null, string? functionName = null)
+		public static SqlPredicate.Like LikePredicate(this ISqlExpressionFactory factory, ISqlExpression value, bool isNot, ISqlExpression template, ISqlExpression? escape = null, string? functionName = null)
 		{
-			return new SqlPredicate.Like(value, isNull, template, escape, functionName);
+			return new SqlPredicate.Like(value, isNot, template, escape, functionName);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]

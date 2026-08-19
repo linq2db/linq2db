@@ -16,13 +16,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 	public sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT
-		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
-		private static readonly CompositeFormat DATETIME_FORMAT  = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})");
-		private static readonly CompositeFormat TIMESTAMP_FORMAT = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})");
+		private static readonly CompositeFormat DATE_FORMAT        = CompositeFormat.Parse("DATE '{0:yyyy-MM-dd}'");
+		private static readonly CompositeFormat TIMESTAMP_FORMAT   = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'");
+		//private static readonly CompositeFormat TIMESTAMPTZ_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'");
 #else
-		private const string DATE_FORMAT      = "CAST('{0:yyyy-MM-dd}' AS {1})";
-		private const string DATETIME_FORMAT  = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
-		private const string TIMESTAMP_FORMAT = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
+		private const string DATE_FORMAT        = "DATE '{0:yyyy-MM-dd}'";
+		private const string TIMESTAMP_FORMAT   = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'";
+		//private const string TIMESTAMPTZ_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'";
 #endif
 
 		FirebirdMappingSchema() : base(ProviderName.Firebird)
@@ -34,14 +34,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SetDataType(typeof(ulong), new SqlDataType(DataType.Decimal, typeof(ulong), precision: 20, scale: 0));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
-			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));
-			SetValueToSqlConverter(typeof(char)    , (sb, _,o,v) => ConvertCharToSql   (sb, o, (char)v));
-			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(Guid)    , (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(string)  ,       (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));
+			SetValueToSqlConverter(typeof(char)    ,       (sb, _,o,v) => ConvertCharToSql   (sb, o, (char)v));
+			SetValueToSqlConverter(typeof(byte[])  ,       (sb, _,_,v) => ConvertBinaryToSql (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)  ,       (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => BuildDateTime      (sb, dt, ((DateTimeOffset)v).DateTime));
+			SetValueToSqlConverter(typeof(Guid)    ,       (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
 #if SUPPORTS_DATEONLY
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => BuildDateOnly(sb, (DateOnly)v));
 #endif
 
 			SetDataType(typeof(bool), new SqlDataType(DataType.Boolean, typeof(bool), "BOOLEAN"));
@@ -86,21 +87,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
 		{
-			var dbType = dt.Type.DbType ?? (dt.Type.DataType == DataType.Date ? "date" : "timestamp");
-			var format = TIMESTAMP_FORMAT;
+			var format = dt.Type.DataType == DataType.Date ? DATE_FORMAT : TIMESTAMP_FORMAT;
 
-			if (value.Millisecond == 0)
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
-					? DATE_FORMAT
-					: DATETIME_FORMAT;
-
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value, dbType);
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
 
 #if SUPPORTS_DATEONLY
-		static void BuildDateOnly(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		static void BuildDateOnly(StringBuilder stringBuilder, DateOnly value)
 		{
-			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}
 #endif
 
@@ -223,6 +218,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 		}
 
+		// unused for now
+		//static void BuildDateTimeOffset(StringBuilder stringBuilder, SqlDataType dt, DateTimeOffset value)
+		//{
+		//	var format = TIMESTAMPTZ_FORMAT;
+
+		//	stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMPTZ_FORMAT, value);
+		//}
+
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
 
 		public class Firebird25MappingSchemaBase : LockedMappingSchema
@@ -250,9 +253,25 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
+		public sealed class Firebird4MappingSchema : LockedMappingSchema
+		{
+			public Firebird4MappingSchema()
+				: base(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			{
+				// Disabled for now, as FB client goes banana (v10.3.4)
+				//SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, _, v) => BuildDateTimeOffset(sb, dt, (DateTimeOffset)v));
+			}
+		}
 
-		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
+		public sealed class Firebird5MappingSchema : LockedMappingSchema
+		{
+			public Firebird5MappingSchema()
+				: base(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			{
+				// see above
+				//SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, _, v) => BuildDateTimeOffset(sb, dt, (DateTimeOffset)v));
+			}
+		}
 
 		sealed class FirebirdRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
 

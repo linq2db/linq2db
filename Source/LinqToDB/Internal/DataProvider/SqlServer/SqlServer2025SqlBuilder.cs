@@ -23,6 +23,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public override string Name => ProviderName.SqlServer2025;
 
+		// SQL Server 2025 adds `||` as an ANSI-SQL string-concat operator (strict null propagation,
+		// auto-coerce). Pre-2025 versions inherit the default `+` form.
+		// https://learn.microsoft.com/en-us/sql/t-sql/language-elements/string-concatenation-pipes-transact-sql
+		protected override ConcatBuildStyle ConcatStyle => ConcatBuildStyle.Pipes;
+
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			if (type.DataType == DataType.Json)

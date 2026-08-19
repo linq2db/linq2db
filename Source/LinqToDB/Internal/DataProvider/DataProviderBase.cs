@@ -369,6 +369,25 @@ namespace LinqToDB.Internal.DataProvider
 			parameter.Value = value ?? DBNull.Value;
 		}
 
+		public virtual DbParameter CreateParameter(DataConnection dataConnection, DbCommand command, DataProviderParameterContext context)
+		{
+			var parameter = command.CreateParameter();
+			var dataType  = InferParameterDataType(dataConnection, context.DbDataType, context.Value);
+
+			if (context.Direction  != null) parameter.Direction = context.Direction.Value;
+
+			if (context.IsDbDataTypeExplicit)
+			{
+				if (dataType.Length    != null) parameter.Size      =       dataType.Length   .Value;
+				if (dataType.Precision != null) parameter.Precision = (byte)dataType.Precision.Value;
+				if (dataType.Scale     != null) parameter.Scale     = (byte)dataType.Scale    .Value;
+			}
+
+			SetParameter(dataConnection, parameter, context.Name, dataType, context.Value);
+
+			return parameter;
+		}
+
 		public virtual Type ConvertParameterType(Type type, DbDataType dataType)
 		{
 			switch (dataType.DataType)
@@ -442,6 +461,21 @@ namespace LinqToDB.Internal.DataProvider
 			parameter.DbType = dbType;
 		}
 
+		protected virtual DbDataType InferParameterDataType(DataConnection dataConnection, DbDataType dbDataType, object? paramValue)
+		{
+			if (dbDataType.DataType != DataType.Undefined)
+				return dbDataType;
+
+			var newDataType = dbDataType.SystemType != typeof(object)
+				? dataConnection.MappingSchema.GetDbDataType(dbDataType.SystemType).DataType
+				: DataType.Undefined;
+
+			if (newDataType == DataType.Undefined && paramValue != null)
+				newDataType = dataConnection.MappingSchema.GetDbDataType(paramValue.GetType()).DataType;
+
+			return dbDataType.WithDataType(newDataType);
+		}
+
 		#endregion
 
 		#region BulkCopy
@@ -474,11 +508,23 @@ namespace LinqToDB.Internal.DataProvider
 		protected virtual  IMemberConverter   CreateMemberConverter()   => new LegacyMemberConverterBase();
 		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
 
+		/// <summary>
+		/// Override to opt-in to provider-specific DML mechanics (currently: "is this exception a
+		/// table-not-found" detection used by <c>DropTable(throwExceptionIfNotExists: false)</c>).
+		/// Providers whose DROP TABLE already expresses "if exists" in SQL don't need this —
+		/// leave it returning <see langword="null"/> and no suppression will be attempted.
+		/// </summary>
+		protected virtual IDmlService? CreateDmlService() => null;
+
 		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(CreateMemberTranslator());
 			serviceProvider.AddService(CreateIdentifierService());
 			serviceProvider.AddService(CreateMemberConverter());
+
+			var dmlService = CreateDmlService();
+			if (dmlService != null)
+				serviceProvider.AddService(dmlService);
 		}
 
 		readonly Lock _guard = new();

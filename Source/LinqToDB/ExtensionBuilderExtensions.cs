@@ -21,6 +21,9 @@ namespace LinqToDB
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Add(this Sql.ISqlExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
 		{
+			if (type == typeof(string))
+				throw new InvalidOperationException("String concatenation must use builder.Concat(...) so it produces SqlConcatExpression. builder.Add is for numeric / temporal arithmetic only.");
+
 			return new SqlBinaryExpression(type, left, "+", right, Precedence.Additive);
 		}
 
@@ -32,6 +35,45 @@ namespace LinqToDB
 		public static ISqlExpression Add(this Sql.ISqlExtensionBuilder builder, ISqlExpression left, int value)
 		{
 			return builder.Add<int>(left, new SqlValue(value));
+		}
+
+		/// <summary>
+		/// Builds a strict-null <see cref="SqlConcatExpression"/> (any-NULL operand → NULL result).
+		/// Use this from <see cref="Sql.IExtensionCallBuilder"/> implementations instead of building
+		/// a binary <c>+</c> on string-typed operands.
+		/// </summary>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
+		public static ISqlExpression Concat(this Sql.ISqlExtensionBuilder builder, ISqlExpression x, ISqlExpression y)
+		{
+			return new SqlConcatExpression(true, x, y);
+		}
+
+		/// <summary>
+		/// Builds a strict-null <see cref="SqlConcatExpression"/> over <paramref name="expressions"/>
+		/// (any-NULL operand → NULL result).
+		/// </summary>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
+		public static ISqlExpression Concat(this Sql.ISqlExtensionBuilder builder, params ISqlExpression[] expressions)
+		{
+			if (expressions.Length == 0)
+				throw new InvalidOperationException("At least one expression must be provided for concatenation.");
+
+			return new SqlConcatExpression(true, expressions);
+		}
+
+		/// <summary>
+		/// Builds a <see cref="SqlConcatExpression"/> with the specified <paramref name="preserveNull"/>
+		/// semantic — <see langword="true"/> for strict any-NULL → NULL (e.g. <c>Sql.Concat</c>);
+		/// <see langword="false"/> for null-as-empty (operands wrapped in <c>Coalesce(.., '')</c> at the
+		/// lowering layer; <c>string.Concat</c>).
+		/// </summary>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
+		public static ISqlExpression Concat(this Sql.ISqlExtensionBuilder builder, bool preserveNull, params ISqlExpression[] expressions)
+		{
+			if (expressions.Length == 0)
+				throw new InvalidOperationException("At least one expression must be provided for concatenation.");
+
+			return new SqlConcatExpression(preserveNull, expressions);
 		}
 
 		public static ISqlExpression Inc(this Sql.ISqlExtensionBuilder builder, ISqlExpression expr)

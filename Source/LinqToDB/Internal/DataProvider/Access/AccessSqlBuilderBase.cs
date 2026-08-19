@@ -56,6 +56,15 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override bool IsValuesSyntaxSupported       => false;
 		protected override bool SupportsColumnAliasesInSource => false;
 
+		// Unlike SqlCe/YDB - which reject a duplicate root result-column name at the server - Access renders
+		// such SQL fine: it auto-qualifies the colliding columns with their source alias (p.ID / d.ID). The
+		// need is purely client-side: a raw ToSqlQuery -> Query<T> round-trip maps the result set by name and
+		// can't map the qualified/duplicate columns back to the member, so it returns defaults. Forcing final
+		// aliases on the collision (PersonID / PersonID_1) fixes that round-trip. It only actually matters for
+		// exported SQL (normal execution reads by ordinal), but there's no builder signal to scope it there,
+		// so it's forced on every root collision - the extra alias is harmless. #5599 / #5657.
+		protected override bool RequiresUniqueRootColumnNames => true;
+
 		#region Skip / Take Support
 
 		protected override string FirstFormat(SelectQuery selectQuery)
@@ -248,30 +257,31 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
-		protected override void BuildParameter(SqlParameter parameter)
+		// Access has no CAST: a parameter that needs an explicit type is wrapped in a conversion function
+		// instead, so the type hook does not apply and the rendering itself is overridden.
+		protected override void BuildSqlParameterCastExpression(SqlParameterCastExpression parameterCast)
 		{
-			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
+			var parameter = parameterCast.Parameter;
+
+			// A parameter that a later conversion turned into a non-query parameter renders as its literal
+			// value - re-parameterising it inside CVar diverges from the base implementation.
+			if (!parameter.IsQueryParameter)
 			{
-				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-
-				var saveStep = BuildStep;
-				BuildStep = Step.TypedExpression;
-
-				// 1. Single parameter loose precision when used with CVar
-				// 2. Only CVar accepts NULL
-				if (paramValue.ProviderValue != null && parameter.Type.DataType is DataType.Single)
-					StringBuilder.Append("CSng(");
-				else
-					StringBuilder.Append("CVar(");
-
-				base.BuildParameter(parameter);
-				StringBuilder.Append(')');
-				BuildStep = saveStep;
-
+				BuildExpression(parameter);
 				return;
 			}
 
-			base.BuildParameter(parameter);
+			var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+			// 1. Single parameter loose precision when used with CVar
+			// 2. Only CVar accepts NULL
+			if (paramValue.ProviderValue != null && parameter.Type.DataType is DataType.Single)
+				StringBuilder.Append("CSng(");
+			else
+				StringBuilder.Append("CVar(");
+
+			BuildParameter(parameter);
+			StringBuilder.Append(')');
 		}
 
 		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)

@@ -158,7 +158,6 @@ namespace Tests.Linq
 			Assert.That(person.ID, Is.EqualTo(1));
 		}
 
-		[YdbCteAsSource]
 		[Test]
 		public async Task ContainsAsyncTest([DataSources] string context)
 		{

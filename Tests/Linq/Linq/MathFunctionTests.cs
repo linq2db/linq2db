@@ -340,7 +340,7 @@ namespace Tests.Linq
 		}
 
 		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
-		[Test]
+		[Test, QueryCacheTest]
 #pragma warning disable NUnit4001
 		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp, [Values(1, 2)] int iteration)
 #pragma warning restore NUnit4001
@@ -363,7 +363,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sign([DataSources(ProviderName.Ydb)] string context)
+		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -428,8 +428,6 @@ namespace Tests.Linq
 		[Test]
 		public void Truncate2([DataSources] string context)
 		{
-			using var _ = context.IsAnyOf(TestProvName.AllAccess) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context);
 			AreEqual(
 				from t in from p in Types select Math.Truncate((double)-p.MoneyValue) where t != 0.1 select t,

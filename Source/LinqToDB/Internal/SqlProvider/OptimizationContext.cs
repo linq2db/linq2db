@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 			else
 			{
-				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
+				var newName = NormalizeParameterName(parameter.Name);
 
 				if (IsParameterOrderDependent || !string.Equals(newName, parameter.Name, StringComparison.Ordinal))
 				{
@@ -82,7 +82,6 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						AccessorId     = parameter.AccessorId,
 						ValueConverter = parameter.ValueConverter,
-						NeedsCast      = parameter.NeedsCast,
 					};
 				}
 
@@ -93,6 +92,15 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return returnValue;
+		}
+
+		/// <summary>
+		/// Normalizes <paramref name="name"/> through the query parameters name normalizer, registers it
+		/// as used, and returns the resulting collision-free name.
+		/// </summary>
+		public string? NormalizeParameterName(string? name)
+		{
+			return (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(name);
 		}
 
 		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, object? value)
@@ -123,7 +131,31 @@ namespace LinqToDB.Internal.SqlProvider
 			where T : class, IQueryElement
 		{
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, reducePredicates: false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
+
+#if BUGCHECK
+			// A Transform pass must leave what it is handed untouched. That element is the query's CACHED statement: it is
+			// re-rendered on every execution and by the remote path, so one write reaching it corrupts every later render —
+			// and the render that breaks is the NEXT one, which makes the failure look unrelated to the rule that caused it.
+			// A Modify pass owns its statement, so it is exempt.
+			var before = ConvertVisitor.VisitMode == VisitMode.Transform ? newElement.ToDebugString() : null;
+#endif
+
+			var result = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
+
+#if BUGCHECK
+			if (before != null)
+			{
+				var after = newElement.ToDebugString();
+
+				// ToDebugString swallows any render failure and returns a "FAIL ToDebugString(...)" marker; both
+				// sides would then be equal and this check would pass without having compared anything.
+				if (before.StartsWith("FAIL ToDebugString(", StringComparison.Ordinal) || after.StartsWith("FAIL ToDebugString(", StringComparison.Ordinal))
+					throw new InvalidOperationException($"Transform-mode mutation check could not render the element.{Environment.NewLine}BEFORE:{Environment.NewLine}{before}{Environment.NewLine}AFTER:{Environment.NewLine}{after}");
+
+				if (after != before)
+					throw new InvalidOperationException($"Transform-mode convert mutated the element it was given.{Environment.NewLine}BEFORE:{Environment.NewLine}{before}{Environment.NewLine}AFTER:{Environment.NewLine}{after}");
+			}
+#endif
 
 			return result;
 		}

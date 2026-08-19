@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -27,6 +27,8 @@ namespace LinqToDB.Internal.DataProvider
 		protected virtual bool CastAllRowsParametersOnUnionAll  => false;
 
 		protected virtual bool CastLiteral(ColumnDescriptor column) => false;
+
+		protected virtual Func<DataOptions, DbDataType, object?, bool>? MultipleRowsConvertToParameter => null;
 
 		/// <summary>
 		/// Returns an optional SQL suffix appended after the INSERT ... VALUES statement in MultipleRows bulk copy mode.
@@ -578,7 +580,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
+			return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
@@ -594,7 +596,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
@@ -610,7 +612,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
@@ -674,7 +676,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
+			return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, from);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source, string from)
@@ -690,7 +692,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, from, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from, CancellationToken cancellationToken)
@@ -706,7 +708,7 @@ namespace LinqToDB.Internal.DataProvider
 				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
 			}
 
-			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, from, cancellationToken);
 		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)

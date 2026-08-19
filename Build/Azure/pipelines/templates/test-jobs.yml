@@ -21,102 +21,16 @@ jobs:
 
   steps:
   - checkout: none
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: $(artifact_test_scripts)
+      targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+    displayName: Extract test scripts
   - task: PowerShell@2
     inputs:
-      targetType: 'inline'
-      script: |
-        $prId = "$(source_pr_id)"
-        $orgName = "linq2db"
-        $baselinesRepo = "linq2db.baselines"
-        $baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
-        Write-Host "Source PR ID: ${prId}"
-        if ($prId) {
-            $baselinesBranch = "baselines/pr_${prId}"
-        } else {
-            $baselinesBranch = "baselines/default"
-        }
-        Write-Host "Baselines branch name: ${baselinesBranch}"
-        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
-        Write-Host "Baselines HEAD: ${output}"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
-            exit 1
-        }
-        $baselinesNewBranch = 0
-        if ($output.Length -lt 40) {
-            Write-Host "Baselines branch not found"
-            Write-Host "Reading baselines repository HEAD hash..."
-            $output = git ls-remote $baselinesRepoUrl $(baselines_master)
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            if ($output.Length -lt 40) {
-                Write-Host "Baselines repo HEAD not found. Last output: ${output}"
-                exit 1
-            }
-            $baslinesHeadHash = ($output -split '\s+')[0]
-            Write-Host "Creating new baselines branch ${baselinesBranch}..."
-            $output = gh api /repos/$orgName/$baselinesRepo/git/refs -i -F ref=refs/heads/$baselinesBranch -F sha=$baslinesHeadHash
-            Write-Host "Create command output: ${output}"
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to create branch. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            if ($output -match "201 Created") {
-                Write-Host "Baselines branch created"
-                $baselinesNewBranch = 1
-            } else {
-                Write-Host "Baselines branch creation failed"
-                exit 1
-            }
-        } else {
-            Write-Host "Baselines branch already exists, checking if rebase required"
-            $head = git ls-remote $baselinesRepoUrl $(baselines_master)
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Failed to read HEAD hash. Error code ${LASTEXITCODE}"
-                exit 1
-            }
-            if ($head.Length -lt 40) {
-                Write-Host "Baselines repo HEAD not found. Last output: ${head}"
-                exit 1
-            }
-            $baslinesHeadHash = ($output -split '\s+')[0]
-            $headHash = ($head -split '\s+')[0]
-            if ($baslinesHeadHash -eq $headHash) {
-                Write-Host "Baselines branch already based on HEAD, no rebase required"
-            } else {
-                Write-Host "Baselines head is ${baslinesHeadHash}, but HEAD is ${head}, trying to rebase on current HEAD"
-                git clone $baselinesRepoUrl baselines
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to clone baselines repository. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                cd baselines
-                git checkout origin/$baselinesBranch
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to checkout baselines branch origin/${baselinesBranch}. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                git rebase origin/$(baselines_master)
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to rebase baselines PR on origin/$(baselines_master). Delete branch and re-run tests. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                git push -f origin HEAD:$baselinesBranch
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to push rebased baselines. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                Write-Host "Baselines PR was rebased on HEAD"
-                $baslinesHeadHash = $headHash
-            }
-        }
-        Write-Host "Baselines branch head hash: ${baslinesHeadHash}"
-        # export branch name and hash to pipelines variables
-        echo "##vso[task.setvariable variable=baselines_branch;isOutput=true]${baselinesBranch}"
-        echo "##vso[task.setvariable variable=baselines_head;isOutput=true]${baslinesHeadHash}"
-        echo "##vso[task.setvariable variable=baselines_new_branch;isOutput=true]${baselinesNewBranch}"
+      pwsh: true
+      filePath: '$(System.DefaultWorkingDirectory)/scripts/ensure-baselines-branch.ps1'
+      arguments: -PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -EmitOutputs
       workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: Checkout test baselines
     name: baselines_init
@@ -140,6 +54,7 @@ jobs:
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
 
   strategy:
     matrix:
@@ -154,7 +69,6 @@ jobs:
             psscript_local: ${{ test_config.psscript_win_local }}
             pre_test_win_local: ${{ test_config.pre_test_win_local }}
             post_test_win_local: ${{ test_config.post_test_win_local }}
-            extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_netfx }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
@@ -180,6 +94,7 @@ jobs:
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
 
   strategy:
     matrix:
@@ -190,7 +105,6 @@ jobs:
             config: ${{ test_config.config_linux }}
             script_global: ${{ test_config.script_linux_global }}
             script_local: ${{ test_config.script_linux_local }}
-            extra: ${{ test_config.extra }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
@@ -214,6 +128,7 @@ jobs:
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
 
   strategy:
     matrix:
@@ -225,7 +140,6 @@ jobs:
             script_global: ${{ test_config.script_macos_global }}
             script_local: ${{ test_config.script_macos_local }}
             docker: ${{ test_config.install_docker_macos }}
-            extra: ${{ test_config.extra }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
@@ -258,6 +172,11 @@ jobs:
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
     baselines_new_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_new_branch'] ]
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
+    # Read by the empty-branch cleanup below: this job's condition replaces the implicit succeeded(),
+    # so it also runs when a test leg failed and a retry is still to come.
+    tests_windows_result: $[ dependencies.test_windows_job.result ]
+    tests_ubuntu_result: $[ dependencies.test_ubuntu_job.result ]
+    tests_macos_result: $[ dependencies.test_macos_job.result ]
 
   steps:
   - checkout: none
@@ -284,21 +203,35 @@ jobs:
             Write-Host "Baselines branch hash missing"
             exit 1
         }
-        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        # @(...) keeps a single-line answer an array, so the emptiness test below counts refs rather
+        # than characters - a bare string would make a legitimate multi-ref answer read as "no result".
+        $output = @(git ls-remote --heads $baselinesRepoUrl $baselinesBranch)
         Write-Host "Baselines current HEAD: ${output}"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
             exit 1
         }
-        if ($output.Length -lt 40) {
+        $baselinesHeadLine = $output | Where-Object { $_ -match '^[0-9a-f]{40}\s' } | Select-Object -First 1
+        if (-not $baselinesHeadLine) {
             Write-Host "Baselines HEAD request returned no result"
             exit 1
         }
-        $baslinesCurrentHash = ($output -split '\s+')[0]
+        $baslinesCurrentHash = ($baselinesHeadLine -split '\s+')[0]
         Write-Host "Baselines branch current head hash: ${baslinesCurrentHash}"
         if ($baselinesHash -eq $baslinesCurrentHash) {
             Write-Host "Baselines branch has no new commits"
             if ($newBranch -eq 1) {
+                $testResults = @("$(tests_windows_result)", "$(tests_ubuntu_result)", "$(tests_macos_result)")
+                $resultsText = $testResults -join ', '
+                Write-Host "Test job results: ${resultsText}"
+                # A failed leg can still be retried, and the retry re-creates this branch through the
+                # self-heal in ensure-baselines-branch.ps1. Deleting it now races that retry, which is
+                # how the branch ends up vanishing and reappearing mid-run.
+                $blocked = $testResults | Where-Object { $_ -in @('Failed', 'Canceled') }
+                if ($blocked) {
+                    Write-Host "A test job did not pass - keeping the baselines branch for a possible retry"
+                    exit 0
+                }
                 Write-Host "Remove empty baselines branch"
                 $output = gh api -XDELETE /repos/$orgName/$baselinesRepo/git/refs/heads/$baselinesBranch
                 Write-Host "Delete branch command output: ${output}"

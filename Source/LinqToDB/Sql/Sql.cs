@@ -68,8 +68,10 @@ namespace LinqToDB
 			throw new InvalidOperationException();
 		}
 
+		// Nullability annotator, handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
+		// Deliberately carries no [Expression] attribute: that would let projection client-calculation
+		// (LinqOptions.PreferClientCalculation) pull it client-side, collapsing a SQL NULL to default(T).
 		[CLSCompliant(false)]
-		[Expression("{0}", 0, CanBeNull = true)]
 		public static T AsNullable<T>(T value)
 		{
 			return value;
@@ -89,8 +91,10 @@ namespace LinqToDB
 			return value;
 		}
 
+		// Pure nullability widener — handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
+		// Deliberately carries no [Expression] attribute: that would let projection client-calculation
+		// (LinqOptions.PreferClientCalculation) pull it client-side, collapsing a SQL NULL to default(T) before the widen.
 		[CLSCompliant(false)]
-		[Expression("{0}", 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T? ToNullable<T>(T value)
 			where T : struct
 		{
@@ -252,6 +256,52 @@ namespace LinqToDB
 		{
 			return Guid.NewGuid();
 		}
+
+		/// <summary>
+		/// Returns a version 7 (time-ordered, RFC 9562) <see cref="Guid"/>. For providers with a native UUIDv7 function
+		/// (PostgreSQL 18+, ClickHouse, DuckDB, MariaDB) the call is translated to it; on all other providers the value
+		/// is generated client-side. The server function is emitted for those providers unconditionally, without probing
+		/// the connected server version.
+		/// </summary>
+		public static Guid NewGuid7()
+		{
+#if NET9_0_OR_GREATER
+			return Guid.CreateVersion7();
+#else
+			return CreateVersion7Fallback();
+#endif
+		}
+
+#if !NET9_0_OR_GREATER
+		// Client-side RFC 9562 UUIDv7 build for TFMs without Guid.CreateVersion7 (net462/netstandard2.0/net8.0).
+		// Bytes are laid out in RFC big-endian order, then mapped into the native Guid via the
+		// endianness-independent (int, short, short, byte...) constructor so the result reads as a v7 GUID.
+		static Guid CreateVersion7Fallback()
+		{
+			var bytes = new byte[16];
+
+			using (var rng = System.Security.Cryptography.RandomNumberGenerator.Create())
+				rng.GetBytes(bytes);
+
+			var unixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+			bytes[0] = (byte)(unixMs >> 40);
+			bytes[1] = (byte)(unixMs >> 32);
+			bytes[2] = (byte)(unixMs >> 24);
+			bytes[3] = (byte)(unixMs >> 16);
+			bytes[4] = (byte)(unixMs >>  8);
+			bytes[5] = (byte) unixMs;
+
+			bytes[6] = (byte)((bytes[6] & 0x0F) | 0x70); // version 7
+			bytes[8] = (byte)((bytes[8] & 0x3F) | 0x80); // variant 10xx
+
+			return new Guid(
+				(bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3],
+				(short)((bytes[4] << 8) | bytes[5]),
+				(short)((bytes[6] << 8) | bytes[7]),
+				bytes[8], bytes[9], bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
+		}
+#endif
 
 		#endregion
 
@@ -591,6 +641,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "concat(substringUTF8({0}, 1, {1} - 1), {3}, substringUTF8({0}, {1} + {2}))", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		// TODO: actually only first and last parametes produce null
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
+		[Expression(PN.DuckDB, "SUBSTR({0}, 1, {1} - 1) || {3} || SUBSTR({0}, {1} + {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string? Stuff(string? str, int? start, int? length, string? newString)
 		{
 			if (str == null || start == null || length == null || newString == null) return null;
@@ -607,6 +658,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "concat(substringUTF8({0}, 1, {1} - 1), {3}, substringUTF8({0}, {1} + {2}))", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		// TODO: actually only first and last parametes produce null
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
+		[Expression(PN.DuckDB, "SUBSTR({0}, 1, {1} - 1) || {3} || SUBSTR({0}, {1} + {2})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
 		{
 			throw new ServerSideOnlyException(nameof(Stuff));
@@ -617,6 +669,7 @@ namespace LinqToDB
 		[Expression(PN.ClickHouse, "leftPadUTF8('', toUInt32({0}), ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SQLite,     "REPLACE(HEX(ZEROBLOB({0})), '00', ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Ydb,        "CAST(String::LeftPad('', {0}, ' ') AS Utf8)", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "REPEAT(' ', {0})",                    IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Space(int? length)
 		{
 			return length == null || length.Value < 0 ? null : "".PadRight(length.Value);
@@ -662,312 +715,6 @@ namespace LinqToDB
 
 			return str.Replace(oldValue.Value, newValue.Value);
 		}
-
-		#region IsNullOrWhiteSpace
-		// set of all White_Space characters per Unicode v13
-		const string WHITESPACES       = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0\x1680\x2000\x2001\x2002\x2003\x2004\x2005\x2006\x2007\x2008\x2009\x200A\x2028\x2029\x205F\x3000";
-		const string ASCII_WHITESPACES = "\x09\x0A\x0B\x0C\x0D\x20\x85\xA0";
-		const string WHITESPACES_REGEX = "\x09|\x0A|\x0B|\x0C|\x0D|\x20|\x85|\xA0|\x1680|\x2000|\x2001|\x2002|\x2003|\x2004|\x2005|\x2006|\x2007|\x2008|\x2009|\x200A|\x2028|\x2029|\x205F|\x3000";
-
-		/*
-		 * marked internal as we don't have plans now to expose it directly (used by string.IsNullOrWhiteSpace mapping)
-		 *
-		 * implementation tries to mimic .NET implementation of string.IsNullOrWhiteSpace (except null check part):
-		 * return true if string doesn't contain any symbols except White_Space codepoints from Unicode.
-		 *
-		 * Known limitations:
-		 * 1. [Access] we handle only following WS:
-		 * - 0x20 (SPACE)
-		 * - 0x1680 (OGHAM SPACE MARK)
-		 * - 0x205F (MEDIUM MATHEMATICAL SPACE)
-		 * - 0x3000 (IDEOGRAPHIC SPACE)
-		 * Proper implementation will be same as we use for SqlCe, but Replace function is not exposed to SQL by default
-		 * and requires sandbox mode: https://support.microsoft.com/en-us/office/turn-sandbox-mode-on-or-off-to-disable-macros-8cc7bad8-38c2-4a7a-a604-43e9a7bbc4fb
-		 * 2. [Informix} implementation use only ASCII whitespaces which probably will not work in some cases for WS outside of
-		 * ASCII range (currently works in our tests, but it could be that it depends on used encodings)
-		 */
-		[Extension(                  typeof(IsNullOrWhiteSpaceDefaultBuilder),                     IsPredicate = true)]
-		[Extension(PN.Oracle,        typeof(IsNullOrWhiteSpaceOracleBuilder),                      IsPredicate = true)]
-		[Extension(PN.Informix,      typeof(IsNullOrWhiteSpaceInformixBuilder),                    IsPredicate = true)]
-		[Extension(PN.SqlServer,     typeof(IsNullOrWhiteSpaceSqlServerBuilder),                   IsPredicate = true)]
-		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.SqlServer2022, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.SqlServer2025, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
-		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),                      IsPredicate = true)]
-		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),                      IsPredicate = true)]
-		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),                       IsPredicate = true)]
-		[Extension(PN.Firebird,      typeof(IsNullOrWhiteSpaceFirebirdBuilder),                    IsPredicate = true)]
-		[Extension(PN.SqlCe,         typeof(IsNullOrWhiteSpaceSqlCeBuilder),                       IsPredicate = true)]
-		[Extension(PN.Ydb,           typeof(IsNullOrWhiteSpaceYdbBuilder),                         IsPredicate = true)]
-		[Expression(PN.ClickHouse, $"empty(replaceRegexpAll(coalesce({{0}}, ''), '{WHITESPACES_REGEX}', ''))", IsPredicate = true)]
-		internal static bool IsNullOrWhiteSpace(string? str) => string.IsNullOrWhiteSpace(str);
-
-		// {0} IS NULL OR LENGTH(Unicode::Strip({ 0})) == 0
-		internal sealed class IsNullOrWhiteSpaceYdbBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-					new SqlFunction(
-						builder.Mapping.GetDbDataType(typeof(int)),
-						"LENGTH",
-						ParametersNullabilityType.IfAnyParameterNullable,
-						new SqlFunction(
-							builder.Mapping.GetDbDataType(typeof(string)),
-							"Unicode::Strip",
-							ParametersNullabilityType.IfAnyParameterNullable,
-							str)),
-					SqlPredicate.Operator.Equal,
-					new SqlValue(0),
-					null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR REPLACE...(str, WHITEPACES, '') == ''
-		internal sealed class IsNullOrWhiteSpaceSqlCeBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlExpression(
-							builder.Mapping.GetDbDataType(typeof(string)),
-							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
-							str),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR NOT(str SIMILAR TO _utf8 x'%[^WHITESPACES_UTF8]%')
-		internal sealed class IsNullOrWhiteSpaceFirebirdBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				const string whiteSpaces = $"%[^{WHITESPACES}]%";
-				var predicate = new SqlPredicate.Expr(
-					new SqlExpression(
-						builder.Mapping.GetDbDataType(typeof(bool)),
-						"{0} SIMILAR TO {1}",
-						Precedence.Comparison,
-						SqlFlags.IsPredicate,
-						ParametersNullabilityType.NotNullable,
-						str,
-						new SqlValue(typeof(string), whiteSpaces)))
-					.MakeNot();
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR NOT(str RLIKE '%[^WHITESPACES]%')
-		internal sealed class IsNullOrWhiteSpaceMySqlBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var whiteSpaces = $"[^{WHITESPACES}]";
-				var condition = new SqlPredicate.Expr(
-					new SqlExpression(
-						builder.Mapping.GetDbDataType(typeof(bool)),
-						"{0} RLIKE {1}",
-						Precedence.Comparison,
-						SqlFlags.IsPredicate,
-						ParametersNullabilityType.NotNullable,
-						str,
-						new SqlValue(typeof(string), whiteSpaces)))
-					.MakeNot();
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), condition);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, condition);
-			}
-		}
-
-		// str IS NULL OR str NOT LIKE '%[^WHITESPACES]%'
-		internal sealed class IsNullOrWhiteSpaceSybaseBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var predicate = new SqlPredicate.Like(
-					str,
-					true,
-					new SqlValue(typeof(string), whiteSpaces),
-					null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false), predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR str NOT LIKE N'%[^WHITESPACES]%'
-		internal sealed class IsNullOrWhiteSpaceSqlServerBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var predicate = new SqlPredicate.Like(
-					str,
-					true,
-					new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
-					null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, '') = ''
-		internal sealed class IsNullOrWhiteSpaceAccessBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR TRIM(N'WHITESPACES FROM str) = ''
-		internal sealed class IsNullOrWhiteSpaceSqlServer2017Builder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, WHITESPACES) IS NULL
-		internal sealed class IsNullOrWhiteSpaceOracleBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, ASCII_WHITESPACES) = ''
-		internal sealed class IsNullOrWhiteSpaceInformixBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-
-		// str IS NULL OR LTRIM(str, WHITESPACES) = ''
-		internal sealed class IsNullOrWhiteSpaceDefaultBuilder : IExtensionCallBuilder
-		{
-			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
-			{
-				var str = builder.GetExpression("str")!;
-
-				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
-						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
-
-				var nullability = new NullabilityContext(builder.Query);
-				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
-						new SqlPredicate.IsNull(str, false),
-						predicate);
-				else
-					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
-			}
-		}
-		#endregion
 
 		[Function(PN.Ydb, "Unicode::Strip", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1033,6 +780,7 @@ namespace LinqToDB
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Access, "Format({0}, String('0', {1}))",                                                     IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})",                         IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.DuckDB, "Lpad(CAST({0} AS VARCHAR),{1},'0')",                                                IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')",                                                       IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.SQLite, "printf('%0{1}d', {0})",                                                             IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.ClickHouse, "leftPadUTF8(toString({0}), toUInt32({1}), '0')",                                IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1046,74 +794,73 @@ namespace LinqToDB
 			return val?.ToString(string.Create(CultureInfo.InvariantCulture, $"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
-		sealed class ConcatAttribute : ExpressionAttribute
-		{
-			public ConcatAttribute() : base("")
-			{
-			}
-
-			public override Expression GetExpression<TContext>(
-				TContext              context,
-				IDataContext          dataContext,
-				IExpressionEvaluator  evaluator,
-				SelectQuery           query,
-				Expression            expression,
-				ConvertFunc<TContext> converter)
-			{
-				var expressionStr = Expression;
-				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
-					out var knownExpressions, true, InlineParameters, out _, converter);
-
-				var arr = new ISqlExpression[knownExpressions.Count];
-
-				Expression? current = null;
-
-				for (var i = 0; i < knownExpressions.Count; i++)
-				{
-					var pair      = knownExpressions[i];
-
-					var converted = converter(context, pair.expression!, null, InlineParameters || pair.parameter?.DoNotParameterize == true);
-
-					if (converted is not SqlPlaceholderExpression placeholder)
-						return converted;
-
-					current = placeholder;
-
-					var arg = placeholder.Sql;
-
-					if (arg.SystemType == typeof(string))
-					{
-						arr[i] = arg;
-					}
-					else
-					{
-						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
-							100 :
-							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
-
-						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, len));
-					}
-				}
-
-				if (arr.Length == 1 && current != null)
-					return current;
-
-				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
-
-				for (var i = 2; i < arr.Length; i++)
-					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
-
-				return new SqlPlaceholderExpression(query, expr, expression);
-			}
-		}
-
-		[Concat]
+		/// <summary>
+		/// Concatenates the given arguments. In-memory delegates to <see cref="string.Concat(object?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator with each non-string operand cast to a string type; per-operand
+		/// null handling follows the provider's native rules and is not unified across providers.
+		/// </summary>
+		/// <remarks>
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(object?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: non-string operands are made string-typed before
+		/// concatenation — on <c>+</c>-providers (SQL Server pre-2025, SqlCe, Access) and on
+		/// Sybase ASE (which emits <c>||</c> but still requires it) via explicit
+		/// <c>CAST(... AS VARCHAR(N))</c>; the other <c>||</c> / <c>CONCAT(...)</c> providers
+		/// auto-coerce non-string operands. Per-operand null handling follows the provider's
+		/// native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>||</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(object?[])"/> directly for explicit null-as-empty.
+		/// </para>
+		/// </remarks>
+		/// <param name="args">Values to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params object?[] args)
 		{
 			return string.Concat(args);
 		}
 
-		[Concat]
+		/// <summary>
+		/// Concatenates the given strings. In-memory delegates to <see cref="string.Concat(string?[])"/>
+		/// (null operands treated as empty). SQL translation emits the provider's native
+		/// concatenation operator; per-operand null handling follows the provider's native rules
+		/// and is not unified across providers.
+		/// </summary>
+		/// <remarks>
+		/// Public API since v1.0 (December 2014).
+		/// <para>
+		/// <b>In-memory (C#)</b>: defers to <see cref="string.Concat(string?[])"/>. A null
+		/// operand is treated as empty, so <c>Sql.Concat("A", null, "B")</c> returns <c>"AB"</c>.
+		/// </para>
+		/// <para>
+		/// <b>SQL (server-side)</b>: arguments are concatenated with the provider's native
+		/// operator/function. Per-operand null handling follows the provider's native rules:
+		/// </para>
+		/// <list type="bullet">
+		///   <item><description>SQL Server (default <c>CONCAT_NULL_YIELDS_NULL=ON</c>), MySQL, PostgreSQL, SQLite, Firebird, DB2, SAP HANA, SqlCe, Access, Informix, ClickHouse, DuckDB, YDB, Sybase ASE: any null operand makes the whole result <see langword="null"/>. (Sybase's native <c>||</c> does not propagate <see langword="null"/>; the translator wraps the chain in <c>CASE WHEN any-null THEN NULL ELSE chain END</c> to deliver the strict-null contract.)</description></item>
+		///   <item><description>Oracle: <c>''</c> is treated as <see langword="null"/>; <c>'A' || NULL</c> returns <c>'A'</c>. Only the all-null case yields <see langword="null"/>.</description></item>
+		/// </list>
+		/// <para>
+		/// Because in-memory (null-as-empty) and SQL behaviour can diverge for null inputs, prefer
+		/// <see cref="ConcatStringsNullable(string, IEnumerable{string?})"/> with an empty
+		/// separator when explicit all-null-→-null semantics are required, or
+		/// <see cref="string.Concat(string?[])"/> directly for explicit null-as-empty.
+		/// </para>
+		/// </remarks>
+		/// <param name="args">Strings to concatenate. Null operands are treated as empty in-memory; SQL behaviour follows the provider's native concat null rules.</param>
+		/// <returns>The concatenation of the arguments. May be <see langword="null"/> on providers whose native concat operator propagates null.</returns>
 		public static string? Concat(params string?[] args)
 		{
 			return string.Concat(args);
@@ -1126,6 +873,7 @@ namespace LinqToDB
 		[Function(                              PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Access,    "Len",          PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Firebird,  "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function(PN.DuckDB,    "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1141,6 +889,7 @@ namespace LinqToDB
 		[Function(                              PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Access,    "Len",          PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Firebird,  "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function(PN.DuckDB,    "Octet_Length", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlServer, "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.SqlCe,     "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.Sybase,    "DataLength",   PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -1153,16 +902,35 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		public static DateTime GetDate()
-		{
-			return DateTime.Now;
-		}
+		/// <summary>
+		/// Returns the current date and time on the database server.
+		/// Emits a provider-specific "now" expression: <c>CURRENT_TIMESTAMP</c> on most providers
+		/// (DB2, MySQL, Oracle, PostgreSQL, SAP HANA, SQL Server, SQLite, Firebird 4+);
+		/// <c>GetDate()</c> on Sybase and SQL CE; <c>Now</c> on Access; <c>CURRENT</c> on Informix;
+		/// <c>now()</c> on ClickHouse; <c>CurrentUtcTimestamp()</c> on YDB (note: returns UTC, not local);
+		/// <c>CURRENT TIMESTAMP WITH TIME ZONE</c> on DB2 z/OS.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
+		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
+		public static DateTime GetDate() => DateTime.Now;
 
+		/// <summary>
+		/// Server-side-only equivalent of the ANSI SQL <c>CURRENT_TIMESTAMP</c> keyword.
+		/// Produces the same SQL as <see cref="GetDate"/> on every provider — see that member for the per-provider mapping.
+		/// Use <see cref="CurrentTimestamp2"/> for a dual-mode variant evaluable on the client,
+		/// or <see cref="CurrentTimestampUtc"/> for a UTC-specific variant.
+		/// </summary>
+		/// <exception cref="ServerSideOnlyException">Property is server-side-only.</exception>
 		[ServerSideOnly]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
+		/// <summary>
+		/// Dual-mode counterpart of <see cref="CurrentTimestamp"/>: emits the same server-side SQL but is also evaluable in-process.
+		/// When evaluated client-side, returns <see cref="DateTime.Now"/>.
+		/// </summary>
+		/// <returns>Current date and time as reported by the server (or <see cref="DateTime.Now"/> client-side).</returns>
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
@@ -1272,17 +1040,26 @@ namespace LinqToDB
 		[Function(PN.ClickHouse, "cosh", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cosh   (double?  value) => value == null ? null : Math.Cosh   (value.Value);
 
+		[Expression(PN.Ydb,        "Math::Cos({0}) / Math::Sin({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Expression(PN.ClickHouse, "1/tan({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Expression(PN.SQLite,     "1/TAN({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
+		// YQL has no DEGREES; compute via Math::Pi(). Cast the argument to Double so it does not mix with the literal/Pi.
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / (decimal)Math.PI);
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Degrees(double?  value) => value == null ? null : (value.Value * 180 / Math.PI);
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static short?   Degrees(short?   value) { return value == null ? null : (short?)  (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static int?     Degrees(int?     value) { return value == null ? null : (int?)    (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static long?    Degrees(long?    value) { return value == null ? null : (long?)   (value.Value * 180 / Math.PI); }
 		[CLSCompliant(false)]
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static sbyte?   Degrees(sbyte?   value) { return value == null ? null : (sbyte?)  (value.Value * 180 / Math.PI); }
+		[Expression(PN.Ydb, "CAST({0} AS Double) * 180.0 / Math::Pi()", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static float?   Degrees(float?   value) { return value == null ? null : (float?)  (value.Value * 180 / Math.PI); }
 
 		[Function(PN.Ydb, "Math::Exp", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1303,6 +1080,7 @@ namespace LinqToDB
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DuckDB,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Log    (decimal? value) { return value == null ? null : (decimal?)Math.Log     ((double)value.Value); }
 
 		[Function(PN.Ydb,   "Math::Log", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1312,6 +1090,7 @@ namespace LinqToDB
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DuckDB,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Log    (double?  value) => value == null ? null : Math.Log(value.Value);
 
 		[Function(PN.PostgreSQL, "Log", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1414,6 +1193,7 @@ namespace LinqToDB
 		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1430,6 +1210,7 @@ namespace LinqToDB
 		[Expression(PN.Oracle,     "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.Firebird,   "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.PostgreSQL, "Trunc({0}, 0)",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.DuckDB,     "Trunc({0})",                IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.MySql,      "Truncate({0}, 0)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SqlCe,      "Round({0}, 0, 1)",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Expression(PN.SapHana,    "Round({0}, 0, ROUND_DOWN)", IsNullable = IsNullableType.IfAnyParameterNullable)]

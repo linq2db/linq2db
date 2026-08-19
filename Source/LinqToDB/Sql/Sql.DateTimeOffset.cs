@@ -74,6 +74,7 @@ namespace LinqToDB
 		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
 		[Extension(PN.ClickHouse, "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
 		[Extension(PN.Ydb,        "",              BuilderType = typeof(DateDiffBuilderYdb))]
+		[Extension(PN.DuckDB,     "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		public static int? DateDiff(DateParts part, DateTimeOffset? startDate, DateTimeOffset? endDate)
 		{
 			if (startDate == null || endDate == null)

@@ -14,13 +14,14 @@ namespace Tests
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				ProviderName.DB2,
-				ProviderName.Ydb,
+				TestProvName.AllYdb,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllClickHouse,
 				TestProvName.AllMySqlWithCTE,
 				TestProvName.AllInformix,
 				TestProvName.AllSapHana,
+				TestProvName.AllDuckDB,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public CteContextSourceAttribute() : this(true)

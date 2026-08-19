@@ -174,9 +174,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.NotNullExpression(intervalType, "Interval {0}", factory.Value(intervalKind));
+					var intervalUnit = factory.NotNullExpression(intervalType, "Interval {0}", factory.Value(intervalKind));
 
-					return factory.Multiply(intervalType, numberExpression, intervalExpr);
+					return factory.Multiply(intervalType, numberExpression, intervalUnit);
 				}
 
 				ISqlExpression intervalExpr;
@@ -237,13 +237,34 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateServerNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+
+				return factory.NotNullExpression(dbDataType, "CURRENT_TIMESTAMP");
+			}
+
+			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				// LOCALTIMESTAMP can only used wth session timezone set, which is false for Npgsql by default
+				return null;
+			}
+
+			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var dbDataType = factory.GetDbDataType(typeof(DateTime));
 
 				// timezone('UTC', now()) returns timestamp without tz
 				// https://www.postgresql.org/docs/current/functions-datetime.html
-				return factory.Function(dbDataType.WithDataType(DataType.DateTime2), "timezone", factory.Value("UTC"), factory.Function(dbDataType.WithDataType(DataType.DateTimeOffset), "now"));
+				return factory.Function(dbDataType, "timezone", factory.Value("UTC"), factory.Function(dbDataType.WithDataType(DataType.DateTimeOffset), "now"));
+			}
+
+			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				// Postgres does not store original timezone, Now and UtcNow are the same instant.
+				return translationContext.ExpressionFactory.Function(dbDataType, "now");
 			}
 		}
 
@@ -351,94 +372,122 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(1)
-						.AllowOrderBy()
-						.AllowFilter()
-						.AllowDistinct()
-						.AllowNotNullCheck(true)
-						.TranslateArguments(0)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Value == null || info.Argument(0) == null)
+					.ConfigureAggregate(c =>
+					{
+						c.TransformValue(ConvertOperandToString);
+
+						if (withoutSeparator)
+							c.HasSequenceIndex(0);
+						else
+							c.HasSequenceIndex(1).TranslateArguments(0);
+
+						c.AllowOrderBy()
+							.AllowFilter()
+							.AllowDistinct()
+							.AllowNotNullCheck(true)
+							.OnBuildFunction(composer =>
 							{
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var valueType = factory.GetDbDataType(info.Value);
-
-							var value = info.Value;
-							if (!info.IsNullFiltered && nullValuesAsEmptyString)
-								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
-
-							if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
-							{
-								if (info.OrderBySql.Any(o => o.expr != value))
+								var info = composer.BuildInfo;
+								if (info.Value == null || (!withoutSeparator && info.Argument(0) == null))
 								{
-									composer.SetFallback(fc => fc
-										.AllowDistinct(false)
-										.AllowNotNullCheck(null)
-									);
 									return;
 								}
-							}
 
-							ISqlExpression? suffix = null;
-							if (info.OrderBySql.Length > 0)
-							{
-								using var sb = Pools.StringBuilder.Allocate();
+								var factory   = info.Factory;
+								var valueType = factory.GetDbDataType(info.Value);
+								var separator = withoutSeparator
+									? factory.Value(valueType, string.Empty)
+									: info.Argument(0)!;
 
-								var args = info.OrderBySql.Select(o => o.expr).ToArray();
+								var value = info.Value;
+								if (!info.IsNullFiltered && nullValuesAsEmptyString)
+									value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-								sb.Value.Append("ORDER BY ");
-								for (int i = 0; i < info.OrderBySql.Length; i++)
+								if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
 								{
-									if (i > 0) sb.Value.Append(", ");
-									sb.Value.Append('{').Append(i).Append('}');
-									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-
-									if (!info.IsNullFiltered)
+									if (info.OrderBySql.Any(o => o.expr != value))
 									{
-										sb.Value.Append(" NULLS ");
-										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+										composer.SetFallback(fc => fc
+											.AllowDistinct(false)
+											.AllowNotNullCheck(null)
+										);
+										return;
 									}
 								}
 
-								suffix = factory.Fragment(sb.Value.ToString(), args);
-							}
+								var suffix = BuildAggregateNullsOrderBy(factory, info.OrderBySql, info.IsNullFiltered, translationContext.ProviderFlags.DefaultNullsOrdering);
 
-							SqlSearchCondition? filterCondition = null;
+								SqlSearchCondition? filterCondition = null;
 
-							if (info is { FilterCondition.IsTrue: false })
-							{
-								filterCondition = info.FilterCondition;
-							}
+								if (info is { FilterCondition.IsTrue: false })
+								{
+									filterCondition = info.FilterCondition;
+								}
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+								var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-							var fn = factory.Function(valueType, "STRING_AGG",
-								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
-								[true, true],
-								filter: filterCondition,
-								isAggregate : true,
-								canBeAffectedByOrderBy : true
-							);
+								var fn = factory.Function(valueType, "STRING_AGG",
+									[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
+									[true, true],
+									filter: filterCondition,
+									isAggregate : true,
+									canBeAffectedByOrderBy : true
+								);
 
-							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+								SetStringJoinResult(composer, fn, isNullableResult, valueType);
+							});
+					});
 
-							composer.SetResult(result);
-						}));
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, withoutSeparator: withoutSeparator);
 
-				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
-
-				return builder.Build(translationContext, methodCall);
+				return builder.Build(translationContext, methodCall, isExpression: translationFlags.HasFlag(TranslationFlags.Expression));
 			}
+		}
+
+		// Window-function capability baseline for PostgreSQL 9.2/9.3. The statistical/regression window set
+		// (VAR_POP/VAR_SAMP/STDDEV*/CORR/COVAR/REGR_*) has been usable as window functions since 8.4, but
+		// FILTER, ordered-set / hypothetical-set WITHIN GROUP aggregates (9.4+) and the frame GROUPS mode /
+		// EXCLUDE clause (11+) are enabled by the version-specific tiers below.
+		protected class PostgreSQLWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			// PostgreSQL supports the full statistical/regression window-function set with standard SQL names.
+			protected override bool IsVarianceSupported         => true;
+			protected override bool IsVarianceBareSupported     => true;
+			protected override bool IsCorrelationSupported      => true;
+			protected override bool IsLinearRegressionSupported => true;
+			// Ordered-set (WITHIN GROUP) aggregates PERCENTILE_CONT/PERCENTILE_DISC were added in PostgreSQL 9.4.
+			protected override bool IsPercentileContSupported   => false;
+			protected override bool IsPercentileDiscSupported   => false;
+			// Frame GROUPS mode and the frame EXCLUDE clause were added in PostgreSQL 11.
+			protected override bool IsFrameGroupsSupported      => false;
+			protected override bool IsFrameExclusionSupported   => false;
+		}
+
+		// PostgreSQL 9.5+ tier: 9.4 introduced FILTER (WHERE ...), ordered-set (WITHIN GROUP) and hypothetical-set
+		// aggregates; v95 is the lowest dialect entry >= 9.4.
+		protected class PostgreSQL95WindowFunctionsMemberTranslator : PostgreSQLWindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFilterSupported     => true;
+			protected override bool IsOrderedSetFilterSupported => true;
+			protected override bool IsPercentileContSupported   => true;
+			protected override bool IsPercentileDiscSupported   => true;
+			// PostgreSQL supports hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST.
+			protected override bool IsHypotheticalSetSupported  => true;
+		}
+
+		// PostgreSQL 11+ tier: adds the frame GROUPS mode and the frame EXCLUDE clause.
+		protected class PostgreSQL11WindowFunctionsMemberTranslator : PostgreSQL95WindowFunctionsMemberTranslator
+		{
+			protected override bool IsFrameGroupsSupported    => true;
+			protected override bool IsFrameExclusionSupported => true;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new PostgreSQLWindowFunctionsMemberTranslator();
 		}
 	}
 }

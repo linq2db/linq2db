@@ -25,10 +25,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			return provider switch
 			{
-				// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
+				// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it.
+				// CommandTimeout raised from Npgsql's 30s default: under a full parallel run's real host
+				// contention, EnsureDeleted's DROP DATABASE / EnsureCreated's CREATE DATABASE can genuinely
+				// run past 30s (confirmed: a real run's first EnsureCreated call timed out at 30.6s). That
+				// timeout is a *different* exception than the "invalid database" one InitializeDatabase's
+				// catch recovers from (a plain Npgsql timeout, not PostgresException/55000), so it isn't
+				// caught there - it propagates, InitializeDatabase never marks the connection initialized,
+				// and every later test re-attempts setup against whatever state that timeout left the
+				// database in. Complementary to the catch-based recovery, not a replacement for it: this
+				// buys the normal path enough headroom that the timeout - and therefore the interrupted-DDL
+				// state the recovery path exists for - is far less likely to happen at all.
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
 					=> optionsBuilder
-					.UseNpgsql(connectionString, o => o.UseNodaTime())
+					.UseNpgsql(connectionString, o => o.UseNodaTime().CommandTimeout(120))
 					.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
 #if !NET10_0
 				_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
@@ -54,8 +64,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var _ = new DisableBaseline("create db");
 
-			context.Database.EnsureDeleted();
-			context.Database.EnsureCreated();
+			try
+			{
+				context.Database.EnsureDeleted();
+				context.Database.EnsureCreated();
+			}
+			catch (Exception ex) when (provider.IsAnyOf(TestProvName.AllPostgreSQL) && IsInvalidDatabaseError(ex))
+			{
+				// Recover exactly as Postgres's own HINT says, then retry once.
+				DropPostgresDatabaseIfExists(connectionString);
+				context.Database.EnsureCreated();
+			}
 
 			TestContextTracker.LastContexts[connectionString] = typeof(TContext);
 
@@ -63,6 +82,45 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			// remove potential CT pollution by OnDatabaseCreated
 			ResetChangeTracker(context);
+		}
+
+		// EnsureDeleted()'s own Exists()-then-DROP path doesn't recover from Postgres's "invalid database"
+		// state (observed here: a prior run's EnsureCreated() left the target database marked invalid - a
+		// connection attempt fails with "55000: cannot connect to invalid database", which Exists() doesn't
+		// treat as "doesn't exist" the way it does the ordinary "3D000: database does not exist", so the
+		// invalid state persists and every subsequent test against that provider fails identically until
+		// someone manually drops it). Postgres's own fix for this is exactly DROP DATABASE - it works on
+		// both an invalid and a normal existing database.
+		//
+		// Scoped to fire only on that exact error, not unconditionally on every InitializeDatabase call:
+		// InitializeDatabase reruns whenever the cached (connectionString, TContext type) pair in
+		// TestContextTracker changes - i.e. potentially many times per suite run, not just once at the
+		// start. An earlier version of this fix ran DROP DATABASE ... WITH (FORCE) unconditionally before
+		// every EnsureDeleted/EnsureCreated call, which killed other still-pooled connections to the same
+		// database on every one of those calls ("57P01: terminating connection due to administrator
+		// command") - a regression worse than the problem it fixed.
+		static bool IsInvalidDatabaseError(Exception ex)
+		{
+			for (var e = ex; e != null; e = e.InnerException)
+				if (e is Npgsql.PostgresException { SqlState: "55000" } pg && pg.MessageText.Contains("invalid database", StringComparison.OrdinalIgnoreCase))
+					return true;
+
+			return false;
+		}
+
+		static void DropPostgresDatabaseIfExists(string connectionString)
+		{
+			var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+			var dbName  = builder.Database!;
+
+			builder.Database = "postgres";
+
+			using var connection = new Npgsql.NpgsqlConnection(builder.ConnectionString);
+			connection.Open();
+
+			using var command = connection.CreateCommand();
+			command.CommandText = $"DROP DATABASE IF EXISTS \"{dbName.Replace("\"", "\"\"")}\" WITH (FORCE);";
+			command.ExecuteNonQuery();
 		}
 
 		protected static void ResetChangeTracker(TContext context)

@@ -11,6 +11,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	/// ensure that the conversion process is deterministic and thread-safe if used in multi-threaded contexts.</remarks>
 	public interface IMemberConverter
 	{
-		Expression Convert(Expression expression, out bool handled);
+		/// <summary>Converts <paramref name="expression"/>, using <paramref name="context"/> for options that affect the conversion.</summary>
+		Expression Convert(Expression expression, IConvertContext context, out bool handled);
 	}
 }

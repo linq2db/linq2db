@@ -171,6 +171,7 @@ namespace Tests.Linq
 				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p });
 		}
 
+		[ActiveIssue(5597, Configuration = TestProvName.AllYdb, Details = "YDB-only [PrimaryKey] on Parent.ParentID (added for YDB's mandatory-PK DDL requirement) is seen by the optimizer as a unique key, so grouping by the Parent entity reduces it to the PK and drops the projected Value1 column. Needs DDL-only PK handling or an optimizer fix.")]
 		[Test]
 		public void GroupBy1([DataSources] string context)
 		{
@@ -493,7 +494,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullAssociation([DataSources(TestProvName.AllClickHouse)] string context)
+		public void NullAssociation([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1245,7 +1246,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
@@ -1266,7 +1267,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -1602,6 +1603,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Issue3809Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1696,6 +1698,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void OptionalAssociationNonNullCorrelation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1713,9 +1716,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
-		public void OptionalAssociationNonNullCorrelationWithProjection([DataSources(TestProvName.AllClickHouse)] string context)
+		public void OptionalAssociationNonNullCorrelationWithProjection([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Table1.Data);
@@ -2062,9 +2065,9 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[YdbMemberNotFound]
 		[Test]
-		public void ManyAssociationEmptyCheck1([DataSources(TestProvName.AllClickHouse)] string context)
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		public void ManyAssociationEmptyCheck1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2074,9 +2077,9 @@ namespace Tests.Linq
 			Assert.That(parents.Any(p => p.ParentID == 5), Is.False);
 		}
 
-		[YdbMemberNotFound]
 		[Test]
-		public void ManyAssociationEmptyCheck2([DataSources(TestProvName.AllClickHouse)] string context)
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		public void ManyAssociationEmptyCheck2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
@@ -26,7 +27,7 @@ namespace Tests.xUpdate
 	public class UpdateTests : TestBase
 	{
 		[Test]
-		public void Update1([DataSources(ProviderName.Ydb)] string context)
+		public void Update1([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -46,7 +47,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update1Async([DataSources(ProviderName.Ydb)] string context)
+		public async Task Update1Async([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -66,7 +67,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update2([DataSources(ProviderName.Ydb)] string context)
+		public void Update2([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -86,7 +87,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update2Async([DataSources(ProviderName.Ydb)] string context)
+		public async Task Update2Async([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -106,6 +107,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -124,6 +126,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -145,6 +148,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update4String([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -159,6 +163,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task Update4Async([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -180,6 +185,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update5([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -273,6 +279,7 @@ namespace Tests.xUpdate
 
 		[Obsolete("Remove test after API removed")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update9Old(
 			[DataSources(
 				TestProvName.AllInformix,
@@ -304,6 +311,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update9(
 			[DataSources(
 				TestProvName.AllInformix,
@@ -336,6 +344,7 @@ namespace Tests.xUpdate
 
 		[Obsolete("Remove test after API removed")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update10Old(
 			[DataSources(
 				TestProvName.AllClickHouse,
@@ -366,6 +375,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update10(
 			[DataSources(
 				TestProvName.AllClickHouse,
@@ -411,6 +421,7 @@ namespace Tests.xUpdate
 		//}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update12(
 			[DataSources(
 				ProviderName.SqlCe,
@@ -431,6 +442,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public async Task Update12Async(
 			[DataSources(
 				ProviderName.SqlCe,
@@ -451,6 +463,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void Update13(
 			[DataSources(
 				ProviderName.SqlCe,
@@ -470,6 +483,7 @@ namespace Tests.xUpdate
 			.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
 		}
 
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		[Test]
 		public void Update14([DataSources] string context)
 		{
@@ -736,7 +750,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void UpdateAssociation1Old([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
@@ -759,7 +773,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public async Task UpdateAssociation1AsyncOld([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
@@ -782,7 +796,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void UpdateAssociation1([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -804,7 +818,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -826,7 +840,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void UpdateAssociation2([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -848,7 +862,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void UpdateAssociation3([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -871,6 +885,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateAssociation4([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -925,8 +940,8 @@ namespace Tests.xUpdate
 			public Table1 Table1 = null!;
 		}
 
-		[YdbUnexpectedSqlQuery]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateAssociation5(
 			[DataSources(
 				false,
@@ -953,6 +968,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateSimilarNames([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -977,6 +993,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void AsUpdatableTest([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1002,6 +1019,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void AsUpdatableDuplicate([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1036,7 +1054,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateNullablePrimaryKey([DataSources(ProviderName.Ydb)] string context)
+		public void UpdateNullablePrimaryKey([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			db.Update(new Table3 { ParentID = 10000, ChildID = null, GrandChildID = 1000 });
@@ -1051,7 +1069,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1074,6 +1092,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateTakeOrdered([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1105,7 +1124,7 @@ namespace Tests.xUpdate
 		public void TestUpdateOrdered(
 			[DataSources(
 			ProviderName.SqlCe,
-			ProviderName.Ydb,
+			TestProvName.AllYdb,
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
 			TestProvName.AllDB2,
@@ -1114,7 +1133,8 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			TestProvName.AllSqlServer,
-			TestProvName.AllSybase
+			TestProvName.AllSybase,
+			TestProvName.AllDuckDB
 			)]
 			string context)
 		{
@@ -1143,6 +1163,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateSkipTakeNotOrdered(
 			[DataSources(
 			TestProvName.AllAccess,
@@ -1176,6 +1197,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateSkipTakeOrdered(
 			[DataSources(
 			TestProvName.AllAccess,
@@ -1212,7 +1234,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
+		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1237,6 +1259,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateSetSelect([DataSources(
 			TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
 			string context)
@@ -1301,7 +1324,7 @@ namespace Tests.xUpdate
 
 		// looks like managed provider handle null bit parameters as false, because it doesn't fail
 		// maybe we need to do the same for unmanaged
-		[ActiveIssue("AseException : Null value is not allowed in BIT TYPE", Configuration = ProviderName.Sybase)]
+		[ActiveIssue(Configurations = new[] { ProviderName.Sybase, TestProvName.AllYdb }, Details = "Sybase: AseException : Null value is not allowed in BIT TYPE. YDB: rejects arithmetic on operands with mismatched decimal facets (Decimal(6,2) vs Decimal(22,9)); fixable by aligning decimal precision/scale, postponed (YDB: linq2db #5591).")]
 		[Test]
 		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
 		{
@@ -1375,6 +1398,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
 		[Test]
 		public void UpdateWithTypeConversion([DataSources] string context)
 		{
@@ -1516,6 +1540,7 @@ namespace Tests.xUpdate
 
 		[Obsolete("Remove test after API removed")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinOld([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
@@ -1557,6 +1582,7 @@ namespace Tests.xUpdate
 
 		// https://stackoverflow.com/questions/57115728/
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoin([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
@@ -1598,6 +1624,7 @@ namespace Tests.xUpdate
 
 		[Obsolete("Remove test after API removed")]
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinDifferentTableOld([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
@@ -1641,6 +1668,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdateFromJoinDifferentTable([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
@@ -1993,6 +2021,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateByAssociationOptional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db   = GetDataContext(context))
@@ -2021,6 +2050,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateByAssociationRequired([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2048,7 +2078,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -2075,7 +2105,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbMemberNotFound]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -2134,72 +2164,6 @@ namespace Tests.xUpdate
 			db.Types
 				.Where(p => p.ID == -1)
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
-		}
-
-		sealed class InsertFromWithConstantsTable
-		{
-			[PrimaryKey]
-			public int Id { get; set; }
-			public int? Value { get; set; }
-			public string? Value1 { get; set; }
-			public string? Value2 { get; set; }
-			public string? Value3 { get; set; }
-			public string? Value4 { get; set; }
-		}
-
-		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
-		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
-
-			var id1 = 1;
-
-			tb
-				.Select(r => new
-				{
-					r,
-					Value1 = tb.Where(r => r.Id == id1).Select(r => r.Value3).SingleOrDefault(),
-					Value2 = "string 1",
-				})
-				.Update(
-					x => x.r,
-					x => new InsertFromWithConstantsTable()
-					{
-						Value1 = x.Value1,
-						Value2 = x.Value1,
-						Value3 = x.Value2,
-						Value4 = x.Value2,
-					});
-		}
-
-		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
-
-			var id1 = 1;
-
-			tb
-				.Select(r => new
-				{
-					r,
-					Value1 = tb.Where(r => r.Id == id1).Select(r => r.Value3).FirstOrDefault(),
-					Value2 = "string 1",
-				})
-				.Update(
-					x => x.r,
-					x => new InsertFromWithConstantsTable()
-					{
-						Value1 = x.Value1,
-						Value2 = x.Value1,
-						Value3 = x.Value2,
-						Value4 = x.Value2,
-					});
 		}
 	}
 }

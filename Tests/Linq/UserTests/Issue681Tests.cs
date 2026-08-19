@@ -135,7 +135,7 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					if (context.IsAnyOf(ProviderName.Ydb))
+					if (context.IsAnyOf(TestProvName.AllYdb))
 						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
 						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
@@ -144,7 +144,7 @@ namespace Tests.UserTests
 				}
 				finally
 				{
-					if (context.IsAnyOf(ProviderName.Ydb))
+					if (context.IsAnyOf(TestProvName.AllYdb))
 						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
 						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
@@ -166,7 +166,7 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					if (context.IsAnyOf(ProviderName.Ydb))
+					if (context.IsAnyOf(TestProvName.AllYdb))
 						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
 						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
@@ -175,7 +175,7 @@ namespace Tests.UserTests
 				}
 				finally
 				{
-					if (context.IsAnyOf(ProviderName.Ydb))
+					if (context.IsAnyOf(TestProvName.AllYdb))
 						await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					else
 						await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
@@ -195,7 +195,7 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					if (context.IsAnyOf(ProviderName.Ydb))
+					if (context.IsAnyOf(TestProvName.AllYdb))
 					{
 						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 						db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
@@ -291,7 +291,7 @@ namespace Tests.UserTests
 				schemaName = withSchema   ? TestUtils.GetSchemaName  (db, context) : null;
 			}
 
-			using var t  = context.IsAnyOf(ProviderName.Ydb)
+			using var t  = context.IsAnyOf(TestProvName.AllYdb)
 				? db.CreateLocalTable<TTable>(databaseName: dbName, serverName: serverName, schemaName: schemaName)
 				: db.CreateLocalTable<TTable>();
 

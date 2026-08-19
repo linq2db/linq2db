@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
@@ -14,16 +15,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	{
 		// Maps each SelectQuery to its set of used columns
 		readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
-		
-		// Tracks which CTE fields are actually used
-		readonly Dictionary<CteClause, HashSet<string>> _usedCteFields = new();
-	
+
+		MappingSchema _mappingSchema = default!;
+
 		// Current pass: true = collecting, false = removing
 		bool _isCollecting;
 
 		bool _inExpression;
 
-		CteClause?           _currentCte;
 		SelectQuery?         _currentUpdateQuery;
 		SqlPredicate.Exists? _currentExistsPredicate;
 		SqlTableLikeSource?  _currentSqlTableLikeSource;
@@ -34,9 +33,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			base.Cleanup();
 			_usedColumnsByQuery.Clear();
-			_usedCteFields.Clear();
 
-			_currentCte                = null;
+			_mappingSchema             = default!;
 			_currentUpdateQuery        = null;
 			_currentExistsPredicate    = null;
 			_currentSqlTableLikeSource = null;
@@ -50,9 +48,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// Pass 1: Collect all column references (no modifications)
 		/// Pass 2: Remove unused columns (modify)
 		/// </summary>
-		public IQueryElement OptimizeColumns(IQueryElement root)
+		public IQueryElement OptimizeColumns(IQueryElement root, MappingSchema mappingSchema)
 		{
 			Cleanup();
+			_mappingSchema = mappingSchema;
 
 			// Pass 1: Collect all column references (no modifications, just collection)
 			_inExpression = true; // Start in expression context
@@ -69,30 +68,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
-			var saveCte = _currentCte;
-			_currentCte = element;
-
 			var prevInExpression = _inExpression;
 			_inExpression = false;
 
 			List<SqlColumn>? originalColumns = null;
-			
+
 			// In modify pass, store original columns for tracking
 			if (!_isCollecting && element.Body != null)
 			{
 				originalColumns = element.Body.Select.Columns.ToList();
 			}
-			
+
 			// Visit the CTE body
 			var result = (CteClause)base.VisitCteClause(element);
-			
+
 			// In modify pass, synchronize fields based on what columns remain
 			if (!_isCollecting && originalColumns != null && result.Body != null)
 			{
 				SynchronizeCteFields(result, originalColumns, result.Body.Select.Columns);
 			}
-			
-			_currentCte = saveCte;
+
 			_inExpression = prevInExpression;
 
 			return result;
@@ -188,7 +183,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				MarkColumnUsed(element);
 				return base.VisitSqlColumnReference(element);
 			}
-			
+
 			// In Phase 2, don't visit column expressions - usage already collected
 			return element;
 		}
@@ -197,19 +192,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (_isCollecting)
 			{
-				// Handle CTE field references
+				// Handle CTE field references — mark the corresponding body column as used
 				if (element.Table is SqlCteTable cte)
 				{
-					// Mark this CTE field as used
-					if (!_usedCteFields.TryGetValue(cte.Cte!, out var usedFields))
-					{
-						usedFields = new HashSet<string>(System.StringComparer.Ordinal);
-						_usedCteFields[cte.Cte!] = usedFields;
-					}
-
-					usedFields.Add(element.PhysicalName);
-					
-					// Find and mark the corresponding column
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
 						if (string.Equals(cte.Cte.Fields[i].Name, element.PhysicalName, System.StringComparison.Ordinal))
@@ -228,6 +213,20 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			
 			// In Phase 2, don't visit field references - usage already collected
+			return element;
+		}
+
+		protected internal override IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+		{
+			if (_isCollecting)
+			{
+				// Mark the corresponding CTE body column as used via direct reference
+				if (element.CteField?.Column is { } bodyColumn)
+				{
+					MarkColumnUsed(bodyColumn);
+				}
+			}
+
 			return element;
 		}
 
@@ -430,54 +429,52 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (cte.Fields.Count == 0 || originalColumns.Count == 0)
 				return;
-			
-			var hasUsedFields = _usedCteFields.TryGetValue(cte, out var usedFieldNames);
-			
+
 			// Build a set of columns that still exist
 			var remainingColumns = new HashSet<SqlColumn>(
-				currentColumns, 
+				currentColumns,
 				Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default
 			);
-			
-			// Determine which fields to keep based on their corresponding columns
-			var fieldsToKeep = new List<SqlField>();
-			
-			for (var i = 0; i < cte.Fields.Count && i < originalColumns.Count; i++)
+
+			// Keep fields whose corresponding body columns still exist.
+			var fieldsToKeep = new List<SqlCteField>();
+
+			for (var i = 0; i < cte.Fields.Count; i++)
 			{
 				var field = cte.Fields[i];
-				var originalColumn = originalColumns[i];
-				
-				// Check if the column still exists
-				if (remainingColumns.Contains(originalColumn))
+
+				// Prefer direct Column reference; fall back to index-based matching
+				var bodyColumn = field.Column ?? (i < originalColumns.Count ? originalColumns[i] : null);
+
+				if (bodyColumn != null && remainingColumns.Contains(bodyColumn))
 				{
-					// Check if the field is actually used
-					if (!hasUsedFields || usedFieldNames!.Contains(field.Name))
-					{
-						fieldsToKeep.Add(field);
-					}
+					fieldsToKeep.Add(field);
 				}
 			}
-			
+
 			// Ensure at least one field remains
-			if (fieldsToKeep.Count == 0 && currentColumns.Count > 0)
+			if (fieldsToKeep.Count == 0)
 			{
-				// Try to keep first available field
-				for (var i = 0; i < cte.Fields.Count && i < originalColumns.Count; i++)
+				// Try to keep first available field via direct reference
+				for (var i = 0; i < cte.Fields.Count; i++)
 				{
-					if (remainingColumns.Contains(originalColumns[i]))
+					var bodyColumn = cte.Fields[i].Column ?? (i < originalColumns.Count ? originalColumns[i] : null);
+					if (bodyColumn != null && remainingColumns.Contains(bodyColumn))
 					{
 						fieldsToKeep.Add(cte.Fields[i]);
 						break;
 					}
 				}
-				
-				// If still no field, create a dummy one
-				if (fieldsToKeep.Count == 0)
+
+				// If still no field, create one connected to the first remaining body column
+				if (fieldsToKeep.Count == 0 && currentColumns.Count > 0)
 				{
-					fieldsToKeep.Add(new SqlField(new DbDataType(typeof(int)), "c1", false));
+					var firstColumn = currentColumns[0];
+					var dataType    = QueryHelper.GetDbDataType(firstColumn.Expression, _mappingSchema);
+					fieldsToKeep.Add(new SqlCteField(dataType, firstColumn.Alias ?? "c1") { Column = firstColumn });
 				}
 			}
-			
+
 			// Replace fields
 			if (fieldsToKeep.Count != cte.Fields.Count)
 				IsOptimized = true;

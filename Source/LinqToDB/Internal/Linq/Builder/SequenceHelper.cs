@@ -937,7 +937,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!buildInfo.IsSubQuery)
 				return false;
 
-			if ((buildInfo.SourceCardinality & SourceCardinality.Zero) != 0)
+			if (buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
 				return true;
 
 			return false;
@@ -1032,6 +1032,34 @@ namespace LinqToDB.Internal.Linq.Builder
 			propName = memberExpression.Member.Name;
 
 			return true;
+		}
+
+		public static bool IsSpecialProperty(Expression expression, IBuildContext context)
+		{
+			if (expression is not MemberExpression memberExpression)
+				return false;
+
+			if (memberExpression.Member is not SpecialPropertyInfo)
+				return false;
+
+			if (memberExpression.Expression is not ContextRefExpression contextRef || !ReferenceEquals(contextRef.BuildContext, context))
+				return false;
+
+			return true;
+		}
+
+		public static MemberExpression ChangeSpecialPropertyObject(Expression expression, IBuildContext context)
+		{
+			if (expression is not MemberExpression memberExpression)
+				throw new InvalidOperationException("Expression is not a member access");
+
+			if (memberExpression.Member is not SpecialPropertyInfo)
+				throw new InvalidOperationException("Member is not a special property");
+
+			if (memberExpression.Expression is not ContextRefExpression contextRef)
+				throw new InvalidOperationException("Member expression is not based on a context reference");
+
+			return CreateSpecialProperty(CreateRef(context), memberExpression.Type, memberExpression.Member.Name);
 		}
 
 		#endregion

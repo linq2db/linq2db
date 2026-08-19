@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
@@ -427,7 +428,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var fm = new FluentMappingBuilder();
 			fm.Entity<Issue155Table>()
 				.Property(e => e.LinkedFrom)
-				.HasAttribute(new ExpressionMethodAttribute((IDataContext db, Issue155Table e) => db.GetTable<Issue155Table>().Where(r => Sql.Ext.PostgreSQL().ValueIsEqualToAny(e.Id, r.Linked)).ArrayAggregate(r => r.Id, Sql.AggregateModifier.Distinct).ToValue()));
+				.HasAttribute(new ExpressionMethodAttribute((IDataContext db, Issue155Table e) => db.GetTable<Issue155Table>().Where(r => Sql.Ext.PostgreSQL().ValueIsEqualToAny(e.Id, r.Linked)).ArrayAggregate(r => r.Id, Sql.AggregateModifier.Distinct).ToValue()) { IsColumn = true });
 			db.AddMappingSchema(fm.Build().MappingSchema);
 
 			var result = db.GetTable<Issue155Table>().Where(e => e.Id == 1).Single();
@@ -981,7 +982,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		#region Issue 4783
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4783")]
 		public async ValueTask Issue4783Test([EFDataSources] string provider)
 		{
@@ -1041,6 +1041,177 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = ctx.CreateLinqToDBConnection();
 		}
 
+		public enum ImplicitLeakPath
+		{
+			ToLinqToDB,
+			GetTable,
+			ToLinqToDBTable
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public void TestImplicitConnectionManagement([EFDataSources] string provider, [Values] ImplicitLeakPath path)
+		{
+			// Reproduces #5364 for every implicit ToLinqToDB() entry point that creates a linq2db
+			// DataConnection and abandons it (never disposed): the connection stays checked out of the
+			// pool. Contexts are held alive so GC/finalization can't mask the leak; past Max Pool Size
+			// (default 100) the next command throws. After the fix each path sets CloseAfterUse, so the
+			// connection is released per command.
+			// Baseline capture is disabled: the loop emits 300 identical statements with no diagnostic value.
+			using var noBaseline = new DisableBaseline("connection-leak stress: 300 identical commands");
+
+			var contexts = new List<IssueContextBase>();
+
+			try
+			{
+				for (var i = 0; i < 300; i++)
+				{
+					var ctx = CreateContext(provider);
+					contexts.Add(ctx);
+
+					switch (path)
+					{
+						case ImplicitLeakPath.ToLinqToDB     : _ = ctx.Masters.ToLinqToDB().ToList();      break;
+						case ImplicitLeakPath.GetTable       : _ = ctx.GetTable<Master>().ToList();        break;
+						case ImplicitLeakPath.ToLinqToDBTable: _ = ctx.Masters.ToLinqToDBTable().ToList(); break;
+					}
+				}
+			}
+			finally
+			{
+				foreach (var ctx in contexts)
+					ctx.Dispose();
+			}
+		}
+
+		// PostgreSQL identity-column temp tables are a separate known limitation (#4333), same as Issue4333Test above.
+		[ActiveIssue(TestProvName.AllPostgreSQL)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public void TempTableSurvivesAcrossCommands([EFDataSources] string provider)
+		{
+			// #5364 fix-scope guard: the explicit CreateLinqToDBContext() must keep its connection
+			// open across commands (SQL temp tables are connection-scoped), even after the implicit
+			// ToLinqToDB() path is changed to release the connection per query.
+			using var ctx = CreateContext(provider);
+			using var db  = ctx.CreateLinqToDBContext();
+
+			var data = new[]
+			{
+				new IdentityTable() { Name = "Bar" },
+				new IdentityTable() { Name = "Baz" },
+			};
+
+			using var table = db.CreateTempTable(data);          // command 1: create + populate
+
+			table.Count().ShouldBe(2);                           // command 2: separate query on the same connection
+
+			table.OrderBy(e => e.Id).Select(e => e.Name).ToArray()
+				.ShouldBe(new[] { "Bar", "Baz" });               // command 3
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
+		public void Issue5355_ContainsViaIEnumerableInGenericMethod([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			IEnumerable<string> licenseFilter = new[] { "12345" };
+
+			var result = ctx.Issue5355Customers
+				.ToLinqToDBTable()
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(x => x.Id)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5355")]
+		public void Issue5355_ContainsViaArrayInGenericMethod([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			string[] licenseFilter = ["12345"];
+
+			var result = ctx.Issue5355Customers
+				.ToLinqToDBTable()
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(x => x.Id)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Id.ShouldBe(1);
+			result[1].Id.ShouldBe(2);
+		}
+
+		public enum Issue5547QueryableShape
+		{
+			Direct,
+			SelectProjection,
+			WhereThenSelectProjection,
+			SelectProjectionThenWhere,
+			SelectProjectionDistinct,
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5547")]
+		public void Issue5547_ContainsThroughQueryableShapes(
+			[EFDataSources] string provider,
+			[Values] Issue5547QueryableShape shape)
+		{
+			using var ctx = CreateContext(provider);
+
+			string[] licenseFilter = ["12345"];
+
+			IQueryable<Issue5355Customer> source = shape switch
+			{
+				Issue5547QueryableShape.Direct                    => ctx.Issue5355Customers,
+				Issue5547QueryableShape.SelectProjection          => ctx.Issue5547CustomerShares.Select(s => s.Customer),
+				Issue5547QueryableShape.WhereThenSelectProjection => ctx.Issue5547CustomerShares.Where(s => s.Id > 0).Select(s => s.Customer),
+				Issue5547QueryableShape.SelectProjectionThenWhere => ctx.Issue5547CustomerShares.Select(s => s.Customer).Where(c => c.Id > 0),
+				Issue5547QueryableShape.SelectProjectionDistinct  => ctx.Issue5547CustomerShares.Select(s => s.Customer).Distinct(),
+				_                                                 => throw new InvalidOperationException($"Unknown shape: {shape}"),
+			};
+
+			var result = source
+				.FilterIssue5355License(licenseFilter)
+				.OrderBy(c => c.Id)
+				.Select(c => c.Id)
+				.ToLinqToDB()
+				.ToList();
+
+			result.ShouldBe(new[] { 1, 2 });
+		}
+
+#if !NETFRAMEWORK
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5585")]
+		public void Issue5585_ManyToManyDirectAny([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Issue5585CustomerShares
+				.Where(s => s.Users.Any(u => u.Email == "user@mail.com"))
+				.OrderBy(s => s.Id)
+				.Select(s => s.Id);
+
+			query.ToList().ShouldBe(new[] { 1, 2 });
+			query.ToLinqToDB().ToList().ShouldBe(new[] { 1, 2 });
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5585")]
+		public void Issue5585_ManyToManyNestedAny([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Issue5585Customers
+				.Where(c => c.CustomerShares.Any(s => s.Users.Any(u => u.Email == "user@mail.com")))
+				.OrderBy(c => c.Id)
+				.Select(c => c.Id);
+
+			query.ToList().ShouldBe(new[] { 1 });
+			query.ToLinqToDB().ToList().ShouldBe(new[] { 1 });
+		}
+#endif
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5388")]
 		public void ConstantAndValueConversion([EFDataSources] string provider)
 		{
@@ -1061,6 +1232,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			result.Count.ShouldBe(1);
 		}
+
+#if !NETFRAMEWORK
+		[Test(Description = "user-reported")]
+		public void BulkCopy_Sequence_AsIdentity([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.BulkCopy(
+				new BulkCopyOptions(),
+				[
+					new BulkCopyIdentityTable() { Value = 1 },
+					new BulkCopyIdentityTable() { Value = 2 },
+				]);
+
+			using var db = ctx.CreateLinqToDBContext();
+			var res = db.GetTable<BulkCopyIdentityTable>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res[0].Id, Is.EqualTo(1));
+			Assert.That(res[0].Value, Is.EqualTo(1));
+			Assert.That(res[1].Id, Is.EqualTo(2));
+			Assert.That(res[1].Value, Is.EqualTo(2));
+		}
+#endif
 	}
 
 	#region Test Extensions
@@ -1070,6 +1264,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		public static TItem Issue4626AnyValue<TSource, TItem>(this IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, TItem>> value)
 		{
 			throw new InvalidOperationException();
+		}
+
+		public static IQueryable<T> FilterIssue5355License<T>(this IQueryable<T> source, IEnumerable<string>? licenseFilter)
+			where T : class, IIssue5355Profile
+		{
+			if (licenseFilter != null)
+				return source.Where(x => licenseFilter.Contains(x.Profile.License));
+
+			return source;
 		}
 	}
 	#endregion

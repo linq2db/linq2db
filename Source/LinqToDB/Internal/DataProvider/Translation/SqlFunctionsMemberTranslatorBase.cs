@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
@@ -9,9 +10,35 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public SqlFunctionsMemberTranslatorBase()
 		{
-			Registration.RegisterMethod<int, int, int?>((value,          compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod);
-			Registration.RegisterMethod<int?, int?, int?>((value,        compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod);
-			Registration.RegisterMethod<object, object, object?>((value, compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod);
+			Registration.RegisterMethod<int, int, int?>((value,          compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod, isGenericTypeMatch: true);
+			Registration.RegisterMethod<int?, int?, int?>((value,        compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod, isGenericTypeMatch: true);
+			Registration.RegisterMethod<object, object, object?>((value, compareTo) => Sql.NullIf(value, compareTo), TranslateNullifMethod, isGenericTypeMatch: true);
+
+			Registration.RegisterMethod<int, int?>(value => Sql.ToNullable(value), TranslateToNullableMethod, isGenericTypeMatch: true);
+			Registration.RegisterMethod<int, int>(value  => Sql.AsNullable(value), TranslateAsNullableMethod, isGenericTypeMatch: true);
+		}
+
+		Expression? TranslateToNullableMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			// Sql.ToNullable<T>(T) is a pure nullability widener: reuse the argument's placeholder re-typed to T?
+			// (MakeNullable) so a SQL NULL is preserved instead of collapsing to default(T). If the argument isn't SQL
+			// (a client-side value), decline so it evaluates client-side.
+			if (translationContext.Translate(methodCall.Arguments[0], translationFlags) is not SqlPlaceholderExpression placeholder)
+				return null;
+
+			return placeholder.MakeNullable();
+		}
+
+		Expression? TranslateAsNullableMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			// Sql.AsNullable<T>(T) annotates nullability but returns T (not T?), so emit the argument's placeholder
+			// unchanged - re-typing it (MakeNullable) would change a wrapping (T?) cast's operand type and trip
+			// ExpressionVisitor unary validation. NULL is preserved by the source (e.g. a LEFT JOIN) and the cast,
+			// matching the original [Expression("{0}", CanBeNull = true)] which also emitted just the column.
+			if (translationContext.Translate(methodCall.Arguments[0], translationFlags) is not SqlPlaceholderExpression placeholder)
+				return null;
+
+			return placeholder;
 		}
 
 		Expression? TranslateNullifMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

@@ -18,8 +18,8 @@ namespace LinqToDB.Internal.DataProvider
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull
 	{
-		public MultipleRowsHelper(ITable<T> table, DataOptions options)
-			: base(table.DataContext, options, typeof(T))
+		public MultipleRowsHelper(ITable<T> table, DataOptions options, Func<DataOptions, DbDataType, object?, bool>? convertToParameter)
+			: base(table.DataContext, options, typeof(T), convertToParameter)
 		{
 			TableName = BasicBulkCopy.GetTableName(SqlBuilder, options.BulkCopyOptions, table);
 		}
@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider
 
 	public abstract class MultipleRowsHelper
 	{
-		protected MultipleRowsHelper(IDataContext dataConnection, DataOptions options, Type entityType)
+		protected MultipleRowsHelper(IDataContext dataConnection, DataOptions options, Type entityType, Func<DataOptions, DbDataType, object?, bool>? convertToParameter)
 		{
 			OriginalContext = dataConnection;
 			DataConnection  = dataConnection is DataConnection dc
@@ -47,6 +47,9 @@ namespace LinqToDB.Internal.DataProvider
 			ColumnTypes   = Columns.Select(c => new SqlDataType(c).Type).ToArray();
 			ParameterName = "p";
 			BatchSize     = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
+
+			if (convertToParameter != null)
+				ConvertToParameter = convertToParameter;
 		}
 
 		public readonly ISqlBuilder         SqlBuilder;
@@ -71,11 +74,11 @@ namespace LinqToDB.Internal.DataProvider
 		public int LastRowStringIndex;
 		public int LastRowParameterIndex;
 
-		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _defaultConvertToParameter = (o, _, _) => o.BulkCopyOptions.UseParameters;
+		private static readonly Func<DataOptions, DbDataType, object?, bool> _defaultConvertToParameter = (o, _, _) => o.BulkCopyOptions.UseParameters;
 
 		public bool SuppressCloseAfterUse { get; set; }
 
-		public Func<DataOptions, ColumnDescriptor, object?, bool> ConvertToParameter { get; set; } = _defaultConvertToParameter;
+		protected Func<DataOptions, DbDataType, object?, bool> ConvertToParameter { get; } = _defaultConvertToParameter;
 
 		public void SetHeader()
 		{
@@ -97,7 +100,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				var position = StringBuilder.Length;
 
-				if (ConvertToParameter(Options, column, value) || !MappingSchema.TryConvertToSql(StringBuilder, type, Options, value))
+				if (ConvertToParameter(Options, type, value) || !MappingSchema.TryConvertToSql(StringBuilder, type, Options, value))
 				{
 					var name = SqlBuilder.ConvertInline(string.Equals(ParameterName, "?", StringComparison.Ordinal) ? ParameterName : string.Create(CultureInfo.InvariantCulture, $"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
 

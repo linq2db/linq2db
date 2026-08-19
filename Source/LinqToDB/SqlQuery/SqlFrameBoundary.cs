@@ -60,6 +60,18 @@ namespace LinqToDB.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		/// <summary>
+		/// Structurally compares this boundary with <paramref name="other"/>, using <paramref name="comparer"/> to compare the offset expressions.
+		/// </summary>
+		public bool Equals(SqlFrameBoundary other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			return IsPreceding  == other.IsPreceding
+				&& BoundaryType == other.BoundaryType
+				&& (Offset is null
+					? other.Offset is null
+					: other.Offset != null && Offset.Equals(other.Offset, comparer));
+		}
+
 		[DebuggerStepThrough]
 		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFrameBoundary(this);
 

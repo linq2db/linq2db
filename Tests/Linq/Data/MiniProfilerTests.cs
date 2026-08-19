@@ -646,6 +646,10 @@ namespace Tests.Data
 			}
 
 			// bulk copy
+			// AllTypes.ID is GENERATED ALWAYS, so the IDs set below are discarded and the server assigns
+			// its own - clean up by the high-water mark rather than by a value we think we inserted.
+			var maxId = db.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				db.BulkCopy(
@@ -656,7 +660,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				db.GetTable<ALLTYPE>().Delete(p => p.ID >= 2000);
+				db.GetTable<ALLTYPE>().Delete(p => p.ID > maxId);
 			}
 
 			// just check schema (no api used)
@@ -882,6 +886,11 @@ namespace Tests.Data
 			var tvpSupported = version >= SqlServerVersion.v2008;
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			// SqlClient 7+ dropped SqlBulkCopy support for SQL Server 2005 (see
+			// SqlServerProviderAdapter.SqlServer2005BulkCopyUnsupported). This test always uses the
+			// Microsoft.Data.SqlClient adapter, so both SqlServer.2005 and SqlServer.2005.MS contexts
+			// hit the fallback — trace contains multi-row INSERTs instead of "INSERT BULK".
+			var bulkCopyDowngraded = context.IsAnyOf(TestProvName.AllSqlServer2005);
 			var trace = string.Empty;
 			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
 			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.MicrosoftDataSqlClient), context, type, "Microsoft.Data.SqlClient.SqlConnection, Microsoft.Data.SqlClient", onTrace: ti =>
@@ -997,7 +1006,7 @@ namespace Tests.Data
 							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 						using (Assert.EnterMultipleScope())
 						{
-							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
+							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped && !bulkCopyDowngraded));
 							Assert.That(copied, Is.EqualTo(10));
 						}
 					}
@@ -1027,7 +1036,7 @@ namespace Tests.Data
 							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 						using (Assert.EnterMultipleScope())
 						{
-							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
+							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped && !bulkCopyDowngraded));
 							Assert.That(copied, Is.EqualTo(10));
 						}
 					}

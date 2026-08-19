@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace LinqToDB.Internal.Expressions.Types
 {
-	[AttributeUsage(AttributeTargets.Constructor)]
+	[AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method)]
 	public sealed class WrappedBindingFlagsAttribute : Attribute
 	{
 		public WrappedBindingFlagsAttribute(BindingFlags bindingFlags)

@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -12,15 +15,18 @@ namespace LinqToDB.Internal.SqlQuery
 	public sealed class NullabilityContext
 	{
 		/// <summary>
-		/// Context for non-select queries of places where we don't know select query.
+		/// Creates context for non-select queries or places where we don't know select query.
+		/// Always returns a new instance to avoid shared mutable state across threads.
 		/// </summary>
-		public static NullabilityContext NonQuery { get; } = new([], null, null, null);
+		public static NullabilityContext NonQuery => new([], null, null, null);
 
 		/// <summary>
 		/// Creates nullability context for provided query or empty context if query is <see langword="null"/>.
 		/// </summary>
 		public static NullabilityContext GetContext(SelectQuery? selectQuery) =>
 			selectQuery == null ? NonQuery : new NullabilityContext([selectQuery], null, null, null);
+
+		HashSet<SqlColumn>? _visitedColumns;
 
 		/// <summary>
 		/// Creates nullability context for provided query.
@@ -132,6 +138,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (expression is SqlColumn column)
 			{
+				_visitedColumns ??= new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
+
 				// if column comes from nullable subquery - column is always nullable
 				if (column.Parent != null)
 				{
@@ -154,8 +162,20 @@ namespace LinqToDB.Internal.SqlQuery
 					}
 				}
 
+				if (!_visitedColumns.Add(column))
+				{
+					// to avoid circular reference in case of column referencing itself directly or through other columns
+
+					if (column.SystemType?.IsNullableOrReferenceType == false)
+						return false;
+
+					return true;
+				}
+
 				// otherwise check column expression nullability
-				return CanBeNull(column.Expression);
+				var columnResult = CanBeNull(column.Expression);
+				_visitedColumns.Remove(column);
+				return columnResult;
 			}
 
 			if (expression is SqlField field)
@@ -166,6 +186,17 @@ namespace LinqToDB.Internal.SqlQuery
 					return true;
 
 				if (CanBeNullSource(field.Table) == true)
+					return true;
+
+				return false;
+			}
+
+			if (expression is SqlCteTableField cteTableField)
+			{
+				if (cteTableField.Table == null || (cteTableField.CteField?.CanBeNullable(this) ?? true))
+					return true;
+
+				if (CanBeNullSource(cteTableField.Table) == true)
 					return true;
 
 				return false;

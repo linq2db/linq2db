@@ -83,7 +83,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 					{
 						string logFragment = string.Empty;
 
-						if (Extension.Options.DataContextOptions.Interceptors?.Any() == true)
+						if (Extension.Options.DataContextOptions.Interceptors?.Count > 0)
 						{
 							logFragment += $"Interceptors count: {Extension.Options.DataContextOptions.Interceptors.Count}";
 						}
@@ -103,7 +103,11 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 				=> debugInfo["LinqToDB"] = "1";
 
 #if !EF31
-			public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other) => true;
+			// none of our options affect the service provider, so "yes" only for another instance of
+			// this extension — the shape EF's own RelationalExtensionInfo uses. Hardening rather than
+			// part of the #5778 fix: both service-provider caches fold the extension types into their
+			// hash, so configurations with different extension sets never reach this pairwise compare.
+			public override bool ShouldUseSameServiceProvider(DbContextOptionsExtensionInfo other) => other is LinqToDBExtensionInfo;
 #endif
 		}
 	}

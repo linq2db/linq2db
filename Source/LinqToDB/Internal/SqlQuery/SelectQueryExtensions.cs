@@ -118,6 +118,28 @@ namespace LinqToDB.Internal.SqlQuery
 			/// otherwise, <see langword="false" />.</returns>
 			public bool IsSingleTableQueryWithoutJoins =>
 				selectQuery is { From.Tables: [{ HasJoins: false }] };
+
+			/// <summary>
+			/// Gets a value indicating whether any table in the query's FROM clause includes one or more join operations.
+			/// </summary>
+			/// <remarks>Use this property to determine if the select query involves joined tables. This can be useful
+			/// for query analysis, optimization, or when conditional logic depends on the presence of joins.</remarks>
+			public bool HasJoins =>
+				selectQuery.From.Tables.Exists(t => t.HasJoins);
+
+			/// <summary>
+			/// Determines whether this query is a trivial pass-through wrapper around a single inner SELECT
+			/// (i.e. <c>SELECT * FROM (innerSelect) AS alias</c> with no WHERE/GROUP BY/HAVING/ORDER BY/
+			/// DISTINCT/TAKE/SKIP/set operators, no joins, and no explicit projection columns). Such
+			/// wrappers are inlined into <c>innerSelect</c> by the optimizer.
+			/// </summary>
+			public bool IsTrivialFromWrapper =>
+				selectQuery is
+				{
+					IsSimple    : true,
+					HasNoColumns: true,
+					From.Tables : [{ Source: SelectQuery }],
+				};
 		}
 
 		extension(SqlTableSource tableSource)

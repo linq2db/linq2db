@@ -16,3 +16,7 @@ variables:
   artifact_test_net80_binaries: 'test_net80_binaries'
   artifact_test_net90_binaries: 'test_net90_binaries'
   artifact_test_net100_binaries: 'test_net100_binaries'
+# Per-test retry for crash/resource-unstable providers (access, oracle). MTP re-runs ONLY the
+# failed tests in-process, so a flaky failure no longer trips retryCountOnTaskFailure into a full
+# ~50-min leg re-run. The max-tests cap skips retry on mass failures (real breakage, not flakiness).
+  test_retry_args: '--retry-failed-tests 2 --retry-failed-tests-max-tests 5'

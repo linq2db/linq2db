@@ -4,8 +4,14 @@
 	<PropertyGroup>
 		<TargetFrameworks>net462;net8.0;net9.0;net10.0</TargetFrameworks>
 		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
-		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
+		<DefineConstants Condition=" $(X86STUBS) == 'True' ">$(DefineConstants);DB2STUBS;HANASTUBS</DefineConstants>
 		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<!-- Mirror BUGCHECK from LinqToDB.csproj so test files can compile against
+	     #if BUGCHECK-gated test hooks on referenced assemblies. -->
+	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
+		<DefineConstants>BUGCHECK;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
@@ -26,20 +32,4 @@
 		<PackageReference Include="Microsoft.Bcl.Memory" />
 	</ItemGroup>
 
-	<!--https://github.com/microsoft/vstest/issues/15297-->
-	<Target Name="Save_PublishDir" BeforeTargets="CopyTraceDataCollectorArtifacts">
-		<CreateProperty Value="$(PublishDir)">
-			<Output TaskParameter="Value" PropertyName="PublishDir_Backup"/>
-		</CreateProperty>
-		<CreateProperty Value="$(PublishDir)\_ignore\">
-			<Output TaskParameter="Value" PropertyName="PublishDir"/>
-		</CreateProperty>
-	</Target>
-	<Target Name="Restore_PublishDir" AfterTargets="CopyTraceDataCollectorArtifacts">
-		<RemoveDir Directories="$(PublishDir)" />
-		<CreateProperty Value="$(PublishDir_Backup)">
-			<Output TaskParameter="Value" PropertyName="PublishDir"/>
-		</CreateProperty>
-	</Target>
-	
 </Project>

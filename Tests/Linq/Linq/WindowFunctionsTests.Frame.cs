@@ -1,22 +1,20 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void FrameRows([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		public void FrameRows([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -26,32 +24,44 @@ namespace Tests.Linq
 				from t in table
 				let wndRowsCurrentAndUnbounded = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.Unbounded)
 				let wndRowsCurrentAndCurrent = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.CurrentRow)
-				let wndRowsValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Value(1).And.Value(2))
+				let wndRowsValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.ValueFollowing(2))
 				select new
 				{
+					Id = t.Id,
+
 					RowsCurrentAndUnbounded = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.Unbounded),
 					RowsCurrentAndCurrent   = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.CurrentRow),
-					RowsValueAndValue       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Value(1).And.Value(2)),
+					RowsValueAndValue       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.ValueFollowing(2)),
 
 					RowsCurrentAndUnboundedDefine = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRowsCurrentAndUnbounded)),
 					RowsCurrentAndCurrentDefine   = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRowsCurrentAndCurrent)),
 					RowsValueAndValueDefine       = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRowsValueAndValue)),
 				};
 
-			Assert.DoesNotThrow(() =>
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("ROWS");
+
+			foreach (var row in query.ToList())
 			{
-				query.ToList();
-			});
+				var currentAndUnbounded = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "UF", 0);
+				var currentAndCurrent   = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "CR", 0);
+				var valueAndValue       = ExpectedFrameSum(data, row.Id, range: false, "P",  1, "F",  2);
+
+				row.RowsCurrentAndUnbounded.ShouldBe(currentAndUnbounded);
+				row.RowsCurrentAndCurrent.ShouldBe(currentAndCurrent);
+				row.RowsValueAndValue.ShouldBe(valueAndValue);
+
+				row.RowsCurrentAndUnboundedDefine.ShouldBe(currentAndUnbounded);
+				row.RowsCurrentAndCurrentDefine.ShouldBe(currentAndCurrent);
+				row.RowsValueAndValueDefine.ShouldBe(valueAndValue);
+			}
 		}
 
 		[Test]
-		public void FrameGroups([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL10Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird3, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameGroups)]
+		public void FrameGroups([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -61,32 +71,47 @@ namespace Tests.Linq
 				from t in table
 				let wndGroupsCurrentAndUnbounded = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.CurrentRow.And.Unbounded)
 				let wndGroupsCurrentAndCurrent = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.CurrentRow.And.CurrentRow)
-				let wndGroupsValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.Value(1).And.Value(2))
+				let wndGroupsValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.ValuePreceding(1).And.ValueFollowing(2))
 				select new
 				{
+					Id = t.Id,
+
 					GroupsCurrentAndUnbounded = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.CurrentRow.And.Unbounded),
 					GroupsCurrentAndCurrent   = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.CurrentRow.And.CurrentRow),
-					GroupsValueAndValue       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.Value(1).And.Value(2)),
+					GroupsValueAndValue       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.ValuePreceding(1).And.ValueFollowing(2)),
 
 					GroupsCurrentAndUnboundedDefine = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndGroupsCurrentAndUnbounded)),
 					GroupsCurrentAndCurrentDefine   = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndGroupsCurrentAndCurrent)),
 					GroupsValueAndValueDefine       = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndGroupsValueAndValue))
 				};
 
-			Assert.DoesNotThrow(() =>
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("GROUPS");
+
+			// Unique Id ⇒ each ORDER BY peer group is a single row ⇒ GROUPS frames are equivalent to ROWS.
+			foreach (var row in query.ToList())
 			{
-				query.ToList();
-			});
+				var currentAndUnbounded = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "UF", 0);
+				var currentAndCurrent   = ExpectedFrameSum(data, row.Id, range: false, "CR", 0, "CR", 0);
+				var valueAndValue       = ExpectedFrameSum(data, row.Id, range: false, "P",  1, "F",  2);
+
+				row.GroupsCurrentAndUnbounded.ShouldBe(currentAndUnbounded);
+				row.GroupsCurrentAndCurrent.ShouldBe(currentAndCurrent);
+				row.GroupsValueAndValue.ShouldBe(valueAndValue);
+
+				row.GroupsCurrentAndUnboundedDefine.ShouldBe(currentAndUnbounded);
+				row.GroupsCurrentAndCurrentDefine.ShouldBe(currentAndCurrent);
+				row.GroupsValueAndValueDefine.ShouldBe(valueAndValue);
+			}
 		}
 
 		[Test]
-		public void FrameRangeValue([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void FrameRangeValue([SupportsAnalyticFunctionsContext(
+			// SQL Server does not support RANGE with value offsets
+			TestProvName.AllSqlServer)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -94,29 +119,33 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 			var query =
 				from t in table
-				let wndRangeValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.Value(1).And.Value(2))
+				let wndRangeValueAndValue = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.ValuePreceding(1).And.ValueFollowing(2))
 				select new
 				{
-					RangeValueAndValue = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.Value(1).And.Value(2)),
+					Id = t.Id,
+
+					RangeValueAndValue = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.ValuePreceding(1).And.ValueFollowing(2)),
 
 					RangeValueAndValueDefine = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRangeValueAndValue))
 				};
 
-			Assert.DoesNotThrow(() =>
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("RANGE");
+
+			foreach (var row in query.ToList())
 			{
-				query.ToList();
-			});
+				var valueAndValue = ExpectedFrameSum(data, row.Id, range: true, "P", 1, "F", 2);
+
+				row.RangeValueAndValue.ShouldBe(valueAndValue);
+				row.RangeValueAndValueDefine.ShouldBe(valueAndValue);
+			}
 		}
 
 		[Test]
-		public void FrameRangeNoValue([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void FrameRangeNoValue([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -128,6 +157,8 @@ namespace Tests.Linq
 				let wndRangeCurrentAndCurrent = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.CurrentRow.And.CurrentRow)
 				select new
 				{
+					Id = t.Id,
+
 					RangeCurrentAndUnbounded = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.CurrentRow.And.Unbounded),
 					RangeCurrentAndCurrent   = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.CurrentRow.And.CurrentRow),
 
@@ -135,10 +166,142 @@ namespace Tests.Linq
 					RangeCurrentAndCurrentDefine   = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wndRangeCurrentAndCurrent)),
 				};
 
-			Assert.DoesNotThrow(() =>
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("RANGE");
+
+			foreach (var row in query.ToList())
 			{
-				query.ToList();
-			});
+				var currentAndUnbounded = ExpectedFrameSum(data, row.Id, range: true, "CR", 0, "UF", 0);
+				var currentAndCurrent   = ExpectedFrameSum(data, row.Id, range: true, "CR", 0, "CR", 0);
+
+				row.RangeCurrentAndUnbounded.ShouldBe(currentAndUnbounded);
+				row.RangeCurrentAndCurrent.ShouldBe(currentAndCurrent);
+
+				row.RangeCurrentAndUnboundedDefine.ShouldBe(currentAndUnbounded);
+				row.RangeCurrentAndCurrentDefine.ShouldBe(currentAndCurrent);
+			}
+		}
+
+		// Explicit boundary direction — same-direction frames the old positional .Value(...) API could not express.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		public void FrameRowsExplicitDirection([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id = t.Id,
+
+					// ROWS BETWEEN 5 PRECEDING AND 2 PRECEDING
+					RowsPrecedingPreceding = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(5).And.ValuePreceding(2)),
+					// ROWS BETWEEN 1 FOLLOWING AND 3 FOLLOWING
+					RowsFollowingFollowing = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValueFollowing(1).And.ValueFollowing(3)),
+					// ROWS BETWEEN 1 PRECEDING AND 2 FOLLOWING (shortcut)
+					RowsShortcut           = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetweenValues(1, 2)),
+				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("ROWS");
+
+			foreach (var row in query.ToList())
+			{
+				// Same-direction frames can be empty for the leading/trailing rows of a partition; an empty frame
+				// aggregates to SQL NULL, materialized as 0 in the non-nullable projection.
+				row.RowsPrecedingPreceding.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "P", 5, "P", 2));
+				row.RowsFollowingFollowing.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "F", 1, "F", 3));
+				row.RowsShortcut.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "P", 1, "F", 2));
+			}
+		}
+
+		// GROUPS BETWEEN n PRECEDING AND m FOLLOWING shortcut.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL10Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird3, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameGroups)]
+		public void FrameGroupsValuesShortcut([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id = t.Id,
+
+					// GROUPS BETWEEN 1 PRECEDING AND 2 FOLLOWING (shortcut)
+					GroupsShortcut = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetweenValues(1, 2)),
+				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("GROUPS");
+
+			foreach (var row in query.ToList())
+				row.GroupsShortcut.ShouldBe(ExpectedFrameSum(data, row.Id, range: false, "P", 1, "F", 2));
+		}
+
+		// RANGE BETWEEN n PRECEDING AND m FOLLOWING shortcut (RANGE-with-offset unsupported on SQL Server).
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void FrameRangeValuesShortcut([SupportsAnalyticFunctionsContext(
+			// SQL Server does not support RANGE with value offsets
+			TestProvName.AllSqlServer)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id = t.Id,
+
+					// RANGE BETWEEN 1 PRECEDING AND 2 FOLLOWING (shortcut)
+					RangeShortcut = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetweenValues(1, 2)),
+				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("RANGE");
+
+			foreach (var row in query.ToList())
+				row.RangeShortcut.ShouldBe(ExpectedFrameSum(data, row.Id, range: true, "P", 1, "F", 2));
+		}
+
+		// A single logical ORDER BY key on a nullable column with an explicit NULLS position is CASE-emulated
+		// into two physical sort keys on providers without native NULLS ordering (e.g. MySQL), which a RANGE
+		// value offset cannot carry. The translate-time error should name the NULLS-emulation conflict rather
+		// than the generic "requires exactly one ORDER BY expression" — the user did supply exactly one key.
+		[Test]
+		public void FrameRangeOffsetNullsEmulatedKey([IncludeDataSources(true, TestProvName.AllMySql80)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
+
+			var emulated =
+				from t in table
+				select Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.NullableDoubleValue, Sql.NullsPosition.Last).RangeBetween.ValuePreceding(1).And.ValueFollowing(2));
+
+			var ex = Assert.Throws<LinqToDBException>(() => emulated.ToList());
+			ex!.Message.ShouldContain("NULLS ordering is emulated");
+
+			// Control: identical frame, non-nullable single key => no NULLS emulation => translates and runs.
+			var control =
+				from t in table
+				select Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.ValuePreceding(1).And.ValueFollowing(2));
+
+			Assert.DoesNotThrow(() => control.ToList());
 		}
 
 	}

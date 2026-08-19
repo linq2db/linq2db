@@ -65,35 +65,25 @@ namespace Tests.Linq
 			[Column("UNKNOWN")] int IIssue4031.Id { get; set; }
 		}
 
-		public class Issue4031Case01 : Issue4031BaseExternal, IIssue4031
-		{
-		}
+		public class Issue4031Case01 : Issue4031BaseExternal, IIssue4031;
 
-		public class Issue4031Case02 : Issue4031BaseInternal, IIssue4031
-		{
-		}
+		public class Issue4031Case02 : Issue4031BaseInternal, IIssue4031;
 
-		public class Issue4031Case03 : Issue4031BaseImplicit
-		{
-		}
+		public class Issue4031Case03 : Issue4031BaseImplicit;
 
 		public class Issue4031Case04 : Issue4031BaseImplicit
 		{
 			[Column("UNKNOWN")] public new int Id { get; set; }
 		}
 
-		public class Issue4031Case05 : Issue4031BaseExplicit
-		{
-		}
+		public class Issue4031Case05 : Issue4031BaseExplicit;
 
 		public class Issue4031Case06 : Issue4031BaseExplicit
 		{
 			[Column("UNKNOWN")] public int Id { get; set; }
 		}
 
-		public class Issue4031Case07 : Issue4031BaseImplicit, IIssue4031
-		{
-		}
+		public class Issue4031Case07 : Issue4031BaseImplicit, IIssue4031;
 
 		public class Issue4031Case08 : Issue4031BaseImplicit, IIssue4031
 		{
@@ -105,9 +95,7 @@ namespace Tests.Linq
 			[Column("PersonID")] public new int Id { get; set; }
 		}
 
-		public class Issue4031Case10 : Issue4031BaseExplicit, IIssue4031
-		{
-		}
+		public class Issue4031Case10 : Issue4031BaseExplicit, IIssue4031;
 
 		public class Issue4031Case11 : Issue4031BaseExplicit, IIssue4031
 		{
@@ -119,9 +107,7 @@ namespace Tests.Linq
 			[Column("PersonID")] int IIssue4031.Id { get; set; }
 		}
 
-		public class Issue4031Case13 : Issue4031BaseImplicit, IIssue4031
-		{
-		}
+		public class Issue4031Case13 : Issue4031BaseImplicit, IIssue4031;
 
 		public class Issue4031Case14 : Issue4031BaseImplicitBad, IIssue4031
 		{
@@ -133,9 +119,7 @@ namespace Tests.Linq
 			[Column("PersonID")] int IIssue4031.Id { get; set; }
 		}
 
-		public class Issue4031Case16 : Issue4031BaseExternal, IIssue4031<int>
-		{
-		}
+		public class Issue4031Case16 : Issue4031BaseExternal, IIssue4031<int>;
 
 		[Test]
 		public void Issue4031_Case01([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
@@ -634,6 +618,222 @@ namespace Tests.Linq
 				Assert.That(Filter2(tb, cn).Single().Id, Is.EqualTo(2));
 			}
 		}
+		#endregion
+
+		interface IGenericParentable
+		{
+			public int Value1 { get; set; }
+		}
+
+		[Table(Name="Parent", IsColumnAttributeRequired = false)]
+		class GenericParent : IGenericParentable
+		{
+			public int ParentID { get; set; }
+			public int Value1   { get; set; }
+		}
+
+		[Test]
+		public void GenericInterfaceMemberTableContextTest()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.GetTable<GenericParent>()
+				.Where (i => ((IGenericParentable)i).Value1 > 0)
+				.Select(i => ((IGenericParentable)i).Value1);
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		public void GenericInterfaceMemberExpressionTest()
+		{
+			using var db = GetDataConnection();
+
+			static Expression<Func<TEntity,int>> GetProjection<TEntity>()
+				where TEntity : IGenericParentable
+			{
+				return i => i.Value1;
+			}
+
+			var query = db.GetTable<GenericParent>()
+				.Select(GetProjection<GenericParent>());
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		public void GenericInterfaceMemberSelectContextTest()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.GetTable<GenericParent>()
+				.Select(i => new GenericParent
+				{
+					ParentID = i.ParentID,
+					Value1   = i.Value1
+				})
+				.Where (i => ((IGenericParentable)i).Value1 > 0)
+				.Select(i => ((IGenericParentable)i).Value1);
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		public void GenericInterfaceGroupingMaxProjectionTest()
+		{
+			using var db = GetDataConnection();
+
+			Expression<Func<IGrouping<int,IGenericParentable>, int>> projection =
+				group => group.Max(i => ((IGenericParentable)i).Value1);
+
+			var query = db.GetTable<GenericParent>()
+				.Where  (i => i.ParentID < 0)
+				.GroupBy(i => i.ParentID)
+				.Select (projection);
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		public void GenericInterfaceConstraintGroupingMaxProjectionTest()
+		{
+			using var db = GetDataConnection();
+
+			static Expression<Func<IGrouping<int,TEntity>,int>> GetGroupByProjection<TEntity>()
+				where TEntity : IGenericParentable
+			{
+				return group => group.Max(i => i.Value1);
+			}
+
+			var query = db.GetTable<GenericParent>()
+				.Where  (i => i.ParentID < 0)
+				.GroupBy(i => i.ParentID)
+				.Select (GetGroupByProjection<GenericParent>());
+
+			_ = query.ToList();
+		}
+
+		#region Generic-interface filter through queryable shapes (#5547)
+
+		// Regression matrix for projection-through-Select interacting with generic-interface
+		// constrained filters. The hierarchy declares the navigation on the abstract base while
+		// the FluentMappingBuilder registers the association on the concrete sealed type — this
+		// produces the DeclaringType != ConcreteType member shape that IsAssociationInRealization
+		// must resolve via the realized type. Mirrors the EF Core fixture
+		// LinqToDB.EntityFrameworkCore.Tests.IssueTests.Issue5547_ContainsThroughQueryableShapes.
+		public interface IHasMembershipProfile
+		{
+			MembershipProfile Profile   { get; set; }
+			int               ProfileId { get; set; }
+		}
+
+		public class MembershipProfile
+		{
+			public int    Id      { get; set; }
+			public string License { get; set; } = null!;
+		}
+
+		public abstract class MemberBase : IHasMembershipProfile
+		{
+			public int               Id        { get; set; }
+			public int               ProfileId { get; set; }
+			public MembershipProfile Profile   { get; set; } = null!;
+		}
+
+		public sealed class Member : MemberBase
+		{
+			public string Name { get; set; } = null!;
+		}
+
+		public sealed class MemberShare
+		{
+			public int    Id       { get; set; }
+			public int    MemberId { get; set; }
+			public Member Member   { get; set; } = null!;
+		}
+
+		public enum MemberQueryableShape
+		{
+			Direct,
+			SelectProjection,
+			WhereThenSelectProjection,
+			SelectProjectionThenWhere,
+			SelectProjectionDistinct,
+		}
+
+		static MappingSchema ConfigureMembershipMapping()
+		{
+			return new FluentMappingBuilder()
+				.Entity<MembershipProfile>()
+					.Property(e => e.Id).IsPrimaryKey()
+					.Property(e => e.License)
+				.Entity<Member>()
+					.Property(e => e.Id).IsPrimaryKey()
+					.Property(e => e.ProfileId)
+					.Property(e => e.Name)
+					.Association(e => e.Profile, e => e.ProfileId, p => p!.Id)
+				.Entity<MemberShare>()
+					.Property(e => e.Id).IsPrimaryKey()
+					.Property(e => e.MemberId)
+					.Association(e => e.Member, e => e.MemberId, m => m!.Id)
+				.Build()
+				.MappingSchema;
+		}
+
+		static IQueryable<T> FilterByLicense<T>(IQueryable<T> source, string[]? licenseFilter)
+			where T : class, IHasMembershipProfile
+		{
+			if (licenseFilter != null)
+				return source.Where(x => licenseFilter.Contains(x.Profile.License));
+
+			return source;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5547")]
+		public void GenericInterfaceFilterAcrossQueryableShapes(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values] MemberQueryableShape shape)
+		{
+			using var db = GetDataContext(context, ConfigureMembershipMapping());
+
+			using var profiles = db.CreateLocalTable(new[]
+			{
+				new MembershipProfile { Id = 1, License = "12345" },
+				new MembershipProfile { Id = 2, License = "67890" },
+			});
+			using var members  = db.CreateLocalTable(new Member[]
+			{
+				new() { Id = 1, ProfileId = 1, Name = "Alice Smith" },
+				new() { Id = 2, ProfileId = 1, Name = "Bob Jones"   },
+				new() { Id = 3, ProfileId = 2, Name = "Carol Davis" },
+			});
+			using var shares   = db.CreateLocalTable(new[]
+			{
+				new MemberShare { Id = 1, MemberId = 1 },
+				new MemberShare { Id = 2, MemberId = 2 },
+				new MemberShare { Id = 3, MemberId = 3 },
+			});
+
+			string[] licenseFilter = ["12345"];
+
+			IQueryable<Member> source = shape switch
+			{
+				MemberQueryableShape.Direct                    => members,
+				MemberQueryableShape.SelectProjection          => shares.Select(s => s.Member),
+				MemberQueryableShape.WhereThenSelectProjection => shares.Where(s => s.Id > 0).Select(s => s.Member),
+				MemberQueryableShape.SelectProjectionThenWhere => shares.Select(s => s.Member).Where(m => m.Id > 0),
+				MemberQueryableShape.SelectProjectionDistinct  => shares.Select(s => s.Member).Distinct(),
+				_                                              => throw new InvalidOperationException($"Unknown shape: {shape}"),
+			};
+
+			var result = FilterByLicense(source, licenseFilter)
+				.OrderBy(m => m.Id)
+				.Select(m => m.Id)
+				.ToList();
+
+			result.ShouldBe(new[] { 1, 2 });
+		}
+
 		#endregion
 	}
 }

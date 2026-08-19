@@ -17,6 +17,7 @@ internal sealed class PostgreSQLProvider : DatabaseProviderBase
 		new(ProviderName.PostgreSQL13, "PostgreSQL 13 Dialect"             ),
 		new(ProviderName.PostgreSQL15, "PostgreSQL 15 Dialect"             ),
 		new(ProviderName.PostgreSQL18, "PostgreSQL 18 Dialect"             ),
+		new(ProviderName.PostgreSQL19, "PostgreSQL 19 Dialect"             ),
 	];
 
 	public PostgreSQLProvider()

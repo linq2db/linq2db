@@ -16,6 +16,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Internal.DataProvider.ClickHouse.Translation;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -50,6 +51,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			SqlProviderFlags.IsUpdateFromSupported                     = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported         = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported                = true;
+			SqlProviderFlags.IsNullsOrderingSupported                  = true;
+			SqlProviderFlags.DefaultNullsOrdering                      = NullsDefaultOrdering.AlwaysLast; // ClickHouse places NULL last regardless of sort direction
 			SqlProviderFlags.IsUnionAllOrderBySupported                = true;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 0;
 			SqlProviderFlags.IsAllSetOperationsSupported               = true;

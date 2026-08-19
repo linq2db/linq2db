@@ -884,9 +884,7 @@ namespace Tests.Linq
 #pragma warning disable CA2263 // Prefer generic overload when type is known
 					v => (EnumValue)Enum.Parse(typeof(EnumValue), v),
 #pragma warning restore CA2263 // Prefer generic overload when type is known
-					false)
-				{
-				}
+					false);
 
 				public static readonly Table[] Data =
 				[
@@ -1061,6 +1059,66 @@ namespace Tests.Linq
 			var trueRecords = db.GetTable<TableWithConverterValue>().Where(x => x.Test1 == (key == "Valid")).ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
+		public void UpdateValuesWithFieldOnRhsConversion([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+
+			// Id=1 starts with Test1='X' (true), Test2='X' (true).
+			// RHS `!Test2` is a CLR-style boolean predicate over a converted column.
+			// It must still be wrapped by the column's ToProvider (bool -> 'X'/null),
+			// otherwise the SQL assigns a boolean predicate to a CHAR(1) column.
+			var affected = db.GetTable<TableWithConverterValue>()
+				.Where(x => x.Id == 1)
+				.Set(x => x.Test1, x => !x.Test2)
+				.Update();
+
+			if (context.SupportsRowcount())
+				affected.ShouldBe(1);
+
+			var record = db.GetTable<TableWithConverterValue>().Where(x => x.Id == 1).Single();
+			record.Test1.ShouldBeFalse();
+			record.Test2.ShouldBeTrue();
+
+			var raw = db.GetTable<TableWithConverterValueRaw>().Where(x => x.Id == 1).Single();
+			raw.Test1.ShouldBeNull();
+			raw.Test2.ShouldBe("X");
+		}
+
+		[Sql.Expression("({0} > 0)", ServerSideOnly = true, IsPredicate = true)]
+		static bool Issue5505IsPositive(int x) => throw new InvalidOperationException();
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
+		public void UpdateValuesWithUnrelatedFunctionConversion([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(TableWithConverterValueRaw.TestData);
+
+			// Id=1 starts with Test1='X' (true).
+			// RHS is an [Sql.Expression] returning CLR bool computed from an unrelated
+			// column (Id, not Test1). The function does not reference the target
+			// column, so its result is still in CLR form and the column's ToProvider
+			// must wrap it — otherwise the raw bool expression is assigned to a
+			// CHAR(1) column (e.g. PG rejects with 22001 "value too long for type
+			// character(1)").
+			var affected = db.GetTable<TableWithConverterValue>()
+				.Where(x => x.Id == 1)
+				.Set(x => x.Test1, x => Issue5505IsPositive(x.Id))
+				.Update();
+
+			if (context.SupportsRowcount())
+				affected.ShouldBe(1);
+
+			// Id=1 → (Id > 0) → true → converter writes 'X'
+			var raw = db.GetTable<TableWithConverterValueRaw>().Where(x => x.Id == 1).Single();
+			raw.Test1.ShouldBe("X");
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
 		public void UpdateValuesWithConversionWithARowShouldThrow([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
 		{
@@ -1099,5 +1157,173 @@ namespace Tests.Linq
 				.Update();
 		}
 
+		sealed class DefaultValuesTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntConverter))]
+			public IntClass IntClassRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntConverter))]
+			public IntClass? IntClassNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntWithNullConverter))]
+			public IntClass? IntClassRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(ClassToIntWithNullConverter))]
+			public IntClass? IntClassNullableWithNull { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringConverter))]
+			public StringStruct StringStructRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringConverter))]
+			public StringStruct? StringStructNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringWithNullConverter))]
+			public StringStruct? StringStructRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(StructToStringWithNullConverter))]
+			public StringStruct? StringStructNullableWithNull { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringConverter))]
+			public StringClass StringClassRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringConverter))]
+			public StringClass? StringClassNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringWithNullConverter))]
+			public StringClass? StringClassRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.VarChar, Length = 10), ValueConverter(ConverterType = typeof(ClassToStringWithNullConverter))]
+			public StringClass? StringClassNullableWithNull { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntConverter))]
+			public IntStruct IntStructRequired { get; set; } = default!;
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntConverter))]
+			public IntStruct? IntStructNullable { get; set; }
+
+			[Column(CanBeNull = false, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntWithNullConverter))]
+			public IntStruct? IntStructRequiredWithNull { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.Int32), ValueConverter(ConverterType = typeof(StructToIntWithNullConverter))]
+			public IntStruct? IntStructNullableWithNull { get; set; }
+
+			sealed class ClassToIntConverter() : ValueConverter<IntClass, int>(v => v.Value, v => new(v), false);
+			sealed class ClassToIntWithNullConverter() : ValueConverter<IntClass?, int>(v => v == null ? -1 : v.Value, v => new(v), true);
+
+			sealed class StructToStringConverter() : ValueConverter<StringStruct, string>(v => v.Value, v => new(v), false);
+			sealed class StructToStringWithNullConverter() : ValueConverter<StringStruct?, string>(v => v == null ? "-1" : v.Value.Value, v => new(v), true);
+
+			sealed class ClassToStringConverter() : ValueConverter<StringClass, string>(v => v.Value, v => new(v), false);
+			sealed class ClassToStringWithNullConverter() : ValueConverter<StringClass?, string>(v => v == null ? "-1" : v.Value, v => new(v), true);
+
+			sealed class StructToIntConverter() : ValueConverter<IntStruct, int>(v => v.Value, v => new(v), false);
+			sealed class StructToIntWithNullConverter() : ValueConverter<IntStruct?, int>(v => v == null ? -1 : v.Value.Value, v => new(v), true);
+
+			public sealed class IntClass(int value)
+			{
+				public int Value => value;
+			}
+
+			public readonly struct StringStruct(string value)
+			{
+				public string Value => value;
+			}
+
+			public sealed class StringClass(string value)
+			{
+				public string Value => value;
+			}
+
+			public readonly struct IntStruct(int value)
+			{
+				public int Value => value;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5427")]
+		public void TestNullConversion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<DefaultValuesTable>();
+
+			db.Insert(new DefaultValuesTable()
+			{
+				Id = 1,
+				StringStructRequired = new("must_set"),
+				StringClassRequired = new("must_set")
+			});
+			db.Insert(new DefaultValuesTable()
+			{
+				Id = 2,
+
+				IntClassRequired = new(1),
+				IntClassNullable = new(1),
+				IntClassRequiredWithNull = new(1),
+				IntClassNullableWithNull = new(1),
+
+				StringStructRequired = new("one"),
+				StringStructNullable = new("one"),
+				StringStructRequiredWithNull = new("one"),
+				StringStructNullableWithNull = new("one"),
+
+				StringClassRequired = new("one"),
+				StringClassNullable = new("one"),
+				StringClassRequiredWithNull = new("one"),
+				StringClassNullableWithNull = new("one"),
+
+				IntStructRequired = new(1),
+				IntStructNullable = new(1),
+				IntStructRequiredWithNull = new(1),
+				IntStructNullableWithNull = new(1),
+			});
+
+			var res = tb.OrderBy(r => r.Id).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].IntClassRequired.Value, Is.Zero);
+				Assert.That(res[0].IntClassNullable, Is.Null);
+
+				Assert.That(res[0].IntClassRequiredWithNull?.Value, Is.EqualTo(-1));
+				Assert.That(res[0].IntClassNullableWithNull?.Value, Is.EqualTo(-1));
+
+				Assert.That(res[0].StringStructRequired.Value, Is.EqualTo("must_set"));
+				Assert.That(res[0].StringStructNullable, Is.Null);
+
+				Assert.That(res[0].StringStructRequiredWithNull?.Value, Is.EqualTo("-1"));
+				Assert.That(res[0].StringStructNullableWithNull?.Value, Is.EqualTo("-1"));
+
+				Assert.That(res[0].StringClassRequired.Value, Is.EqualTo("must_set"));
+				Assert.That(res[0].StringClassNullable, Is.Null);
+
+				Assert.That(res[0].StringClassRequiredWithNull?.Value, Is.EqualTo("-1"));
+				Assert.That(res[0].StringClassNullableWithNull?.Value, Is.EqualTo("-1"));
+
+				Assert.That(res[0].IntStructRequired.Value, Is.Zero);
+				Assert.That(res[0].IntStructNullable, Is.Null);
+
+				Assert.That(res[0].IntStructRequiredWithNull?.Value, Is.EqualTo(-1));
+				Assert.That(res[0].IntStructNullableWithNull?.Value, Is.EqualTo(-1));
+
+				Assert.That(res[1].IntClassRequired.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntClassNullable?.Value, Is.EqualTo(1));
+
+				Assert.That(res[1].IntClassRequiredWithNull?.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntClassNullableWithNull?.Value, Is.EqualTo(1));
+
+				Assert.That(res[1].StringStructRequired.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringStructNullable?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].StringStructRequiredWithNull?.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringStructNullableWithNull?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].StringClassRequired.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringClassNullable?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].StringClassRequiredWithNull?.Value, Is.EqualTo("one"));
+				Assert.That(res[1].StringClassNullableWithNull?.Value, Is.EqualTo("one"));
+
+				Assert.That(res[1].IntStructRequired.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntStructNullable?.Value, Is.EqualTo(1));
+
+				Assert.That(res[1].IntStructRequiredWithNull?.Value, Is.EqualTo(1));
+				Assert.That(res[1].IntStructNullableWithNull?.Value, Is.EqualTo(1));
+			}
+
+		}
 	}
 }

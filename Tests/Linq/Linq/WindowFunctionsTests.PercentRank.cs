@@ -1,6 +1,7 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -9,14 +10,8 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void PercentRankWithMultiplePartitions([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		public void PercentRankWithMultiplePartitions([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -34,21 +29,12 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void PercentRankWithMultiplePartitionsWithDefineWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		public void PercentRankWithMultiplePartitionsWithDefineWindow([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -75,16 +61,12 @@ namespace Tests.Linq
 				orderby s.Entity.Id
 				select s;
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void PercentRankWithNulls([IncludeDataSources(
-			true,
-			TestProvName.AllOracle12Plus)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		public void PercentRankWithNulls([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -98,21 +80,12 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void PercentRankWithoutPartition([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentRank)]
+		public void PercentRankWithoutPartition([SupportsAnalyticFunctionsContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
@@ -130,10 +103,7 @@ namespace Tests.Linq
 				})
 				.OrderBy(x => x.Entity.Id);
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 	}
 

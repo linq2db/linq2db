@@ -10,7 +10,21 @@ namespace LinqToDB.Mapping
 	/// Used for controlling query caching of custom SQL Functions.
 	/// Parameter with this attribute will be evaluated on client side before generating SQL.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Deprecated; scheduled for removal in v7.
+	/// </para>
+	/// <para>
+	/// The per-parameter expression compile inside <see cref="ExpressionsEqual{TContext}"/> (and the
+	/// base <see cref="SqlQueryDependentAttribute.ExpressionsEqual{TContext}"/>) is unsafe whenever
+	/// the parameter expression captures outer-scope transparent identifiers, e.g. inside multi-level
+	/// eager-loaded projections — see <see href="https://github.com/linq2db/linq2db/issues/5154"/>.
+	/// The default structural cache-compare path is sufficient for the cases this attribute was
+	/// intended to cover.
+	/// </para>
+	/// </remarks>
 	[AttributeUsage(AttributeTargets.Parameter)]
+	[Obsolete("Scheduled for removal in v7. The default structural cache-compare path covers the cases this attribute was intended to handle; see https://github.com/linq2db/linq2db/issues/5154.")]
 	public class SqlQueryDependentParamsAttribute : SqlQueryDependentAttribute
 	{
 		public override bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2, Func<TContext, Expression, Expression, bool> comparer)
