@@ -7,8 +7,8 @@ using LINQPad.Extensibility.DataContext;
 
 namespace LinqToDB.LINQPad;
 
-// the one place allowed to use MessageBox, see BannedSymbols.txt
-#pragma warning disable RS0030 // Do not use banned APIs
+// the one place allowed to use MessageBox, see BannedSymbols.txt - each use is suppressed individually,
+// so a ban added to the repo-wide list later isn't absorbed by this file
 internal static class Notification
 {
 	/// <summary>
@@ -26,8 +26,12 @@ internal static class Notification
 
 	private static bool CanShowMessageBox => true;
 #else
+	// per-thread on purpose: the dialog is modal on a single Dispatcher thread, so a caller on any other
+	// thread reads false and falls back to logging, which is the safe direction where WPF may be unavailable
+#pragma warning disable RS0030 // Do not use banned APIs
 	[ThreadStatic]
 	private static bool _connectionDialogScope;
+#pragma warning restore RS0030 // Do not use banned APIs
 
 	public static void BeginConnectionDialog() => _connectionDialogScope = true;
 	public static void EndConnectionDialog  () => _connectionDialogScope = false;
@@ -51,6 +55,7 @@ internal static class Notification
 			ShowError(message, title);
 	}
 
+#pragma warning disable RS0030 // Do not use banned APIs
 	public static void Error(Window owner, string message, string title = "Error")
 	{
 		Log(message, title);
@@ -64,6 +69,7 @@ internal static class Notification
 
 		MessageBox.Show(owner, FormatMessages(ex), title, MessageBoxButton.OK, MessageBoxImage.Error);
 	}
+#pragma warning restore RS0030 // Do not use banned APIs
 
 	/// <summary>
 	/// Returns messages of the exception and all its inner exceptions: the message of a wrapper such as
@@ -84,6 +90,7 @@ internal static class Notification
 		return messages.ToString();
 	}
 
+#pragma warning disable RS0030 // Do not use banned APIs
 	public static void Warning(Window owner, string message, string title = "Warning")
 	{
 		Log(message, title);
@@ -108,6 +115,7 @@ internal static class Notification
 	{
 		MessageBox.Show(message, title, MessageBoxButton.OK, MessageBoxImage.Error);
 	}
+#pragma warning restore RS0030 // Do not use banned APIs
 
 	private static string Format(Exception ex, string context)
 	{
@@ -147,4 +155,3 @@ internal static class Notification
 		}
 	}
 }
-#pragma warning restore RS0030 // Do not use banned APIs
