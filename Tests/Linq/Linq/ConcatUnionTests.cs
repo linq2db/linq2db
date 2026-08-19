@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -2627,13 +2628,37 @@ namespace Tests.Linq
 		/// refusal, and it is left open.
 		/// </para>
 		/// <para>
-		/// <c>UNION ALL</c> is asked alongside, since it hands every row back and reads each on its own branch's
-		/// terms - so it is the one set operation that has no comparison to get wrong.
+		/// Asked of every operation that compares, not only of <c>Union</c>, because the refusal is decided by a
+		/// single equality against <c>UnionAll</c> - so the four others reach it by construction, and the message
+		/// names the operation it refused. <c>ExceptAll</c> and <c>IntersectAll</c> are the pair worth having:
+		/// they are the ones a reader most expects to behave like <c>UnionAll</c>, and the ones where reading each
+		/// branch on its own terms inside a multiset difference would answer a wrong row set rather than refuse.
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void UnionRefusesAConstantBranchAgainstAConvertedColumn([DataSources] string context)
+		public void SetOperationRefusesAConstantBranchAgainstAConvertedColumn(
+			[DataSources] string context,
+			[Values(
+				SetOperation.Union,
+				SetOperation.Except,
+				SetOperation.ExceptAll,
+				SetOperation.Intersect,
+				SetOperation.IntersectAll)]
+			SetOperation operation)
 		{
+			static IQueryable<T> Combine<T>(IQueryable<T> first, IQueryable<T> second, SetOperation operation)
+			{
+				return operation switch
+				{
+					SetOperation.Union        => first.Union(second),
+					SetOperation.Except       => first.Except(second),
+					SetOperation.ExceptAll    => first.ExceptAll(second),
+					SetOperation.Intersect    => first.Intersect(second),
+					SetOperation.IntersectAll => first.IntersectAll(second),
+					_                         => throw new InvalidOperationException($"Unhandled set operation {operation}."),
+				};
+			}
+
 			var ms = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -2648,18 +2673,42 @@ namespace Tests.Linq
 			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
 			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
 
-			Action union = () => fromColumn.Union(fromConstant).ToArray();
+			var combined = () => Combine(fromColumn, fromConstant, operation).ToArray();
 
-			union.ShouldThrow<LinqToDBException>().Message.ShouldContain("in different terms");
+			var refusal = combined.ShouldThrow<LinqToDBException>();
 
-			// Read a branch at a time, so each side keeps its own reading and nothing is compared in the database.
-			//
+			refusal.Message.ShouldContain("in different terms");
+			refusal.Message.ShouldContain(operation.ToString());
+		}
+
+		/// <summary>
+		/// The one set operation that has no comparison to get wrong.
+		/// </summary>
+		/// <remarks>
+		/// <c>UNION ALL</c> hands every row back and reads each on its own branch's terms, so a branch supplying a
+		/// constant where the other reads a converted column is kept apart rather than refused. The control for the
+		/// refusal above, and the reason that refusal is keyed on this operation alone.
+		/// </remarks>
+		[Test]
+		public void UnionAllReadsAConstantBranchOnItsOwnTerms([DataSources(TestProvName.AllSybase)] string context)
+		{
 			// Not asked of Sybase, and the reason is the same gap seen from the other side: the constant is emitted
 			// as the value it is rather than through the column's conversion, so it arrives as BIT against a column
 			// stored as a character - which that provider rejects outright instead of comparing. Where the storage
 			// tolerates both, the rows come back read on their own branch's terms.
-			if (context.IsAnyOf(TestProvName.AllSybase))
-				return;
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
 
 			var all = fromColumn.UnionAll(fromConstant).ToArray();
 
