@@ -49,4 +49,6 @@ Driver errors are written to `linq2db.LINQPad.log`, in the `Logs.LINQPad<version
 * Windows: `%localappdata%\LINQPad`
 * macOS: `~/Library/Application Support/LINQPad`
 
-Errors raised outside of the connection dialog are reported in that log only, without a message box. LINQPad renders a driver's dialogs through Avalonia XPF on macOS, and that is available to a driver just while the dialog is open, so anything reported from elsewhere has nowhere to draw.
+On macOS, errors raised outside of the connection dialog go to that log only, without a message box: LINQPad renders a driver's dialogs through Avalonia XPF there, and XPF is available to a driver just while its own dialog is open, so anything reported from elsewhere has nowhere to draw. On Windows they are shown in a message box as well.
+
+Failures the driver recovers from go to the log on either system, without a message box. Reading the age of a connection's schema is one: LINQPad asks for it before it has downloaded that connection's database client, so it cannot be answered yet, and the schema is built and queried normally straight afterwards.

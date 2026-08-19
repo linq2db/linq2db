@@ -52,7 +52,10 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 		}
 		catch (Exception ex)
 		{
-			DriverHelper.HandleException(ex, nameof(GetLastSchemaUpdate));
+			// LINQPad asks for this before it downloads the connection's database client, so the client cannot
+			// be loaded yet and provider resolution fails. Returning null just means "schema age unknown",
+			// which is why the schema is built and queried normally right afterwards - so don't interrupt.
+			DriverHelper.LogException(ex, nameof(GetLastSchemaUpdate));
 			return null;
 		}
 	}

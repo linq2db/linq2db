@@ -198,7 +198,9 @@ internal static class DriverHelper
 		}
 		catch (Exception ex)
 		{
-			HandleException(ex, nameof(ClearConnectionPools));
+			// closing pools needs the database client, which LINQPad has not downloaded for a connection that
+			// was never used - and then there is nothing to close either, so this must not interrupt the user
+			LogException(ex, nameof(ClearConnectionPools));
 		}
 	}
 
@@ -397,9 +399,10 @@ internal static class DriverHelper
 
 	/// <summary>
 	/// Same as <see cref="HandleException"/> for failures the driver recovers from: they go to the log
-	/// without interrupting the user with a dialog.
+	/// without interrupting the user with a dialog. Use it for anything LINQPad may call on a connection
+	/// before it has downloaded that connection's database client, as no client can be loaded until then.
 	/// </summary>
-	private static void LogException(Exception ex, string method)
+	public static void LogException(Exception ex, string method)
 	{
 		Notification.Log(ex, string.Create(CultureInfo.InvariantCulture, $"Recovered error in method '{method}':"));
 	}
