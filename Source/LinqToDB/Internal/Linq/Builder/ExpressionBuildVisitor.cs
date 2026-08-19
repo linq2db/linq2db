@@ -2307,6 +2307,23 @@ namespace LinqToDB.Internal.Linq.Builder
 						return Visit(contextRef.WithType(node.Type));
 					}
 
+					// Collapse Convert(Convert(x, T), T?) to Convert(x, T?). The outer conversion only adds or
+					// drops the nullable wrapper over the type the inner one already produced, so it states
+					// nothing of its own. A comparison between differing key types arrives in this shape because
+					// ExpressionBuilder.Equal reconciles the unwrapped types and the nullable wrapper in two
+					// independent steps, each adding its own Convert.
+					//
+					// Two shapes are deliberately left alone: a chain passing through a different intermediate
+					// type, where the direct conversion may not exist at all (a wrapper struct reached via
+					// object), and a conversion carrying a Method, which is a user-defined operator whose call
+					// must not be dropped.
+					if (node.Method == null
+						&& node.Operand is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } innerConvert
+						&& node.Type.UnwrapNullableType() == innerConvert.Type.UnwrapNullableType())
+					{
+						return Visit(Expression.Convert(innerConvert.Operand, node.Type));
+					}
+
 					if (_buildPurpose is BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
 					{
 						return base.VisitUnary(node);
