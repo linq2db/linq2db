@@ -173,7 +173,7 @@ The `[User]DataProviders.json` is a regular JSON file:
     {
         // base configuration to inherit settings from
         // Inheritance rules:
-        // - DefaultConfiguration, TraceLevel, Providers - use value from base configuration only if it is not defined in current configuration
+        // - DefaultConfiguration, TraceLevel, Providers, MaxParallelLanes - use value from base configuration only if it is not defined in current configuration
         // - Connections - merge current and base connection strings
         "BasedOn"              : "LocalConnectionStrings",
 
@@ -189,6 +189,12 @@ The `[User]DataProviders.json` is a regular JSON file:
         // Supported values: Off, Error, Warning, Info, Verbose
         // Default level: Info
         "TraceLevel"           : "Error",
+
+        // (optional) how many provider lanes the parallel test dispatcher runs at once. Tests are
+        // parallelized across databases and serialized within one, so this caps how many databases are
+        // exercised concurrently. Left unset it is 2 x processor count. Set it to 1 to run the lanes one
+        // at a time, which is how to tell a real failure from one caused by parallel execution.
+        // "MaxParallelLanes"  : 1,
                                 
         // list of database providers, enabled for current test configuration
         "Providers"            :
