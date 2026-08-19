@@ -208,8 +208,8 @@ internal static class NuGetPackageVersions
 	<ItemGroup>
 		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
 
-		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
-		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
+		<!-- no PublicAPI baselines here: the driver is loaded by LINQPad, not referenced by anyone, so its
+		     public surface is not a contract to track - same as linq2db.cli and the analyzers -->
 
 		<!-- driver-specific bans, merged with the repo-wide list from Source/Directory.Build.props -->
 		<AdditionalFiles Include="BannedSymbols.txt" />
