@@ -293,9 +293,12 @@
 		The LINQPad driver nuget is the exception and has no such PackageReference: it declares its
 		database clients per connection instead (IDatabaseProvider.GetNuGetPackages), so the pin lives
 		in SQLiteProvider.GetNuGetPackages, which returns this version next to Microsoft.Data.Sqlite.
-		SourceGear.sqlite3 is provisioned only for the SQLiteClassic variant - the two packages place
-		e_sqlite3 at conflicting paths (see SQLite.Runtime.props) - so the Microsoft.Data.Sqlite variant
-		relies on this pin alone. Whether LINQPad's per-connection restore honours it over the
+		SourceGear.sqlite3 is provisioned next to it for the SQLiteClassic variant only - the two packages
+		place e_sqlite3 at conflicting paths (see SQLite.Runtime.props) - so the Microsoft.Data.Sqlite
+		variant relies on this pin alone. That separation is per-provider: the two paths that cannot tell
+		which client a connection needs - DatabaseProviders.GetAllNuGetPackages, and the static-context
+		branch of DriverHelper.OverrideDriverDependencies - still hand LINQPad both variants together, as
+		the nuspec did before. Whether LINQPad's per-connection restore honours it over the
 		transitive 2.1.11 is unconfirmed against a real install; check it in the LINQPad pass of the
 		release test matrix.
 		Keep this entry and the suppression below even though no project references the id: the version
