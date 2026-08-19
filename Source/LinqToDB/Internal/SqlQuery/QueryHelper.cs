@@ -380,8 +380,18 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlCastExpression cast:
 				{
 					var found = GetColumnDescriptor(cast.Expression, alreadyVisitedElements, forTyping);
-					if (found?.GetDbDataType(true).SystemType != cast.SystemType)
+					if (found == null || found.GetDbDataType(true).SystemType != cast.SystemType)
 						return null;
+
+					// The CLR type surviving is enough to read the value through this column, and not enough to write
+					// one down beside it. A cast that keeps the type while changing the database type changes the
+					// domain with it - CAST(x AS Date) over a datetime column, where a bound before 1753 fits the
+					// column's type and not the cast's - and typing the value from the column then hands the provider
+					// a value it cannot represent. Asked of the typing caller only, so the converter and unit the
+					// read path comes here for are still found through a cast that narrowed nothing but the type.
+					if (forTyping && found.GetDbDataType(true).DataType != cast.Type.DataType)
+						return null;
+
 					return found;
 				}
 
