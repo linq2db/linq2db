@@ -33,7 +33,11 @@ until docker logs db2 | grep -q 'Setup has completed'; do
     fi;
 done
 
-# wait for Informix
+# wait for Informix. The bound below is the linux one. macOS runs this same script now
+# (script_macos_global in test-matrix.yml), but the mac.informix14.sh it replaced deliberately allowed
+# 1000 x 10s rather than 300 x 5s, because docker on the macOS agents is far slower - so if mac_enabled
+# is ever turned back on, this ceiling has to grow with it. The DB2 wait above needs no such note: its
+# mac script was byte-identical to the linux one.
 retries=0
 until docker logs informix | grep -q 'Informix container login information'; do
     sleep 5
