@@ -436,7 +436,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationContext.Translate(operand, translationFlags) is not SqlPlaceholderExpression placeholder)
 				return false;
 
-			return QueryHelper.GetColumnDescriptor(placeholder.Sql) is { DurationUnit: null };
+			return QueryHelper.GetColumnDescriptor(placeholder.Sql) is { DurationUnit: null, ValueConverter: not null };
 		}
 
 		/// <summary>

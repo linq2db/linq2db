@@ -53,6 +53,50 @@ namespace Tests.Linq
 			bare  .ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
 		}
 
+		[Table]
+		sealed class NativeIntervalRow
+		{
+			[Column] public int      Id         { get; set; }
+			[Column] public TimeSpan Span       { get; set; }
+			[Column] public DateTime StartedOn  { get; set; }
+			[Column] public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A <see cref="TimeSpan"/> column that declared no unit and carries no converter either, paired with a
+		/// computed difference.
+		/// </summary>
+		/// <remarks>
+		/// The refusal above is for a stored number whose meaning only a hand-written converter knows. A column with
+		/// no converter is a different case: on a provider with a native interval type it holds an interval, and
+		/// adding an elapsed difference to it is <c>interval + interval</c> - a question the database answers. Under
+		/// the refusal it was declined by a message naming a converter the model does not have, and the projection
+		/// lost the .NET fallback with it.
+		/// <para>
+		/// PostgreSQL, because the assertion is that the query <em>answers</em>, and that is where a bare
+		/// <see cref="TimeSpan"/> maps to a native interval. Both a demanded projection and a predicate are asserted:
+		/// the refusal reached them by different routes, one falling back to .NET and one failing the query whole.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void AnUndeclaredDurationWithNoConverterKeepsItsMeaning([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new NativeIntervalRow
+				{
+					Id         = 1,
+					Span       = TimeSpan.FromMinutes(30),
+					StartedOn  = new DateTime(2020, 1, 1, 10, 0, 0),
+					FinishedOn = new DateTime(2020, 1, 1, 11, 0, 0),
+				},
+			});
+
+			t.Select(r => Sql.AsSql(r.Span + (r.FinishedOn - r.StartedOn))).Single().ShouldBe(TimeSpan.FromMinutes(90));
+			t.Count(r => r.Span + (r.FinishedOn - r.StartedOn) > TimeSpan.FromMinutes(60)).ShouldBe(1);
+		}
+
 		/// <summary>
 		/// A duration paired with an ordinary <see cref="TimeSpan"/> value rather than with another stored one.
 		/// </summary>
