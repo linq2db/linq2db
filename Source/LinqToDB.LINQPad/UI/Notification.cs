@@ -128,6 +128,7 @@ internal static class Notification
 
 		for (var currEx = ex; currEx != null; currEx = currEx.InnerException)
 		{
+			error.AppendLine(currEx.GetType().FullName);
 			error.AppendLine(currEx.Message);
 			error.AppendLine(currEx.StackTrace);
 		}
