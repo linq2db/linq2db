@@ -848,5 +848,176 @@ namespace Tests.Linq
 				.LoadWith(t => t.Child,    t => t.Where(e => e.Id == 1))
 				;
 		}
+		// The filter closes over an optional value: null means "no filter". The captured set is not part
+		// of the query cache key, so a plan compiled for one closure state must not be reused for another.
+		// See https://github.com/linq2db/linq2db/issues/5793 - wrong in both directions: unfiltered first
+		// dropped the filter, filtered first produced WHERE 1 = 0.
+		static (MainItem[] main, SubItem1[] subs, SubItem1_Sub[] subSubs) OptionalFilterData()
+		{
+			return (
+				[new MainItem { Id = 1, Value = "Main_1" }],
+				[
+					new SubItem1 { Id = 1, ParentId = 1, Value = "A" },
+					new SubItem1 { Id = 2, ParentId = 1, Value = "B" },
+				],
+				[
+					new SubItem1_Sub { Id = 1, ParentId = 1, Value = "A" },
+					new SubItem1_Sub { Id = 2, ParentId = 1, Value = "B" },
+				]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5793"), QueryCacheTest]
+		public void LoadWithOptionalFilter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool filteredFirst)
+		{
+			var data = OptionalFilterData();
+
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable(data.main);
+			using var subs = db.CreateLocalTable(data.subs);
+
+			// Both cases share the query shape, so the sibling case's cache entry would decide this one.
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			if (filteredFirst)
+			{
+				Values(["A"]).ShouldBe(new[] { "A" });
+				Values(null).ShouldBe(new[] { "A", "B" });
+			}
+			else
+			{
+				Values(null).ShouldBe(new[] { "A", "B" });
+				Values(["A"]).ShouldBe(new[] { "A" });
+			}
+
+			List<string> Values(HashSet<string>? values)
+			{
+				return db.GetTable<MainItem>()
+					.LoadWith(m => m.SubItems1, q => q.Where(s => values == null || values.Contains(s.Value!)))
+					.ToList()
+					.SelectMany(m => m.SubItems1)
+					.Select(s => s.Value!)
+					.OrderBy(v => v)
+					.ToList();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5793"), QueryCacheTest]
+		public void ThenLoadOptionalFilter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool filteredFirst)
+		{
+			var data = OptionalFilterData();
+
+			using var db      = GetDataContext(context);
+			using var main    = db.CreateLocalTable(data.main);
+			using var subs    = db.CreateLocalTable(data.subs);
+			using var subSubs = db.CreateLocalTable(data.subSubs);
+
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			if (filteredFirst)
+			{
+				Values(["A"]).ShouldBe(new[] { "A" });
+				Values(null).ShouldBe(new[] { "A", "B" });
+			}
+			else
+			{
+				Values(null).ShouldBe(new[] { "A", "B" });
+				Values(["A"]).ShouldBe(new[] { "A" });
+			}
+
+			List<string> Values(HashSet<string>? values)
+			{
+				return db.GetTable<MainItem>()
+					.LoadWith(m => m.SubItems1)
+					.ThenLoad(s => s.SubSubItems, q => q.Where(ss => values == null || values.Contains(ss.Value!)))
+					.ToList()
+					.SelectMany(m => m.SubItems1)
+					.SelectMany(s => s.SubSubItems)
+					.Select(ss => ss.Value!)
+					.OrderBy(v => v)
+					.ToList();
+			}
+		}
+
+		// The inline form goes through LoadWithMember.FilterExpression, a different branch of
+		// AssociationHelper than the loadFunc overload above.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5793"), QueryCacheTest]
+		public void LoadWithInlineOptionalFilter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool filteredFirst)
+		{
+			var data = OptionalFilterData();
+
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable(data.main);
+			using var subs = db.CreateLocalTable(data.subs);
+
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			if (filteredFirst)
+			{
+				Values(["A"]).ShouldBe(new[] { "A" });
+				Values(null).ShouldBe(new[] { "A", "B" });
+			}
+			else
+			{
+				Values(null).ShouldBe(new[] { "A", "B" });
+				Values(["A"]).ShouldBe(new[] { "A" });
+			}
+
+			List<string> Values(HashSet<string>? values)
+			{
+				return db.GetTable<MainItem>()
+					.LoadWith(m => m.SubItems1.Where(s => values == null || values.Contains(s.Value!)))
+					.ToList()
+					.SelectMany(m => m.SubItems1)
+					.Select(s => s.Value!)
+					.OrderBy(v => v)
+					.ToList();
+			}
+		}
+
+
+		// Counterpart to the filter tests above: the same optional-filter idiom as a plain top-level
+		// Where. One compiled plan serves both closure states - the filter is re-rendered from the
+		// current closure on every execution rather than folded into the plan, which is exactly what a
+		// LoadWith filter failed to do.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5793"), QueryCacheTest]
+		public void OptionalFilterReusesPlan([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool filteredFirst)
+		{
+			var data = OptionalFilterData();
+
+			using var db   = GetDataContext(context);
+			using var subs = db.CreateLocalTable(data.subs);
+
+			subs.ClearCache();
+
+			long missAfterFirst;
+
+			if (filteredFirst)
+			{
+				Values(["A"]).ShouldBe(new[] { "A" });
+				missAfterFirst = subs.GetCacheMissCount();
+
+				Values(null).ShouldBe(new[] { "A", "B" });
+			}
+			else
+			{
+				Values(null).ShouldBe(new[] { "A", "B" });
+				missAfterFirst = subs.GetCacheMissCount();
+
+				Values(["A"]).ShouldBe(new[] { "A" });
+			}
+
+			missAfterFirst.ShouldBeGreaterThan(0);
+			subs.GetCacheMissCount().ShouldBe(missAfterFirst);
+
+			List<string> Values(HashSet<string>? values)
+			{
+				return db.GetTable<SubItem1>()
+					.Where(s => values == null || values.Contains(s.Value!))
+					.ToList()
+					.Select(s => s.Value!)
+					.OrderBy(v => v)
+					.ToList();
+			}
+		}
 	}
 }
