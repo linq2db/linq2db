@@ -22,7 +22,6 @@
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="LINQPad.Reference" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynLinqPadVersion)" />
 
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="MySqlConnector" />
@@ -40,6 +39,11 @@
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472'">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Configuration" />
+
+		<!-- the lpx plugin ships its own System.Collections.Immutable / System.Reflection.Metadata and binds
+		     them through DriverHelper's resolvers, so it is not affected by the host's in-box copies and stays
+		     on the current Roslyn - see RoslynLinqPadVersion for why the nuget driver cannot -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 
 		<PackageReference Include="System.Threading.Tasks.Extensions" />
 		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
@@ -60,6 +64,10 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+		<!-- the nuget driver loads into the LINQPad host, whose in-box System.Collections.Immutable and
+		     System.Reflection.Metadata win over ours, so Roslyn's floor for them has to stay at 8.0.0 -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynLinqPadVersion)" />
+
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />

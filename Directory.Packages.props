@@ -46,13 +46,18 @@
 		-->
 		<OleDbTestsVersion>9.0.10</OleDbTestsVersion>
 
-		<!--used by VersionOverride in the LINQPad driver projects.
+		<!--used by VersionOverride for the .NET (nuget) LINQPad driver only, never for its net472 lpx build.
 		    System.Collections.Immutable and System.Reflection.Metadata are part of the shared framework, so the copy
 		    loaded by the LINQPad host wins, and a driver requiring a HIGHER version than the host's in-box one fails
 		    to load ("manifest definition does not match", issue #5768). Roslyn 4.13.0 is the last version whose net8.0
 		    dependency group asks for 8.0.0 of both, which binds on .NET 8, 9 and 10 hosts alike; 4.14-5.3 require
 		    9.0.0 and 5.6 requires 10.0.1. The driver only parses and emits the generated model, so it doesn't need a
-		    newer compiler.-->
+		    newer compiler.
+		    LINQPad 5 has no shared framework: the lpx carries its own copies and DriverHelper redirects to them, so
+		    the net472 build stays on the central Roslyn version. Applying this pin to it too would be a silent
+		    downgrade of the lpx compiler.
+		    Nothing else picks this up - a plain PackageReference gets the central version, so linq2db.CLI and the
+		    source generators are unaffected.-->
 		<RoslynLinqPadVersion>4.13.0</RoslynLinqPadVersion>
 
 		<!--version of dotMorten.Microsoft.SqlServer.Types the LINQPad driver provisions at runtime on hosts where
