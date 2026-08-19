@@ -2188,5 +2188,20 @@ namespace Tests.Linq
 
 			AreEqual(parentsQry, parents);
 		}
+
+		[Test]
+		public void DifferentTypesOnPredicateTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentValue1 = 1;
+
+			var parentsQry = db.Parent
+				.Where(_ => _.Value1 == parentValue1 * 1.0);
+
+			var parents = Parent
+				.Where(_ => _.Value1 == parentValue1 * 1.0);
+
+			AreEqual(parentsQry, parents);
+		}
 	}
 }
