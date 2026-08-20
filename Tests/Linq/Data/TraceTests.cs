@@ -19,8 +19,13 @@ using Tests.Model;
 
 namespace Tests.Data
 {
-	// reassigns the global DataConnection.WriteTraceLine sink, so it must run with no other
-	// test executing concurrently (see ResourceLaneDispatcher exclusive lane)
+	// Fixture-level rather than per-method, and it has to be: OneTimeSetUp sets the process-global
+	// DataConnection.TraceSwitch.Level and holds it until OneTimeTearDown, so the mutation spans every case
+	// in the fixture. Marking only the methods would leave the level altered while other lanes run. (The
+	// WriteTraceLine sink is a separate matter - the few tests that reassign it save and restore it
+	// themselves.) The cost is real: the exclusive lane takes the write lock for the whole subtree, so every
+	// provider lane stalls for the duration. Narrowing it means moving the level change out of OneTimeSetUp
+	// into the cases that need it.
 	[TestFixture, NonParallelizable]
 	public class TraceTests : TestBase
 	{
