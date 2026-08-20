@@ -4790,6 +4790,76 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
+		#region Identifier quoting
+
+		/// <summary>
+		/// Whether <paramref name="value"/> has to be delimited to be read back as the name it is.
+		/// Providers that delimit unconditionally leave this alone; the rest express their unquoted
+		/// alphabet, case convention, reserved words and quoting mode here, in one place per provider
+		/// instead of once per <see cref="ConvertType"/>.
+		/// <para>
+		/// <paramref name="value"/> is never empty - <see cref="BuildIdentifier"/> is the only caller and
+		/// short-circuits first - so an override may index its first character without a length check.
+		/// </para>
+		/// </summary>
+		protected virtual bool RequiresQuoting(string value, ConvertType convertType) => true;
+
+		/// <summary>
+		/// Writes <paramref name="value"/> delimited. The default is the SQL standard double quote with
+		/// doubling as the escape; providers using brackets or backticks override it.
+		/// </summary>
+		protected virtual StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('"').Append(value.Replace("\"", "\"\"", StringComparison.Ordinal)).Append('"');
+		}
+
+		/// <summary>
+		/// Bracket-delimits a name, doubling a closing bracket inside it so the name cannot terminate
+		/// early. Shared by the T-SQL family, which all quote this way.
+		/// </summary>
+		protected static StringBuilder DelimitWithBrackets(StringBuilder sb, string value)
+		{
+			return sb.Append('[').Append(value.Replace("]", "]]", StringComparison.Ordinal)).Append(']');
+		}
+
+		/// <summary>
+		/// Writes a possibly multi-part name, delimiting each part separately. Pre-joining the parts and
+		/// delimiting once would feed the separator through <see cref="DelimitIdentifier"/>, which
+		/// escapes it - turning <c>a.b</c> into the single name <c>a].[b</c>.
+		/// </summary>
+		protected StringBuilder DelimitQualifiedIdentifier(StringBuilder sb, string value)
+		{
+			if (value.IndexOf('.', StringComparison.Ordinal) <= 0)
+				return DelimitIdentifier(sb, value);
+
+			var parts = value.Split('.');
+
+			for (var i = 0; i < parts.Length; i++)
+			{
+				if (i > 0)
+					sb.Append('.');
+
+				DelimitIdentifier(sb, parts[i]);
+			}
+
+			return sb;
+		}
+
+		/// <summary>
+		/// Writes an identifier, delimiting it only when <see cref="RequiresQuoting"/> says so. This is
+		/// the single place that decision is made, so a provider cannot forget one <see cref="ConvertType"/>
+		/// and silently emit a bare name - which is how table aliases went unquoted on more than one
+		/// provider.
+		/// </summary>
+		protected StringBuilder BuildIdentifier(StringBuilder sb, string value, ConvertType convertType)
+		{
+			return value.Length > 0 && RequiresQuoting(value, convertType)
+				? DelimitIdentifier(sb, value)
+				: sb.Append(value);
+		}
+
+		#endregion
+
 		#region Common Helper methods
 
 		protected ISqlExpression ConvertCaseToConditions(SqlCaseExpression caseExpression, int start)

@@ -132,6 +132,13 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				: new DB2MemberTranslator();
 		}
 
+		// Db2 counts the 128 in bytes: SQL0107N rejects a name that fits in characters but not in the
+		// bytes its encoding needs.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new DB2IdentifierService();
+		}
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version == DB2Version.zOS ?

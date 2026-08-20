@@ -67,6 +67,17 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override bool IsNestedJoinParenthesisRequired => true;
 
+		// Brackets are an MS Access / SQL Server compatibility syntax in SQLite with no escape for a
+		// closing bracket - doubling one yields "unrecognized token". SQLite also accepts the SQL
+		// standard double quote, which does escape by doubling, so fall back to that for a name a
+		// bracket cannot hold. Names without a bracket keep the bracketed form they have always had.
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return value.Contains(']', StringComparison.Ordinal)
+				? base.DelimitIdentifier(sb, value)
+				: sb.Append('[').Append(value).Append(']');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -82,7 +93,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
@@ -92,10 +103,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
-					if (value.IndexOf('.', StringComparison.Ordinal) > 0)
-						value = string.Join("].[", value.Split('.'));
-
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitQualifiedIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'

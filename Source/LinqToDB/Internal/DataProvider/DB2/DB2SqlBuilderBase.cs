@@ -260,21 +260,28 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case ConvertType.NameToSchema         :
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToQueryTableAlias:
-					if (ProviderOptions.IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
-					{
-						if (value.Length > 0 && value[0] == '"')
-							return sb.Append(value);
+					// an already-delimited name is passed through untouched
+					if (value.Length > 0 && value[0] == '"')
+						return sb.Append(value);
 
-						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-						    value.StartsWith('_') ||
-						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
-							return sb.Append('"').Append(value).Append('"');
-					}
-
-					break;
+					return BuildIdentifier(sb, value, convertType);
 			}
 
 			return sb.Append(value);
+		}
+
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
+		{
+			if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.None)
+				return false;
+
+			// A caseless script - CJK, Hangul, Thai - is neither upper nor lower, so it used to slip
+			// past this test and go out bare even though Db2's ordinary identifier alphabet is
+			// A-Z 0-9 _ @ # $. Quoting it is safe precisely because it has no case for Db2 to fold,
+			// so the quoted and folded forms resolve to the same name.
+			return ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote
+				|| value.StartsWith('_')
+				|| value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c) || c > 127);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)

@@ -110,6 +110,17 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 		}
 
+		// PostgreSQL truncates an over-long identifier instead of raising an error, so two aliases
+		// differing only past the cut silently collapse into one and the server rejects the query with
+		// 42712 "specified more than once". Declaring the limit lets the alias uniquifier truncate first
+		// and suffix the duplicate. The 63 is NAMEDATALEN - 1 for a standard build - NAMEDATALEN is
+		// compile-time configurable, so this is the default-build limit linq2db assumes rather than an
+		// absolute one; a server built with a larger value only means we truncate sooner than required.
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new PostgreSQLIdentifierService();
+		}
+
 		private void ConfigureTypes()
 		{
 			// https://www.postgresql.org/docs/current/static/datatype.html

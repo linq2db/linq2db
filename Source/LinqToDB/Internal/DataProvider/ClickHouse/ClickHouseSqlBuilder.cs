@@ -63,33 +63,24 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
-			{
-				case ConvertType.NameToQueryTable     :
-				case ConvertType.NameToCteName        :
-				case ConvertType.NameToQueryField     :
-				case ConvertType.NameToQueryParameter :
-				case ConvertType.NameToQueryTableAlias:
-				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToDatabase       :
-				case ConvertType.NameToSchema         :
-				case ConvertType.NameToProcedure      :
-				default                               :
-					if (IsValidIdentifier(value))
-						sb.Append(value);
-					else
-						EscapeIdentifier(sb, value);
-					break;
-			}
+			// every ConvertType is an identifier here, hence no switch: ClickHouse names its query
+			// parameters the same way it names anything else
+			if (value.Length == 0)
+				throw new LinqToDBException("Empty identifier");
 
+			return BuildIdentifier(sb, value, convertType);
+		}
+
+		protected override bool RequiresQuoting(string value, ConvertType convertType) => !IsValidIdentifier(value);
+
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			EscapeIdentifier(sb, value);
 			return sb;
 		}
 
 		private static bool IsValidIdentifier(string identifier)
 		{
-			if (identifier.Length == 0)
-				throw new LinqToDBException("Empty identifier");
-
 			// https://clickhouse.com/docs/en/sql-reference/syntax/#identifiers
 			if (identifier[0] is not '_' and not (>= 'a' and <= 'z') and not (>= 'A' and <= 'Z'))
 				return false;

@@ -184,6 +184,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		bool _skipBrackets;
 
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return DelimitWithBrackets(sb, value);
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -210,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					if (convertType == ConvertType.NameToQueryField && Name.Length > 0 && value[0] == '#')
 						return sb.Append(value);
 
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitIdentifier(sb, value);
 
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
@@ -219,10 +224,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					if (_skipBrackets || value.Length > 28 || (value.Length > 0 && (value[0] == '[' || value[0] == '#')))
 						return sb.Append(value);
 
-					if (value.IndexOf('.', StringComparison.Ordinal) > 0)
-						value = string.Join("].[", value.Split('.'));
-
-					return sb.Append('[').Append(value).Append(']');
+					return DelimitQualifiedIdentifier(sb, value);
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'

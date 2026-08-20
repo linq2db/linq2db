@@ -179,48 +179,60 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
+		/// Oracle reads a nonquoted identifier as uppercase and accepts only a restricted alphabet in one,
+		/// so a name outside that alphabet - or a reserved word - has to be delimited.
+		/// <para>
+		/// TODO: the documented rule is wider than what is checked here. Oracle allows "alphanumeric
+		/// characters from your database character set", while this accepts latin letters only, so a name
+		/// the server would have taken bare gets delimited instead. That direction is safe; matching the
+		/// rule exactly needs the database character set, which the builder does not have.
+		/// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
+		/// </para>
 		/// </summary>
-		private bool IsValidIdentifier(string name)
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
 		{
-			// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
-			// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
-			// now we check only for latin letters
-			// Also we should allow only uppercase letters:
-			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
-			return !IsReserved(name)                                                                                               &&
-				((ProviderOptions.DontEscapeLowercaseIdentifiers && name[0] is >= 'a' and <= 'z') || name[0] is >= 'A' and <= 'Z') &&
-				name.All(c =>
+			return IsReserved(value)                                                                                                  ||
+				!((ProviderOptions.DontEscapeLowercaseIdentifiers && value[0] is >= 'a' and <= 'z') || value[0] is >= 'A' and <= 'Z') ||
+				!value.All(c =>
 					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '$' or '#' or '_'
 				);
 		}
 
+		/// <summary>
+		/// Oracle quoted identifiers accept every character except the double quote itself, and it has
+		/// no escape for one. Emitting such a name produces invalid SQL, so refuse it here where the
+		/// cause is still visible rather than letting the server report a syntax error.
+		/// </summary>
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			if (value.Contains('"', StringComparison.Ordinal))
+				throw new LinqToDBException($"Oracle cannot represent the identifier '{value}': a quoted identifier cannot contain a double quote.");
+
+			return sb.Append('"').Append(value).Append('"');
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
+			// needs proper list of reserved words and name validation
+			// something like we did for Firebird
+			// right now reserved words list contains garbage
+			return convertType switch
 			{
-				case ConvertType.NameToQueryParameter :
-					return sb.Append(':').Append(value);
-				// needs proper list of reserved words and name validation
-				// something like we did for Firebird
-				// right now reserved words list contains garbage
-				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryField     :
-				case ConvertType.NameToQueryTable     :
-				case ConvertType.NameToCteName        :
-				case ConvertType.NameToProcedure      :
-				case ConvertType.NameToPackage        :
-				case ConvertType.NameToServer         :
-				case ConvertType.SequenceName         :
-				case ConvertType.NameToSchema         :
-				case ConvertType.TriggerName          :
-					if (!IsValidIdentifier(value))
-						return sb.Append('"').Append(value).Append('"');
+				ConvertType.NameToQueryParameter  => sb.Append(':').Append(value),
 
-					return sb.Append(value);
-			}
+				ConvertType.NameToQueryFieldAlias
+					or ConvertType.NameToQueryField
+					or ConvertType.NameToQueryTable
+					or ConvertType.NameToCteName
+					or ConvertType.NameToProcedure
+					or ConvertType.NameToPackage
+					or ConvertType.NameToServer
+					or ConvertType.SequenceName
+					or ConvertType.NameToSchema
+					or ConvertType.TriggerName    => BuildIdentifier(sb, value, convertType),
 
-			return sb.Append(value);
+				_                                 => sb.Append(value),
+			};
 		}
 
 		protected override StringBuilder BuildExpression(ISqlExpression expr,

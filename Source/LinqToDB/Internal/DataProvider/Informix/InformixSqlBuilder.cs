@@ -161,17 +161,16 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		}
 
 		/// <summary>
-		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
+		/// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1660.htm
+		/// TODO: add informix-specific reserved words list
+		/// TODO: Letter definitions is: In the default locale, must be an ASCII character in the range A to Z or a to z
+		/// add support for other locales later
 		/// </summary>
-		private bool IsValidIdentifier(string name)
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
 		{
-			// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1660.htm
-			// TODO: add informix-specific reserved words list
-			// TODO: Letter definitions is: In the default locale, must be an ASCII character in the range A to Z or a to z
-			// add support for other locales later
-			return !IsReserved(name) &&
-				name[0] is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_' &&
-				name.All(c => c is
+			return IsReserved(value) ||
+				value[0] is not ((>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_') ||
+				!value.All(c => c is
 					(>= 'a' and <= 'z') or
 					(>= 'A' and <= 'Z') or
 					(>= '0' and <= '9') or
@@ -182,39 +181,31 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
+			return convertType switch
 			{
-				case ConvertType.NameToQueryFieldAlias:
-				case ConvertType.NameToQueryField     :
-				case ConvertType.NameToQueryTable     :
-				case ConvertType.NameToCteName        :
-				case ConvertType.NameToProcedure      :
-				case ConvertType.NameToServer         :
-				case ConvertType.NameToDatabase       :
-				case ConvertType.NameToSchema         :
-					if (value.Length > 0 && !IsValidIdentifier(value))
-						// I wonder what to do if identifier has " in name?
-						return sb.Append('"').Append(value).Append('"');
+				ConvertType.NameToQueryFieldAlias
+					or ConvertType.NameToQueryField
+					or ConvertType.NameToQueryTable
+					or ConvertType.NameToQueryTableAlias
+					or ConvertType.NameToCteName
+					or ConvertType.NameToProcedure
+					or ConvertType.NameToServer
+					or ConvertType.NameToDatabase
+					or ConvertType.NameToSchema        => BuildIdentifier(sb, value, convertType),
 
-					break;
+				ConvertType.NameToQueryParameter       => SqlProviderFlags.IsParameterOrderDependent
+					? sb.Append('?')
+					: sb.Append('@').Append(value),
 
-				case ConvertType.NameToQueryParameter   :
-					return SqlProviderFlags.IsParameterOrderDependent
-						? sb.Append('?')
-						: sb.Append('@').Append(value);
+				ConvertType.NameToCommandParameter
+					or ConvertType.NameToSprocParameter => sb.Append(':').Append(value),
 
-				case ConvertType.NameToCommandParameter :
+				ConvertType.SprocParameterToName        => value.Length > 0 && value[0] == ':'
+					? sb.Append(value.AsSpan(1))
+					: sb.Append(value),
 
-				case ConvertType.NameToSprocParameter   :
-					return sb.Append(':').Append(value);
-
-				case ConvertType.SprocParameterToName   :
-					return (value.Length > 0 && value[0] == ':')
-						? sb.Append(value.AsSpan(1))
-						: sb.Append(value);
-			}
-
-			return sb.Append(value);
+				_                                       => sb.Append(value),
+			};
 		}
 
 		protected override void BuildCreateTableFieldType(SqlField field)

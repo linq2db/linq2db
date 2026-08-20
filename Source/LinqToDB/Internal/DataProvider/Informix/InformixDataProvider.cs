@@ -73,6 +73,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return new InformixMemberTranslator();
 		}
 
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new InformixIdentifierService();
+		}
+
 		[ColumnReader(1)]
 		static float GetFloat(DbDataReader dr, int idx)
 		{

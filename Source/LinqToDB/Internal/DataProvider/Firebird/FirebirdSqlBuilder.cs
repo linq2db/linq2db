@@ -219,39 +219,35 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				);
 		}
 
+		protected override bool RequiresQuoting(string value, ConvertType convertType)
+		{
+			return ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote
+				|| (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value));
+		}
+
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
+			return convertType switch
 			{
-				case ConvertType.NameToQueryFieldAlias :
-				case ConvertType.NameToQueryTableAlias :
-				case ConvertType.NameToQueryField      :
-				case ConvertType.NameToQueryTable      :
-				case ConvertType.NameToCteName         :
-				case ConvertType.NameToProcedure       :
-				case ConvertType.NameToPackage         :
-				case ConvertType.SequenceName          :
-					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
-					{
-						// I wonder what to do if identifier has " in name?
-						return sb.Append('"').Append(value).Append('"');
-					}
+				ConvertType.NameToQueryFieldAlias
+					or ConvertType.NameToQueryTableAlias
+					or ConvertType.NameToQueryField
+					or ConvertType.NameToQueryTable
+					or ConvertType.NameToCteName
+					or ConvertType.NameToProcedure
+					or ConvertType.NameToPackage
+					or ConvertType.SequenceName          => BuildIdentifier(sb, value, convertType),
 
-					break;
+				ConvertType.NameToQueryParameter
+					or ConvertType.NameToCommandParameter
+					or ConvertType.NameToSprocParameter  => sb.Append('@').Append(value),
 
-				case ConvertType.NameToQueryParameter  :
-				case ConvertType.NameToCommandParameter:
-				case ConvertType.NameToSprocParameter  :
-					return sb.Append('@').Append(value);
+				ConvertType.SprocParameterToName         => value.Length > 0 && value[0] == '@'
+					? sb.Append(value.AsSpan(1))
+					: sb.Append(value),
 
-				case ConvertType.SprocParameterToName  :
-					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.AsSpan(1))
-						: sb.Append(value);
-			}
-
-			return sb.Append(value);
+				_                                        => sb.Append(value),
+			};
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)

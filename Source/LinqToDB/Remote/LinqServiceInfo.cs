@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
+using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Remote
@@ -23,5 +24,15 @@ namespace LinqToDB.Remote
 		public string           MemberConverterType      { get; set; } = null!;
 		[DataMember(Order = 8)]
 		public string?          DmlServiceType           { get; set; }
+
+		/// <summary>
+		/// Identifier service the server-side provider uses, so client-side SQL preview aliases a
+		/// statement the same way the server does when it renders it for real. Carried as a type name
+		/// like the other provider services, which reproduces the whole policy rather than the few
+		/// numbers a scalar contract could hold. <see langword="null"/> when the server predates this
+		/// member; the client then falls back to its historical default.
+		/// </summary>
+		[DataMember(Order = 9)]
+		public string?          IdentifierServiceType    { get; set; }
 	}
 }

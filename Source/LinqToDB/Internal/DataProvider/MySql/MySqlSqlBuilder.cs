@@ -332,13 +332,16 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToCteName        :
 				case ConvertType.NameToProcedure      :
-					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					value = value.Replace("`", "``", StringComparison.Ordinal);
-
-					return sb.Append('`').Append(value).Append('`');
+					return DelimitIdentifier(sb, value);
 			}
 
 			return sb.Append(value);
+		}
+
+		// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
+		protected override StringBuilder DelimitIdentifier(StringBuilder sb, string value)
+		{
+			return sb.Append('`').Append(value.Replace("`", "``", StringComparison.Ordinal)).Append('`');
 		}
 
 		protected override StringBuilder BuildExpression(ISqlExpression expr,

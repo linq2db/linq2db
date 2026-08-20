@@ -116,7 +116,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override IIdentifierService CreateIdentifierService()
 		{
-			return new IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128);
+			return Version <= OracleVersion.v11
+				? new Oracle11IdentifierService()
+				: new OracleIdentifierService();
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

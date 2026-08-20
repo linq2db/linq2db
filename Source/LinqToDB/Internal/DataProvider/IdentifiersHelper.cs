@@ -13,6 +13,12 @@
 				var size = identifier.Length - decrement;
 				if (size <= 0)
 					size = 1;
+
+				// Never cut between the halves of a surrogate pair: the leftover lone surrogate is not
+				// a valid identifier character and encodes as a replacement character downstream.
+				if (size > 1 && size < identifier.Length && char.IsHighSurrogate(identifier[size - 1]))
+					size--;
+
 				identifier = identifier.Substring(0, size);
 			}
 
