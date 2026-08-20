@@ -379,6 +379,7 @@ namespace Tests.Linq
 				{
 					CountAll   = Sql.Window.Count(w => w),
 					CountConst = Sql.Window.Count(1, w => w),
+					SumConst   = Sql.Window.Sum(1, w => w),
 					AllRows    = Sql.Window.Count(w => w) == rowCount     && Sql.Window.Sum(t.IntValue, w => w) > 0,
 					WrongCount = Sql.Window.Count(w => w) == rowCount + 1 && Sql.Window.Sum(t.IntValue, w => w) > 0,
 				};
@@ -388,6 +389,7 @@ namespace Tests.Linq
 			result.Count.ShouldBe(data.Length);
 			result.ShouldAllBe(r => r.CountAll   == data.Length);
 			result.ShouldAllBe(r => r.CountConst == data.Length);
+			result.ShouldAllBe(r => r.SumConst   == data.Length);
 			result.ShouldAllBe(r => r.AllRows);
 			result.ShouldAllBe(r => !r.WrongCount);
 		}
