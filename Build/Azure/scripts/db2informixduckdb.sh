@@ -52,8 +52,12 @@ done
 
 # AUTO_STMT_STATS (real-time statistics) makes the optimizer synchronously profile a table's stats
 # during query compilation whenever they're missing/stale - our tests constantly create/drop small
-# tables and immediately query them, so this fires on nearly every fresh table. Measured 3.7x slower
-# with it on (confirmed via a controlled run: identical test counts, only this setting differed).
+# tables and immediately query them, so this fires on nearly every fresh table. Turned off as a
+# precaution against that.
+# A "3.7x slower with it on" figure was recorded here previously. Treat it as unverified: the CI step
+# durations either side of the change do not show it (6m41s / 9142 tests after against 6m35s / 9141
+# before, inside a pre-change band of 6.66-7.24 min). The setting is harmless, so it stays - but the
+# number should not be relied on without a fresh controlled measurement.
 docker exec -u db2inst1 db2 bash -lc "db2 connect to testdb && db2 UPDATE DB CFG FOR testdb USING AUTO_STMT_STATS OFF"
 
 docker logs db2
