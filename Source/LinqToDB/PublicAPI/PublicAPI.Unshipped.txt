@@ -1,1 +1,9 @@
 #nullable enable
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.set -> void
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateOutputRowsSupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateOutputRowsSupported.set -> void
+static LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh<T>(this LinqToDB.IDataContext! dc, T! obj) -> int
+static LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh<T>(this System.Linq.IQueryable<T!>! source, T! obj) -> int
+static LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync<T>(this LinqToDB.IDataContext! dc, T! obj, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
+static LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync<T>(this System.Linq.IQueryable<T!>! source, T! obj, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<int>!
