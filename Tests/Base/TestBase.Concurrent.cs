@@ -17,6 +17,16 @@ namespace Tests
 	{
 		static readonly JsonSerializerOptions _dumpObjectOptions = new JsonSerializerOptions { WriteIndented = true };
 
+		/// <summary>What one <see cref="ConcurrentRunner{TParam,TResult}"/> thread recorded. Everything but
+		/// <see cref="Param"/> is only populated for a failure - a passing result is dropped immediately
+		/// rather than retained until the run finishes.</summary>
+		sealed record ConcurrentRunOutcome<TParam, TResult>(
+			TParam         Param,
+			TResult?       Result,
+			string         LastQuery,
+			DbParameter[]? Parameters,
+			Exception?     Failure);
+
 		[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
 		protected void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
 			Action<TResult, TParam> checkAction, params TParam[] parameters)
@@ -31,7 +41,7 @@ namespace Tests
 			using var semaphore = new Semaphore(0, poolCount);
 
 			var threads     = new Thread[threadCount];
-			var results     = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
+			var results     = new ConcurrentRunOutcome<TParam, TResult>[threadCount];
 			var queryFailed = new bool[threadCount];
 
 			for (var i = 0; i < threadCount; i++)
@@ -58,16 +68,16 @@ namespace Tests
 							try
 							{
 								checkAction(result, param);
-								results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, (Exception?)null)!;
+								results[n] = new ConcurrentRunOutcome<TParam, TResult>(param, default, "", null, null);
 							}
 							catch (Exception checkFailure)
 							{
-								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)checkFailure);
+								results[n] = new ConcurrentRunOutcome<TParam, TResult>(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, checkFailure);
 							}
 						}
 						catch (Exception e)
 						{
-							results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, e)!;
+							results[n] = new ConcurrentRunOutcome<TParam, TResult>(param, default, "", null, e);
 							queryFailed[n] = true;
 						}
 
@@ -96,31 +106,35 @@ namespace Tests
 				var result = results[i];
 				if (queryFailed[i])
 				{
-					TestContext.Out.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
-					throw result.Item5!;
+					TestContext.Out.WriteLine($"Exception in query ({result.Param}):\n\n{result.Failure}");
+
+					// Capture rather than a bare throw, as the check-failure path below does: this one reports
+					// the provider's own exception, where the worker thread's original stack is the most
+					// useful part of the report and a rethrow would reset it to this line.
+					ExceptionDispatchInfo.Capture(result.Failure!).Throw();
 				}
 
-				if (result.Item5 == null)
+				if (result.Failure == null)
 					continue;
 
-				var testResult = queryFunc(dc, result!.Item1);
+				var testResult = queryFunc(dc, result.Param);
 
-				TestContext.Out.WriteLine($"Failed query ({result.Item1}):\n");
-				if (result.Item4 != null)
+				TestContext.Out.WriteLine($"Failed query ({result.Param}):\n");
+				if (result.Parameters != null)
 				{
 					var sb = new StringBuilder();
-					dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
+					dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Parameters.OfType<DbParameter>());
 					TestContext.Out.WriteLine(sb);
 				}
 
 				TestContext.Out.WriteLine();
-				TestContext.Out.WriteLine(result.Item3);
+				TestContext.Out.WriteLine(result.LastQuery);
 
-				DumpObject(result.Item2);
+				DumpObject(result.Result);
 
 				DumpObject(testResult);
 
-				ExceptionDispatchInfo.Capture(result.Item5).Throw();
+				ExceptionDispatchInfo.Capture(result.Failure).Throw();
 			}
 		}
 
