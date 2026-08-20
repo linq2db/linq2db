@@ -781,7 +781,7 @@ namespace Tests.Linq
 		/// </summary>
 		/// <remarks>
 		/// The sibling above carries the amount as a tick count reconciled from a difference, which is the other
-		/// branch of the shift entirely - <see cref="TranslationProviderFlags.CanLowerIntervalShift"/> is read for a
+		/// branch of the shift entirely - <see cref="LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift"/> is read for a
 		/// shift by a <em>declared</em> duration only, and nothing asked for that in SQL. Every other declared-shift
 		/// case is a plain projection, which falls back to .NET and answers correctly on every provider whether the
 		/// lowering happened or not: they cannot tell "lowered" from "quietly not lowered".
