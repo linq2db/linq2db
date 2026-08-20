@@ -47,6 +47,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// <c>DateTime64(7)</c> column itself holds. That is the same boundary the millisecond form of
 		/// <c>DateAdd</c> already works within on this provider.
 		/// </para>
+		/// <para>
+		/// The span between two of them is narrower still, because the subtraction is taken in nanoseconds as well:
+		/// two endpoints inside that window can differ by more than an <see cref="long"/> holds, so the usable span
+		/// is about 292 years rather than the 584 the endpoints cover. ClickHouse wraps instead of raising, so a
+		/// wider difference comes back as a plausible-looking wrong number.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
@@ -68,7 +74,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// </summary>
 		/// <remarks>
 		/// <c>toIntervalNanosecond</c> takes an expression, so the count needs no decomposition. Scaling ticks up
-		/// by a hundred stays inside <see cref="long"/> for any range a <c>TimeSpan</c> holds.
+		/// by a hundred caps the amount at <c>long.MaxValue / 100</c> - about 292 years, far short of what a
+		/// <c>TimeSpan</c> holds, but past any span these timestamps measure exactly: <see cref="ElapsedTicks"/>
+		/// above carries the same ceiling, and for the same reason.
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
