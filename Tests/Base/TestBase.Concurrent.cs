@@ -117,7 +117,22 @@ namespace Tests
 				if (result.Failure == null)
 					continue;
 
-				var testResult = queryFunc(dc, result.Param);
+				// Re-run the query on the shared connection purely to dump what it returns now. It is the
+				// same query that just produced the failing result, so it throwing is the likely case rather
+				// than an exotic one - and an escape here would replace the check failure we are reporting.
+				// (It would have on master too, where this ran unguarded inside the catch block.)
+				var reran      = true;
+				var testResult = default(TResult);
+
+				try
+				{
+					testResult = queryFunc(dc, result.Param);
+				}
+				catch (Exception rerunFailure)
+				{
+					reran = false;
+					TestContext.Out.WriteLine($"Diagnostic re-run also failed ({result.Param}):\n\n{rerunFailure}");
+				}
 
 				TestContext.Out.WriteLine($"Failed query ({result.Param}):\n");
 				if (result.Parameters != null)
@@ -132,8 +147,11 @@ namespace Tests
 
 				DumpObject(result.Result);
 
-				DumpObject(testResult);
+				if (reran)
+					DumpObject(testResult);
 
+				// The original check failure is what the test is reporting, so it is rethrown whether or not
+				// the diagnostic re-run above succeeded.
 				ExceptionDispatchInfo.Capture(result.Failure).Throw();
 			}
 		}
