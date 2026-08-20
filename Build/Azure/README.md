@@ -84,6 +84,10 @@ Legend:
 |MySQL 8.0<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8.0<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB 11<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.2<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.3<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 9.5<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -148,12 +152,12 @@ Legend:
 |`ProviderName.MySql80`|Latest MySQL using MySQL.Data||
 |`TestProvName.MySql80Connector`|Latest MySQL using MySqlConnector||
 |`TestProvName.MariaDB11Connector`|Latest MariaDB using MySqlConnector||
-|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI (EOL)|
-|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI (EOL)|
-|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI (EOL)|
-|`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI (EOL)|
-|`TestProvName.PostgreSQL11`|PostgreSQL 11|Not tested by CI (EOL)|
-|`TestProvName.PostgreSQL12`|PostgreSQL 12|Not tested by CI (EOL)|
+|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|EOL|
+|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|EOL|
+|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|EOL|
+|`TestProvName.PostgreSQL10`|PostgreSQL 10|EOL|
+|`TestProvName.PostgreSQL11`|PostgreSQL 11|EOL|
+|`TestProvName.PostgreSQL12`|PostgreSQL 12|EOL|
 |`ProviderName.PostgreSQL13`|PostgreSQL 13||
 |`TestProvName.PostgreSQL14`|PostgreSQL 14||
 |`ProviderName.PostgreSQL15`|PostgreSQL 15||
