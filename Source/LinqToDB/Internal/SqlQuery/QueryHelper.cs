@@ -380,7 +380,12 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlCastExpression cast:
 				{
 					var found = GetColumnDescriptor(cast.Expression, alreadyVisitedElements, forTyping);
-					if (found == null || found.GetDbDataType(true).SystemType != cast.SystemType)
+					if (found == null)
+						return null;
+
+					var columnType = found.GetDbDataType(true);
+
+					if (columnType.SystemType != cast.SystemType)
 						return null;
 
 					// The CLR type surviving is enough to read the value through this column, and not enough to write
@@ -389,8 +394,24 @@ namespace LinqToDB.Internal.SqlQuery
 					// column's type and not the cast's - and typing the value from the column then hands the provider
 					// a value it cannot represent. Asked of the typing caller only, so the converter and unit the
 					// read path comes here for are still found through a cast that narrowed nothing but the type.
-					if (forTyping && found.GetDbDataType(true).DataType != cast.Type.DataType)
+					//
+					// Compared across precision and scale and not the data type alone, because a cast between two of
+					// the same type changes the domain just as much: Decimal(6,2) widened to Decimal(22,9), where a
+					// bound needing a third decimal place fits the cast's type and not the column's, and typing it
+					// from the column declares a scale too small for its own digits. An absent size counts as a
+					// difference - a cast that names a decimal type without sizing it takes whatever the provider
+					// makes of it, and the column's own sizing cannot speak for that domain either way.
+					//
+					// Length is deliberately not compared. It bounds how much of a value is kept rather than which
+					// values exist, and a bound beside a cast that renamed a string type has always taken the
+					// column's length.
+					if (forTyping
+						&& (   columnType.DataType  != cast.Type.DataType
+							|| columnType.Precision != cast.Type.Precision
+							|| columnType.Scale     != cast.Type.Scale))
+					{
 						return null;
+					}
 
 					return found;
 				}
