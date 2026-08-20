@@ -1956,11 +1956,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!IsSame(optimized, node))
 				return Visit(optimized);
 
-			if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
-			{
-				return sqlResult;
-			}
-
 			{
 				Expression test;
 
@@ -1971,22 +1966,22 @@ namespace LinqToDB.Internal.Linq.Builder
 				using (UsingAlias(null))
 				{
 					test = Visit(node.Test);
-				}
 
-				if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
-				{
-					var binary = (BinaryExpression)test;
-					if (HandleDefaultIfEmptyInBinary(binary.Left,     binary.Right, out var newTest)
-					    || HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
+					// The rewritten test has to be visited in the same scope as the original one: the descriptor/alias
+					// suppression is what keeps a conditional from picking up the enclosing column's type (#5216).
+					if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
-						if (binary.NodeType == ExpressionType.Equal)
+						var binary = (BinaryExpression)test;
+						if (HandleDefaultIfEmptyInBinary(binary.Left,  binary.Right, out var newTest) ||
+						    HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
 						{
-							newTest = Expression.Not(newTest);
+							if (binary.NodeType == ExpressionType.Equal)
+							{
+								newTest = Expression.Not(newTest);
+							}
+
+							test = Visit(newTest);
 						}
-
-						var newCondition = Expression.Condition(newTest, node.IfTrue, node.IfFalse);
-
-						return Visit(newCondition);
 					}
 				}
 
@@ -1998,26 +1993,29 @@ namespace LinqToDB.Internal.Linq.Builder
 					return boolValue ? ifTrue : ifFalse;
 				}
 
-				if (_buildPurpose is BuildPurpose.Sql)
+				if (test    is SqlPlaceholderExpression testPlaceholder &&
+				    ifTrue  is SqlPlaceholderExpression truePlaceholder &&
+				    ifFalse is SqlPlaceholderExpression falsePlaceholder)
 				{
-					if (test is SqlPlaceholderExpression testPlaceholder
-					    && ifTrue is SqlPlaceholderExpression truePlaceholder
-					    && ifFalse is SqlPlaceholderExpression falsePlaceholder)
-					{
-						testPlaceholder  = UpdateNesting(testPlaceholder);
-						truePlaceholder  = UpdateNesting(truePlaceholder);
-						falsePlaceholder = UpdateNesting(falsePlaceholder);
+					testPlaceholder  = UpdateNesting(testPlaceholder);
+					truePlaceholder  = UpdateNesting(truePlaceholder);
+					falsePlaceholder = UpdateNesting(falsePlaceholder);
 
-						return Visit(CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node));
-					}
+					return CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node);
 				}
 
 				var newNode = node.Update(test, ifTrue, ifFalse);
-				if (!IsSame(newNode, node))
-					return Visit(newNode);
-			}
 
-			return node;
+				// Whole-expression conversion is attempted only after the fast path above failed, so a conditional that
+				// is already made of placeholders never pays for it. It must run on the original node: the visited
+				// children may have been materialized client-side, and such a tree no longer converts to SQL.
+				if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
+				{
+					return sqlResult;
+				}
+
+				return newNode;
+			}
 		}
 
 		bool HandleDefaultIfEmptyInBinary(Expression left, Expression right, [NotNullWhen(true)] out Expression? newCondition)
