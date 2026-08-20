@@ -212,7 +212,14 @@ public class TestsInitialization
 		if (maxLanes < 1)
 			maxLanes = 1;
 
-		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), diagnostics: null, maxLanes, out var workers))
+		// Lane routing is traced only on request. A lane that hangs or misroutes is the one failure here
+		// that cannot be diagnosed after the fact, so the sink exists - but it is off by default because
+		// it logs per work item.
+		IParallelDiagnostics? diagnostics = Environment.GetEnvironmentVariable("L2DB_PARALLEL_DIAG") == "1"
+			? new DelegateParallelDiagnostics(m => TestContext.Progress.WriteLine(m))
+			: null;
+
+		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), diagnostics, maxLanes, out var workers))
 		{
 			TestBase.ParallelExecutionEnabled = true;
 			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (maxLanes={maxLanes} [{(configuredLanes.HasValue ? "from config" : "default 2xCPU")}], cpus={Environment.ProcessorCount}, nunitWorkers={workers})");

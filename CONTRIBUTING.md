@@ -149,7 +149,8 @@ Optional switches, read once when the test assembly starts. All are unset by def
 | Variable | Effect |
 |---|---|
 | `L2DB_TEST_QUERYCACHE` | Maximum number of entries kept in the query cache. Defaults to `100` on x86 and .NET Framework legs, where the 32-bit address space is the binding constraint, and to the library default (10000) everywhere else. Raise it if a test asserting exact cache miss counts sees its entries trimmed. |
-| `LINQ2DB_ASSERT_STATE` | Set to `1` to compare the shared test tables (`Person`, `Patient`, `Doctor`, `Parent`, `Child`, `GrandChild`, `Inheritance*`, `Types2`) with their expected contents after every test, so a test that leaves data behind fails in its own teardown with `SMOrc` instead of breaking whatever runs next. Off by default because the comparison is slow. |
+| `L2DB_ASSERT_STATE` | Set to `1` to compare the shared test tables (`Person`, `Patient`, `Doctor`, `Parent`, `Child`, `GrandChild`, `Inheritance*`, `Types2`) with their expected contents after every test, so a test that leaves data behind fails in its own teardown with `SMOrc` instead of breaking whatever runs next. Off by default because the comparison is slow. |
+| `L2DB_PARALLEL_DIAG` | Set to `1` to trace how the parallel dispatcher routes each test - which lane it goes to, when the globally-exclusive lane takes and releases the write lock and for how long, and any test whose lane failed to run it. Off by default because it logs per work item. Use it when a run hangs or a test appears to have run on the wrong lane, which is not diagnosable after the fact. See `MaxParallelLanes` below to cap or disable lane concurrency. |
 
 ### Configure data providers for tests
 
