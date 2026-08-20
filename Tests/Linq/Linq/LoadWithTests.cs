@@ -901,6 +901,45 @@ namespace Tests.Linq
 			}
 		}
 
+		// The same filter, but with a parent-level predicate over the association. That inlines the filter
+		// into the main query's EXISTS as well, a second consumer of the association lambda - and the one
+		// whose pre-fix symptom was total row loss: reusing a plan compiled for a non-null set collapsed
+		// the parent query to WHERE 1 = 0, so it returned nothing rather than unfiltered children.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5793"), QueryCacheTest]
+		public void LoadWithOptionalFilterParentPredicate([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool filteredFirst)
+		{
+			var data = OptionalFilterData();
+
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable(data.main);
+			using var subs = db.CreateLocalTable(data.subs);
+
+			LinqToDB.Internal.Linq.Query.ClearCaches();
+
+			if (filteredFirst)
+			{
+				Values(["A"]).ShouldBe(new[] { "A" });
+				Values(null).ShouldBe(new[] { "A", "B" });
+			}
+			else
+			{
+				Values(null).ShouldBe(new[] { "A", "B" });
+				Values(["A"]).ShouldBe(new[] { "A" });
+			}
+
+			List<string> Values(HashSet<string>? values)
+			{
+				return db.GetTable<MainItem>()
+					.LoadWith(m => m.SubItems1, q => q.Where(s => values == null || values.Contains(s.Value!)))
+					.Where(m => m.SubItems1.Any())
+					.ToList()
+					.SelectMany(m => m.SubItems1)
+					.Select(s => s.Value!)
+					.OrderBy(v => v)
+					.ToList();
+			}
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5793"), QueryCacheTest]
 		public void ThenLoadOptionalFilter([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool filteredFirst)
 		{
