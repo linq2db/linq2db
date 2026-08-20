@@ -168,6 +168,14 @@ namespace Tests
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 			var (provider, isRemote) = NUnitUtils.GetContext(test);
 
+			// Drop any server-provider marker left on this thread. It is set on the LinqService server's
+			// execution flow and CustomTestContext.Get consults it *before* the current test id, so a stale
+			// value would misroute this test's traces and baselines. Today every transport answers on a
+			// thread-pool thread, whose ExecutionContext is reset per work item, so none can survive - but
+			// lane threads are dedicated and outlive the item that ran on them, so an in-process transport
+			// would leave one set on a lane for the rest of the run.
+			CustomTestContext.SetServerProvider(null);
+
 			// establish a fresh per-test context before anything in setup/test can log
 			CustomTestContext.Begin(isRemote, provider);
 
