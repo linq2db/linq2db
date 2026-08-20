@@ -1,4 +1,4 @@
-using NUnit.Framework.Internal.Execution;
+using NUnit.Framework.Interfaces;
 using NUnit.ParallelByResource;
 
 namespace Tests
@@ -11,14 +11,14 @@ namespace Tests
 	// without it being serialized behind, or blocking, the provider lane.
 	public sealed class DatabaseLaneStrategy : IResourceLaneStrategy
 	{
-		public LaneAssignment? Classify(WorkItem work)
+		public LaneAssignment? Classify(ITest test)
 		{
-			var (context, isRemote) = NUnitUtils.GetContext(work.Test);
+			var (context, isRemote) = NUnitUtils.GetContext(test);
 
 			if (context == null)
 				return LaneAssignment.GatedInline();
 
-			if (NUnitUtils.IsCreateDatabase(work.Test))
+			if (NUnitUtils.IsCreateDatabase(test))
 				return LaneAssignment.Ungated(context);
 
 			return LaneAssignment.Serial(context, requiresSecondaryMutex: isRemote);

@@ -113,7 +113,7 @@ namespace NUnit.ParallelByResource
 				return;
 			}
 
-			var assignment = _strategy.Classify(work) ?? LaneAssignment.GatedInline();
+			var assignment = _strategy.Classify(work.Test) ?? LaneAssignment.GatedInline();
 
 			switch (assignment.Disposition)
 			{
