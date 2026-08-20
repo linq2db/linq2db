@@ -343,9 +343,15 @@ namespace Tests.Linq
 		/// its domain to the column's. SQL Server's <c>datetime</c> begins in 1753, so a bound before that reached
 		/// the driver as a value it cannot represent and the query failed with <em>SqlDateTime overflow</em> where
 		/// it had answered.
+		/// <para>
+		/// From 2008 up, where there is a <c>date</c> type to cast to and a <c>datetime2</c> to write the bound down
+		/// as. SQL Server 2005 has neither: <c>.Date</c> truncates through <c>DateAdd</c>/<c>DateDiff</c> rather than
+		/// a cast, and its own default for <see cref="DateTime"/> is <c>datetime</c>, so a bound before 1753 is out
+		/// of reach there however it is typed.
+		/// </para>
 		/// </remarks>
 		[Test]
-		public void ADateBoundBeforeTheColumnsRange([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void ADateBoundBeforeTheColumnsRange([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[]
