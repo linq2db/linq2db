@@ -219,10 +219,10 @@ namespace Tests
 		// helper to detect tests that leave database in inconsistent state
 		// enable only for debug to not slowdown tests
 		bool _badState;
-		// Diagnostic toggle: set env var L2DB_ASSERT_STATE=1 (e.g. in CI) to detect tests that leave the
-		// shared tables (Person/Patient/Doctor/Parent/Child/Inheritance/Types2) mutated - the polluting
-		// test's teardown then throws "SMOrc". Off by default because the per-test comparison is slow.
-		readonly bool _assertStateEnabled = Environment.GetEnvironmentVariable("L2DB_ASSERT_STATE") == "1";
+		// Diagnostic toggle (TestEnvironment.AssertState): detects tests that leave the shared tables
+		// (Person/Patient/Doctor/Parent/Child/Inheritance/Types2) mutated - the polluting test's teardown
+		// then throws "SMOrc". Off by default because the per-test comparison is slow.
+		readonly bool _assertStateEnabled = TestEnvironment.AssertState;
 		void AssertState(string context)
 		{
 			// don't fail tests if database is not consistent already

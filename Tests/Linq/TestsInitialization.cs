@@ -153,9 +153,7 @@ public class TestsInitialization
 #else
 			var capByDefault = IntPtr.Size == 4;
 #endif
-			int? qcMax = Environment.GetEnvironmentVariable("L2DB_TEST_QUERYCACHE") is { } qcMaxStr && int.TryParse(qcMaxStr, out var n)
-				? n
-				: capByDefault ? 100 : (int?)null;
+			var qcMax = TestEnvironment.QueryCacheMax ?? (capByDefault ? 100 : (int?)null);
 
 			if (qcMax != null)
 				LinqToDB.Internal.Linq.QueryCache.Default.MaxEntriesOverride = qcMax;
@@ -220,7 +218,7 @@ public class TestsInitialization
 		// Lane routing is traced only on request. A lane that hangs or misroutes is the one failure here
 		// that cannot be diagnosed after the fact, so the sink exists - but it is off by default because
 		// it logs per work item.
-		IParallelDiagnostics? diagnostics = Environment.GetEnvironmentVariable("L2DB_PARALLEL_DIAG") == "1"
+		IParallelDiagnostics? diagnostics = TestEnvironment.ParallelDiagnostics
 			? new DelegateParallelDiagnostics(m => TestContext.Progress.WriteLine(m))
 			: null;
 
