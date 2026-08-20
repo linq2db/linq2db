@@ -43,6 +43,11 @@ namespace NUnit.ParallelByResource
 		// aggregate per-lane memory footprint (DataConnection + query / materialization caches) on small
 		// CI agents — an uncapped lane count OOM-ed the multi-context legs. The exclusive lane is not
 		// throttled (it already runs alone under the write lock).
+		//
+		// The host chooses the value. Note the constraint this bounds is memory while the default the host
+		// currently derives is a CPU count, so on a many-core, modest-memory agent the cap is loosest
+		// exactly where it binds hardest - that default is a proxy that CI has shown to work, not a
+		// measurement. A host on such an agent should set it explicitly rather than take the default.
 		readonly SemaphoreSlim _laneThrottle;
 
 		// True (per-thread) while a thread already holds the gate (read or write). A work item

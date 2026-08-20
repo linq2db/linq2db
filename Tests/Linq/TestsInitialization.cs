@@ -209,6 +209,9 @@ public class TestsInitialization
 		// Parallelize tests across database providers: route each provider's tests to a
 		// dedicated lane so the same database is never hit concurrently. Only swap when
 		// NUnit is actually running in parallel; a serial run keeps the original dispatcher.
+		// The cap bounds per-lane memory, not CPU, so 2xCPU is a proxy rather than a measurement: it happens
+		// to hold on the CI agents, but a many-core machine with modest memory gets the loosest cap exactly
+		// where it binds hardest. Set MaxParallelLanes explicitly there - see CONTRIBUTING.md.
 		var configuredLanes = TestConfiguration.MaxParallelLanes;
 		var maxLanes        = configuredLanes ?? (2 * Environment.ProcessorCount);
 		if (maxLanes < 1)
@@ -224,7 +227,10 @@ public class TestsInitialization
 		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), diagnostics, maxLanes, out var workers, out _dispatcher))
 		{
 			TestBase.ParallelExecutionEnabled = true;
-			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (maxLanes={maxLanes} [{(configuredLanes.HasValue ? "from config" : "default 2xCPU")}], cpus={Environment.ProcessorCount}, nunitWorkers={workers})");
+			// maxLanes is the concurrency ceiling, not nunitWorkers: resource tests run on the dispatcher's
+			// own lane threads rather than NUnit's workers, so the effective limit is the smaller of
+			// maxLanes and the number of distinct provider contexts in the run.
+			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (maxLanes={maxLanes} [{(configuredLanes.HasValue ? "from config" : "default 2xCPU")}] is the concurrency ceiling, cpus={Environment.ProcessorCount}, nunitWorkers={workers} dispatch only)");
 		}
 		else
 		{
