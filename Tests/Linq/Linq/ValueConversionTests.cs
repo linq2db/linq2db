@@ -1380,6 +1380,74 @@ namespace Tests.Linq
 			rows.Select(r => r.Span).ShouldBe([value, value]);
 		}
 
+		sealed class SeparatelyDeclaredRowA
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		sealed class SeparatelyDeclaredRowB
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		/// <summary>
+		/// Two columns declaring the same conversion separately are read the same way, and the comparison that
+		/// establishes it does not depend on how the conversion spells its nullability.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above pairs a column with itself, so the two descriptors are one object and the comparison
+		/// short-circuits on identity before looking at either conversion. Declared twice they are two objects that
+		/// behave alike, which is what the comparison exists to recognise - and the only shape that reaches it.
+		/// <para>
+		/// Nullable storage under a non-nullable member is what makes the parameter and the value it stands for
+		/// disagree: the conversion reads <c>v.Value</c>, so substituting a bare <see cref="long"/> for a
+		/// <c>long?</c> parameter asks for a member that type does not have. That threw
+		/// <em>Property 'Int64 Value' is not defined for type 'System.Int64'</em> while the query was still being
+		/// built. The nullable-member spelling of the same thing failed the other way, silently: its conversion is
+		/// wrapped in a nullability cast, and stripping the cast used to abandon the substitution underneath it, so
+		/// two identical conversions compared unequal.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void SeparatelyDeclaredConversionsAreReadTheSameWay([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SeparatelyDeclaredRowA>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Entity<SeparatelyDeclaredRowB>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable<SeparatelyDeclaredRowA>();
+			using var b  = db.CreateLocalTable<SeparatelyDeclaredRowB>();
+
+			db.Insert(new SeparatelyDeclaredRowA { Id = 1, Span = value });
+			db.Insert(new SeparatelyDeclaredRowB { Id = 2, Span = value });
+
+			var rows = a
+				.Select(r => new { r.Id, r.Span })
+				.Concat(b.Select(r => new { r.Id, r.Span }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Span).ShouldBe([value, value]);
+		}
+
 		sealed class ScaledValueRow
 		{
 			[PrimaryKey] public int Id    { get; set; }

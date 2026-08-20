@@ -116,13 +116,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			return body.Transform(e =>
 			{
+				// Put back into the parameter's own nullability where the two differ. The body may read a
+				// member the unwrapped type does not have - Value, HasValue - and rebuilding that access
+				// against it throws instead of producing a comparable form.
 				if (ReferenceEquals(e, parameter))
-					return common;
+					return parameter.Type == common.Type ? common : Expression.Convert(common, parameter.Type);
 
 				if (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } unary
 					&& unary.Type.UnwrapNullableType() == unary.Operand.Type.UnwrapNullableType())
 				{
-					return unary.Operand;
+					// Recursed rather than returned: the transform does not descend into a node the callback
+					// replaced, so the parameter anywhere under a stripped conversion would keep its own
+					// identity and two bodies that differ only there would compare unequal.
+					return Canonicalize(unary.Operand, parameter, common);
 				}
 
 				return e;
