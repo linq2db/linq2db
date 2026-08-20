@@ -10,7 +10,10 @@
 # YDB_USE_IN_MEMORY_PDISKS: RAM-backed storage instead of file-backed disks, so commits skip real
 # fsync/disk I/O - YDB's own recommended setting for test environments; CI containers are destroyed
 # after every run anyway, so there's no data to lose by skipping durability.
-docker run -d --name ydb -p 2136:2136 -e YDB_FEATURE_FLAGS=enable_temp_tables -e YDB_USE_IN_MEMORY_PDISKS=1 ydbplatform/local-ydb:latest
+# Must be the literal "true": use_in_memory_pdisks_flag in ydb/public/tools/lib/cmds/__init__.py
+# compares against that string, so the "1" this previously carried was silently inert and the leg ran
+# on file-backed disks. YDB's own docker docs document 0/1, which is where the 1 came from.
+docker run -d --name ydb -p 2136:2136 -e YDB_FEATURE_FLAGS=enable_temp_tables -e YDB_USE_IN_MEMORY_PDISKS=true ydbplatform/local-ydb:latest
 
 docker ps -a
 
