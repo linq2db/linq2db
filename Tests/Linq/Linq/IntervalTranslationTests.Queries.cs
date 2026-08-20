@@ -1215,8 +1215,8 @@ namespace Tests.Linq
 				.Select(r => r.Id)
 				.ToArray();
 
-			nanosecondsInMilliseconds.ShouldThrow<LinqToDBException>().Message.ShouldContain("TimeSpan member");
-			millisecondsInNanoseconds.ShouldThrow<LinqToDBException>().Message.ShouldContain("TimeSpan member");
+			nanosecondsInMilliseconds.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_Member);
+			millisecondsInNanoseconds.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_Member);
 
 			// The conversion itself is untouched by that - only arithmetic on the stored number is refused.
 			t.Select(r => r.InNanoseconds).Single().ShouldBe(duration);
@@ -1453,6 +1453,48 @@ namespace Tests.Linq
 				.ToList();
 
 			durations.ShouldBe([longer, shorter]);
+		}
+
+		/// <summary>
+		/// Choosing between a declared duration and a computed difference keeps them apart too, though only one of
+		/// them has a column to be asked about.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above pairs two columns, so both sides name a descriptor and the comparison has something to
+		/// compare. A difference names none - it lowers to a bare tick count that carries no unit and is converted by
+		/// nothing - and a missing descriptor used to be read as "arrives on whatever terms it is chosen against".
+		/// That is true of a literal and of a parameter, which are written through the other side's descriptor, and
+		/// false of a computed value, which is written through nothing: the arms collapsed into one <c>CASE</c> and
+		/// the tick count came back through the seconds column's unit, ten million times too large.
+		/// <para>
+		/// Asked both ways, because the two outcomes are different and both are wanted. In SQL there is nobody to
+		/// choose a conversion per row, so the pairing is refused by name. As a plain projection the choice stays
+		/// where the row is, each arm keeps its own reading, and both values are right.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ConditionalKeepsADifferenceApartFromADeclaredDuration([DataSources] string context)
+		{
+			var taken  = TimeSpan.FromHours(1);
+			var budget = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<BudgetedTaskRow>();
+			SeedTasks(db, (taken, budget), (taken, budget));
+
+			var forced = () => t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql(r.Id == 1 ? r.Budget : r.FinishedOn - r.StartedOn))
+				.ToArray();
+
+			forced.ShouldThrow<LinqToDBException>();
+
+			var durations = t
+				.OrderBy(r => r.Id)
+				.Select(r => r.Id == 1 ? r.Budget : r.FinishedOn - r.StartedOn)
+				.ToList();
+
+			durations.ShouldBe([budget, taken]);
 		}
 
 		/// <summary>

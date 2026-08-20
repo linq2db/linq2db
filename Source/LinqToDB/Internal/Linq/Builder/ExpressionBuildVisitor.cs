@@ -2032,21 +2032,35 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// which is exactly the difference the conditional was built to keep. Asking for the choice in SQL leaves
 		/// nobody to make it per row, so it is refused by name instead of answered wrongly.
 		/// <para>
-		/// Only two stored values can disagree. Anything else - a literal, a parameter, a computed expression -
-		/// arrives already in the terms of whatever it is being chosen against, so it never stands in the way.
+		/// A literal or a parameter never stands in the way: it is written through the descriptor of whatever it is
+		/// being chosen against, so it arrives on those terms by construction. A <em>computed</em> value does not -
+		/// an elapsed difference lowers to a bare tick count that carries no unit and is converted by nothing - so
+		/// it stands in terms of its own and cannot share a reading with a column that carries one. Collapsing those
+		/// two reads the tick count through the column's unit, which is the silent factor-of-10000000 error the
+		/// declaration exists to prevent.
 		/// </para>
 		/// </remarks>
 		static bool CanShareOneReading(SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)
 		{
 			var descriptor1 = QueryHelper.GetColumnDescriptor(placeholder1.Sql);
-			if (descriptor1 == null)
-				return true;
-
 			var descriptor2 = QueryHelper.GetColumnDescriptor(placeholder2.Sql);
-			if (descriptor2 == null)
+
+			if (descriptor1 != null && descriptor2 != null)
+				return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
+
+			var declared = descriptor1 ?? descriptor2;
+
+			// Neither side says how it is stored, so there is no conversion for the other to be read through.
+			if (declared == null || (declared.DurationUnit == null && declared.ValueConverter == null))
 				return true;
 
-			return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
+			// One side is stored on terms of its own. A literal or a parameter is written through the other's
+			// descriptor, so it arrives on those terms; a computed value - an elapsed difference is a bare tick
+			// count converted by nothing - stands in its own and cannot share a reading with a column that
+			// carries one.
+			var computed = descriptor1 == null ? placeholder1.Sql : placeholder2.Sql;
+
+			return QueryHelper.UnwrapNullablity(computed) is SqlValue or SqlParameter;
 		}
 
 		bool HandleDefaultIfEmptyInBinary(Expression left, Expression right, [NotNullWhen(true)] out Expression? newCondition)
