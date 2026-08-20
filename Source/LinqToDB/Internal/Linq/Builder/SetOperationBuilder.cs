@@ -417,9 +417,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (sameWay)
 				{
-					// The check goes in as well as being made here: this call sees the whole projection, while the
-					// members inside it are matched up and merged one at a time further down.
-					var helper = new MergeProjectionHelper(Builder, MappingSchema, TryMergeViaDifferencePredicate, BranchesReadTheSameWay);
+					var helper = new MergeProjectionHelper(Builder, MappingSchema, TryMergeViaDifferencePredicate);
 
 					if (helper.TryMergeProjections(projection1, projection2, flags, out var merged))
 					{
