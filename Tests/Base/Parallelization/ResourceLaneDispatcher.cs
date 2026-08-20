@@ -192,16 +192,56 @@ namespace NUnit.ParallelByResource
 		{
 			_original.CancelRun(force);
 
+			CompleteLanes();
+		}
+
+		/// <summary>
+		/// Ends every lane and waits briefly for its thread to exit, reporting any that does not. Call once
+		/// the run is over (assembly teardown).
+		/// </summary>
+		/// <remarks>
+		/// Without this a normal run never completes a lane - only <see cref="CancelRun"/> did - so every
+		/// lane thread stayed parked until the process exited and a lane still stuck on an item was
+		/// invisible: the run simply hung. The join turns that into a named lane in the log. Lane threads
+		/// are background threads, so a lane that never exits cannot hold up the process either way.
+		/// </remarks>
+		/// <param name="report">Receives one message per lane that did not exit within the timeout.</param>
+		/// <param name="timeout">How long to wait for each lane thread. Short by design - this is a
+		/// diagnostic, not a barrier.</param>
+		public void Shutdown(Action<string> report, TimeSpan timeout)
+		{
+			var lanes = CompleteLanes();
+
+			foreach (var lane in lanes)
+			{
+				// Never join the lane we are running on. A work item's completion cascades its parents'
+				// teardowns onto the completing thread, so the host's assembly teardown - and therefore this
+				// call - runs on whichever lane executed the last item. Joining it can only ever burn the
+				// whole timeout and then report the caller as stuck.
+				if (lane.IsCurrentThread)
+					continue;
+
+				if (!lane.Join(timeout))
+					report($"[parallel] lane '{lane.Name}' did not finish within {timeout.TotalSeconds:0.#}s - it is still running or stuck on '{lane.CurrentTestName ?? "(none)"}'");
+			}
+		}
+
+		List<SerialLane> CompleteLanes()
+		{
+			var lanes = new List<SerialLane>();
+
 			lock (_lanesLock)
 			{
-				foreach (var lane in _resourceLanes.Values)
-					lane.Complete();
-
-				foreach (var lane in _ungatedLanes.Values)
-					lane.Complete();
+				lanes.AddRange(_resourceLanes.Values);
+				lanes.AddRange(_ungatedLanes.Values);
 			}
 
-			_exclusiveLane.Complete();
+			lanes.Add(_exclusiveLane);
+
+			foreach (var lane in lanes)
+				lane.Complete();
+
+			return lanes;
 		}
 
 		SerialLane GetResourceLane(string key) => GetLane(_resourceLanes, key, LaneGating.Read, key);
@@ -249,6 +289,21 @@ namespace NUnit.ParallelByResource
 			readonly IParallelDiagnostics                                _diag;
 			readonly LaneGating                                          _gating;
 			readonly string                                              _name;
+			readonly Thread                                              _thread;
+
+			// Name of the item the lane is running, for the stuck-lane report. Written by the lane thread
+			// and read by whoever calls Shutdown, so it is deliberately just a torn-read-safe reference.
+			volatile string?                                             _currentTestName;
+
+			public string  Name            => _name;
+			public string? CurrentTestName => _currentTestName;
+
+			// True when the caller is running on this lane's own thread. Reachable: a work item's completion
+			// cascades its parents' teardowns onto the completing thread, so assembly teardown - and thus
+			// Shutdown - runs on whichever lane ran the last item.
+			public bool IsCurrentThread => _thread == Thread.CurrentThread;
+
+			public bool Join(TimeSpan timeout) => _thread.Join(timeout);
 
 			public SerialLane(string name, ReaderWriterLockSlim gate, SemaphoreSlim secondaryMutex, SemaphoreSlim laneThrottle, IParallelDiagnostics diag, LaneGating gating)
 			{
@@ -259,13 +314,13 @@ namespace NUnit.ParallelByResource
 				_gating         = gating;
 				_name           = name;
 
-				var thread = new Thread(Run)
+				_thread = new Thread(Run)
 				{
 					IsBackground = true,
 					Name         = $"parallel-by-resource-lane:{name}",
 				};
 
-				thread.Start();
+				_thread.Start();
 			}
 
 			public void Enqueue(WorkItem work, bool secondary = false)
@@ -288,6 +343,8 @@ namespace NUnit.ParallelByResource
 					// would report it - the thread is a background thread - and the queue would keep
 					// accepting items nobody consumes, so their WorkItemComplete never fires and the run
 					// hangs on a child countdown that cannot reach zero. Contain it per item instead.
+					_currentTestName = work.Test.Name;
+
 					try
 					{
 						RunItem(work, secondary);
@@ -296,6 +353,10 @@ namespace NUnit.ParallelByResource
 					{
 						_diag.Log($"lane-item-failed test={work.Test.Name} error={ex}");
 						TestContext.Progress.WriteLine($"[parallel] lane '{_name}' failed to run {work.Test.Name}, continuing: {ex}");
+					}
+					finally
+					{
+						_currentTestName = null;
 					}
 				}
 			}

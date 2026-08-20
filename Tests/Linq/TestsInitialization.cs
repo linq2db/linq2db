@@ -34,6 +34,8 @@ public class TestsInitialization
 {
 	static bool _doMetrics;
 
+	static ResourceLaneDispatcher? _dispatcher;
+
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
@@ -219,7 +221,7 @@ public class TestsInitialization
 			? new DelegateParallelDiagnostics(m => TestContext.Progress.WriteLine(m))
 			: null;
 
-		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), diagnostics, maxLanes, out var workers))
+		if (ResourceLaneDispatcherInstaller.TryInstall(new DatabaseLaneStrategy(), diagnostics, maxLanes, out var workers, out _dispatcher))
 		{
 			TestBase.ParallelExecutionEnabled = true;
 			TestContext.Progress.WriteLine($"[parallel] installed ResourceLaneDispatcher (maxLanes={maxLanes} [{(configuredLanes.HasValue ? "from config" : "default 2xCPU")}], cpus={Environment.ProcessorCount}, nunitWorkers={workers})");
@@ -491,6 +493,10 @@ public class TestsInitialization
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
+		// End the lanes and name any that is still running. Nothing else does: a lane stuck on an item
+		// would otherwise leave the run hanging with no indication of which one.
+		_dispatcher?.Shutdown(m => TestContext.Progress.WriteLine(m), TimeSpan.FromSeconds(10));
+
 		TestInMemoryDatabases.DisposeAll();
 
 		if (_doMetrics)
