@@ -11,6 +11,8 @@ using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -567,6 +569,27 @@ namespace Tests.Linq
 					Assert.That(query(db, -1), Is.Null);
 				}
 			}
+		}
+
+		// ForEachUntilAsync had no coverage anywhere in the suite, which is how ExpressionQuery.GetForEachUntilAsync came
+		// to be the one enumeration path never reworked alongside its siblings. It still passes the bare Preambles field,
+		// which nothing on this path assigns — and since the compiled-query argument array was folded out of
+		// GetResultEnumerable's signature and into that carrier, a compiled query reaching this path finds no execution
+		// context at all.
+		[Test]
+		public async Task CompiledQuery_ForEachUntilAsync([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent.Where(p => p.ParentID == id));
+
+			using var db = GetDataContext(context);
+
+			var seen = new List<int>();
+
+			// Returning false keeps the enumeration going, so this walks every matching row.
+			await query(db, 1).ForEachUntilAsync(p => { seen.Add(p.ParentID); return false; });
+
+			seen.ShouldBe([1]);
 		}
 
 		[Test]

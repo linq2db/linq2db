@@ -122,12 +122,14 @@ namespace Tests.xUpdate
 		[Test]
 		public void SQLiteTruncateReset_RendersTableNameInline([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db    = GetDataContext(context);
+			// GetDataConnection rather than GetDataContext: [IncludeDataSources] already excludes the remote contexts
+			// (its params overload passes includeLinqService: false), so every case here is a DataConnection and the
+			// interceptor and assertions need no runtime guard.
+			using var db    = GetDataConnection(context);
 			using var table = db.CreateLocalTable<TestIdTrun>();
 
 			var capture = new SqliteSeqResetCapture();
-			if (db is DataConnection dc)
-				dc.AddInterceptor(capture);
+			db.AddInterceptor(capture);
 
 			table.Insert(() => new TestIdTrun { Field1 = 1m });
 			table.Truncate();
@@ -135,11 +137,8 @@ namespace Tests.xUpdate
 			// The sqlite_sequence reset carries the table name as an inline SqlValue inside a SqlFragmentStatement
 			// (IsParameterDependent is false), so the whole-query parameterization pass leaves it inline. Guard that:
 			// the reset must render WHERE NAME='TestIdTrun', never a parameter.
-			if (db is DataConnection)
-			{
-				Assert.That(capture.ResetSql, Is.Not.Null);
-				Assert.That(capture.ResetSql, Does.Contain("'TestIdTrun'"));
-			}
+			Assert.That(capture.ResetSql, Is.Not.Null);
+			Assert.That(capture.ResetSql, Does.Contain("'TestIdTrun'"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]

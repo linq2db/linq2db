@@ -8,6 +8,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	public class PredicateTests : TestBase
@@ -982,6 +984,28 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != False));
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != FalseN));
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != Null));
+		}
+
+		[ActiveIssue(5673, Details = "The merged render pipeline no longer folds a predicate compared against a boolean parameter, so the comparison survives into the rendered SQL. Master emitted the bare predicate; this branch emits ([r].[Value1] = [r].[Value2]) = @True plus a bound parameter, which is non-sargable on every engine. Affects 118 baseline files across all 59 provider configurations.")]
+		[Test]
+		public void Test_PredicateWithBooleanParameterIsFolded([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			var True = true;
+
+			var query = tb.Where(r => (r.Value1 == r.Value2) == True);
+
+			AssertQuery(query);
+
+			var sql = query.ToSqlQuery();
+
+			// The comparison against a boolean parameter carries no information: the predicate is
+			// either true or false regardless of the parameter's value, so it must fold away and
+			// leave WHERE [r].[Value1] = [r].[Value2] with nothing bound.
+			sql.Parameters.ShouldBeEmpty();
+			sql.Sql.ShouldNotContain("@True");
 		}
 
 		[Test]

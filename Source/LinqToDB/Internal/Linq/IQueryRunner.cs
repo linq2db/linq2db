@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.Linq
 
 		Expression?       MapperExpression { get; set; }
 		int               RowsCount        { get; set; }
-		[Obsolete("Query batches are modeled by SqlCommandScenario; QueryNumber is always 0 and will be removed.")]
+		[Obsolete("Query batches are modeled by SqlCommandScenario; QueryNumber is always 0 and will be removed in version 7.")]
 		int               QueryNumber      { get; set; }
 	}
 }

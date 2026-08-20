@@ -656,7 +656,14 @@ namespace LinqToDB.Data
 					harvest(i, dr);
 
 					if (steps[i].Kind != SqlStepKind.NonQuery)
-						dr.NextResult();
+					{
+						var advanced = dr.NextResult();
+
+						// The last harvested step legitimately has nothing to advance to when the group carries no
+						// terminal, so only a shortfall with steps still pending is a real misalignment.
+						if (!advanced && k + 1 < harvestCount)
+							throw new InvalidOperationException("Combined command returned fewer result sets than the scenario planned.");
+					}
 				}
 			}
 
@@ -891,7 +898,14 @@ namespace LinqToDB.Data
 					await harvest(i, dr).ConfigureAwait(false);
 
 					if (steps[i].Kind != SqlStepKind.NonQuery)
-						await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+					{
+						var advanced = await dr.NextResultAsync(cancellationToken).ConfigureAwait(false);
+
+						// The last harvested step legitimately has nothing to advance to when the group carries no
+						// terminal, so only a shortfall with steps still pending is a real misalignment.
+						if (!advanced && k + 1 < harvestCount)
+							throw new InvalidOperationException("Combined command returned fewer result sets than the scenario planned.");
+					}
 				}
 			}
 

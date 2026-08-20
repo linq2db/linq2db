@@ -20,6 +20,15 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		{
 			if (statement.NeedsIdentity)
 			{
+				// CURRENT_IDENTITY_VALUE() returns the last identity generated in the SESSION, so without this guard an
+				// insert into a table carrying no identity column would silently return a value produced by an unrelated
+				// earlier insert (or NULL on a fresh session). The removed SapHanaSqlBuilder.BuildCommand carried the
+				// same check, and every sibling provider still does.
+				var into = statement.InsertClause!.Into;
+
+				if (into?.GetIdentityField() == null)
+					throw new LinqToDBException($"Identity field must be defined for '{into?.NameForLogging}'.");
+
 				var idType = factory.GetDbDataType(typeof(long));
 
 				return IdentitySelectScenario(statement, factory.Function(idType, "CURRENT_IDENTITY_VALUE"));

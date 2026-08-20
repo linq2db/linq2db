@@ -194,13 +194,30 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetQuery(ref expressions, false, out _);
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
-			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
-				.ConfigureAwait(false);
+			try
+			{
+				Preambles = await query.InitHarvestersAsync(DataContext, expressions, Parameters, cancellationToken)
+					.ConfigureAwait(false);
 
-			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
-				.GetResultEnumerable(DataContext, expressions, Preambles);
+				var enumerable = Query<TResult>.GetQuery(DataContext, ref expressions, out _)
+					.GetResultEnumerable(DataContext, expressions, Preambles);
+
+				// Ownership of the read-consistency transaction moves to the returned sequence. This method returns
+				// before the caller enumerates anything, so releasing it here would leave the main query streaming
+				// outside the transaction while the harvesters above already ran inside it — the very inconsistency
+				// the transaction exists to prevent.
+				return transaction == null
+					? enumerable
+					: new AsyncEnumerableAsyncWrapper<TResult>(enumerable, transaction);
+			}
+			catch
+			{
+				if (transaction != null)
+					await transaction.DisposeAsync().ConfigureAwait(false);
+
+				throw;
+			}
 		}
 
 		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
@@ -237,13 +254,24 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Preambles);
+			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
+			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+
+			var (result, harvesters, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
+
+			if (!combined)
+				Preambles = harvesters;
+
+			var enumerable = (IAsyncEnumerable<T>)result;
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 
-			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+			await using (enumerator.ConfigureAwait(false))
 			{
-				if (func(enumerator.Current))
-					break;
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+				{
+					if (func(enumerator.Current))
+						break;
+				}
 			}
 		}
 

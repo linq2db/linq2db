@@ -894,32 +894,42 @@ namespace LinqToDB.Internal.Linq
 			// for a combined group.
 			(ExecutionStep[] Steps, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan()
 			{
-				var dataConnection = (DataConnection)_dataContext;
-				var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
-				var values         = CollectParameterValues();
+				// Held on the same object DataConnection.QueryRunner.GetCommand locks, and for the same reason: that
+				// monitor is what licenses GetCommand's Modify-mode (in-place mutating) visitors over
+				// QueryInfo.Statement. This path renders that same shared statement, so without the lock it is a
+				// traversal racing those mutations. GetCommand takes the lock on every execution, not only cold ones,
+				// so this adds no serialization that concurrent executions of one query did not already have. It also
+				// makes the EagerCommandCache read/render/publish sequence atomic, so two cold executions cannot both
+				// render and both publish.
+				lock (_query.QueryInfo)
+				{
+					var dataConnection = (DataConnection)_dataContext;
+					var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
+					var values         = CollectParameterValues();
 
-				// A cache built for the OTHER backend is unusable (batch and concat shapes are not interchangeable).
-				var cache = _query.QueryInfo.EagerCommandCache is { } c && c.WasBatch == useBatch ? c : null;
+					// A cache built for the OTHER backend is unusable (batch and concat shapes are not interchangeable).
+					var cache = _query.QueryInfo.EagerCommandCache is { } c && c.WasBatch == useBatch ? c : null;
 
-				// The render / split / bind machinery is CombinedReaderBatch's; what stays here is eager-specific — the
-				// self-executing preambles, the group ordering they impose, and the terminal main query.
-				var commands = new CombinedReaderBatch(dataConnection, BuildBatchSteps())
-					.Bind(values, useBatch, cache?.Commands, out var templates);
+					// The render / split / bind machinery is CombinedReaderBatch's; what stays here is eager-specific — the
+					// self-executing preambles, the group ordering they impose, and the terminal main query.
+					var commands = new CombinedReaderBatch(dataConnection, BuildBatchSteps())
+						.Bind(values, useBatch, cache?.Commands, out var templates);
 
-				// Warm: the step facts and the group list are parameter-independent and were cached with the templates, so
-				// neither the scenario nor the grouping is rebuilt (the ?? short-circuits before BuildScenario runs).
-				var steps  = cache?.Steps  ?? ScenarioCommandRenderer.ProjectExecutionSteps(BuildScenario());
-				var groups = cache?.Groups ?? BuildGroups(commands);
+					// Warm: the step facts and the group list are parameter-independent and were cached with the templates, so
+					// neither the scenario nor the grouping is rebuilt (the ?? short-circuits before BuildScenario runs).
+					var steps  = cache?.Steps  ?? ScenarioCommandRenderer.ProjectExecutionSteps(BuildScenario());
+					var groups = cache?.Groups ?? BuildGroups(commands);
 
-				var commandByGroup = new CombinedCommand?[groups.Length];
+					var commandByGroup = new CombinedCommand?[groups.Length];
 
-				for (var i = 0; i < commands.Count; i++)
-					commandByGroup[_nonCombinableIndexes.Length + i] = commands[i];
+					for (var i = 0; i < commands.Count; i++)
+						commandByGroup[_nonCombinableIndexes.Length + i] = commands[i];
 
-				if (templates != null)
-					_query.QueryInfo.EagerCommandCache = new PreparedScenario(steps, groups, templates, useBatch);
+					if (templates != null)
+						_query.QueryInfo.EagerCommandCache = new PreparedScenario(steps, groups, templates, useBatch);
 
-				return (steps, groups, commandByGroup);
+					return (steps, groups, commandByGroup);
+				}
 			}
 
 			public IEnumerator<T> GetEnumerator()

@@ -34,6 +34,14 @@ namespace Tests.Linq
 		// existing behaviour.
 		protected ITestDataContext GetDataContext(string configuration)
 		{
+			// Combining is a DataConnection-only path, so with it on the remote context runs the same eager load as
+			// separate commands. Same SQL, different physical grouping — which would make the remote baseline differ
+			// from the direct one for every test in this fixture, for a reason that is not a SQL divergence. Skipping
+			// the remote leg here keeps the direct-vs-remote baseline gate STRICT for the whole suite instead of
+			// loosening the comparison to tolerate the difference.
+			if (combinedCommands && configuration.IsRemote())
+				Assert.Ignore("Combined commands are a DataConnection-only path; the remote context would only re-test the sequential shape the false fixture already covers.");
+
 			return base.GetDataContext(configuration, o => o.UseCombinedCommands(combinedCommands));
 		}
 
@@ -3867,6 +3875,57 @@ namespace Tests.Linq
 			// Both children are combinable, so the detached SELECT, the correlated child, and the main query
 			// all merge into ONE combined multi-result-set command (a single round-trip).
 			if (!context.IsRemote()) counter.Count.ShouldBe(1);
+		}
+
+		// Runs the same combined eager load down BOTH execution backends: the ADO.NET DbBatch (UseDbBatch on, the
+		// default) and the semicolon-concatenated single command it falls back to. Providers here are the batch-capable
+		// ones on net8.0+, so the axis is a real fork rather than two identical runs.
+		//
+		// This test registers NO interceptor on purpose. DataConnection.CanUseDbBatch requires Interceptor == null, so
+		// any interceptor-based assertion would itself force the concat path and collapse the axis — which is also why
+		// the UseDbBatch=false branch had no option-driven coverage before: it was reachable only through a registered
+		// ICommandInterceptor or on net462.
+		[Test]
+		public void CombinedEagerLoad_HonoursDbBatchBackend(
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context,
+			[Values] bool useDbBatch)
+		{
+			var (masters, correlated, detached) = GenerateMixedEagerData();
+
+			// Opts into combining explicitly rather than relying on the fixture parameter, so both backends are
+			// exercised regardless of which fixture instance is running.
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(true).UseDbBatch(useDbBatch));
+
+			using var tMaster     = db.CreateLocalTable(masters);
+			using var tCorrelated = db.CreateLocalTable(correlated);
+			using var tDetached   = db.CreateLocalTable(detached);
+
+			var query =
+				from m in tMaster
+				orderby m.Id
+				select new
+				{
+					m.Id,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(masters.Length);
+
+			// A batch binds each statement's parameters in its own scope while the concat form uniquifies them across
+			// statements, so identical materialization on both backends is the property worth pinning.
+			foreach (var m in result)
+			{
+				m.Correlated.Select(c => c.Id).ShouldBe(correlated.Where(c => c.MasterId == m.Id).Select(c => c.Id).OrderBy(id => id).ToList());
+				m.Detached  .Select(d => d.Id).ShouldBe(detached.Select(d => d.Id).OrderBy(id => id).ToList());
+			}
 		}
 
 		#endregion

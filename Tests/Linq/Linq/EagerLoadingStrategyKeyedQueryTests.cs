@@ -648,6 +648,12 @@ namespace Tests.Linq
 		public void MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
+			// Combining is a DataConnection-only path, so the remote context would run the same eager load as separate
+			// commands and produce a differently-grouped baseline than the direct leg — a physical difference, not a SQL
+			// one. Skipping it keeps the direct-vs-remote baseline comparison strict.
+			if (context.IsRemote())
+				Assert.Ignore("Combined commands are a DataConnection-only path; the remote context cannot exercise the ordering invariant this test guards.");
+
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
 			// Combining forced on: the ORDERING INVARIANT this test guards exists only in BuildPlan's combined path, so with

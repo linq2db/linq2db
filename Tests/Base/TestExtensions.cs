@@ -38,12 +38,20 @@ namespace Tests
 		/// <para>
 		/// Stricter than <see cref="UsesCombinedCommands"/>: it additionally requires the context itself to be a
 		/// <see cref="DataConnection"/>, because the combined eager executor is built on one — a
-		/// <see cref="DataContext"/> or a remote context loads sequentially however the option is set.
+		/// <see cref="DataContext"/> or a remote context loads sequentially however the option is set; and it requires
+		/// no pending query hints, which the eager gate also refuses to combine with.
 		/// </para>
 		/// </summary>
 		public static bool UsesCombinedEagerLoading(this IDataContext db)
 		{
-			return db.UsesCombinedCommands() && db is DataConnection;
+			return db.UsesCombinedCommands()
+				&& db is DataConnection
+				// Mirrors QueryRunner.TryGetCombinedEagerEnumerable: it falls back to the sequential path while hints are
+				// pending, because the combined executor bypasses the GetCommand -> GetNextCommandHints path that applies
+				// and clears them — the hint would be dropped from the eager SQL and a one-shot NextQueryHints would leak
+				// onto the next query. Without this the helper reads true for a context that in fact loads sequentially.
+				&& db.QueryHints.Count == 0
+				&& db.NextQueryHints.Count == 0;
 		}
 	}
 }
