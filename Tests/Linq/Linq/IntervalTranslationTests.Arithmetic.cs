@@ -359,7 +359,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		[ThrowsCannotBeConverted(NoTickTotalProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void DurationsInDifferentUnitsCombineAsDurations([DataSources] string context, [Values] bool inSql)
 		{
 			// Direct and remote fold the operand casts differently - remote folds them into the enclosing cast,
@@ -467,7 +467,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		[ThrowsCannotBeConverted(NoTickTotalProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADifferenceAndADeclaredDurationCombineAsDurations([DataSources(false)] string context)
 		{
 			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
@@ -508,7 +508,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		[ThrowsCannotBeConverted(NoTickTotalProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void ADifferenceAndADeclaredDurationCombineInSql([DataSources(false)] string context)
 		{
@@ -772,6 +772,42 @@ namespace Tests.Linq
 			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
 
 			ShiftedInAPredicate(t)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// The same shift, taking its amount from a declared column rather than from a computed difference.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above carries the amount as a tick count reconciled from a difference, which is the other
+		/// branch of the shift entirely - <see cref="TranslationProviderFlags.CanLowerIntervalShift"/> is read for a
+		/// shift by a <em>declared</em> duration only, and nothing asked for that in SQL. Every other declared-shift
+		/// case is a plain projection, which falls back to .NET and answers correctly on every provider whether the
+		/// lowering happened or not: they cannot tell "lowered" from "quietly not lowered".
+		/// <para>
+		/// So this is where the two halves become visible. The providers named decline by name, and the rest have to
+		/// answer from SQL - and answer with the column's own unit, since ninety minutes read as ninety million
+		/// ticks is half a millisecond and would not clear the bound.
+		/// </para>
+		/// <para>
+		/// Local contexts only, for the reason the sibling gives: a remote context wraps the refusal in a transport
+		/// exception that says nothing about the translation.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDeclaredShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
+		public void ADeclaredDurationShiftIsExpressedInAPredicate([DataSources(false)] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, value);
+
+			t
+				.Where(r => ShiftOrigin + r.InSeconds > ShiftOrigin.AddHours(1))
+				.Select(r => r.Id)
 				.ToArray()
 				.ShouldBe([1]);
 		}

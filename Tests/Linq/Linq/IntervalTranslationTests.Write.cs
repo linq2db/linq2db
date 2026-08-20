@@ -166,9 +166,9 @@ namespace Tests.Linq
 		public void UpsertBuilderRoundTripsTheDeclaredUnit(
 			[DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
-			// The builder is where a derived conversion is easiest to lose: the match condition compares a
-			// duration column, and Set writes a value into another. Both build their own SQL rather than going
-			// through the entity's column list.
+			// The builder is where a derived conversion is easiest to lose: Set writes a value into a duration
+			// column and builds its own assignment rather than going through the entity's column list. The match
+			// is on the key, so what this pins is the Set half.
 			//
 			// Column-to-column assignment is deliberately not exercised here: that copies stored numbers, and two
 			// duration columns declared in different units hold different numbers for the same duration. Whether
@@ -196,8 +196,8 @@ namespace Tests.Linq
 
 			var row = t.Single();
 
-			// Matched on the duration column, so no second row appeared, and the value written through Set comes
-			// back as the duration it was.
+			// Matched on the key, so no second row appeared, and the value written through Set comes back as the
+			// duration it was.
 			row.InTicks.ShouldBe(extra);
 			row.InSeconds.ShouldBe(seed);
 		}
