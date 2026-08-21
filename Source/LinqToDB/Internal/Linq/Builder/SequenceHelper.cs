@@ -102,9 +102,42 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var common = Expression.Parameter(parameter1.Type.UnwrapNullableType(), "p");
 
-			return ExpressionEqualityComparer.Instance.Equals(
-				Canonicalize(lambda1.Body, parameter1, common),
-				Canonicalize(lambda2.Body, parameter2, common));
+			// The unwrapped parameter is what makes the two spellings of one conversion meet: standing for a
+			// nullable value it leaves nothing behind that the plainly-typed side has no counterpart for. Some
+			// bodies cannot be rebuilt around it - one that reads a member only Nullable<> has, or hands the value
+			// to something that expects one - and then both sides keep the nullability they were written in, which
+			// leaves them comparable to each other rather than to nothing.
+			if (!TryCanonicalize(lambda1.Body, parameter1, common, out var body1)
+				|| !TryCanonicalize(lambda2.Body, parameter2, common, out var body2))
+			{
+				body1 = Canonicalize(lambda1.Body, parameter1, AsWrittenIn(parameter1, common));
+				body2 = Canonicalize(lambda2.Body, parameter2, AsWrittenIn(parameter2, common));
+			}
+
+			return ExpressionEqualityComparer.Instance.Equals(body1, body2);
+
+			static Expression AsWrittenIn(ParameterExpression parameter, ParameterExpression common)
+				=> parameter.Type == common.Type ? common : Expression.Convert(common, parameter.Type);
+		}
+
+		/// <summary>
+		/// Rewrites a conversion body around <paramref name="replacement"/>, reporting whether the body survives it
+		/// rather than throwing when it does not.
+		/// </summary>
+		static bool TryCanonicalize(Expression body, ParameterExpression parameter, Expression replacement, [NotNullWhen(true)] out Expression? result)
+		{
+			try
+			{
+				result = Canonicalize(body, parameter, replacement);
+				return true;
+			}
+			catch (ArgumentException)
+			{
+				// Rebuilding an access against a type that does not have it - Property 'Int64 Value' is not
+				// defined for type 'System.Int64' - says this body is written in terms of its own nullability.
+				result = null;
+				return false;
+			}
 		}
 
 		/// <summary>
@@ -112,15 +145,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// nullability they were written against: the parameter becomes a shared one, and a conversion that only
 		/// puts a value into or takes it out of <c>Nullable&lt;&gt;</c> is dropped.
 		/// </summary>
-		static Expression Canonicalize(Expression body, ParameterExpression parameter, ParameterExpression common)
+		static Expression Canonicalize(Expression body, ParameterExpression parameter, Expression replacement)
 		{
 			return body.Transform(e =>
 			{
-				// Put back into the parameter's own nullability where the two differ. The body may read a
-				// member the unwrapped type does not have - Value, HasValue - and rebuilding that access
-				// against it throws instead of producing a comparable form.
 				if (ReferenceEquals(e, parameter))
-					return parameter.Type == common.Type ? common : Expression.Convert(common, parameter.Type);
+					return replacement;
 
 				if (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } unary
 					&& unary.Type.UnwrapNullableType() == unary.Operand.Type.UnwrapNullableType())
@@ -128,7 +158,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// Recursed rather than returned: the transform does not descend into a node the callback
 					// replaced, so the parameter anywhere under a stripped conversion would keep its own
 					// identity and two bodies that differ only there would compare unequal.
-					return Canonicalize(unary.Operand, parameter, common);
+					return Canonicalize(unary.Operand, parameter, replacement);
 				}
 
 				return e;

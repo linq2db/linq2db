@@ -431,6 +431,55 @@ namespace Tests.Linq
 			selectResult.Length.ShouldBe(20);
 		}
 
+		/// <summary>
+		/// A set operation distincts the value the condition chose, not the columns it chose between.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above concatenates, so leaving the choice on the client costs nothing but columns. Here the
+		/// branches meet under a UNION, and a choice the database never made is a choice DISTINCT cannot see: ten
+		/// rows come back, one per pairing of the columns the rows were assembled from, where three values were
+		/// asked for. The two arms carry one conversion spelled against a nullable member and against a plain one.
+		/// </remarks>
+		[Test]
+		public void UnionDistinctsTheValueTheConditionChose([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						select new
+						{
+							Converted = t1.EnumNullable != null ? t1.EnumNullable : t1.Enum,
+						};
+
+			var selectResult = query.Union(query).ToArray();
+
+			selectResult.Length.ShouldBe(3);
+		}
+
+		/// <summary>
+		/// A condition between two converted columns is answered where the rows are, so it can filter.
+		/// </summary>
+		/// <remarks>
+		/// A projection that cannot be folded still has somewhere to go - the client reads both columns and chooses
+		/// per row. A predicate has not: the choice has to be made in SQL or not at all.
+		/// </remarks>
+		[Test]
+		public void WhereChoosesBetweenTwoConvertedColumns([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+
+			var count = table.Count(t => (t.EnumNullable != null ? t.EnumNullable : t.Enum) == EnumValue.Value1);
+
+			count.ShouldBe(4);
+		}
+
 		[Test]
 		public void CoalesceConcatTest([DataSources(false)] string context)
 		{
