@@ -701,6 +701,13 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 75)]
 		public bool IsDistinctOnSupported { get; set; }
 
+		/// <summary>
+		/// Indicates support for APPLY elimination for correlated query shapes produced by <c>*By</c> operators.
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 77), DefaultValue(false)]
+		public bool IsCorrelatedByOperatorApplyRewriteSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -800,6 +807,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
+				^ IsCorrelatedByOperatorApplyRewriteSupported          .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -881,6 +889,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
+				&& IsCorrelatedByOperatorApplyRewriteSupported           == other.IsCorrelatedByOperatorApplyRewriteSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
