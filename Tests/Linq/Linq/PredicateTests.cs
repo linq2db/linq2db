@@ -986,26 +986,35 @@ namespace Tests.Linq
 			AssertQuery(tb.Where(r => (r.Value5 <= r.Value4) != Null));
 		}
 
-		[ActiveIssue(5673, Details = "The merged render pipeline no longer folds a predicate compared against a boolean parameter, so the comparison survives into the rendered SQL. Master emitted the bare predicate; this branch emits ([r].[Value1] = [r].[Value2]) = @True plus a bound parameter, which is non-sargable on every engine. Affects 118 baseline files across all 59 provider configurations.")]
+		// A predicate compared against a boolean PARAMETER is deliberately not folded: folding needs the value, and
+		// baking a value into the memoized structure would make a re-run with the other value reuse it. The fold is
+		// also refused for a second reason recorded at SqlExpressionOptimizerVisitor.VisitExprExprPredicate —
+		// restructuring the parameter into a predicate lowers `(A = B) = @p` to an inverted comparison on engines with
+		// no boolean type, which silently returns wrong rows on Firebird 2.5.
+		//
+		// So the property worth pinning is the opposite of a fold: the rendered SQL must be IDENTICAL for either value,
+		// with the value carried by the parameter. That is what makes the render safe to cache, and it is what breaks
+		// if value-baking is ever reintroduced. (With inlined parameters the operand is a literal, not a parameter, and
+		// the fold does run — Test_PredicateWithBoolean covers that side.)
 		[Test]
-		public void Test_PredicateWithBooleanParameterIsFolded([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void Test_PredicateWithBooleanParameterIsValueIndependent([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(BooleanTable.Data);
 
-			var True = true;
+			var flag    = true;
+			var whenTrue = tb.Where(r => (r.Value1 == r.Value2) == flag).ToSqlQuery();
 
-			var query = tb.Where(r => (r.Value1 == r.Value2) == True);
+			flag = false;
+			var whenFalse = tb.Where(r => (r.Value1 == r.Value2) == flag).ToSqlQuery();
 
-			AssertQuery(query);
+			whenFalse.Sql.ShouldBe(whenTrue.Sql);
 
-			var sql = query.ToSqlQuery();
+			whenTrue .Parameters.Count.ShouldBe(1);
+			whenFalse.Parameters.Count.ShouldBe(1);
 
-			// The comparison against a boolean parameter carries no information: the predicate is
-			// either true or false regardless of the parameter's value, so it must fold away and
-			// leave WHERE [r].[Value1] = [r].[Value2] with nothing bound.
-			sql.Parameters.ShouldBeEmpty();
-			sql.Sql.ShouldNotContain("@True");
+			whenTrue .Parameters[0].Value.ShouldBe(true);
+			whenFalse.Parameters[0].Value.ShouldBe(false);
 		}
 
 		[Test]
