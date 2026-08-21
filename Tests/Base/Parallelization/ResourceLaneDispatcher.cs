@@ -166,7 +166,7 @@ namespace NUnit.ParallelByResource
 				return true;
 
 			return work.Test.Properties.Get(PropertyNames.ParallelScope) is ParallelScope scope
-				&& (scope & ParallelScope.None) != 0;
+				&& scope.HasFlag(ParallelScope.None);
 		}
 
 		// Runs a leaf body under the read gate on the current thread, unless we are already inside
