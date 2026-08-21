@@ -37,7 +37,7 @@
 
 	<PropertyGroup Label="Nuget">
 		<Title>LINQ to DB driver for LINQPad</Title>
-		<Description>Supported databases: IBM DB2 LUW/zOS/iSeries, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, ClickHouse.</Description>
+		<Description>Supported databases: ClickHouse, DuckDB, IBM DB2 LUW/zOS/iSeries, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, YDB.</Description>
 		<Product>$(Title)</Product>
 
 		<PackageTags>$(PackageTags);linqpaddriver;linqpad;iseries</PackageTags>
@@ -53,34 +53,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!-- dependencies surfaced in the package's net8.0 dependency group -->
+		<!-- Dependencies surfaced in the package's net8.0 dependency group.
+
+		     Database client packages are deliberately NOT here: the driver declares them per connection from
+		     DataContextDriver.OverrideDriverDependencies (see IDatabaseProvider.GetNuGetPackages), so LINQPad
+		     downloads only the clients for databases the user actually connects to, and platform-specific ones
+		     (IBM DB2 ships as Net.IBM.Data.Db2 / -osx / -lnx) can be picked by host OS. Only what the driver
+		     needs before any connection exists belongs here. -->
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="LINQPad.Reference" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynLinqPadVersion)" />
 
-		<PackageReference Include="AdoNetCore.AseClient" />
-		<PackageReference Include="ClickHouse.Driver" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<!-- registers its provider detector while the provider list is built, i.e. before any connection is used -->
 		<PackageReference Include="linq2db4iSeries" Condition="$(DefineConstants.Contains('WITH_ISERIES'))" />
-		<PackageReference Include="Microsoft.Data.SqlClient" />
-		<PackageReference Include="Microsoft.Data.Sqlite" />
-		<PackageReference Include="Microsoft.SqlServer.Types" />
-		<PackageReference Include="MySqlConnector" />
-		<PackageReference Include="Net.IBM.Data.Db2" />
-		<PackageReference Include="Npgsql" />
-		<PackageReference Include="Octonica.ClickHouseClient" />
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
-		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
-		<!-- Pin the vulnerable transitive native package (GHSA-2m69-gcr7-jv3q) forward: Microsoft.Data.Sqlite
-		     still resolves SQLitePCLRaw.lib.e_sqlite3 2.1.11. CentralPackageTransitivePinningEnabled is false,
-		     so this needs an explicit reference, not just a PackageVersion entry. -->
-		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" />
-		<PackageReference Include="System.Data.Odbc" />
-		<PackageReference Include="System.Data.OleDb" />
-		<PackageReference Include="System.Data.SQLite" />
-		<PackageReference Include="DuckDB.NET.Data.Full" />
-		<PackageReference Include="Ydb.Sdk" />
 
 		<!-- build-ordering only: build the WPF driver assembly, but don't link it
 		     (its net8.0-windows7.0 TFM is intentionally incompatible with this net8.0 project) -->
@@ -103,5 +89,4 @@
 		</ItemGroup>
 	</Target>
 
-	<Import Project="$(MSBuildThisFileDirectory)\..\..\SQLite.Runtime.props" />
 </Project>
