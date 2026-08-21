@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -2556,6 +2557,166 @@ namespace Tests.Linq
 				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
 			}
 		}
+		#endregion
+
+		#region Asymmetric branches
+
+		sealed class ConvertedFlagRow
+		{
+			[PrimaryKey] public int   Id   { get; set; }
+			[Column    ] public bool? Flag { get; set; }
+
+			public static readonly ConvertedFlagRow[] Data =
+			{
+				new() { Id = 1, Flag = true  },
+				new() { Id = 2, Flag = false },
+			};
+		}
+
+		/// <summary>
+		/// A branch supplying a plain <c>NULL</c> where the other reads a column through a conversion.
+		/// </summary>
+		/// <remarks>
+		/// The branches are deliberately not the same query. Every other set-operation test here unions a query with
+		/// itself, so both sides carry the same descriptor and agree by reference alone - which is exactly the shape
+		/// that cannot catch a divergence check reading too much into an absent descriptor. A <c>NULL</c> is stored
+		/// in no terms and read through no conversion, so it cannot disagree with what the other branch declares.
+		/// </remarks>
+		[Test]
+		public void UnionPadsAConvertedColumnWithNull([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var withValue = t.Select(x => new { x.Id, x.Flag });
+			var withNull  = t.Select(x => new { x.Id, Flag = (bool?)null });
+
+			var result = withValue.Union(withNull).ToArray();
+
+			result.Length.ShouldBe(4);
+			result.Count(r => r.Flag == null).ShouldBe(2);
+			result.Single(r => r.Id == 1 && r.Flag != null).Flag.ShouldBe(true);
+			result.Single(r => r.Id == 2 && r.Flag != null).Flag.ShouldBe(false);
+		}
+
+		/// <summary>
+		/// A branch supplying a constant where the other reads a column through a conversion is refused rather than
+		/// compared on unequal terms.
+		/// </summary>
+		/// <remarks>
+		/// The companion to the <c>NULL</c> case above, and the one that behaves differently. A <c>NULL</c> is stored
+		/// in no terms and read through none, so it cannot disagree with what the other branch declares. A constant
+		/// has terms of its own and no descriptor to state them, and a set operation other than <c>UNION ALL</c>
+		/// decides which rows survive by comparing values in the database - where a raw <see langword="true"/> and a column
+		/// written as <c>'Y'</c> are two different values.
+		/// <para>
+		/// Which is what that comparison did: before this the query answered two rows where the CLR says one, the
+		/// constant and the column each coming back through the converter as though they had matched nothing. A
+		/// refusal replaces a wrong answer here rather than a right one, so the loud form is the improvement.
+		/// </para>
+		/// <para>
+		/// What neither form does is convert the constant through the column's descriptor and answer the single
+		/// correct row. That is a design question about descriptor-less branches rather than a defect in the
+		/// refusal, and it is left open.
+		/// </para>
+		/// <para>
+		/// Asked of every operation that compares, not only of <c>Union</c>, because the refusal is decided by a
+		/// single equality against <c>UnionAll</c> - so the four others reach it by construction, and the message
+		/// names the operation it refused. <c>ExceptAll</c> and <c>IntersectAll</c> are the pair worth having:
+		/// they are the ones a reader most expects to behave like <c>UnionAll</c>, and the ones where reading each
+		/// branch on its own terms inside a multiset difference would answer a wrong row set rather than refuse.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void SetOperationRefusesAConstantBranchAgainstAConvertedColumn(
+			[DataSources] string context,
+			[Values(
+				SetOperation.Union,
+				SetOperation.Except,
+				SetOperation.ExceptAll,
+				SetOperation.Intersect,
+				SetOperation.IntersectAll)]
+			SetOperation operation)
+		{
+			static IQueryable<T> Combine<T>(IQueryable<T> first, IQueryable<T> second, SetOperation operation)
+			{
+				return operation switch
+				{
+					SetOperation.Union        => first.Union(second),
+					SetOperation.Except       => first.Except(second),
+					SetOperation.ExceptAll    => first.ExceptAll(second),
+					SetOperation.Intersect    => first.Intersect(second),
+					SetOperation.IntersectAll => first.IntersectAll(second),
+					_                         => throw new InvalidOperationException($"Unhandled set operation {operation}."),
+				};
+			}
+
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
+
+			var combined = () => Combine(fromColumn, fromConstant, operation).ToArray();
+
+			var refusal = combined.ShouldThrow<LinqToDBException>();
+
+			refusal.Message.ShouldContain("in different terms");
+			refusal.Message.ShouldContain(operation.ToString());
+		}
+
+		/// <summary>
+		/// The one set operation that has no comparison to get wrong.
+		/// </summary>
+		/// <remarks>
+		/// <c>UNION ALL</c> hands every row back and reads each on its own branch's terms, so a branch supplying a
+		/// constant where the other reads a converted column is kept apart rather than refused. The control for the
+		/// refusal above, and the reason that refusal is keyed on this operation alone.
+		/// </remarks>
+		[Test]
+		public void UnionAllReadsAConstantBranchOnItsOwnTerms([DataSources(TestProvName.AllSybase)] string context)
+		{
+			// Not asked of Sybase, and the reason is the same gap seen from the other side: the constant is emitted
+			// as the value it is rather than through the column's conversion, so it arrives as BIT against a column
+			// stored as a character - which that provider rejects outright instead of comparing. Where the storage
+			// tolerates both, the rows come back read on their own branch's terms.
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
+
+			var all = fromColumn.UnionAll(fromConstant).ToArray();
+
+			all.Length.ShouldBe(4);
+			all.Count(r => r.Flag == true).ShouldBe(3);
+			all.Count(r => r.Flag == false).ShouldBe(1);
+		}
+
 		#endregion
 	}
 }

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Mapping;
 
 #pragma warning disable MA0048
 #pragma warning disable IDE0130
@@ -367,6 +368,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static IDefinedWindow DefineWindow(this Sql.IWindowFunction window, Func<IWindowBuilder, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(DefineWindow));
 
@@ -530,6 +532,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long RowNumber(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RowNumber));
 
@@ -559,6 +562,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long Rank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Rank));
 
@@ -585,6 +589,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long DenseRank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(DenseRank));
 
@@ -611,6 +616,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double PercentRank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(PercentRank));
 
@@ -637,6 +643,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double CumeDist(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(CumeDist));
 
@@ -666,6 +673,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long NTile(this Sql.IWindowFunction window, int n, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(NTile));
 
@@ -699,6 +707,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T Lead<T>(this Sql.IWindowFunction window, T expr, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
@@ -728,6 +737,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
@@ -757,6 +767,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T Lead<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lead));
 
@@ -786,6 +797,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T Lag<T>(this Sql.IWindowFunction window, T expr, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
@@ -815,6 +827,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
@@ -844,6 +857,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T Lag<T>(this Sql.IWindowFunction window, T expr, int offset, T @default, Func<ILeadLagFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Lag));
 
@@ -876,6 +890,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T FirstValue<T>(this Sql.IWindowFunction window, T expr, Func<IValueFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(FirstValue));
 
@@ -901,6 +916,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T LastValue<T>(this Sql.IWindowFunction window, T expr, Func<IValueFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(LastValue));
 
@@ -926,6 +942,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static T NthValue<T>(this Sql.IWindowFunction window, T expr, long n, Func<INthValueFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(NthValue));
 
@@ -959,6 +976,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int Count(this Sql.IWindowFunction window, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
 
@@ -987,6 +1005,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int Count(this Sql.IWindowFunction window, object? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
 
@@ -997,6 +1016,7 @@ namespace LinqToDB
 		/// <para><b>Syntax:</b> <c>Sql.Window.LongCount(f =&gt; f.[Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>Identical SQL to <see cref="Count(Sql.IWindowFunction, Func{IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction})"/> (<c>COUNT(*)</c>), returning <see cref="long"/>.</para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long LongCount(this Sql.IWindowFunction window, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(LongCount));
 
@@ -1007,6 +1027,7 @@ namespace LinqToDB
 		/// <para><b>Syntax:</b> <c>Sql.Window.LongCount(expr, f =&gt; f.[Distinct()][.Filter(...)][.PartitionBy(...)][.OrderBy(...)][.RowsBetween|RangeBetween...])</c></para>
 		/// <para>Identical SQL to <see cref="Count(Sql.IWindowFunction, object?, Func{IAggregateFinal, IDefinedFunction})"/> (<c>COUNT(expr)</c>), returning <see cref="long"/>.</para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long LongCount(this Sql.IWindowFunction window, object? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(LongCount));
 
@@ -1046,6 +1067,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int Sum(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1078,6 +1100,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int? Sum(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1110,6 +1133,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long Sum(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1142,6 +1166,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long? Sum(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1174,6 +1199,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Sum(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1206,6 +1232,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Sum(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1238,6 +1265,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal Sum(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1270,6 +1298,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal? Sum(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1302,6 +1331,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float Sum(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1334,6 +1364,7 @@ namespace LinqToDB
 		/// FROM Table t
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float? Sum(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
@@ -1372,6 +1403,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Average(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1403,6 +1435,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Average(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1434,6 +1467,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Average(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1465,6 +1499,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Average(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1496,6 +1531,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Average(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1527,6 +1563,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Average(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1558,6 +1595,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal Average(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1589,6 +1627,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal? Average(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1620,6 +1659,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float Average(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1651,6 +1691,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float? Average(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1682,6 +1723,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Average(this Sql.IWindowFunction window, short argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1713,6 +1755,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Average(this Sql.IWindowFunction window, short? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1744,6 +1787,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Average(this Sql.IWindowFunction window, byte argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1775,6 +1819,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Average(this Sql.IWindowFunction window, byte? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
@@ -1811,6 +1856,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int Min(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -1840,6 +1886,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int? Min(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -1869,6 +1916,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long Min(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -1898,6 +1946,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long? Min(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -1927,6 +1976,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Min(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -1956,6 +2006,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Min(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -1985,6 +2036,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal Min(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2014,6 +2066,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal? Min(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2043,6 +2096,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float Min(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2072,6 +2126,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float? Min(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2101,6 +2156,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static short Min(this Sql.IWindowFunction window, short argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2130,6 +2186,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static short? Min(this Sql.IWindowFunction window, short? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2159,6 +2216,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static byte Min(this Sql.IWindowFunction window, byte argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2188,6 +2246,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static byte? Min(this Sql.IWindowFunction window, byte? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Min));
 
@@ -2224,6 +2283,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int Max(this Sql.IWindowFunction window, int argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2253,6 +2313,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static int? Max(this Sql.IWindowFunction window, int? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2282,6 +2343,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long Max(this Sql.IWindowFunction window, long argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2311,6 +2373,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long? Max(this Sql.IWindowFunction window, long? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2340,6 +2403,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double Max(this Sql.IWindowFunction window, double argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2369,6 +2433,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Max(this Sql.IWindowFunction window, double? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2398,6 +2463,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal Max(this Sql.IWindowFunction window, decimal argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2427,6 +2493,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static decimal? Max(this Sql.IWindowFunction window, decimal? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2456,6 +2523,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float Max(this Sql.IWindowFunction window, float argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2485,6 +2553,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static float? Max(this Sql.IWindowFunction window, float? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2514,6 +2583,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static short Max(this Sql.IWindowFunction window, short argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2543,6 +2613,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static short? Max(this Sql.IWindowFunction window, short? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2572,6 +2643,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static byte Max(this Sql.IWindowFunction window, byte argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2601,6 +2673,7 @@ namespace LinqToDB
 		///
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static byte? Max(this Sql.IWindowFunction window, byte? argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Max));
 
@@ -2624,6 +2697,7 @@ namespace LinqToDB
 		/// RATIO_TO_REPORT(t.Value) OVER (PARTITION BY t.Dept)
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RatioToReport<T>(this Sql.IWindowFunction window, T argument, Func<IOPartitionFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RatioToReport));
 
@@ -2646,6 +2720,7 @@ namespace LinqToDB
 		/// MEDIAN(t.Value) OVER (PARTITION BY t.Dept)
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Median<T>(this Sql.IWindowFunction window, T argument, Func<IOPartitionFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Median));
 
@@ -2668,6 +2743,7 @@ namespace LinqToDB
 		/// STDDEV(t.Value) OVER (PARTITION BY t.Dept ORDER BY t.Date)
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? StdDev<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(StdDev));
 
@@ -2679,6 +2755,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>STDDEV_POP(expr) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? StdDevPop<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(StdDevPop));
 
@@ -2690,6 +2767,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>STDDEV_SAMP(expr) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? StdDevSamp<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(StdDevSamp));
 
@@ -2701,6 +2779,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>VARIANCE(expr) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Variance<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Variance));
 
@@ -2712,6 +2791,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>VAR_POP(expr) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? VarPop<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(VarPop));
 
@@ -2723,6 +2803,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>VAR_SAMP(expr) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? VarSamp<T>(this Sql.IWindowFunction window, T argument, Func<IAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(VarSamp));
 
@@ -2738,6 +2819,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>COVAR_POP(expr1, expr2) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? CovarPop<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(CovarPop));
 
@@ -2749,6 +2831,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>COVAR_SAMP(expr1, expr2) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? CovarSamp<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(CovarSamp));
 
@@ -2760,6 +2843,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>CORR(expr1, expr2) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? Corr<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Corr));
 
@@ -2771,6 +2855,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SLOPE(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrSlope<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSlope));
 
@@ -2782,6 +2867,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_INTERCEPT(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrIntercept<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrIntercept));
 
@@ -2793,6 +2879,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_COUNT(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long? RegrCount<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrCount));
 
@@ -2804,6 +2891,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_R2(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrR2<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrR2));
 
@@ -2815,6 +2903,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_AVGX(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrAvgX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrAvgX));
 
@@ -2826,6 +2915,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_AVGY(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrAvgY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrAvgY));
 
@@ -2837,6 +2927,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SXX(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrSXX<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSXX));
 
@@ -2848,6 +2939,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SYY(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrSYY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSYY));
 
@@ -2859,6 +2951,7 @@ namespace LinqToDB
 		/// <para>Not supported by every provider. Where unsupported it throws a descriptive exception at query-translation time.</para>
 		/// <para><b>Generated SQL:</b> <c>REGR_SXY(y, x) OVER (...)</c></para>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double? RegrSXY<T1, T2>(this Sql.IWindowFunction window, T1 argument1, T2 argument2, Func<IBivariateAggregateFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RegrSXY));
 
@@ -2893,6 +2986,7 @@ namespace LinqToDB
 
 #pragma warning disable RS0030
 
+		[ServerSideOnly]
 		public static TValue PercentileCont<TElement, TValue>(
 			this IEnumerable<TElement>                                 source,
 			double                                                     argument,
@@ -2917,6 +3011,7 @@ namespace LinqToDB
 		/// PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.Salary) OVER (PARTITION BY t.Dept)
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static TValue PercentileCont<TValue>(this Sql.IWindowFunction window, double fraction, Func<IOrderedSetWindowSingleOrder, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(PercentileCont));
 
@@ -2951,6 +3046,7 @@ namespace LinqToDB
 
 #pragma warning disable RS0030
 
+		[ServerSideOnly]
 		public static TValue PercentileDisc<TElement, TValue>(
 			this IEnumerable<TElement>                                     source,
 			double                                                         argument,
@@ -2974,6 +3070,7 @@ namespace LinqToDB
 		/// PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY t.Salary) OVER (PARTITION BY t.Dept)
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static TValue PercentileDisc<TValue>(this Sql.IWindowFunction window, double fraction, Func<IOrderedSetWindowMultiOrder, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(PercentileDisc));
 
@@ -3007,6 +3104,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long Rank<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(Rank));
 
@@ -3034,6 +3132,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long Rank<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(Rank));
 
@@ -3061,6 +3160,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long DenseRank<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(DenseRank));
 
@@ -3088,6 +3188,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static long DenseRank<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(DenseRank));
 
@@ -3115,6 +3216,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double PercentRank<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(PercentRank));
 
@@ -3142,6 +3244,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double PercentRank<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(PercentRank));
 
@@ -3169,6 +3272,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double CumeDist<TElement, TValue>(this IEnumerable<TElement> source, object? value, Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(CumeDist));
 
@@ -3196,6 +3300,7 @@ namespace LinqToDB
 		/// GROUP BY t.Dept
 		/// </code>
 		/// </remarks>
+		[ServerSideOnly]
 		public static double CumeDist<TElement, TValue>(this IEnumerable<TElement> source, object? value1, object? value2, Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func)
 			=> throw new ServerSideOnlyException(nameof(CumeDist));
 
