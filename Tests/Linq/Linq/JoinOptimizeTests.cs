@@ -6,6 +6,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -747,6 +749,50 @@ namespace Tests.Linq
 				return query.Where(p => p.Bill.Client.Name == clientName);
 			}
 		}
+		#endregion
+
+		#region Left join to grouping with computed key
+
+		[Table]
+		sealed class InventoryItem
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)] public string No { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class StockEntry
+		{
+			[Column(IsPrimaryKey = true)] public int    Id       { get; set; }
+			[Column]                      public string Code     { get; set; } = null!;
+			[Column]                      public int    Quantity { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5799")]
+		public void LeftJoinToGroupingWithComputedKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable([new InventoryItem { No = "ITM" }]);
+			using var t2 = db.CreateLocalTable([new StockEntry { Id = 1, Code = "ITM-A", Quantity = 5 }]);
+
+			// LEFT JOIN a grouping whose key is a computed expression, not a plain column
+			var query =
+				from item in t1
+				from g in t2.GroupBy(s => s.Code.Substring(0, 3)).LeftJoin(g => g.Key == item.No)
+				select new { item.No, Qty = g.Sum(s => s.Quantity) };
+
+			var rows = query.ToList();
+
+			rows.Count.ShouldBe(1);
+			rows[0].No.ShouldBe("ITM");
+			rows[0].Qty.ShouldBe(5);
+			db.LastQuery!.ShouldContain("LEFT JOIN");
+
+			// Count() drops the joined columns from the projection, which engages left-join removal.
+			// The grouping key is unique, so the join preserves cardinality and can be dropped.
+			query.Count().ShouldBe(1);
+			db.LastQuery!.ShouldNotContain("LEFT JOIN");
+		}
+
 		#endregion
 	}
 }
