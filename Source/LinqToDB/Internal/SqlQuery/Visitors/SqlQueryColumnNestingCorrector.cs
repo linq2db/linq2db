@@ -179,6 +179,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			QueryElementType.SqlConcat                or
 			QueryElementType.CompareTo                or
 			QueryElementType.SqlRow                   or
+			// intervals
+			QueryElementType.SqlInterval              or
+			QueryElementType.SqlIntervalDifference    or
+			QueryElementType.SqlIntervalPart          or
+			QueryElementType.SqlTemporalArithmetic    or
 			// predicates / search conditions
 			QueryElementType.SearchCondition          or
 			QueryElementType.NotPredicate             or

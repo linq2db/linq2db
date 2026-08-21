@@ -1432,6 +1432,10 @@ namespace Tests.Linq
 
 		#region DateDiff
 
+		// SQL Server before 2016 has no exact measure of elapsed time - DATEDIFF_BIG arrived there - and Sql.AsSql
+		// below asks for the value in SQL, so there is no client-side answer to fall back to. Declared rather than
+		// excluded so it goes red the day the lowering reaches those versions.
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[DataSources(TestProvName.AllInformix)]
@@ -1454,6 +1458,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateHour(
 			[DataSources(TestProvName.AllInformix)]
@@ -1477,6 +1482,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1501,6 +1507,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1532,6 +1539,7 @@ namespace Tests.Linq
 		// Possible reason:
 		// looks like Access runtime modify some C++ runtime options that affect runtime's rounding behavior
 		// used also by SQLite provider's native part
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMillisecond(
 			[DataSources(
@@ -1992,16 +2000,37 @@ namespace Tests.Linq
 		}
 
 		// Short name: Oracle 11 (30) and Firebird <= 3 (31) cap identifier length; the 32-char class name overflows both.
+		/// <summary>
+		/// Providers whose lowering expresses an elapsed date difference in SQL. One name to add as each gains
+		/// support - the three tests below read it in opposite directions, so they cannot drift apart.
+		/// </summary>
+		const string ElapsedDifferenceProviders =
+			TestProvName.AllSqlServer2016Plus + "," +
+			TestProvName.AllPostgreSQL        + "," +
+			TestProvName.AllSQLite            + "," +
+			TestProvName.AllMySql             + "," +
+			TestProvName.AllDuckDB            + "," +
+			ProviderName.SqlCe                + "," +
+			TestProvName.AllFirebird          + "," +
+			TestProvName.AllClickHouse        + "," +
+			TestProvName.AllSapHana           + "," +
+			TestProvName.AllSybase            + "," +
+			TestProvName.AllOracle            + "," +
+			TestProvName.AllDB2               + "," +
+			TestProvName.AllYdb;
+
 		[Table("NullableDateTimeSub")]
 		sealed class NullableDateTimeSubtractionTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 
-			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			// No explicit data type: the two values are whole hours apart, so each provider's own default for
+			// DateTime carries them, and DateTime2 is not a type Access ODBC or ClickHouse can be handed at all.
+			[Column(CanBeNull = false)]
 			public DateTime StartedOn { get; set; }
 
-			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			[Column(CanBeNull = true)]
 			public DateTime? FinishedOn { get; set; }
 
 			public static readonly NullableDateTimeSubtractionTable[] Data =
@@ -2012,7 +2041,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableDateTimeSubtractionProjectionTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
+		public void NullableDateTimeSubtractionProjectionTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2032,16 +2061,36 @@ namespace Tests.Linq
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
 
-			if (!context.IsRemote() && db is DataConnection dc)
-			{
-				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
-					.ShouldBeFalse("DateTime subtraction must not appear in SQL — it is evaluated client-side in .NET");
-			}
+			// Where the provider can express the elapsed interval it is free to compute it server-side, so the
+			// contract this test pins is the value. Where it cannot, the subtraction must still not leak into SQL -
+			// the value has to come from .NET - and that is what the guard below keeps honest.
+			AssertSubtractionStaysClientSide(context, db, "DateTime");
 		}
 
+		/// <summary>
+		/// Asserts the subtraction was not emitted, on a provider that has no lowering for it.
+		/// </summary>
+		/// <remarks>
+		/// Both column names appear in the SQL either way, since the client-side path still has to read them, so
+		/// what is looked for is a subtraction <em>between</em> them. The pattern only catches the operands in the
+		/// written order - which is the order the builder emits - and stops at a comma so a function call taking
+		/// both dates as arguments does not read as one.
+		/// </remarks>
+		static void AssertSubtractionStaysClientSide(string context, IDataContext db, string valueType)
+		{
+			if (context.IsRemote() || context.IsAnyOf(ElapsedDifferenceProviders) || db is not DataConnection dc)
+				return;
+
+			Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+				.ShouldBeFalse($"{valueType} subtraction must not appear in SQL — it is evaluated client-side in .NET");
+		}
+
+		// Forced server-side on a provider that has no lowering for date subtraction. The excluded set is the
+		// providers that do have one - one name to move as each gains support, rather than a list of the rest.
 		[ThrowsCannotBeConverted]
 		[Test]
-		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
+		public void NullableDateTimeSubtractionProjectionSqlTest(
+			[DataSources(ElapsedDifferenceProviders)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2055,6 +2104,31 @@ namespace Tests.Linq
 				};
 
 			_ = query.ToArray();
+		}
+
+		[Test]
+		public void NullableDateTimeSubtractionProjectionServerSideTest(
+			[IncludeDataSources(true, ElapsedDifferenceProviders)] string context)
+		{
+			// The same query on a provider that does translate it. Sql.AsSql forces the server side, so this
+			// fails outright rather than quietly falling back if the lowering ever stops working.
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
 		}
 
 		// Short name: Oracle 11 caps identifiers at 30 chars.
@@ -2098,11 +2172,33 @@ namespace Tests.Linq
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
 
-			if (!context.IsRemote() && db is DataConnection dc)
-			{
-				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
-					.ShouldBeFalse("DateTimeOffset subtraction must not appear in SQL — it is evaluated client-side in .NET");
-			}
+			AssertSubtractionStaysClientSide(context, db, "DateTimeOffset");
+		}
+
+		[Test]
+		public void NullableDateTimeOffsetSubtractionProjectionServerSideTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			// Sql.AsSql forces the server side, so this fails outright rather than quietly falling back if the
+			// lowering ever stops working. There is no Sql.AsSql counterpart for the providers that cannot express
+			// it, because the throw comes from the same builder method the DateTime overload already covers.
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeOffsetSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
 		}
 	}
 }
