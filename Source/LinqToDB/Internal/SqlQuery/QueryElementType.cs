@@ -130,8 +130,15 @@
 		// later member and trips ApiCompat CP0011. In v7 move next to SqlCast where it belongs logically.
 		SqlParameterCast,
 
-		// Appended for the SqlCommandScenario refactor — enum ordinals are wire-serialized, so new members
-		// must stay at the end.
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 group these together next to SqlCast.
+		SqlInterval,
+		SqlIntervalDifference,
+		SqlIntervalPart,
+		SqlTemporalArithmetic,
+
+		// Appended for the SqlCommandScenario refactor — enum ordinals are wire-serialized, so new members must stay
+		// at the end. Ordered AFTER master's additions so master's already-published ordinals do not shift.
 		SqlObjectNameExpression,
 		SqlFragmentStatement,
 	}

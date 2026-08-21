@@ -200,10 +200,25 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		TranslationProviderFlags? _translationProviderFlags;
 		// Cached per query so member translators don't allocate a TranslationProviderFlags on each ProviderFlags access.
-		public TranslationProviderFlags TranslationProviderFlags =>
-			_translationProviderFlags ??= new TranslationProviderFlags(
+		public TranslationProviderFlags TranslationProviderFlags => _translationProviderFlags ??= CreateTranslationProviderFlags();
+
+		TranslationProviderFlags CreateTranslationProviderFlags()
+		{
+			// The interval capabilities are asked of the convert visitor rather than declared a second time,
+			// because that is where the lowering lives. It runs long after this point - by then the read
+			// expression is bound to its columns - so a translator that needs a client-side fallback has to
+			// know here, while it can still decline to build the node.
+			var convertVisitor = DataContext.GetSqlOptimizer(DataContext.Options).CreateConvertVisitor(false);
+
+			return new TranslationProviderFlags(
 				DataContext.SqlProviderFlags.DefaultNullsOrdering,
-				DataContext.SqlProviderFlags.IsNullsOrderingSupported);
+				DataContext.SqlProviderFlags.IsNullsOrderingSupported,
+				convertVisitor.CanLowerIntervalDifference,
+				convertVisitor.CanLowerIntervalPart,
+				convertVisitor.CanLowerIntervalShift,
+				convertVisitor.IntervalResolution,
+				convertVisitor.CanMeasureDifferenceInTicks);
+		}
 
 		#endregion
 

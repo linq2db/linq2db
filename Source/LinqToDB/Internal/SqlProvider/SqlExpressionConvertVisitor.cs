@@ -1196,6 +1196,10 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
 
+			var reconciled = ReconcileDurationUnits(predicate);
+			if (reconciled != null)
+				return Visit(reconciled);
+
 			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0;
 
 			var testExpression  = predicate.Expr1;
@@ -1307,6 +1311,404 @@ namespace LinqToDB.Internal.SqlProvider
 		/// frequently lowered and then reduced further, so a replayed intermediate would resurface in its un-reduced form.
 		/// </summary>
 		protected override bool IsReplaceable(IQueryElement element) => element is not SqlCastExpression;
+		/// <remarks>
+		/// Over integral storage an interval is its stored amount, so the node simply disappears here. The read path
+		/// turns the amount back into a <see cref="TimeSpan"/> through the operand's column descriptor, which
+		/// <see cref="QueryHelper.GetColumnDescriptor(ISqlExpression)"/> reaches by looking through this node.
+		/// <para>
+		/// Which makes reaching that descriptor an invariant rather than a convenience: past this point the SQL value
+		/// no longer says what unit it counts, so whatever wraps or rewrites it - a cast, a function, a projection
+		/// into a derived table, a branch of a set operation - has to leave the descriptor reachable from the result.
+		/// Where it does not, the statement stays valid and the value is read through the wrong conversion, which is
+		/// the one failure the lowering cannot see for itself. <see cref="BasicSqlBuilder"/> refuses this node rather
+		/// than rendering its operand for the same reason: a provider that never lowered it away should say so, not
+		/// quietly emit a bare number where a duration was meant.
+		/// </para>
+		/// </remarks>
+		protected internal override IQueryElement VisitSqlIntervalExpression(SqlIntervalExpression element)
+		{
+			return Visit(element.Value);
+		}
+
+		/// <summary>
+		/// Whether an elapsed date difference can be lowered to a value here.
+		/// </summary>
+		/// <remarks>
+		/// Declared beside the lowering it describes, and read by the member translator through
+		/// <c>ITranslationContext.ProviderFlags</c>. The translator has to ask before it builds anything, because
+		/// a difference it does not build stays an ordinary .NET subtraction and is computed on materialisation -
+		/// and by the time this visitor runs, the read expression is already bound to its columns, so there is no
+		/// going back.
+		/// </remarks>
+		public virtual bool CanLowerIntervalDifference => false;
+
+		/// <summary>
+		/// Whether a member of an elapsed date difference can be lowered. Defaults to whatever the difference
+		/// itself can do.
+		/// </summary>
+		/// <remarks>
+		/// Separate because one provider has only this half: Access counts elapsed units well enough to answer
+		/// <c>TotalHours</c>, but its <c>DateDiff</c> is a 32-bit count that overflows once scaled to ticks, so
+		/// the interval never becomes a value there.
+		/// </remarks>
+		public virtual bool CanLowerIntervalPart => CanLowerIntervalDifference;
+
+		/// <summary>
+		/// The finest unit this provider can actually resolve when it measures elapsed time. Defaults to
+		/// <see cref="SqlIntervalUnit.Tick"/> - no loss.
+		/// </summary>
+		/// <remarks>
+		/// Distinct from <see cref="FinestDateUnit"/>, which names the finest unit the provider's own difference
+		/// function counts in. A provider may measure elapsed time some other way and still be limited: SQLite goes
+		/// through <c>julianday</c>, whose double holds about 47 microseconds of a Julian day number, so its
+		/// measurement is rounded to the millisecond however the value is stored.
+		/// <para>
+		/// Read by the member translator, which declines to build a <em>component</em> in a unit finer than this.
+		/// Such a component is not merely less precise - it is identically zero, because the count it is taken
+		/// from was rounded to a coarser unit first. Declining leaves the member to .NET, which has both dates and
+		/// can answer exactly.
+		/// </para>
+		/// </remarks>
+		public virtual SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Tick;
+
+		/// <summary>
+		/// Whether an elapsed date difference can become a tick count here. Defaults to yes.
+		/// </summary>
+		/// <remarks>
+		/// A provider answering no has no way to reach a unit finer than <see cref="IntervalResolution"/> at all:
+		/// <see cref="ElapsedTicks"/> leaves it nothing to divide, and its own difference function cannot name such
+		/// a unit either. Access is the case - its <c>DateDiff</c> is a 32-bit count that overflows once scaled to
+		/// ticks.
+		/// <para>
+		/// Read by the member translator, which declines to build a <em>total</em> in a unit finer than the
+		/// resolution when this is false. Left to be built, that node reaches the SQL builder, which can only
+		/// throw - and a throw there takes with it the projection's fall back to .NET, the one place the member can
+		/// still be answered exactly. A total is otherwise left alone, because a coarser measurement makes one
+		/// quantised rather than meaningless, which is why this is asked rather than the resolution alone.
+		/// </para>
+		/// </remarks>
+		public virtual bool CanMeasureDifferenceInTicks => true;
+
+		/// <summary>
+		/// Whether <see cref="LowerTemporalArithmetic"/> can express a date shifted by an interval at all.
+		/// </summary>
+		/// <remarks>
+		/// Read by the member translator so a declared duration added to a date is declined while the expression is
+		/// still being built, rather than reaching the builder as a node nothing can render - a refusal there has no
+		/// client-side fallback left. The default follows what the base implementation needs: it spends the amount
+		/// through <see cref="ShiftDate"/> at <see cref="FinestDateUnit"/>, so a provider that names no finest unit
+		/// cannot lower one.
+		/// <para>
+		/// Only the <em>declared</em> half is declined early. A shift by a computed difference is left to be built,
+		/// because <c>start + (end - start)</c> cancels against the difference it came from and asks the provider
+		/// for nothing - refusing it here would sink a query that works everywhere.
+		/// </para>
+		/// </remarks>
+		public virtual bool CanLowerIntervalShift => FinestDateUnit != null;
+
+		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			var lowered = LowerTemporalArithmetic(element);
+			if (lowered != null)
+				return Visit(lowered);
+
+			return base.VisitSqlTemporalArithmeticExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers a date/time value shifted by an interval.
+		/// </summary>
+		/// <remarks>
+		/// There is no default. A provider with a native interval type applies the operator directly; one that
+		/// lowered the interval to a tick count has to spend that count through its own <c>DATEADD</c>, whose
+		/// argument is usually a 32-bit integer and so cannot take ticks in one step.
+		/// <para>
+		/// Left alone, the node reaches the builder and is refused by name. That is the point of it existing: the
+		/// generic binary handling would otherwise put a plain operator between a date and a number, which a
+		/// database evaluates into something that still looks like a date.
+		/// </para>
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider cannot express the shift.</returns>
+		protected virtual ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			if (FinestDateUnit is not { } finest)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(finest, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+			var ticks    = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+
+			// Days, then seconds within the day, then the sub-second part in the finest unit the provider counts.
+			// Split this way because DATEADD and its equivalents take a 32-bit amount: a tick count overflows it
+			// within minutes, while a day count covers millennia and each remainder is bounded by its own unit.
+			var days      = TruncateDivide(ticks, TimeSpan.TicksPerDay);
+			var seconds   = TruncateDivide(TruncateRemainder(ticks, TimeSpan.TicksPerDay), TimeSpan.TicksPerSecond);
+			var remainder = TruncateRemainder(ticks, TimeSpan.TicksPerSecond);
+
+			// A fine unit may be finer than a tick, in which case the remainder scales up rather than divides.
+			var fine = fineDenominator != 1
+				? Factory.Multiply(longType, remainder, fineDenominator)
+				: TruncateDivide(remainder, ticksPerFine);
+
+			var shifted = ShiftDate(SqlIntervalUnit.Day, days, element.Temporal);
+			if (shifted == null)
+				return null;
+
+			shifted = ShiftDate(SqlIntervalUnit.Second, seconds, shifted);
+			if (shifted == null)
+				return null;
+
+			return ShiftDate(finest, fine, shifted);
+		}
+
+		protected internal override IQueryElement VisitSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
+		{
+			var lowered = LowerIntervalDifference(element);
+			if (lowered != null)
+				return Visit(lowered);
+
+			return base.VisitSqlIntervalDifferenceExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers <c>End - Start</c> into the elapsed time as a value, in whatever form the read path turns back
+		/// into a <see cref="TimeSpan"/>.
+		/// </summary>
+		/// <remarks>
+		/// Over integral storage that form is the tick count, which is the default. A provider with a native
+		/// interval type overrides this to produce one instead - the value is the same duration either way, and
+		/// which representation is used is exactly the provider's business.
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
+		protected virtual ISqlExpression? LowerIntervalDifference(SqlIntervalDifferenceExpression element)
+		{
+			return ElapsedTicks(element);
+		}
+
+		/// <summary>
+		/// Elapsed ticks between two date/time values, exactly.
+		/// </summary>
+		/// <remarks>
+		/// The one quantity that has to be a tick count rather than any equivalent duration, because
+		/// <see cref="TimeSpan.Ticks"/> asks for it by name. Unlike the other members it is not a count of whole
+		/// units that anchoring can correct, so a provider answers it or does not - one that cannot produce it
+		/// <em>exactly</em>, at the resolution its own date type stores, returns <see langword="null"/> rather than
+		/// approximating.
+		/// <para>
+		/// The default derives it from the counting primitives, so a provider that has those needs nothing more:
+		/// whole elapsed days, plus the remainder counted in <see cref="FinestDateUnit"/>. Neither part can
+		/// overflow - the day count is small for any range a <see cref="TimeSpan"/> can hold, and the remainder is
+		/// measured across a window shorter than one day - which is what makes this preferable to counting the
+		/// whole range in a fine unit. A provider with a single exact expression for the difference overrides it
+		/// with that instead.
+		/// </para>
+		/// </remarks>
+		/// <returns><see langword="null"/> when the provider has no exact form, leaving the expression untranslated.</returns>
+		protected virtual ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			if (FinestDateUnit is not { } finest)
+				return null;
+
+			if (!SqlIntervalUnits.TryGetTicksRatio(finest, out var ticksPerFine, out var fineDenominator))
+				return null;
+
+			// Deliberately the raw boundary count, uncorrected: whatever it lands on, the remainder is measured
+			// from that exact point, so an overshoot comes back as a negative remainder of the same size and the
+			// two telescope. Correcting it here would only duplicate the count through a CASE for no gain.
+			//
+			// Days, not seconds, and the choice is what makes the whole CLR range reachable. A shift takes a
+			// 32-bit amount on the providers that come through here, so the anchor's unit sets the ceiling: in
+			// seconds that is 2^31 seconds, which is 68 years - close enough to ordinary that a person's age
+			// crosses it - while in days it is far past what a date can hold. Nothing else grows in exchange: the
+			// remainder spans at most one day, so counting it even in nanoseconds stays four orders below the
+			// 64-bit limit, and the whole part reaches about 3.2e18 ticks against a limit of 9.2e18.
+			var days = CountDateBoundaries(SqlIntervalUnit.Day, element.Start, element.End);
+			if (days == null)
+				return null;
+
+			var anchor = ShiftDate(SqlIntervalUnit.Day, days, element.Start);
+			if (anchor == null)
+				return null;
+
+			var remainder = CountDateBoundaries(finest, anchor, element.End);
+			if (remainder == null)
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// A fine unit may be finer than a tick - a nanosecond is a hundredth of one - so the ratio is applied
+			// as a fraction. Plain division, not the truncating helper: the count is a whole number of ticks by
+			// construction, so no rounding rule can disagree about the result.
+			if (ticksPerFine != 1)
+				remainder = Factory.Multiply(longType, remainder, ticksPerFine);
+
+			if (fineDenominator != 1)
+				remainder = Factory.Div(longType, remainder, Factory.Value(longType, fineDenominator));
+
+			// Scaled in two steps rather than by the tick count of a day directly, and the reason is the type a
+			// literal takes rather than arithmetic: 864000000000 is past the 32-bit range, and a provider that
+			// reads such a literal as decimal makes the whole product decimal with it - the value stays right and
+			// arrives as the wrong CLR type, which the reader then refuses. Both factors here fit in 32 bits, so
+			// the product stays integral wherever the day count already is.
+			var wholeTicks = Factory.Multiply(longType,
+				Factory.Multiply(longType, days, (long)TimeSpan.TicksPerDay / TimeSpan.TicksPerSecond),
+				TimeSpan.TicksPerSecond);
+
+			return Factory.Add(longType, wholeTicks, remainder);
+		}
+
+		/// <summary>
+		/// Shifts a date/time value by a whole number of units - the provider's <c>DATEADD</c>.
+		/// </summary>
+		/// <remarks>
+		/// Must be exact: the anchor correction in <see cref="IntervalLowering"/> shifts by a computed count and
+		/// compares the result against the original, so an approximate shift would produce an off-by-one count.
+		/// </remarks>
+		protected virtual ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Counts unit boundaries crossed between two date/time values - the provider's <c>DATEDIFF</c>.
+		/// </summary>
+		/// <remarks>
+		/// Boundary counting, not elapsed time. It is deliberately the wrong answer on its own: it is the cheap
+		/// starting estimate that the anchor correction turns into the elapsed count, and being a count of whole
+		/// units it cannot overflow the way a fine-grained difference over the same range would.
+		/// </remarks>
+		protected virtual ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			return null;
+		}
+
+		/// <summary>
+		/// Finest unit this provider can count date boundaries in, used for the fractional part of a
+		/// <c>Total*</c> member. <see langword="null"/> means totals of a date difference are not supported.
+		/// </summary>
+		/// <remarks>
+		/// Only ever applied to a window shorter than one of the requested units, so it cannot overflow however
+		/// far apart the two dates are - which is what makes a total expressible at all. Taking the whole
+		/// difference in this unit would overflow: a century in ticks is more than <see cref="long"/> holds.
+		/// </remarks>
+		protected virtual SqlIntervalUnit? FinestDateUnit => null;
+
+		/// <summary>
+		/// Whether <see cref="ElapsedTicks"/> is fine enough to answer the individual members, or only the
+		/// difference taken as a whole. Defaults to yes.
+		/// </summary>
+		/// <remarks>
+		/// A tick count answers every member with far less SQL, but only where it resolves what the provider
+		/// stores. Access counts seconds while an OLE Automation date holds fractions of one, so its count can sit
+		/// a second from the truth - enough to move <c>Hours</c> across a boundary - and counting each unit with
+		/// the correction against the actual dates stays exact there. The tick count still answers the difference
+		/// itself, which has no other form.
+		/// </remarks>
+		protected virtual bool ElapsedTicksResolveMembers => true;
+
+		protected internal override IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
+		{
+			// Lower before visiting children: the child interval carries the unit this needs, and visiting it
+			// first would unwrap it to a bare amount.
+			var lowered = LowerIntervalPart(element);
+			if (lowered != null)
+				return Visit(lowered);
+
+			return base.VisitSqlIntervalPartExpression(element);
+		}
+
+		/// <summary>
+		/// Lowers an interval part to SQL. The default uses <see cref="IntervalLowering"/>'s integral-storage
+		/// strategy; providers with a native interval type override this to use it instead.
+		/// </summary>
+		/// <returns><see langword="null"/> when the part cannot be produced exactly, leaving it untranslated.</returns>
+		protected virtual ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
+		{
+			// A part of a computed difference is answered by counting elapsed units directly. .NET defines the
+			// member as _ticks / TicksPerUnit, and the anchor count reproduces that quotient exactly - forming a
+			// tick count first would only reintroduce the overflow and precision limits it exists to avoid.
+			// Unwrap first: the translator's placeholder may carry a nullability wrapper around the difference.
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
+			{
+				// Ticks is the exception: it is the whole difference, not a count of units, so counting cannot
+				// answer it. It is the same quantity the provider produces for a bare difference over integral
+				// storage.
+				if (element is { Unit: SqlIntervalUnit.Tick, Kind: SqlIntervalPartKind.Total })
+				{
+					var ticks = ElapsedTicks(difference);
+
+					return ticks == null ? null : Factory.Cast(ticks, element.Type);
+				}
+
+				// Every member follows from the tick count, and .NET defines them that way, so where the count is
+				// fine enough this is both the shorter SQL and the closer reading of the CLR.
+				if (ElapsedTicksResolveMembers && ElapsedTicks(difference) is { } exact)
+					return IntervalLowering.FromTicks(Factory, exact, element, TruncateDivide, TruncateRemainder);
+
+				// The two ask for different counts. A component is the whole number itself, so it needs the
+				// corrected one - nothing follows it to absorb an overshoot. A total is followed by its leftover,
+				// which is measured from wherever the anchor landed and cancels the overshoot, so it takes the raw
+				// count and leaves the correction out of the expression entirely.
+				if (element.Kind == SqlIntervalPartKind.Component)
+				{
+					var whole = IntervalLowering.ElapsedUnits(Factory, difference, element.Unit, CountDateBoundaries, ShiftDate);
+
+					if (whole != null)
+						return Factory.Cast(IntervalLowering.WrapComponent(Factory, whole, element.Unit, element.Within, TruncateRemainder), element.Type);
+				}
+				else
+				{
+					var total = IntervalLowering.ElapsedTotal(
+						Factory, difference, element.Unit, FinestDateUnit, CountDateBoundaries, ShiftDate);
+
+					if (total != null)
+						return Factory.Cast(total, element.Type);
+				}
+
+				// Counting could not reach this unit either. A coarse tick count still beats leaving the member
+				// untranslated, which is what it would have been before any of this existed.
+				var elapsed = ElapsedTicks(difference);
+
+				return elapsed == null ? null : IntervalLowering.FromTicks(Factory, elapsed, element, TruncateDivide, TruncateRemainder);
+			}
+
+			return IntervalLowering.LowerPart(Factory, element, TruncateDivide, TruncateRemainder);
+		}
+
+		/// <summary>
+		/// Integer division truncating toward zero.
+		/// </summary>
+		/// <remarks>
+		/// The default is the division itself, which is what dividing two integers means in SQL and matches CLR
+		/// integer division on negatives. A provider whose division is not integral overrides it - MySQL and
+		/// DuckDB return a fraction, Access has no integer division at all - and so does one whose truncation is
+		/// spelled its own way.
+		/// </remarks>
+		protected virtual ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Div(longType, value, Factory.Value(longType, divisor));
+		}
+
+		/// <summary>
+		/// Remainder of the same truncating division, which is what <c>%</c> means on integers in most databases
+		/// and what the CLR operator means.
+		/// </summary>
+		/// <remarks>
+		/// Kept separate from <see cref="TruncateDivide"/> because composing it out of one - as
+		/// <c>value - trunc(value / divisor) * divisor</c> - repeats the value three times, and the components of
+		/// an interval nest two of these, so the repetition multiplies. A provider whose remainder disagrees on
+		/// negatives, or that spells it as a function, overrides this.
+		/// </remarks>
+		protected virtual ISqlExpression TruncateRemainder(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Mod(longType, value, Factory.Value(longType, divisor));
+		}
 
 		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
@@ -1726,6 +2128,80 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return selectQuery;
+		}
+
+		/// <summary>
+		/// Brings a membership test between two declared durations to common terms, or returns <see langword="null"/>
+		/// when there is nothing to reconcile.
+		/// </summary>
+		/// <remarks>
+		/// A comparison is reconciled while it is translated, because both operands are still expressions there. A
+		/// membership test is not: it becomes a predicate over one expression and a sub-query, and the two numbers
+		/// are then compared as they stand - 1800 against 18000000000 is the same ninety minutes written twice.
+		/// Neither value is known while the query is built, so no conversion of a constant can bridge them.
+		/// <para>
+		/// Both sides go to ticks rather than one side to the other's unit: converting the test down to a coarser
+		/// unit would truncate it, and a duration that the column cannot represent would then match a stored value
+		/// it does not equal.
+		/// </para>
+		/// <para>
+		/// The sub-query is cloned before its column is rewritten unless this visitor owns it outright, the same
+		/// condition <see cref="ConvertToExists"/> applies for the same reason - it may be shared, and a statement
+		/// reached through the query cache must not be edited in place.
+		/// </para>
+		/// </remarks>
+		ISqlPredicate? ReconcileDurationUnits(SqlPredicate.InSubQuery predicate)
+		{
+			if (predicate.SubQuery.Select.Columns is not [var singleColumn])
+				return null;
+
+			var testDescriptor   = QueryHelper.GetColumnDescriptor(predicate.Expr1);
+			var columnDescriptor = QueryHelper.GetColumnDescriptor(singleColumn.Expression);
+
+			if (testDescriptor?.DurationUnit is not { } testUnit || columnDescriptor?.DurationUnit is not { } columnUnit || testUnit == columnUnit)
+				return null;
+
+			// The two meet in the finer of their units, not in ticks. Either way the coarser one is the one that
+			// moves - a coarser unit converts into a finer exactly, while the other direction has a remainder to
+			// drop - so the finer column keeps the amount it was stored as and stays a column an index can be
+			// walked by, and only one side is multiplied rather than both.
+			//
+			// Ticks are the fallback and were the whole rule before: they are finer than every unit a column can be
+			// declared in but one, so meeting there is nearly always safe and is simply further than the two need to
+			// go. The exception is DurationUnit.Nanosecond, which is finer still - a tick is a hundred of them - so
+			// the meeting below can land under a tick, and no lowering takes a sub-tick amount. What reaches the
+			// builder then is a node it refuses, and the refusal it gives names an interval member although this is
+			// a membership test. Recorded rather than worked around: bringing such a column to any coarser unit is
+			// the division that DurationUnit.Nanosecond documents as unavailable, so there is no meeting to move to.
+			var meeting = SqlIntervalUnits.IsFinerThan(SqlIntervalType.ToIntervalUnit(columnUnit), SqlIntervalType.ToIntervalUnit(testUnit))
+				? columnUnit
+				: testUnit;
+
+			var subQuery = predicate.SubQuery;
+
+			if (GetVisitMode(subQuery) == VisitMode.Transform)
+				subQuery = subQuery.CloneQuery();
+
+			var subQueryColumn = subQuery.Select.Columns[0];
+
+			subQueryColumn.Expression = TotalIn(subQueryColumn.Expression, columnDescriptor, columnUnit, meeting);
+
+			return new SqlPredicate.InSubQuery(
+				TotalIn(predicate.Expr1, testDescriptor, testUnit, meeting),
+				predicate.IsNot,
+				subQuery,
+				predicate.DoNotConvert);
+		}
+
+		/// <summary>
+		/// A declared duration counted in <paramref name="meeting"/> rather than in the unit it is stored as. Where
+		/// the two are the same the count is the stored amount, and the column is left as it is.
+		/// </summary>
+		ISqlExpression TotalIn(ISqlExpression expression, ColumnDescriptor descriptor, DurationUnit unit, DurationUnit meeting)
+		{
+			var interval = new SqlIntervalExpression(expression, descriptor.GetDbDataType(true), SqlIntervalType.ForDuration(unit));
+
+			return new SqlIntervalPartExpression(interval, SqlIntervalType.ToIntervalUnit(meeting), SqlIntervalPartKind.Total, Factory.GetDbDataType(typeof(long)));
 		}
 
 		ISqlPredicate ConvertToExists(SqlPredicate.InSubQuery inPredicate)

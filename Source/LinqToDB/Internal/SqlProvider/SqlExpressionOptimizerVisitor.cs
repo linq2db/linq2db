@@ -1077,6 +1077,56 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
+		/// <summary>
+		/// Cancels a shift against the difference it was built from: <c>start + (end - start)</c> is <c>end</c>.
+		/// </summary>
+		/// <remarks>
+		/// Worth doing here rather than leaving to each provider, because it removes the arithmetic entirely - the
+		/// result needs no interval type, no date addition and no lowering at all, so it works even where the
+		/// provider could express none of those. Both operands have to be the same expression for the terms to
+		/// cancel, which is what the comparison checks.
+		/// </remarks>
+		protected internal override IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			var newElement = base.VisitSqlTemporalArithmeticExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
+			{
+				var temporal = QueryHelper.UnwrapNullablity(element.Temporal);
+
+				// start + (end - start) is end, and end - (end - start) is start. Both operands have to be the
+				// same expression for the terms to cancel, which is what the comparison checks.
+				var remaining =
+					!element.IsSubtract && difference.Start.Equals(temporal, SqlQuery.SqlExtensions.DefaultComparer) ? difference.End
+					: element.IsSubtract && difference.End.Equals(temporal, SqlQuery.SqlExtensions.DefaultComparer)  ? difference.Start
+					: null;
+
+				if (remaining != null)
+				{
+					// The term that cancels is the shifted value itself, and the expression was NULL whenever it
+					// was - while the endpoint left standing need not be. So its absence is carried by a condition
+					// rather than dropped with it; where it cannot be absent, nothing needs carrying.
+					//
+					// Kept as a fold in both cases because that is the whole point of this rule: what replaces the
+					// expression needs no interval type, no date addition and no lowering, so it still works on a
+					// provider that could express none of those. Blocking the fold instead would refuse the query
+					// there - and refuse a shape that was answered before durations were translated at all.
+					if (!element.Temporal.CanBeNullable(NullabilityContext))
+						return Visit(remaining);
+
+					return Visit(new SqlConditionExpression(
+						new SqlPredicate.IsNull(element.Temporal, false),
+						new SqlValue(element.Type, null),
+						remaining));
+				}
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			var newElement = base.VisitSqlBinaryExpression(element);
