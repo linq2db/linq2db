@@ -35,12 +35,16 @@ namespace Tests.Linq
 		protected ITestDataContext GetDataContext(string configuration)
 		{
 			// Combining is a DataConnection-only path, so with it on the remote context runs the same eager load as
-			// separate commands. Same SQL, different physical grouping — which would make the remote baseline differ
-			// from the direct one for every test in this fixture, for a reason that is not a SQL divergence. Skipping
-			// the remote leg here keeps the direct-vs-remote baseline gate STRICT for the whole suite instead of
-			// loosening the comparison to tolerate the difference.
+			// separate commands. Same SQL, different physical grouping — which would make the remote baseline differ from
+			// the direct one for every test in this fixture, for a reason that is not a SQL divergence. Suppressing the
+			// baseline for that leg keeps the direct-vs-remote gate STRICT for the whole suite instead of loosening the
+			// comparison to tolerate the difference.
+			//
+			// The leg still RUNS: skipping it with Assert.Ignore breaks the tests whose expected failure is declared by
+			// attribute ([ThrowsForProvider] and friends), because the IgnoreException arrives before the exception they
+			// require and is reported as the wrong type.
 			if (combinedCommands && configuration.IsRemote())
-				Assert.Ignore("Combined commands are a DataConnection-only path; the remote context would only re-test the sequential shape the false fixture already covers.");
+				CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
 
 			return base.GetDataContext(configuration, o => o.UseCombinedCommands(combinedCommands));
 		}

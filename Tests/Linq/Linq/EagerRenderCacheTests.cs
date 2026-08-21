@@ -48,7 +48,10 @@ namespace Tests.Linq
 		// re-render (>= 1) and (b) caching never renders MORE than the first run; its companion StableEagerLoadFullyCached
 		// shows a fully-stable load re-renders nothing (0). Statement-level granularity - a stable main staying cached while
 		// only a volatile sibling re-renders - is a DbBatch-backend property and is not observable on this concat path.
-		[Test]
+		// QueryCacheTest: this asserts an exact GetCacheMissCount() delta, so it needs the globally-exclusive lane and the
+		// entry-cap lifted. Without it a suite that has already filled the cache evicts the entry run 2 expects to hit,
+		// which surfaces as one extra compilation.
+		[Test, QueryCacheTest]
 		public void ParameterDependentDetailReRenders([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// Forced on: this fixture's whole subject is the COMBINED per-command render cache. With the policy switch off
@@ -91,7 +94,7 @@ namespace Tests.Linq
 
 		// A fully stable eager load renders once and is fully reused - nothing re-renders on the second run. This is the
 		// core invariant: a non-parameter-dependent statement is never re-rendered (holds on every backend).
-		[Test]
+		[Test, QueryCacheTest]
 		public void StableEagerLoadFullyCached([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// Forced on: this fixture's whole subject is the COMBINED per-command render cache. With the policy switch off
