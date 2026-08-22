@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -13,6 +14,28 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		/// <inheritdoc/>
 		protected override bool SupportsNullInColumn => false;
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// Elapsed ticks from the microsecond count a YQL <c>Interval</c> casts to.
+		/// </summary>
+		/// <remarks>
+		/// Subtracting two temporal values yields an <c>Interval</c>, and casting one to <c>Int64</c> gives the
+		/// microseconds it holds - which is also the finest a YDB timestamp stores, so scaling to ticks loses
+		/// nothing. The subtraction has to carry the interval type, or the cast reads as a no-op between two
+		/// <c>Int64</c> values and is pruned.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+			var microseconds = Factory.Cast(Factory.Sub(intervalType, element.End, element.Start), longType, true);
+
+			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
 
 		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB
 		// supports) instead of folding it to NULLIF.

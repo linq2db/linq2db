@@ -12,11 +12,159 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
 	internal static class SequenceHelper
 	{
+		/// <summary>
+		/// Whether two stored values are handed to the reader on the same terms, so one reading can serve both.
+		/// </summary>
+		/// <remarks>
+		/// A conversion is not arithmetic on the SQL side, so bringing two values that carry different ones into a
+		/// single value loses the difference: whichever conversion the result is read through is right for at most
+		/// one of them. Callers that only know one side decide for themselves what an unknown means - here both
+		/// sides are known.
+		/// <para>
+		/// The declared duration unit is compared rather than the converter derived from it: two columns declaring
+		/// the same unit get equivalent converters that are not the same object. That substitution is sound because
+		/// a declared unit is the only thing that can define the stored form - <see cref="ColumnDescriptor"/> refuses
+		/// a column that states a unit and carries a hand-written converter as well, so equal units cannot hide
+		/// unequal conversions.
+		/// </para>
+		/// </remarks>
+		public static bool ReadTheSameWay(ColumnDescriptor descriptor1, ColumnDescriptor descriptor2)
+		{
+			if (descriptor1.DurationUnit != null || descriptor2.DurationUnit != null)
+				return descriptor1.DurationUnit == descriptor2.DurationUnit;
+
+			return ConvertTheSameWay(descriptor1.ValueConverter, descriptor2.ValueConverter);
+		}
+
+		/// <summary>
+		/// Whether two value converters carry a value between the model and the database on the same terms.
+		/// </summary>
+		/// <remarks>
+		/// Compared by what they do rather than by which object they are, so the same conversion declared twice
+		/// counts as one: two entities that each say <c>HasConversion(ts =&gt; ts.Ticks, v =&gt; TimeSpan.FromTicks(v))</c>
+		/// get converters that are equal in every way except identity, and treating those as different would keep
+		/// apart two columns that are interchangeable.
+		/// <para>
+		/// A converter built from delegates rather than expressions holds them as opaque constants, so two of those
+		/// never compare equal however alike they behave. That is the safe direction to be wrong in: the answer is
+		/// used to decide whether one reading can serve both values, and "no" costs a column or a refusal while
+		/// "yes" would silently read one value through the other's conversion.
+		/// </para>
+		/// </remarks>
+		public static bool ConvertTheSameWay(IValueConverter? converter1, IValueConverter? converter2)
+		{
+			// Covers both being absent, and the far more common case of one descriptor reached along two paths.
+			if (ReferenceEquals(converter1, converter2))
+				return true;
+
+			if (converter1 == null || converter2 == null)
+				return false;
+
+			return converter1.HandlesNulls == converter2.HandlesNulls
+				&& ConversionsMatch(converter1.FromProviderExpression, converter2.FromProviderExpression)
+				&& ConversionsMatch(converter1.ToProviderExpression,   converter2.ToProviderExpression);
+		}
+
+		/// <summary>
+		/// Whether two conversion lambdas carry the same value across, disregarding which of them speaks in terms of
+		/// a nullable type.
+		/// </summary>
+		/// <remarks>
+		/// The same conversion declared on a nullable property and on a plain one produces lambdas that differ only
+		/// in where <c>Nullable&lt;&gt;</c> appears - the delegate types differ, and the body carries an extra
+		/// conversion to reach the declared type. Compared as they stand they are never equal, which would keep
+		/// apart two columns that hold the same thing.
+		/// <para>
+		/// Nulls themselves are not what is being compared here: whether a converter is prepared to see one is
+		/// already settled by <see cref="IValueConverter.HandlesNulls"/>, and a NULL read is decided by the column's
+		/// nullability rather than by the conversion.
+		/// </para>
+		/// </remarks>
+		static bool ConversionsMatch(LambdaExpression lambda1, LambdaExpression lambda2)
+		{
+			if (lambda1.Parameters.Count != 1 || lambda2.Parameters.Count != 1)
+				return ExpressionEqualityComparer.Instance.Equals(lambda1, lambda2);
+
+			var parameter1 = lambda1.Parameters[0];
+			var parameter2 = lambda2.Parameters[0];
+
+			if (parameter1.Type.UnwrapNullableType()    != parameter2.Type.UnwrapNullableType()
+				|| lambda1.ReturnType.UnwrapNullableType() != lambda2.ReturnType.UnwrapNullableType())
+			{
+				return false;
+			}
+
+			var common = Expression.Parameter(parameter1.Type.UnwrapNullableType(), "p");
+
+			// The unwrapped parameter is what makes the two spellings of one conversion meet: standing for a
+			// nullable value it leaves nothing behind that the plainly-typed side has no counterpart for. Some
+			// bodies cannot be rebuilt around it - one that reads a member only Nullable<> has, or hands the value
+			// to something that expects one - and then both sides keep the nullability they were written in, which
+			// leaves them comparable to each other rather than to nothing.
+			if (!TryCanonicalize(lambda1.Body, parameter1, common, out var body1)
+				|| !TryCanonicalize(lambda2.Body, parameter2, common, out var body2))
+			{
+				body1 = Canonicalize(lambda1.Body, parameter1, AsWrittenIn(parameter1, common));
+				body2 = Canonicalize(lambda2.Body, parameter2, AsWrittenIn(parameter2, common));
+			}
+
+			return ExpressionEqualityComparer.Instance.Equals(body1, body2);
+
+			static Expression AsWrittenIn(ParameterExpression parameter, ParameterExpression common)
+				=> parameter.Type == common.Type ? common : Expression.Convert(common, parameter.Type);
+		}
+
+		/// <summary>
+		/// Rewrites a conversion body around <paramref name="replacement"/>, reporting whether the body survives it
+		/// rather than throwing when it does not.
+		/// </summary>
+		static bool TryCanonicalize(Expression body, ParameterExpression parameter, Expression replacement, [NotNullWhen(true)] out Expression? result)
+		{
+			try
+			{
+				result = Canonicalize(body, parameter, replacement);
+				return true;
+			}
+			catch (ArgumentException)
+			{
+				// Rebuilding an access against a type that does not have it - Property 'Int64 Value' is not
+				// defined for type 'System.Int64' - says this body is written in terms of its own nullability.
+				result = null;
+				return false;
+			}
+		}
+
+		/// <summary>
+		/// Rewrites a conversion body so that two of them can be told apart by what they compute rather than by the
+		/// nullability they were written against: the parameter becomes a shared one, and a conversion that only
+		/// puts a value into or takes it out of <c>Nullable&lt;&gt;</c> is dropped.
+		/// </summary>
+		static Expression Canonicalize(Expression body, ParameterExpression parameter, Expression replacement)
+		{
+			return body.Transform(e =>
+			{
+				if (ReferenceEquals(e, parameter))
+					return replacement;
+
+				if (e is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } unary
+					&& unary.Type.UnwrapNullableType() == unary.Operand.Type.UnwrapNullableType())
+				{
+					// Recursed rather than returned: the transform does not descend into a node the callback
+					// replaced, so the parameter anywhere under a stripped conversion would keep its own
+					// identity and two bodies that differ only there would compare unequal.
+					return Canonicalize(unary.Operand, parameter, replacement);
+				}
+
+				return e;
+			});
+		}
+
 		public static Expression PrepareBody(LambdaExpression lambda, params IBuildContext[] sequences)
 		{
 			var body = lambda.Parameters.Count == 0

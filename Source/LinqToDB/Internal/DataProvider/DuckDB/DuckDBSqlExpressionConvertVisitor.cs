@@ -13,6 +13,64 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
 
+		/// <summary>
+		/// <c>//</c>, DuckDB's integer division - its <c>/</c> produces a double even between two integers.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Expression(longType, Precedence.Multiplicative, "{0} // {1}", value, Factory.Value(longType, divisor));
+		}
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// Elapsed ticks from <c>date_diff</c> at microsecond resolution.
+		/// </summary>
+		/// <remarks>
+		/// A DuckDB timestamp holds microseconds, so the count is exact and scaling it to ticks - ten of them to
+		/// the microsecond - loses nothing. Taken through the count rather than DuckDB's own <c>INTERVAL</c>,
+		/// because an interval carries months and days alongside the microseconds and only the count is a single
+		/// number.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var microseconds = Factory.Function(longType, "Date_Diff",
+				Factory.Value(Factory.GetDbDataType(typeof(string)), "microsecond"), element.Start, element.End);
+
+			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
+
+		/// <inheritdoc />
+		/// <remarks>Lowered below without going through <c>FinestDateUnit</c>, which the default reads.</remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by an interval built from the microsecond count, which is what DuckDB stores.
+		/// </summary>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// Through the truncating divide, for the reason TruncateDivide states above: DuckDB's / produces a
+			// double even between two integers, and To_Microseconds takes a BIGINT - so a tick count that is not a
+			// whole number of microseconds would hand a fraction to an integer parameter.
+			var microseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond / 1000);
+			var interval     = Factory.Function(longType.WithDataType(DataType.Interval), "To_Microseconds", microseconds);
+			var type         = Factory.GetDbDataType(element.Temporal);
+
+			// The date is cast rather than passed through: a parameter reaches DuckDB as an untyped literal, and
+			// it will not choose between the overloads of + for a string and an interval.
+			var temporal = Factory.Cast(element.Temporal, type.WithDataType(DataType.DateTime2), true);
+
+			return element.IsSubtract
+				? Factory.Sub(type, temporal, interval)
+				: Factory.Add(type, temporal, interval);
+		}
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate);
