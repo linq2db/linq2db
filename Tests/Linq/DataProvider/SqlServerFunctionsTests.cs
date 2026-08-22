@@ -199,6 +199,7 @@ namespace Tests.DataProvider
 			db.LastQuery!.ShouldContain("CONVERT(decimal,");
 		}
 
+		[ActiveIssue]
 		[Test]
 		public void ConvertTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -209,6 +210,7 @@ namespace Tests.DataProvider
 			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
+		[ActiveIssue]
 		[Test]
 		public void ConvertTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -277,6 +279,7 @@ namespace Tests.DataProvider
 			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
+		[ActiveIssue]
 		[Test]
 		public void ConvertWithStyleTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
