@@ -245,6 +245,16 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
+		/// <summary>
+		/// Suggests a display name for a parameter built from <paramref name="expression"/>, taken from the
+		/// member the value is read from rather than from the column it is compared against - a parameter
+		/// carries a value, so it reads better named after that value's source. When the expression is not
+		/// itself a member access, the nearest member access inside it is used, but only across calls that
+		/// hand back a value already held by their target: an element read, or <c>GetValueOrDefault</c>.
+		/// A call that <i>computes</i> a new value would give a name that describes the wrong thing - the
+		/// parameter behind <c>today.AddDays(-7)</c> is not <c>today</c> - so those keep returning
+		/// <see langword="null"/> and are named the way they were before source-based naming existed.
+		/// </summary>
 		public static string? SuggestParameterDisplayName(Expression? expression)
 		{
 			return expression switch
@@ -257,8 +267,36 @@ namespace LinqToDB.Internal.Linq
 				UnaryExpression { Operand: var operand } =>
 					SuggestParameterDisplayName(operand),
 
+				// values[0] over an array - name after the array, not the target column
+				BinaryExpression { NodeType: ExpressionType.ArrayIndex, Left: var array } =>
+					SuggestParameterDisplayName(array),
+
+				// list[0], dict[key], value.GetValueOrDefault() - the call returns what the target holds
+				MethodCallExpression { Object: { } target } call when IsValuePreservingCall(call) =>
+					SuggestParameterDisplayName(target),
+
+				IndexExpression { Object: { } target } =>
+					SuggestParameterDisplayName(target),
+
 				_ => null,
 			};
+
+			static bool IsValuePreservingCall(MethodCallExpression call)
+			{
+				var method = call.Method;
+
+				// An indexer read hands back an element the container already holds. IsSpecialName keeps this
+				// to real indexers rather than any method that happens to be called get_Item.
+				if (method is { IsSpecialName: true, Name: "get_Item" })
+					return true;
+
+				// Nullable<T>.GetValueOrDefault() returns the target's own value - but the overload taking a
+				// default can return that argument instead, so it must not lend the target's name.
+				return string.Equals(method.Name, nameof(Nullable<>.GetValueOrDefault), StringComparison.Ordinal)
+					&& call.Arguments.Count == 0
+					&& method.DeclaringType is { IsGenericType: true } declaringType
+					&& declaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
+			}
 		}
 
 		static string? BuildParameterPath(Expression? expression)
