@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -9,6 +11,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 using LinqToDB.Remote;
 
 using NUnit.Framework;
@@ -190,6 +193,135 @@ namespace Tests.Linq
 			foreach (var flag in originalFlags.CustomFlags)
 			{
 				Assert.That(remoteFlags.CustomFlags, Does.Contain(flag));
+			}
+		}
+
+		// InsertOrReplace is the shape that exposes this: it builds a two-query plan and
+		// QueryRunner.NonQueryQuery2 runs both on the *same* IQueryRunner (UPDATE, then INSERT when the
+		// update matched nothing), while the runner is disposed once at the end. The remote runner used to
+		// assign _client = GetClient() unconditionally on every execute, so the second one overwrote the
+		// first and the first was never disposed - one leaked client (and, for a real transport, its
+		// connection) per InsertOrReplace. Counting creates against disposes catches that without depending
+		// on any particular transport's internals.
+		[Test]
+		public async Task RemoteRunnerDoesNotLeakClientAcrossTwoQueryPlan()
+		{
+			// A file, not ":memory:": linq2db opens and closes a connection per query, and an unshared
+			// in-memory SQLite database dies with the connection that created it, taking the table with it.
+			var databasePath = Path.Combine(Path.GetTempPath(), $"linq2db-remote-client-lifetime-{Guid.NewGuid():N}.sqlite");
+
+			try
+			{
+				// SQLite has a native upsert, and with it InsertOrReplace compiles to a single statement -
+				// which never reaches the two-execute path this is about. Turning the flag off selects
+				// MakeAlternativeInsertOrUpdate's UPDATE-then-INSERT plan instead, which is the shape every
+				// provider without native support (Access among them) really uses.
+				var provider = new NoNativeUpsertSqliteProvider();
+
+				await using var backend = new DataConnection(new DataOptions()
+					.UseConnectionString($"Data Source={databasePath}")
+					.UseDataProvider(provider));
+
+				await backend.CreateTableAsync<ClientLifetimeEntity>();
+
+				await using var context = new CountingRemoteDataContext(backend);
+
+				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first" });
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(context.ClientsCreated, Is.GreaterThan(0), "the runner never asked for a client - the test no longer exercises the path it was written for");
+					Assert.That(context.ClientsDisposed, Is.EqualTo(context.ClientsCreated), "every client the runner obtained must be disposed");
+				}
+			}
+			finally
+			{
+				try
+				{
+					Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+					File.Delete(databasePath);
+				}
+				catch
+				{
+					// best-effort: a temp file left behind is not worth failing the test over
+				}
+			}
+		}
+
+		[Table]
+		sealed class ClientLifetimeEntity
+		{
+			[PrimaryKey] public int     Id    { get; set; }
+			[Column]     public string? Value { get; set; }
+		}
+
+		sealed class NoNativeUpsertSqliteProvider : SQLiteDataProvider
+		{
+			public NoNativeUpsertSqliteProvider() : base("SQLite.NoNativeUpsert", SQLiteProvider.Microsoft)
+			{
+				SqlProviderFlags.IsInsertOrUpdateSupported = false;
+			}
+		}
+
+		// Serves the remote protocol in-process, straight off a real database, so the test exercises the
+		// actual runner/serialization path rather than a mock of it. Only the client's lifetime is
+		// instrumented.
+		sealed class CountingRemoteDataContext : RemoteDataContextBase
+		{
+			readonly DataOptions _backendOptions;
+
+			public CountingRemoteDataContext(DataConnection backend) : base(new DataOptions())
+			{
+				_backendOptions = backend.Options;
+			}
+
+			public int ClientsCreated  { get; private set; }
+			public int ClientsDisposed { get; private set; }
+
+			protected override string ContextIDPrefix => "Test.CountingRemote";
+
+			protected override ILinqService GetClient()
+			{
+				ClientsCreated++;
+
+				return new CountingClient(this, new BackendLinqService(_backendOptions) { AllowUpdates = true });
+			}
+
+			// LinqService's own CreateDataContext builds a DataConnection from a *configuration name*; this
+			// test has no registered configuration, only an explicit set of options, so it has to be pointed
+			// at them directly.
+			sealed class BackendLinqService : LinqService
+			{
+				readonly DataOptions _options;
+
+				public BackendLinqService(DataOptions options)
+				{
+					_options = options;
+				}
+
+				public override DataConnection CreateDataContext(string? configuration) => new (_options);
+			}
+
+			sealed class CountingClient : ILinqService, IDisposable
+			{
+				readonly CountingRemoteDataContext _owner;
+				readonly ILinqService              _inner;
+
+				public CountingClient(CountingRemoteDataContext owner, ILinqService inner)
+				{
+					_owner = owner;
+					_inner = inner;
+				}
+
+				public string? RemoteClientTag { get => _inner.RemoteClientTag; set => _inner.RemoteClientTag = value; }
+
+				public void Dispose() => _owner.ClientsDisposed++;
+
+				public Task<LinqServiceInfo> GetInfoAsync        (string? configuration, CancellationToken cancellationToken = default) => _inner.GetInfoAsync(configuration, cancellationToken);
+				public Task<int>             ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteNonQueryAsync(configuration, queryData, cancellationToken);
+				public Task<string?>         ExecuteScalarAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteScalarAsync(configuration, queryData, cancellationToken);
+				public Task<string>          ExecuteReaderAsync  (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteReaderAsync(configuration, queryData, cancellationToken);
+				public Task<int>             ExecuteBatchAsync   (string? configuration, string queryData, CancellationToken cancellationToken = default) => _inner.ExecuteBatchAsync(configuration, queryData, cancellationToken);
 			}
 		}
 	}

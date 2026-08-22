@@ -131,16 +131,20 @@ namespace LinqToDB.Remote
 
 			public override void Dispose()
 			{
-				if (_client != null)
-					DisposeClient(_client);
+				var client = Interlocked.Exchange(ref _client, null);
+
+				if (client != null)
+					DisposeClient(client);
 
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (_client != null)
-					await DisposeClientAsync(_client).ConfigureAwait(false);
+				var client = Interlocked.Exchange(ref _client, null);
+
+				if (client != null)
+					await DisposeClientAsync(client).ConfigureAwait(false);
 
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
@@ -192,7 +196,7 @@ namespace LinqToDB.Remote
 					_dataContext.GetNextCommandHints(true),
 					_dataContext.Options);
 
-				_client = _dataContext.GetClient();
+				_client ??= _dataContext.GetClient();
 
 				var ret = await _client.ExecuteReaderAsync(_dataContext.ConfigurationString, data, cancellationToken).ConfigureAwait(false);
 
@@ -224,7 +228,7 @@ namespace LinqToDB.Remote
 					_dataContext.GetNextCommandHints(true),
 					_dataContext.Options);
 
-				_client = _dataContext.GetClient();
+				_client ??= _dataContext.GetClient();
 
 				var ret = await _client.ExecuteScalarAsync(_dataContext.ConfigurationString, data, cancellationToken)
 					.ConfigureAwait(false);
@@ -265,7 +269,7 @@ namespace LinqToDB.Remote
 					return -1;
 				}
 
-				_client = _dataContext.GetClient();
+				_client ??= _dataContext.GetClient();
 
 				return await _client.ExecuteNonQueryAsync(_dataContext.ConfigurationString, data, cancellationToken)
 					.ConfigureAwait(false);
