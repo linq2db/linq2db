@@ -66,7 +66,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IndexWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		public void IndexWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -80,7 +80,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IndexWithNavigationOffset([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		public void IndexWithNavigationOffset([IncludeDataSources(TestProvName.WithApplyJoin, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -91,6 +91,27 @@ namespace Tests.Linq
 				select new { p.ParentID, Index = c.Index, c.Item.ChildID };
 
 			AssertQuery(query);
+		}
+
+		[Test]
+		public void IndexSQLiteOrderingAndTake([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(CreateTestTableData());
+
+			AssertQuery(table
+				.Where(x => x.TestId >= 20)
+				.OrderBy(x => x.Id)
+				.Index()
+				.Where(x => x.Index > 0)
+				.Take(4)
+				.Select(x => new { x.Index, x.Item.Id }));
+
+			AssertQuery(table
+				.OrderByDescending(x => x.Id)
+				.Index()
+				.Take(3)
+				.Select(x => new { x.Index, x.Item.Id }));
 		}
 
 		[Test]

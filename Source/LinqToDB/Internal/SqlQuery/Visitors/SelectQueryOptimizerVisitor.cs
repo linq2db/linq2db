@@ -1353,7 +1353,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
-				var sql   = (SelectQuery)joinSource.Source;
+				var sql                              = (SelectQuery)joinSource.Source;
+				var enableCorrelatedOperatorRewrite = _providerFlags.IsCorrelatedByOperatorApplyRewriteSupported;
+				var isCountByShape                    = enableCorrelatedOperatorRewrite && IsCountByShape(sql);
+				var isRowNumberShape                  = enableCorrelatedOperatorRewrite && IsIndexShape(sql);
 
 				var isAgg = sql.Select.Columns.Exists(static c => QueryHelper.IsAggregationOrWindowExpression(c.Expression));
 
@@ -1470,9 +1473,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
 				if (QueryHelper.IsDependsOnOuterSources(sql, whereToIgnore))
+				{
+					if (enableCorrelatedOperatorRewrite && TryOptimizeCorrelatedSetByApply(joinTable, sql))
+						return true;
+
 					return optimized;
+				}
 
 				var searchCondition = new List<ISqlPredicate>();
+				var groupByAdditions   = new List<ISqlExpression>();
+				var partitionAdditions = new List<ISqlExpression>();
 
 				var predicates = sql.Where.SearchCondition.Predicates;
 
@@ -1505,14 +1515,28 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								}
 
 								// check that used key in grouping
-								if (!sql.GroupBy.Items.Exists(gi => QueryHelper.SameWithoutNullablity(gi, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(gi, expExpr.Expr2)))
+								if (!sql.GroupBy.Items.Exists(gi => QueryHelper.SameWithoutNullablity(gi, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(gi, expExpr.Expr2))
+									&& !groupByAdditions.Exists(gi => QueryHelper.SameWithoutNullablity(gi, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(gi, expExpr.Expr2)))
 								{
-									return optimized;
+									if (!isCountByShape
+										|| !TryGetInnerCorrelationExpression(expExpr, accessible, out var innerExpression))
+									{
+										return optimized;
+									}
+
+									groupByAdditions.Add(innerExpression);
 								}
 							}
 							else if (isAgg)
 							{
-								return optimized;
+								if (!isRowNumberShape
+									|| predicate is not SqlPredicate.ExprExpr expExpr
+									|| !TryGetInnerCorrelationExpression(expExpr, accessible, out var innerExpression))
+								{
+									return optimized;
+								}
+
+								partitionAdditions.Add(innerExpression);
 							}
 
 							if (sql.Select.IsDistinct)
@@ -1537,6 +1561,32 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (toRemove != null)
 					{
+						List<SqlExtendedFunction>? rowNumberFunctions = null;
+
+						if (partitionAdditions.Count > 0
+							&& !TryGetOperatorRowNumberFunctions(sql, out rowNumberFunctions))
+						{
+							return optimized;
+						}
+
+						foreach (var expression in groupByAdditions)
+							sql.GroupBy.Expr(expression);
+
+						if (rowNumberFunctions != null)
+						{
+							foreach (var function in rowNumberFunctions)
+							{
+								var partition = function.PartitionBy?.ToList() ?? [];
+								foreach (var expression in partitionAdditions)
+								{
+									if (!partition.Exists(item => QueryHelper.SameWithoutNullablity(item, expression)))
+										partition.Add(expression);
+								}
+
+								function.Modify(function.Arguments, function.WithinGroup, partition, function.OrderBy, function.Filter, function.FrameClause, function.KeepClause);
+							}
+						}
+
 						foreach (var predicate in toRemove)
 						{
 							searchCondition.Insert(0, predicate);
@@ -1627,6 +1677,237 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return optimized;
+		}
+
+		bool TryOptimizeCorrelatedSetByApply(SqlJoinedTable joinTable, SelectQuery outerQuery)
+		{
+			if (joinTable.JoinType != JoinType.CrossApply
+				|| outerQuery.Select.HasModifier
+				|| outerQuery.HasGroupBy
+				|| outerQuery.HasHaving
+				|| outerQuery.HasSetOperators
+				|| outerQuery.IsLimited
+				|| outerQuery.From.Tables is not [{ Joins.Count: 0, Source: SelectQuery innerQuery }]
+				|| innerQuery.Select.HasModifier
+				|| innerQuery.HasGroupBy
+				|| innerQuery.HasHaving
+				|| innerQuery.HasSetOperators
+				|| innerQuery.IsLimited
+				|| innerQuery.From.Tables.Count != 1
+				|| innerQuery.From.Tables[0].Joins.Count != 0
+				|| !TryGetSetByRowNumberFunctions(outerQuery, innerQuery, out var rowNumberFunctions))
+			{
+				return false;
+			}
+
+			var innerSources = QueryHelper.EnumerateAccessibleSources(innerQuery).ToList();
+			var correlatedPredicates = new List<SqlPredicate.ExprExpr>();
+			var partitionAdditions   = new List<ISqlExpression>();
+
+			if (innerQuery.Where.SearchCondition.IsOr)
+				return false;
+
+			foreach (var predicate in innerQuery.Where.SearchCondition.Predicates)
+			{
+				if (!QueryHelper.IsDependsOnOuterSources(predicate, currentSources: innerSources))
+					continue;
+
+				if (predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } equality
+					|| !TryGetInnerCorrelationExpression(equality, innerSources, out var innerExpression))
+				{
+					return false;
+				}
+
+				correlatedPredicates.Add(equality);
+				partitionAdditions.Add(innerExpression);
+			}
+
+			if (correlatedPredicates.Count == 0
+				|| QueryHelper.IsDependsOnOuterSources(innerQuery, correlatedPredicates.Cast<IQueryElement>().ToList())
+				|| QueryHelper.IsDependsOnOuterSources(outerQuery, [innerQuery]))
+			{
+				return false;
+			}
+
+			var correctedPredicates = new List<ISqlPredicate>(correlatedPredicates.Count);
+			foreach (var predicate in correlatedPredicates)
+			{
+				var correctedForInner = _movingOuterPredicateVisitor.CorrectReferences(innerQuery, innerSources, predicate);
+				var outerSources      = QueryHelper.EnumerateAccessibleSources(outerQuery).ToList();
+				correctedPredicates.Add(_movingOuterPredicateVisitor.CorrectReferences(outerQuery, outerSources, correctedForInner));
+			}
+
+			foreach (var function in rowNumberFunctions)
+			{
+				var partition = function.PartitionBy?.ToList() ?? [];
+				foreach (var expression in partitionAdditions)
+				{
+					if (!partition.Exists(item => QueryHelper.SameWithoutNullablity(item, expression)))
+						partition.Add(expression);
+				}
+
+				function.Modify(function.Arguments, function.WithinGroup, partition, function.OrderBy, function.Filter, function.FrameClause, function.KeepClause);
+			}
+
+			foreach (var predicate in correlatedPredicates)
+				innerQuery.Where.SearchCondition.Predicates.Remove(predicate);
+
+			joinTable.JoinType = JoinType.Inner;
+			joinTable.Condition.Predicates.AddRange(correctedPredicates);
+			return true;
+		}
+
+		static bool IsCountByShape(SelectQuery query)
+		{
+			if (!query.HasGroupBy || query.Select.HasModifier || query.HasHaving || query.HasSetOperators || query.HasOrderBy)
+				return false;
+
+			var aggregateCount = 0;
+
+			foreach (var column in query.Select.Columns)
+			{
+				if (!QueryHelper.ContainsAggregationFunction(column.Expression))
+				{
+					if (!query.GroupBy.Items.Exists(item => QueryHelper.SameWithoutNullablity(item, column.Expression)))
+						return false;
+
+					continue;
+				}
+
+				if (column.Expression is not SqlExtendedFunction { FunctionName: "COUNT" } count
+					|| !QueryHelper.IsAggregationFunction(count))
+				{
+					return false;
+				}
+
+				aggregateCount++;
+			}
+
+			return aggregateCount == 1;
+		}
+
+		static bool IsIndexShape(SelectQuery query)
+		{
+			if (query.Select.HasModifier || query.HasGroupBy || query.HasHaving || query.HasSetOperators || query.IsLimited
+				|| !TryGetOperatorRowNumberFunctions(query, out var functions)
+				|| functions.Count != 1)
+			{
+				return false;
+			}
+
+			return query.Select.Columns.Exists(column =>
+				column.Expression is SqlBinaryExpression
+				{
+					Operation: "-",
+					Expr1: SqlExtendedFunction { FunctionName: "ROW_NUMBER" },
+					Expr2: SqlValue { Value: 1 },
+				});
+		}
+
+		static bool TryGetSetByRowNumberFunctions(SelectQuery outerQuery, SelectQuery innerQuery, [NotNullWhen(true)] out List<SqlExtendedFunction>? functions)
+		{
+			functions = null;
+
+			if (outerQuery.Where.SearchCondition.Predicates is not [SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } filter]
+				|| !TryGetOperatorRowNumberFunctions(innerQuery, out var found)
+				|| found.Count != 1)
+			{
+				return false;
+			}
+
+			var rowNumberColumns = innerQuery.Select.Columns
+				.Where(column => QueryHelper.IsDependsOn(column.Expression, found[0]))
+				.ToList();
+
+			if (rowNumberColumns.Count != 1)
+				return false;
+
+			var isRowNumberFilter = IsIntegerOne(filter.Expr1)
+				? QueryHelper.SameWithoutNullablity(filter.Expr2, rowNumberColumns[0])
+				: IsIntegerOne(filter.Expr2) && QueryHelper.SameWithoutNullablity(filter.Expr1, rowNumberColumns[0]);
+
+			if (!isRowNumberFilter)
+				return false;
+
+			var hasMembershipPredicate = false;
+			innerQuery.Where.SearchCondition.VisitAll(element =>
+			{
+				if (element is SqlPredicate.InList or SqlPredicate.InSubQuery)
+					hasMembershipPredicate = true;
+			});
+
+			if (!hasMembershipPredicate)
+				return false;
+
+			functions = found;
+			return true;
+		}
+
+		static bool IsIntegerOne(ISqlExpression expression)
+		{
+			expression = SequenceHelper.UnwrapNullability(expression);
+			return expression is SqlValue value && value.Value switch
+			{
+				sbyte number  => number == 1,
+				byte number   => number == 1,
+				short number  => number == 1,
+				ushort number => number == 1,
+				int number    => number == 1,
+				uint number   => number == 1,
+				long number   => number == 1,
+				ulong number  => number == 1,
+				_             => false,
+			};
+		}
+
+		static bool TryGetInnerCorrelationExpression(SqlPredicate.ExprExpr predicate, List<ISqlTableSource> accessible, [NotNullWhen(true)] out ISqlExpression? innerExpression)
+		{
+			var expression1 = SequenceHelper.UnwrapNullability(predicate.Expr1);
+			var expression2 = SequenceHelper.UnwrapNullability(predicate.Expr2);
+
+			var depends1 = QueryHelper.IsDependsOnOuterSources(expression1, currentSources: accessible);
+			var depends2 = QueryHelper.IsDependsOnOuterSources(expression2, currentSources: accessible);
+
+			innerExpression = depends1 != depends2 ? depends1 ? expression2 : expression1 : null;
+			return innerExpression != null;
+		}
+
+		static bool TryGetOperatorRowNumberFunctions(SelectQuery query, [NotNullWhen(true)] out List<SqlExtendedFunction>? functions)
+		{
+			var found = new List<SqlExtendedFunction>();
+			var valid = true;
+
+			foreach (var column in query.Select.Columns)
+			{
+				if (!QueryHelper.IsAggregationOrWindowExpression(column.Expression))
+					continue;
+
+				column.Expression.VisitAll(element =>
+				{
+					if (!valid)
+						return;
+
+					if (element is SqlExtendedFunction function && function.IsWindowFunction)
+					{
+						if (string.Equals(function.FunctionName, "ROW_NUMBER", StringComparison.Ordinal))
+							found.Add(function);
+						else
+							valid = false;
+					}
+				});
+
+				if (QueryHelper.ContainsAggregationFunction(column.Expression))
+					valid = false;
+			}
+
+			if (!valid || found.Count == 0)
+			{
+				functions = null;
+				return false;
+			}
+
+			functions = found;
+			return true;
 		}
 
 		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere, bool inGrouping)

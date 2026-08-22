@@ -19,16 +19,17 @@ namespace Tests.Linq
 		{
 			[PrimaryKey] public int Id { get; set; }
 			[Column] public int TestId { get; set; }
+			[Column] public int? NullableTestId { get; set; }
 		}
 
 		TestTable[] CreateTestTableData()
 		{
 			return [
-				new TestTable() { Id = 1, TestId = 20},
-				new TestTable() { Id = 2, TestId = 20 },
-				new TestTable() { Id = 3, TestId = 30 },
-				new TestTable() { Id = 4, TestId = 30 },
-				new TestTable() { Id = 5, TestId = 40 }
+				new TestTable() { Id = 1, TestId = 20, NullableTestId = null },
+				new TestTable() { Id = 2, TestId = 20, NullableTestId = null },
+				new TestTable() { Id = 3, TestId = 30, NullableTestId = 30 },
+				new TestTable() { Id = 4, TestId = 30, NullableTestId = 30 },
+				new TestTable() { Id = 5, TestId = 40, NullableTestId = 40 }
 				];
 		}
 
@@ -48,7 +49,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IntersectByWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		public void IntersectByWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -63,7 +64,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IntersectByWithWhere([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		public void IntersectByWithWhere([IncludeDataSources(TestProvName.WithApplyJoin, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -73,6 +74,47 @@ namespace Tests.Linq
 				select new { p.ParentID, c.ChildID };
 
 			AssertQuery(query);
+		}
+
+		[Test]
+		public void IntersectByNavigationEdgeCases([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var duplicateAndMissingKeys =
+				from p in db.Parent.LoadWith(x => x.Children)
+				from c in p.Children.IntersectBy(new[] { 2, 2, int.MaxValue }, x => x.ChildID)
+				orderby p.ParentID, c.ChildID
+				select new { p.ParentID, c.ChildID };
+
+			var emptyKeys =
+				from p in db.Parent.LoadWith(x => x.Children)
+				from c in p.Children.IntersectBy(Array.Empty<int>(), x => x.ChildID)
+				orderby p.ParentID, c.ChildID
+				select new { p.ParentID, c.ChildID };
+
+			AssertQuery(duplicateAndMissingKeys);
+			AssertQuery(emptyKeys);
+		}
+
+		[Test]
+		public void IntersectBySQLiteNullableCompositeKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(CreateTestTableData());
+
+			var keys = new[]
+			{
+				new { TestId = 20, NullableTestId = (int?)null },
+				new { TestId = 20, NullableTestId = (int?)null },
+				new { TestId = 99, NullableTestId = (int?)99 }
+			};
+
+			AssertQuery(table
+				.Where(x => x.Id > 0)
+				.IntersectBy(keys, x => new { x.TestId, x.NullableTestId })
+				.Select(x => new { x.Id, x.TestId, x.NullableTestId })
+				.OrderBy(x => x.Id));
 		}
 
 		[Test]
