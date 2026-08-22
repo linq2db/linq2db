@@ -10,6 +10,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -169,7 +170,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Set while eager-load processing recursively builds a preamble sub-query, so the nested
+		/// Set while eager-load processing recursively builds a harvester sub-query, so the nested
 		/// <see cref="FinalizeProjection{T}"/> calls skip the <c>ImplicitCollectionLoading</c> guard —
 		/// those loads were already validated on the top-level query.
 		/// </summary>
@@ -183,7 +184,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext       context,
 			Expression          expression,
 			ParameterExpression queryParameter,
-			ref List<Preamble>? preambles,
+			ref List<Harvester>? harvesters,
 			Expression[]        previousKeys)
 		{
 			if (expression.NodeType == ExpressionType.Default)
@@ -195,7 +196,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Strict mode: reject implicit collection eager loads (those not explicitly marked via LoadWith/ThenLoad).
 				// A per-query With*LoadStrategy marker sets a strategy on the context modifier and opts the whole query in.
-				// Guarded only for the top-level user query — the recursive preamble sub-query builds that
+				// Guarded only for the top-level user query — the recursive harvester sub-query builds that
 				// eager-load processing performs (below) re-build already-authorized loads (e.g. a LoadWith
 				// load-function's nested collection) and would otherwise re-trip the guard without marker context.
 				new ImplicitEagerLoadGuardVisitor().Visit(postProcessed);
@@ -206,7 +207,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			try
 			{
-				var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys, out var finalizer);
+				var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref harvesters, previousKeys, out var finalizer);
 
 				if (SequenceHelper.HasError(correctedEager))
 					return correctedEager;
@@ -655,7 +656,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return toRead;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions, object?[]?,object?[]?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions, object?[]?,SqlCommandExecutionContext?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
 		{
 			var type = typeof(T);
 
@@ -672,13 +673,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var mappingBody = expressionGenerator.Build();
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,T>>(mappingBody,
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,SqlCommandExecutionContext?,T>>(mappingBody,
 				QueryRunnerParam,
 				ExpressionConstants.DataContextParam,
 				DataReaderParam,
 				QueryExpressionContainerParam,
 				ParametersParam,
-				PreambleParam);
+				ExecutionContextParam);
 
 			return mapper;
 		}

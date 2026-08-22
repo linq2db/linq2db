@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -19,9 +21,34 @@ using Tests.Model;
 
 namespace Tests.Linq
 {
-	[TestFixture]
-	public class EagerLoadingTests : TestBase
+	// Runs twice: once with combined multi-statement execution off (the 6.x default) and once with it on. Eager loading on
+	// the Default strategy is the combinable one, so this is where both shapes need real coverage — the engine must not go
+	// untested just because it does not ship enabled.
+	[TestFixture(false)]
+	[TestFixture(true)]
+	public class EagerLoadingTests(bool combinedCommands) : TestBase
 	{
+		// Overrides the base helper by overload resolution — the base declares GetDataContext(string, MappingSchema? = null,
+		// ...), so this exact-arity one wins for every plain GetDataContext(context) call and the fixture parameter reaches
+		// all ~70 of them without editing any. The two sites passing their own options builder or mapping schema keep their
+		// existing behaviour.
+		protected ITestDataContext GetDataContext(string configuration)
+		{
+			// Combining is a DataConnection-only path, so with it on the remote context runs the same eager load as
+			// separate commands. Same SQL, different physical grouping — which would make the remote baseline differ from
+			// the direct one for every test in this fixture, for a reason that is not a SQL divergence. Suppressing the
+			// baseline for that leg keeps the direct-vs-remote gate STRICT for the whole suite instead of loosening the
+			// comparison to tolerate the difference.
+			//
+			// The leg still RUNS: skipping it with Assert.Ignore breaks the tests whose expected failure is declared by
+			// attribute ([ThrowsForProvider] and friends), because the IgnoreException arrives before the exception they
+			// require and is reported as the wrong type.
+			if (combinedCommands && configuration.IsRemote())
+				CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
+
+			return base.GetDataContext(configuration, o => o.UseCombinedCommands(combinedCommands));
+		}
+
 		[Table]
 		sealed class MasterClass
 		{
@@ -3701,6 +3728,208 @@ namespace Tests.Linq
 		{
 			var query = (IAsyncEnumerable<LoadWithPassthroughRoot>)_passthroughQuery.LoadWith(a => a.Child);
 			Assert.That(() => query.GetAsyncEnumerator(), Throws.TypeOf<LinqToDBException>());
+		}
+
+		#endregion
+
+		#region Heterogeneous combinable eager children (keyed correlated + non-keyed detached) in one query
+
+		[Table]
+		sealed class MixedMaster
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(MixedCorrelatedChild.MasterId))]
+			public List<MixedCorrelatedChild> CorrelatedChildren { get; set; } = null!;
+		}
+
+		// FK-correlated to MixedMaster: each master sees only its own rows. Under the Default
+		// eager-loading strategy this becomes a combinable Harvester<TKey,T> (IStepMaterializer).
+		[Table]
+		sealed class MixedCorrelatedChild
+		{
+			[Column, PrimaryKey] public int     Id       { get; set; }
+			[Column]             public int     MasterId { get; set; }
+			[Column]             public string? Name     { get; set; }
+		}
+
+		// Not correlated to MixedMaster at all — the eager-loaded expression references no master
+		// field, so the same full set attaches to every master. Under the Default strategy this
+		// becomes a DetachedHarvester<T>: a non-keyed but combinable child (IStepMaterializer), so its
+		// standalone SELECT merges into the same combined command as the keyed correlated child.
+		[Table]
+		sealed class MixedDetachedChild
+		{
+			[Column, PrimaryKey] public int     Id   { get; set; }
+			[Column]             public string? Name { get; set; }
+		}
+
+		sealed class CombinedCommandCounter : CommandInterceptor
+		{
+			public int Count { get; set; }
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				var sql = command.CommandText;
+
+				if (sql.Contains("SELECT", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("CREATE", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("DROP", StringComparison.OrdinalIgnoreCase)
+					&& !sql.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				{
+					Count++;
+				}
+
+				return command;
+			}
+		}
+
+		(MixedMaster[], MixedCorrelatedChild[], MixedDetachedChild[]) GenerateMixedEagerData()
+		{
+			var masters = Enumerable.Range(1, 3).Select(i => new MixedMaster { Id = i, Name = "Master" + i }).ToArray();
+
+			var correlated = masters
+				.SelectMany(m => Enumerable.Range(1, 2 + m.Id)
+					.Select(k => new MixedCorrelatedChild
+					{
+						Id       = m.Id * 100 + k,
+						MasterId = m.Id,
+						Name     = $"Corr{m.Id}_{k}",
+					}))
+				.ToArray();
+
+			var detached = Enumerable.Range(1, 4)
+				.Select(k => new MixedDetachedChild { Id = k, Name = "Det" + k })
+				.ToArray();
+
+			return (masters, correlated, detached);
+		}
+
+		// Regression for the combined eager engine (Source/LinqToDB/Internal/Linq/QueryRunner.cs) merging
+		// HETEROGENEOUS combinable children in one query: a KEYED correlated child (CorrelatedChildren,
+		// FK-correlated -> Harvester<TKey,T>) and a NON-KEYED detached child (no master dependency ->
+		// DetachedHarvester<T>) merge into a single multi-result-set command, and each still materializes
+		// correctly for every master row (the correlated per-master, the detached shared across all).
+		[Test]
+		public void CorrelatedAndDetachedChildren_CombineIntoSingleCommand(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var (masters, correlated, detached) = GenerateMixedEagerData();
+
+			// This test exists to assert the combined engine merges heterogeneous children, so it opts into the policy
+			// switch explicitly rather than relying on the default (off in 6.x).
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(true));
+
+			var counter = new CombinedCommandCounter();
+			if (!context.IsRemote()) db.AddInterceptor(counter);
+
+			using var tMaster     = db.CreateLocalTable(masters);
+			using var tCorrelated = db.CreateLocalTable(correlated);
+			using var tDetached   = db.CreateLocalTable(detached);
+
+			if (!context.IsRemote()) counter.Count = 0;
+
+			var query =
+				from m in tMaster
+				orderby m.Id
+				select new
+				{
+					m.Id,
+					m.Name,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			var expected = masters
+				.OrderBy(m => m.Id)
+				.Select(m => new
+				{
+					m.Id,
+					m.Name,
+					Correlated = correlated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+					Detached = detached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				})
+				.ToList();
+
+			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
+
+			// Every master must see its own correlated rows (never another master's) and the full detached set.
+			foreach (var m in result)
+			{
+				var expectedCorrelated = correlated.Where(c => c.MasterId == m.Id).Select(c => c.Id).OrderBy(id => id).ToList();
+				m.Correlated.Select(c => c.Id).OrderBy(id => id).ToList().ShouldBe(expectedCorrelated);
+
+				m.Detached.Select(d => d.Id).OrderBy(id => id).ToList()
+					.ShouldBe(detached.Select(d => d.Id).OrderBy(id => id).ToList());
+			}
+
+			// Both children are combinable, so the detached SELECT, the correlated child, and the main query
+			// all merge into ONE combined multi-result-set command (a single round-trip).
+			if (!context.IsRemote()) counter.Count.ShouldBe(1);
+		}
+
+		// Runs the same combined eager load down BOTH execution backends: the ADO.NET DbBatch (UseDbBatch on, the
+		// default) and the semicolon-concatenated single command it falls back to. Providers here are the batch-capable
+		// ones on net8.0+, so the axis is a real fork rather than two identical runs.
+		//
+		// This test registers NO interceptor on purpose. DataConnection.CanUseDbBatch requires Interceptor == null, so
+		// any interceptor-based assertion would itself force the concat path and collapse the axis — which is also why
+		// the UseDbBatch=false branch had no option-driven coverage before: it was reachable only through a registered
+		// ICommandInterceptor or on net462.
+		[Test]
+		public void CombinedEagerLoad_HonoursDbBatchBackend(
+			[IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context,
+			[Values] bool useDbBatch)
+		{
+			var (masters, correlated, detached) = GenerateMixedEagerData();
+
+			// Opts into combining explicitly rather than relying on the fixture parameter, so both backends are
+			// exercised regardless of which fixture instance is running.
+			using var db = GetDataContext(context, o => o.UseCombinedCommands(true).UseDbBatch(useDbBatch));
+
+			using var tMaster     = db.CreateLocalTable(masters);
+			using var tCorrelated = db.CreateLocalTable(correlated);
+			using var tDetached   = db.CreateLocalTable(detached);
+
+			var query =
+				from m in tMaster
+				orderby m.Id
+				select new
+				{
+					m.Id,
+					Correlated = tCorrelated
+						.Where(c => c.MasterId == m.Id)
+						.OrderBy(c => c.Id)
+						.ToList(),
+					Detached = tDetached
+						.OrderBy(d => d.Id)
+						.ToList(),
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(masters.Length);
+
+			// A batch binds each statement's parameters in its own scope while the concat form uniquifies them across
+			// statements, so identical materialization on both backends is the property worth pinning.
+			foreach (var m in result)
+			{
+				m.Correlated.Select(c => c.Id).ShouldBe(correlated.Where(c => c.MasterId == m.Id).Select(c => c.Id).OrderBy(id => id).ToList());
+				m.Detached  .Select(d => d.Id).ShouldBe(detached.Select(d => d.Id).OrderBy(id => id).ToList());
+			}
 		}
 
 		#endregion

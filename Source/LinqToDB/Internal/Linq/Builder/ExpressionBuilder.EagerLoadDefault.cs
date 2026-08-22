@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -9,6 +10,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -19,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
-			List<Preamble>         preambles,
+			List<Harvester>         harvesters,
 			Expression[]           previousKeys,
 			EagerLoadState         state)
 		{
@@ -62,9 +64,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, correctedSequence, new SelectQuery()));
 
-				var parameters = new object[] { detailSequence, queryParameter, preambles };
+				var parameters = new object[] { detailSequence, queryParameter, harvesters };
 
-				resultExpression = _buildPreambleQueryDetachedMethodInfo
+				resultExpression = _buildHarvesterQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
 					.InvokeExt<Expression>(this, parameters);
 			}
@@ -125,9 +127,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
 					clonedParentContextRef.BuildContext.SelectQuery));
 
-				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys };
+				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, harvesters, orderByToApply, detailKeys };
 
-				resultExpression = _buildPreambleQueryAttachedMethodInfo
+				resultExpression = _buildHarvesterQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
 					.InvokeExt<Expression>(this, parameters);
 
@@ -144,66 +146,96 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class DetachedPreamble<T>(Query<T> query) : Preamble
+		// A detached child is a standalone single-statement SELECT (no per-master correlation) whose whole result
+		// attaches to every master, so it can be merged into the combined multi-result-set command as one extra
+		// result set (read once, materialized to a list) instead of a separate round-trip. Combinable exactly when
+		// the query renders as a single command (GetResultFromReader != null); otherwise it self-executes.
+		sealed class DetachedHarvester<T>(Query<T> query) : Harvester, IStepMaterializer
 		{
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
-				return query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
+				return query.GetResultEnumerable(dataContext, expressions, context).ToList();
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
-				return await query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
+				return await query.GetResultEnumerable(dataContext, expressions, context).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var q in query.Queries)
-				{
-					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
-				}
+				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, parameters, values);
+			}
+
+			public bool CanCombine => query.GetResultFromReader != null;
+
+			public SqlStatement? GetCombinableStatement()
+				=> query.QueryInfo.Statement;
+
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
+			{
+				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
+			}
+
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> query.GetResultFromReader!(dataContext, expressions, context, dataReader).ToList();
+
+			public async Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+			{
+				return await query.GetResultFromReader!(dataContext, expressions, context, dataReader).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 		}
 
-		sealed class Preamble<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Preamble
+		sealed class Harvester<TKey, T>(Query<KeyDetailEnvelope<TKey, T>> query) : Harvester, IStepMaterializer
 			where TKey : notnull
 		{
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
+				=> BuildResult(query.GetResultEnumerable(dataContext, expressions, context));
+
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
+				=> BuildResultAsync(query.GetResultEnumerable(dataContext, expressions, context), cancellationToken);
+
+			public bool CanCombine => query.GetResultFromReader != null;
+
+			public SqlStatement? GetCombinableStatement()
+				=> query.QueryInfo.Statement;
+
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
 			{
-				var result = new PreambleResult<TKey, T>();
-				foreach (var e in query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
-				{
+				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
+			}
+
+			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
+				=> BuildResult(query.GetResultFromReader!(dataContext, expressions, context, dataReader));
+
+			public Task<object> MaterializeFromReaderAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader, CancellationToken cancellationToken)
+				=> BuildResultAsync(query.GetResultFromReader!(dataContext, expressions, context, dataReader), cancellationToken);
+
+			// Both the sequential (GetResultEnumerable) and combined (GetResultFromReader) paths bucket the same
+			// KeyDetailEnvelope stream into a HarvesterResult; only the source enumerable differs.
+			static HarvesterResult<TKey, T> BuildResult(IEnumerable<KeyDetailEnvelope<TKey, T>> source)
+			{
+				var result = new HarvesterResult<TKey, T>();
+
+				foreach (var e in source)
 					result.Add(e.Key, e.Detail);
-				}
 
 				return result;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles,
-				CancellationToken                                        cancellationToken)
+			static async Task<object> BuildResultAsync(IAsyncEnumerable<KeyDetailEnvelope<TKey, T>> source, CancellationToken cancellationToken)
 			{
-				var result = new PreambleResult<TKey, T>();
+				var result = new HarvesterResult<TKey, T>();
 
-				var enumerator = query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
-					.GetAsyncEnumerator(cancellationToken);
-				await using (enumerator.ConfigureAwait(false))
-				{
-					while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-					{
-						var e = enumerator.Current;
-						result.Add(e.Key, e.Detail);
-					}
-				}
+				await foreach (var e in source.WithCancellation(cancellationToken).ConfigureAwait(false))
+					result.Add(e.Key, e.Detail);
 
 				return result;
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var q in query.Queries)
-				{
-					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
-				}
+				QueryHelper.CollectParametersAndValues(query.QueryInfo.Statement, parameters, values);
 			}
 		}
 	}

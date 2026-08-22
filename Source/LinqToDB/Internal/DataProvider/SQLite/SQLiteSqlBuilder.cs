@@ -33,28 +33,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
-				MappingSchema.ConvertToSqlValue(StringBuilder, null, DataOptions, trun.Table!.TableName.Name);
-			}
-			else
-			{
-				StringBuilder.AppendLine("SELECT last_insert_rowid()");
-			}
-		}
-
 		protected override string LimitFormat(SelectQuery selectQuery)
 		{
 			return "LIMIT {0}";
@@ -210,8 +188,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable);
-			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
+			var rows = valuesTable.BuildRows(RenderContext.EvaluationContext);
 
 			if (rows.Count == 0)
 			{
