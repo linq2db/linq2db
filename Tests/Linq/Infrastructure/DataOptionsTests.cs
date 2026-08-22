@@ -822,7 +822,11 @@ namespace Tests.Infrastructure
 			new DataOptions().UseDefaultNullsPosition(Sql.NullsPosition.First).SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.First);
 		}
 
-		[Test]
+		// NonParallelizable: the subject of this test is the process-global setter itself, so unlike
+		// WithDefaultNullsPositionTest above it cannot be expressed against a local DataOptions. The
+		// save/restore below bounds the mutation in time but does not isolate it - while it is in effect,
+		// any concurrent lane building a DataOptions inherits NULLS LAST.
+		[Test, NonParallelizable]
 		public void ConfigurationSqlDefaultNullsPositionTest()
 		{
 			// MIN006: the process-global static getter/setter, and its propagation to freshly-built DataOptions.

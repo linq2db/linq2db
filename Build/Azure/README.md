@@ -46,10 +46,11 @@ Those pipelines used to run tests only for specific databases manually by team m
 - `/azp run test-sqlce` - SQL CE tests
 - `/azp run test-sqlite` - SQLite tests
 - `/azp run test-sqlserver` - SQL Server tests (all versions)
-- `/azp run test-sqlserver-2019` - SQL Server 2019 tests
-- `/azp run test-sqlserver-2022` - SQL Server 2022 tests
+- `/azp run test-sqlserver-2019` - SQL Server 2017 + 2019 tests (one job covers both versions)
+- `/azp run test-sqlserver-2022` - SQL Server 2022 + 2025 tests (one job covers both versions)
 - `/azp run test-sybase` - SAP/SYBASE ASE tests
 - `/azp run test-ydb` - YDB tests
+- `/azp run test-duckdb` - DuckDB tests
 
 ## Test Matrix
 
@@ -65,20 +66,21 @@ Legend:
 
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
+- :new_moon: - test job implemented, but the main test suite runs on release runs (`full_run`) only, with PR runs covered by the Linux legs. Two mechanisms in `templates/test-matrix.yml` produce it: `win_efcore_only`, where the Windows legs still run the EF.Core suite on every run but the main suite only on release runs, and a `full_run`-conditional `enable_os_windows`, where there is no Windows leg at all on a PR run. Note the first also makes the `netfx` main suite release-run only, since `netfx` runs nowhere but Windows
 - :x: - test job not implemented yet
 - `netfx`: .NET Framework (4.6.2)
 - `netcore`: .NET 8+
 - :door: - Windows 2025
 - :penguin: - Linux (Ununtu 24.04)
-- :green_apple: - MacOS 13 (MacOS testing currently disabled)
+- :green_apple: - macOS 15 (MacOS testing currently disabled)
 
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: | netcore :green_apple: |
 |:---|:---:|:---:|:---:|:---:|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with NorthwindDB Tests|:new_moon:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:new_moon:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.53.4](https://www.sqlite.org/releaselog/3_53_4.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:new_moon:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8.0<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -109,10 +111,10 @@ Legend:
 |MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2022<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2025<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:new_moon:|:new_moon:|:heavy_minus_sign:|:heavy_minus_sign:|
+|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:new_moon:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2022<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:new_moon:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2025<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:new_moon:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
 |Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:x:|:x:|:x:|:x:|
 |Access<br>Jet 4.0 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access><br>ACE 12 OLE DB|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -131,6 +133,7 @@ Legend:
 |ClickHouse (latest)<br>[ClickHouse.Driver](https://www.nuget.org/packages/ClickHouse.Driver/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |ClickHouse (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |YDB (latest)<br>[Ydb.Sdk](https://www.nuget.org/packages/Ydb.Sdk/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|DuckDB (latest)<br>[DuckDB.NET.Data.Full](https://www.nuget.org/packages/DuckDB.NET.Data.Full/)|:heavy_minus_sign:|:new_moon:|:heavy_check_mark:|:heavy_check_mark:|
 
 ### Notes
 
