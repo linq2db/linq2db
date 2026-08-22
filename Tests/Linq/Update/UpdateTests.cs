@@ -2165,5 +2165,135 @@ namespace Tests.xUpdate
 				.Where(p => p.ID == -1)
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
 		}
+
+		class ChildView : Child;
+
+		class ChildDto
+		{
+			public required Child Child { get; set; }
+		}
+
+		[Test]
+		public void UpdateFromNamedDto([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useAnonymousDto)
+		{
+			using var db = GetDataContext(context);
+			using var tr = db.BeginTransaction();
+
+			var childViews =
+				from child in db.Child
+				from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID)
+				select new ChildView
+				{
+					ChildID  = child.ChildID,
+					ParentID = child.ParentID
+				};
+
+			if (useAnonymousDto)
+			{
+				var dtos =
+					from childView in childViews
+					select new
+					{
+						Child = childView
+					};
+
+				var records = dtos
+					.Where(dto => dto.Child.ChildID == int.MinValue)
+					.Select(dto => dto.Child)
+					.Set(child => child.ParentID, child => child.ParentID)
+					.Update();
+
+				records.ShouldBe(0);
+			}
+			else
+			{
+				var dtos =
+					from childView in childViews
+					select new ChildDto
+					{
+						Child = childView
+					};
+
+				var records = dtos
+					.Where(dto => dto.Child.ChildID == int.MinValue)
+					.Select(dto => dto.Child)
+					.Set(child => child.ParentID, child => child.ParentID)
+					.Update();
+
+				records.ShouldBe(0);
+			}
+		}
+
+		class ChildViewDto
+		{
+			public required ChildView Child { get; set; }
+		}
+
+		[Test]
+		public void UpdateFromDtoWithExactlyTypedMember([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tr = db.BeginTransaction();
+
+			var childViews =
+				from child in db.Child
+				from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID)
+				select new ChildView
+				{
+					ChildID  = child.ChildID,
+					ParentID = child.ParentID
+				};
+
+			// Same shape as UpdateFromNamedDto, except the DTO member is declared as the projected type rather
+			// than its base. That is what decides whether the target table resolves, not whether the DTO is
+			// named or anonymous, so this case works even without the fix.
+			var dtos =
+				from childView in childViews
+				select new ChildViewDto
+				{
+					Child = childView
+				};
+
+			var records = dtos
+				.Where(dto => dto.Child.ChildID == int.MinValue)
+				.Select(dto => dto.Child)
+				.Set(child => child.ParentID, child => child.ParentID)
+				.Update();
+
+			records.ShouldBe(0);
+		}
+
+		[Test]
+		public void UpdateFromAnonymousDtoWithBaseTypedMember([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tr = db.BeginTransaction();
+
+			var childViews =
+				from child in db.Child
+				from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID)
+				select new ChildView
+				{
+					ChildID  = child.ChildID,
+					ParentID = child.ParentID
+				};
+
+			// The other side of the same boundary: an anonymous DTO carrying the base type. It resolves too,
+			// which rules out "anonymous types are what works" as an explanation.
+			var dtos =
+				from childView in childViews
+				select new
+				{
+					Child = (Child)childView
+				};
+
+			var records = dtos
+				.Where(dto => dto.Child.ChildID == int.MinValue)
+				.Select(dto => dto.Child)
+				.Set(child => child.ParentID, child => child.ParentID)
+				.Update();
+
+			records.ShouldBe(0);
+		}
 	}
 }
