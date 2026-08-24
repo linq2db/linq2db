@@ -350,49 +350,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var generic = BuildGenericFromMembers(columns, flags, refExpression, refExpression, 0, purpose);
 
-			// When building a key entity (e.g. a GroupBy key), the key is materialized as a value
-			// construct that carries only columns. During association expansion (Expand), include the
-			// entity's associations so that navigating an association off the key (such as g.Key.Children)
-			// resolves against the entity reference instead of failing on the association-less construct.
-			// Gated on Expand so key-extraction / correlation builds (Sql + ForKeys) keep the plain
-			// column-only key and don't recurse through the association back into this construct.
-			if (flags.IsKeys() && flags.IsExpand())
-			{
-				List<SqlGenericConstructorExpression.Assignment>? withAssociations = null;
-
-				foreach (var association in entityDescriptor.Associations)
-				{
-					var associationMember = association.MemberInfo;
-
-					// Expression.MakeMemberAccess only accepts an instance property/field; a method-based
-					// association (AssociationAttribute also supports methods) would throw. Skip it — such an
-					// association can't be projected as a plain member read onto the key entity.
-					if (associationMember.MemberType is not (MemberTypes.Property or MemberTypes.Field))
-						continue;
-
-					var alreadyPresent = false;
-					foreach (var assignment in generic.Assignments)
-					{
-						if (assignment.MemberInfo == associationMember)
-						{
-							alreadyPresent = true;
-							break;
-						}
-					}
-
-					if (alreadyPresent)
-						continue;
-
-					withAssociations ??= [.. generic.Assignments];
-
-					var associationAccess = (Expression)Expression.MakeMemberAccess(refExpression, associationMember);
-					withAssociations.Add(new SqlGenericConstructorExpression.Assignment(associationMember, associationAccess, false, false));
-				}
-
-				if (withAssociations != null)
-					generic = generic.ReplaceAssignments(withAssociations.AsReadOnly());
-			}
-
 			return generic;
 		}
 
