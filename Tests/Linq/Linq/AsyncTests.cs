@@ -20,6 +20,7 @@ namespace Tests.Linq
 	public class AsyncTests : TestBase
 	{
 		[Test]
+		[UsesRemoteContext]
 		public async Task Test([DataSources(false)] string context)
 		{
 			await TestImpl(context);
@@ -38,6 +39,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[UsesRemoteContext]
 		public void Test1([DataSources(false)] string context)
 		{
 			if (TestConfiguration.DisableRemoteContext)
@@ -49,6 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[UsesRemoteContext]
 		public async Task TestForEach([DataSources(false)] string context)
 		{
 			await TestForEachImpl(context);

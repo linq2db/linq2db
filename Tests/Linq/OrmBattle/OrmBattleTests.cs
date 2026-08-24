@@ -44,7 +44,11 @@ namespace Tests.OrmBattle
 		[MemberNotNull(nameof(Customers), nameof(Employees), nameof(Order), nameof(Products))]
 		private NorthwindDB Setup(string context, bool guardGrouping = true)
 		{
+			// The cache below is shared by the fixture's concurrently-running contexts, so whichever
+			// provider populates it first is the one that captures the preload queries. That is test
+			// data loading, not a query under test, so keep it out of the baselines entirely.
 			using (new DisableLogging())
+			using (new DisableBaseline("Test data preload"))
 			{
 				var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(guardGrouping));
 

@@ -46,6 +46,27 @@
 		-->
 		<OleDbTestsVersion>9.0.10</OleDbTestsVersion>
 
+		<!--used by VersionOverride for the .NET (nuget) LINQPad driver only, never for its net472 lpx build.
+		    System.Collections.Immutable and System.Reflection.Metadata are part of the shared framework, so the copy
+		    loaded by the LINQPad host wins, and a driver requiring a HIGHER version than the host's in-box one fails
+		    to load ("manifest definition does not match", issue #5768). Roslyn 4.13.0 is the last version whose net8.0
+		    dependency group asks for 8.0.0 of both, which binds on .NET 8, 9 and 10 hosts alike; 4.14-5.3 require
+		    9.0.0 and 5.6 requires 10.0.1. The driver only parses and emits the generated model, so it doesn't need a
+		    newer compiler.
+		    LINQPad 5 has no shared framework: the lpx carries its own copies and DriverHelper redirects to them, so
+		    the net472 build stays on the central Roslyn version. Applying this pin to it too would be a silent
+		    downgrade of the lpx compiler.
+		    Nothing else picks this up - a plain PackageReference gets the central version, so linq2db.CLI and the
+		    source generators are unaffected.-->
+		<RoslynLinqPadVersion>4.13.0</RoslynLinqPadVersion>
+
+		<!--version of dotMorten.Microsoft.SqlServer.Types the LINQPad driver provisions at runtime on hosts where
+		    Microsoft's package has no native spatial library. Deliberately NOT a PackageVersion: 1.5.0 depends on
+		    System.Data.SqlClient and 2.5.0 on Microsoft.Data.SqlClient, and the driver uses the Microsoft client, so
+		    it needs 2.5.0 - while the repo keeps building against the 1.5.0 self-signed copy in Redist that the
+		    System.Data.SqlClient tests need. The two assembly versions are incompatible, so they stay apart.-->
+		<DotMortenSqlServerTypesLinqPadVersion>2.5.0</DotMortenSqlServerTypesLinqPadVersion>
+
 		<!--bundled version for legacy SignalR packages (net462 + SignalR.Client !net8+ + SignalR.Core)-->
 		<SignalRLegacyVersion>1.2.11</SignalRLegacyVersion>
 		<!--bundled version for legacy AspNetCore [net462] packages (Microsoft.AspNetCore + Kestrel.Core)-->
@@ -63,7 +84,7 @@
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.138"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.158"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.6.0"                        />
-		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK (.NET 8 => Roslyn 4.8) for broad IDE reach; bump only when that SDK is dropped. Kept separate from the 5.3.0 runtime pin below; CentralPackageTransitivePinningEnabled=false so the 4.8 transitive CodeAnalysis assemblies don't clash.-->
+		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK (.NET 8 => Roslyn 4.8) for broad IDE reach; bump only when that SDK is dropped. Kept separate from the 5.6.0 runtime pin below; CentralPackageTransitivePinningEnabled=false so the 4.8 transitive CodeAnalysis assemblies don't clash.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces"              Version="4.8.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.6.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.6.0"                        />
@@ -263,11 +284,25 @@
 		Microsoft.EntityFrameworkCore.Sqlite. Patched releases DO now exist (2.1.12, 3.50.3, 3.53.3 —
 		the project renumbered to track SQLite versions), but Microsoft.Data.Sqlite still resolves
 		2.1.11, so the vulnerable package stays in a consumer's graph and tools such as LINQPad report
-		it. At runtime the patched binary wins: tests and LINQPad reference SourceGear.sqlite3
-		(>= 3.50.2, currently 3.53.4).
+		it. At runtime the patched binary wins wherever SourceGear.sqlite3 is present: tests reference
+		it (>= 3.50.2, currently 3.53.4), and the LINQPad 5 lpx overwrites the native with it in
+		LinqToDB.LINQPad.csproj's PostBuild2 target.
 		CentralPackageTransitivePinningEnabled is false here (see the Roslyn note above), so pinning
 		requires an explicit PackageReference on SQLitePCLRaw.lib.e_sqlite3 in each consuming project
 		rather than a PackageVersion entry alone.
+		The LINQPad driver nuget is the exception and has no such PackageReference: it declares its
+		database clients per connection instead (IDatabaseProvider.GetNuGetPackages), so the pin lives
+		in SQLiteProvider.GetNuGetPackages, which returns this version next to Microsoft.Data.Sqlite.
+		SourceGear.sqlite3 is provisioned next to it for the SQLiteClassic variant only - the two packages
+		place e_sqlite3 at conflicting paths (see SQLite.Runtime.props) - so the Microsoft.Data.Sqlite
+		variant relies on this pin alone. That separation is per-provider: the two paths that cannot tell
+		which client a connection needs - DatabaseProviders.GetAllNuGetPackages, and the static-context
+		branch of DriverHelper.OverrideDriverDependencies - still hand LINQPad both variants together, as
+		the nuspec did before. Whether LINQPad's per-connection restore honours it over the
+		transitive 2.1.11 is unconfirmed against a real install; check it in the LINQPad pass of the
+		release test matrix.
+		Keep this entry and the suppression below even though no project references the id: the version
+		is read at build time by the generated NuGetPackageVersions class.
 		-->
 		<PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
 		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />

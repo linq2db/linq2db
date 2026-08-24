@@ -1,0 +1,12 @@
+{
+	"NET90.Azure": {
+		"Providers": [
+			"PostgreSQL.9.2",
+			"PostgreSQL.9.3",
+			"PostgreSQL.9.5",
+			"PostgreSQL.10",
+			"PostgreSQL.11",
+			"PostgreSQL.12"
+		]
+	}
+}

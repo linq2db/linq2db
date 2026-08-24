@@ -56,6 +56,24 @@
 		public const string Error_WindowFunction_AggregateDistinct                = "DISTINCT is not supported in window aggregate functions by current provider.";
 		public const string Error_WindowFunction_NotSupported                     = "Window functions are not supported by current provider.";
 
+		public const string Error_Interval_Operation                              = "This TimeSpan operation is not supported by current provider.";
+		/// <summary>
+		/// Spelled out rather than terse, unlike its neighbours, because this one describes a capability that was
+		/// taken away rather than one that never existed: before 6.5 the same expression was rewritten into
+		/// <c>Sql.DateDiff</c>, which counts crossed boundaries instead of measuring elapsed time. Provider-neutral
+		/// wording because more than one provider reaches it.
+		/// </summary>
+		public const string Error_Interval_Difference                             = "Subtracting one date/time value from another is not supported by current provider. Compute the difference in .NET, or use Sql.DateDiff where a count of crossed unit boundaries answers the question.";
+		public const string Error_Interval_Member                                 = "This TimeSpan member is not supported by current provider.";
+		/// <summary>
+		/// Names the declaration rather than the provider, because no provider can answer this one: the two stored
+		/// numbers are counted in different units and only one of them says so.
+		/// </summary>
+		public const string Error_Interval_UndeclaredOperand                      = "Cannot combine a duration whose unit is declared with one stored through a value converter, which does not say what its number counts. Declare that column with DurationAttribute, or combine the two in .NET.";
+		public const string Error_Interval_Shift                                  = "Adding a TimeSpan to a date/time value is not supported by current provider.";
+		/// <summary><c>{0}</c> - the requested component unit, <c>{1}</c> - the finest unit the provider resolves.</summary>
+		public const string Error_Interval_ComponentBelowResolution               = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated.";
+
 		public const string Error_Upsert_MergeLowering_NotSupported =
 			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
 			+ "but the current provider does not support the two-branch MERGE shape. "
