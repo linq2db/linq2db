@@ -1,4 +1,6 @@
-﻿using NUnit.Framework.Interfaces;
+﻿using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+using NUnit.Framework.Internal;
 
 namespace Tests
 {
@@ -28,6 +30,21 @@ namespace Tests
 
 			return test.Method.GetCustomAttributes<UsesRemoteContextAttribute>(true).Length != 0
 				|| test.Method.TypeInfo.GetCustomAttributes<UsesRemoteContextAttribute>(true).Length != 0;
+		}
+
+		// True for [NonParallelizable] tests and for tests inside a [NonParallelizable] fixture. Both run
+		// under ResourceLaneDispatcher's exclusive write lock - the fixture case because its whole subtree
+		// is executed inline while that lock is held - so nothing runs alongside them at all, which is
+		// stronger than the secondary mutex. The dispatcher never asks the lane strategy about them, so a
+		// classifier-based check cannot see the exclusivity; this reads the same ParallelScope.None
+		// property the dispatcher routes on, walking up because the mark sits on the suite, not the leaf.
+		public static bool IsGloballyExclusive(ITest test)
+		{
+			for (var current = test; current != null; current = current.Parent)
+				if (current.Properties.Get(PropertyNames.ParallelScope) is ParallelScope scope && scope.HasFlag(ParallelScope.None))
+					return true;
+
+			return false;
 		}
 
 		public static (string? context, bool isLinqService) GetContext(ITest test)

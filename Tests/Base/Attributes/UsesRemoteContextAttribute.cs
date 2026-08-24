@@ -13,7 +13,8 @@ namespace Tests
 	/// Prefer a remote parameter value (<c>[DataSources(true)]</c> and friends) over this attribute. It
 	/// exists for tests that need both the direct and the remote context for the same parameter.
 	/// Forgetting it is not silent: <c>ServerContainerBase.CreateContext</c> asserts that every remote
-	/// context is created by a test the classifier can see as remote.
+	/// context is created by a test the classifier can see as remote. A <c>[NonParallelizable]</c> test
+	/// needs no marker - it runs globally exclusive, so no concurrent remote test exists to protect.
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
 	public sealed class UsesRemoteContextAttribute : Attribute

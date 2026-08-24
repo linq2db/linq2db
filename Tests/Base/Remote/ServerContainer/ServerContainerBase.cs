@@ -56,13 +56,18 @@ namespace Tests.Remote.ServerContainer
 		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
 
 		// A remote context may only be created by a test the lane classifier can see as remote, either from
-		// its parameter value or via [UsesRemoteContext]. Otherwise it runs without the secondary mutex and
-		// silently corrupts a concurrent remote test's server-side state.
+		// its parameter value or via [UsesRemoteContext] - or by one that runs globally exclusive, which the
+		// classifier never sees. Otherwise it runs without the secondary mutex and silently corrupts a
+		// concurrent remote test's server-side state.
 		private static void AssertClassifiedAsRemote()
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
 			if (test.Method == null)
+				return;
+
+			// A globally-exclusive test excludes every other test, remote or not, so it needs no mutex.
+			if (NUnitUtils.IsGloballyExclusive(test))
 				return;
 
 			var (_, isRemote) = NUnitUtils.GetContext(test);
