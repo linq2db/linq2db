@@ -1181,3 +1181,11 @@ virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetParameterCastType(LinqT
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitInListValues(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate, System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>! values, LinqToDB.Internal.SqlQuery.Visitors.VisitMode mode) -> System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.ISqlExpression!>?
 virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlParameterCastExpression(LinqToDB.Internal.SqlQuery.SqlParameterCastExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 static LinqToDB.Internal.SqlQuery.QueryHelper.EnsureParameterCast(LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+const LinqToDB.DataProvider.Oracle.OracleHints.ForUpdate = "FOR UPDATE" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.NoWait = "NOWAIT" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.SkipLocked = "SKIP LOCKED" -> string!
+static LinqToDB.DataProvider.Oracle.OracleHints.Wait(int seconds) -> string!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!

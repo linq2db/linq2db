@@ -1,3 +1,11 @@
 #nullable enable
 override LinqToDB.DataProvider.DuckDB.DuckDBOptions.<Clone>$() -> LinqToDB.DataProvider.DuckDB.DuckDBOptions!
 *REMOVED*override LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
+const LinqToDB.DataProvider.Oracle.OracleHints.ForUpdate = "FOR UPDATE" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.NoWait = "NOWAIT" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.SkipLocked = "SKIP LOCKED" -> string!
+static LinqToDB.DataProvider.Oracle.OracleHints.Wait(int seconds) -> string!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!

@@ -1,2 +1,10 @@
 #nullable enable
 override LinqToDB.DataProvider.DuckDB.DuckDBOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DuckDB.DuckDBOptions!>!
+const LinqToDB.DataProvider.Oracle.OracleHints.ForUpdate = "FOR UPDATE" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.NoWait = "NOWAIT" -> string!
+const LinqToDB.DataProvider.Oracle.OracleHints.SkipLocked = "SKIP LOCKED" -> string!
+static LinqToDB.DataProvider.Oracle.OracleHints.Wait(int seconds) -> string!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
+static LinqToDB.DataProvider.Oracle.OracleHints.ForUpdateHint<TSource>(this LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>! source, string! lockingClause, params string![]! columns) -> LinqToDB.DataProvider.Oracle.IOracleSpecificQueryable<TSource>!
