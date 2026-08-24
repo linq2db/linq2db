@@ -261,6 +261,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var ctx = CreateContext(provider);
 
+			var item = new Issue4624Item
+			{
+				Name           = "Issue4624",
+				Entries        =
+				{
+					new Issue4624Entry { EntriesCount = 3 },
+					new Issue4624Entry { EntriesCount = 4 },
+				},
+				ItemTicketDates =
+				{
+					new Issue4624ItemTicketDate { EntryCount = 5 },
+					new Issue4624ItemTicketDate { EntryCount = 6 },
+				},
+			};
+
+			ctx.Issue4624Items.Add(item);
+			ctx.SaveChanges();
+
 			var query = ctx.Issue4624ItemTicketDates.ToLinqToDB()
 				.Where(p => p.Id < 1000)
 				.GroupBy(p => p.Item)
@@ -276,6 +294,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				});
 
 			var result = query.ToList();
+
+			var row = result.Single(r => r.AclItemId == item.Id);
+
+			row.AclItemName.ShouldBe("Issue4624");
+			row.TotalEntryCount.ShouldBe(7);
+			row.TotalEntryAllowed.Select(x => x.EntryCount).OrderBy(x => x).ToArray().ShouldBe(new[] { 5, 6 });
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/66")]
