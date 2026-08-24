@@ -592,7 +592,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624 - composite group key must not take the entity-key Expand path")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624 - anonymous (non-scalar) composite key, member-root column read off g.Key")]
 		public void TestGroupByCompositeKeyEagerLoad([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
