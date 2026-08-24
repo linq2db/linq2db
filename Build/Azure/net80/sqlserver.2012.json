@@ -1,4 +1,4 @@
-﻿{
+{
 	"NET80.Azure": {
 		"Providers": [
 			"SqlServer.2012",

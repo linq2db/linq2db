@@ -50,8 +50,8 @@ jobs:
 
   displayName: 'Win'
   dependsOn: create_baselines_branch
-  # Release (full_run) legs run every TFM's main suite, not just net10, so they need materially more
-  # headroom than a PR run. default: 60, max: 360.
+  # Release (full_run) legs run every TFM's main suite, not just net10, and jobs now bundle several
+  # providers - so they need materially more headroom than a PR run. default: 60, max: 360.
   ${{ if eq(parameters.full_run, true) }}:
     timeoutInMinutes: 300
   ${{ if not(eq(parameters.full_run, true)) }}:
@@ -85,6 +85,7 @@ jobs:
             ${{ if not(eq(test_config.x86, true)) }}:
               arch: x64
             retry: ${{ test_config.retry }}
+            win_efcore_only: ${{ test_config.win_efcore_only }}
 
   steps:
   - template: test-workflow-windows.yml

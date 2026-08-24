@@ -9,6 +9,8 @@ using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -184,6 +186,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(4),");
 		}
 
 		[Test]
@@ -193,8 +196,10 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal,");
 		}
 
+		[ActiveIssue(5810)]
 		[Test]
 		public void ConvertTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -202,8 +207,10 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), 123));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
+		[ActiveIssue(5810)]
 		[Test]
 		public void ConvertTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -211,6 +218,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(max),");
 		}
 
 		[Test]
@@ -220,6 +228,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal(30, 0),");
 		}
 
 		[Test]
@@ -247,6 +256,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123, 1));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(4),");
 		}
 
 		[Test]
@@ -256,6 +266,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123, 1));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal,");
 		}
 
 		[Test]
@@ -265,8 +276,10 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), new DateTime(2022, 02, 22), 105));
 
 			Assert.That(result, Is.EqualTo("22-02-2022"));
+			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
+		[ActiveIssue(5810)]
 		[Test]
 		public void ConvertWithStyleTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -274,6 +287,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123, 1));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(max),");
 		}
 
 		[Test]
@@ -283,6 +297,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123, 1));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal(30, 0),");
 		}
 
 		[Test]
