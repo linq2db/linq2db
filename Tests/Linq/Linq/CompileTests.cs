@@ -619,7 +619,6 @@ namespace Tests.Linq
 			Assert.That(result2[0], Is.SameAs(result1[0]));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4365")]
 		public void CustomContext_CompiledQueryCustomTest([DataSources(false)] string context)
 		{
