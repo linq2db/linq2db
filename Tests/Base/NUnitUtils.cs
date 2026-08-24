@@ -19,6 +19,17 @@ namespace Tests
 			return false;
 		}
 
+		// True for tests marked [UsesRemoteContext] - they build a remote context from a non-remote
+		// parameter value, so GetContext cannot see it from the arguments alone.
+		public static bool UsesRemoteContext(ITest test)
+		{
+			if (test.Method == null)
+				return false;
+
+			return test.Method.GetCustomAttributes<UsesRemoteContextAttribute>(true).Length != 0
+				|| test.Method.TypeInfo.GetCustomAttributes<UsesRemoteContextAttribute>(true).Length != 0;
+		}
+
 		public static (string? context, bool isLinqService) GetContext(ITest test)
 		{
 			if (test.Arguments.Length > 0)

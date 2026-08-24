@@ -8,6 +8,8 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
+using NUnit.Framework.Internal;
+
 using Tests.Model;
 
 namespace Tests.Remote.ServerContainer
@@ -46,10 +48,35 @@ namespace Tests.Remote.ServerContainer
 		// InvokeConnectionFactory. Each call passes a different factory (the per-test factory bakes
 		// in UseConfiguration/UseDataProvider), so a host created once must use the *latest* caller's
 		// factory, not the one captured when it was first started.
+		//
+		// That "latest caller wins" only holds because the dispatcher lets one remote test run at a time
+		// (DatabaseLaneStrategy's secondary mutex). A test the classifier does not see as remote would run
+		// outside that mutex and overwrite this field - and TestLinqService.MappingSchema - underneath a
+		// remote test on another lane, so the invariant is asserted rather than assumed.
 		private Func<string?, MappingSchema?, DataConnection> _connectionFactory = null!;
+
+		// A remote context may only be created by a test the lane classifier can see as remote, either from
+		// its parameter value or via [UsesRemoteContext]. Otherwise it runs without the secondary mutex and
+		// silently corrupts a concurrent remote test's server-side state.
+		private static void AssertClassifiedAsRemote()
+		{
+			var test = TestExecutionContext.CurrentContext.CurrentTest;
+
+			if (test.Method == null)
+				return;
+
+			var (_, isRemote) = NUnitUtils.GetContext(test);
+
+			if (!isRemote && !NUnitUtils.UsesRemoteContext(test))
+				throw new InvalidOperationException(
+					$"{test.FullName} creates a remote context but is not classified as remote, so it runs without the "
+					+ "secondary mutex and can corrupt a concurrent remote test. Use a remote parameter value, or mark it [UsesRemoteContext].");
+		}
 
 		ITestDataContext IServerContainer.CreateContext(Func<ITestLinqService,DataOptions, DataOptions> optionBuilder, Func<string?, MappingSchema?, DataConnection> connectionFactory)
 		{
+			AssertClassifiedAsRemote();
+
 			_connectionFactory = connectionFactory;
 
 			var entry = OpenHost();

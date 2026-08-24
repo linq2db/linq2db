@@ -21,7 +21,10 @@ namespace Tests
 			if (NUnitUtils.IsCreateDatabase(test))
 				return LaneAssignment.Ungated(context);
 
-			return LaneAssignment.Serial(context, requiresSecondaryMutex: isRemote);
+			// A test can also reach the shared LinqService host from a non-remote parameter value by
+			// appending the remote suffix in its body - the classifier cannot see that from the arguments,
+			// so [UsesRemoteContext] declares it.
+			return LaneAssignment.Serial(context, requiresSecondaryMutex: isRemote || NUnitUtils.UsesRemoteContext(test));
 		}
 	}
 }
