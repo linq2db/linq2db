@@ -514,6 +514,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// Giving it a sort key restores the default frame it wants.
 		/// </summary>
 		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
-			=> func.FunctionName is "NTILE";
+			=> base.IsWindowOrderByRequired(func)
+				|| func.FunctionName is "NTILE";
 	}
 }

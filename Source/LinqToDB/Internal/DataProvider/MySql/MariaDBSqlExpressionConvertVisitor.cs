@@ -15,6 +15,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		/// base's answer of no requirement at all.
 		/// </summary>
 		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
-			=> IsOrderDependentWindowFunction(func.FunctionName);
+			=> base.IsWindowOrderByRequired(func)
+				|| IsOrderDependentWindowFunction(func.FunctionName);
 	}
 }

@@ -1,6 +1,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -89,6 +90,52 @@ namespace Tests.Linq
 				partition.Select(r => r.Number)
 					.OrderBy(n => n)
 					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
+
+		// #5806: a RANGE/GROUPS frame with a value offset is defined relative to the sort key, so the standard
+		// ties it to the ORDER BY and every dialect enforces that - dropping a constant key must not take the
+		// clause with it. Before the drop this ran everywhere (the constant kept the clause non-empty); without
+		// the frame arm in the base requirement it emits OVER ( RANGE ...) and the server refuses it, e.g.
+		// SQLite "RANGE with offset PRECEDING/FOLLOWING requires one ORDER BY expression".
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void ConstantWindowOrderByWithOffsetFrame([SupportsAnalyticFunctionsContext(
+			// SQL Server does not support RANGE with value offsets
+			TestProvName.AllSqlServer,
+			// PostgreSQL < 11 supports RANGE frames only with UNBOUNDED (value offsets need PG 11+)
+			TestProvName.AllPostgreSQL10Minus)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t.Id,
+					t.CategoryId,
+					Framed = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(1).RangeBetweenValues(1, 2)),
+				};
+
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("RANGE");
+			sql.ShouldNotContain("ORDER BY 1");
+
+			// The frame still needs a sort key, so the clause has to survive the constant being dropped.
+			sql.ShouldContain("ORDER BY");
+
+			// Every row ties on the constant key, so each row's frame covers its whole partition and every
+			// member of a partition sees the same total.
+			foreach (var partition in query.ToList().GroupBy(r => r.CategoryId))
+			{
+				var expected = data.Where(d => d.CategoryId == partition.Key).Sum(d => d.IntValue);
+
+				foreach (var row in partition)
+					row.Framed.ShouldBe(expected);
 			}
 		}
 	}

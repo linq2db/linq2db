@@ -955,14 +955,20 @@ namespace LinqToDB.Internal.SqlProvider
 		/// is <see langword="false"/>: standard SQL leaves the ordering optional, and most providers follow it.
 		/// </summary>
 		/// <remarks>
-		/// Only <c>ROW_NUMBER</c> is answered here, from the flag that already states this very thing for the
-		/// row-number paging emulation. Beyond it, providers disagree on which functions the rule covers and on
-		/// whether a frame clause drags the requirement in with it, so the rest is left to the overrides: PostgreSQL,
-		/// SQLite, DuckDB, Firebird, YDB and MySQL 8 add nothing at all, and YDB in particular must stay that way,
-		/// since it cannot parse a scalar subquery as a sort key.
+		/// Two things are answered here. <c>ROW_NUMBER</c>, from the flag that already states this very thing for the
+		/// row-number paging emulation. And a frame whose boundaries are read off the sort key - a <c>GROUPS</c> frame,
+		/// or a <c>RANGE</c> frame with a value offset - which the standard defines in terms of that key, so every
+		/// dialect enforces it and no provider may opt out. Which <em>functions</em> carry the requirement is another
+		/// matter entirely: providers disagree, so that part is left to the overrides, and PostgreSQL, SQLite, DuckDB,
+		/// Firebird, YDB and MySQL 8 add nothing at all. YDB in particular must stay that way, since it cannot parse a
+		/// scalar subquery as a sort key - it is safe here only because it rejects <c>RANGE</c> and <c>GROUPS</c> frames
+		/// at translation, so the frame arm below can never fire for it.
 		/// </remarks>
 		protected virtual bool IsWindowOrderByRequired(SqlExtendedFunction func)
-			=> !SqlProviderFlags.IsRowNumberWithoutOrderBySupported && func.FunctionName is "ROW_NUMBER";
+			=> (!SqlProviderFlags.IsRowNumberWithoutOrderBySupported && func.FunctionName is "ROW_NUMBER")
+				|| func.FrameClause is { FrameType: SqlFrameClause.FrameTypeKind.Groups }
+					or { FrameType: SqlFrameClause.FrameTypeKind.Range, Start.BoundaryType: SqlFrameBoundary.FrameBoundaryType.Offset }
+					or { FrameType: SqlFrameClause.FrameTypeKind.Range, End.BoundaryType  : SqlFrameBoundary.FrameBoundaryType.Offset };
 
 		/// <summary>
 		/// The window functions no provider will order implicitly: a rank has to know what it is ranking, and
