@@ -10,6 +10,7 @@ using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.DuckDB;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Async;
 using LinqToDB.Interceptors;
@@ -353,6 +354,13 @@ namespace Tests.Linq
 
 			records.ShouldHaveSingleItem();
 
+			var asyncRecords = new List<AsyncMaterializationRecord>();
+
+			await foreach (var record in table.AsAsyncEnumerable())
+				asyncRecords.Add(record);
+
+			asyncRecords.ShouldHaveSingleItem();
+
 			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
 			interceptor.SyncCalls.ShouldBe(0);
 		}
@@ -365,6 +373,23 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context, interceptor: interceptor);
 
 			var records = await db.Child.AsSQLite().ToListAsync();
+
+			records.ShouldNotBeEmpty();
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		// AsDuckDB over IQueryable (rather than ITable) is the only shape that produces
+		// DatabaseSpecificQueryable; SQLite has no such overload.
+		[Test]
+		public async Task DatabaseSpecificQueryableMaterializedAsynchronously([IncludeDataSources(TestProvName.AllDuckDB)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db = GetDataConnection(context, interceptor: interceptor);
+
+			var records = await db.Child.Where(c => c.ChildID > 0).AsDuckDB().ToListAsync();
 
 			records.ShouldNotBeEmpty();
 
