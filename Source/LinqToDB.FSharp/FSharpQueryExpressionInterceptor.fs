@@ -21,6 +21,12 @@ type private FreeVarMarker =
     static member Get<'T> (index: int) : 'T =
         raise (NotSupportedException(sprintf "F# free variable marker %d was not substituted" index))
 
+/// Signals that the chained-group-join flatten produced a tree still referencing the outer element, i.e. the
+/// rewrite is wrong rather than the input unsupported. Excluded from the decline handler on purpose: a decline
+/// leaves the un-flattened shape in place, which renders as INNER JOIN LATERAL and drops rows silently.
+type private FlattenInvariantException(message: string) =
+    inherit InvalidOperationException(message)
+
 /// Rewrites F#-specific expression-tree shapes the core translator does not understand:
 ///   * reduces the F# quotation machinery a captured-variable lambda compiles to -
 ///       LeafExpressionConverter.QuotationToLambdaExpression(SubstHelper(quotation, freeVars, capturedValues))
@@ -352,8 +358,20 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                             | :? MethodCallExpression as mc when mc.Arguments.Count >= 1 -> toQueryable mc (requery mc.Arguments.[0])
                             | _ -> failwith "unexpected tail shape"
 
-                    Some (this.Visit (requery coll.Body) |> nonNull)
-        with _ -> None
+                    // Only ko/kr are remapped off a; the inner sequence and any hoisted tail lambda are re-quoted
+                    // verbatim, so a correlated one carries a above the lambda that bound it (#5790), reaching
+                    // the translator as "'_arg1.Item1.Id' could not be converted to SQL". flatSM's own lambdas
+                    // still bind a, hence the comparison against its count rather than zero.
+                    let flattened = requery coll.Body
+                    let countA (e: Expression) = e.GetCount(a, (fun v n -> obj.ReferenceEquals(n, v)))
+                    if countA flattened <> countA flatSM then
+                        raise (FlattenInvariantException
+                                   "F# chained group join could not be flattened: the group join's inner sequence or a hoisted tail operator is correlated to the outer element. See https://github.com/linq2db/linq2db/issues/5790")
+
+                    Some (this.Visit flattened |> nonNull)
+        with
+        | :? FlattenInvariantException -> reraise()
+        | _                            -> None
 
     override this.VisitMethodCall(node: MethodCallExpression) =
         match this.TryReduceFSharpQuotation node with
