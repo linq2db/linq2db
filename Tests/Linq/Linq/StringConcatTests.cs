@@ -839,5 +839,73 @@ namespace Tests.Linq
 			res[1].Text13.ShouldBe("Element тест3 Text13");
 			res[1].Text14.ShouldBe("Element тест4 Text14");
 		}
+
+		#region Concat inside a set-operation operand's projection
+
+		[Table]
+		sealed class ConcatSetOpEntity
+		{
+			[PrimaryKey]       public Guid    Id       { get; set; }
+			[Column, Nullable] public Guid?   ParentId { get; set; }
+			[Column, Nullable] public string? Name     { get; set; }
+		}
+
+		static readonly Guid ConcatSetOpRootId  = new Guid("11111111-1111-1111-1111-111111111111");
+		static readonly Guid ConcatSetOpChildId = new Guid("22222222-2222-2222-2222-222222222222");
+
+		static readonly ConcatSetOpEntity[] ConcatSetOpData =
+		{
+			new() { Id = ConcatSetOpRootId,  ParentId = null,               Name = "root"  },
+			new() { Id = ConcatSetOpChildId, ParentId = ConcatSetOpRootId,  Name = "child" },
+		};
+
+		// `Guid.ToString("N")` has no SQL translation, so the concat around it can only be computed
+		// client-side over the Guid column. A terminal Select has always allowed that; inside a
+		// set-operation operand it started throwing "The LINQ expression '…ToString("N")' could not be
+		// converted to SQL" once binary `+` got routed through the concat translator, because a set
+		// projection asks translators for strict SQL and the translator reports an error rather than
+		// declining. Each operand must instead select the columns the projection reads and let the
+		// materializer build the string.
+		[Test]
+		public void Concat_SetOperationOperand_UntranslatableConcatOperand([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatSetOpData);
+
+			var query = table.Where(e => e.ParentId == null).Select(e => new { id = "p_" + e.Id.ToString("N"), name = e.Name })
+				.Concat(table.Where(e => e.ParentId != null).Select(e => new { id = "c_" + e.Id.ToString("N"), name = e.Name }));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Union_SetOperationOperand_UntranslatableConcatOperand([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatSetOpData);
+
+			var query = table.Where(e => e.ParentId == null).Select(e => new { id = "p_" + e.Id.ToString("N"), name = e.Name })
+				.Union(table.Where(e => e.ParentId != null).Select(e => new { id = "c_" + e.Id.ToString("N"), name = e.Name }));
+
+			AssertQuery(query);
+		}
+
+		// Same defect with operands of different shape: the member holding the untranslatable concat
+		// exists on one side only, so it is NULL-padded on the other.
+		[Test]
+		public void Concat_SetOperationOperand_UntranslatableConcatOperand_DifferentShapes([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatSetOpData);
+
+			var query = table.Where(e => e.ParentId == null)
+					.Select(e => new { id = "p_" + e.Id.ToString("N"), name = e.Name, parent = (string?)null })
+				.Concat(table.Where(e => e.ParentId != null)
+					.Select(e => new { id = e.Id.ToString("N"), name = e.Name, parent = (string?)("p_" + e.ParentId!.Value.ToString("N")) }));
+
+			AssertQuery(query);
+		}
+
+		#endregion
 	}
 }

@@ -880,7 +880,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
 				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
 				{
-					if (TranslateMember(BuildContext, node, out var translatedMember))
+					if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(translatedMember))
 					{
 						return Visit(translatedMember);
 					}
@@ -2906,6 +2906,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool));
 		}
 
+		/// <summary>
+		/// A set-operation projection is built with <see cref="BuildFlags.ForSetProjection"/>, which makes
+		/// <see cref="GetTranslationFlags"/> ask translators for strict SQL — so a member they cannot translate
+		/// (e.g. <c>Guid.ToString("N")</c>) comes back as an error instead of being declined. Such a member is
+		/// still projectable through a set operation: each operand selects the columns it reads and the
+		/// materializer computes the value, exactly as for a terminal <c>Select</c>. Treat the error as
+		/// "not translated" so the caller falls through to the client-side path.
+		/// </summary>
+		bool DeclinedForSetProjection(Expression translated)
+		{
+			return _buildFlags.HasFlag(BuildFlags.ForSetProjection) && translated is SqlErrorExpression { IsCritical: false };
+		}
+
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
 			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
@@ -2914,7 +2927,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// carries none, and a translator can still have something to say about it - a duration's total
 				// compared against a bound is a comparison of doubles, and the scaling it puts on the column can
 				// move to the other side only where the comparison is in view.
-				if (TranslateMember(BuildContext, node, out var translatedMember))
+				if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(translatedMember))
 					return Visit(translatedMember);
 
 				// The attribute machinery reads its instructions off a member, so it is asked only where there is
