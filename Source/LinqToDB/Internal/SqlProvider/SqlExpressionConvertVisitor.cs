@@ -944,7 +944,7 @@ namespace LinqToDB.Internal.SqlProvider
 				];
 			}
 
-			if (ReferenceEquals(kept, orderBy) || (kept is not { Count: > 0 } && orderBy is not { Count: > 0 }))
+			if (ReferenceEquals(kept, orderBy))
 				return func;
 
 			return func.WithOrderBy(kept is { Count: > 0 } ? kept : null);
