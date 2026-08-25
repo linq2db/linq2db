@@ -259,5 +259,37 @@ namespace Tests.Linq
 			rows.Count.ShouldBe(data.Length);
 			rows.Select(r => r.Nth).Distinct().Count().ShouldBe(1);
 		}
+
+		// #5806 goes wider than the literal it reports: a captured local holds one value for the whole execution,
+		// so it ties every row exactly as a literal does and is dropped the same way - whether it reaches the AST
+		// as a parameter or as an inlined constant, neither spelling may show up as a sort key.
+		[Test]
+		public void CapturedLocalWindowOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+			var key  = 7;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t.Id,
+					Number = Sql.Window.RowNumber(w => w.OrderBy(key)),
+				};
+
+			var rows = query.ToList();
+			var sql  = query.ToSqlQuery().Sql;
+
+			sql.ShouldNotContain("ORDER BY 7");
+			sql.ShouldNotContain("ORDER BY @");
+
+			// Every row ties on it, so the numbering is arbitrary but still a complete 1..N.
+			rows.Select(r => r.Number)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+		}
 	}
 }

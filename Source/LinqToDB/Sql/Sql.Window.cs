@@ -442,6 +442,10 @@ namespace LinqToDB
 		{
 		}
 
+		// TODO: v7 - inheriting IOFrameFinal here exposes the frame methods before OrderBy has been called, so
+		// PartitionBy(x).RowsBetweenValues(1, 1) compiles. A frame is defined relative to the window ordering, so
+		// only the state after OrderBy should offer one. Until that is fixed the unordered shape reaches the server,
+		// where the strict providers are handed a stand-in ordering and the rest sort by nothing.
 		/// <summary>State providing OrderBy in frame-capable chains.</summary>
 		public interface IOrderOFrameFinal : IOrderByPart<IOThenPartOFrameFinal>, IOFrameFinal
 		{
