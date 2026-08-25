@@ -37,7 +37,9 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
+    # Shallow, single-branch: the full repo is ~420 Mb of history for a tree the leg only appends to.
+    # The branch only moves forward while tests run, so the later pull --rebase / push still resolve.
+    script: 'git clone --depth 1 --single-branch --branch $(baselines_branch) https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
   condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
