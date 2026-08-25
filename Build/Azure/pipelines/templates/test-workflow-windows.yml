@@ -143,9 +143,12 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    # Shallow, single-branch: the full repo is ~420 Mb of history for a tree the leg only appends to.
-    # The branch only moves forward while tests run, so the later pull --rebase / push still resolve.
-    script: 'git clone --depth 1 --single-branch --branch $(baselines_branch) https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines'
+    # The leg needs the index, not the tree: BaselinesWriter creates its own directories and always
+    # writes whole files, so nothing here is ever read back from the repository. --sparse lays out the
+    # two root files instead of 343541, and --depth 1 --single-branch skips ~420 Mb of history for a
+    # tree the leg only appends to. The branch only moves forward while tests run, so the later
+    # pull --rebase / push still resolve. The commit step pairs this with git add --sparse.
+    script: 'git clone --depth 1 --single-branch --sparse --branch $(baselines_branch) https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
   condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
@@ -262,7 +265,7 @@ steps:
     targetType: 'inline'
     script: |
       Write-Host "Add baselines changes to commit (index)"
-      $output = git add -A
+      $output = git add --sparse -A
       if ($LASTEXITCODE -ne 0) {
           Write-Host "Failed to add baselines changes. Error code ${LASTEXITCODE}, output: ${output}"
           exit 1
