@@ -186,5 +186,18 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			return base.WrapColumnExpression(expr);
 		}
+
+		/// <summary>
+		/// MariaDB's rule - <c>No order list in window specification for 'rank'</c> - for the ranking functions and
+		/// <c>LAG</c>/<c>LEAD</c>. It leaves <c>ROW_NUMBER</c>, <c>NTILE</c>, the <c>*_VALUE</c> pair and framed
+		/// aggregates alone.
+		/// </summary>
+		/// <remarks>
+		/// MySQL 8 imposes nothing here and would take a bare <c>OVER ()</c>, but the two share this visitor, and the
+		/// stand-in ordering is valid on both and means the same thing - every row ties either way. Splitting them
+		/// would buy a shorter <c>OVER</c> clause on MySQL and nothing else.
+		/// </remarks>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> IsOrderDependentWindowFunction(func.FunctionName);
 	}
 }

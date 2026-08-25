@@ -891,7 +891,113 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(Optimize(newElement));
 
+			// After the provider had its say, so a renamed function is normalized under the name it will be
+			// emitted with. Idempotent - a re-visit of the rewritten node finds nothing left to change.
+			newElement = NormalizeWindowOrderBy(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(newElement));
+
 			return element;
+		}
+
+		/// <summary>
+		/// Brings a window's <c>ORDER BY</c> to a form every dialect accepts.
+		/// </summary>
+		/// <remarks>
+		/// A sort key that holds the same value for every row orders nothing - all rows tie - so it is dropped, the
+		/// same treatment <see cref="BasicSqlBuilder.BuildOrderByClause"/> gives a statement's <c>ORDER BY</c>. That
+		/// alone settles the dialects that refuse a constant there (SQL Server and SAP HANA reject any constant;
+		/// MySQL 8 reads an integer one as a legacy column position), because none of them ever sees one.
+		/// <para>
+		/// Dropping can empty the clause, which is a problem of its own: on some providers a ranking function needs
+		/// an <c>ORDER BY</c>, and so does a frame. <see cref="IsWindowOrderByRequired"/> says
+		/// when that is the case, and the first key the caller wrote comes back wrapped by
+		/// <see cref="WrapWindowOrderByConstant"/> - keeping the value, the direction and the NULLS position it was
+		/// given - rather than being replaced by an invented one. Only a window that arrived with no <c>ORDER BY</c>
+		/// at all has nothing to carry over, and that one gets a plain <c>1</c>; <c>Sql.Window.DefineWindow</c> with
+		/// only a <c>PARTITION BY</c> reaches a ranking function that way.
+		/// </para>
+		/// </remarks>
+		protected ISqlExpression NormalizeWindowOrderBy(SqlExtendedFunction func)
+		{
+			if (!func.IsWindowFunction)
+				return func;
+
+			var orderBy = func.OrderBy;
+
+			var kept = orderBy == null || orderBy.TrueForAll(static i => !QueryHelper.IsConstantFast(i.Expression))
+				? orderBy
+				: orderBy.Where(static i => !QueryHelper.IsConstantFast(i.Expression)).ToList();
+
+			if (kept is not { Count: > 0 } && IsWindowOrderByRequired(func))
+			{
+				// Every row ties on a constant, so the first key decides the whole clause - the ones behind it never
+				// get to break a tie, and are the only part actually dropped here.
+				var original = orderBy is { Count: > 0 } ? orderBy[0] : null;
+
+				kept =
+				[
+					new SqlWindowOrderItem(
+						WrapWindowOrderByConstant(original?.Expression ?? new SqlValue(1)),
+						original?.IsDescending  ?? false,
+						original?.NullsPosition ?? Sql.NullsPosition.None),
+				];
+			}
+
+			if (ReferenceEquals(kept, orderBy) || (kept is not { Count: > 0 } && orderBy is not { Count: > 0 }))
+				return func;
+
+			return func.WithOrderBy(kept is { Count: > 0 } ? kept : null);
+		}
+
+		/// <summary>
+		/// Whether the provider insists on an <c>ORDER BY</c> inside this function's <c>OVER</c> clause. The default
+		/// is <see langword="false"/>: standard SQL leaves the ordering optional, and most providers follow it.
+		/// </summary>
+		/// <remarks>
+		/// Only <c>ROW_NUMBER</c> is answered here, from the flag that already states this very thing for the
+		/// row-number paging emulation. Beyond it, providers disagree on which functions the rule covers and on
+		/// whether a frame clause drags the requirement in with it, so the rest is left to the overrides: PostgreSQL,
+		/// SQLite, DuckDB, Firebird, YDB and MySQL 8 add nothing at all, and YDB in particular must stay that way,
+		/// since it cannot parse a scalar subquery as a sort key.
+		/// </remarks>
+		protected virtual bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> !SqlProviderFlags.IsRowNumberWithoutOrderBySupported && func.FunctionName is "ROW_NUMBER";
+
+		/// <summary>
+		/// The window functions no provider will order implicitly: a rank has to know what it is ranking, and
+		/// <c>LAG</c>/<c>LEAD</c> have to know which row counts as the neighbour. Every provider that enforces an
+		/// <c>ORDER BY</c> requirement at all covers at least these.
+		/// </summary>
+		/// <remarks>
+		/// <c>NTILE</c> and <c>FIRST_VALUE</c>/<c>LAST_VALUE</c> are deliberately left out, because providers genuinely
+		/// disagree on them: SQL Server and SAP HANA demand an ordering for all three, Oracle, DB2 and Informix for
+		/// <c>NTILE</c> alone, ClickHouse for <c>NTILE</c> and nothing else, MariaDB for none of them. So is
+		/// <c>ROW_NUMBER</c>, which <see cref="IsWindowOrderByRequired"/> answers from a provider flag. Each override
+		/// adds the ones its own dialect needs.
+		/// </remarks>
+		protected static bool IsOrderDependentWindowFunction(string functionName)
+			=> functionName is "RANK" or "DENSE_RANK" or "PERCENT_RANK" or "CUME_DIST" or "LAG" or "LEAD";
+
+		/// <summary>
+		/// Restates a constant window sort key as a scalar subquery, for a provider that demands an <c>ORDER BY</c>
+		/// but refuses a constant one.
+		/// </summary>
+		/// <remarks>
+		/// <c>(SELECT 1)</c> is constant in value but is not a constant <em>expression</em>, and that is the
+		/// distinction the strict dialects draw: it is the documented T-SQL spelling of "no meaningful ordering",
+		/// and Oracle and SAP HANA take it too, once their builders supply the dummy <c>FROM</c> a table-less query
+		/// needs there. Wrapping rather than substituting keeps whatever the caller passed - <c>OrderBy(5)</c> stays
+		/// a 5, and a captured local stays the parameter it became instead of vanishing from the command.
+		/// <see cref="SelectQuery.DoNotRemove"/> stops query optimization from folding the subquery away.
+		/// </remarks>
+		protected virtual ISqlExpression WrapWindowOrderByConstant(ISqlExpression expression)
+		{
+			var query = new SelectQuery { DoNotRemove = true };
+
+			query.Select.AddNewColumn(expression);
+
+			return query;
 		}
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
