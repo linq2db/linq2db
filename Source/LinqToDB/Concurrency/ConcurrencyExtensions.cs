@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -314,6 +313,15 @@ namespace LinqToDB.Concurrency
 				cd.MemberAccessor.SetValue(to, cd.MemberAccessor.GetValue(from));
 		}
 
+		// a lock member without a setter would make the write-back a silent no-op, leaving the caller with a
+		// stale token and a success result; reject before the UPDATE runs rather than report an unobservable success
+		private static void EnsureLockColumnsWritable(ColumnDescriptor[] lockColumns, Type objType)
+		{
+			foreach (var cd in lockColumns)
+				if (!cd.MemberAccessor.HasSetter)
+					throw new LinqToDBException($"UpdateOptimisticWithRefresh cannot refresh '{objType.Name}.{cd.MemberName}': the optimistic-lock member has no setter, so the regenerated value cannot be written back onto the entity.");
+		}
+
 		// new T { lockCol = <source>.lockCol, ... } — only the optimistic-lock column(s), nothing else
 		private static MemberInitExpression InitLockColumns(Type objType, ColumnDescriptor[] lockColumns, Expression source)
 		{
@@ -367,7 +375,7 @@ namespace LinqToDB.Concurrency
 			var expression = source.Expression;
 
 			while (expression is MethodCallExpression call
-				&& call.Method.DeclaringType == typeof(Queryable)
+				&& !typeof(ITable<T>).IsAssignableFrom(call.Type)
 				&& call.Arguments.Count > 0
 				&& typeof(IQueryable<T>).IsAssignableFrom(call.Arguments[0].Type))
 			{
@@ -390,6 +398,8 @@ namespace LinqToDB.Concurrency
 			// no optimistic-lock column -> nothing to refresh, behave like a plain optimistic update
 			if (lockColumns.Length == 0)
 				return updatable.Update();
+
+			EnsureLockColumnsWritable(lockColumns, objType);
 
 			if (dc.SqlProviderFlags.IsUpdateOutputRowsSupported)
 			{
@@ -434,6 +444,8 @@ namespace LinqToDB.Concurrency
 			if (lockColumns.Length == 0)
 				return await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
 
+			EnsureLockColumnsWritable(lockColumns, objType);
+
 			if (dc.SqlProviderFlags.IsUpdateOutputRowsSupported)
 			{
 				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
@@ -472,7 +484,11 @@ namespace LinqToDB.Concurrency
 		/// <para>
 		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
 		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
-		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
 		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
@@ -482,8 +498,9 @@ namespace LinqToDB.Concurrency
 		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
 		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
 		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
-		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
-		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
@@ -505,7 +522,11 @@ namespace LinqToDB.Concurrency
 		/// <para>
 		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
 		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
-		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
 		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
@@ -516,8 +537,9 @@ namespace LinqToDB.Concurrency
 		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
 		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
 		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
-		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
-		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
@@ -539,7 +561,11 @@ namespace LinqToDB.Concurrency
 		/// <para>
 		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
 		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
-		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
 		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
@@ -549,8 +575,9 @@ namespace LinqToDB.Concurrency
 		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
 		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
 		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
-		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
-		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
@@ -574,7 +601,11 @@ namespace LinqToDB.Concurrency
 		/// <para>
 		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
 		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
-		/// observed instead. On SQL Server the OUTPUT path cannot be used against a table with an enabled UPDATE trigger.
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
 		/// </para>
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
@@ -585,8 +616,9 @@ namespace LinqToDB.Concurrency
 		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
 		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
 		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
-		/// When the entity declares no optimistic-lock column the call degrades to a plain update and returns the raw
-		/// provider count, which is always <c>0</c> on providers that do not report affected rows (e.g. ClickHouse).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
 		/// </returns>
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable

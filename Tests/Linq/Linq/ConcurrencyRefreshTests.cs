@@ -38,6 +38,31 @@ namespace Tests.Linq
 			[Column]     public string? Value { get; set; }
 		}
 
+		// entity carrying two optimistic-lock columns with different regeneration strategies
+		public sealed class RefreshTwoStampsTable
+		{
+			[PrimaryKey] public int     Id       { get; set; }
+			[Column]     public Guid    Stamp    { get; set; }
+			[Column]     public int     Revision { get; set; }
+			[Column]     public string? Value    { get; set; }
+		}
+
+		// mapped entity whose optimistic-lock member has no setter - the regenerated value cannot be written
+		// back onto it, so the API rejects the call instead of reporting a success the caller cannot observe
+		public sealed class RefreshReadOnlyStampTable
+		{
+			public RefreshReadOnlyStampTable(int id, Guid stamp, string? value)
+			{
+				Id    = id;
+				Stamp = stamp;
+				Value = value;
+			}
+
+			[PrimaryKey] public int     Id    { get; }
+			[Column]     public Guid    Stamp { get; }
+			[Column]     public string? Value { get; set; }
+		}
+
 		private static MappingSchema GuidSchema(string tableName)
 		{
 			var ms = new MappingSchema();
@@ -219,6 +244,62 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UpdateViaQueryWithFilterUnderLinqToDBOperator([DataSources] string context)
+		{
+			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshGuid"));
+
+			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
+
+			using var _ = new DisableBaseline("guid used");
+			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			db.Insert(record);
+			record.Stamp = t.Single().Stamp;
+			var before   = record.Stamp;
+
+			// same as above, but a linq2db operator sits above the caller's filter: it must not stop the read-back
+			// from unwinding past the filter, which tests a column the update itself rewrites
+			record.Value = "updated";
+			var cnt = t.Where(r => r.Value == "initial").TagQuery("refresh").UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(1);
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.Single().Stamp);
+		}
+
+		[Test]
+		public void UpdateOnReadOnlyLockMemberThrows([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RefreshReadOnlyStampTable>()
+					.HasTableName("ConcurrencyRefreshReadOnly")
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
+				.Build();
+
+			using var _  = new DisableBaseline("guid used");
+			using var db = GetDataContext(context, ms);
+
+			SkipIfRefreshUnsupported(db);
+
+			using var t = db.CreateLocalTable<RefreshReadOnlyStampTable>();
+
+			db.Insert(new RefreshReadOnlyStampTable(1, Guid.NewGuid(), "initial"));
+
+			var record = new RefreshReadOnlyStampTable(1, t.Single().Stamp, "updated");
+
+			Action act = () => db.UpdateOptimisticWithRefresh(record);
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("has no setter");
+
+			// the guard fires before the UPDATE, so nothing was written
+			t.Single().Value.ShouldBe("initial");
+		}
+
+		[Test]
 		public void UpdateRefreshesEntityWithoutDefaultConstructor([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -276,6 +357,54 @@ namespace Tests.Linq
 
 			record.Stamp.ShouldBe(6);
 			record.Stamp.ShouldBe(t.Single().Stamp);
+		}
+
+		[Test]
+		public void UpdateRefreshesMultipleLockColumns([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RefreshTwoStampsTable>()
+					.HasTableName("ConcurrencyRefreshTwoStamps")
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
+					.Property(e => e.Revision)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
+				.Build();
+
+			using var _  = new DisableBaseline("guid used");
+			using var db = GetDataContext(context, ms);
+
+			SkipIfRefreshUnsupported(db);
+
+			using var t = db.CreateLocalTable<RefreshTwoStampsTable>();
+
+			var record = new RefreshTwoStampsTable { Id = 1, Stamp = default, Revision = 5, Value = "initial" };
+			db.Insert(record);
+
+			record.Stamp   = t.Single().Stamp;
+			var beforeGuid = record.Stamp;
+
+			record.Value = "updated";
+			var cnt = db.UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(1);
+
+			// both lock columns are regenerated, and both land on the entity
+			record.Stamp.ShouldNotBe(beforeGuid);
+			record.Revision.ShouldBe(6);
+
+			var stored = t.Single();
+			record.Stamp.ShouldBe(stored.Stamp);
+			record.Revision.ShouldBe(stored.Revision);
+
+			// a stale attempt leaves both of them untouched
+			var stale  = new RefreshTwoStampsTable { Id = 1, Stamp = beforeGuid, Revision = 5, Value = "conflict" };
+			var failed = db.UpdateOptimisticWithRefresh(stale);
+
+			failed.ShouldBe(0);
+			stale.Stamp.ShouldBe(beforeGuid);
+			stale.Revision.ShouldBe(5);
 		}
 
 		[Test]
@@ -431,7 +560,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 
 			Action act = () => db.UpdateOptimisticWithRefresh(record);
-			act.ShouldThrow<LinqToDBException>();
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("requires the provider to support");
 		}
 
 		[Test]
@@ -452,7 +581,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 
 			Func<Task> act = () => db.UpdateOptimisticWithRefreshAsync(record);
-			await act.ShouldThrowAsync<LinqToDBException>();
+			(await act.ShouldThrowAsync<LinqToDBException>()).Message.ShouldContain("requires the provider to support");
 		}
 
 		// Guard test: keep SqlProviderFlags.IsUpdateOutputRowsSupported honest. It probes the provider's actual UPDATE
