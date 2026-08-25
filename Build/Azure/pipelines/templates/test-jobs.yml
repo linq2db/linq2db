@@ -49,7 +49,9 @@ jobs:
     vmImage: 'windows-2025'
 
   displayName: 'Win'
-  dependsOn: create_baselines_branch
+  dependsOn:
+  - create_baselines_branch
+  - build_x86_job # only the windows legs consume win-x86 binaries, so only they wait for them
   # Release (full_run) legs run every TFM's main suite, not just net10, and jobs now bundle several
   # providers - so they need materially more headroom than a PR run. default: 60, max: 360.
   ${{ if eq(parameters.full_run, true) }}:

@@ -187,14 +187,25 @@ steps:
   displayName: 'Mount RAM disk (opt-in)'
 
 # One block per TFM, run in list order. $(arch) is resolved per matrix leg in test-jobs.yml, so the
-# x86 and x64 variants of every step below collapse into a single step.
+# x86 and x64 variants of every step below collapse into a single step - except the download, which
+# takes the two architectures from two artifacts now that build_x86_job publishes win-x86 separately.
+# A leg therefore fetches only the architecture it runs, instead of both.
 - ${{ each tfm in parameters.tfms }}:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifactName: $(artifact_test_${{ tfm.flag }}_binaries)
       targetPath: '$(System.DefaultWorkingDirectory)/${{ tfm.dir }}'
-    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), eq(variables.arch, 'x64'), succeeded())
     displayName: 'Extract ${{ tfm.label }} test binaries'
+
+  # One artifact carries every TFM's win-x86 binaries; itemPattern takes this TFM's slice of it.
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: $(artifact_test_x86_binaries)
+      itemPattern: '${{ tfm.dir }}/**'
+      targetPath: '$(System.DefaultWorkingDirectory)'
+    condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), eq(variables.arch, 'x86'), succeeded())
+    displayName: 'Extract ${{ tfm.label }} test binaries (x86)'
 
   - task: CmdLine@2
     inputs:
