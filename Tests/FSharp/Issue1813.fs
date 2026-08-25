@@ -447,3 +447,40 @@ let Issue5794Test(db : IDataContext) =
 
     Assert.That(actual, Is.EqualTo "1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3")
 
+// Test4's chain with the second groupJoin's INNER SEQUENCE correlated to the outer range variable
+// (`.Where(fun z -> z.Id > tr.Id)` reads tr). Queryable.GroupJoin's inner is a plain sequence with no
+// lambda slot to bind the outer element, so the flatten cannot express the shape: it hoists the group
+// join above the SelectMany while passing the inner sequence through unchanged, leaving a reference to
+// an element that is no longer in scope. Gated on #5790.
+let Issue5790Test(db : IDataContext) =
+    use table1 = db.CreateLocalTable<TradeValid>()
+    use table2 = db.CreateLocalTable<NominationValid>()
+
+    db.Insert({TradeValid.Id=1; DealNumber=2;ParcelGroupID=3;ParcelID=4}) |> ignore
+    db.Insert({TradeValid.Id=2; DealNumber=3;ParcelGroupID=4;ParcelID=5}) |> ignore
+    db.Insert({TradeValid.Id=3; DealNumber=5;ParcelGroupID=6;ParcelID=7}) |> ignore
+    db.Insert({TradeValid.Id=4; DealNumber=8;ParcelGroupID=6;ParcelID=9}) |> ignore
+    db.Insert({NominationValid.Id=1; DeliveryDealNumber=2;DeliveryParcelGroup=3;DeliveryParcelID=4; ReceiptDealNumber=9;ReceiptParcelGroup=9;ReceiptParcelID=9}) |> ignore
+    db.Insert({NominationValid.Id=2; DeliveryDealNumber=9;DeliveryParcelGroup=9;DeliveryParcelID=9; ReceiptDealNumber=3;ReceiptParcelGroup=4;ReceiptParcelID=5}) |> ignore
+    db.Insert({NominationValid.Id=3; DeliveryDealNumber=8;DeliveryParcelGroup=6;DeliveryParcelID=9; ReceiptDealNumber=3;ReceiptParcelGroup=4;ReceiptParcelID=5}) |> ignore
+    db.Insert({NominationValid.Id=4; DeliveryDealNumber=2;DeliveryParcelGroup=3;DeliveryParcelID=4; ReceiptDealNumber=8;ReceiptParcelGroup=6;ReceiptParcelID=9}) |> ignore
+
+    let query = query {
+        for tr in db.GetTable<TradeValid>() do
+        groupJoin n_del in db.GetTable<NominationValid>()
+            on ((tr.DealNumber,tr.ParcelGroupID, tr.ParcelID) = (n_del.DeliveryDealNumber, n_del.DeliveryParcelGroup, n_del.DeliveryParcelID)) into n_del_g
+        for x in n_del_g.DefaultIfEmpty() do
+        groupJoin n_rec in db.GetTable<NominationValid>().Where(fun z -> z.Id > tr.Id)
+            on ((tr.DealNumber,tr.ParcelGroupID, tr.ParcelID) = (n_rec.ReceiptDealNumber, n_rec.ReceiptParcelGroup, n_rec.ReceiptParcelID)) into n_rec_g
+        for y in n_rec_g.DefaultIfEmpty() do
+        sortBy tr.Id
+        yield (tr, x, y)
+    }
+
+    let result = query.Take(90) |> Seq.toArray
+
+    // Test4's six rows with the Receipt side additionally filtered by n_rec.Id > tr.Id, which drops
+    // trade 2's N2 match (2 > 2 is false) and trade 4's N4 match (4 > 4 is false) - so the correlation
+    // has to reach the SQL for the assertion to hold, and both joins still have to stay LEFT.
+    Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-3,3-0-0,4-3-0")
+
