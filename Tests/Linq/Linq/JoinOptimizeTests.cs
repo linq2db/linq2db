@@ -6,6 +6,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -747,6 +749,100 @@ namespace Tests.Linq
 				return query.Where(p => p.Bill.Client.Name == clientName);
 			}
 		}
+		#endregion
+
+		#region Left join to grouping with computed key
+
+		[Table]
+		sealed class InventoryItem
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)] public string No { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class StockEntry
+		{
+			[Column(IsPrimaryKey = true)] public int    Id       { get; set; }
+			[Column]                      public string Code     { get; set; } = null!;
+			[Column]                      public int    Quantity { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5799")]
+		public void LeftJoinToGroupingWithComputedKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable([new InventoryItem { No = "ITM" }]);
+			using var t2 = db.CreateLocalTable([new StockEntry { Id = 1, Code = "ITM-A", Quantity = 5 }]);
+
+			// LEFT JOIN a grouping whose key is a computed expression, not a plain column
+			var query =
+				from item in t1
+				from g in t2.GroupBy(s => s.Code.Substring(0, 3)).LeftJoin(g => g.Key == item.No)
+				select new { item.No, Qty = g.Sum(s => s.Quantity) };
+
+			var rows = query.ToList();
+
+			rows.Count.ShouldBe(1);
+			rows[0].No.ShouldBe("ITM");
+			rows[0].Qty.ShouldBe(5);
+			db.LastQuery!.ShouldContain("LEFT JOIN");
+
+			// Count() drops the joined columns from the projection, which engages left-join removal.
+			// The grouping key is unique, so the join preserves cardinality and can be dropped.
+			query.Count().ShouldBe(1);
+			db.LastQuery!.ShouldNotContain("LEFT JOIN");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5799")]
+		public void LeftJoinToDistinctWithComputedKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable([new InventoryItem { No = "ITM" }]);
+			using var t2 = db.CreateLocalTable([new StockEntry { Id = 1, Code = "ITM-A", Quantity = 5 }]);
+
+			// DISTINCT contributes its projected column expressions as a keyset, so a computed
+			// projection puts a non-reducible element there just as a GROUP BY item does.
+			var distinct = t2.Select(s => s.Code.Substring(0, 3)).Distinct();
+
+			var query =
+				from item in t1
+				from d in distinct.LeftJoin(d => d == item.No)
+				select new { item.No, Key = d };
+
+			var rows = query.ToList();
+
+			rows.Count.ShouldBe(1);
+			rows[0].No.ShouldBe("ITM");
+			rows[0].Key.ShouldBe("ITM");
+
+			// The keyset spans the whole DISTINCT projection and the join matches only part of it,
+			// so the join must be kept - resolving that must not throw.
+			query.Count().ShouldBe(1);
+			db.LastQuery!.ShouldContain("LEFT JOIN");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5799")]
+		public void LeftJoinToSourceWithComputedUniqueKey([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable([new InventoryItem { No = "ITM" }]);
+			using var t2 = db.CreateLocalTable([new StockEntry { Id = 1, Code = "ITM", Quantity = 5 }]);
+
+			// HasUniqueKey writes the raw selector into the source's unique keys, reaching the same
+			// keyset walk without any subquery at all.
+			var query =
+				from item in t1
+				from s in t2.HasUniqueKey(s => s.Code.Substring(0, 3)).LeftJoin(s => s.Code == item.No)
+				select new { item.No, Qty = (int?)s.Quantity };
+
+			var rows = query.ToList();
+
+			rows.Count.ShouldBe(1);
+			rows[0].Qty.ShouldBe(5);
+
+			query.Count().ShouldBe(1);
+		}
+
 		#endregion
 	}
 }

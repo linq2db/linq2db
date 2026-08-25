@@ -9,6 +9,67 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 	public class SqlServerSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
+		/// <summary>
+		/// <c>DATEDIFF_BIG</c> counts nanoseconds, and <c>datetime2</c> stores 100ns, so the leftover of a total
+		/// is exact. It is only ever applied to a sub-unit window, well inside the roughly 292 years at which the
+		/// nanosecond form would overflow.
+		/// </summary>
+		/// <remarks>
+		/// The nanosecond datepart arrived with <c>datetime2</c> in 2008 - <c>DATEADD</c> on 2005 answers <em>is not
+		/// a recognized dateadd option</em> - so that version counts in milliseconds instead, which is as fine as its
+		/// own <c>datetime</c> resolves anyway. Version-checked here rather than overridden on the 2005 visitor,
+		/// because the 2008 one derives from it and would inherit the wrong answer.
+		/// </remarks>
+		protected override SqlIntervalUnit? FinestDateUnit =>
+			_sqlServerVersion >= SqlServerVersion.v2008 ? SqlIntervalUnit.Nanosecond : SqlIntervalUnit.Millisecond;
+
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Nanosecond  => "nanosecond",
+				SqlIntervalUnit.Day         => "day",
+				SqlIntervalUnit.Hour        => "hour",
+				SqlIntervalUnit.Minute      => "minute",
+				SqlIntervalUnit.Second      => "second",
+				SqlIntervalUnit.Millisecond => "millisecond",
+				SqlIntervalUnit.Microsecond => "microsecond",
+				_                           => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+			if (part == null)
+				return null;
+
+			// The amount is cast down: DATEADD takes a 32-bit number, and an amount computed from a tick count
+			// arrives here as BIGINT even when its value is small - which SQL Server rejects as an overflow rather
+			// than narrowing on its own.
+			return Factory.Function(Factory.GetDbDataType(date), "DateAdd",
+				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part),
+				Factory.Cast(amount, Factory.GetDbDataType(typeof(int)), true),
+				date);
+		}
+
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+			if (part == null)
+				return null;
+
+			// DateDiff_Big, not DateDiff: the 32-bit form overflows at about 24 days in milliseconds. Counting
+			// whole units keeps the number small, but the caller may ask for a fine unit over a long range.
+			return Factory.Function(Factory.GetDbDataType(typeof(long)), "DateDiff_Big",
+				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end);
+		}
+
+		/// <summary>
+		/// <c>DATEDIFF_BIG</c> arrived in 2016; earlier versions leave date subtraction to .NET.
+		/// </summary>
+		public override bool CanLowerIntervalDifference => _sqlServerVersion >= SqlServerVersion.v2016;
+
 		readonly SqlServerVersion _sqlServerVersion;
 
 		public SqlServerSqlExpressionConvertVisitor(bool allowModify, SqlServerVersion sqlServerVersion) : base(allowModify)
@@ -131,11 +192,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					if (type1 == typeof(double) || type1 == typeof(float))
 					{
+						// Precedence stated so this reads like every other remainder. Left unstated it takes the
+						// constructor default and the renderer brackets it, which is how a float % on this provider
+						// came to be parenthesised while the generated ones no longer are.
 						return new SqlBinaryExpression(
 							element.Expr2.SystemType!,
 							new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Convert", SqlDataType.Int32, element.Expr1),
 							element.Operation,
-							element.Expr2);
+							element.Expr2,
+							Precedence.Multiplicative);
 					}
 
 					break;
