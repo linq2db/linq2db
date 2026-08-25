@@ -333,42 +333,51 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                     let gjMethod    = Methods.Queryable.GroupJoin.MakeGenericMethod(pairType, gjArgs.[1], gjArgs.[2], gjArgs.[3])
                     let gPrime      = Expression.Call(gjMethod, flatSM, g.Arguments.[1], Expression.Quote ko', Expression.Quote ki, Expression.Quote kr') :> Expression
 
-                    let toQueryable (mc: MethodCallExpression) (newSource: Expression) : Expression =
+                    // An unsupported operator or tail shape is an ordinary decline, so it returns None rather
+                    // than routing through the handler below.
+                    let toQueryable (mc: MethodCallExpression) (newSource: Expression) : Expression option =
                         let def  = mc.Method.GetGenericMethodDefinition()
                         let qDef =
-                            if   def = Methods.Enumerable.SelectManyProjection then Methods.Queryable.SelectManyProjection
-                            elif def = Methods.Enumerable.SelectManySimple     then Methods.Queryable.SelectManySimple
-                            elif def = Methods.Enumerable.GroupJoin            then Methods.Queryable.GroupJoin
-                            elif def = Methods.Enumerable.Select               then Methods.Queryable.Select
-                            elif def = Methods.Enumerable.Where                then Methods.Queryable.Where
-                            else failwith "unsupported tail operator"
-                        let qMethod = qDef.MakeGenericMethod(mc.Method.GetGenericArguments())
-                        let args    =
-                            [| for i in 0 .. mc.Arguments.Count - 1 ->
-                                 if i = 0 then newSource
-                                 else match mc.Arguments.[i] with
-                                      | :? LambdaExpression as l -> Expression.Quote l :> Expression
-                                      | other                    -> other |]
-                        Expression.Call(qMethod, args) :> Expression
+                            if   def = Methods.Enumerable.SelectManyProjection then Some Methods.Queryable.SelectManyProjection
+                            elif def = Methods.Enumerable.SelectManySimple     then Some Methods.Queryable.SelectManySimple
+                            elif def = Methods.Enumerable.GroupJoin            then Some Methods.Queryable.GroupJoin
+                            elif def = Methods.Enumerable.Select               then Some Methods.Queryable.Select
+                            elif def = Methods.Enumerable.Where                then Some Methods.Queryable.Where
+                            else None
+                        qDef |> Option.map (fun qDef ->
+                            let qMethod = qDef.MakeGenericMethod(mc.Method.GetGenericArguments())
+                            let args    =
+                                [| for i in 0 .. mc.Arguments.Count - 1 ->
+                                     if i = 0 then newSource
+                                     else match mc.Arguments.[i] with
+                                          | :? LambdaExpression as l -> Expression.Quote l :> Expression
+                                          | other                    -> other |]
+                            Expression.Call(qMethod, args) :> Expression)
 
-                    let rec requery (e: Expression) : Expression =
-                        if obj.ReferenceEquals(e, g) then gPrime
+                    let rec requery (e: Expression) : Expression option =
+                        if obj.ReferenceEquals(e, g) then Some gPrime
                         else
                             match e with
-                            | :? MethodCallExpression as mc when mc.Arguments.Count >= 1 -> toQueryable mc (requery mc.Arguments.[0])
-                            | _ -> failwith "unexpected tail shape"
+                            | :? MethodCallExpression as mc when mc.Arguments.Count >= 1 ->
+                                requery mc.Arguments.[0] |> Option.bind (toQueryable mc)
+                            | _ -> None
 
                     // Only ko/kr are remapped off a; the inner sequence and any hoisted tail lambda are re-quoted
                     // verbatim, so a correlated one carries a above the lambda that bound it (#5790), reaching
                     // the translator as "'_arg1.Item1.Id' could not be converted to SQL". flatSM's own lambdas
                     // still bind a, hence the comparison against its count rather than zero.
-                    let flattened = requery coll.Body
-                    let countA (e: Expression) = e.GetCount(a, (fun v n -> obj.ReferenceEquals(n, v)))
-                    if countA flattened <> countA flatSM then
-                        raise (FlattenInvariantException
-                                   "F# chained group join could not be flattened: the group join's inner sequence or a hoisted tail operator is correlated to the outer element. See https://github.com/linq2db/linq2db/issues/5790")
+                    match requery coll.Body with
+                    | None           -> None
+                    | Some flattened ->
+                        let countA (e: Expression) = e.GetCount(a, (fun v n -> obj.ReferenceEquals(n, v)))
+                        if countA flattened <> countA flatSM then
+                            raise (FlattenInvariantException
+                                       "F# chained group join could not be flattened: the group join's inner sequence or a hoisted tail operator is correlated to the outer element. See https://github.com/linq2db/linq2db/issues/5790")
 
-                    Some (this.Visit flattened |> nonNull)
+                        Some (this.Visit flattened |> nonNull)
+        // Stays broad: findGj and the pair-type construction still signal an unsupported shape by throwing (a
+        // zero-argument call in the chain, a non-generic outer element). It therefore also swallows a genuine
+        // rewrite bug, whose fallback here is the un-flattened INNER JOIN LATERAL shape - silent row loss.
         with
         | :? FlattenInvariantException -> reraise()
         | _                            -> None
