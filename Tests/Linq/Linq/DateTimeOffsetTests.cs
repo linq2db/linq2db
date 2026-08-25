@@ -897,6 +897,12 @@ namespace Tests.Linq
 
 		#region DateDiff
 
+		// Every gate in this region carries the same reason: SQL Server before 2016 has no exact measure of elapsed
+		// time - DATEDIFF_BIG arrived there - and Sql.AsSql asks for the value in SQL, so there is no client-side
+		// answer to fall back to. These used to be answered from DATEDIFF, which counts boundary crossings rather
+		// than elapsed time and was therefore wrong for unaligned inputs. Declared rather than excluded so they go
+		// red the day the lowering reaches those versions.
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -921,6 +927,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateHour(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -945,6 +952,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMinute(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -969,6 +977,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateSecond(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -993,6 +1002,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMillisecond(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]

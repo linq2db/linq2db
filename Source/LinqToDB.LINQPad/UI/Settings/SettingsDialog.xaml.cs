@@ -68,7 +68,7 @@ internal sealed partial class SettingsDialog
 		}
 
 		if (ex == null
-			|| Notification.YesNo(this, $"{_testErrorMessage ?? "Connection to database failed"} Save anyway?\r\n\r\n{ex.Message}", "Error", icon: MessageBoxImage.Stop))
+			|| Notification.YesNo(this, $"{_testErrorMessage ?? "Connection to database failed"} Save anyway?\r\n\r\n{Notification.FormatMessages(ex)}", "Error", icon: MessageBoxImage.Stop))
 		{
 			DialogResult = true;
 		}
@@ -93,7 +93,7 @@ internal sealed partial class SettingsDialog
 			if (ex == null)
 				Notification.Info(this, "Successful!", "Connection Test");
 			else
-				Notification.Error(this, ex.Message, "Connection Test Error");
+				Notification.Error(this, ex, "Connection Test Error");
 		}
 	}
 

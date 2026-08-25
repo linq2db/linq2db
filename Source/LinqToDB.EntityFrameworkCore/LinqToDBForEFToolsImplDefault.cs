@@ -118,7 +118,16 @@ namespace LinqToDB.EntityFrameworkCore
 			else
 				info = GetLinqToDBProviderInfo(providerInfo);
 
-			return _knownProviders.GetOrAdd(new ProviderKey(info.ProviderName, connectionInfo.ConnectionString), k =>
+			// A context configured with a DbDataSource (or an externally-supplied DbConnection) carries no
+			// connection string on its EF options extension, so the key has to fall back to the connection the
+			// provider is detected from - otherwise every server of one family shares a single entry and all
+			// but the first are served the dialect detected from someone else's server.
+			// Precedence mirrors ProviderDetectorBase.DetectServerVersion.
+			var connectionString = connectionInfo.ConnectionString
+				?? connectionInfo.Connection?.ConnectionString
+				?? connectionInfo.Transaction?.Connection?.ConnectionString;
+
+			return _knownProviders.GetOrAdd(new ProviderKey(info.ProviderName, connectionString), k =>
 			{
 				return CreateLinqToDBDataProvider(providerInfo, info, connectionInfo);
 			});

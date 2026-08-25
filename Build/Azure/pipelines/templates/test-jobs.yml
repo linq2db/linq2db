@@ -48,9 +48,14 @@ jobs:
   pool:
     vmImage: 'windows-2025'
 
-  displayName: 'Tests: Windows'
+  displayName: 'Win'
   dependsOn: create_baselines_branch
-  timeoutInMinutes: 180 # default: 60, max: 360
+  # Release (full_run) legs run every TFM's main suite, not just net10, and jobs now bundle several
+  # providers - so they need materially more headroom than a PR run. default: 60, max: 360.
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 180
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
@@ -73,8 +78,14 @@ jobs:
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
-            x86: ${{ test_config.x86 }}
+            # Resolved here rather than branched on in the workflow, so each test/setup step exists
+            # once with an $(arch) path instead of twice with one half always skipped.
+            ${{ if eq(test_config.x86, true) }}:
+              arch: x86
+            ${{ if not(eq(test_config.x86, true)) }}:
+              arch: x64
             retry: ${{ test_config.retry }}
+            win_efcore_only: ${{ test_config.win_efcore_only }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -88,8 +99,11 @@ jobs:
 - job: test_ubuntu_job
   pool:
     vmImage: 'ubuntu-24.04'
-  timeoutInMinutes: 180 # default: 60, max: 360
-  displayName: 'Tests: Linux'
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 180
+  displayName: 'Lin'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
   variables:
@@ -122,8 +136,11 @@ jobs:
 - job: test_macos_job
   pool:
     vmImage: 'macOS-15'
-  displayName: 'Tests: MacOS'
-  timeoutInMinutes: 240 # default: 60, max: 360
+  displayName: 'Mac'
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 240
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
