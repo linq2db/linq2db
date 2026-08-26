@@ -83,6 +83,37 @@ namespace Tests.Linq
 			projected.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
 		}
 
+		/// <summary>
+		/// Both refused pairings above, projected from an operand of a set operation rather than from a terminal
+		/// <c>Select</c>.
+		/// </summary>
+		/// <remarks>
+		/// A set operand's projection is built asking translators for strict SQL, so it is the one place where a
+		/// refusal raised regardless of the flags can be mistaken for one raised only because SQL was demanded.
+		/// Read that way it is swallowed and the generic handling answers instead - the comparison came back
+		/// <c>False</c> where the CLR answers <c>True</c>, and the sum came back 01:30:00.0005400 for three hours -
+		/// which is exactly the silent wrong duration the refusals exist to stop, now inside a query shape that
+		/// looks no different from any other.
+		/// </remarks>
+		[Test]
+		public void ARefusedPairingStaysRefusedInsideASetOperation([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, TimeSpan.FromMinutes(90));
+
+			var compared = () => t.Where(r => r.Id >  0).Select(r => r.InSeconds == r.Undeclared)
+				.Concat  (t.Where(r => r.Id <= 0).Select(r => r.InSeconds == r.Undeclared))
+				.ToArray();
+
+			var combined = () => t.Where(r => r.Id >  0).Select(r => r.InTicks + r.UndeclaredSeconds)
+				.Concat  (t.Where(r => r.Id <= 0).Select(r => r.InTicks + r.UndeclaredSeconds))
+				.ToArray();
+
+			compared.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
+			combined.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
+		}
+
 		// TimeSpan / TimeSpan arrived in .NET Core 3.0; on net462 the operator does not exist to be translated.
 #if !NETFRAMEWORK
 		[Table]
