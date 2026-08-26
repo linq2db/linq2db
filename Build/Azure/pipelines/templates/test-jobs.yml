@@ -35,7 +35,7 @@ jobs:
     inputs:
       pwsh: true
       filePath: '$(System.DefaultWorkingDirectory)/scripts/ensure-baselines-branch.ps1'
-      arguments: -PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -NoCreate -EmitOutputs
+      arguments: -PrId "$(source_pr_id)" -BaselinesMaster "$(baselines_master)" -Rebase -EmitOutputs
       workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: Checkout test baselines
     name: baselines_init

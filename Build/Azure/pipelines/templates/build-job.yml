@@ -268,8 +268,14 @@ jobs:
 #                                                                                              #
 #  -a x86 rebuilds the whole graph for the win-x86 RID, so these eight publishes take ~6.8 min #
 #  against ~2.1 for their x64 counterparts, which reuse "Build Solution for Tests". Doing them #
-#  here lifts that off the critical path: the job starts alongside build_job and finishes long #
-#  before it, in a window where 9 of the 10 parallel slots sit idle anyway.                    #
+#  here lifts that off the critical path, in a window where 9 of the 10 slots sit idle anyway. #
+#                                                                                              #
+#  The margin is thinner than it looks, so measure before assuming it. This job finished 36s   #
+#  ahead of build_job on build 23050, 0.6 min on 23028 and 1.9 on 23045 - the windows legs are #
+#  kept clear of it only because create_baselines_branch then takes another 2-3 min. And the   #
+#  two grow differently: build_job publishes from a warm tree, while these eight publishes run #
+#  cold, so adding a TFM or a project moves them apart. If it ever overtakes build_job plus    #
+#  create_baselines_branch, every windows leg starts late and the timeline will not say why.   #
 #                                                                                              #
 #  Only the three Access legs run x86 (x86: true in test-matrix.yml), but the binaries used to #
 #  ride along inside every per-TFM artifact - so every linux leg downloaded win-x86 binaries   #
