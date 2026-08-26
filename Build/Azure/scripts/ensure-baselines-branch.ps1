@@ -2,18 +2,20 @@
 ensure-baselines-branch.ps1 — idempotently ensure the per-run baselines branch
 exists on the linq2db.baselines repository.
 
-Shared by two callers in the test pipeline:
+Called once per run by create_baselines_branch, as -Rebase -NoCreate -EmitOutputs.
 
-  * create_baselines_branch (central, runs once): -Rebase -EmitOutputs.
-    Creates the branch if missing, rebases it onto baselines master when it
-    already exists but is behind, and exports the branch name / head hash /
-    new-branch flag as task output variables.
+Under -NoCreate it does not create the branch: a test leg creates it by pushing,
+and only if it has baselines to push, so a run that changes none leaves no branch
+behind. That is what removed the end-of-run create_baselines_pr job, whose only
+remaining duty would have been deleting the empty branch and which cost a fresh
+agent acquisition - 78 min on build 23009 - for 0.3 min of work.
 
-  * test_{windows,linux,macos}_job (self-heal, before their clone): ensure-only.
-    Re-creates the branch at the recorded -BaseHash if a previous completed run
-    deleted it (empty branch cleanup) — without this a "rerun failed jobs"
-    restart fails because create_baselines_branch is not re-run, so its branch
-    was already removed by create_baselines_pr (see build 21555).
+What is left for this job is the case the legs cannot handle: a branch left by an
+earlier run of the same PR that has fallen behind baselines master. The legs clone
+master and would rebase their commit onto that stale base, so it is rebased onto
+master here, once, before any leg starts.
+
+The creation path is kept for callers that do not pass -NoCreate.
 
 The branch creation is race-tolerant: when several test jobs self-heal a missing
 branch in parallel, only one wins the ref creation; the losers detect the branch
@@ -42,6 +44,7 @@ param(
     [Parameter(Mandatory = $true)][string] $BaselinesMaster,
     [string] $BaseHash = '',
     [switch] $Rebase,
+    [switch] $NoCreate,
     [switch] $EmitOutputs
 )
 
@@ -82,7 +85,9 @@ function Get-RemoteHash([string]$ref, [switch]$Heads) {
 $branchHash  = Get-RemoteHash $Branch -Heads
 $newBranch   = 0
 
-if (-not $branchHash) {
+if (-not $branchHash -and $NoCreate) {
+    Write-Host "Baselines branch does not exist - the first test leg with baselines to push creates it"
+} elseif (-not $branchHash) {
     Write-Host "Baselines branch not found, creating it"
 
     # Create from the recorded base hash when supplied (keeps create_baselines_pr's
