@@ -113,6 +113,12 @@ jobs:
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
   strategy:
+    # Leaves four of the ten parallel slots for the windows legs. Both jobs become eligible in the same
+    # second, but linux takes every slot within 0.3 min and windows then waits for one to come free: 44.4
+    # min on build 23028, 54.8 on 23024. Its four longest legs are the run's four longest, so they start
+    # last and finish alone. Six is where the work splits - 647 linux minutes against 506 windows - and
+    # the model is sharply peaked there: 122.3 min against 129.8 at seven and 145.7 at five.
+    maxParallel: 6
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
         ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true')) }}:
