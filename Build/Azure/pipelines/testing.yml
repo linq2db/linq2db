@@ -16,6 +16,12 @@
 # The leg names below are a copy of the ones test-matrix.yml produces. Refresh them from a recent
 # test-all timeline when that file changes, or the probe answers a question about the wrong set.
 #
+# One run, two answers: the windows job builds its displayName from a per-leg variable while the
+# linux job is left alone. The schema says a matrix key "is appended to the name of the job", so the
+# windows legs should come out as "Win <title> <key>" - longer, not cleaner. If instead they read
+# "Win <title>", the key is replaced and the a_ .. y_ prefixes can be hidden from the UI while still
+# doing their sorting. A literal "Win $(title) <key>" would mean the variable does not expand here.
+#
 #   DO NOT MERGE THIS FILE. It has taken the place of the real provider matrix, which is parked next
 #   to it as testing.backup.yml, so that the pipeline definitions already pointing here - test-all,
 #   test-cli and every test-<provider> - run the probe instead. That is what makes it usable at all:
@@ -46,36 +52,49 @@ stages:
   - job: test_windows_job
     pool:
       vmImage: 'windows-2025'
-    displayName: 'Win'
+    displayName: 'Win $(title)'
     timeoutInMinutes: 60
     strategy:
       matrix:
         a_SqlServer2014:
           leg: a_SqlServer2014
+          title: SQL Server 2014
         d_SqlServer2012:
           leg: d_SqlServer2012
+          title: SQL Server 2012
         e_SqlServer2008:
           leg: e_SqlServer2008
+          title: SQL Server 2008
         f_SqlServer2016:
           leg: f_SqlServer2016
+          title: SQL Server 2016
         g_SqlCE:
           leg: g_SqlCE
+          title: SQL CE
         l_SqlServer2017_2019:
           leg: l_SqlServer2017_2019
+          title: SQL Server 2017 + 2019
         m_SqlServer2022_2025:
           leg: m_SqlServer2022_2025
+          title: SQL Server 2022 + 2025
         n_SqlServer2019Extras:
           leg: n_SqlServer2019Extras
+          title: SQL Server EXTRAS
         o_SqlServer2005:
           leg: o_SqlServer2005
+          title: SQL Server 2005
         r_Access_MDB:
           leg: r_Access_MDB
+          title: Access MDB (Jet/ODBC)
         s_SQLite:
           leg: s_SQLite
+          title: SQLite (all providers)
         v_Access_ACE_Odbc:
           leg: v_Access_ACE_Odbc
+          title: Access ACE (ODBC) x86
         x_Access_ACE_OleDb:
           leg: x_Access_ACE_OleDb
+          title: Access ACE (OLEDB) x86
     steps:
     - checkout: none
     - task: PowerShell@2
