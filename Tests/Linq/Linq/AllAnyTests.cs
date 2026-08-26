@@ -25,8 +25,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
-				   Parent.Where(parent => Child.Where(child => child.ParentID == parent.ParentID).Any(child => child.ParentID > 3)),
-				db.Parent.Where(parent => db.Child.Where(child => child.ParentID == parent.ParentID).Any(child => child.ParentID > 3)));
+				   Parent.Where(p => Child.Where(c => c.ParentID == p.ParentID).Any(c => c.ParentID > 3)),
+				db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID).Any(c => c.ParentID > 3)));
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
