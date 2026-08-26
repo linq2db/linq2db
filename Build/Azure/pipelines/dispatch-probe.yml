@@ -1,0 +1,141 @@
+# Dispatch-order probe. Same job and matrix shape as test-all, no build, no tests: every leg just
+# holds a slot for a few minutes. A run costs ~84 agent-minutes and about a quarter of an hour of
+# wall clock, against ~20 agent-hours and three hours for the real thing, so an ordering question
+# can be answered the same morning it is asked.
+#
+# It exists because three test-all runs were spent on one: legs are dispatched in case-insensitive
+# alphabetical order of the matrix key, which is why the keys in test-matrix.yml carry an a_ .. y_
+# prefix. Two earlier attempts failed for reasons a probe would have shown in minutes - one reordered
+# the entries, which does nothing, and one numbered the keys 01_ .. 25_, which breaks the documented
+# rule that a matrix configuration name must start with a letter.
+#
+# What it can answer: the order Azure requests agents in, and whether a rename changes it. What it
+# cannot: behaviour under a busy pool. When another run holds the slots the order scrambles whatever
+# the names are, so run this when the pool is quiet and read it as the uncontended order.
+#
+# The leg names below are a copy of the ones test-matrix.yml produces. Refresh them from a recent
+# test-all timeline when that file changes, or the probe answers a question about the wrong set.
+#
+# Settled, do not retry: the a_ .. y_ prefixes cannot be hidden from the UI. Build 23041 gave every
+# windows leg the name "Win $(title) a_SqlServer2014" - the matrix key is appended to the job name
+# exactly as the schema says, and a variable is not expanded in a job displayName at all, so a
+# templated name only makes it longer. There is no per-leg displayName in the strategy schema either.
+#
+# Not registered as a pipeline by adding this file: a definition has to be created once in Azure
+# DevOps pointing at it, after which /azp run works like any other. While the ordering work was in
+# flight it borrowed the testing.yml name instead, since test-all and the test-<provider>
+# definitions already point there - a shortcut worth remembering, and worth swapping back the moment
+# the question is answered, because leaving it would turn provider testing into a stub.
+
+parameters:
+- name: hold_minutes
+  displayName: 'Minutes each leg holds its agent'
+  type: number
+  # Long enough that the legs cannot all hold a slot at once - that queueing is the whole signal -
+  # and long enough that agent-acquisition jitter, which runs to a couple of minutes, does not blur
+  # the waves. Three gives 28 legs over ten slots as three clean waves.
+  default: 3
+
+trigger: none
+pr:
+  branches:
+    include:
+    - '*'
+
+stages:
+
+- stage: ''
+  displayName: ''
+  jobs:
+
+  - job: test_windows_job
+    pool:
+      vmImage: 'windows-2025'
+    displayName: 'Win'
+    timeoutInMinutes: 60
+    strategy:
+      matrix:
+        a_SqlServer2014:
+          leg: a_SqlServer2014
+        d_SqlServer2012:
+          leg: d_SqlServer2012
+        e_SqlServer2008:
+          leg: e_SqlServer2008
+        f_SqlServer2016:
+          leg: f_SqlServer2016
+        g_SqlCE:
+          leg: g_SqlCE
+        l_SqlServer2017_2019:
+          leg: l_SqlServer2017_2019
+        m_SqlServer2022_2025:
+          leg: m_SqlServer2022_2025
+        n_SqlServer2019Extras:
+          leg: n_SqlServer2019Extras
+        o_SqlServer2005:
+          leg: o_SqlServer2005
+        r_Access_MDB:
+          leg: r_Access_MDB
+        s_SQLite:
+          leg: s_SQLite
+        v_Access_ACE_Odbc:
+          leg: v_Access_ACE_Odbc
+        x_Access_ACE_OleDb:
+          leg: x_Access_ACE_OleDb
+    steps:
+    - checkout: none
+    - task: PowerShell@2
+      inputs:
+        targetType: inline
+        pwsh: true
+        script: |
+          Write-Host "$(leg) started $([DateTime]::UtcNow.ToString('o'))"
+          Start-Sleep -Seconds (60 * ${{ parameters.hold_minutes }})
+      displayName: 'Hold a slot'
+
+  - job: test_ubuntu_job
+    pool:
+      vmImage: 'ubuntu-24.04'
+    displayName: 'Lin'
+    timeoutInMinutes: 60
+    strategy:
+      matrix:
+        b_ClickHouse:
+          leg: b_ClickHouse
+        c_PostgreSQL2:
+          leg: c_PostgreSQL2
+        h_SAPHANA2:
+          leg: h_SAPHANA2
+        i_PostgreSQL1:
+          leg: i_PostgreSQL1
+        j_Oracle1819:
+          leg: j_Oracle1819
+        k_Firebird:
+          leg: k_Firebird
+        l_SqlServer2017_2019:
+          leg: l_SqlServer2017_2019
+        m_SqlServer2022_2025:
+          leg: m_SqlServer2022_2025
+        n_SqlServer2019Extras:
+          leg: n_SqlServer2019Extras
+        p_MySQL:
+          leg: p_MySQL
+        q_Oracle2123:
+          leg: q_Oracle2123
+        s_SQLite:
+          leg: s_SQLite
+        t_Oracle1112:
+          leg: t_Oracle1112
+        u_YdbSybase:
+          leg: u_YdbSybase
+        w_DB2InformixDuckDB:
+          leg: w_DB2InformixDuckDB
+    steps:
+    - checkout: none
+    - task: PowerShell@2
+      inputs:
+        targetType: inline
+        pwsh: true
+        script: |
+          Write-Host "$(leg) started $([DateTime]::UtcNow.ToString('o'))"
+          Start-Sleep -Seconds (60 * ${{ parameters.hold_minutes }})
+      displayName: 'Hold a slot'

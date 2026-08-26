@@ -86,20 +86,27 @@ jobs:
       test_matrix:
 # The a_ .. y_ prefix on each name sets the order legs are dispatched in, longest leg first. Azure
 # hands out a matrix in case-insensitive alphabetical order of the key, not in the order entries are
-# declared here: builds 22995 and 23009 had different declaration orders and both matched the alphabet
-# 13/13 on their windows legs, while 23024 matched 11/13 and 12/15 with the misses being adjacent
-# pairs, which is agent-acquisition jitter rather than a different order.
+# declared here. Builds 22995 and 23009 had different declaration orders and both matched the
+# alphabet 13/13 on their windows legs; 23024 matched 11/13 with the misses being adjacent pairs,
+# which is agent-acquisition jitter; and the dispatch-probe run 23039 matched 13/13 exactly.
 #
-# It is worth ordering because a leg dispatched late only gets a slot once the other ten are taken and
-# then runs alone in the tail. On 23024 the six longest legs (77.8 down to 64.7 min) all sort into the
-# second half of the alphabet, and the run ended 157.0 min after its first leg started against 132.1
-# for the same legs dispatched longest-first.
+# It is worth ordering because a leg dispatched late only gets a slot once the other ten are taken
+# and then runs alone in the tail. Measured, not modelled: 23024 and 23028 differ only in these
+# prefixes, and the test phase went from 157.0 to 140.6 min with the leg work unchanged at 1153 and
+# 1148 agent-minutes - the whole gain is packing, average parallelism 7.34 to 8.17.
+#
+# Two things this cannot do, both measured rather than assumed:
+#   - Hide itself. The key is appended to the job name and a variable is not expanded in a job
+#     displayName, so "Win a_SqlServer2014" is the best available; probe build 23041 rendered a
+#     templated name as the literal "Win $(title) a_SqlServer2014".
+#   - Order the windows block against the linux one. Those are separate jobs, and which goes first
+#     varies with the names held constant - five runs to two, plus a third order in the probe.
 #
 # An earlier attempt numbered the keys 01_ .. 25_ and did nothing. Those names break the documented
-# rule that a matrix configuration name must start with a letter, and the build that tested them also
-# shared the agent pool with another test-all run, so it proved neither way. Hence letters.
+# rule that a matrix configuration name must start with a letter, and the build that tested them
+# also shared the agent pool with another test-all run, so it proved neither way. Hence letters.
 #
-# Letters come from measured durations, so they drift. Renumber when a leg has clearly outgrown its
+# Letters come from measured durations, so they drift. Reletter when a leg has clearly outgrown its
 # neighbours; being a few places out costs little, since only the long ones need to go first.
         - name: s_SQLite
           title: SQLite (all providers)
