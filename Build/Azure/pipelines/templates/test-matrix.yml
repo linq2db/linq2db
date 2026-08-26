@@ -3,7 +3,7 @@ parameters:
   with_baselines: false
   mac_enabled: false
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
-  linux_max_parallel: 6 # slots the linux legs may hold at once; see test-jobs.yml. 0 means no limit
+  linux_max_parallel: 6 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
   db_filter: '[all]'
 
 # db_filter specify test db selection filter for pipeline. Current list of supported values:

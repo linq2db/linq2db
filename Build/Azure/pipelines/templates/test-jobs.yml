@@ -4,10 +4,15 @@ parameters:
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
   full_run: false # disable by default
-  # Slots the linux legs may hold at once, out of the ten the project has. Six is measured for
-  # test-all on a PR, where the work splits 647 linux agent-minutes against 506 windows; a pipeline
-  # with a different split - a release full_run, or a test-<provider> definition whose matrix has no
-  # windows legs at all, which is 12 of the 25 entries - wants its own number. 0 means no limit.
+  # Slots the linux legs may hold at once, out of the ten the project has. 0 leaves the job uncapped.
+  # Six is measured for test-all on a PR: build 23050 split 643 linux agent-minutes over 15 legs
+  # against 489 windows over 13, and the floor a cap allows is max(linux_work/cap, windows_work/(10 -
+  # cap)). Six puts that floor at 122 min and makes windows the binding side, where five gives 129 and
+  # seven 163. Work that splits differently wants its own number, which is why default.yml passes 0
+  # for the release full_run: that run does every TFM's main suite and netfx exists only on windows,
+  # so it grows exactly the side six leaves four slots, and no release run has been measured with a
+  # cap. The per-provider definitions in testing.yml need nothing - their widest filter, oracle.all,
+  # enables three linux legs, so the cap never binds there.
   linux_max_parallel: 6
 
 jobs:
@@ -118,12 +123,13 @@ jobs:
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
   strategy:
-    # Leaves the rest of the ten parallel slots for the windows legs. Both jobs become eligible in the
-    # same second, but linux takes every slot within 0.3 min and windows then waits for one to come
-    # free: 44.4 min on build 23028, 54.8 on 23024, while its four longest legs are the whole run's
-    # four longest, so they start last and finish alone. Where the default 6 comes from, and when a
-    # pipeline wants a different number, is on linux_max_parallel at the top of this file.
-    maxParallel: ${{ parameters.linux_max_parallel }}
+    # Leaves the rest of the ten slots for the windows legs, which otherwise never get one: both jobs
+    # become eligible in the same second, but linux takes all ten within 0.3 min and windows then
+    # waits - 44.4 min on build 23028, 54.8 on 23024 - with its four longest legs starting last and
+    # finishing alone. Emitted only when set, so 0 leaves the property out rather than resting on how
+    # Azure reads maxParallel: 0. Where the default comes from is on linux_max_parallel above.
+    ${{ if gt(parameters.linux_max_parallel, 0) }}:
+      maxParallel: ${{ parameters.linux_max_parallel }}
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
         ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true')) }}:

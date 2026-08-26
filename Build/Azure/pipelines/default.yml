@@ -46,3 +46,7 @@ stages:
       mac_enabled: false
       full_run: true
       db_filter: '[all]'
+      # Uncapped, unlike test-all. Six linux slots is measured for a PR run, and a full_run shifts the
+      # work the other way - every TFM's main suite runs, and netfx runs on windows only - so the cap
+      # would squeeze the side that grows. Measure a release PR before putting a number here.
+      linux_max_parallel: 0
