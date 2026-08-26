@@ -18,7 +18,7 @@
 
 sm=".claude"
 
-# --- not populated yet (fresh clone / fresh worktree) - bootstrap it ---------
+# --- not populated yet (fresh worktree, or a clone that never ran --init) ----
 if [ ! -e "$sm/.git" ]; then
   case "$(git ls-tree HEAD -- "$sm" 2>/dev/null)" in
     160000*) ;;
@@ -38,11 +38,14 @@ if [ ! -e "$sm/.git" ]; then
     fi
   fi
 
-  if ! git submodule update "$@" -- "$sm" >/dev/null 2>&1; then
-    echo "[.githooks] $sm bootstrap skipped (offline or clone failed) - run" \
-         "'git submodule update --init -- $sm' by hand before working here." >&2
+  if ! err="$(git submodule update "$@" -- "$sm" 2>&1)"; then
+    echo "[.githooks] $sm bootstrap skipped: $err" >&2
+    echo "[.githooks] run 'git submodule update --init -- $sm' by hand before working here." >&2
     exit 0
   fi
+
+  # `--init` checks out a detached HEAD; a corpus commit made there can't be pushed.
+  git -C "$sm" switch --quiet master 2>/dev/null || :
 fi
 
 # uncommitted tracked edits inside the corpus - leave them alone
