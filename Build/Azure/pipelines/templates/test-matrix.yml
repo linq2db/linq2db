@@ -84,26 +84,145 @@ jobs:
       mac_enabled: ${{ parameters.mac_enabled }}
       full_run: ${{ parameters.full_run }}
       test_matrix:
-# Entries are grouped by database family, families ordered by their longest leg. That order is for
-# reading only - dispatch order is not controlled from this file, and two attempts to control it were
-# measured and failed. Reordering the entries did nothing (build 23009 dispatched its windows legs in
-# the same order as 22995 did on the old layout), and prefixing the keys to force an order did nothing
-# either: on 23022 the first legs to start were 01, 18, 16, 17, 24 and 23, which is neither the
-# declared nor the key order. 23022 shared the agent pool with another test-all run and the earlier
-# builds largely did not, so the order most likely follows how the shared pool hands out slots.
+# Dispatch order is not controlled from this file, and two ways of trying were measured and failed.
+# Reordering the entries changed nothing: build 23009 dispatched its windows legs in the same order
+# as 22995 had on the previous layout. Prefixing the keys to force an order changed nothing either:
+# on 23022 the first legs to start were neither the declared nor the key order. 23022 shared the
+# agent pool with another test-all run and the earlier builds largely did not, so the order most
+# likely follows how the shared pool hands out slots rather than anything set here.
 #
-# It still matters which legs are long, because a leg that starts last runs alone in the tail: on
-# 22995 the four netfx SQL Server legs (72/71/67/63 min) started at +80..+86 and the last 36 minutes
-# of the run held five slots or fewer. There is just no way to ask for them first from here.
-# ClickHouse
-# All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
-# databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
-        - name: ClickHouse
-          title: ClickHouse (all providers)
-          config_linux: clickhouse
-          config_macos: clickhouse
-          script_linux_global: clickhouse.sh
-          script_macos_global: clickhouse.sh
+# Which legs are long still matters, because a leg that starts last runs alone in the tail: on 22995
+# the four netfx SQL Server legs (72/71/67/63 min) started at +80..+86 and the last 36 minutes of the
+# run held five slots or fewer. There is just no way to ask for those first from here.
+# SQLite
+        - name: SQLite
+          title: SQLite (all providers)
+          config_win: sqlite
+          config_linux: sqlite
+          config_macos: sqlite
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          # On Windows, run only the EF.Core tests (which need netfx / EF Core 3.1) for non-release runs.
+          # The main-library tests then run on Linux alone, which means net8/9/10: netfx runs nowhere but
+          # Windows, so this config's netfx main suite is release-run only. That is a deliberate CI-time
+          # trade-off, not an oversight - netfx main coverage on PR runs comes from Access, SqlCE and SQL
+          # Server 2005-2016. Note this config also carries TestNoopProvider, so the provider-agnostic
+          # tests are in the same position. Release runs (full_run) run the main suite on Windows for
+          # every TFM.
+          win_efcore_only: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
+            enabled: false
+
+# Access
+        - name: Access_MDB
+          title: Access MDB (Jet/ODBC)
+          config_win: access.mdb
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          x86: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+# The two ACE providers run as separate entries, one provider each. Together they put ~14.9k tests through a
+# single x86 process, which reaches ~1.7GB of reserved address space by the end - and NUnit's last act is to
+# serialize the whole result document into one contiguous string, which then fails with OutOfMemoryException.
+# That failure is deterministic, so unlike the random AV below it survives every retry and the leg stays red.
+# Halving the run removes it: measured locally against the CI ACE build (2010 redist, x86), 7731 and 7715
+# tests, both exit 0, no OOM. It costs no wall-clock either - the halves take 360s + 332s against 741s for the
+# combined run - but only because TestsInitialization now holds one connection open per transport: splitting
+# also takes away the ODBC anchor that used to keep the shared ACE engine warm for both, and without an OLE DB
+# anchor of its own that half alone takes 1866s.
+        - name: Access_ACE_Odbc
+          title: Access ACE (ODBC) x86
+          config_win: access.ace.odbc
+          psscript_win_global: access.ace.ps1
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          x86: true
+          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: Access_ACE_OleDb
+          title: Access ACE (OLEDB) x86
+          config_win: access.ace.oledb
+          psscript_win_global: access.ace.ps1
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          x86: true
+          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: Access_ACE_x64
+          title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
+          config_win: access.ace.x64
+          psscript_win_global: access.ace.x64.ps1
+          enable_os_windows: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          retry: true # x64 provider could crash with AV
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+# SQL CE
+        - name: SqlCE
+          title: SQL CE
+          config_win: sqlce
+          psscript_win_global: sqlce.ps1
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]'))) }}:
+            enabled: false
+
+# MySql/MariaDB
+        - name: MySQL
+          title: MySQL/MariaDB (all providers)
+          config_linux: mysql
+          config_macos: mysql
+          script_linux_global: mysql.sh
+          script_macos_global: mac.mysql.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -112,9 +231,48 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
+            enabled: false
+
+# PostgreSQL
+        - name: PostgreSQL1
+          title: PostgreSQL (9.2-12)
+          config_linux: pgsql1
+          config_macos: pgsql1
+          script_linux_global: pgsql1.sh
+          script_macos_global: mac.pgsql1.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
+            enabled: false
+
+        - name: PostgreSQL2
+          title: PostgreSQL (13-19)
+          config_linux: pgsql2
+          config_macos: pgsql2
+          script_linux_global: pgsql2.sh
+          script_macos_global: mac.pgsql2.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
 # SQL Server
@@ -277,84 +435,6 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]'))) }}:
             enabled: false
 
-# PostgreSQL
-        - name: PostgreSQL1
-          title: PostgreSQL (9.2-12)
-          config_linux: pgsql1
-          config_macos: pgsql1
-          script_linux_global: pgsql1.sh
-          script_macos_global: mac.pgsql1.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
-
-        - name: PostgreSQL2
-          title: PostgreSQL (13-19)
-          config_linux: pgsql2
-          config_macos: pgsql2
-          script_linux_global: pgsql2.sh
-          script_macos_global: mac.pgsql2.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
-
-# SAP HANA
-        - name: SAPHANA2
-          title: SAP HANA 2
-          config_linux: hana2
-          config_macos: hana2
-          script_linux_global: hana2.sh
-          script_macos_global: mac.hana2.sh
-          script_linux_local: hana2.tests.sh
-          script_macos_local: hana2.tests.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:
-            enabled: false
-
-# SQL CE
-        - name: SqlCE
-          title: SQL CE
-          config_win: sqlce
-          psscript_win_global: sqlce.ps1
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]'))) }}:
-            enabled: false
-
 # Oracle
         - name: Oracle1112
           title: Oracle 11g + 12c
@@ -436,131 +516,6 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
             enabled: false
 
-# MySql/MariaDB
-        - name: MySQL
-          title: MySQL/MariaDB (all providers)
-          config_linux: mysql
-          config_macos: mysql
-          script_linux_global: mysql.sh
-          script_macos_global: mac.mysql.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
-            enabled: false
-
-# Access
-        - name: Access_MDB
-          title: Access MDB (Jet/ODBC)
-          config_win: access.mdb
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          x86: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-# The two ACE providers run as separate entries, one provider each. Together they put ~14.9k tests through a
-# single x86 process, which reaches ~1.7GB of reserved address space by the end - and NUnit's last act is to
-# serialize the whole result document into one contiguous string, which then fails with OutOfMemoryException.
-# That failure is deterministic, so unlike the random AV below it survives every retry and the leg stays red.
-# Halving the run removes it: measured locally against the CI ACE build (2010 redist, x86), 7731 and 7715
-# tests, both exit 0, no OOM. It costs no wall-clock either - the halves take 360s + 332s against 741s for the
-# combined run - but only because TestsInitialization now holds one connection open per transport: splitting
-# also takes away the ODBC anchor that used to keep the shared ACE engine warm for both, and without an OLE DB
-# anchor of its own that half alone takes 1866s.
-        - name: Access_ACE_Odbc
-          title: Access ACE (ODBC) x86
-          config_win: access.ace.odbc
-          psscript_win_global: access.ace.ps1
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          x86: true
-          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-        - name: Access_ACE_OleDb
-          title: Access ACE (OLEDB) x86
-          config_win: access.ace.oledb
-          psscript_win_global: access.ace.ps1
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          x86: true
-          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-        - name: Access_ACE_x64
-          title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
-          config_win: access.ace.x64
-          psscript_win_global: access.ace.x64.ps1
-          enable_os_windows: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          retry: true # x64 provider could crash with AV
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-# SQLite
-        - name: SQLite
-          title: SQLite (all providers)
-          config_win: sqlite
-          config_linux: sqlite
-          config_macos: sqlite
-          enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          # On Windows, run only the EF.Core tests (which need netfx / EF Core 3.1) for non-release runs.
-          # The main-library tests then run on Linux alone, which means net8/9/10: netfx runs nowhere but
-          # Windows, so this config's netfx main suite is release-run only. That is a deliberate CI-time
-          # trade-off, not an oversight - netfx main coverage on PR runs comes from Access, SqlCE and SQL
-          # Server 2005-2016. Note this config also carries TestNoopProvider, so the provider-agnostic
-          # tests are in the same position. Release runs (full_run) run the main suite on Windows for
-          # every TFM.
-          win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
-            enabled: false
-
 # DB2 + Informix + DuckDB and YDB + Sybase - fast providers paired per-job (distinct ports, no
 # conflict) to save CI agent capacity without running several DB engines on one agent. DB2 keeps its
 # native-driver local scripts (Informix.DB2 uses the DB2 client too). DuckDB is embedded - no
@@ -609,6 +564,50 @@ jobs:
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
+            enabled: false
+
+# SAP HANA
+        - name: SAPHANA2
+          title: SAP HANA 2
+          config_linux: hana2
+          config_macos: hana2
+          script_linux_global: hana2.sh
+          script_macos_global: mac.hana2.sh
+          script_linux_local: hana2.tests.sh
+          script_macos_local: hana2.tests.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:
+            enabled: false
+
+# ClickHouse
+# All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
+# databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
+        - name: ClickHouse
+          title: ClickHouse (all providers)
+          config_linux: clickhouse
+          config_macos: clickhouse
+          script_linux_global: clickhouse.sh
+          script_macos_global: clickhouse.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
             enabled: false
 
 # DuckDB runs as part of the DB2 + Informix + DuckDB job above.
