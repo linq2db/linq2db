@@ -19,7 +19,7 @@ Already cloned? `git submodule update --init`, then `git -C .claude switch maste
 
 **Restart your agent after populating the submodule.** Claude Code resolves the `CLAUDE.md` import set — the always-loaded project instructions — **once, at session start**, and does not re-read it when `.claude/` appears. A session that was already open while the submodule was empty keeps running with no project instructions however many files land on disk afterwards. Skill discovery *may* refresh mid-session, but it isn't guaranteed to, so don't rely on either: restart is the only way to be sure the session matches what's on disk.
 
-`core.hooksPath .githooks` is what keeps the corpus current and safe: `post-checkout` / `post-merge` / `post-rewrite` fast-forward `.claude/` to the agents repo's tip (skipping any checkout with uncommitted corpus edits), and `pre-commit` refuses two things that would otherwise slip in unnoticed — a `.claude` submodule-pointer bump, and edits to the root `AGENTS.md` / `CLAUDE.md` pointers. Both are overridable with `git commit --no-verify` when deliberate.
+`core.hooksPath .githooks` is what keeps the corpus current and safe: `post-checkout` / `post-merge` / `post-rewrite` **populate** `.claude/` when it has no working copy — so a new `git worktree add` comes up with the corpus already in place — and otherwise fast-forward it to the agents repo's tip (skipping any checkout with uncommitted corpus edits), and `pre-commit` refuses two things that would otherwise slip in unnoticed — a `.claude` submodule-pointer bump, and edits to the root `AGENTS.md` / `CLAUDE.md` pointers. Both are overridable with `git commit --no-verify` when deliberate.
 
 **Editing the instructions:** commit inside `.claude/` and push to the agents repo (`git -C .claude commit`, `git -C .claude push`). Corpus changes never land on a linq2db branch.
 
@@ -149,7 +149,8 @@ Optional switches, read once when the test assembly starts. All are unset by def
 | Variable | Effect |
 |---|---|
 | `L2DB_TEST_QUERYCACHE` | Maximum number of entries kept in the query cache. Defaults to `100` on x86 and .NET Framework legs, where the 32-bit address space is the binding constraint, and to the library default (10000) everywhere else. Raise it if a test asserting exact cache miss counts sees its entries trimmed. |
-| `LINQ2DB_ASSERT_STATE` | Set to `1` to compare the shared test tables (`Person`, `Patient`, `Doctor`, `Parent`, `Child`, `GrandChild`, `Inheritance*`, `Types2`) with their expected contents after every test, so a test that leaves data behind fails in its own teardown with `SMOrc` instead of breaking whatever runs next. Off by default because the comparison is slow. |
+| `L2DB_ASSERT_STATE` | Set to `1` to compare the shared test tables (`Person`, `Patient`, `Doctor`, `Parent`, `Child`, `GrandChild`, `Inheritance*`, `Types2`) with their expected contents after every test, so a test that leaves data behind fails in its own teardown with `SMOrc` instead of breaking whatever runs next. Off by default because the comparison is slow. |
+| `L2DB_PARALLEL_DIAG` | Set to `1` to trace how the parallel dispatcher routes each test - which lane it goes to, when the globally-exclusive lane takes and releases the write lock and for how long, and any test whose lane failed to run it. Off by default because it logs per work item. Use it when a run hangs or a test appears to have run on the wrong lane, which is not diagnosable after the fact. See `MaxParallelLanes` below to cap or disable lane concurrency. |
 
 ### Configure data providers for tests
 
@@ -173,7 +174,7 @@ The `[User]DataProviders.json` is a regular JSON file:
     {
         // base configuration to inherit settings from
         // Inheritance rules:
-        // - DefaultConfiguration, TraceLevel, Providers - use value from base configuration only if it is not defined in current configuration
+        // - DefaultConfiguration, TraceLevel, Providers, MaxParallelLanes - use value from base configuration only if it is not defined in current configuration
         // - Connections - merge current and base connection strings
         "BasedOn"              : "LocalConnectionStrings",
 
@@ -189,6 +190,12 @@ The `[User]DataProviders.json` is a regular JSON file:
         // Supported values: Off, Error, Warning, Info, Verbose
         // Default level: Info
         "TraceLevel"           : "Error",
+
+        // (optional) how many provider lanes the parallel test dispatcher runs at once. Tests are
+        // parallelized across databases and serialized within one, so this caps how many databases are
+        // exercised concurrently. Left unset it is 2 x processor count. Set it to 1 to run the lanes one
+        // at a time, which is how to tell a real failure from one caused by parallel execution.
+        // "MaxParallelLanes"  : 1,
                                 
         // list of database providers, enabled for current test configuration
         "Providers"            :

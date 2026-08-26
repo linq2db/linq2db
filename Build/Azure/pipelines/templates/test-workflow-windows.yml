@@ -223,11 +223,11 @@ steps:
   - ${{ if or(eq(tfm.pr_main, true), eq(parameters.full_run, true)) }}:
     - script: ${{ tfm.dir }}\main\$(arch)\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings ${{ tfm.dir }}\main\$(arch)\.runsettings --report-trx --report-trx-filename ${{ tfm.trx }}-main-$(arch).trx --results-directory TestResults --hangdump --hangdump-timeout 5m
       displayName: 'Tests (${{ tfm.label }}): $(title)'
-      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), ne(variables.retry, 'true'))
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), ne(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
 
     - script: ${{ tfm.dir }}\main\$(arch)\linq2db.Tests.exe --filter "TestCategory != SkipCI" --settings ${{ tfm.dir }}\main\$(arch)\.runsettings --report-trx --report-trx-filename ${{ tfm.trx }}-main-$(arch).trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
       displayName: 'Tests (${{ tfm.label }}): $(title)'
-      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), eq(variables.retry, 'true'))
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), eq(variables.retry, 'true'), or(${{ parameters.full_run }}, ne(variables.win_efcore_only, 'true')))
       retryCountOnTaskFailure: 2
 
   - script: ${{ tfm.dir }}\efcore\$(arch)\linq2db.EntityFrameworkCore.Tests.exe --filter "TestCategory != SkipCI" --settings ${{ tfm.dir }}\efcore\$(arch)\.runsettings --report-trx --report-trx-filename ${{ tfm.trx }}-efcore-$(arch).trx --results-directory TestResults --hangdump --hangdump-timeout 5m
