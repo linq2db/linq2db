@@ -1,1 +1,238 @@
-#nullable enable
+﻿#nullable enable
+~override LinqToDB.Internal.SqlQuery.SqlIntervalType.Equals(object obj) -> bool
+~override LinqToDB.Internal.SqlQuery.SqlIntervalType.ToString() -> string
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_ComponentBelowResolution = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Difference = "Subtracting one date/time value from another is not supported by current provider. Compute the difference in .NET, or use Sql.DateDiff where a count of crossed unit boundaries answers the question." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Member = "This TimeSpan member is not supported by current provider." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Operation = "This TimeSpan operation is not supported by current provider." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Shift = "Adding a TimeSpan to a date/time value is not supported by current provider." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_UndeclaredOperand = "Cannot combine a duration whose unit is declared with one stored through a value converter, which does not say what its number counts. Declare that column with DurationAttribute, or combine the two in .NET." -> string!
+LinqToDB.Internal.SqlProvider.IntervalLowering
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlInterval = 85 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlIntervalDifference = 86 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlIntervalPart = 87 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlTemporalArithmetic = 88 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression
+LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.End.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.IntervalType.get -> LinqToDB.Internal.SqlQuery.SqlIntervalType
+LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Modify(LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalType intervalType) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.SqlIntervalDifferenceExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalType intervalType) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Start.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Type.get -> LinqToDB.DbDataType
+LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Calendar = 1 -> LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Duration = 0 -> LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalExpression
+LinqToDB.Internal.SqlQuery.SqlIntervalExpression.IntervalType.get -> LinqToDB.Internal.SqlQuery.SqlIntervalType
+LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Modify(LinqToDB.Internal.SqlQuery.ISqlExpression! value, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalType intervalType) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalExpression.SqlIntervalExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! value, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalType intervalType) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Type.get -> LinqToDB.DbDataType
+LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Unit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Value.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Interval.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Kind.get -> LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Modify(LinqToDB.Internal.SqlQuery.ISqlExpression! interval, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalPartKind kind, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalUnit? within) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.SqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! interval, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalPartKind kind, LinqToDB.DbDataType type, LinqToDB.Internal.SqlQuery.SqlIntervalUnit? within = null) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Type.get -> LinqToDB.DbDataType
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Unit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Within.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
+LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Component = 0 -> LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
+LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Total = 1 -> LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
+LinqToDB.Internal.SqlQuery.SqlIntervalType
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlIntervalDomain Domain, out LinqToDB.Internal.SqlQuery.SqlIntervalUnit Resolution, out bool IsSigned) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Domain.get -> LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Domain.init -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Equals(LinqToDB.Internal.SqlQuery.SqlIntervalType other) -> bool
+LinqToDB.Internal.SqlQuery.SqlIntervalType.IsSigned.get -> bool
+LinqToDB.Internal.SqlQuery.SqlIntervalType.IsSigned.init -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Resolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalType.Resolution.init -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.SqlIntervalType() -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalType.SqlIntervalType(LinqToDB.Internal.SqlQuery.SqlIntervalDomain Domain, LinqToDB.Internal.SqlQuery.SqlIntervalUnit Resolution, bool IsSigned) -> void
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Day = 7 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Hour = 6 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Microsecond = 2 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Millisecond = 3 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Minute = 5 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Month = 9 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Nanosecond = 0 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Quarter = 10 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Second = 4 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick = 1 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Week = 8 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Year = 11 -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Internal.SqlQuery.SqlIntervalUnits
+LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression
+LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Interval.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.IsSubtract.get -> bool
+LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Modify(LinqToDB.Internal.SqlQuery.ISqlExpression! temporal, LinqToDB.Internal.SqlQuery.ISqlExpression! interval, LinqToDB.DbDataType type) -> void
+LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.SqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! temporal, LinqToDB.Internal.SqlQuery.ISqlExpression! interval, bool isSubtract, LinqToDB.DbDataType type) -> void
+LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Temporal.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Type.get -> LinqToDB.DbDataType
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanMeasureDifferenceInTicks.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift.get -> bool
+LinqToDB.Linq.Translation.TranslationProviderFlags.TranslationProviderFlags(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering defaultNullsOrdering, bool isNullsOrderingSupported, bool canLowerIntervalDifference, bool canLowerIntervalPart, bool canLowerIntervalShift, LinqToDB.Internal.SqlQuery.SqlIntervalUnit intervalResolution = LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick, bool canMeasureDifferenceInTicks = true) -> void
+LinqToDB.Mapping.ColumnDescriptor.DurationUnit.get -> LinqToDB.Mapping.DurationUnit?
+LinqToDB.Mapping.DurationAttribute
+LinqToDB.Mapping.DurationAttribute.DurationAttribute(LinqToDB.Mapping.DurationUnit unit) -> void
+LinqToDB.Mapping.DurationAttribute.Unit.get -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationAttribute.Unit.set -> void
+LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Day = 7 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Hour = 6 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Microsecond = 2 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Millisecond = 3 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Minute = 5 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Nanosecond = 0 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Second = 4 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.DurationUnit.Tick = 1 -> LinqToDB.Mapping.DurationUnit
+LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>.HasDuration(LinqToDB.Mapping.DurationUnit unit) -> LinqToDB.Mapping.PropertyMappingBuilder<TEntity, TProperty>!
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanMeasureDifferenceInTicks.get -> bool
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicksResolveMembers.get -> bool
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerIntervalDifference(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerIntervalPart(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlIntervalDifferenceExpression(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.SystemType.get -> System.Type?
+override LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.SystemType.get -> System.Type?
+override LinqToDB.Internal.SqlQuery.SqlIntervalExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.SystemType.get -> System.Type?
+override LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Internal.SqlQuery.SqlIntervalType.GetHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.SystemType.get -> System.Type?
+override LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+override LinqToDB.Mapping.DurationAttribute.GetObjectID() -> string!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Greater(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! expr1, LinqToDB.Internal.SqlQuery.ISqlExpression! expr2, bool? unknownValue) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.GreaterOrEqual(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! expr1, LinqToDB.Internal.SqlQuery.ISqlExpression! expr2, bool? unknownValue) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Less(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! expr1, LinqToDB.Internal.SqlQuery.ISqlExpression! expr2, bool? unknownValue) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.LessOrEqual(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! expr1, LinqToDB.Internal.SqlQuery.ISqlExpression! expr2, bool? unknownValue) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Mod(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.DbDataType dbDataType, LinqToDB.Internal.SqlQuery.ISqlExpression! x, LinqToDB.Internal.SqlQuery.ISqlExpression! value) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+static LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.NotEqual(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! expr1, LinqToDB.Internal.SqlQuery.ISqlExpression! expr2, bool? unknownValue) -> LinqToDB.Internal.SqlQuery.ISqlPredicate!
+static LinqToDB.Internal.SqlQuery.SqlArgumentDomains.ForAggregate(string! functionName) -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain
+static LinqToDB.Internal.Expressions.ExpressionHelpers.MoveValueMarkerOutside(System.Linq.Expressions.Expression! expression, System.Func<System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! build) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.SqlProvider.IntervalLowering.ElapsedTotal(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! difference, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalUnit? finestUnit, System.Func<LinqToDB.Internal.SqlQuery.SqlIntervalUnit, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression?>! countBoundaries, System.Func<LinqToDB.Internal.SqlQuery.SqlIntervalUnit, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression?>! shiftDate) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.Internal.SqlProvider.IntervalLowering.ElapsedUnits(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! difference, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, System.Func<LinqToDB.Internal.SqlQuery.SqlIntervalUnit, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression?>! countBoundaries, System.Func<LinqToDB.Internal.SqlQuery.SqlIntervalUnit, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression?>! shiftDate) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.Internal.SqlProvider.IntervalLowering.FromTicks(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! ticks, LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateDivide, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateRemainder) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.Internal.SqlProvider.IntervalLowering.LowerPart(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateDivide, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateRemainder) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.Internal.SqlProvider.IntervalLowering.ToTicks(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.SqlIntervalExpression! interval) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.Internal.SqlProvider.IntervalLowering.WrapComponent(LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Internal.SqlQuery.ISqlExpression! wholeUnits, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalUnit? within, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, long, LinqToDB.Internal.SqlQuery.ISqlExpression!>! truncateRemainder) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.ForDuration(LinqToDB.Mapping.DurationUnit unit, bool isSigned = true) -> LinqToDB.Internal.SqlQuery.SqlIntervalType
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.operator !=(LinqToDB.Internal.SqlQuery.SqlIntervalType left, LinqToDB.Internal.SqlQuery.SqlIntervalType right) -> bool
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.operator ==(LinqToDB.Internal.SqlQuery.SqlIntervalType left, LinqToDB.Internal.SqlQuery.SqlIntervalType right) -> bool
+static LinqToDB.Internal.SqlQuery.SqlIntervalType.ToIntervalUnit(LinqToDB.Mapping.DurationUnit unit) -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.IsFinerThan(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.SqlIntervalUnit other) -> bool
+static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryGetTicksRatio(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, out long numerator, out long denominator) -> bool
+static LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryToTicks(long amount, LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, out long ticks) -> bool
+static readonly LinqToDB.Internal.SqlQuery.SqlIntervalType.ClrTimeSpan -> LinqToDB.Internal.SqlQuery.SqlIntervalType
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalDifferenceExpression(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> void
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression! element) -> void
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> void
+virtual LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> void
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalDifference.get -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalPart.get -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanMeasureDifferenceInTicks.get -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! start, LinqToDB.Internal.SqlQuery.ISqlExpression! end) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicksResolveMembers.get -> bool
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.FinestDateUnit.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalDifference(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalPart(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit unit, LinqToDB.Internal.SqlQuery.ISqlExpression! amount, LinqToDB.Internal.SqlQuery.ISqlExpression! date) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression! value, long divisor) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlIntervalDifferenceExpression(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+
+LinqToDB.Internal.SqlQuery.SqlExtendedFunction.ArgumentDomain.get -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain
+LinqToDB.Internal.SqlQuery.SqlArgumentDomain
+LinqToDB.Internal.SqlQuery.SqlArgumentDomains
+LinqToDB.Internal.SqlQuery.SqlArgumentDomain.Element = 2 -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain
+LinqToDB.Internal.SqlQuery.SqlArgumentDomain.None = 0 -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain
+LinqToDB.Internal.SqlQuery.SqlArgumentDomain.SameKind = 1 -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain

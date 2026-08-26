@@ -1,8 +1,11 @@
-﻿{
+{
 	"NET100.Azure": {
 		"Providers": [
+			"MySql.5.7",
+			"MySqlConnector.5.7",
 			"MySql.8.0",
-			"MySqlConnector.8.0"
+			"MySqlConnector.8.0",
+			"MariaDB.11"
 		]
 	}
 }

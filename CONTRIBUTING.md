@@ -142,6 +142,16 @@ public class Test: TestBase
 }
 ```
 
+### Test-run environment variables
+
+Optional switches, read once when the test assembly starts. All are unset by default.
+
+| Variable | Effect |
+|---|---|
+| `L2DB_TEST_QUERYCACHE` | Maximum number of entries kept in the query cache. Defaults to `100` on x86 and .NET Framework legs, where the 32-bit address space is the binding constraint, and to the library default (10000) everywhere else. Raise it if a test asserting exact cache miss counts sees its entries trimmed. |
+| `L2DB_ASSERT_STATE` | Set to `1` to compare the shared test tables (`Person`, `Patient`, `Doctor`, `Parent`, `Child`, `GrandChild`, `Inheritance*`, `Types2`) with their expected contents after every test, so a test that leaves data behind fails in its own teardown with `SMOrc` instead of breaking whatever runs next. Off by default because the comparison is slow. |
+| `L2DB_PARALLEL_DIAG` | Set to `1` to trace how the parallel dispatcher routes each test - which lane it goes to, when the globally-exclusive lane takes and releases the write lock and for how long, and any test whose lane failed to run it. Off by default because it logs per work item. Use it when a run hangs or a test appears to have run on the wrong lane, which is not diagnosable after the fact. See `MaxParallelLanes` below to cap or disable lane concurrency. |
+
 ### Configure data providers for tests
 
 `DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken
@@ -164,7 +174,7 @@ The `[User]DataProviders.json` is a regular JSON file:
     {
         // base configuration to inherit settings from
         // Inheritance rules:
-        // - DefaultConfiguration, TraceLevel, Providers - use value from base configuration only if it is not defined in current configuration
+        // - DefaultConfiguration, TraceLevel, Providers, MaxParallelLanes - use value from base configuration only if it is not defined in current configuration
         // - Connections - merge current and base connection strings
         "BasedOn"              : "LocalConnectionStrings",
 
@@ -180,6 +190,12 @@ The `[User]DataProviders.json` is a regular JSON file:
         // Supported values: Off, Error, Warning, Info, Verbose
         // Default level: Info
         "TraceLevel"           : "Error",
+
+        // (optional) how many provider lanes the parallel test dispatcher runs at once. Tests are
+        // parallelized across databases and serialized within one, so this caps how many databases are
+        // exercised concurrently. Left unset it is 2 x processor count. Set it to 1 to run the lanes one
+        // at a time, which is how to tell a real failure from one caused by parallel execution.
+        // "MaxParallelLanes"  : 1,
                                 
         // list of database providers, enabled for current test configuration
         "Providers"            :

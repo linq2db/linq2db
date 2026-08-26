@@ -28,13 +28,18 @@ jobs:
       filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/verify-analyzer-delivery.ps1'
       arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/nugets"'
 
-  - task: NuGetCommand@2
-    inputs:
-      command: 'push'
-      packagesToPush: '$(Build.SourcesDirectory)/.build/nugets/*.nupkg'
-      nuGetFeedType: 'internal'
-      publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
+  # Pushed through a script rather than NuGetCommand@2 so that the feed being over its storage
+  # quota (HTTP 402) warns instead of failing the build, while any other push failure still fails.
+  - task: NuGetAuthenticate@1
+    displayName: Authenticate to Azure Artifacts feed
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
+
+  - task: PowerShell@2
     displayName: Publish to Azure Artifacts feed
+    inputs:
+      pwsh: true
+      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/publish-azure-artifacts.ps1'
+      arguments: '-PackagesDir "$(Build.SourcesDirectory)/.build/nugets" -Source "https://pkgs.dev.azure.com/linq2db/0dcc414b-ea54-451e-a54f-d63f05367c4b/_packaging/967a4107-9788-41a4-9f6d-a2318aab1410/nuget/v3/index.json"'
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
 
   - task: NuGetCommand@2
