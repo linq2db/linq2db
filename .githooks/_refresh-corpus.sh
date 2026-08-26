@@ -38,9 +38,9 @@ if [ ! -e "$sm/.git" ]; then
     fi
   fi
 
-  if ! git submodule update "$@" -- "$sm" >/dev/null 2>&1; then
-    echo "[.githooks] $sm bootstrap skipped (offline or clone failed) - run" \
-         "'git submodule update --init -- $sm' by hand before working here." >&2
+  if ! err="$(git submodule update "$@" -- "$sm" 2>&1)"; then
+    echo "[.githooks] $sm bootstrap skipped: $err" >&2
+    echo "[.githooks] run 'git submodule update --init -- $sm' by hand before working here." >&2
     exit 0
   fi
 fi
