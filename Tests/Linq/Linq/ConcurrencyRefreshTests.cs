@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Concurrency;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -271,6 +272,85 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UpdateViaQueryWithIgnoreFilters([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RefreshTable<Guid>>()
+					.HasTableName("ConcurrencyRefreshFiltered")
+					.HasQueryFilter(e => e.Id != 1)
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+
+			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
+
+			using var _ = new DisableBaseline("guid used");
+			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			db.Insert(record);
+			record.Stamp = t.IgnoreFilters().Single().Stamp;
+			var before   = record.Stamp;
+
+			// the caller explicitly disabled the entity query filter that hides this row, so the UPDATE reaches it;
+			// the read-back must honour that too, or it matches nothing and the entity keeps a stale token on success
+			record.Value = "updated";
+			var cnt = t.IgnoreFilters().UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(1);
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.IgnoreFilters().Single().Stamp);
+		}
+
+		[Test]
+		public void UpdateThroughUnsupportedSourceShapeThrows([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			var mb = new FluentMappingBuilder(ms);
+			mb.Entity<RefreshTable<Guid>>()
+				.HasTableName("ConcurrencyRefreshShape")
+				.Property(e => e.Stamp)
+					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid));
+			mb.Entity<RefreshTable<int>>()
+				.HasTableName("ConcurrencyRefreshShapeOuter");
+			mb.Build();
+
+			using var db = GetDataContext(context, ms);
+
+			// only the SELECT-fallback read-back path is affected: the OUTPUT/RETURNING path reads the new value
+			// from the UPDATE itself and never rebuilds a read-back query
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
+
+			using var _     = new DisableBaseline("guid used");
+			using var outer = db.CreateLocalTable<RefreshTable<int>>();
+			using var t     = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			db.Insert(new RefreshTable<int> { Id = 1, Stamp = 1, Value = "o" });
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			db.Insert(record);
+			record.Stamp = t.Single().Stamp;
+
+			// the outer sequence has a different element type, so the peel cannot reach the updated table and the
+			// caller's filter - over a column the UPDATE rewrites - would survive into the read-back
+			var source = outer.SelectMany(o => t.Where(g => g.Value == "initial"));
+
+			record.Value = "updated";
+
+			Action act = () => source.UpdateOptimisticWithRefresh(record);
+			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("does not expose the updated table");
+
+			// the guard fires before the UPDATE, so nothing was written
+			t.Single().Value.ShouldBe("initial");
+		}
+
+		[Test]
 		public void UpdateOnReadOnlyLockMemberThrows([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -437,6 +517,32 @@ namespace Tests.Linq
 			// rowversion is purely database-generated and only obtainable via OUTPUT / SELECT
 			record.Stamp.ShouldNotBe(before);
 			record.Stamp.ShouldBe(t.Single().Stamp);
+		}
+
+		// Pins the documented SQL Server limitation: OUTPUT without INTO is rejected against a table carrying any
+		// enabled UPDATE trigger, and the OUTPUT path is taken unconditionally there, so the call fails outright
+		// where the plain UpdateOptimistic would have succeeded. Asserts only that it throws - the error text is
+		// localized and the exception type differs between the SqlClient flavours.
+		[Test]
+		public void UpdateOnTriggeredTableThrowsOnSqlServer([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var _  = new DisableBaseline("guid used");
+			using var db = GetDataContext(context, GuidSchema("ConcurrencyRefreshTriggered"));
+			using var t  = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			db.Insert(record);
+			record.Stamp = t.Single().Stamp;
+
+			db.Execute("CREATE TRIGGER TR_ConcurrencyRefreshTriggered ON ConcurrencyRefreshTriggered AFTER UPDATE AS SET NOCOUNT ON");
+
+			record.Value = "updated";
+
+			Action act = () => db.UpdateOptimisticWithRefresh(record);
+			act.ShouldThrow<Exception>();
+
+			// the sibling API has no OUTPUT clause, so it is unaffected by the trigger
+			db.UpdateOptimistic(record).ShouldBe(1);
 		}
 
 		[Test]
@@ -652,7 +758,12 @@ namespace Tests.Linq
 
 			try
 			{
-				return t.Where(r => r.Id == 1).Set(r => r.Stamp, 2).Update() == 1;
+				if (t.Where(r => r.Id == 1).Set(r => r.Stamp, 2).Update() != 1)
+					return false;
+
+				// the count must also distinguish "no row matched" - that is the direction
+				// UpdateOptimisticWithRefresh relies on to report a concurrency failure
+				return t.Where(r => r.Id == -1).Set(r => r.Stamp, 3).Update() == 0;
 			}
 			catch
 			{

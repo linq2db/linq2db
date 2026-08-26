@@ -110,8 +110,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <returns>
-		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static int UpdateOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
@@ -131,8 +131,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="obj">Entity instance to update.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static Task<int> UpdateOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
@@ -151,8 +151,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <returns>
-		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static int UpdateOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
@@ -174,8 +174,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="obj">Entity instance to update.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of updated records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static Task<int> UpdateOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
@@ -196,8 +196,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <returns>
-		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static int DeleteOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
@@ -217,8 +217,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static Task<int> DeleteOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
@@ -237,8 +237,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <returns>
-		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static int DeleteOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
@@ -258,8 +258,8 @@ namespace LinqToDB.Concurrency
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>
-		/// Number of deleted records. On providers that do not report affected rows (e.g. ClickHouse) the count is
-		/// always <c>0</c>, so it cannot be used to detect an optimistic-concurrency failure on those providers.
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 		/// </returns>
 		public static Task<int> DeleteOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
@@ -368,23 +368,45 @@ namespace LinqToDB.Concurrency
 		// Table-shaping calls on the caller's source (TableName / SchemaName / ...) are kept so the read-back hits
 		// the same table the UPDATE targeted; the caller's query operators are dropped, because their predicates
 		// may test columns the UPDATE itself rewrites - the updated row would then no longer match and the
-		// refresh would silently not happen.
+		// refresh would silently not happen. A source the peel cannot reduce to that table is rejected outright.
 		private static IQueryable<T> ReadBackSource<T>(IQueryable<T> source, IDataContext dc)
 			where T : class
 		{
-			var expression = source.Expression;
-
-			while (expression is MethodCallExpression call
-				&& !typeof(ITable<T>).IsAssignableFrom(call.Type)
-				&& call.Arguments.Count > 0
-				&& typeof(IQueryable<T>).IsAssignableFrom(call.Arguments[0].Type))
-			{
-				expression = call.Arguments[0];
-			}
+			var expression = ReadBackExpression<T>(source.Expression);
 
 			return ReferenceEquals(expression, source.Expression)
 				? source
 				: Internals.CreateExpressionQueryInstance<T>(dc, expression);
+		}
+
+		private static Expression ReadBackExpression<T>(Expression expression)
+			where T : class
+		{
+			if (expression is not MethodCallExpression call || typeof(ITable<T>).IsAssignableFrom(call.Type))
+				return expression;
+
+			// the operator doesn't expose the updated table as its own source (SelectMany / Join with a different
+			// outer, OfType / Cast over a base type), so the caller's filters cannot be dropped from the read-back:
+			// a predicate over a column the UPDATE rewrites would hide the updated row and leave the entity stale
+			if (call.Arguments.Count == 0 || !typeof(IQueryable<T>).IsAssignableFrom(call.Arguments[0].Type))
+				throw new LinqToDBException($"UpdateOptimisticWithRefresh cannot refresh through '{call.Method.Name}': the query operator does not expose the updated table as its source, so the regenerated value cannot be read back reliably.");
+
+			var inner = ReadBackExpression<T>(call.Arguments[0]);
+
+			// IgnoreFilters is the one dropped operator that changes which rows are visible: without it the
+			// read-back re-enables entity query filters the caller disabled, hiding the row the UPDATE reached
+			if (call.Method.DeclaringType == typeof(LinqExtensions) && string.Equals(call.Method.Name, nameof(LinqExtensions.IgnoreFilters), StringComparison.Ordinal))
+			{
+				if (ReferenceEquals(inner, call.Arguments[0]))
+					return call;
+
+				var arguments = call.Arguments.ToArray();
+				arguments[0]  = inner;
+
+				return Expression.Call(call.Method, arguments);
+			}
+
+			return inner;
 		}
 
 		private static int UpdateOptimisticWithRefreshCore<T>(IQueryable<T> source, IDataContext dc, T obj)
@@ -418,12 +440,15 @@ namespace LinqToDB.Concurrency
 			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
 				throw new LinqToDBException(UpdateWithRefreshNotSupportedMessage);
 
+			// built before the UPDATE so an unsupported source shape is rejected without having modified anything
+			var readBack = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns));
+
 			var count = updatable.Update();
 
 			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
 			if (count > 0)
 			{
-				var fresh = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefault();
+				var fresh = readBack.FirstOrDefault();
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
@@ -463,12 +488,15 @@ namespace LinqToDB.Concurrency
 			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
 				throw new LinqToDBException(UpdateWithRefreshNotSupportedMessage);
 
+			// built before the UPDATE so an unsupported source shape is rejected without having modified anything
+			var readBack = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns));
+
 			var count = await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
 
 			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
 			if (count > 0)
 			{
-				var fresh = await FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns)).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+				var fresh = await readBack.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
 				if (fresh != null)
 					CopyColumns(lockColumns, fresh, obj);
@@ -505,6 +533,9 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
 		/// </exception>
 		public static int UpdateOptimisticWithRefresh<T>(this IDataContext dc, T obj)
 			where T : class
@@ -544,6 +575,9 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
 		/// </exception>
 		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
@@ -582,6 +616,9 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
 		/// </exception>
 		public static int UpdateOptimisticWithRefresh<T>(this IQueryable<T> source, T obj)
 			where T : class
@@ -623,6 +660,9 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
 		/// </exception>
 		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
