@@ -89,10 +89,15 @@ jobs:
     displayName: PublishSingleFile Smoke Test
     condition: and(succeeded(), ${{ parameters.with_singlefile_smoke }})
 
+# Only the graph Build Test Artifacts publishes, not the whole solution: LinqToDB.CLI has the slowest
+# restore in the run at 1.4 min and finishes it last, and Tests.T4 is the last project to compile, so
+# between them they add ~2.3 min to a step whose every minute is serial prefix. Nothing is left
+# unchecked - the build pipeline compiles all of linq2db.slnx on the same PR, and Tests.LinqToDB.CLI
+# has its own test-cli pipeline.
   - task: DotNetCoreCLI@2
     inputs:
       command: build
-      projects: $(solution)
+      projects: $(test_solution_filter)
       arguments: --configuration $(test_configuration)
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})

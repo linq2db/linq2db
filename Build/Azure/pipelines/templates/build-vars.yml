@@ -4,6 +4,7 @@ variables:
   release_branch: release
   baselines_master: master
   solution: 'linq2db.slnx'
+  test_solution_filter: 'linq2db.Testing.slnf'
   netfx_tfm: 'net462'
   release_configuration: 'Release'
   test_configuration: 'Azure'
