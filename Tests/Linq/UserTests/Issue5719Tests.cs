@@ -127,8 +127,10 @@ namespace Tests.UserTests
 
 			visitor.Visit(mapperExpression);
 
-			// sanity: the TPH branches are in there at all, otherwise the assertion below is vacuous
-			visitor.Constructions.Count.ShouldBeGreaterThan(0);
+			// sanity: every TPH branch is materialized, otherwise the assertion below is vacuous — a shape that
+			// stopped emitting per-branch constructors would satisfy a bare "any constructions at all" check
+			// while covering nothing.
+			visitor.Constructions.Select(c => c.Type).Distinct().Count().ShouldBe(5);
 
 			// the actual guard: a constructor duplicated across branches must be stored once and reused, so no
 			// two occurrences in the mapper may be structurally equal
