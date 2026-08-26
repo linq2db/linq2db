@@ -86,16 +86,32 @@ jobs:
       full_run: ${{ parameters.full_run }}
       linux_max_parallel: ${{ parameters.linux_max_parallel }}
       test_matrix:
-# The a_ .. y_ prefix on each name sets the order legs are dispatched in, longest leg first. Azure
-# hands out a matrix in case-insensitive alphabetical order of the key, not in the order entries are
-# declared here. Builds 22995 and 23009 had different declaration orders and both matched the
-# alphabet 13/13 on their windows legs; 23024 matched 11/13 with the misses being adjacent pairs,
-# which is agent-acquisition jitter; and the dispatch-probe run 23039 matched 13/13 exactly.
+# Two things decide the order legs run in, and which one you see depends on whether the job caps its
+# parallelism. Both were measured on build 23050, the first run to carry a cap.
 #
-# It is worth ordering because a leg dispatched late only gets a slot once the other ten are taken
-# and then runs alone in the tail. Measured, not modelled: 23024 and 23028 differ only in these
-# prefixes, and the test phase went from 157.0 to 140.6 min with the leg work unchanged at 1153 and
-# 1148 agent-minutes - the whole gain is packing, average parallelism 7.34 to 8.17.
+#   - maxParallel decides WHICH legs are released next, and takes them in the order they are declared
+#     here. The linux job caps at linux_max_parallel, and the six legs it started were s p i c l n -
+#     exactly the first six ubuntu-enabled entries in the file as it then stood - followed by m, t and
+#     j as slots freed, again in file order. The alphabet would have given b c h i j k.
+#   - Legs already released take agents in case-insensitive alphabetical order of the key. The windows
+#     job has no cap, so all thirteen are released at once and only this rule is visible: the first
+#     five and the last three matched the alphabet exactly, the middle four were out by a place or
+#     two, which is acquisition jitter between legs freeing slots seconds apart. File order would have
+#     started s r v x.
+#
+# So keep this file sorted by key. Then both rules give the same order, and one edit maintains both.
+# Grouping entries by provider family used to be free, because without a cap the file order was inert -
+# builds 22995 and 23009 had different declaration orders and both matched the alphabet 13/13 on their
+# windows legs. The cap made file order load-bearing again, and the family grouping had put ClickHouse,
+# the second-longest linux leg, last: on 23050 it started 90 minutes in and defined the tail by itself.
+# Replaying 23028's leg durations through the slot model puts that at 153.9 min against 122.3 sorted.
+#
+# The a_ .. y_ prefixes come from measured durations, longest first, so the long legs are the ones
+# dispatched early - a leg that starts late only gets a slot once the other ten are taken, and then
+# runs alone in the tail. Measured, not modelled: 23024 and 23028 differ only in these prefixes, and
+# the test phase went from 157.0 to 140.6 min with the leg work unchanged at 1153 and 1148 agent-
+# minutes, so the whole gain is packing - average parallelism 7.34 to 8.17. Durations drift, so
+# reletter when a leg has clearly outgrown its neighbours, and move its block to keep the file sorted.
 #
 # Two things this cannot do, both measured rather than assumed:
 #   - Hide itself. The key is appended to the job name and a variable is not expanded in a job
@@ -108,8 +124,361 @@ jobs:
 # rule that a matrix configuration name must start with a letter, and the build that tested them
 # also shared the agent pool with another test-all run, so it proved neither way. Hence letters.
 #
-# Letters come from measured durations, so they drift. Reletter when a leg has clearly outgrown its
-# neighbours; being a few places out costs little, since only the long ones need to go first.
+# Sorting scatters the provider families, so: Access is r_Access_MDB, v_Access_ACE_Odbc,
+# x_Access_ACE_OleDb and y_Access_ACE_x64. SQL Server is a_SqlServer2014, d_SqlServer2012,
+# e_SqlServer2008, f_SqlServer2016, l_SqlServer2017_2019, m_SqlServer2022_2025, n_SqlServer2019Extras
+# and o_SqlServer2005. Oracle is j_Oracle1819, q_Oracle2123 and t_Oracle1112. PostgreSQL is
+# c_PostgreSQL2 and i_PostgreSQL1. The rest are one entry each: b_ClickHouse, g_SqlCE, h_SAPHANA2,
+# k_Firebird, p_MySQL, s_SQLite, u_YdbSybase, w_DB2InformixDuckDB.
+# 2008-2016 run one version per job. The original reason was that batching two versions in a single
+# netfx process exhausted memory (unbounded per-MappingSchema attribute cache). That no longer
+# reproduces: the merged 2017+2019 and 2022+2025 jobs put four providers through one netfx process and
+# their NETFX main suites have completed on full_run builds 22779, 22810, 22850 and 22863. So the split
+# is kept here conservatively, not as a measured limit - it simply has not been retested for these
+# versions.
+        - name: a_SqlServer2014
+          title: SQL Server 2014
+          config_win: sqlserver.2014
+          script_win_global: sqlserver.2014.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+# All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
+# databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
+        - name: b_ClickHouse
+          title: ClickHouse (all providers)
+          config_linux: clickhouse
+          config_macos: clickhouse
+          script_linux_global: clickhouse.sh
+          script_macos_global: clickhouse.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
+            enabled: false
+
+        - name: c_PostgreSQL2
+          title: PostgreSQL (13-19)
+          config_linux: pgsql2
+          config_macos: pgsql2
+          script_linux_global: pgsql2.sh
+          script_macos_global: mac.pgsql2.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
+            enabled: false
+
+        - name: d_SqlServer2012
+          title: SQL Server 2012
+          config_win: sqlserver.2012
+          script_win_global: sqlserver.2012.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: e_SqlServer2008
+          title: SQL Server 2008
+          config_win: sqlserver.2008
+          script_win_global: sqlserver.2008.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: f_SqlServer2016
+          title: SQL Server 2016
+          config_win: sqlserver.2016
+          script_win_global: sqlserver.2016.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: g_SqlCE
+          title: SQL CE
+          config_win: sqlce
+          psscript_win_global: sqlce.ps1
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]'))) }}:
+            enabled: false
+
+        - name: h_SAPHANA2
+          title: SAP HANA 2
+          config_linux: hana2
+          config_macos: hana2
+          script_linux_global: hana2.sh
+          script_macos_global: mac.hana2.sh
+          script_linux_local: hana2.tests.sh
+          script_macos_local: hana2.tests.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:
+            enabled: false
+
+        - name: i_PostgreSQL1
+          title: PostgreSQL (9.2-12)
+          config_linux: pgsql1
+          config_macos: pgsql1
+          script_linux_global: pgsql1.sh
+          script_macos_global: mac.pgsql1.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
+            enabled: false
+
+        - name: j_Oracle1819
+          title: Oracle 18c + 19c
+          config_linux: oracle1819
+          config_macos: oracle1819
+          script_linux_global: oracle1819.sh
+          script_macos_global: oracle1819.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          retry: true # provider has issue with resource management
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
+            enabled: false
+
+        - name: k_Firebird
+          title: Firebird (all versions)
+          config_linux: firebird
+          config_macos: firebird
+          script_linux_global: firebird.sh
+          script_macos_global: firebird.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
+            enabled: false
+
+        - name: l_SqlServer2017_2019
+          title: SQL Server 2017 + 2019
+          config_win: sqlserver.2017_2019
+          config_linux: sqlserver.fts.2017_2019
+          config_macos: sqlserver.fts.2017_2019
+          script_win_global: sqlserver.2017_2019.cmd
+          script_linux_global: sqlserver.2017_2019.sh
+          script_macos_global: sqlserver.2017_2019.sh
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          # 2017+: on Windows run only EF.Core for non-release runs (EF.Core needs netfx). The main
+          # library then runs on Linux alone, i.e. net8/9/10 - this config's netfx main suite is
+          # release-run only, deliberately. Release runs (full_run) run it on Windows for every TFM.
+          win_efcore_only: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
+            enabled: false
+
+        - name: m_SqlServer2022_2025
+          title: SQL Server 2022 + 2025
+          config_win: sqlserver.2022_2025
+          config_linux: sqlserver.2022_2025
+          config_macos: sqlserver.2022_2025
+          script_win_global: sqlserver.2022_2025.cmd
+          script_linux_global: sqlserver.2022_2025.sh
+          script_macos_global: sqlserver.2022_2025.sh
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          win_efcore_only: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]'))) }}:
+            enabled: false
+
+# additional test runner as SqlServer2019 already takes a lot of time
+        - name: n_SqlServer2019Extras
+          title: SQL Server EXTRAS
+          config_win: sqlserver.extras
+          config_linux: sqlserver.extras
+          config_macos: sqlserver.extras
+          script_win_global: sqlserver.extras.cmd
+          script_linux_global: sqlserver.extras.sh
+          script_macos_global: sqlserver.extras.sh
+          install_docker_macos: true
+          enable_os_windows: true
+          enable_os_ubuntu: true
+          enable_os_macos:  true
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          # extras counts as 2017+ for the EF.Core-only-on-Windows-for-non-release rule
+          win_efcore_only: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
+            enabled: false
+
+        - name: o_SqlServer2005
+          title: SQL Server 2005
+          config_win: sqlserver.2005
+          script_win_global: sqlserver.2005.cmd
+          pre_test_win_local: enable_tls11.cmd
+          post_test_win_local: disable_tls11.cmd
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
+            enabled: false
+
+        - name: p_MySQL
+          title: MySQL/MariaDB (all providers)
+          config_linux: mysql
+          config_macos: mysql
+          script_linux_global: mysql.sh
+          script_macos_global: mac.mysql.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
+            enabled: false
+
+        - name: q_Oracle2123
+          title: Oracle 21c + 23c
+          config_linux: oracle2123
+          config_macos: oracle2123
+          script_linux_global: oracle2123.sh
+          script_macos_global: oracle2123.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          retry: true # provider has issue with resource management
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
+            enabled: false
+
+        - name: r_Access_MDB
+          title: Access MDB (Jet/ODBC)
+          config_win: access.mdb
+          enable_os_windows: true
+          enable_os_ubuntu: false
+          enable_os_macos: false
+          enable_fw_netfx: true
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          x86: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
         - name: s_SQLite
           title: SQLite (all providers)
           config_win: sqlite
@@ -135,21 +504,49 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
             enabled: false
 
-# Access
-        - name: r_Access_MDB
-          title: Access MDB (Jet/ODBC)
-          config_win: access.mdb
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
+        - name: t_Oracle1112
+          title: Oracle 11g + 12c
+          config_linux: oracle1112
+          config_macos: oracle1112
+          script_linux_global: oracle1112.sh
+          script_macos_global: oracle1112.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          x86: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
+          retry: true # provider has issue with resource management
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
+            enabled: false
+
+# DB2 + Informix + DuckDB and YDB + Sybase - fast providers paired per-job (distinct ports, no
+# conflict) to save CI agent capacity without running several DB engines on one agent. DB2 keeps its
+# native-driver local scripts (Informix.DB2 uses the DB2 client too). DuckDB is embedded - no
+# container, no setup script - so it rides along at near-zero agent cost. On Windows the leg runs
+# DuckDB alone (DB2/Informix have no Windows containers) via config_win, and stays full-run-only:
+# DuckDB has no netfx-only tests, so PR runs are already covered by the Linux leg.
+        - name: u_YdbSybase
+          title: YDB + Sybase
+          config_linux: ydbsybase
+          config_macos: ydbsybase
+          script_linux_global: ydbsybase.sh
+          script_macos_global: ydbsybase.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
             enabled: false
 
 # The two ACE providers run as separate entries, one provider each. Together they put ~14.9k tests through a
@@ -177,6 +574,31 @@ jobs:
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
+            enabled: false
+
+        - name: w_DB2InformixDuckDB
+          title: DB2 + Informix + DuckDB
+          config_win: duckdb
+          config_linux: db2informixduckdb
+          config_macos: db2informixduckdb
+          script_linux_global: db2informixduckdb.sh
+          script_macos_global: db2informixduckdb.sh
+          script_linux_local: db2.provider.sh
+          script_macos_local: mac.db2.provider.sh
+          install_docker_macos: true
+          ${{ if eq(parameters.full_run, true) }}:
+            enable_os_windows: true
+          ${{ if not(eq(parameters.full_run, true)) }}:
+            enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net80: true
+          enable_fw_net90: true
+          enable_fw_net100: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
             enabled: false
 
         - name: x_Access_ACE_OleDb
@@ -212,417 +634,6 @@ jobs:
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
-
-# SQL CE
-        - name: g_SqlCE
-          title: SQL CE
-          config_win: sqlce
-          psscript_win_global: sqlce.ps1
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]'))) }}:
-            enabled: false
-
-# MySql/MariaDB
-        - name: p_MySQL
-          title: MySQL/MariaDB (all providers)
-          config_linux: mysql
-          config_macos: mysql
-          script_linux_global: mysql.sh
-          script_macos_global: mac.mysql.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
-            enabled: false
-
-# PostgreSQL
-        - name: i_PostgreSQL1
-          title: PostgreSQL (9.2-12)
-          config_linux: pgsql1
-          config_macos: pgsql1
-          script_linux_global: pgsql1.sh
-          script_macos_global: mac.pgsql1.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
-
-        - name: c_PostgreSQL2
-          title: PostgreSQL (13-19)
-          config_linux: pgsql2
-          config_macos: pgsql2
-          script_linux_global: pgsql2.sh
-          script_macos_global: mac.pgsql2.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
-
-# SQL Server
-        - name: o_SqlServer2005
-          title: SQL Server 2005
-          config_win: sqlserver.2005
-          script_win_global: sqlserver.2005.cmd
-          pre_test_win_local: enable_tls11.cmd
-          post_test_win_local: disable_tls11.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-# 2008-2016 run one version per job. The original reason was that batching two versions in a single
-# netfx process exhausted memory (unbounded per-MappingSchema attribute cache). That no longer
-# reproduces: the merged 2017+2019 and 2022+2025 jobs put four providers through one netfx process and
-# their NETFX main suites have completed on full_run builds 22779, 22810, 22850 and 22863. So the split
-# is kept here conservatively, not as a measured limit - it simply has not been retested for these
-# versions.
-        - name: e_SqlServer2008
-          title: SQL Server 2008
-          config_win: sqlserver.2008
-          script_win_global: sqlserver.2008.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: d_SqlServer2012
-          title: SQL Server 2012
-          config_win: sqlserver.2012
-          script_win_global: sqlserver.2012.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: a_SqlServer2014
-          title: SQL Server 2014
-          config_win: sqlserver.2014
-          script_win_global: sqlserver.2014.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: f_SqlServer2016
-          title: SQL Server 2016
-          config_win: sqlserver.2016
-          script_win_global: sqlserver.2016.cmd
-          enable_os_windows: true
-          enable_os_ubuntu: false
-          enable_os_macos: false
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
-
-        - name: l_SqlServer2017_2019
-          title: SQL Server 2017 + 2019
-          config_win: sqlserver.2017_2019
-          config_linux: sqlserver.fts.2017_2019
-          config_macos: sqlserver.fts.2017_2019
-          script_win_global: sqlserver.2017_2019.cmd
-          script_linux_global: sqlserver.2017_2019.sh
-          script_macos_global: sqlserver.2017_2019.sh
-          install_docker_macos: true
-          enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          # 2017+: on Windows run only EF.Core for non-release runs (EF.Core needs netfx). The main
-          # library then runs on Linux alone, i.e. net8/9/10 - this config's netfx main suite is
-          # release-run only, deliberately. Release runs (full_run) run it on Windows for every TFM.
-          win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
-            enabled: false
-
-# additional test runner as SqlServer2019 already takes a lot of time
-        - name: n_SqlServer2019Extras
-          title: SQL Server EXTRAS
-          config_win: sqlserver.extras
-          config_linux: sqlserver.extras
-          config_macos: sqlserver.extras
-          script_win_global: sqlserver.extras.cmd
-          script_linux_global: sqlserver.extras.sh
-          script_macos_global: sqlserver.extras.sh
-          install_docker_macos: true
-          enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos:  true
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          # extras counts as 2017+ for the EF.Core-only-on-Windows-for-non-release rule
-          win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
-            enabled: false
-
-        - name: m_SqlServer2022_2025
-          title: SQL Server 2022 + 2025
-          config_win: sqlserver.2022_2025
-          config_linux: sqlserver.2022_2025
-          config_macos: sqlserver.2022_2025
-          script_win_global: sqlserver.2022_2025.cmd
-          script_linux_global: sqlserver.2022_2025.sh
-          script_macos_global: sqlserver.2022_2025.sh
-          install_docker_macos: true
-          enable_os_windows: true
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: true
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]'))) }}:
-            enabled: false
-
-# Oracle
-        - name: t_Oracle1112
-          title: Oracle 11g + 12c
-          config_linux: oracle1112
-          config_macos: oracle1112
-          script_linux_global: oracle1112.sh
-          script_macos_global: oracle1112.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          retry: true # provider has issue with resource management
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
-            enabled: false
-
-        - name: j_Oracle1819
-          title: Oracle 18c + 19c
-          config_linux: oracle1819
-          config_macos: oracle1819
-          script_linux_global: oracle1819.sh
-          script_macos_global: oracle1819.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          retry: true # provider has issue with resource management
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
-            enabled: false
-
-        - name: q_Oracle2123
-          title: Oracle 21c + 23c
-          config_linux: oracle2123
-          config_macos: oracle2123
-          script_linux_global: oracle2123.sh
-          script_macos_global: oracle2123.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          retry: true # provider has issue with resource management
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
-            enabled: false
-
-# Firebird
-        - name: k_Firebird
-          title: Firebird (all versions)
-          config_linux: firebird
-          config_macos: firebird
-          script_linux_global: firebird.sh
-          script_macos_global: firebird.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
-            enabled: false
-
-# DB2 + Informix + DuckDB and YDB + Sybase - fast providers paired per-job (distinct ports, no
-# conflict) to save CI agent capacity without running several DB engines on one agent. DB2 keeps its
-# native-driver local scripts (Informix.DB2 uses the DB2 client too). DuckDB is embedded - no
-# container, no setup script - so it rides along at near-zero agent cost. On Windows the leg runs
-# DuckDB alone (DB2/Informix have no Windows containers) via config_win, and stays full-run-only:
-# DuckDB has no netfx-only tests, so PR runs are already covered by the Linux leg.
-        - name: w_DB2InformixDuckDB
-          title: DB2 + Informix + DuckDB
-          config_win: duckdb
-          config_linux: db2informixduckdb
-          config_macos: db2informixduckdb
-          script_linux_global: db2informixduckdb.sh
-          script_macos_global: db2informixduckdb.sh
-          script_linux_local: db2.provider.sh
-          script_macos_local: mac.db2.provider.sh
-          install_docker_macos: true
-          ${{ if eq(parameters.full_run, true) }}:
-            enable_os_windows: true
-          ${{ if not(eq(parameters.full_run, true)) }}:
-            enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
-            enabled: false
-
-        - name: u_YdbSybase
-          title: YDB + Sybase
-          config_linux: ydbsybase
-          config_macos: ydbsybase
-          script_linux_global: ydbsybase.sh
-          script_macos_global: ydbsybase.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
-            enabled: false
-
-# SAP HANA
-        - name: h_SAPHANA2
-          title: SAP HANA 2
-          config_linux: hana2
-          config_macos: hana2
-          script_linux_global: hana2.sh
-          script_macos_global: mac.hana2.sh
-          script_linux_local: hana2.tests.sh
-          script_macos_local: hana2.tests.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:
-            enabled: false
-
-# ClickHouse
-# All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
-# databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
-        - name: b_ClickHouse
-          title: ClickHouse (all providers)
-          config_linux: clickhouse
-          config_macos: clickhouse
-          script_linux_global: clickhouse.sh
-          script_macos_global: clickhouse.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net80: true
-          enable_fw_net90: true
-          enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
             enabled: false
 
 # DuckDB runs as part of the DB2 + Informix + DuckDB job above.
