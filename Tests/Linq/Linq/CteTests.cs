@@ -2859,16 +2859,16 @@ namespace Tests.Linq
 			});
 
 			AreEqual(
-					Enumerable.Range(0, 10)
-						.Select(i => dateFrom.AddDays(i))
-						.Select(d => new
-						{
-							Date  = d.Date,
-							Year  = Sql.MakeDateTime(d.Date.Year,            1, 1),
-							Month = Sql.MakeDateTime(d.Date.Year, d.Date.Month, 1)
-						}),
-					subQuery
-					);
+				Enumerable.Range(0, 10)
+					.Select(i => dateFrom.AddDays(i))
+					.Select(d => new
+					{
+						Date  = d.Date,
+						Year  = Sql.MakeDateTime(d.Date.Year,            1, 1),
+						Month = Sql.MakeDateTime(d.Date.Year, d.Date.Month, 1)
+					}),
+				subQuery
+				);
 
 		}
 
@@ -2901,15 +2901,15 @@ namespace Tests.Linq
 			});
 
 			AreEqual(
-					Enumerable.Range(0, 10)
-						.Select(i => new { Date = dateFrom.AddDays(i), Counter = i + 1 })
-						.Select(d => new
-						{
-							Date  = d.Date,
-							Mixed = Sql.MakeDateTime(d.Date.Year, d.Date.Month, d.Counter)
-						}),
-					subQuery
-					);
+				Enumerable.Range(0, 10)
+					.Select(i => new { Date = dateFrom.AddDays(i), Counter = i + 1 })
+					.Select(d => new
+					{
+						Date  = d.Date,
+						Mixed = Sql.MakeDateTime(d.Date.Year, d.Date.Month, d.Counter)
+					}),
+				subQuery
+				);
 		}
 
 		[Test]
