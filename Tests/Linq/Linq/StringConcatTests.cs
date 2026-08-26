@@ -878,22 +878,40 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		// The operands overlap and carry the same prefix, so the Union has something to deduplicate. Disjoint
+		// operands would answer exactly what Concat answers and pin nothing the Concat test does not.
 		[Test]
 		public void Union_SetOperationOperand_UntranslatableConcatOperand([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(ConcatSetOpData);
 
-			var query = table.Where(e => e.ParentId == null).Select(e => new { id = "p_" + e.Id.ToString("N"), name = e.Name })
-				.Union(table.Where(e => e.ParentId != null).Select(e => new { id = "c_" + e.Id.ToString("N"), name = e.Name }));
+			var query = table.Where(e => e.Name != null).Select(e => new { id = "p_" + e.Id.ToString("N"), name = e.Name })
+				.Union(table.Where(e => e.ParentId == null).Select(e => new { id = "p_" + e.Id.ToString("N"), name = e.Name }));
 
 			AssertQuery(query);
 		}
 
-		// Same defect with operands of different shape: the member holding the untranslatable concat
-		// exists on one side only, so it is NULL-padded on the other.
+		// Reached as a method call rather than as binary `+`, which is the other call site the fall-through is
+		// applied to - the three tests around it all enter through VisitBinary.
 		[Test]
-		public void Concat_SetOperationOperand_UntranslatableConcatOperand_DifferentShapes([DataSources] string context)
+		public void Concat_SetOperationOperand_UntranslatableStringConcatCall([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(ConcatSetOpData);
+
+			var query = table.Where(e => e.ParentId == null).Select(e => new { id = string.Concat("p_", e.Id.ToString("N")), name = e.Name })
+				.Concat(table.Where(e => e.ParentId != null).Select(e => new { id = string.Concat("c_", e.Id.ToString("N")), name = e.Name }));
+
+			AssertQuery(query);
+		}
+
+		// Same defect where the untranslatable concat sits in a different member on each side: the first operand
+		// concatenates into `id` and passes a null literal for `parent`, the second leaves `id` a bare ToString
+		// and concatenates into `parent`. Both operands still project the same anonymous type - Concat requires
+		// it - so what differs is the placeholder layout, each operand selecting NULLs in the other's slots.
+		[Test]
+		public void Concat_SetOperationOperand_UntranslatableConcatInDifferentMembers([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(ConcatSetOpData);
