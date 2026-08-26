@@ -18,7 +18,7 @@
 
 sm=".claude"
 
-# --- not populated yet (fresh clone / fresh worktree) - bootstrap it ---------
+# --- not populated yet (fresh worktree, or a clone that never ran --init) ----
 if [ ! -e "$sm/.git" ]; then
   case "$(git ls-tree HEAD -- "$sm" 2>/dev/null)" in
     160000*) ;;
