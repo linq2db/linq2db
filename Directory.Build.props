@@ -6,7 +6,7 @@
 		<EF8Version>8.8.0</EF8Version>
 		<EF9Version>9.7.0</EF9Version>
 		<EF10Version>10.6.0</EF10Version>
-		
+
 		<!-- Baselines update on next major release -->
 		<BaselineVersion>6.0.0</BaselineVersion>
 		<EF3BaselineVersion>3.28.0</EF3BaselineVersion>
@@ -18,7 +18,7 @@
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<VersionSuffix Condition=" '$(VersionSuffix)' == '' ">-local.1</VersionSuffix>
 		<ApplyVersionSuffix Condition=" '$(ApplyVersionSuffix)' == '' ">true</ApplyVersionSuffix>
-		
+
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
