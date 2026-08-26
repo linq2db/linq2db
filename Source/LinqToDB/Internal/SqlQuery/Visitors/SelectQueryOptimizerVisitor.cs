@@ -673,9 +673,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// expression each leg recomputes from what it projects itself.
 		/// <para>
 		/// <see cref="Constant"/> and <see cref="Derived"/> build fresh columns, which carry no alias.
-		/// That is invisible while <see cref="AllowDerivedSetColumns"/> confines derivation to a
-		/// recursive CTE body, where result names come from <see cref="CteClause.Fields"/> - widen that
-		/// gate and the first leg's aliases start naming the result columns.
+		/// For <see cref="Derived"/> that is invisible while <see cref="AllowDerivedSetColumns"/> confines
+		/// it to a recursive CTE body, where result names come from <see cref="CteClause.Fields"/> - widen
+		/// that gate and the first leg's aliases start naming the result columns. <see cref="Constant"/> is
+		/// not gated and already synthesises alias-less columns for any UnionAll rewrite.
 		/// </para>
 		/// </summary>
 		enum SetColumnSource
@@ -699,7 +700,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		///         operation (legs must be aligned);</item>
 		///   <item>a leg is too short to hold a position that resolved to an existing
 		///         <paramref name="setQuery"/> column — for any operation, since widening the leg
-		///         would make it read a column of a sibling query.</item>
+		///         would make it read a column of a sibling query;</item>
+		///   <item>a derived position reads a <paramref name="setQuery"/> column that one of the legs
+		///         does not project at the same index.</item>
 		/// </list>
 		/// <para>
 		/// Runs in O(N + M·L) where N is the setQuery column count, M is the target column count,
@@ -889,8 +892,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// fine and is cheaper than N copies of the expression, so derivation stays off.
 		/// </para>
 		/// <para>
-		/// Keyed on the enclosing recursive clause rather than <see cref="_currentCteClause"/>: a plain
-		/// CTE nested inside a recursive one would otherwise take its place and hide the reference.
+		/// Keyed on the enclosing recursive clause rather than on <see cref="_currentCteClause"/> plus a
+		/// separate "is recursive" flag: a single field carries both facts, so they cannot disagree about
+		/// which clause the reference is tested against.
 		/// </para>
 		/// </summary>
 		bool AllowDerivedSetColumns(SelectQuery setQuery)
