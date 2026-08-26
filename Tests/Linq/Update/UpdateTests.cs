@@ -2166,7 +2166,13 @@ namespace Tests.xUpdate
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
 		}
 
-		class ChildView : Child;
+		interface IChildView
+		{
+			int ChildID  { get; set; }
+			int ParentID { get; set; }
+		}
+
+		class ChildView : Child, IChildView;
 
 		class ChildDto
 		{
@@ -2174,7 +2180,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateFromNamedDto([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useAnonymousDto)
+		public void UpdateFromNamedDto([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool useAnonymousDto)
 		{
 			using var db = GetDataContext(context);
 			using var tr = db.BeginTransaction();
@@ -2204,6 +2210,9 @@ namespace Tests.xUpdate
 					.Update();
 
 				records.ShouldBe(0);
+
+				if (db is DataConnection dc)
+					dc.LastQuery!.ShouldMatch(@"UPDATE\s+\[Child\]");
 			}
 			else
 			{
@@ -2221,6 +2230,9 @@ namespace Tests.xUpdate
 					.Update();
 
 				records.ShouldBe(0);
+
+				if (db is DataConnection dc)
+					dc.LastQuery!.ShouldMatch(@"UPDATE\s+\[Child\]");
 			}
 		}
 
@@ -2261,6 +2273,9 @@ namespace Tests.xUpdate
 				.Update();
 
 			records.ShouldBe(0);
+
+			if (db is DataConnection dc)
+				dc.LastQuery!.ShouldMatch(@"UPDATE\s+\[Child\]");
 		}
 
 		[Test]
@@ -2294,6 +2309,50 @@ namespace Tests.xUpdate
 				.Update();
 
 			records.ShouldBe(0);
+
+			if (db is DataConnection dc)
+				dc.LastQuery!.ShouldMatch(@"UPDATE\s+\[Child\]");
+		}
+
+		class ChildInterfaceDto
+		{
+			public required IChildView Child { get; set; }
+		}
+
+		[Test]
+		public void UpdateFromDtoWithInterfaceTypedMember([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tr = db.BeginTransaction();
+
+			var childViews =
+				from child in db.Child
+				from parent in db.Parent.InnerJoin(parent => parent.ParentID == child.ParentID)
+				select new ChildView
+				{
+					ChildID  = child.ChildID,
+					ParentID = child.ParentID
+				};
+
+			// The declaring type does not have to be a base class. An interface the projected type implements
+			// reaches the same member-drop check, and is equally red without the fix.
+			var dtos =
+				from childView in childViews
+				select new ChildInterfaceDto
+				{
+					Child = childView
+				};
+
+			var records = dtos
+				.Where(dto => dto.Child.ChildID == int.MinValue)
+				.Select(dto => dto.Child)
+				.Set(child => child.ParentID, child => child.ParentID)
+				.Update();
+
+			records.ShouldBe(0);
+
+			if (db is DataConnection dc)
+				dc.LastQuery!.ShouldMatch(@"UPDATE\s+\[Child\]");
 		}
 	}
 }
