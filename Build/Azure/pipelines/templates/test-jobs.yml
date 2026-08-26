@@ -4,6 +4,11 @@ parameters:
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
   full_run: false # disable by default
+  # Slots the linux legs may hold at once, out of the ten the project has. Six is measured for
+  # test-all on a PR, where the work splits 647 linux agent-minutes against 506 windows; a pipeline
+  # with a different split - a release full_run, or a test-<provider> definition whose matrix has no
+  # windows legs at all, which is 12 of the 25 entries - wants its own number. 0 means no limit.
+  linux_max_parallel: 6
 
 jobs:
 ##############################################################################################
@@ -113,12 +118,12 @@ jobs:
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
   strategy:
-    # Leaves four of the ten parallel slots for the windows legs. Both jobs become eligible in the same
-    # second, but linux takes every slot within 0.3 min and windows then waits for one to come free: 44.4
-    # min on build 23028, 54.8 on 23024. Its four longest legs are the run's four longest, so they start
-    # last and finish alone. Six is where the work splits - 647 linux minutes against 506 windows - and
-    # the model is sharply peaked there: 122.3 min against 129.8 at seven and 145.7 at five.
-    maxParallel: 6
+    # Leaves the rest of the ten parallel slots for the windows legs. Both jobs become eligible in the
+    # same second, but linux takes every slot within 0.3 min and windows then waits for one to come
+    # free: 44.4 min on build 23028, 54.8 on 23024, while its four longest legs are the whole run's
+    # four longest, so they start last and finish alone. Where the default 6 comes from, and when a
+    # pipeline wants a different number, is on linux_max_parallel at the top of this file.
+    maxParallel: ${{ parameters.linux_max_parallel }}
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
         ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true')) }}:

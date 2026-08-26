@@ -3,6 +3,7 @@ parameters:
   with_baselines: false
   mac_enabled: false
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
+  linux_max_parallel: 6 # slots the linux legs may hold at once; see test-jobs.yml. 0 means no limit
   db_filter: '[all]'
 
 # db_filter specify test db selection filter for pipeline. Current list of supported values:
@@ -83,6 +84,7 @@ jobs:
       with_baselines: ${{ parameters.with_baselines }}
       mac_enabled: ${{ parameters.mac_enabled }}
       full_run: ${{ parameters.full_run }}
+      linux_max_parallel: ${{ parameters.linux_max_parallel }}
       test_matrix:
 # The a_ .. y_ prefix on each name sets the order legs are dispatched in, longest leg first. Azure
 # hands out a matrix in case-insensitive alphabetical order of the key, not in the order entries are

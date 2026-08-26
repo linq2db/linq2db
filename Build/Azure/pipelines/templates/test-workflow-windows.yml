@@ -309,7 +309,13 @@ steps:
               Write-Host "Failed to fetch ${branch}. Error code ${LASTEXITCODE}, output: ${output}"
               exit 1
           }
-          $output = git rebase FETCH_HEAD 2>&1
+          # -X theirs, which during a rebase means the commit being replayed - this leg's freshly captured
+          # baseline - and not the branch it is going onto. Without it the second run of a PR whose SQL
+          # moved fails every baseline-carrying leg: the leg clones baselines master, so its commit rewrites
+          # the same files the previous run already changed on the branch, and the replay conflicts.
+          # Reproduced on a scratch repository with this exact sequence; the fresh capture is always the one
+          # that should win, so resolving that way is the answer rather than a papered-over conflict.
+          $output = git rebase -X theirs FETCH_HEAD 2>&1
           if ($LASTEXITCODE -ne 0) {
               Write-Host "Failed to rebase onto ${branch}. Error code ${LASTEXITCODE}, output: ${output}"
               Write-Host "Display conflict diff"
@@ -361,8 +367,11 @@ steps:
       $note = "Test baselines changed by this PR. Don't forget to merge/close baselines PR after this pr merged/closed."
       $output = gh api /repos/$orgName/linq2db/issues/$prId/comments -F body="$note"
       if ($LASTEXITCODE -ne 0 -or -not ($output -match "html_url")) {
-          Write-Host "Message posting failed. Error code ${LASTEXITCODE}, output: ${output}"
-          exit 1
+          # A warning, not a failure. The two exits above guard something real - the baselines were not
+          # tracked - while by this point the PR exists and only the courtesy notification is missing.
+          # Failing here would put a leg red over a comment, after its provider tests all passed, and a
+          # re-run cannot repost it: the leg finds nothing to commit and exits before reaching this code.
+          Write-Host "##vso[task.logissue type=warning]Message posting failed. Error code ${LASTEXITCODE}, output: ${output}"
       }
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
