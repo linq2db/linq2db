@@ -131,9 +131,11 @@ namespace LinqToDB.Remote
 
 			public override void Dispose()
 			{
-				var client = Interlocked.Exchange(ref _client, null);
+				var client = _client;
 
-				if (client != null)
+				_client = null;
+
+				if (client != null && _dataContext.OwnsClient)
 					DisposeClient(client);
 
 				base.Dispose();
@@ -141,9 +143,11 @@ namespace LinqToDB.Remote
 
 			public override async ValueTask DisposeAsync()
 			{
-				var client = Interlocked.Exchange(ref _client, null);
+				var client = _client;
 
-				if (client != null)
+				_client = null;
+
+				if (client != null && _dataContext.OwnsClient)
 					await DisposeClientAsync(client).ConfigureAwait(false);
 
 				await base.DisposeAsync().ConfigureAwait(false);
