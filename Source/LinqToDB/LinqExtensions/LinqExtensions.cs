@@ -1720,9 +1720,6 @@ namespace LinqToDB
 		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
 		public static QuerySql ToSqlQuery<T>(this IQueryable<T> query, SqlGenerationOptions? options = null)
 		{
-			if (query is LoadWithQueryableBase<T> loadWith)
-				query = loadWith.Query;
-
 			var expressionQuery = (IExpressionQuery)query.GetLinqToDBSource();
 
 			// currently we have only non-linq APIs that could generate multiple commands like

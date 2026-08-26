@@ -13,6 +13,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -322,6 +324,45 @@ namespace Tests.Linq
 			AreEqual(
 				AdjustExpectedData(db,  from t in    Types2 where t.DateTimeValue!.Value.Date > dt!.Value.Date select t),
 										from t in db.Types2 where t.DateTimeValue!.Value.Date > dt!.Value.Date select t);
+		}
+
+		[Table]
+		sealed class DateBoundRow
+		{
+			[Column]                               public int      Id    { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime Value { get; set; }
+		}
+
+		/// <summary>
+		/// A bound compared against a date-truncated column keeps its own type rather than taking the column's.
+		/// </summary>
+		/// <remarks>
+		/// The descriptor walk sees through a cast that kept the CLR type, which is what lets a value converter be
+		/// found underneath one. A cast can keep the CLR type and change the database type all the same -
+		/// <c>CAST(x AS Date)</c> over a <c>datetime</c> column - and typing the bound from the column then narrows
+		/// its domain to the column's. SQL Server's <c>datetime</c> begins in 1753, so a bound before that reached
+		/// the driver as a value it cannot represent and the query failed with <em>SqlDateTime overflow</em> where
+		/// it had answered.
+		/// <para>
+		/// From 2008 up, where there is a <c>date</c> type to cast to and a <c>datetime2</c> to write the bound down
+		/// as. SQL Server 2005 has neither: <c>.Date</c> truncates through <c>DateAdd</c>/<c>DateDiff</c> rather than
+		/// a cast, and its own default for <see cref="DateTime"/> is <c>datetime</c>, so a bound before 1753 is out
+		/// of reach there however it is typed.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ADateBoundBeforeTheColumnsRange([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new DateBoundRow { Id = 1, Value = new DateTime(2009, 9, 20) },
+			});
+
+			// A captured local, so the bound reaches the statement as a parameter rather than as an inlined literal.
+			var bound = new DateTime(1700, 1, 1);
+
+			t.Count(r => r.Value.Date > bound).ShouldBe(1);
 		}
 
 		[Test]

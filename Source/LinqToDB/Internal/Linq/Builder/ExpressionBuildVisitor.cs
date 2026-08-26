@@ -2016,7 +2016,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (test is SqlPlaceholderExpression testPlaceholder
 					    && ifTrue is SqlPlaceholderExpression truePlaceholder
-					    && ifFalse is SqlPlaceholderExpression falsePlaceholder)
+					    && ifFalse is SqlPlaceholderExpression falsePlaceholder
+					    && CanShareOneReading(truePlaceholder, falsePlaceholder))
 					{
 						testPlaceholder  = UpdateNesting(testPlaceholder);
 						truePlaceholder  = UpdateNesting(truePlaceholder);
@@ -2032,6 +2033,48 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return node;
+		}
+
+		/// <summary>
+		/// Refuses to bring the two answers of a conditional into a single SQL value when they are not read the
+		/// same way.
+		/// </summary>
+		/// <remarks>
+		/// A <c>CASE</c> hands the reader one value with one conversion, which is right for both answers only while
+		/// they are stored on the same terms. Two columns holding a duration in different units, or carrying
+		/// different value converters, are not - collapsing them would read one through the other's conversion,
+		/// which is exactly the difference the conditional was built to keep. Asking for the choice in SQL leaves
+		/// nobody to make it per row, so it is refused by name instead of answered wrongly.
+		/// <para>
+		/// A literal or a parameter never stands in the way: it is written through the descriptor of whatever it is
+		/// being chosen against, so it arrives on those terms by construction. A <em>computed</em> value does not -
+		/// an elapsed difference lowers to a bare tick count that carries no unit and is converted by nothing - so
+		/// it stands in terms of its own and cannot share a reading with a column that carries one. Collapsing those
+		/// two reads the tick count through the column's unit, which is the silent factor-of-10000000 error the
+		/// declaration exists to prevent.
+		/// </para>
+		/// </remarks>
+		static bool CanShareOneReading(SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)
+		{
+			var descriptor1 = QueryHelper.GetColumnDescriptor(placeholder1.Sql);
+			var descriptor2 = QueryHelper.GetColumnDescriptor(placeholder2.Sql);
+
+			if (descriptor1 != null && descriptor2 != null)
+				return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
+
+			var declared = descriptor1 ?? descriptor2;
+
+			// Neither side says how it is stored, so there is no conversion for the other to be read through.
+			if (declared == null || (declared.DurationUnit == null && declared.ValueConverter == null))
+				return true;
+
+			// One side is stored on terms of its own. A literal or a parameter is written through the other's
+			// descriptor, so it arrives on those terms; a computed value - an elapsed difference is a bare tick
+			// count converted by nothing - stands in its own and cannot share a reading with a column that
+			// carries one.
+			var computed = descriptor1 == null ? placeholder1.Sql : placeholder2.Sql;
+
+			return QueryHelper.UnwrapNullablity(computed) is SqlValue or SqlParameter;
 		}
 
 		bool HandleDefaultIfEmptyInBinary(Expression left, Expression right, [NotNullWhen(true)] out Expression? newCondition)
@@ -2847,7 +2890,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (converted is not SqlPlaceholderExpression placeholderTest)
 				return null;
 
-			var descriptor = QueryHelper.GetColumnDescriptor(placeholderTest.Sql);
+			// Asked for typing: whatever is written down on the other side of this expression takes its terms from
+			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered.
+			var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql);
 			return descriptor;
 		}
 
@@ -2877,12 +2922,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
-			if (node.Method != null && IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
+			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
+				// Offered to the translators whether or not the operator is a method: a comparison between numbers
+				// carries none, and a translator can still have something to say about it - a duration's total
+				// compared against a bound is a comparison of doubles, and the scaling it puts on the column can
+				// move to the other side only where the comparison is in view.
 				if (TranslateMember(BuildContext, node, out var translatedMember))
 					return Visit(translatedMember);
 
-				if (HandleExtension(BuildContext, node, out translatedMember))
+				// The attribute machinery reads its instructions off a member, so it is asked only where there is
+				// one to read them off.
+				if (node.Method != null && HandleExtension(BuildContext, node, out translatedMember))
 					return Visit(translatedMember);
 			}
 
@@ -4034,6 +4085,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!RestoreCompare(ref left, ref right))
 				RestoreCompare(ref right, ref left);
 
+			// After RestoreCompare, never before: it pattern-matches on the nested shape itself (the
+			// lifted char cases, and its own double-conversion branch), so collapsing first hides the
+			// operands it is looking for.
+			left  = CollapseNullableConvert(left);
+			right = CollapseNullableConvert(right);
+
 			if (BuildContext == null)
 				throw new InvalidOperationException();
 
@@ -4523,6 +4580,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return false;
+		}
+
+		// Convert(Convert(x, T), T?) states nothing the inner conversion has not already stated - the outer
+		// one only adds the nullable wrapper. Comparison operands arrive in this shape from two directions:
+		// the C# compiler emits it for a lifted implicit conversion, and ExpressionBuilder.Equal builds it
+		// when it reconciles the unwrapped types and the nullable wrapper in two independent steps.
+		//
+		// Left alone: a chain through a different intermediate type, where the direct conversion may not
+		// exist at all (a wrapper struct reached via object), and a user-defined conversion operator.
+		static Expression CollapseNullableConvert(Expression expr)
+		{
+			return expr is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } outer
+				&& outer.Operand is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } inner
+				&& outer.Type.UnwrapNullableType() == inner.Type.UnwrapNullableType()
+					? Expression.Convert(inner.Operand, outer.Type)
+					: expr;
 		}
 
 		// restores original types, lost due to C# compiler optimizations

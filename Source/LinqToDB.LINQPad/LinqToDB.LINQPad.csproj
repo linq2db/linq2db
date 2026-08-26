@@ -22,7 +22,6 @@
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="LINQPad.Reference" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="MySqlConnector" />
@@ -34,12 +33,20 @@
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="linq2db4iSeries" Condition="$(DefineConstants.Contains('WITH_ISERIES'))" />
-		<PackageReference Include="Microsoft.SqlServer.Types" />
+		<!-- netfx only on purpose: the .NET build must not bind this assembly at compile time, so that a
+		     connection can be given either Microsoft's package or dotMorten's managed reimplementation of it -
+		     see SqlServerProvider.GetNuGetPackages -->
+		<PackageReference Include="Microsoft.SqlServer.Types" Condition=" '$(TargetFramework)' == 'net472' " />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472'">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.Configuration" />
+
+		<!-- the lpx plugin ships its own System.Collections.Immutable / System.Reflection.Metadata and binds
+		     them through DriverHelper's resolvers, so it is not affected by the host's in-box copies and stays
+		     on the current Roslyn - see RoslynLinqPadVersion for why the nuget driver cannot -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 
 		<PackageReference Include="System.Threading.Tasks.Extensions" />
 		<PackageReference Include="System.Runtime.CompilerServices.Unsafe" />
@@ -60,6 +67,18 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+		<!-- the nuget driver loads into the LINQPad host, whose in-box System.Collections.Immutable and
+		     System.Reflection.Metadata win over ours, so Roslyn's floor for them has to stay at 8.0.0 -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynLinqPadVersion)" />
+
+		<!-- Roslyn's API is expressed in ImmutableArray (EmitResult.Diagnostics), so this reference cannot be
+		     avoided - but the version stamped on it has to be the lowest supported host's, for the same reason:
+		     the assembly is in the shared framework, so a .NET 8 host offers 8.0.0.0 and cannot satisfy a higher
+		     reference. Oracle's client pulls the package to 10.x transitively, which stamped 10.0.0.0 and is the
+		     load failure reported in #5768. NU1605 is expected: the downgrade only decides what this assembly
+		     compiles against, and LINQPad restores the Oracle client's own closure when it provisions it. -->
+		<PackageReference Include="System.Collections.Immutable" VersionOverride="$(Net8LatestForNuget)" NoWarn="NU1605" />
+
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
@@ -107,16 +126,12 @@
 		</Page>
 	</ItemGroup>
 
-	<!-- Generate the LINQPad .lpx/.lpx6 artifacts on build. Set to false to build the driver
-	     assembly only (e.g. from LinqToDB.LINQPad.Pack, which packs the NuGet and doesn't need
-	     the .lpx, and to avoid coupling `dotnet pack` to 7-Zip / Pack.cmd). -->
+	<!-- Generate the LINQPad 5 .lpx plugin on build. Set to false to build the driver assembly only
+	     (e.g. from LinqToDB.LINQPad.Pack, which packs the NuGet and doesn't need the .lpx, and to
+	     avoid coupling `dotnet pack` to 7-Zip / Pack.cmd). -->
 	<PropertyGroup>
 		<GenerateLpxArtifacts Condition="'$(GenerateLpxArtifacts)' == ''">true</GenerateLpxArtifacts>
 	</PropertyGroup>
-
-	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net472' and '$(GenerateLpxArtifacts)' != 'false'">
-		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx6" />
-	</Target>
 
 	<Target Name="PostBuild2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net472'">
 		<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
@@ -140,14 +155,80 @@
 		<!-- Drop architectures LINQPad 5 can't run; the SDK copies the full win-* set automatically. -->
 		<RemoveDir Directories="$(TargetDir)\runtimes\win-arm;$(TargetDir)\runtimes\win-arm64" />
 
-		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" Condition="'$(GenerateLpxArtifacts)' != 'false'" />
+		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot;" Condition="'$(GenerateLpxArtifacts)' != 'false'" />
+	</Target>
+
+	<!-- Provider packages are not static dependencies of the driver nuget: LINQPad provisions them per connection
+	     via DataContextDriver.OverrideDriverDependencies, so driver code needs their ids and versions. Versions are
+	     generated from central package management instead of being duplicated in code, where they would drift.
+
+	     Watch the TFM branches when bumping a client. These expand against *this* project's TargetFramework
+	     (net8.0-windows7.0), so a PackageVersion split across TFMs contributes only its net8.0-compatible entry:
+	     Net.IBM.Data.Db2 and its -lnx/-osx siblings resolve to 9.0.0.400, never to the 10.0.0.200 the net10.0
+	     entries carry. That is required rather than incidental - those 10.x packages ship a net10.0-only
+	     dependency group, and the driver assembly is lib/net8.0 - but it means bumping a net10.0-conditioned
+	     entry alone never reaches the driver, which then keeps provisioning the old client with nothing to say
+	     so. Bump the net8.0 branch in the same change, or confirm deliberately that the driver stays behind. -->
+	<Target Name="GenerateNuGetPackageVersions" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)' != 'net472'">
+		<PropertyGroup>
+			<_NuGetPackageVersionsFile>$(IntermediateOutputPath)NuGetPackageVersions.g.cs</_NuGetPackageVersionsFile>
+		</PropertyGroup>
+
+		<!-- built as a single property: an item Include cannot mix literal text with an item reference (MSB4012),
+		     and %3B keeps the C# statement separators from splitting the value into several items -->
+		<PropertyGroup>
+			<_NuGetPackageVersionsSource>
+// &lt;auto-generated /&gt;
+namespace LinqToDB.LINQPad%3B
+
+internal static class NuGetPackageVersions
+{
+	public const string AdoNetCore_AseClient                = "@(PackageVersion->WithMetadataValue('Identity', 'AdoNetCore.AseClient')->'%(Version)')"%3B
+	public const string ClickHouse_Driver                   = "@(PackageVersion->WithMetadataValue('Identity', 'ClickHouse.Driver')->'%(Version)')"%3B
+	public const string dotMorten_Microsoft_SqlServer_Types = "$(DotMortenSqlServerTypesLinqPadVersion)"%3B
+	public const string DuckDB_NET_Data_Full                = "@(PackageVersion->WithMetadataValue('Identity', 'DuckDB.NET.Data.Full')->'%(Version)')"%3B
+	public const string FirebirdSql_Data_FirebirdClient     = "@(PackageVersion->WithMetadataValue('Identity', 'FirebirdSql.Data.FirebirdClient')->'%(Version)')"%3B
+	public const string Microsoft_Data_SqlClient            = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.SqlClient')->'%(Version)')"%3B
+	public const string Microsoft_Data_Sqlite               = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.Sqlite')->'%(Version)')"%3B
+	public const string Microsoft_SqlServer_Types           = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.SqlServer.Types')->'%(Version)')"%3B
+	public const string MySqlConnector                      = "@(PackageVersion->WithMetadataValue('Identity', 'MySqlConnector')->'%(Version)')"%3B
+	public const string Net_IBM_Data_Db2                    = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2')->'%(Version)')"%3B
+	public const string Net_IBM_Data_Db2_lnx                = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2-lnx')->'%(Version)')"%3B
+	public const string Net_IBM_Data_Db2_osx                = "@(PackageVersion->WithMetadataValue('Identity', 'Net.IBM.Data.Db2-osx')->'%(Version)')"%3B
+	public const string Npgsql                              = "@(PackageVersion->WithMetadataValue('Identity', 'Npgsql')->'%(Version)')"%3B
+	public const string Octonica_ClickHouseClient           = "@(PackageVersion->WithMetadataValue('Identity', 'Octonica.ClickHouseClient')->'%(Version)')"%3B
+	public const string Oracle_ManagedDataAccess_Core       = "@(PackageVersion->WithMetadataValue('Identity', 'Oracle.ManagedDataAccess.Core')->'%(Version)')"%3B
+	public const string SourceGear_sqlite3                  = "@(PackageVersion->WithMetadataValue('Identity', 'SourceGear.sqlite3')->'%(Version)')"%3B
+	public const string SQLitePCLRaw_lib_e_sqlite3          = "@(PackageVersion->WithMetadataValue('Identity', 'SQLitePCLRaw.lib.e_sqlite3')->'%(Version)')"%3B
+	public const string System_Data_Odbc                    = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.Odbc')->'%(Version)')"%3B
+	public const string System_Data_OleDb                   = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.OleDb')->'%(Version)')"%3B
+	public const string System_Data_SQLite                  = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.SQLite')->'%(Version)')"%3B
+	public const string Ydb_Sdk                             = "@(PackageVersion->WithMetadataValue('Identity', 'Ydb.Sdk')->'%(Version)')"%3B
+}
+			</_NuGetPackageVersionsSource>
+		</PropertyGroup>
+
+		<!-- an id with no PackageVersion entry expands to an empty string, which would compile and ship:
+		     three of the ids above are referenced by no project on this build, so NU1008 doesn't cover them -->
+		<Error Condition="$(_NuGetPackageVersionsSource.Contains('&quot;&quot;'))"
+		       Text="GenerateNuGetPackageVersions: a package id has no matching PackageVersion in Directory.Packages.props (its version expanded to an empty string)." />
+
+		<WriteLinesToFile File="$(_NuGetPackageVersionsFile)" Lines="$(_NuGetPackageVersionsSource)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+
+		<ItemGroup>
+			<Compile    Include="$(_NuGetPackageVersionsFile)" />
+			<FileWrites Include="$(_NuGetPackageVersionsFile)" />
+		</ItemGroup>
 	</Target>
 
 	<ItemGroup>
 		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
 
-		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
-		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
+		<!-- no PublicAPI baselines here: the driver is loaded by LINQPad, not referenced by anyone, so its
+		     public surface is not a contract to track - same as linq2db.cli and the analyzers -->
+
+		<!-- driver-specific bans, merged with the repo-wide list from Source/Directory.Build.props -->
+		<AdditionalFiles Include="BannedSymbols.txt" />
 	</ItemGroup>
 
 	<Import Project="$(MSBuildThisFileDirectory)\..\..\SQLite.Runtime.props" />
