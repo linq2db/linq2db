@@ -32,7 +32,10 @@ parameters:
   default: 3
 
 trigger: none
-pr: none
+pr:
+  branches:
+    include:
+    - '*'
 
 stages:
 
