@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -96,6 +97,9 @@ namespace Tests.UserTests
 				context,
 				options => options
 					.UseTraceMapperExpression(true)
+					// MapperCreated is gated on TraceSwitchConnection.TraceInfo; without this the test depends on
+					// the process-wide switch, and a UserDataProviders.json TraceLevel below Info reddens it.
+					.UseTraceLevel(TraceLevel.Info)
 					.UseTracing(info =>
 					{
 						if (info.TraceInfoStep == TraceInfoStep.MapperCreated)
