@@ -252,7 +252,11 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                     Some (Expression.Quote(this.Visit lam |> nonNull))
             // Fail safe: any unexpected shape/evaluation surprise leaves the node untouched (no worse than
             // before this rewrite existed), so only genuinely-matching F# quotation predicates are transformed.
-            with _ -> None
+            // A flatten-invariant violation raised by the nested Visit is not such a surprise - it must stay
+            // loud, exactly as it does when the flatten runs outside a quotation reduction.
+            with
+            | :? FlattenInvariantException -> reraise()
+            | _                            -> None
 
     // Unwrap a Quote'd lambda argument (Queryable methods) or return a bare lambda (Enumerable methods).
     member private _.AsLambda (e: Expression) : LambdaExpression =
@@ -284,7 +288,7 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
 
                 let rec findGj (e: Expression) : MethodCallExpression option =
                     match e with
-                    | :? MethodCallExpression as mc ->
+                    | :? MethodCallExpression as mc when mc.Arguments.Count >= 1 ->
                         let sourcedFromA =
                             match mc.Arguments.[0] with
                             | :? MethodCallExpression as dfe when dfe.Method.Name = "DefaultIfEmpty" && dfe.Arguments.Count >= 1 ->
@@ -292,9 +296,8 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                                 | :? MemberExpression as me -> obj.ReferenceEquals(me.Expression, a)
                                 | _                         -> false
                             | _ -> false
-                        if   mc.Method.Name = "GroupJoin" && mc.Arguments.Count = 5 && sourcedFromA then Some mc
-                        elif mc.Arguments.Count >= 1                                                then findGj mc.Arguments.[0]
-                        else None
+                        if mc.Method.Name = "GroupJoin" && mc.Arguments.Count = 5 && sourcedFromA then Some mc
+                        else findGj mc.Arguments.[0]
                     | _ -> None
 
                 match findGj coll.Body with
@@ -375,8 +378,8 @@ type private FSharpRewriteVisitor(mappingSchema: MappingSchema) =
                                        "F# chained group join could not be flattened: the group join's inner sequence or a hoisted tail operator is correlated to the outer element. See https://github.com/linq2db/linq2db/issues/5790")
 
                         Some (this.Visit flattened |> nonNull)
-        // Stays broad: findGj and the pair-type construction still signal an unsupported shape by throwing (a
-        // zero-argument call in the chain, a non-generic outer element). It therefore also swallows a genuine
+        // Stays broad: AsLambda's cast and the pair-type construction still signal an unsupported shape by
+        // throwing (a non-lambda argument, a non-generic outer element). It therefore also swallows a genuine
         // rewrite bug, whose fallback here is the un-flattened INNER JOIN LATERAL shape - silent row loss.
         with
         | :? FlattenInvariantException -> reraise()
