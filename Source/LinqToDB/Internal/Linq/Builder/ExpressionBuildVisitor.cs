@@ -1993,6 +1993,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return boolValue ? ifTrue : ifFalse;
 				}
 
+				// Deliberately not gated on BuildPurpose.Sql: under BuildPurpose.Expression such conditionals used to
+				// be collapsed by the whole-expression conversion that ran before the children were visited, and
+				// that call now runs after this fast path — on the original node, where it may no longer convert.
 				if (test    is SqlPlaceholderExpression testPlaceholder  &&
 				    ifTrue  is SqlPlaceholderExpression truePlaceholder  &&
 				    ifFalse is SqlPlaceholderExpression falsePlaceholder &&
