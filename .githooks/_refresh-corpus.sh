@@ -43,6 +43,9 @@ if [ ! -e "$sm/.git" ]; then
     echo "[.githooks] run 'git submodule update --init -- $sm' by hand before working here." >&2
     exit 0
   fi
+
+  # `--init` checks out a detached HEAD; a corpus commit made there can't be pushed.
+  git -C "$sm" switch --quiet master 2>/dev/null || :
 fi
 
 # uncommitted tracked edits inside the corpus - leave them alone
