@@ -4023,6 +4023,35 @@ CREATE TABLE ""TABLE_A""(
 			ids.ShouldBe(new [] { 1, 2, 3 });
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1879")]
+		public void TestNativeIdentityTruncateReset([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<NativeIdentity>();
+
+			table.BulkCopy(new []
+				{
+					new NativeIdentity() { Field = 11 },
+					new NativeIdentity() { Field = 12 },
+				});
+
+			table.OrderBy(_ => _.Field).Select(_ => _.Id).ToArray().ShouldBe(new [] { 1, 2 });
+
+			table.Truncate();
+
+			table.BulkCopy(new [] { new NativeIdentity() { Field = 21 } });
+
+			table.Select(_ => _.Id).Single().ShouldBe(1);
+
+			// resetting the identity must not change how it is generated: an explicitly supplied
+			// value is still accepted afterwards
+			table.Truncate();
+
+			db.BulkCopy(new BulkCopyOptions() { KeepIdentity = true }, new [] { new NativeIdentity() { Id = 42, Field = 31 } });
+
+			table.Select(_ => _.Id).Single().ShouldBe(42);
+		}
+
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
