@@ -152,10 +152,32 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			}
 		}
 
+		// INSERT ALL is a multitable insert, and Oracle evaluates a sequence only once per row returned by the
+		// driving query. The driving query here is SELECT * FROM dual, which returns a single row, so every INTO
+		// branch would receive the same value from the identity generator. Oracle 11 was unaffected because its
+		// identity is emulated by a per-row BEFORE INSERT trigger, but from Oracle 12 the column is a native
+		// identity, so fall back to the single-table INSERT ... SELECT ... UNION ALL form whenever the server
+		// is the one generating the value.
+		AlternativeBulkCopy GetAlternativeBulkCopy<T>(ITable<T> table, DataOptions options)
+			where T : notnull
+		{
+			if (_useAlternativeBulkCopy == AlternativeBulkCopy.InsertAll
+				&& _provider.Version >= OracleVersion.v12
+				&& options.BulkCopyOptions.KeepIdentity != true
+				&& table.DataContext.MappingSchema
+					.GetEntityDescriptor(typeof(T), options.ConnectionOptions.OnEntityDescriptorCreated)
+					.Columns.Any(static c => c.IsIdentity))
+			{
+				return AlternativeBulkCopy.InsertDual;
+			}
+
+			return _useAlternativeBulkCopy;
+		}
+
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			return _useAlternativeBulkCopy switch
+			return GetAlternativeBulkCopy(table, options) switch
 			{
 				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source),
 				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source),
@@ -166,7 +188,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return _useAlternativeBulkCopy switch
+			return GetAlternativeBulkCopy(table, options) switch
 			{
 				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
 				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
@@ -177,7 +199,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			return _useAlternativeBulkCopy switch
+			return GetAlternativeBulkCopy(table, options) switch
 			{
 				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),
 				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options, MultipleRowsConvertToParameter), source, cancellationToken),

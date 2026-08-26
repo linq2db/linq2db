@@ -3960,8 +3960,6 @@ CREATE TABLE ""TABLE_A""(
 		{
 			if (copyType == BulkCopyType.RowByRow && keepIdentity)
 				Assert.Inconclusive($"{nameof(BulkCopyType.RowByRow)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = true mode");
-			if (copyType == BulkCopyType.MultipleRows && multipeRowsMode == AlternativeBulkCopy.InsertAll && !keepIdentity)
-				Assert.Inconclusive($"{nameof(BulkCopyType.MultipleRows)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false with {nameof(AlternativeBulkCopy.InsertAll)} mode");
 			if ((copyType == BulkCopyType.ProviderSpecific || copyType == BulkCopyType.Default) && !keepIdentity)
 				Assert.Inconclusive($"{nameof(BulkCopyType.ProviderSpecific)} doesn't support {nameof(BulkCopyOptions.KeepIdentity)} = false mode");
 
@@ -4005,6 +4003,24 @@ CREATE TABLE ""TABLE_A""(
 					Assert.That(insertedData[1].Id, Is.EqualTo(2));
 				}
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1879")]
+		public void TestNativeIdentityDefaultBulkCopy([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<NativeIdentity>();
+
+			table.BulkCopy(new []
+				{
+					new NativeIdentity() { Field = 11 },
+					new NativeIdentity() { Field = 12 },
+					new NativeIdentity() { Field = 13 },
+				});
+
+			var ids = table.OrderBy(_ => _.Field).Select(_ => _.Id).ToArray();
+
+			ids.ShouldBe(new [] { 1, 2, 3 });
 		}
 
 		[Test]
