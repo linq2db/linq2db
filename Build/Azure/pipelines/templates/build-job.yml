@@ -278,7 +278,7 @@ jobs:
 - job: build_x86_job
   pool:
     vmImage: 'windows-2025'
-  displayName: 'Build (win-x86 test artifacts)'
+  displayName: 'Build (win-x86)'
   timeoutInMinutes: 60
   condition: and(succeeded(), ${{ parameters.with_tests }})
 
