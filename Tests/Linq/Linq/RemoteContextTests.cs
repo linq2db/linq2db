@@ -13,6 +13,9 @@ using LinqToDB.Internal.DataProvider.SQLite;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
+using LinqToDB.Remote.SignalR;
+
+using Microsoft.AspNetCore.SignalR.Client;
 
 using NUnit.Framework;
 
@@ -238,7 +241,11 @@ namespace Tests.Linq
 			{
 				try
 				{
-					Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+					// Scoped to this database's pool - the suite runs provider lanes in parallel, and
+					// ClearAllPools would drop every other SQLite pool in the process along with it.
+					using (var pooled = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={databasePath}"))
+						Microsoft.Data.Sqlite.SqliteConnection.ClearPool(pooled);
+
 					File.Delete(databasePath);
 				}
 				catch
@@ -247,6 +254,97 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+		// The mirror case: OwnsClient == false says the client belongs to the context, so neither the
+		// configuration preload nor the query runner may dispose it - one shared client has to survive every
+		// query made through the context, not just the first.
+		[Test]
+		public async Task RemoteRunnerLeavesAContextOwnedClientAlive()
+		{
+			var databasePath = Path.Combine(Path.GetTempPath(), $"linq2db-remote-shared-client-{Guid.NewGuid():N}.sqlite");
+
+			try
+			{
+				var provider = new NoNativeUpsertSqliteProvider();
+
+				await using var backend = new DataConnection(new DataOptions()
+					.UseConnectionString($"Data Source={databasePath}")
+					.UseDataProvider(provider));
+
+				await backend.CreateTableAsync<ClientLifetimeEntity>();
+
+				await using var context = new SharedClientRemoteDataContext(backend);
+
+				await context.InsertOrReplaceAsync(new ClientLifetimeEntity { Id = 1, Value = "first" });
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(context.NonQueryExecutions, Is.EqualTo(2), "the two-query InsertOrReplace plan did not run - the test no longer exercises the path it was written for");
+					Assert.That(context.ClientsCreated,     Is.EqualTo(1), "the one shared client must be handed to every caller");
+					Assert.That(context.ClientsDisposed,    Is.Zero,       "a client the context owns must outlive the runner that used it");
+				}
+			}
+			finally
+			{
+				try
+				{
+					// Scoped to this database's pool - the suite runs provider lanes in parallel, and
+					// ClearAllPools would drop every other SQLite pool in the process along with it.
+					using (var pooled = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={databasePath}"))
+						Microsoft.Data.Sqlite.SqliteConnection.ClearPool(pooled);
+
+					File.Delete(databasePath);
+				}
+				catch
+				{
+					// best-effort: a temp file left behind is not worth failing the test over
+				}
+			}
+		}
+
+		// SignalRDataContext(HubConnection) builds the client itself, so the connection is the context's to
+		// dispose. It used to hand it to a client whose DisposeAsync did nothing at all, leaking the connection
+		// and its transport for the life of the process.
+		[Test]
+		public async Task SignalRContextDisposesTheHubConnectionItCreated()
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			await new SignalRDataContext(hubConnection).DisposeAsync();
+
+			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+		}
+
+		[Test]
+		public void SignalRContextDisposesTheHubConnectionItCreated_SyncDispose()
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			new SignalRDataContext(hubConnection).Dispose();
+
+			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+		}
+
+		// The other constructor takes a client the caller built, so the connection inside it stays the
+		// caller's: disposing the context must not touch it.
+		[Test]
+		public async Task SignalRContextLeavesACallerSuppliedClientAlone()
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			await new SignalRDataContext(new SignalRLinqServiceClient(hubConnection)).DisposeAsync();
+
+			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
+			// that reason and not because the connection was disposed underneath its owner.
+			var error = Assert.CatchAsync(() => hubConnection.StartAsync());
+
+			Assert.That(error, Is.Not.InstanceOf<ObjectDisposedException>());
+		}
+
+		// Never started and pointed at a port nothing listens on: these tests only ever observe whether the
+		// connection was disposed, so no server is needed.
+		static HubConnection BuildUnstartedHubConnection()
+			=> new HubConnectionBuilder().WithUrl("http://localhost:1/linq2db").Build();
 
 		[Table]
 		sealed class ClientLifetimeEntity
@@ -266,23 +364,41 @@ namespace Tests.Linq
 		// Serves the remote protocol in-process, straight off a real database, so the test exercises the
 		// actual runner/serialization path rather than a mock of it. Only the client's lifetime is
 		// instrumented.
-		sealed class CountingRemoteDataContext : RemoteDataContextBase
+		// Hands out one client for the whole context and declares it context-owned, so neither the preload nor
+		// the runner disposes it.
+		sealed class SharedClientRemoteDataContext : CountingRemoteDataContext
+		{
+			ILinqService? _client;
+
+			public SharedClientRemoteDataContext(DataConnection backend) : base(backend, "Test.SharedClientRemote")
+			{
+			}
+
+			protected override bool OwnsClient => false;
+
+			protected override ILinqService GetClient() => _client ??= base.GetClient();
+		}
+
+		class CountingRemoteDataContext : RemoteDataContextBase
 		{
 			readonly DataOptions _backendOptions;
+			readonly string      _configuration;
 
 			// RemoteDataContextBase caches ConfigurationInfo process-wide keyed on ConfigurationString, so a
 			// context left without one writes SQLite-with-upsert-disabled under the key every configuration-less
 			// remote context shares. The name resolves to nothing - BackendLinqService ignores it.
-			public CountingRemoteDataContext(DataConnection backend) : base(new DataOptions().UseConfiguration("Test.CountingRemote"))
+			public CountingRemoteDataContext(DataConnection backend, string configuration = "Test.CountingRemote")
+				: base(new DataOptions().UseConfiguration(configuration))
 			{
 				_backendOptions = backend.Options;
+				_configuration  = configuration;
 			}
 
 			public int ClientsCreated     { get; private set; }
 			public int ClientsDisposed    { get; private set; }
 			public int NonQueryExecutions { get; private set; }
 
-			protected override string ContextIDPrefix => "Test.CountingRemote";
+			protected override string ContextIDPrefix => _configuration;
 
 			protected override ILinqService GetClient()
 			{
