@@ -41,7 +41,7 @@ jobs:
     inputs:
       packageType: runtime
       version: 8.x
-    # Only when the analyzer tests actually run — testing.yml (the provider matrix) inherits with_analyzer_tests: false
+    # Only when the analyzer tests actually run — the provider matrix inherits with_analyzer_tests: false
     # and skips them, so it needn't provision the net8.0 runtime.
     condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
 
