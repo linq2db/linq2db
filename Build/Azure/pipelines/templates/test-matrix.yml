@@ -84,21 +84,21 @@ jobs:
       mac_enabled: ${{ parameters.mac_enabled }}
       full_run: ${{ parameters.full_run }}
       test_matrix:
-# The NN_ prefix is what orders the run. Azure dispatches a matrix in case-insensitive alphabetical
-# order of the key, NOT in the order entries are declared here: on build 23009 the windows dispatch
-# matched the alphabet 13/13 and this file 0/13, and 22995 on the old layout matched 13/13 too - so
-# reordering the entries alone changed nothing.
+# Entries are grouped by database family, families ordered by their longest leg. That order is for
+# reading only - dispatch order is not controlled from this file, and two attempts to control it were
+# measured and failed. Reordering the entries did nothing (build 23009 dispatched its windows legs in
+# the same order as 22995 did on the old layout), and prefixing the keys to force an order did nothing
+# either: on 23022 the first legs to start were 01, 18, 16, 17, 24 and 23, which is neither the
+# declared nor the key order. 23022 shared the agent pool with another test-all run and the earlier
+# builds largely did not, so the order most likely follows how the shared pool hands out slots.
 #
-# Numbering runs longest leg first, because a leg dispatched late only gets a slot once the other ten
-# are taken and then runs alone in the tail: on 22995 the four netfx SQL Server legs (72/71/67/63 min)
-# went out at +80..+86 and the last 36 minutes of the run held five slots or fewer. Entries are kept
-# in numbering order so the file reads in dispatch order; renumber when a measured duration moves a
-# leg past its neighbours. Numbers are per-file - windows and linux each sort their own subset, which
-# preserves the same relative order.
+# It still matters which legs are long, because a leg that starts last runs alone in the tail: on
+# 22995 the four netfx SQL Server legs (72/71/67/63 min) started at +80..+86 and the last 36 minutes
+# of the run held five slots or fewer. There is just no way to ask for them first from here.
 # ClickHouse
 # All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
 # databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
-        - name: 01_ClickHouse
+        - name: ClickHouse
           title: ClickHouse (all providers)
           config_linux: clickhouse
           config_macos: clickhouse
@@ -118,7 +118,7 @@ jobs:
             enabled: false
 
 # SQL Server
-        - name: 02_SqlServer2005
+        - name: SqlServer2005
           title: SQL Server 2005
           config_win: sqlserver.2005
           script_win_global: sqlserver.2005.cmd
@@ -142,7 +142,7 @@ jobs:
 # their NETFX main suites have completed on full_run builds 22779, 22810, 22850 and 22863. So the split
 # is kept here conservatively, not as a measured limit - it simply has not been retested for these
 # versions.
-        - name: 03_SqlServer2008
+        - name: SqlServer2008
           title: SQL Server 2008
           config_win: sqlserver.2008
           script_win_global: sqlserver.2008.cmd
@@ -158,7 +158,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: 04_SqlServer2012
+        - name: SqlServer2012
           title: SQL Server 2012
           config_win: sqlserver.2012
           script_win_global: sqlserver.2012.cmd
@@ -174,7 +174,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: 05_SqlServer2014
+        - name: SqlServer2014
           title: SQL Server 2014
           config_win: sqlserver.2014
           script_win_global: sqlserver.2014.cmd
@@ -190,7 +190,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: 06_SqlServer2016
+        - name: SqlServer2016
           title: SQL Server 2016
           config_win: sqlserver.2016
           script_win_global: sqlserver.2016.cmd
@@ -206,7 +206,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
             enabled: false
 
-        - name: 07_SqlServer2017_2019
+        - name: SqlServer2017_2019
           title: SQL Server 2017 + 2019
           config_win: sqlserver.2017_2019
           config_linux: sqlserver.fts.2017_2019
@@ -232,7 +232,7 @@ jobs:
             enabled: false
 
 # additional test runner as SqlServer2019 already takes a lot of time
-        - name: 08_SqlServer2019Extras
+        - name: SqlServer2019Extras
           title: SQL Server EXTRAS
           config_win: sqlserver.extras
           config_linux: sqlserver.extras
@@ -255,7 +255,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
             enabled: false
 
-        - name: 09_SqlServer2022_2025
+        - name: SqlServer2022_2025
           title: SQL Server 2022 + 2025
           config_win: sqlserver.2022_2025
           config_linux: sqlserver.2022_2025
@@ -278,7 +278,7 @@ jobs:
             enabled: false
 
 # PostgreSQL
-        - name: 10_PostgreSQL1
+        - name: PostgreSQL1
           title: PostgreSQL (9.2-12)
           config_linux: pgsql1
           config_macos: pgsql1
@@ -297,7 +297,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
             enabled: false
 
-        - name: 11_PostgreSQL2
+        - name: PostgreSQL2
           title: PostgreSQL (13-19)
           config_linux: pgsql2
           config_macos: pgsql2
@@ -317,7 +317,7 @@ jobs:
             enabled: false
 
 # SAP HANA
-        - name: 12_SAPHANA2
+        - name: SAPHANA2
           title: SAP HANA 2
           config_linux: hana2
           config_macos: hana2
@@ -339,7 +339,7 @@ jobs:
             enabled: false
 
 # SQL CE
-        - name: 13_SqlCE
+        - name: SqlCE
           title: SQL CE
           config_win: sqlce
           psscript_win_global: sqlce.ps1
@@ -356,7 +356,7 @@ jobs:
             enabled: false
 
 # Oracle
-        - name: 14_Oracle1112
+        - name: Oracle1112
           title: Oracle 11g + 12c
           config_linux: oracle1112
           config_macos: oracle1112
@@ -376,7 +376,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
             enabled: false
 
-        - name: 15_Oracle1819
+        - name: Oracle1819
           title: Oracle 18c + 19c
           config_linux: oracle1819
           config_macos: oracle1819
@@ -396,7 +396,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
             enabled: false
 
-        - name: 16_Oracle2123
+        - name: Oracle2123
           title: Oracle 21c + 23c
           config_linux: oracle2123
           config_macos: oracle2123
@@ -417,7 +417,7 @@ jobs:
             enabled: false
 
 # Firebird
-        - name: 17_Firebird
+        - name: Firebird
           title: Firebird (all versions)
           config_linux: firebird
           config_macos: firebird
@@ -437,7 +437,7 @@ jobs:
             enabled: false
 
 # MySql/MariaDB
-        - name: 18_MySQL
+        - name: MySQL
           title: MySQL/MariaDB (all providers)
           config_linux: mysql
           config_macos: mysql
@@ -457,7 +457,7 @@ jobs:
             enabled: false
 
 # Access
-        - name: 19_Access_MDB
+        - name: Access_MDB
           title: Access MDB (Jet/ODBC)
           config_win: access.mdb
           enable_os_windows: true
@@ -482,7 +482,7 @@ jobs:
 # combined run - but only because TestsInitialization now holds one connection open per transport: splitting
 # also takes away the ODBC anchor that used to keep the shared ACE engine warm for both, and without an OLE DB
 # anchor of its own that half alone takes 1866s.
-        - name: 20_Access_ACE_Odbc
+        - name: Access_ACE_Odbc
           title: Access ACE (ODBC) x86
           config_win: access.ace.odbc
           psscript_win_global: access.ace.ps1
@@ -500,7 +500,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
-        - name: 21_Access_ACE_OleDb
+        - name: Access_ACE_OleDb
           title: Access ACE (OLEDB) x86
           config_win: access.ace.oledb
           psscript_win_global: access.ace.ps1
@@ -518,7 +518,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
             enabled: false
 
-        - name: 22_Access_ACE_x64
+        - name: Access_ACE_x64
           title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
           config_win: access.ace.x64
           psscript_win_global: access.ace.x64.ps1
@@ -536,7 +536,7 @@ jobs:
             enabled: false
 
 # SQLite
-        - name: 23_SQLite
+        - name: SQLite
           title: SQLite (all providers)
           config_win: sqlite
           config_linux: sqlite
@@ -567,7 +567,7 @@ jobs:
 # container, no setup script - so it rides along at near-zero agent cost. On Windows the leg runs
 # DuckDB alone (DB2/Informix have no Windows containers) via config_win, and stays full-run-only:
 # DuckDB has no netfx-only tests, so PR runs are already covered by the Linux leg.
-        - name: 24_DB2InformixDuckDB
+        - name: DB2InformixDuckDB
           title: DB2 + Informix + DuckDB
           config_win: duckdb
           config_linux: db2informixduckdb
@@ -592,7 +592,7 @@ jobs:
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
             enabled: false
 
-        - name: 25_YdbSybase
+        - name: YdbSybase
           title: YDB + Sybase
           config_linux: ydbsybase
           config_macos: ydbsybase
