@@ -413,8 +413,9 @@ namespace Tests.Linq
 		}
 
 		// YDB rejects the constant carried into the join ON clause ("each equality predicate argument must depend on exactly one JOIN input").
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test8([DataSources(TestProvName.AllYdb)] string context)
+		public void Issue1813Test8([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test8(db);
@@ -429,10 +430,11 @@ namespace Tests.Linq
 
 		// The nullable-string join key makes linq2db emit the null-aware equality
 		// (ON a.Text = b.Name OR a.Text IS NULL AND b.Name IS NULL), which YDB rejects ("JOIN ON expression must be
-		// a conjunction of equality predicates"). IsComplexJoinConditionSupported=false only relocates INNER JOIN
-		// conditions to WHERE; an outer join cannot.
+		// a conjunction of equality predicates"). IsComplexJoinConditionSupported=false cannot relocate it either:
+		// the predicate references both join inputs, so it has to stay in ON.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
-		public void Issue1813Test10([DataSources(TestProvName.AllYdb)] string context)
+		public void Issue1813Test10([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test10(db);
