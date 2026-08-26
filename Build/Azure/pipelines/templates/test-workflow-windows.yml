@@ -260,6 +260,14 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
+    # PowerShell 7, not the 5.1 that windows would otherwise get: the git calls below capture stderr
+    # with 2>&1, and Windows PowerShell turns a native command's stderr into error records, which the
+    # task's default $ErrorActionPreference of Stop then makes terminating. git push writes its status
+    # to stderr even when it succeeds, so on build 23045 nine windows legs failed on a push that had
+    # worked. The linux legs ran the same script under pwsh and went through the whole reject-fetch-
+    # rebase-push retry without trouble. The stderr is not optional here - losing gh's "A pull request
+    # already exists" is what would break the race between legs.
+    pwsh: true
     script: |
       Write-Host "Add baselines changes to commit (index)"
       $output = git add --sparse -A
