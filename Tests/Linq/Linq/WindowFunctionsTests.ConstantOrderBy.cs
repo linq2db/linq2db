@@ -139,11 +139,17 @@ namespace Tests.Linq
 				};
 
 			var sql = query.ToSqlQuery().Sql;
-			sql.ShouldContain("RANGE");
-			sql.ShouldNotContain("ORDER BY 1");
 
 			// The frame still needs a sort key, so the clause has to survive the constant being dropped.
+			sql.ShouldContain("RANGE");
 			sql.ShouldContain("ORDER BY");
+
+			// DuckDB cannot parse the scalar-subquery stand-in inside a RANGE frame, and takes the bare constant
+			// there instead, so it is the one provider that keeps the caller's key verbatim.
+			if (context.IsAnyOf(TestProvName.AllDuckDB))
+				sql.ShouldContain("ORDER BY 1");
+			else
+				sql.ShouldNotContain("ORDER BY 1");
 
 			// Every row ties on the constant key, so each row's frame covers its whole partition and every
 			// member of a partition sees the same total.
@@ -255,9 +261,11 @@ namespace Tests.Linq
 
 			query.ToSqlQuery().Sql.ShouldNotContain("ORDER BY 1");
 
-			// One window over the whole table with every row tied, so each row reads the same second value.
+			// The point here is that the statement is accepted at all - SAP HANA rejects NTH_VALUE with no
+			// ordering. What it returns is deliberately not asserted: unordered, both the row it lands on and
+			// the default frame it reads over are the server's business, and they genuinely differ (Firebird 3
+			// hands back several distinct values where the rest return one).
 			rows.Count.ShouldBe(data.Length);
-			rows.Select(r => r.Nth).Distinct().Count().ShouldBe(1);
 		}
 
 		// #5806 goes wider than the literal it reports: a captured local holds one value for the whole execution,

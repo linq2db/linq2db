@@ -931,6 +931,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (kept is not { Count: > 0 } && IsWindowOrderByRequired(func))
 			{
+				// Where the stand-in cannot be parsed, the caller's key is what keeps the clause alive, so the node
+				// is left exactly as it came - which is also what keeps this rewrite a fixed point, since a constant
+				// handed back unwrapped would be dropped again on the next pass.
+				if (orderBy is { Count: > 0 } && !CanWrapWindowOrderByConstant)
+					return func;
+
 				// Every row ties on a constant, so the first key decides the whole clause - the ones behind it never
 				// get to break a tie, and are the only part actually dropped here.
 				var original = orderBy is { Count: > 0 } ? orderBy[0] : null;
@@ -997,6 +1003,13 @@ namespace LinqToDB.Internal.SqlProvider
 		/// a 5, and a captured local stays the parameter it became instead of vanishing from the command.
 		/// <see cref="SelectQuery.DoNotRemove"/> stops query optimization from folding the subquery away.
 		/// </remarks>
+		/// <summary>
+		/// Whether the scalar subquery <see cref="WrapWindowOrderByConstant"/> builds is parseable as a window sort
+		/// key here. DuckDB is the exception: it takes one in a plain window but not inside a <c>RANGE</c> frame,
+		/// and it accepts the bare constant there instead, so it keeps the caller's key rather than the stand-in.
+		/// </summary>
+		protected virtual bool CanWrapWindowOrderByConstant => true;
+
 		protected virtual ISqlExpression WrapWindowOrderByConstant(ISqlExpression expression)
 		{
 			var query = new SelectQuery { DoNotRemove = true };
