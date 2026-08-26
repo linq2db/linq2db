@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -17,6 +18,84 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 	{
 		public OracleSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
 		{
+		}
+
+		/// <summary>
+		/// Oracle's <c>TRUNC</c> already is truncation toward zero, the semantic the base composes <c>FLOOR</c>
+		/// and <c>CEILING</c> to reach - and Oracle spells the second one <c>CEIL</c>, so that composition does
+		/// not even parse here.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Function(longType, "Trunc", Factory.Div(longType, value, Factory.Value(longType, divisor)));
+		}
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// The operands are narrowed to six fractional digits before they are subtracted, so a component below the
+		/// microsecond is identically zero rather than merely imprecise, and is declined instead.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="AsTimestamp"/> casts to <see cref="DataType.DateTime2"/> with no precision, which renders as a
+		/// bare <c>timestamp</c> - six digits - so the sub-microsecond tick cannot survive the subtraction whatever
+		/// the column holds. Declaring the floor makes the member fall back to .NET, which answers it from the two
+		/// dates, rather than depending on what the driver happens to round-trip.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Microsecond;
+
+		/// <summary>
+		/// Elapsed ticks summed field by field out of the interval two timestamps subtract to.
+		/// </summary>
+		/// <remarks>
+		/// Both operands are cast to <c>timestamp</c> first: subtracting Oracle <c>date</c> values yields a number
+		/// of days instead, and a date carries no fraction of a second to lose. Field by field rather than through
+		/// the day count, because that count is a floating number of days and cannot carry a tick over a long
+		/// range - the same reason the existing <c>DateDiff</c> lowering decomposes its millisecond form.
+		/// <para>
+		/// Fields of a negative interval are all negative, so the sum needs no sign handling.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var elapsed    = Factory.Sub(Factory.GetDbDataType(typeof(TimeSpan)), AsTimestamp(element.End), AsTimestamp(element.Start));
+
+			var seconds = Factory.Cast(
+				Factory.Function(doubleType, "Round",
+					Factory.Multiply(doubleType, Extract("Second", elapsed, doubleType), (double)TimeSpan.TicksPerSecond)),
+				longType, true);
+
+			return Factory.Add(longType, WholeField(elapsed, "Day", TimeSpan.TicksPerDay),
+				Factory.Add(longType, WholeField(elapsed, "Hour", TimeSpan.TicksPerHour),
+					Factory.Add(longType, WholeField(elapsed, "Minute", TimeSpan.TicksPerMinute), seconds)));
+		}
+
+		ISqlExpression WholeField(ISqlExpression elapsed, string part, long ticksPerUnit)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Multiply(longType,
+				Factory.Cast(Extract(part, elapsed, Factory.GetDbDataType(typeof(double))), longType, true),
+				ticksPerUnit);
+		}
+
+		/// <summary>
+		/// <c>EXTRACT</c> as a function node. Its argument uses the standard <c>field FROM value</c> form, which is
+		/// not a comma-separated argument list.
+		/// </summary>
+		ISqlExpression Extract(string part, ISqlExpression value, DbDataType resultType)
+		{
+			return Factory.Function(resultType, "Extract", Factory.Expression(resultType, $"{part} From {{0}}", value));
+		}
+
+		ISqlExpression AsTimestamp(ISqlExpression value)
+		{
+			return Factory.Cast(value, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
 		}
 
 		#region LIKE

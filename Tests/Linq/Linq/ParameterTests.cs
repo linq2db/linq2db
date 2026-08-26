@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -33,6 +34,27 @@ namespace Tests.Linq
 			var parent2 = db.Parent.FirstOrDefault(p => p.ParentID == id)!;
 
 			Assert.That(parent1.ParentID, Is.Not.EqualTo(parent2.ParentID));
+		}
+
+		// A provider may rewrite the name of the DbParameter it is handed (managed Sybase; YDB prefixes it with '$').
+		// That name must never be written back onto the SqlParameter of the CACHED statement, which every later
+		// execution and every concurrent thread shares - the Transform-mode mutation guard reports such a write as
+		// "convert mutated the element it was given". The name the query builder assigned must survive execution.
+		[Test]
+		public void ExecutionDoesNotRenameCachedParameters([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var id    = 1;
+			var query = db.GetTable<Parent>().Where(p => p.ParentID == id);
+
+			query.ToArray();
+
+			var parameters = new List<SqlParameter>();
+
+			QueryHelper.CollectParametersAndValues(query.GetStatement(), parameters, new List<SqlValue>());
+
+			parameters.Select(p => p.Name).ShouldBe(new[] { "id" });
 		}
 
 		[Test]
@@ -530,7 +552,7 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -602,7 +624,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Insert([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -696,7 +718,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_InsertObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -772,7 +794,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -846,7 +868,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_ValueExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -939,7 +961,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_Update([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1033,7 +1055,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_UpdateObject([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1109,7 +1131,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetValue([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1183,7 +1205,7 @@ namespace Tests.Linq
 			res[1].String3.ShouldBe("str3");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterDeduplication_SetExpr([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = (DataConnection)GetDataContext(context);
@@ -1280,7 +1302,7 @@ namespace Tests.Linq
 		private int _cnt3;
 		private int _param;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1426,7 +1448,7 @@ namespace Tests.Linq
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1487,114 +1509,120 @@ namespace Tests.Linq
 			return db.Person.Where(p => p.ID == paramCopy);
 		}
 
-		private int[] _params = new int[30];
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
-		public void TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		// Async by necessity, not preference. The remote (LinqService) contexts route every sync call
+		// through SafeAwaiter.Run - Task.Run(...).GetAwaiter().GetResult() - so a blocking runner holds
+		// two thread-pool threads per worker, 60 for the 30 below, while the in-process Kestrel/gRPC
+		// host serving those same calls needs pool threads of its own. Nothing raises the pool floor,
+		// so it starts at processor count and grows ~1 thread/sec: on CI this test sat for 11 minutes
+		// on SqlServer.2017.MS.LinqService (build 22779) and was killed by --hangdump-timeout 5m on
+		// SqlServer.Contained.LinqService (22810), starving unrelated tests meanwhile. Awaiting frees
+		// the thread for the duration of the round-trip, so the burst no longer exhausts the pool.
+		public async Task TestIQueryableParameterEvaluationMultiThreaded([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using var _ = new DisableBaseline("multi-threading");
 
-			var tasks = new Task[30];
+			// per-invocation state: a shared instance field is clobbered when parallel execution runs
+			// this test concurrently for several SqlServer contexts (thread index collides across them).
+			var paramValues = new int[30];
+			var tasks       = new Task[30];
 
 			for (var i = 0; i < tasks.Length; i++)
 			{
 				var thread = i;
-				tasks[i] = Task.Run(() => TestRunner(context, thread));
+				tasks[i] = TestRunnerAsync(context, paramValues, thread);
 			}
 
-			Task.WaitAll(tasks);
+			await Task.WhenAll(tasks);
 		}
 
-		private void TestRunner(string context, int thread)
+		private async Task TestRunnerAsync(string context, int[] paramValues, int thread)
 		{
 			// don't use Assert.Multiple in multi-threading tests
 #pragma warning disable NUnit2045 // Use Assert.Multiple
 			using var db = GetDataContext(context);
-			_params[thread] = 1;
-			var persons = Query(db, thread);
+			paramValues[thread] = 1;
+			var persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(1));
 			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-			_params[thread] = 2;
-			persons = Query(db, thread);
+			paramValues[thread] = 2;
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(3));
 			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
-			_params[thread] = 3;
-			persons = Query(db, thread);
+			paramValues[thread] = 3;
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(2));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-			_params[thread] = 1;
-			persons = Query(db, thread);
+			paramValues[thread] = 1;
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(1));
 			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-			_params[thread] = 3;
-			persons = Query(db, thread);
+			paramValues[thread] = 3;
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(2));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-			_params[thread] = 2;
-			persons = Query(db, thread);
+			paramValues[thread] = 2;
+			persons = await QueryAsync(db, thread);
 
 			Assert.That(persons, Has.Count.EqualTo(3));
 			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
 			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
-			List<Person> Query(ITestDataContext db, int thread)
+			Task<List<Person>> QueryAsync(ITestDataContext db, int thread)
 			{
 				return db.Person
 					.Where(_ =>
-					 GetQueryT1(db, thread).Select(p => p.ID).Contains(_.ID) &&
-					(GetQueryT2(db, thread).Select(p => p.ID).Contains(_.ID) ||
-					 GetQueryT3(db, thread).Select(p => p.ID).Contains(_.ID)))
-					.ToList();
+					 GetQueryT1(db, paramValues, thread).Select(p => p.ID).Contains(_.ID) &&
+					(GetQueryT2(db, paramValues, thread).Select(p => p.ID).Contains(_.ID) ||
+					 GetQueryT3(db, paramValues, thread).Select(p => p.ID).Contains(_.ID)))
+					.ToListAsync();
 			}
 #pragma warning restore NUnit2045 // Use Assert.Multiple
 		}
 
-		private IQueryable<Person> GetQueryT1(ITestDataContext db, int thread)
+		private IQueryable<Person> GetQueryT1(ITestDataContext db, int[] paramValues, int thread)
 		{
-			_cnt1++;
-			var paramCopy = _params[thread];
+			var paramCopy = paramValues[thread];
 			if (paramCopy == 1)
 				return db.Person.Where(p => p.ID == paramCopy);
 
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		private IQueryable<Person> GetQueryT2(ITestDataContext db, int thread)
+		private IQueryable<Person> GetQueryT2(ITestDataContext db, int[] paramValues, int thread)
 		{
-			_cnt2++;
-			var paramCopy = _params[thread];
+			var paramCopy = paramValues[thread];
 			if (paramCopy == 2)
 				return db.Person.Where(p => paramCopy == p.ID);
 
 			return db.Person.Where(p => p.ID == paramCopy - 1);
 		}
 
-		private IQueryable<Person> GetQueryT3(ITestDataContext db, int thread)
+		private IQueryable<Person> GetQueryT3(ITestDataContext db, int[] paramValues, int thread)
 		{
-			_cnt3++;
-			var paramCopy = _params[thread];
+			var paramCopy = paramValues[thread];
 			if (paramCopy == 3)
 				return db.Person.Where(p => p.ID == paramCopy);
 
 			return db.Person.Where(p => paramCopy + 1 != p.ID);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450"), QueryCacheTest]
 		public void TestSimpleParameterEvaluation([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1659,7 +1687,7 @@ namespace Tests.Linq
 		/// Tests that we do not have cache hit for similar parameters
 		/// </summary>
 		/// <param name="context"></param>
-		[Test]
+		[Test, QueryCacheTest]
 		public void Caching([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1876,7 +1904,7 @@ namespace Tests.Linq
 			public bool? Value5 { get; set; }
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void DedupOfParameters([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);

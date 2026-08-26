@@ -308,16 +308,33 @@ namespace Tests.Infrastructure
 			public int Id { get; }
 		}
 
+		static readonly object _entityDescriptorCreatedSync = new();
+
 		[Test]
 		public void OnEntityDescriptorCreatedTest([DataSources(false)] string context)
+		{
+			// MappingSchema.EntityDescriptorCreatedCallback is a single process-wide slot and this test
+			// runs one case per provider: without serializing the cases, one case's install replaces
+			// another's handler mid-run and its finally clears the slot underneath it.
+			lock (_entityDescriptorCreatedSync)
+			{
+				OnEntityDescriptorCreatedTestBody(context);
+			}
+		}
+
+		void OnEntityDescriptorCreatedTestBody(string context)
 		{
 			MappingSchema.ClearCache();
 			var globalTriggered = false;
 			var localTriggrered = false;
+			// while the handler is installed it fires for every schema, including those of tests running
+			// concurrently - only descriptors built by this case's own context count as a trigger
+			MappingSchema? caseSchema = null;
 
-			MappingSchema.EntityDescriptorCreatedCallback = (_, _) =>
+			MappingSchema.EntityDescriptorCreatedCallback = (mappingSchema, _) =>
 			{
-				globalTriggered = true;
+				if (ReferenceEquals(mappingSchema, caseSchema))
+					globalTriggered = true;
 			};
 
 			try
@@ -326,6 +343,7 @@ namespace Tests.Infrastructure
 				// global handler set
 				using (var db = GetDataContext(context))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -344,6 +362,7 @@ namespace Tests.Infrastructure
 					localTriggrered = true;
 				})))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -358,6 +377,7 @@ namespace Tests.Infrastructure
 				// descriptor cached
 				using (var db = GetDataContext(context))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -370,6 +390,7 @@ namespace Tests.Infrastructure
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
 				{
+					caseSchema = db.MappingSchema;
 					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
@@ -801,7 +822,11 @@ namespace Tests.Infrastructure
 			new DataOptions().UseDefaultNullsPosition(Sql.NullsPosition.First).SqlOptions.DefaultNullsPosition.ShouldBe(Sql.NullsPosition.First);
 		}
 
-		[Test]
+		// NonParallelizable: the subject of this test is the process-global setter itself, so unlike
+		// WithDefaultNullsPositionTest above it cannot be expressed against a local DataOptions. The
+		// save/restore below bounds the mutation in time but does not isolate it - while it is in effect,
+		// any concurrent lane building a DataOptions inherits NULLS LAST.
+		[Test, NonParallelizable]
 		public void ConfigurationSqlDefaultNullsPositionTest()
 		{
 			// MIN006: the process-global static getter/setter, and its propagation to freshly-built DataOptions.

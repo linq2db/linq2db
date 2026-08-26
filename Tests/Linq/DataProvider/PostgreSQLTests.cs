@@ -51,10 +51,10 @@ namespace Tests.DataProvider
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
 			paramCount = 1;
-			return "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p ORDER BY \"ID\"";
+			return "SELECT \"ID\" FROM \"AllTypes\" WHERE :p IS NULL AND \"{0}\" IS NULL OR :p IS NOT NULL AND \"{0}\" = :p";
 		}
 		protected override string  GetNullSql  (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 1";
-		protected override string  PassValueSql(DataConnection dc) => "SELECT \"ID\" FROM \"AllTypes\" WHERE \"{0}\" = :p ORDER BY \"ID\"";
+		protected override string  PassValueSql(DataConnection dc) => "SELECT \"ID\" FROM \"AllTypes\" WHERE \"{0}\" = :p";
 		protected override string  GetValueSql (DataConnection dc) => "SELECT \"{0}\" FROM {1} WHERE \"ID\" = 2";
 
 		[Test]
@@ -1199,6 +1199,11 @@ namespace Tests.DataProvider
 			public string Value = null!;
 		}
 
+		// Does committed (non-transactional) writes to SequenceTest1 and the sequence sequencetestseq, and
+		// asserts exact sequence values 1..40 - so nothing else may touch them while it runs. Both are
+		// scoped to one database, and every test against a database runs on that database's lane, so no
+		// concurrent test can reach them: this needs no NonParallelizable. Different PostgreSQL versions are
+		// different databases.
 		[Test]
 		public void BulkCopyRetrieveSequences(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,

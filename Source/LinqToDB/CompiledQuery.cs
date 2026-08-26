@@ -119,11 +119,20 @@ namespace LinqToDB
 									typeof(IQueryable<>) :
 									typeof(IEnumerable<>);
 
-							var qtype  = type.GetGenericType(expr.Type);
-							var helper = ActivatorExt.CreateInstance<ITableHelper>(
-								typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
+							var qtype       = type.GetGenericType(expr.Type);
+							var elementType = qtype?.GetGenericArguments()[0];
 
-							return helper.CallTable(context.query, expr, context.ps, context.preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
+							// The Queryable form substitutes a Table<T>, so it applies only when the call's static type
+							// can hold one. A client-side materializer such as ToList() is typed List<T> and cannot:
+							// leave the call in place so the inner queryable becomes the compiled table instead, which
+							// is what already happens for its async counterpart.
+							if (elementType == null || expr.Type.IsAssignableFrom(typeof(Table<>).MakeGenericType(elementType)))
+							{
+								var helper = ActivatorExt.CreateInstance<ITableHelper>(
+									typeof(TableHelper<>).MakeGenericType(elementType ?? expr.Type));
+
+								return helper.CallTable(context.query, expr, context.ps, context.preambles, elementType != null ? MethodType.Queryable : MethodType.Element);
+							}
 						}
 
 						if (string.Equals(expr.Method.Name, "GetTable", StringComparison.Ordinal) && expr.Method.DeclaringType == typeof(DataExtensions))

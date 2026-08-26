@@ -46,12 +46,12 @@ namespace Tests.DataProvider
 		{
 			paramCount = dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc) ? 3 : 1;
 			return dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc)
-				? "SELECT ID FROM {1} WHERE ? IS NULL AND {0} IS NULL OR ? IS NOT NULL AND {0} = ? ORDER BY ID"
+				? "SELECT ID FROM {1} WHERE ? IS NULL AND {0} IS NULL OR ? IS NOT NULL AND {0} = ?"
 				: base.PassNullSql(dc, out paramCount);
 		}
 		protected override string PassValueSql(DataConnection dc) =>
 			dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc)
-				? "SELECT ID FROM {1} WHERE {0} = ? ORDER BY ID"
+				? "SELECT ID FROM {1} WHERE {0} = ?"
 				: base.PassValueSql(dc);
 
 		[Test]
@@ -399,6 +399,11 @@ namespace Tests.DataProvider
 			public int Id;
 		}
 
+		// The two OLE DB contexts this runs for do not share a file: AccessTools.CreateDatabase appends
+		// .mdb for Jet and .accdb for ACE, and DropDatabase removes the matching extension. So there is no
+		// filename clash to serialize against, despite what the NonParallelizable here used to claim. The
+		// remaining question is whether concurrent ADOX create/drop conflicts inside the ACE and Jet
+		// engines, which share one engine core - if the Access legs go red here, that is the reason.
 		[Test]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllAccessOleDb)] string context)
 		{
