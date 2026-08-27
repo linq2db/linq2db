@@ -63,6 +63,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
+			// OracleSqlBuilderBase.CommandCount yields a second command for a truncate only when ResetIdentity is
+			// set and the table has an identity field, which is what makes the indexing below safe.
 			if (statement is SqlTruncateTableStatement truncate && commandNumber == 1 && UseNativeIdentity(truncate.Table!))
 			{
 				var table = truncate.Table!;
