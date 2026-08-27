@@ -104,7 +104,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]
-		public void Issue2847Test([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool withIdentity)
+		public void Issue2847Test([IncludeDataSources(TestProvName.AllOracle11)] string context, [Values] bool withIdentity)
 		{
 			using var db = GetDataContext(context);
 
