@@ -23,7 +23,7 @@ namespace LinqToDB
 	/// </summary>
 	/// <typeparam name="T">Table record mapping class.</typeparam>
 	[PublicAPI]
-	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
+	public class TempTable<T> : ITable<T>, ITableMutable<T>, IQueryableWrapper<T>, IDisposable, IAsyncDisposable
 		where T : notnull
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -815,6 +815,9 @@ namespace LinqToDB
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		IQueryProvider IQueryable.Provider    => _table.Provider;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		IQueryable<T> IQueryableWrapper<T>.WrappedQuery => _table;
 
 		#endregion
 

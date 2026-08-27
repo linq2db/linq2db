@@ -34,6 +34,23 @@ namespace Tests.Linq
 			Assert.That(ch.Parent, Is.Not.Null);
 		}
 
+		// LoadWith returns a wrapper over linq2db query, so linq2db-only extensions must still see the
+		// query behind it instead of rejecting it as a non-linq2db IQueryable.
+		[Test]
+		public void LoadWithQueryIsLinqToDbSource([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.LoadWith(c => c.Parent);
+
+			query.ToSqlQuery().Sql.ShouldNotBeNullOrWhiteSpace();
+
+			var child = query.ElementAtOrDefault(() => 0);
+
+			child.ShouldNotBeNull();
+			child.Parent.ShouldNotBeNull();
+		}
+
 		[Test]
 		public void LoadWithAsTable1([DataSources] string context)
 		{
