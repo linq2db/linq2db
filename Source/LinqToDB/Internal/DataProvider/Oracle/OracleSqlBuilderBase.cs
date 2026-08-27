@@ -538,8 +538,23 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 						StringBuilder
 							.AppendLine(" FOR EACH ROW")
-							.AppendLine("BEGIN")
-							.Append("\tSELECT ");
+							.AppendLine("BEGIN");
+
+						// When the sequence is named by the mapping, GetIdentityExpression puts its NEXTVAL into the
+						// INSERT itself, so an unconditional assignment here would draw a second value and the column
+						// would advance by two per row. Bulk copy still omits the column, so the trigger has to keep
+						// supplying a value when none was given.
+						var guardSuppliedValue = GetSequenceNameAttribute(createTable.Table!, false) != null;
+						var indent             = guardSuppliedValue ? "\t\t" : "\t";
+
+						if (guardSuppliedValue)
+						{
+							StringBuilder.Append("\tIF :NEW.");
+							Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
+							StringBuilder.AppendLine(" IS NULL THEN");
+						}
+
+						StringBuilder.Append(indent).Append("SELECT ");
 						AppendSchemaPrefix(StringBuilder, GetIdentitySequenceSchema(createTable.Table!));
 						Convert(StringBuilder, GetIdentitySequenceName(createTable.Table!), ConvertType.SequenceName);
 						StringBuilder
@@ -547,8 +562,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
 						StringBuilder
 							.Append(" FROM dual;")
-							.AppendLine  ()
-							.AppendLine  ("END;");
+							.AppendLine();
+
+						if (guardSuppliedValue)
+							StringBuilder.AppendLine("\tEND IF;");
+
+						StringBuilder.AppendLine("END;");
 					}
 
 					break;

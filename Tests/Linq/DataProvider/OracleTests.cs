@@ -4078,6 +4078,27 @@ CREATE TABLE ""TABLE_A""(
 			table.OrderBy(_ => _.Field).Select(_ => _.Id).ToArray().ShouldBe(new [] { 1, 2, 3 });
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1879")]
+		public void TestSequenceNameInsertWithIdentity([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SequenceIdentity>();
+
+			var returned = new []
+				{
+					Convert.ToInt32(db.InsertWithIdentity(new SequenceIdentity() { Field = 11 })),
+					Convert.ToInt32(db.InsertWithIdentity(new SequenceIdentity() { Field = 12 })),
+				};
+
+			var stored = table.OrderBy(_ => _.Field).Select(_ => _.Id).ToArray();
+
+			returned.ShouldBe(stored);
+
+			// the INSERT carries the sequence's nextval and the trigger assigns from the same sequence, so a
+			// gap here means one row consumed two values
+			stored.ShouldBe(new [] { 1, 2 });
+		}
+
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
