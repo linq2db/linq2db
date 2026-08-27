@@ -552,9 +552,11 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsOrderBySubQuerySupported { get; set; } = true;
 
 		/// <summary>
-		/// When disabled, a join condition that is not a conjunction of equality predicates is moved out of ON:
-		/// for an INNER JOIN it goes to WHERE; for a LEFT JOIN a predicate depending only on the joined subtree is
-		/// pushed into a wrapped derived table, and one referencing both join inputs has to stay in ON.
+		/// When disabled, an AND-joined ON clause has each predicate that is not a plain equality of two non-literal
+		/// expressions moved out of ON: for an INNER JOIN it goes to WHERE; for a LEFT JOIN one depending only on the
+		/// outer side goes to WHERE, one depending only on the joined subtree is pushed into a wrapped derived table,
+		/// and one referencing both join inputs has to stay in ON. An ON clause that is itself a disjunction is left
+		/// untouched.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
 		/// -- with flag:
