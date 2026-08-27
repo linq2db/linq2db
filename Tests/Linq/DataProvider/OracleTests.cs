@@ -4024,6 +4024,26 @@ CREATE TABLE ""TABLE_A""(
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1879")]
+		public void TestNativeIdentityKeepIdentityLeavesGeneratorBehind([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<NativeIdentity>();
+
+			db.BulkCopy(new BulkCopyOptions() { KeepIdentity = true }, new []
+				{
+					new NativeIdentity() { Id = 4, Field = 11 },
+					new NativeIdentity() { Id = 8, Field = 12 },
+				});
+
+			table.BulkCopy(new [] { new NativeIdentity() { Field = 13 } });
+
+			// Oracle does not advance the identity generator for an explicitly supplied value, so a generated id
+			// keeps starting from 1 and can land on a row that is already there. Callers who mix the two are
+			// expected to reseed the column themselves.
+			table.Where(_ => _.Field == 13).Select(_ => _.Id).Single().ShouldBe(1);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1879")]
 		public void TestNativeIdentityTruncateReset([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
 		{
 			using var db    = GetDataConnection(context);
