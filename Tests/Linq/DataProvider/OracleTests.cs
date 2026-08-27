@@ -4053,6 +4053,26 @@ CREATE TABLE ""TABLE_A""(
 		}
 
 		[Table]
+		sealed class NullableIdentity
+		{
+			[Column, Identity]
+			public int? Id    { get; set; }
+			[Column]
+			public int  Field { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1879")]
+		public void TestNullableNativeIdentity([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<NullableIdentity>();
+
+			table.BulkCopy(new [] { new NullableIdentity() { Field = 11 } });
+
+			table.Select(_ => _.Id).Single().ShouldBe(1);
+		}
+
+		[Table]
 		sealed class SequenceIdentity
 		{
 			[Column]
