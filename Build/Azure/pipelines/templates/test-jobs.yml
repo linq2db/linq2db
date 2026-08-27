@@ -4,16 +4,25 @@ parameters:
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
   full_run: false # disable by default
-  # Slots the linux legs may hold at once, out of the ten the project has. 0 leaves the job uncapped.
-  # Six is measured for test-all on a PR: build 23050 split 643 linux agent-minutes over 15 legs
-  # against 489 windows over 13, and the floor a cap allows is max(linux_work/cap, windows_work/(10 -
-  # cap)). Six puts that floor at 122 min and makes windows the binding side, where five gives 129 and
-  # seven 163. Work that splits differently wants its own number, which is why default.yml passes 0
-  # for the release full_run: that run does every TFM's main suite and netfx exists only on windows,
-  # so it grows exactly the side six leaves four slots, and no release run has been measured with a
-  # cap. The per-provider definitions in testing.yml need nothing - their widest filter, oracle.all,
-  # enables three linux legs, so the cap never binds there.
-  linux_max_parallel: 6
+  # Linux legs allowed to run at once, out of the ten slots the project has. 0 leaves the job
+  # uncapped, which is the default because a cap measured worse than none.
+  #
+  # The case for one looked strong. Both test jobs become eligible in the same second, linux takes
+  # all ten slots within 0.3 min, and windows then waited 44.4 min on build 23028 and 54.8 on 23024,
+  # with its longest legs starting last and finishing alone. Six is where the work splits. It did fix
+  # that symptom - the first windows leg started at +0.1 on 23045 - and it still lost the run: 23059
+  # took 164.4 min against 156.7 for the uncapped 23028, on 1151 against 1148 agent-minutes of work.
+  #
+  # The reason is the floor rather than the packing. Uncapped, both jobs draw on all ten slots and
+  # the floor is total_work/10, which is 115 min on 23059's numbers. Capped at six, windows is
+  # confined to four slots and its 501 agent-minutes need 125 min there, so the floor is 10 min
+  # worse before a single leg runs. Both builds finished 20 to 25 min above their own floor, so the
+  # cap had no packing advantage to trade back. Windows starting late reads badly on the timeline
+  # but did not cost wall clock - 23028 ran windows last and still finished first.
+  #
+  # Put a number here only with a measurement behind it, and note that a cap also makes the file
+  # order of test-matrix.yml load-bearing, which the note above that matrix explains.
+  linux_max_parallel: 0
 
 jobs:
 ##############################################################################################
@@ -123,11 +132,9 @@ jobs:
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
   strategy:
-    # Leaves the rest of the ten slots for the windows legs, which otherwise never get one: both jobs
-    # become eligible in the same second, but linux takes all ten within 0.3 min and windows then
-    # waits - 44.4 min on build 23028, 54.8 on 23024 - with its four longest legs starting last and
-    # finishing alone. Emitted only when set, so 0 leaves the property out rather than resting on how
-    # Azure reads maxParallel: 0. Where the default comes from is on linux_max_parallel above.
+    # Emitted only when a cap is asked for, so the default of 0 leaves the property out entirely
+    # rather than resting on how Azure reads maxParallel: 0. Why the default is 0 is on
+    # linux_max_parallel above.
     ${{ if gt(parameters.linux_max_parallel, 0) }}:
       maxParallel: ${{ parameters.linux_max_parallel }}
     matrix:

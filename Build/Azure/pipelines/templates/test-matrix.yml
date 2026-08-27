@@ -3,7 +3,7 @@ parameters:
   with_baselines: false
   mac_enabled: false
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
-  linux_max_parallel: 6 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
+  linux_max_parallel: 0 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
   db_filter: '[all]'
 
 # db_filter specify test db selection filter for pipeline. Current list of supported values:
@@ -100,6 +100,8 @@ jobs:
 #     started s r v x.
 #
 # So keep this file sorted by key. Then both rules give the same order, and one edit maintains both.
+# The cap is off by default now, which leaves the first rule dormant and the sort with it, but sorted
+# is what this file should be either way - a cap can then be switched on without reopening the trap.
 # Grouping entries by provider family used to be free, because without a cap the file order was inert -
 # builds 22995 and 23009 had different declaration orders and both matched the alphabet 13/13 on their
 # windows legs. The cap made file order load-bearing again, and the family grouping had put ClickHouse,
