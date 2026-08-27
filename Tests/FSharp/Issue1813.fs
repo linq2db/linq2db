@@ -484,3 +484,26 @@ let Issue5790Test(db : IDataContext) =
     // has to reach the SQL for the assertion to hold, and both joins still have to stay LEFT.
     Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-3,3-0-0,4-3-0")
 
+// Issue5790Test is [ActiveIssue]-gated and so never runs, leaving the flatten's fail-loud refusal itself
+// unexecuted. This pins the refusal, so downgrading the invariant back to a silent decline is caught.
+// Delete together with the gate when #5790 is fixed.
+let Issue5790RefusalTest(db : IDataContext) =
+    use table1 = db.CreateLocalTable<TradeValid>()
+    use table2 = db.CreateLocalTable<NominationValid>()
+
+    let query = query {
+        for tr in db.GetTable<TradeValid>() do
+        groupJoin n_del in db.GetTable<NominationValid>()
+            on ((tr.DealNumber,tr.ParcelGroupID, tr.ParcelID) = (n_del.DeliveryDealNumber, n_del.DeliveryParcelGroup, n_del.DeliveryParcelID)) into n_del_g
+        for x in n_del_g.DefaultIfEmpty() do
+        groupJoin n_rec in db.GetTable<NominationValid>().Where(fun z -> z.Id > tr.Id)
+            on ((tr.DealNumber,tr.ParcelGroupID, tr.ParcelID) = (n_rec.ReceiptDealNumber, n_rec.ReceiptParcelGroup, n_rec.ReceiptParcelID)) into n_rec_g
+        for y in n_rec_g.DefaultIfEmpty() do
+        sortBy tr.Id
+        yield (tr, x, y)
+    }
+
+    Assert.That(
+        System.Action(fun () -> query.Take(90) |> Seq.toArray |> ignore),
+        Throws.InstanceOf<System.InvalidOperationException>().And.Message.Contains("5790"))
+

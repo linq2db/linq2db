@@ -463,6 +463,14 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue5790Test(db);
 		}
 
+		// The refusal is a client-side translation decision, so one provider covers it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5790")]
+		public void Issue5790RefusalTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue5790RefusalTest(db);
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
 		public void ExpressionFunctionInCteTranslationTest1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
