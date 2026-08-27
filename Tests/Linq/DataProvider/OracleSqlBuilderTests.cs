@@ -58,6 +58,28 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void Issue1879DropTableIfExistsDoesNotDropSequenceOrTriggerForOracle12()
+		{
+			var sql = BuildSql(OracleVersion.v12, table => new SqlDropTableStatement(table), TableOptions.DropIfExists);
+
+			sql.Count.ShouldBe(1);
+			sql[0].ShouldContain("DROP TABLE \"Issue1879Table\"");
+			sql[0].ShouldNotContain("SIDENTITY_");
+			sql[0].ShouldNotContain("TIDENTITY_");
+		}
+
+		[Test]
+		public void Issue1879DropTableDropsSequenceAndTriggerForOracle11()
+		{
+			var sql = BuildSql(OracleVersion.v11, table => new SqlDropTableStatement(table));
+
+			sql.Count.ShouldBe(1);
+			sql[0].ShouldContain("DROP TRIGGER \"TIDENTITY_Issue1879Table\"");
+			sql[0].ShouldContain("DROP SEQUENCE \"SIDENTITY_Issue1879Table\"");
+			sql[0].ShouldContain("DROP TABLE \"Issue1879Table\"");
+		}
+
+		[Test]
 		public void Issue1879TruncateResetsNativeIdentityForOracle12()
 		{
 			var sql = BuildSql(OracleVersion.v12, table => new SqlTruncateTableStatement
@@ -73,7 +95,7 @@ namespace Tests.DataProvider
 			});
 		}
 
-		static IReadOnlyList<string> BuildSql(OracleVersion version, System.Func<SqlTable, SqlStatement> createStatement)
+		static IReadOnlyList<string> BuildSql(OracleVersion version, System.Func<SqlTable, SqlStatement> createStatement, TableOptions tableOptions = TableOptions.NotSet)
 		{
 			var provider  = OracleTools.GetDataProvider(version, OracleProvider.Managed);
 			var options   = new DataOptions();
@@ -91,7 +113,10 @@ namespace Tests.DataProvider
 				true,
 				static () => NoopQueryParametersNormalizer.Instance);
 			var builder   = provider.CreateSqlBuilder(provider.MappingSchema, options);
-			var table     = new SqlTable(provider.MappingSchema.GetEntityDescriptor(typeof(Issue1879Table)));
+			var table     = new SqlTable(provider.MappingSchema.GetEntityDescriptor(typeof(Issue1879Table)))
+			{
+				TableOptions = tableOptions,
+			};
 			var statement = createStatement(table);
 			var commands  = new List<string>();
 
