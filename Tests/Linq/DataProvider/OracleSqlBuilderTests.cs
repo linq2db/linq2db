@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -168,10 +169,10 @@ namespace Tests.DataProvider
 		}
 
 		static IReadOnlyList<string> BuildSql(
-			OracleVersion                   version,
-			System.Func<SqlTable, SqlStatement> createStatement,
-			TableOptions                    tableOptions = TableOptions.NotSet,
-			System.Type?                    entityType   = null)
+			OracleVersion                version,
+			Func<SqlTable, SqlStatement> createStatement,
+			TableOptions                 tableOptions = TableOptions.NotSet,
+			Type?                        entityType   = null)
 		{
 			var provider  = OracleTools.GetDataProvider(version, OracleProvider.Managed);
 			var options   = new DataOptions();
