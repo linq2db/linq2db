@@ -157,7 +157,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		// branch would receive the same value from the identity generator. Oracle 11 was unaffected because its
 		// identity is emulated by a per-row BEFORE INSERT trigger, but from Oracle 12 the column is a native
 		// identity, so fall back to the single-table INSERT ... SELECT ... UNION ALL form whenever the server
-		// is the one generating the value.
+		// is the one generating the value. A SequenceName on the identity member keeps the sequence and trigger,
+		// hence keeps INSERT ALL usable.
 		AlternativeBulkCopy GetAlternativeBulkCopy<T>(ITable<T> table, DataOptions options)
 			where T : notnull
 		{
@@ -166,7 +167,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				&& options.BulkCopyOptions.KeepIdentity != true
 				&& table.DataContext.MappingSchema
 					.GetEntityDescriptor(typeof(T), options.ConnectionOptions.OnEntityDescriptorCreated)
-					.Columns.Any(static c => c.IsIdentity))
+					.Columns.Any(static c => c.IsIdentity && c.SequenceName == null))
 			{
 				return AlternativeBulkCopy.InsertDual;
 			}

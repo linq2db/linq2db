@@ -4052,6 +4052,32 @@ CREATE TABLE ""TABLE_A""(
 			table.Select(_ => _.Id).Single().ShouldBe(42);
 		}
 
+		[Table]
+		sealed class SequenceIdentity
+		{
+			[Column]
+			[SequenceName("SEQ_Issue1879Legacy")]
+			public int Id    { get; set; }
+			[Column]
+			public int Field { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1879")]
+		public void TestSequenceNameKeepsLegacyIdentity([IncludeDataSources(false, TestProvName.AllOracle12Plus)] string context)
+		{
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SequenceIdentity>();
+
+			table.BulkCopy(new []
+				{
+					new SequenceIdentity() { Field = 11 },
+					new SequenceIdentity() { Field = 12 },
+					new SequenceIdentity() { Field = 13 },
+				});
+
+			table.OrderBy(_ => _.Field).Select(_ => _.Id).ToArray().ShouldBe(new [] { 1, 2, 3 });
+		}
+
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
