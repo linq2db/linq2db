@@ -4,6 +4,25 @@ parameters:
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
   full_run: false # disable by default
+  # Linux legs allowed to run at once, out of the ten slots the project has. 0 leaves the job
+  # uncapped, which is the default because a cap measured worse than none.
+  #
+  # The case for one looked strong. Both test jobs become eligible in the same second, linux takes
+  # all ten slots within 0.3 min, and windows then waited 44.4 min on build 23028 and 54.8 on 23024,
+  # with its longest legs starting last and finishing alone. Six is where the work splits. It did fix
+  # that symptom - the first windows leg started at +0.1 on 23045 - and it still lost the run: 23059
+  # took 164.4 min against 156.7 for the uncapped 23028, on 1151 against 1148 agent-minutes of work.
+  #
+  # The reason is the floor rather than the packing. Uncapped, both jobs draw on all ten slots and
+  # the floor is total_work/10, which is 115 min on 23059's numbers. Capped at six, windows is
+  # confined to four slots and its 501 agent-minutes need 125 min there, so the floor is 10 min
+  # worse before a single leg runs. Both builds finished 20 to 25 min above their own floor, so the
+  # cap had no packing advantage to trade back. Windows starting late reads badly on the timeline
+  # but did not cost wall clock - 23028 ran windows last and still finished first.
+  #
+  # Put a number here only with a measurement behind it, and note that a cap also makes the file
+  # order of test-matrix.yml load-bearing, which the note above that matrix explains.
+  linux_max_parallel: 0
 
 jobs:
 ##############################################################################################
@@ -49,7 +68,9 @@ jobs:
     vmImage: 'windows-2025'
 
   displayName: 'Win'
-  dependsOn: create_baselines_branch
+  dependsOn:
+  - create_baselines_branch
+  - build_x86_job # only the windows legs consume win-x86 binaries, so only they wait for them
   # Release (full_run) legs run every TFM's main suite, not just net10, and jobs now bundle several
   # providers - so they need materially more headroom than a PR run. default: 60, max: 360.
   ${{ if eq(parameters.full_run, true) }}:
@@ -59,7 +80,7 @@ jobs:
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
-    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
+    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
   strategy:
     matrix:
@@ -108,9 +129,14 @@ jobs:
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
-    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
+    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
   strategy:
+    # Emitted only when a cap is asked for, so the default of 0 leaves the property out entirely
+    # rather than resting on how Azure reads maxParallel: 0. Why the default is 0 is on
+    # linux_max_parallel above.
+    ${{ if gt(parameters.linux_max_parallel, 0) }}:
+      maxParallel: ${{ parameters.linux_max_parallel }}
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
         ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true')) }}:
@@ -145,7 +171,7 @@ jobs:
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
-    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
+    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
 
   strategy:
     matrix:
@@ -167,141 +193,3 @@ jobs:
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
       full_run: ${{ parameters.full_run }}
-
-################################################################
-# This job runs after all tests and:                           #
-# - if baselines branch has commits create PR (if none exists) #
-# - if baselines branch has no commits - delete branch         #
-# - if PR created, post link to it to main PR                  #
-################################################################
-- job: create_baselines_pr
-  pool:
-    vmImage: 'windows-2025'
-  displayName: 'Create Test Baselines Pull Request'
-  dependsOn:
-  - create_baselines_branch # for variables flow
-  - test_windows_job
-  - test_ubuntu_job
-  - test_macos_job
-  condition: dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch']
-  variables:
-    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
-    baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
-    baselines_new_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_new_branch'] ]
-    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
-    # Read by the empty-branch cleanup below: this job's condition replaces the implicit succeeded(),
-    # so it also runs when a test leg failed and a retry is still to come.
-    tests_windows_result: $[ dependencies.test_windows_job.result ]
-    tests_ubuntu_result: $[ dependencies.test_ubuntu_job.result ]
-    tests_macos_result: $[ dependencies.test_macos_job.result ]
-
-  steps:
-  - checkout: none
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: |
-        $prId = "$(source_pr_id)"
-        $baselinesBranch = "$(baselines_branch)"
-        $baselinesHash = "$(baselines_head)"
-        $newBranch = $(baselines_new_branch)
-        $orgName = "linq2db"
-        $baselinesRepo = "linq2db.baselines"
-        $testsRepo = "linq2db"
-        $baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
-        Write-Host "Source PR ID: ${prId}"
-        Write-Host "Baselines branch: ${baselinesBranch}"
-        Write-Host "Baselines branch hash: ${baselinesHash}"
-        if (-not ($baselinesBranch)) {
-            Write-Host "Baselines branch name missing"
-            exit 1
-        }
-        if (-not ($baselinesHash)) {
-            Write-Host "Baselines branch hash missing"
-            exit 1
-        }
-        # @(...) keeps a single-line answer an array, so the emptiness test below counts refs rather
-        # than characters - a bare string would make a legitimate multi-ref answer read as "no result".
-        $output = @(git ls-remote --heads $baselinesRepoUrl $baselinesBranch)
-        Write-Host "Baselines current HEAD: ${output}"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
-            exit 1
-        }
-        $baselinesHeadLine = $output | Where-Object { $_ -match '^[0-9a-f]{40}\s' } | Select-Object -First 1
-        if (-not $baselinesHeadLine) {
-            Write-Host "Baselines HEAD request returned no result"
-            exit 1
-        }
-        $baslinesCurrentHash = ($baselinesHeadLine -split '\s+')[0]
-        Write-Host "Baselines branch current head hash: ${baslinesCurrentHash}"
-        if ($baselinesHash -eq $baslinesCurrentHash) {
-            Write-Host "Baselines branch has no new commits"
-            if ($newBranch -eq 1) {
-                $testResults = @("$(tests_windows_result)", "$(tests_ubuntu_result)", "$(tests_macos_result)")
-                $resultsText = $testResults -join ', '
-                Write-Host "Test job results: ${resultsText}"
-                # A failed leg can still be retried, and the retry re-creates this branch through the
-                # self-heal in ensure-baselines-branch.ps1. Deleting it now races that retry, which is
-                # how the branch ends up vanishing and reappearing mid-run.
-                $blocked = $testResults | Where-Object { $_ -in @('Failed', 'Canceled') }
-                if ($blocked) {
-                    Write-Host "A test job did not pass - keeping the baselines branch for a possible retry"
-                    exit 0
-                }
-                Write-Host "Remove empty baselines branch"
-                $output = gh api -XDELETE /repos/$orgName/$baselinesRepo/git/refs/heads/$baselinesBranch
-                Write-Host "Delete branch command output: ${output}"
-                if ($LASTEXITCODE -ne 0) {
-                    Write-Host "Failed to delete branch. Error code ${LASTEXITCODE}"
-                    exit 1
-                }
-                # delete operation returns nothing on both delete and missing branch
-                Write-Host "Baselines branch deleted"
-                exit 0
-            }
-            exit 0
-        }
-        Write-Host "New baselines commited, check if we need to create PR or it already created"
-        $output = gh api -XGET /repos/$orgName/$baselinesRepo/pulls -F state=open -F head=${orgName}:$baselinesBranch
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "PR search request failed. Error code ${LASTEXITCODE}, output: ${output}"
-            exit 1
-        }
-        if ($output -match "html_url") {
-            Write-Host "PR already exists"
-            exit 0
-        }
-        if ($prId) {
-            $sourcePrUrl = "https://github.com/${orgName}/${testsRepo}/pull/${prId}"
-            $prName = "Baselines for ${sourcePrUrl}"
-            $prMessage = "Baselines for [#${prId}](${sourcePrUrl})"
-        }
-        else {
-            $prName = "Baselines"
-            $prMessage = "Not associated with any pull request (tests pipeline triggered from admin console?)"
-        }
-        $output = gh api /repos/$orgName/$baselinesRepo/pulls -F title="${prName}" -F head=$baselinesBranch -F base=$(baselines_master) -F draft=true -F body="${prMessage}"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "PR creation failed. Error code ${LASTEXITCODE}, output: ${output}"
-            exit 1
-        }
-        if ($output -match "html_url") {
-            Write-Host "PR created"
-        }
-        if ($prId) {
-            Write-Host "Post notification to source PR about baselines PR creation"
-            $output = gh api /repos/$orgName/$testsRepo/issues/$prId/comments -F body="Test baselines changed by this PR. Don't forget to merge/close baselines PR after this pr merged/closed."
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "Message posting failed. Error code ${LASTEXITCODE}, output: ${output}"
-                exit 1
-            }
-            if (-not($output -match "html_url")) {
-                Write-Host "Message posting failed. Output: ${output}"
-                exit 1
-            }
-        }
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
-    displayName: Create Baselines PR
-    env:
-      GITHUB_TOKEN: $(BASELINES_GH_PAT)
