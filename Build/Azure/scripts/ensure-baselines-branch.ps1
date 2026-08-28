@@ -46,15 +46,11 @@ if ($PrId) {
 }
 Write-Host "Baselines branch name: ${Branch}"
 
-function Get-RemoteHash([string]$ref, [switch]$Heads) {
+function Get-RemoteHash([string]$ref) {
     # @(...) keeps a single-line answer an array. Without it PowerShell hands back a bare string for
     # one match and a string[] for several, so a length test means "characters" in the first case and
     # "lines" in the second — and a legitimate multi-ref answer reads as "not found".
-    if ($Heads) {
-        $out = @(git ls-remote --heads $baselinesRepoUrl $ref)
-    } else {
-        $out = @(git ls-remote $baselinesRepoUrl $ref)
-    }
+    $out = @(git ls-remote --heads $baselinesRepoUrl $ref)
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ls-remote for '${ref}' failed with code ${LASTEXITCODE}"
         exit 1
@@ -66,7 +62,7 @@ function Get-RemoteHash([string]$ref, [switch]$Heads) {
     return ($line -split '\s+')[0]
 }
 
-$branchHash = Get-RemoteHash $Branch -Heads
+$branchHash = Get-RemoteHash $Branch
 
 if (-not $branchHash) {
     Write-Host "Baselines branch does not exist - the first test leg with baselines to push creates it"
@@ -75,15 +71,22 @@ if (-not $branchHash) {
 
     if ($Rebase) {
         Write-Host "Checking if rebase required"
-        $masterHash = Get-RemoteHash $BaselinesMaster
-        if (-not $masterHash) {
-            Write-Host "Baselines repo HEAD not found for '${BaselinesMaster}'"
+        # Ask whether the branch is already on top of master, rather than comparing the two head
+        # hashes: a branch carrying even one baselines commit is by construction ahead of master, so
+        # the hashes always differ and the clone below ran on every re-run of a baseline-carrying PR.
+        # That clone is the whole repository - 343541 files, ~420 Mb - and it sits in the serial
+        # prefix every test leg waits on: 2.3 min for the job on build 23050 against 0.25 min on
+        # 23068, where no branch existed. "ahead" means there is nothing to rebase onto.
+        $status = gh api /repos/$orgName/$baselinesRepo/compare/${BaselinesMaster}...${Branch} --jq .status
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Compare request for '${BaselinesMaster}...${Branch}' failed with code ${LASTEXITCODE}"
             exit 1
         }
-        if ($branchHash -eq $masterHash) {
-            Write-Host "Baselines branch already based on HEAD, no rebase required"
+        Write-Host "Baselines branch is '${status}' relative to ${BaselinesMaster}"
+        if ($status -eq 'ahead' -or $status -eq 'identical') {
+            Write-Host "Baselines branch already based on ${BaselinesMaster}, no rebase required"
         } else {
-            Write-Host "Baselines head is ${branchHash}, but master is ${masterHash}, trying to rebase on current HEAD"
+            Write-Host "Baselines head is ${branchHash} and the branch is '${status}', trying to rebase on current HEAD"
             git clone $baselinesRepoUrl baselines
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "Failed to clone baselines repository. Error code ${LASTEXITCODE}"
@@ -106,8 +109,8 @@ if (-not $branchHash) {
                 exit 1
             }
             Write-Host "Baselines PR was rebased on HEAD"
+            $branchHash = git rev-parse HEAD
             cd ..
-            $branchHash = $masterHash
         }
     }
 }
