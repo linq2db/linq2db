@@ -1184,8 +1184,11 @@ namespace Tests.DataProvider
 		}
 
 		/// <summary>
-		/// Covers the batch-splitting path in <see cref="LinqToDB.Internal.DataProvider.BasicBulkCopy"/>: the payload is
-		/// large enough to cross the generated-statement length limit many times over, in every Oracle bulk copy mode.
+		/// Covers the batch-splitting path in <see cref="LinqToDB.Internal.DataProvider.BasicBulkCopy"/>. Only
+		/// <c>InsertAll</c> and <c>InsertDual</c> reach the splitter - <c>InsertInto</c> array-binds a single
+		/// fixed-length statement. In literal mode the payload crosses the 384KB provider limit on its own, which
+		/// is what pins the raised <c>OracleBulkCopy.MaxSqlLength</c>; parameterized rows are far shorter, so those
+		/// batches split only under an explicit <see cref="BulkCopyOptions.MaxSqlLengthForBatch"/>.
 		/// </summary>
 		[Test]
 		public void BulkCopyMultipleRowsCrossesSqlLengthLimit(
@@ -1194,7 +1197,10 @@ namespace Tests.DataProvider
 			[Values]                                     bool                useParameters)
 		{
 			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
-			using var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy }));
+			using var db = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy }));
+
+			var queries = new SaveQueriesInterceptor();
+			db.AddInterceptor(queries);
 
 			using var table = db.CreateLocalTable<BulkSplitTable>();
 
@@ -1205,16 +1211,40 @@ namespace Tests.DataProvider
 			db.BulkCopy(
 				new BulkCopyOptions
 				{
-					BulkCopyType  = BulkCopyType.MultipleRows,
-					MaxBatchSize  = 5000,
-					UseParameters = useParameters,
+					BulkCopyType         = BulkCopyType.MultipleRows,
+					MaxBatchSize         = 5000,
+					// a literal row renders ~1050 chars, so 500 of them cross the 384KB provider limit unaided;
+					// a parameterized row is ~45 chars, so only an explicit cap makes those batches split
+					MaxSqlLengthForBatch = useParameters ? (int?)8192 : null,
+					UseParameters        = useParameters,
 				},
 				rows);
 
 			var loaded = table.OrderBy(r => r.Id).ToArray();
 
-			Assert.That(loaded.Select(r => r.Id),  Is.EqualTo(rows.Select(r => r.Id)));
-			Assert.That(loaded.Select(r => r.Val), Is.EqualTo(rows.Select(r => r.Val)));
+			loaded.Select(r => r.Id). ShouldBe(rows.Select(r => r.Id));
+			loaded.Select(r => r.Val).ShouldBe(rows.Select(r => r.Val));
+
+			var inserts = queries.Queries
+				.Where(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				.ToList();
+
+			if (useAlternativeBulkCopy == AlternativeBulkCopy.InsertInto)
+			{
+				// array-bound: one fixed-length statement whatever the row count, so nothing reaches the splitter
+				inserts.Count.ShouldBe(1);
+			}
+			else
+			{
+				inserts.Count.ShouldBeGreaterThan(1);
+
+				if (!useParameters)
+				{
+					// pins the raise without pinning the constant: under the old 65535 ceiling no statement
+					// could have exceeded ~66KB
+					inserts.Max(q => q.Length).ShouldBeGreaterThan(128 * 1024);
+				}
+			}
 		}
 
 		[Test]
