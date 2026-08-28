@@ -21,23 +21,14 @@ steps:
   condition: and(variables.title, succeeded())
   displayName: Extract test scripts
 
-# Re-create the baselines branch if a previous completed run deleted it (empty-branch
-# cleanup). Without this, a "rerun failed jobs" restart fails on the clone below because
-# create_baselines_branch is not re-run on a partial restart. See build 21555.
-- task: PowerShell@2
-  inputs:
-    pwsh: true
-    filePath: '$(System.DefaultWorkingDirectory)/scripts/ensure-baselines-branch.ps1'
-    arguments: -Branch "$(baselines_branch)" -BaselinesMaster "$(baselines_master)" -BaseHash "$(baselines_head)"
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Ensure test baselines branch
-  condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
-  env:
-    GITHUB_TOKEN: $(BASELINES_GH_PAT)
-
 - task: CmdLine@2
   inputs:
-    script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
+    # The leg needs the index, not the tree: BaselinesWriter creates its own directories and always
+    # writes whole files, so nothing here is ever read back from the repository. --sparse lays out the
+    # two root files instead of 343541, and --depth 1 --single-branch skips ~420 Mb of history for a
+    # tree the leg only appends to. Master is cloned rather than the run branch, which may not
+    # exist yet - see the push below. The commit step pairs this with git add --sparse.
+    script: 'git clone --depth 1 --single-branch --sparse --branch $(baselines_master) https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
   condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
@@ -147,15 +138,23 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
+    # PowerShell 7, not the 5.1 that windows would otherwise get: the git calls below capture stderr
+    # with 2>&1, and Windows PowerShell turns a native command's stderr into error records, which the
+    # task's default $ErrorActionPreference of Stop then makes terminating. git push writes its status
+    # to stderr even when it succeeds, so on build 23045 nine windows legs failed on a push that had
+    # worked. The linux legs ran the same script under pwsh and went through the whole reject-fetch-
+    # rebase-push retry without trouble. The stderr is not optional here - losing gh's "A pull request
+    # already exists" is what would break the race between legs.
+    pwsh: true
     script: |
       Write-Host "Add baselines changes to commit (index)"
-      $output = git add -A
+      $output = git add --sparse -A
       if ($LASTEXITCODE -ne 0) {
           Write-Host "Failed to add baselines changes. Error code ${LASTEXITCODE}, output: ${output}"
           exit 1
       }
       Write-Host "Create commit"
-      $output = git commit -m "[Mac / $(title)] baselines"
+      $output = git commit -m "[MacOS / $(title)] baselines"
       if ($output -match "nothing to commit") {
           Write-Host "No baselines changes detected"
           exit 0
@@ -164,33 +163,100 @@ steps:
           Write-Host "Failed to create commit. Error code ${LASTEXITCODE}, output: ${output}"
           exit 1
       }
-      $rebaseAttempts = 10
-      do {
-          Write-Host "Pull with rebase"
-          $output = git pull --rebase
+
+      # The leg cloned baselines master, so this push is what creates the run branch, and only a leg
+      # that actually has baselines to push ever creates it. A run that changes none leaves nothing
+      # behind, which is what retired create_baselines_pr - a job that cost a fresh agent acquisition
+      # at the very end of the run (78 min on build 23009) for 0.3 min of work. Whichever leg commits
+      # first wins the ref; the rest are rejected and rebase onto it.
+      $branch = "$(baselines_branch)"
+      $orgName = "linq2db"
+      $repoUrl = "https://$(BASELINES_GH_PAT)@github.com/${orgName}/linq2db.baselines.git"
+      $pushed = $false
+      $attempts = 10
+      while ($attempts -gt 0) {
+          Write-Host "Push baselines to ${branch}"
+          $output = git push $repoUrl HEAD:refs/heads/$branch 2>&1
+          if ($LASTEXITCODE -eq 0) {
+              $pushed = $true
+              break
+          }
+          Write-Host "Push rejected, rebasing onto ${branch}. Output: ${output}"
+          $output = git fetch origin "refs/heads/${branch}" 2>&1
           if ($LASTEXITCODE -ne 0) {
-              Write-Host "Failed to rebase. Error code ${LASTEXITCODE}, output: ${output}"
-              Write-Host "Display conflict diff"
-              $output = git diff ORIG_HEAD FETCH_HEAD
-              if ($LASTEXITCODE -ne 0) {
-                  Write-Host "Failed to render diff. Error code ${LASTEXITCODE}, output:"
-                  Write-Output $output
-                  exit 1
-              }
-              Write-Output $output
+              Write-Host "Failed to fetch ${branch}. Error code ${LASTEXITCODE}, output: ${output}"
               exit 1
           }
-          Write-Host "Push baselines to server"
-          $output = git push https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git $(baselines_branch)
+          # -X theirs, which during a rebase means the commit being replayed - this leg's freshly captured
+          # baseline - and not the branch it is going onto. Without it the second run of a PR whose SQL
+          # moved fails every baseline-carrying leg: the leg clones baselines master, so its commit rewrites
+          # the same files the previous run already changed on the branch, and the replay conflicts.
+          # Reproduced on a scratch repository with this exact sequence; the fresh capture is always the one
+          # that should win, so resolving that way is the answer rather than a papered-over conflict.
+          # --onto FETCH_HEAD HEAD~1 keeps that to this leg's own commit. A bare FETCH_HEAD replays
+          # everything back to the merge base, and the clone is --depth 1: when baselines master advanced
+          # after create_baselines_branch rebased the branch, the shallow root is unreachable from the
+          # branch tip, so git reads it as an unrelated root commit and replays its whole tree - which
+          # -X theirs then lets win, reverting every baseline another leg had already pushed. HEAD~1 is
+          # exact because this step makes exactly one commit.
+          $output = git rebase -X theirs --onto FETCH_HEAD HEAD~1 2>&1
           if ($LASTEXITCODE -ne 0) {
-              Write-Host "Failed to push baselines. Error code ${LASTEXITCODE}, output: ${output}"
-          } else {
-              exit 0
+              Write-Host "Failed to rebase onto ${branch}. Error code ${LASTEXITCODE}, output: ${output}"
+              Write-Host "Display conflict diff"
+              git diff ORIG_HEAD FETCH_HEAD
+              exit 1
           }
-          $rebaseAttempts = $rebaseAttempts - 1
-      } while ($rebaseAttempts -gt 0)
-      Write-Host "Failed to push baselines"
-      exit 1
+          $attempts = $attempts - 1
+      }
+      if (-not $pushed) {
+          Write-Host "Failed to push baselines"
+          exit 1
+      }
+
+      # Open the baselines PR if this leg is the first to push. Concurrent legs either find the PR the
+      # winner already opened, or lose the create - which GitHub answers with "A pull request already
+      # exists", not an error worth failing a green test leg over.
+      $output = gh api -XGET /repos/$orgName/linq2db.baselines/pulls -F state=open -F head="${orgName}:${branch}"
+      if ($LASTEXITCODE -ne 0) {
+          Write-Host "PR search failed. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      if ($output -match "html_url") {
+          Write-Host "Baselines PR already exists"
+          exit 0
+      }
+      $prId = "$(source_pr_id)"
+      if ($prId) {
+          $sourcePrUrl = "https://github.com/${orgName}/linq2db/pull/${prId}"
+          $prName = "Baselines for ${sourcePrUrl}"
+          $prMessage = "Baselines for [#${prId}](${sourcePrUrl})"
+      } else {
+          $prName = "Baselines"
+          $prMessage = "Not associated with any pull request (tests pipeline triggered from admin console?)"
+      }
+      $output = gh api /repos/$orgName/linq2db.baselines/pulls -F title="${prName}" -F head=$branch -F base=$(baselines_master) -F draft=true -F body="${prMessage}" 2>&1
+      if ($output -match "A pull request already exists") {
+          Write-Host "Baselines PR was opened by a concurrent leg"
+          exit 0
+      }
+      if (-not ($output -match "html_url")) {
+          Write-Host "PR creation failed. Error code ${LASTEXITCODE}, output: ${output}"
+          exit 1
+      }
+      Write-Host "Baselines PR created"
+      if (-not $prId) {
+          exit 0
+      }
+      Write-Host "Post notification to source PR about baselines PR creation"
+      $note = "Test baselines changed by this PR. Don't forget to merge/close baselines PR after this pr merged/closed."
+      $output = gh api /repos/$orgName/linq2db/issues/$prId/comments -F body="$note"
+      if ($LASTEXITCODE -ne 0 -or -not ($output -match "html_url")) {
+          # A warning, not a failure. The two exits above guard something real - the baselines were not
+          # tracked - while by this point the PR exists and only the courtesy notification is missing.
+          # Failing here would put a leg red over a comment, after its provider tests all passed, and a
+          # re-run cannot repost it: the leg finds nothing to commit and exits before reaching this code.
+          Write-Host "##vso[task.logissue type=warning]Message posting failed. Error code ${LASTEXITCODE}, output: ${output}"
+      }
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
   condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
