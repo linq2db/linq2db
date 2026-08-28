@@ -1730,8 +1730,13 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set, overrides the provider-specific limit on the length of the generated statement per batch.
-		/// Used by <see cref="BulkCopyType.MultipleRows"/> mode to decide when to send the current batch and start a new one.
+		/// If set, overrides the provider-specific limit on the length of the generated statement per batch,
+		/// measured in characters of the generated SQL, not bytes. When <see langword="null"/> (the default),
+		/// the provider's own limit is used.
+		/// Honored by <see cref="BulkCopyType.MultipleRows"/> mode only, and within it not by Oracle's
+		/// <c>AlternativeBulkCopy.InsertInto</c> mode, which array-binds a single fixed-length statement.
+		/// A batch always contains at least one row, so a value below the length of a single rendered row does not
+		/// truncate: it degrades to one statement per row.
 		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
 		/// </summary>
 		[Pure]
@@ -1991,8 +1996,13 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set, overrides the provider-specific limit on the length of the generated statement per batch.
-		/// Used by <see cref="BulkCopyType.MultipleRows"/> mode to decide when to send the current batch and start a new one.
+		/// If set, overrides the provider-specific limit on the length of the generated statement per batch,
+		/// measured in characters of the generated SQL, not bytes. When <see langword="null"/> (the default),
+		/// the provider's own limit is used.
+		/// Honored by <see cref="BulkCopyType.MultipleRows"/> mode only, and within it not by Oracle's
+		/// <c>AlternativeBulkCopy.InsertInto</c> mode, which array-binds a single fixed-length statement.
+		/// A batch always contains at least one row, so a value below the length of a single rendered row does not
+		/// truncate: it degrades to one statement per row.
 		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
 		/// </summary>
 		[Pure]
