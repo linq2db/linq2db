@@ -844,6 +844,43 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void FilteredLeftJoinNullCheckSurvivesSetOperation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Regression: with a query filter on the joined entity, the `joined != null ? joined.X : fallback`
+			// conditional was discarded in every set-operation branch except the first, so a non-matching left
+			// join produced NULL instead of the fallback. Two ingredients keep the shape intact: the filter must
+			// not fold to a constant, and the projected column must be computed — with a plain column the join
+			// is flattened and the null check never has to survive on its own.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   }, // resolves
+				new DetailClass { Id = 2, MasterId = 100 }  // does not
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(details))
+			{
+				IQueryable<string> Values(int id) =>
+					from d in db.GetTable<DetailClass>().Where(d => d.Id == id)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					select m != null ? m.Value : "Unknown";
+
+				Values(1).Concat(Values(2)).ToList().ShouldBe(["Master!", "Unknown"]);
+			}
+		}
+
+		[Test]
 		public void NamedFilter_InterfaceTypedLambda_FastPath([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// Regression: a filter lambda typed against an interface (Func<ISoftDelete, ...>) applied to a concrete
