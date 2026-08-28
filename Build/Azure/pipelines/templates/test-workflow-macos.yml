@@ -186,7 +186,13 @@ steps:
           # the same files the previous run already changed on the branch, and the replay conflicts.
           # Reproduced on a scratch repository with this exact sequence; the fresh capture is always the one
           # that should win, so resolving that way is the answer rather than a papered-over conflict.
-          $output = git rebase -X theirs FETCH_HEAD 2>&1
+          # --onto FETCH_HEAD HEAD~1 keeps that to this leg's own commit. A bare FETCH_HEAD replays
+          # everything back to the merge base, and the clone is --depth 1: when baselines master advanced
+          # after create_baselines_branch rebased the branch, the shallow root is unreachable from the
+          # branch tip, so git reads it as an unrelated root commit and replays its whole tree - which
+          # -X theirs then lets win, reverting every baseline another leg had already pushed. HEAD~1 is
+          # exact because this step makes exactly one commit.
+          $output = git rebase -X theirs --onto FETCH_HEAD HEAD~1 2>&1
           if ($LASTEXITCODE -ne 0) {
               Write-Host "Failed to rebase onto ${branch}. Error code ${LASTEXITCODE}, output: ${output}"
               Write-Host "Display conflict diff"
