@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -334,31 +333,11 @@ namespace Tests.xUpdate
 			[Column(Length = 200)] public string? Value { get; set; }
 		}
 
-		sealed class BulkCopyCommandCounter : CommandInterceptor
-		{
-			public int Count            { get; private set; }
-			public int MaxCommandLength { get; private set; }
-
-			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
-			{
-				var sql = command.CommandText;
-
-				if (sql.Contains("INSERT", StringComparison.OrdinalIgnoreCase)
-					&& !sql.Contains("CREATE", StringComparison.OrdinalIgnoreCase)
-					&& !sql.Contains("DROP", StringComparison.OrdinalIgnoreCase))
-				{
-					Count++;
-					MaxCommandLength = Math.Max(MaxCommandLength, sql.Length);
-				}
-
-				return command;
-			}
-		}
-
 		// MaxSqlLengthForBatch is honored in shared BasicBulkCopy code, so it does not need the whole provider
 		// matrix. These three cover every distinct statement shape the splitter has to survive:
 		//   SQLite     - MultipleRowsCopy1, plain INSERT INTO ... VALUES (row), (row) (same path as SqlServer/MySql/ClickHouse)
-		//   PostgreSQL - MultipleRowsCopy1 plus a GetMultipleRowsSuffix that must be re-emitted on every batch
+		//   PostgreSQL - MultipleRowsCopy1 plus a GetMultipleRowsSuffix (ON CONFLICT DO NOTHING, which only
+		//                ConflictAction.Ignore turns on) that must be re-emitted on every batch
 		//   Firebird   - MultipleRowsCopy2 (SELECT ... UNION ALL) and the only provider with Cast*OnUnionAll,
 		//                where the first row of each batch renders differently from the rest
 		// Oracle has its own coverage in OracleTests.BulkCopyMultipleRowsCrossesSqlLengthLimit.
@@ -373,7 +352,7 @@ namespace Tests.xUpdate
 			const int valueLength  = 200;
 
 			using var _ = new DisableBaseline("generated statement volume is the subject of the test");
-			var       counter = new BulkCopyCommandCounter();
+			var       queries = new SaveQueriesInterceptor();
 
 			// the limit is reachable both per-call and connection-wide; cover both entry points
 			using var db = viaDataOptions
@@ -381,10 +360,11 @@ namespace Tests.xUpdate
 					.UseBulkCopyType(BulkCopyType.MultipleRows)
 					.UseBulkCopyMaxSqlLengthForBatch(maxSqlLength)
 					.UseBulkCopyMaxBatchSize(rowCount * 10)
-					.UseBulkCopyUseParameters(useParameters))
+					.UseBulkCopyUseParameters(useParameters)
+					.UseBulkCopyConflictAction(ConflictAction.Ignore))
 				: GetDataConnection(context);
 
-			db.AddInterceptor(counter);
+			db.AddInterceptor(queries);
 
 			using var table = db.CreateLocalTable<WideBulkCopyTable>();
 
@@ -406,23 +386,35 @@ namespace Tests.xUpdate
 						MaxBatchSize         = rowCount * 10,
 						MaxSqlLengthForBatch = maxSqlLength,
 						UseParameters        = useParameters,
+						ConflictAction       = ConflictAction.Ignore,
 					},
 					rows);
 			}
 
 			var loaded = table.OrderBy(r => r.Id).ToArray();
 
-			Assert.That(loaded.Select(r => r.Id),    Is.EqualTo(rows.Select(r => r.Id)));
-			Assert.That(loaded.Select(r => r.Value), Is.EqualTo(rows.Select(r => r.Value)));
+			loaded.Select(r => r.Id).   ShouldBe(rows.Select(r => r.Id));
+			loaded.Select(r => r.Value).ShouldBe(rows.Select(r => r.Value));
+
+			var inserts = queries.Queries
+				.Where(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				.ToList();
 
 			using (Assert.EnterMultipleScope())
 			{
 				// the option must actually split: a single statement would mean it was ignored
-				Assert.That(counter.Count, Is.GreaterThan(1));
+				Assert.That(inserts, Has.Count.GreaterThan(1));
 				// a row is appended before the limit is checked, so one row may overshoot - but no more than that.
 				// Without the option this is what goes red: the provider default (1MB on SQLite) would let every
 				// row into a single statement, in both literal and parameterized mode.
-				Assert.That(counter.MaxCommandLength, Is.LessThan(maxSqlLength + 4 * valueLength));
+				Assert.That(inserts.Select(q => q.Length).DefaultIfEmpty().Max(), Is.LessThan(maxSqlLength + 4 * valueLength));
+			}
+
+			// PostgreSQL is the only provider here with a GetMultipleRowsSuffix; the suffix is appended after the
+			// length check, so a batch could lose it without any of the assertions above noticing
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL))
+			{
+				inserts.Count(q => q.Contains("ON CONFLICT", StringComparison.OrdinalIgnoreCase)).ShouldBe(inserts.Count);
 			}
 		}
 
