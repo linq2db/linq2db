@@ -365,31 +365,50 @@ namespace Tests.xUpdate
 		[Test]
 		public void MaxSqlLengthForBatchSplitsStatements(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllFirebird)] string context,
-			[Values]                                                                                                 bool   useParameters)
+			[Values]                                                                                                 bool   useParameters,
+			[Values]                                                                                                 bool   viaDataOptions)
 		{
 			const int maxSqlLength = 4096;
 			const int rowCount     = 1000;
 			const int valueLength  = 200;
 
-			using var _         = new DisableBaseline("generated statement volume is the subject of the test");
-			var       counter   = new BulkCopyCommandCounter();
-			using var db        = GetDataConnection(context, interceptor: counter);
-			using var table     = db.CreateLocalTable<WideBulkCopyTable>();
+			using var _ = new DisableBaseline("generated statement volume is the subject of the test");
+			var       counter = new BulkCopyCommandCounter();
+
+			// the limit is reachable both per-call and connection-wide; cover both entry points
+			using var db = viaDataOptions
+				? GetDataConnection(context, o => o
+					.UseBulkCopyType(BulkCopyType.MultipleRows)
+					.UseBulkCopyMaxSqlLengthForBatch(maxSqlLength)
+					.UseBulkCopyMaxBatchSize(rowCount * 10)
+					.UseBulkCopyUseParameters(useParameters))
+				: GetDataConnection(context);
+
+			db.AddInterceptor(counter);
+
+			using var table = db.CreateLocalTable<WideBulkCopyTable>();
 
 			var rows = Enumerable.Range(1, rowCount)
 				.Select(i => new WideBulkCopyTable { Id = i, Value = new string((char)('a' + i % 26), valueLength) })
 				.ToList();
 
 			// MaxBatchSize is deliberately larger than rowCount so statement length is the only splitter
-			db.BulkCopy(
-				new BulkCopyOptions
-				{
-					BulkCopyType         = BulkCopyType.MultipleRows,
-					MaxBatchSize         = rowCount * 10,
-					MaxSqlLengthForBatch = maxSqlLength,
-					UseParameters        = useParameters,
-				},
-				rows);
+			if (viaDataOptions)
+			{
+				table.BulkCopy(rows);
+			}
+			else
+			{
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType         = BulkCopyType.MultipleRows,
+						MaxBatchSize         = rowCount * 10,
+						MaxSqlLengthForBatch = maxSqlLength,
+						UseParameters        = useParameters,
+					},
+					rows);
+			}
 
 			var loaded = table.OrderBy(r => r.Id).ToArray();
 
