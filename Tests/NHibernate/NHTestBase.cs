@@ -51,6 +51,16 @@ namespace LinqToDB.NHibernate.Tests
 		}
 
 		/// <summary>
+		/// Before each test, establish its own capture context. The trace and baseline buffers are kept per test,
+		/// and a write that resolves to no test is dropped, so a fixture that never begins one captures nothing.
+		/// </summary>
+		[SetUp]
+		public virtual void OnBeforeTest()
+		{
+			CustomTestContext.Begin(false, null);
+		}
+
+		/// <summary>
 		/// After each test, dump the SQL captured by the LinqToDB.NHibernate logger to that test's baseline (a no-op
 		/// when no baselines path is configured or the test failed) and release the per-test context.
 		/// </summary>

@@ -50,10 +50,7 @@ namespace Tests.Linq
 			}
 		}
 
-		public class ExpressionTestsFakeType
-		{
-
-		}
+		public class ExpressionTestsFakeType;
 
 		[Table]
 		private sealed class ExpressionTestClass

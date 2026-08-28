@@ -279,7 +279,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							keepClause : keepClause,
 							nullTreatment : element.NullTreatment,
 							fromPosition : element.FromPosition,
-							isWindowFunction: element.IsWindowFunction), element);
+							isWindowFunction: element.IsWindowFunction,
+							argumentDomain: element.ArgumentDomain), element);
 					}
 
 					break;
@@ -468,6 +469,53 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected virtual ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			return (ISqlExpression)Visit(expression);
+		}
+
+		/// <summary>
+		/// Visit of the TAKE modifier of a select clause. A modifier is not a value position, so a visitor that
+		/// must treat it differently from a column expression overrides this instead of the whole clause.
+		/// </summary>
+		protected virtual ISqlExpression? VisitTake(SqlSelectClause selectClause, ISqlExpression? takeValue)
+		{
+			return (ISqlExpression?)Visit(takeValue);
+		}
+
+		/// <summary>
+		/// Visit of the SKIP modifier of a select clause. See <see cref="VisitTake"/>.
+		/// </summary>
+		protected virtual ISqlExpression? VisitSkip(SqlSelectClause selectClause, ISqlExpression? skipValue)
+		{
+			return (ISqlExpression?)Visit(skipValue);
+		}
+
+		protected internal virtual IQueryElement VisitSqlParameterCastExpression(SqlParameterCastExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Parameter);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((SqlParameter)Visit(element.Parameter));
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var parameter = (SqlParameter)Visit(element.Parameter);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Parameter, parameter))
+						return NotifyReplaced(new SqlParameterCastExpression(parameter), element);
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
 		}
 
 		protected internal virtual IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
@@ -2161,8 +2209,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.TakeValue);
-					Visit(element.SkipValue);
+					VisitTake(element, element.TakeValue);
+					VisitSkip(element, element.SkipValue);
 
 					if (element.DistinctOn != null)
 						foreach (var on in element.DistinctOn)
@@ -2177,8 +2225,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					element.TakeValue = (ISqlExpression?)Visit(element.TakeValue);
-					element.SkipValue = (ISqlExpression?)Visit(element.SkipValue);
+					element.TakeValue = VisitTake(element, element.TakeValue);
+					element.SkipValue = VisitSkip(element, element.SkipValue);
 
 					if (element.DistinctOn != null)
 						for (var i = 0; i < element.DistinctOn.Count; i++)
@@ -2193,8 +2241,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Transform:
 				{
-					var take = (ISqlExpression?)Visit(element.TakeValue);
-					var skip = (ISqlExpression?)Visit(element.SkipValue);
+					var take = VisitTake(element, element.TakeValue);
+					var skip = VisitSkip(element, element.SkipValue);
 
 					List<ISqlExpression>? newDistinctOn = null;
 					if (element.DistinctOn != null)
@@ -2450,6 +2498,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return predicate;
 		}
 
+		/// <summary>
+		/// Visit of the value list of an IN predicate. The values are a different position from the tested
+		/// expression - a visitor that must treat them differently overrides this rather than the whole
+		/// predicate.
+		/// </summary>
+		protected virtual List<ISqlExpression>? VisitInListValues(SqlPredicate.InList predicate, List<ISqlExpression> values, VisitMode mode)
+		{
+			return VisitElements(values, mode);
+		}
+
 		protected internal virtual IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			switch (GetVisitMode(predicate))
@@ -2457,13 +2515,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				case VisitMode.ReadOnly:
 				{
 					Visit(predicate.Expr1);
-					VisitElements(predicate.Values, VisitMode.ReadOnly);
+					VisitInListValues(predicate, predicate.Values, VisitMode.ReadOnly);
 					break;
 				}
 				case VisitMode.Modify:
 				{
 					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
-					VisitElements(predicate.Values, VisitMode.Modify);
+					VisitInListValues(predicate, predicate.Values, VisitMode.Modify);
 
 					predicate.Modify(expr1);
 
@@ -2472,7 +2530,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				case VisitMode.Transform:
 				{
 					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
-					var values = VisitElements(predicate.Values, VisitMode.Transform);
+					var values = VisitInListValues(predicate, predicate.Values, VisitMode.Transform);
 
 					if (ShouldReplace(predicate)                 ||
 					    !ReferenceEquals(predicate.Expr1, expr1) ||
@@ -3392,7 +3450,139 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, expression) || !ReferenceEquals(element.FromType, fromType))
 					{
-						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType), element);
+						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType, element.IsMandatory), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlIntervalExpression(SqlIntervalExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Value);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Value), element.Type, element.IntervalType);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var value = (ISqlExpression)Visit(element.Value);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Value, value))
+					{
+						return NotifyReplaced(new SqlIntervalExpression(value, element.Type, element.IntervalType), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Start);
+					Visit(element.End);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Start), (ISqlExpression)Visit(element.End), element.Type, element.IntervalType);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var start = (ISqlExpression)Visit(element.Start);
+					var end   = (ISqlExpression)Visit(element.End);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Start, start) || !ReferenceEquals(element.End, end))
+					{
+						return NotifyReplaced(new SqlIntervalDifferenceExpression(start, end, element.Type, element.IntervalType), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Interval);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Interval), element.Unit, element.Kind, element.Type, element.Within);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var interval = (ISqlExpression)Visit(element.Interval);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Interval, interval))
+					{
+						return NotifyReplaced(new SqlIntervalPartExpression(interval, element.Unit, element.Kind, element.Type, element.Within), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Temporal);
+					Visit(element.Interval);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Temporal), (ISqlExpression)Visit(element.Interval), element.Type);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var temporal = (ISqlExpression)Visit(element.Temporal);
+					var interval = (ISqlExpression)Visit(element.Interval);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Temporal, temporal) || !ReferenceEquals(element.Interval, interval))
+					{
+						return NotifyReplaced(new SqlTemporalArithmeticExpression(temporal, interval, element.IsSubtract, element.Type), element);
 					}
 
 					break;

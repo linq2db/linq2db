@@ -237,9 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		sealed class PersonEx : Person
-		{
-		}
+		sealed class PersonEx : Person;
 
 		[Test]
 		public void SimplTest()
@@ -288,9 +286,9 @@ namespace Tests.Linq
 			public int ChildID { get; set; }
 		}
 
-		public class MyChildBase_11_21 : MyChildBase { }
-		public class MyChild11 : MyChildBase_11_21 { }
-		public class MyChild21 : MyChildBase_11_21 { }
+		public class MyChildBase_11_21 : MyChildBase;
+		public class MyChild11 : MyChildBase_11_21;
+		public class MyChild21 : MyChildBase_11_21;
 
 		[Test]
 		public void InheritanceMappingIssue106Test([DataSources] string context)
@@ -471,9 +469,7 @@ namespace Tests.Linq
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;
 		}
 
-		public class InheritanceB : InheritanceBase
-		{
-		}
+		public class InheritanceB : InheritanceBase;
 
 		[Table(Name="LinqDataTypes")]
 		public class InheritanceAssociation

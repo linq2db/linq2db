@@ -32,9 +32,7 @@ namespace Tests.UserTests
 			[Column] public int? ParentId { get; set; }
 		}
 
-		public class PrimaryKeyEquality<T>
-		{
-		}
+		public class PrimaryKeyEquality<T>;
 
 		[Table]
 		public class Deviation : PrimaryKeyEquality<Deviation>

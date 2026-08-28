@@ -6,261 +6,30 @@
     <BuildType Name="Testing" />
   </Configurations>
   <Folder Name="/.agents/">
+    <Project Path=".github/.github.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
     <File Path="AGENTS.md" />
     <File Path="CLAUDE.md" />
-    <File Path=".agents/settings.local.json" />
-  </Folder>
-  <Folder Name="/.agents/agents/">
-    <File Path=".agents/agents/baselines-reviewer.md" />
-    <File Path=".agents/agents/code-reviewer.md" />
-    <File Path=".agents/agents/kb-architect.md" />
-    <File Path=".agents/agents/kb-github-curator.md" />
-    <File Path=".agents/agents/kb-historian.md" />
-    <File Path=".agents/agents/kb-issue-detector.md" />
-    <File Path=".agents/agents/kb-research.md" />
-    <File Path=".agents/agents/test-runner.md" />
-    <File Path=".agents/agents/test-writer.md" />
-  </Folder>
-  <Folder Name="/.agents/agents/_shared/">
-    <File Path=".agents/agents/_shared/kb-protocol.md" />
-  </Folder>
-  <Folder Name="/.agents/docs/">
-    <File Path=".agents/docs/adding-provider-version.md" />
-    <File Path=".agents/docs/agent-evals.md" />
-    <File Path=".agents/docs/agent-guardrails.md" />
-    <File Path=".agents/docs/agent-rules.md" />
-    <File Path=".agents/docs/analyzer-rules.md" />
-    <File Path=".agents/docs/api-surface-classification.md" />
-    <File Path=".agents/docs/architecture.md" />
-    <File Path=".agents/docs/audit-agents-checks.md" />
-    <File Path=".agents/docs/baselines-repo-layout.md" />
-    <File Path=".agents/docs/bug-investigation.md" />
-    <File Path=".agents/docs/ci-tests.md" />
-    <File Path=".agents/docs/claude-setup.md" />
-    <File Path=".agents/docs/code-design.md" />
-    <File Path=".agents/docs/definition-of-done.md" />
-    <File Path=".agents/docs/github-authoring.md" />
-    <File Path=".agents/docs/github-review-api.md" />
-    <File Path=".agents/docs/issue-labels.md" />
-    <File Path=".agents/docs/issue-search.md" />
-    <File Path=".agents/docs/kb-architecture.md" />
-    <File Path=".agents/docs/kb-areas.md" />
-    <File Path=".agents/docs/kb-build-steps.md" />
-    <File Path=".agents/docs/kb-coverage-tiers.md" />
-    <File Path=".agents/docs/kb-issue-categories.md" />
-    <File Path=".agents/docs/kb-refresh-cursors.md" />
-    <File Path=".agents/docs/kb-selection-grammar.md" />
-    <File Path=".agents/docs/maintaining-the-corpus.md" />
-    <File Path=".agents/docs/msbuild-override.md" />
-    <File Path=".agents/docs/pr-and-push.md" />
-    <File Path=".agents/docs/pr-context-prep.md" />
-    <File Path=".agents/docs/pr-resolver.md" />
-    <File Path=".agents/docs/predecessor-bltoolkit.md" />
-    <File Path=".agents/docs/query-cache-mechanics.md" />
-    <File Path=".agents/docs/review-bot-claim-audit.md" />
-    <File Path=".agents/docs/review-conventions.md" />
-    <File Path=".agents/docs/review-orchestration.md" />
-    <File Path=".agents/docs/review-posting.md" />
-    <File Path=".agents/docs/script-authoring.md" />
-    <File Path=".agents/docs/test-databases.md" />
-    <File Path=".agents/docs/test-review-checklist.md" />
-    <File Path=".agents/docs/testing.md" />
-    <File Path=".agents/docs/windows-dev-gotchas.md" />
-    <File Path=".agents/docs/windows-gotchas.md" />
-    <File Path=".agents/docs/worktree.md" />
-  </Folder>
-  <Folder Name="/.agents/docs/release/">
-    <File Path=".agents/docs/release/branch-and-pr.md" />
-    <File Path=".agents/docs/release/external-repos.md" />
-    <File Path=".agents/docs/release/first-run-todos.md" />
-    <File Path=".agents/docs/release/linqpad-test-checklist.md" />
-    <File Path=".agents/docs/release/nuget-package-notes.md" />
-    <File Path=".agents/docs/release/overview.md" />
-    <File Path=".agents/docs/release/provider-db-init.md" />
-  </Folder>
-  <Folder Name="/.agents/hooks/">
-    <File Path=".agents/hooks/cleanup-docker-session.ps1" />
-    <File Path=".agents/hooks/track-docker-start.ps1" />
-    <File Path=".agents/hooks/track-kb-usage.js" />
-    <File Path=".agents/hooks/track-session-start.js" />
-  </Folder>
-  <Folder Name="/.agents/rules/">
-    <File Path=".agents/rules/cross-cutting-core.md" />
-  </Folder>
-  <Folder Name="/.agents/scripts/">
-    <File Path=".agents/scripts/_shared.ps1" />
-    <File Path=".agents/scripts/amend-branch-commit.ps1" />
-    <File Path=".agents/scripts/analyzer-profile-build.ps1" />
-    <File Path=".agents/scripts/analyzer-profile-report.ps1" />
-    <File Path=".agents/scripts/apply-verify-writes.ps1" />
-    <File Path=".agents/scripts/azp-build-failures.ps1" />
-    <File Path=".agents/scripts/azp-run.ps1" />
-    <File Path=".agents/scripts/baselines-diff.ps1" />
-    <File Path=".agents/scripts/carry-curation.ps1" />
-    <File Path=".agents/scripts/close-stale-baselines.ps1" />
-    <File Path=".agents/scripts/diff-baselines.ps1" />
-    <File Path=".agents/scripts/diff-reader.ps1" />
-    <File Path=".agents/scripts/dismiss-stale-reviews.ps1" />
-    <File Path=".agents/scripts/edit-gh-comment.ps1" />
-    <File Path=".agents/scripts/extract-agent-output.ps1" />
-    <File Path=".agents/scripts/fuget-api-diff.ps1" />
-    <File Path=".agents/scripts/kb-audit-citations.ps1" />
-    <File Path=".agents/scripts/kb-coverage-backfill.ps1" />
-    <File Path=".agents/scripts/kb-fetch-commits.ps1" />
-    <File Path=".agents/scripts/kb-fetch-github.ps1" />
-    <File Path=".agents/scripts/kb-fetch-wiki.ps1" />
-    <File Path=".agents/scripts/kb-search.ps1" />
-    <File Path=".agents/scripts/kb-state.ps1" />
-    <File Path=".agents/scripts/kb-usage-audit.ps1" />
-    <File Path=".agents/scripts/linqpad-local-push.ps1" />
-    <File Path=".agents/scripts/milestone-consistency.ps1" />
-    <File Path=".agents/scripts/post-pr-review.ps1" />
-    <File Path=".agents/scripts/post-pr-thread-replies.ps1" />
-    <File Path=".agents/scripts/pr-body-edit.ps1" />
-    <File Path=".agents/scripts/pr-context.ps1" />
-    <File Path=".agents/scripts/release-deps-discover.ps1" />
-    <File Path=".agents/scripts/release-milestone-audit.ps1" />
-    <File Path=".agents/scripts/release-notes-audit.ps1" />
-    <File Path=".agents/scripts/release-notes-draft.ps1" />
-    <File Path=".agents/scripts/release-nuget-verify.ps1" />
-    <File Path=".agents/scripts/release-prefetch.ps1" />
-    <File Path=".agents/scripts/release-publicapi-reconcile.ps1" />
-    <File Path=".agents/scripts/release-state.ps1" />
-    <File Path=".agents/scripts/release-test-cli-scaffold.ps1" />
-    <File Path=".agents/scripts/remove-worktree-locked.ps1" />
-    <File Path=".agents/scripts/snap-baselines.ps1" />
-    <File Path=".agents/scripts/test-status.ps1" />
-    <File Path=".agents/scripts/verify-lines.ps1" />
-    <File Path=".agents/scripts/wait-for-review.ps1" />
-  </Folder>
-  <Folder Name="/.agents/skills/api-baselines/">
-    <File Path=".agents/skills/api-baselines/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/audit-agents/">
-    <File Path=".agents/skills/audit-agents/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/chores/">
-    <File Path=".agents/skills/chores/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/copilot-loop/">
-    <File Path=".agents/skills/copilot-loop/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/create-issue/">
-    <File Path=".agents/skills/create-issue/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/enable-disabled-test/">
-    <File Path=".agents/skills/enable-disabled-test/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/find-issues/">
-    <File Path=".agents/skills/find-issues/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/fix-issue/">
-    <File Path=".agents/skills/fix-issue/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/kb-ask/">
-    <File Path=".agents/skills/kb-ask/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/kb-build/">
-    <File Path=".agents/skills/kb-build/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/kb-issues/">
-    <File Path=".agents/skills/kb-issues/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/kb-refresh/">
-    <File Path=".agents/skills/kb-refresh/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/kb-status/">
-    <File Path=".agents/skills/kb-status/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/merge-duplicates/">
-    <File Path=".agents/skills/merge-duplicates/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/profile-analyzers/">
-    <File Path=".agents/skills/profile-analyzers/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release/">
-    <File Path=".agents/skills/release/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-deps/">
-    <File Path=".agents/skills/release-deps/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-milestone-check/">
-    <File Path=".agents/skills/release-milestone-check/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-notes/">
-    <File Path=".agents/skills/release-notes/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-notes-validate/">
-    <File Path=".agents/skills/release-notes-validate/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-postpublish/">
-    <File Path=".agents/skills/release-postpublish/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-publicapi/">
-    <File Path=".agents/skills/release-publicapi/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-publish/">
-    <File Path=".agents/skills/release-publish/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-test-matrix/">
-    <File Path=".agents/skills/release-test-matrix/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/release-verify/">
-    <File Path=".agents/skills/release-verify/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/review-pr/">
-    <File Path=".agents/skills/review-pr/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/session-reflect/">
-    <File Path=".agents/skills/session-reflect/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/test/">
-    <File Path=".agents/skills/test/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/test-progress/">
-    <File Path=".agents/skills/test-progress/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/test-providers/">
-    <File Path=".agents/skills/test-providers/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/update-slnx/">
-    <File Path=".agents/skills/update-slnx/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/verify-review/">
-    <File Path=".agents/skills/verify-review/SKILL.md" />
-  </Folder>
-  <Folder Name="/.agents/skills/version-bump/">
-    <File Path=".agents/skills/version-bump/SKILL.md" />
-  </Folder>
-  <Folder Name="/.github/">
-    <File Path=".github/CODEOWNERS" />
-    <File Path=".github/copilot-instructions.md" />
-  </Folder>
-  <Folder Name="/.github/ISSUE_TEMPLATE/">
-    <File Path=".github/ISSUE_TEMPLATE/01_bug_report_linq2db.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/02_bug_report_linq2db.efcore.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/03_bug_report_linq2db.cli.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/04_bug_report_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.linqpad.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/09_bug_report_linq2db.other.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/11_feture_request_linq2db.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/12_feture_request_linq2db.efcore.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/13_feture_request_linq2db.cli.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/14_feture_request_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.linqpad.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/19_feture_request_linq2db.other.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/config.yml" />
+    <Project Path=".claude/.claude.csproj">
+      <Build Solution="*|*" Project="false" />
+    </Project>
   </Folder>
   <Folder Name="/.root/">
     <File Path=".editorconfig" />
     <File Path=".gitattributes" />
     <File Path=".gitignore" />
+    <File Path=".gitmodules" />
     <File Path=".runsettings" />
+    <File Path="AGENTS.md" />
     <File Path="Build.cmd" />
+    <File Path="CLAUDE.md" />
     <File Path="Clean.cmd" />
     <File Path="Compile.cmd" />
     <File Path="CONTRIBUTING.md" />
     <File Path="DataProviders.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
     <File Path="global.json" />
     <File Path="linq2db.Benchmarks.slnf" />
     <File Path="linq2db.playground.slnf" />
@@ -269,6 +38,7 @@
     <File Path="README.md" />
     <File Path="SQLite.Runtime.props" />
     <File Path="Test.cmd" />
+    <File Path="UpdateBaselines.cmd" />
   </Folder>
   <Folder Name="/Build/">
     <File Path="Build/linq2db.snk" />
@@ -280,160 +50,106 @@
     <File Path="Build/Azure/README.md" />
   </Folder>
   <Folder Name="/Build/Azure/net100/">
-    <File Path="Build/Azure/net100/access.ace.json" />
+    <File Path="Build/Azure/net100/access.ace.odbc.json" />
+    <File Path="Build/Azure/net100/access.ace.oledb.json" />
     <File Path="Build/Azure/net100/access.ace.x64.json" />
     <File Path="Build/Azure/net100/access.mdb.json" />
-    <File Path="Build/Azure/net100/clickhouse.driver.json" />
-    <File Path="Build/Azure/net100/clickhouse.mysql.json" />
-    <File Path="Build/Azure/net100/clickhouse.octonica.json" />
-    <File Path="Build/Azure/net100/db2.json" />
-    <File Path="Build/Azure/net100/firebird25.json" />
-    <File Path="Build/Azure/net100/firebird3.json" />
-    <File Path="Build/Azure/net100/firebird4.json" />
-    <File Path="Build/Azure/net100/firebird5.json" />
+    <File Path="Build/Azure/net100/clickhouse.json" />
+    <File Path="Build/Azure/net100/db2informixduckdb.json" />
+    <File Path="Build/Azure/net100/duckdb.json" />
+    <File Path="Build/Azure/net100/firebird.json" />
     <File Path="Build/Azure/net100/hana2.json" />
-    <File Path="Build/Azure/net100/informix.json" />
-    <File Path="Build/Azure/net100/mariadb11.json" />
     <File Path="Build/Azure/net100/mysql.json" />
-    <File Path="Build/Azure/net100/mysql57.json" />
-    <File Path="Build/Azure/net100/oracle11.json" />
-    <File Path="Build/Azure/net100/oracle12.json" />
-    <File Path="Build/Azure/net100/oracle18.json" />
-    <File Path="Build/Azure/net100/oracle19.json" />
-    <File Path="Build/Azure/net100/oracle21.json" />
-    <File Path="Build/Azure/net100/oracle23.json" />
-    <File Path="Build/Azure/net100/pgsql13.json" />
-    <File Path="Build/Azure/net100/pgsql14.json" />
-    <File Path="Build/Azure/net100/pgsql15.json" />
-    <File Path="Build/Azure/net100/pgsql16.json" />
-    <File Path="Build/Azure/net100/pgsql17.json" />
-    <File Path="Build/Azure/net100/pgsql18.json" />
+    <File Path="Build/Azure/net100/oracle1112.json" />
+    <File Path="Build/Azure/net100/oracle1819.json" />
+    <File Path="Build/Azure/net100/oracle2123.json" />
+    <File Path="Build/Azure/net100/pgsql1.json" />
+    <File Path="Build/Azure/net100/pgsql2.json" />
     <File Path="Build/Azure/net100/sqlce.json" />
-    <File Path="Build/Azure/net100/sqlite.extras.json" />
     <File Path="Build/Azure/net100/sqlite.json" />
     <File Path="Build/Azure/net100/sqlserver.2005.json" />
     <File Path="Build/Azure/net100/sqlserver.2008.json" />
     <File Path="Build/Azure/net100/sqlserver.2012.json" />
     <File Path="Build/Azure/net100/sqlserver.2014.json" />
     <File Path="Build/Azure/net100/sqlserver.2016.json" />
-    <File Path="Build/Azure/net100/sqlserver.2017.json" />
-    <File Path="Build/Azure/net100/sqlserver.2019.json" />
-    <File Path="Build/Azure/net100/sqlserver.2022.json" />
-    <File Path="Build/Azure/net100/sqlserver.2022.metrics.json" />
-    <File Path="Build/Azure/net100/sqlserver.2025.json" />
+    <File Path="Build/Azure/net100/sqlserver.2017_2019.json" />
+    <File Path="Build/Azure/net100/sqlserver.2022_2025.json" />
     <File Path="Build/Azure/net100/sqlserver.extras.json" />
-    <File Path="Build/Azure/net100/sqlserver.fts.2019.json" />
-    <File Path="Build/Azure/net100/sybase.json" />
+    <File Path="Build/Azure/net100/sqlserver.fts.2017_2019.json" />
+    <File Path="Build/Azure/net100/ydbsybase.json" />
   </Folder>
   <Folder Name="/Build/Azure/net80/">
-    <File Path="Build/Azure/net80/access.ace.json" />
+    <File Path="Build/Azure/net80/access.ace.odbc.json" />
+    <File Path="Build/Azure/net80/access.ace.oledb.json" />
     <File Path="Build/Azure/net80/access.ace.x64.json" />
     <File Path="Build/Azure/net80/access.mdb.json" />
-    <File Path="Build/Azure/net80/clickhouse.driver.json" />
-    <File Path="Build/Azure/net80/clickhouse.mysql.json" />
-    <File Path="Build/Azure/net80/clickhouse.octonica.json" />
-    <File Path="Build/Azure/net80/db2.json" />
-    <File Path="Build/Azure/net80/firebird25.json" />
-    <File Path="Build/Azure/net80/firebird3.json" />
-    <File Path="Build/Azure/net80/firebird4.json" />
-    <File Path="Build/Azure/net80/firebird5.json" />
+    <File Path="Build/Azure/net80/clickhouse.json" />
+    <File Path="Build/Azure/net80/db2informixduckdb.json" />
+    <File Path="Build/Azure/net80/duckdb.json" />
+    <File Path="Build/Azure/net80/firebird.json" />
     <File Path="Build/Azure/net80/hana2.json" />
-    <File Path="Build/Azure/net80/informix.json" />
-    <File Path="Build/Azure/net80/mariadb11.json" />
     <File Path="Build/Azure/net80/mysql.json" />
-    <File Path="Build/Azure/net80/mysql57.json" />
-    <File Path="Build/Azure/net80/oracle11.json" />
-    <File Path="Build/Azure/net80/oracle12.json" />
-    <File Path="Build/Azure/net80/oracle18.json" />
-    <File Path="Build/Azure/net80/oracle19.json" />
-    <File Path="Build/Azure/net80/oracle21.json" />
-    <File Path="Build/Azure/net80/oracle23.json" />
-    <File Path="Build/Azure/net80/pgsql13.json" />
-    <File Path="Build/Azure/net80/pgsql14.json" />
-    <File Path="Build/Azure/net80/pgsql15.json" />
-    <File Path="Build/Azure/net80/pgsql16.json" />
-    <File Path="Build/Azure/net80/pgsql17.json" />
-    <File Path="Build/Azure/net80/pgsql18.json" />
+    <File Path="Build/Azure/net80/oracle1112.json" />
+    <File Path="Build/Azure/net80/oracle1819.json" />
+    <File Path="Build/Azure/net80/oracle2123.json" />
+    <File Path="Build/Azure/net80/pgsql1.json" />
+    <File Path="Build/Azure/net80/pgsql2.json" />
     <File Path="Build/Azure/net80/sqlce.json" />
-    <File Path="Build/Azure/net80/sqlite.extras.json" />
     <File Path="Build/Azure/net80/sqlite.json" />
     <File Path="Build/Azure/net80/sqlserver.2005.json" />
     <File Path="Build/Azure/net80/sqlserver.2008.json" />
     <File Path="Build/Azure/net80/sqlserver.2012.json" />
     <File Path="Build/Azure/net80/sqlserver.2014.json" />
     <File Path="Build/Azure/net80/sqlserver.2016.json" />
-    <File Path="Build/Azure/net80/sqlserver.2017.json" />
-    <File Path="Build/Azure/net80/sqlserver.2019.json" />
-    <File Path="Build/Azure/net80/sqlserver.2022.json" />
-    <File Path="Build/Azure/net80/sqlserver.2022.metrics.json" />
-    <File Path="Build/Azure/net80/sqlserver.2025.json" />
+    <File Path="Build/Azure/net80/sqlserver.2017_2019.json" />
+    <File Path="Build/Azure/net80/sqlserver.2022_2025.json" />
     <File Path="Build/Azure/net80/sqlserver.extras.json" />
-    <File Path="Build/Azure/net80/sqlserver.fts.2019.json" />
-    <File Path="Build/Azure/net80/sybase.json" />
+    <File Path="Build/Azure/net80/sqlserver.fts.2017_2019.json" />
+    <File Path="Build/Azure/net80/ydbsybase.json" />
   </Folder>
   <Folder Name="/Build/Azure/net90/">
-    <File Path="Build/Azure/net90/access.ace.json" />
+    <File Path="Build/Azure/net90/access.ace.odbc.json" />
+    <File Path="Build/Azure/net90/access.ace.oledb.json" />
     <File Path="Build/Azure/net90/access.ace.x64.json" />
     <File Path="Build/Azure/net90/access.mdb.json" />
-    <File Path="Build/Azure/net90/clickhouse.driver.json" />
-    <File Path="Build/Azure/net90/clickhouse.mysql.json" />
-    <File Path="Build/Azure/net90/clickhouse.octonica.json" />
-    <File Path="Build/Azure/net90/db2.json" />
-    <File Path="Build/Azure/net90/firebird25.json" />
-    <File Path="Build/Azure/net90/firebird3.json" />
-    <File Path="Build/Azure/net90/firebird4.json" />
-    <File Path="Build/Azure/net90/firebird5.json" />
+    <File Path="Build/Azure/net90/clickhouse.json" />
+    <File Path="Build/Azure/net90/db2informixduckdb.json" />
+    <File Path="Build/Azure/net90/duckdb.json" />
+    <File Path="Build/Azure/net90/firebird.json" />
     <File Path="Build/Azure/net90/hana2.json" />
-    <File Path="Build/Azure/net90/informix.json" />
-    <File Path="Build/Azure/net90/mariadb11.json" />
     <File Path="Build/Azure/net90/mysql.json" />
-    <File Path="Build/Azure/net90/mysql57.json" />
-    <File Path="Build/Azure/net90/oracle11.json" />
-    <File Path="Build/Azure/net90/oracle12.json" />
-    <File Path="Build/Azure/net90/oracle18.json" />
-    <File Path="Build/Azure/net90/oracle19.json" />
-    <File Path="Build/Azure/net90/oracle21.json" />
-    <File Path="Build/Azure/net90/oracle23.json" />
-    <File Path="Build/Azure/net90/pgsql13.json" />
-    <File Path="Build/Azure/net90/pgsql14.json" />
-    <File Path="Build/Azure/net90/pgsql15.json" />
-    <File Path="Build/Azure/net90/pgsql16.json" />
-    <File Path="Build/Azure/net90/pgsql17.json" />
-    <File Path="Build/Azure/net90/pgsql18.json" />
+    <File Path="Build/Azure/net90/oracle1112.json" />
+    <File Path="Build/Azure/net90/oracle1819.json" />
+    <File Path="Build/Azure/net90/oracle2123.json" />
+    <File Path="Build/Azure/net90/pgsql1.json" />
+    <File Path="Build/Azure/net90/pgsql2.json" />
     <File Path="Build/Azure/net90/sqlce.json" />
-    <File Path="Build/Azure/net90/sqlite.extras.json" />
     <File Path="Build/Azure/net90/sqlite.json" />
     <File Path="Build/Azure/net90/sqlserver.2005.json" />
     <File Path="Build/Azure/net90/sqlserver.2008.json" />
     <File Path="Build/Azure/net90/sqlserver.2012.json" />
     <File Path="Build/Azure/net90/sqlserver.2014.json" />
     <File Path="Build/Azure/net90/sqlserver.2016.json" />
-    <File Path="Build/Azure/net90/sqlserver.2017.json" />
-    <File Path="Build/Azure/net90/sqlserver.2019.json" />
-    <File Path="Build/Azure/net90/sqlserver.2022.json" />
-    <File Path="Build/Azure/net90/sqlserver.2022.metrics.json" />
-    <File Path="Build/Azure/net90/sqlserver.2025.json" />
+    <File Path="Build/Azure/net90/sqlserver.2017_2019.json" />
+    <File Path="Build/Azure/net90/sqlserver.2022_2025.json" />
     <File Path="Build/Azure/net90/sqlserver.extras.json" />
-    <File Path="Build/Azure/net90/sqlserver.fts.2019.json" />
-    <File Path="Build/Azure/net90/sybase.json" />
+    <File Path="Build/Azure/net90/sqlserver.fts.2017_2019.json" />
+    <File Path="Build/Azure/net90/ydbsybase.json" />
   </Folder>
   <Folder Name="/Build/Azure/netfx/">
-    <File Path="Build/Azure/netfx/access.ace.json" />
+    <File Path="Build/Azure/netfx/access.ace.odbc.json" />
+    <File Path="Build/Azure/netfx/access.ace.oledb.json" />
     <File Path="Build/Azure/netfx/access.ace.x64.json" />
     <File Path="Build/Azure/netfx/access.mdb.json" />
     <File Path="Build/Azure/netfx/sqlce.json" />
-    <File Path="Build/Azure/netfx/sqlite.extras.json" />
     <File Path="Build/Azure/netfx/sqlite.json" />
     <File Path="Build/Azure/netfx/sqlserver.2005.json" />
     <File Path="Build/Azure/netfx/sqlserver.2008.json" />
     <File Path="Build/Azure/netfx/sqlserver.2012.json" />
     <File Path="Build/Azure/netfx/sqlserver.2014.json" />
     <File Path="Build/Azure/netfx/sqlserver.2016.json" />
-    <File Path="Build/Azure/netfx/sqlserver.2017.json" />
-    <File Path="Build/Azure/netfx/sqlserver.2019.json" />
-    <File Path="Build/Azure/netfx/sqlserver.2022.json" />
-    <File Path="Build/Azure/netfx/sqlserver.2022.metrics.json" />
-    <File Path="Build/Azure/netfx/sqlserver.2025.json" />
+    <File Path="Build/Azure/netfx/sqlserver.2017_2019.json" />
+    <File Path="Build/Azure/netfx/sqlserver.2022_2025.json" />
     <File Path="Build/Azure/netfx/sqlserver.extras.json" />
   </Folder>
   <Folder Name="/Build/Azure/pipelines/">
@@ -445,6 +161,7 @@
     <File Path="Build/Azure/pipelines/templates/build-job.yml" />
     <File Path="Build/Azure/pipelines/templates/build-vars.yml" />
     <File Path="Build/Azure/pipelines/templates/nuget-job.yml" />
+    <File Path="Build/Azure/pipelines/templates/test-cli.yml" />
     <File Path="Build/Azure/pipelines/templates/test-jobs.yml" />
     <File Path="Build/Azure/pipelines/templates/test-matrix.yml" />
     <File Path="Build/Azure/pipelines/templates/test-workflow-linux.yml" />
@@ -456,63 +173,42 @@
     <File Path="Build/Azure/scripts/access.ace.x64.ps1" />
     <File Path="Build/Azure/scripts/clickhouse.sh" />
     <File Path="Build/Azure/scripts/db2.provider.sh" />
-    <File Path="Build/Azure/scripts/db2.sh" />
+    <File Path="Build/Azure/scripts/db2informixduckdb.sh" />
     <File Path="Build/Azure/scripts/disable_tls11.cmd" />
     <File Path="Build/Azure/scripts/enable_tls11.cmd" />
-    <File Path="Build/Azure/scripts/firebird25.sh" />
-    <File Path="Build/Azure/scripts/firebird3.sh" />
-    <File Path="Build/Azure/scripts/firebird4.sh" />
-    <File Path="Build/Azure/scripts/firebird5.sh" />
+    <File Path="Build/Azure/scripts/ensure-baselines-branch.ps1" />
+    <File Path="Build/Azure/scripts/firebird.sh" />
     <File Path="Build/Azure/scripts/hana2.sh" />
     <File Path="Build/Azure/scripts/hana2.tests.sh" />
-    <File Path="Build/Azure/scripts/informix14.sh" />
     <File Path="Build/Azure/scripts/mac.db2.provider.sh" />
-    <File Path="Build/Azure/scripts/mac.db2.sh" />
     <File Path="Build/Azure/scripts/mac.hana2.sh" />
-    <File Path="Build/Azure/scripts/mac.informix14.sh" />
-    <File Path="Build/Azure/scripts/mac.mariadb11.sh" />
     <File Path="Build/Azure/scripts/mac.mysql.sh" />
-    <File Path="Build/Azure/scripts/mac.mysql57.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql13.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql14.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql15.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql16.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql17.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql18.sh" />
-    <File Path="Build/Azure/scripts/mariadb11.sh" />
+    <File Path="Build/Azure/scripts/mac.pgsql1.sh" />
+    <File Path="Build/Azure/scripts/mac.pgsql2.sh" />
     <File Path="Build/Azure/scripts/mysql.sh" />
-    <File Path="Build/Azure/scripts/mysql57.sh" />
-    <File Path="Build/Azure/scripts/oracle11.sh" />
-    <File Path="Build/Azure/scripts/oracle12.sh" />
-    <File Path="Build/Azure/scripts/oracle18.sh" />
-    <File Path="Build/Azure/scripts/oracle19.sh" />
-    <File Path="Build/Azure/scripts/oracle21.sh" />
-    <File Path="Build/Azure/scripts/oracle23.sh" />
-    <File Path="Build/Azure/scripts/pgsql13.sh" />
-    <File Path="Build/Azure/scripts/pgsql14.sh" />
-    <File Path="Build/Azure/scripts/pgsql15.sh" />
-    <File Path="Build/Azure/scripts/pgsql16.sh" />
-    <File Path="Build/Azure/scripts/pgsql17.sh" />
-    <File Path="Build/Azure/scripts/pgsql18.sh" />
+    <File Path="Build/Azure/scripts/oracle1112.sh" />
+    <File Path="Build/Azure/scripts/oracle1819.sh" />
+    <File Path="Build/Azure/scripts/oracle2123.sh" />
+    <File Path="Build/Azure/scripts/pgsql1.sh" />
+    <File Path="Build/Azure/scripts/pgsql2.sh" />
+    <File Path="Build/Azure/scripts/ramdisk.ps1" />
     <File Path="Build/Azure/scripts/sqlce.ps1" />
     <File Path="Build/Azure/scripts/sqlserver.2005.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2008.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2012.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2014.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.2016.cmd" />
-    <File Path="Build/Azure/scripts/sqlserver.2017.cmd" />
-    <File Path="Build/Azure/scripts/sqlserver.2017.sh" />
-    <File Path="Build/Azure/scripts/sqlserver.2019.cmd" />
-    <File Path="Build/Azure/scripts/sqlserver.2019.sh" />
-    <File Path="Build/Azure/scripts/sqlserver.2022.cmd" />
-    <File Path="Build/Azure/scripts/sqlserver.2022.sh" />
-    <File Path="Build/Azure/scripts/sqlserver.2025.cmd" />
-    <File Path="Build/Azure/scripts/sqlserver.2025.sh" />
+    <File Path="Build/Azure/scripts/sqlserver.2017_2019.cmd" />
+    <File Path="Build/Azure/scripts/sqlserver.2017_2019.sh" />
+    <File Path="Build/Azure/scripts/sqlserver.2022_2025.cmd" />
+    <File Path="Build/Azure/scripts/sqlserver.2022_2025.sh" />
     <File Path="Build/Azure/scripts/sqlserver.extras.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.extras.sh" />
-    <File Path="Build/Azure/scripts/sybase.sh" />
     <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
+    <File Path="Build/Azure/scripts/verify-analyzer-delivery.ps1" />
+    <File Path="Build/Azure/scripts/verify-nuget-sizes.ps1" />
+    <File Path="Build/Azure/scripts/ydbsybase.sh" />
   </Folder>
   <Folder Name="/Build/Local/">
     <File Path="Data/Setup Scripts/all.cmd" />
@@ -624,9 +320,7 @@
     <Project Path="Source/CodeGenerators/CodeGenerators.csproj" />
     <Project Path="Source/LinqToDB.Analyzers/LinqToDB.Analyzers.csproj" />
     <Project Path="Source/LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj" />
-    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj">
-      <Build Solution="Testing|*" Project="false" />
-    </Project>
+    <Project Path="Source/LinqToDB.CLI/LinqToDB.CLI.csproj" />
     <Project Path="Source/LinqToDB.Compat/LinqToDB.Compat.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
@@ -706,6 +400,7 @@
       <Build Solution="Testing|*" Project="false" />
     </Project>
     <Project Path="Tests/FSharp/Tests.FSharp.fsproj" />
+    <Project Path="Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj" />
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />
     <Project Path="Tests/NHibernate/Tests.NHibernate.NH5.csproj" />

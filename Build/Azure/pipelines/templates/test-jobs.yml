@@ -48,9 +48,14 @@ jobs:
   pool:
     vmImage: 'windows-2025'
 
-  displayName: 'Tests: Windows'
+  displayName: 'Win'
   dependsOn: create_baselines_branch
-  timeoutInMinutes: 180 # default: 60, max: 360
+  # Release (full_run) legs run every TFM's main suite, not just net10, and jobs now bundle several
+  # providers - so they need materially more headroom than a PR run. default: 60, max: 360.
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 180
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
@@ -73,8 +78,14 @@ jobs:
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             net100: ${{ test_config.enable_fw_net100 }}
-            x86: ${{ test_config.x86 }}
+            # Resolved here rather than branched on in the workflow, so each test/setup step exists
+            # once with an $(arch) path instead of twice with one half always skipped.
+            ${{ if eq(test_config.x86, true) }}:
+              arch: x86
+            ${{ if not(eq(test_config.x86, true)) }}:
+              arch: x64
             retry: ${{ test_config.retry }}
+            win_efcore_only: ${{ test_config.win_efcore_only }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -88,8 +99,11 @@ jobs:
 - job: test_ubuntu_job
   pool:
     vmImage: 'ubuntu-24.04'
-  timeoutInMinutes: 180 # default: 60, max: 360
-  displayName: 'Tests: Linux'
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 180
+  displayName: 'Lin'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
   variables:
@@ -122,8 +136,11 @@ jobs:
 - job: test_macos_job
   pool:
     vmImage: 'macOS-15'
-  displayName: 'Tests: MacOS'
-  timeoutInMinutes: 240 # default: 60, max: 360
+  displayName: 'Mac'
+  ${{ if eq(parameters.full_run, true) }}:
+    timeoutInMinutes: 300
+  ${{ if not(eq(parameters.full_run, true)) }}:
+    timeoutInMinutes: 240
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
@@ -172,6 +189,11 @@ jobs:
     baselines_head: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_head'] ]
     baselines_new_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_new_branch'] ]
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
+    # Read by the empty-branch cleanup below: this job's condition replaces the implicit succeeded(),
+    # so it also runs when a test leg failed and a retry is still to come.
+    tests_windows_result: $[ dependencies.test_windows_job.result ]
+    tests_ubuntu_result: $[ dependencies.test_ubuntu_job.result ]
+    tests_macos_result: $[ dependencies.test_macos_job.result ]
 
   steps:
   - checkout: none
@@ -198,21 +220,35 @@ jobs:
             Write-Host "Baselines branch hash missing"
             exit 1
         }
-        $output = git ls-remote --heads $baselinesRepoUrl $baselinesBranch
+        # @(...) keeps a single-line answer an array, so the emptiness test below counts refs rather
+        # than characters - a bare string would make a legitimate multi-ref answer read as "no result".
+        $output = @(git ls-remote --heads $baselinesRepoUrl $baselinesBranch)
         Write-Host "Baselines current HEAD: ${output}"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Baselines HEAD request failed with code ${LASTEXITCODE}"
             exit 1
         }
-        if ($output.Length -lt 40) {
+        $baselinesHeadLine = $output | Where-Object { $_ -match '^[0-9a-f]{40}\s' } | Select-Object -First 1
+        if (-not $baselinesHeadLine) {
             Write-Host "Baselines HEAD request returned no result"
             exit 1
         }
-        $baslinesCurrentHash = ($output -split '\s+')[0]
+        $baslinesCurrentHash = ($baselinesHeadLine -split '\s+')[0]
         Write-Host "Baselines branch current head hash: ${baslinesCurrentHash}"
         if ($baselinesHash -eq $baslinesCurrentHash) {
             Write-Host "Baselines branch has no new commits"
             if ($newBranch -eq 1) {
+                $testResults = @("$(tests_windows_result)", "$(tests_ubuntu_result)", "$(tests_macos_result)")
+                $resultsText = $testResults -join ', '
+                Write-Host "Test job results: ${resultsText}"
+                # A failed leg can still be retried, and the retry re-creates this branch through the
+                # self-heal in ensure-baselines-branch.ps1. Deleting it now races that retry, which is
+                # how the branch ends up vanishing and reappearing mid-run.
+                $blocked = $testResults | Where-Object { $_ -in @('Failed', 'Canceled') }
+                if ($blocked) {
+                    Write-Host "A test job did not pass - keeping the baselines branch for a possible retry"
+                    exit 0
+                }
                 Write-Host "Remove empty baselines branch"
                 $output = gh api -XDELETE /repos/$orgName/$baselinesRepo/git/refs/heads/$baselinesBranch
                 Write-Host "Delete branch command output: ${output}"

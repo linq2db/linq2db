@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using LinqToDB.DataProvider;
@@ -26,20 +27,41 @@ internal sealed class AccessProvider : DatabaseProviderBase
 
 	public override bool SupportsSecondaryConnection => true;
 	public override bool AutomaticProviderSelection  => true;
+	// OLE DB is not implemented outside of Windows and there is no ODBC driver for Access on other systems
+	public override bool IsPlatformSupported         => Platform.IsWindows;
+
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
+			return [("System.Data.Odbc", NuGetPackageVersions.System_Data_Odbc)];
+
+		return [("System.Data.OleDb", NuGetPackageVersions.System_Data_OleDb)];
+	}
+#endif
 
 	public override string? GetProviderDownloadUrl(string? providerName)
 	{
 		return "https://www.microsoft.com/en-us/download/details.aspx?id=54920";
 	}
 
+	// each client is touched from its own non-inlined method: the assembly is loaded when a method
+	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
+	// are provisioned (see GetNuGetPackages), so a shared body would load the one that is missing
 	public override void ClearAllPools(string providerName)
 	{
-		if (OperatingSystem.IsWindows() && string.Equals(providerName, ProviderName.Access, StringComparison.Ordinal))
-			OleDbConnection.ReleaseObjectPool();
+		if (Platform.IsWindows && string.Equals(providerName, ProviderName.Access, StringComparison.Ordinal))
+			ReleaseOleDbPool();
 
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
-			OdbcConnection.ReleaseObjectPool();
+			ReleaseOdbcPool();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ReleaseOleDbPool() => OleDbConnection.ReleaseObjectPool();
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ReleaseOdbcPool() => OdbcConnection.ReleaseObjectPool();
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
@@ -47,7 +69,7 @@ internal sealed class AccessProvider : DatabaseProviderBase
 			: string.Equals(settings.Connection.SecondaryProvider, ProviderName.Access, StringComparison.Ordinal) ? settings.Connection.GetFullSecondaryConnectionString()
 				: null;
 
-		if (connectionString == null || !OperatingSystem.IsWindows())
+		if (connectionString == null || !Platform.IsWindows)
 			return null;
 
 		// only OLE DB schema has required information
@@ -57,6 +79,12 @@ internal sealed class AccessProvider : DatabaseProviderBase
 		else
 			provider = DatabaseProviders.GetDataProvider(settings.Connection.SecondaryProvider, connectionString, null);
 
+		return ReadOleDbSchemaUpdate(provider, connectionString);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DateTime? ReadOleDbSchemaUpdate(IDataProvider provider, string connectionString)
+	{
 		using var cn = (OleDbConnection)provider.CreateConnection(connectionString);
 		cn.Open();
 
@@ -79,8 +107,14 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
-			return OdbcFactory.Instance;
+			return GetOdbcFactory();
 
-		return OleDbFactory.Instance;
+		return GetOleDbFactory();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetOdbcFactory() => OdbcFactory.Instance;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetOleDbFactory() => OleDbFactory.Instance;
 }

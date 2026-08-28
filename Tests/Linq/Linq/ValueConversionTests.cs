@@ -431,6 +431,55 @@ namespace Tests.Linq
 			selectResult.Length.ShouldBe(20);
 		}
 
+		/// <summary>
+		/// A set operation distincts the value the condition chose, not the columns it chose between.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above concatenates, so leaving the choice on the client costs nothing but columns. Here the
+		/// branches meet under a UNION, and a choice the database never made is a choice DISTINCT cannot see: ten
+		/// rows come back, one per pairing of the columns the rows were assembled from, where three values were
+		/// asked for. The two arms carry one conversion spelled against a nullable member and against a plain one.
+		/// </remarks>
+		[Test]
+		public void UnionDistinctsTheValueTheConditionChose([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						select new
+						{
+							Converted = t1.EnumNullable != null ? t1.EnumNullable : t1.Enum,
+						};
+
+			var selectResult = query.Union(query).ToArray();
+
+			selectResult.Length.ShouldBe(3);
+		}
+
+		/// <summary>
+		/// A condition between two converted columns is answered where the rows are, so it can filter.
+		/// </summary>
+		/// <remarks>
+		/// A projection that cannot be folded still has somewhere to go - the client reads both columns and chooses
+		/// per row. A predicate has not: the choice has to be made in SQL or not at all.
+		/// </remarks>
+		[Test]
+		public void WhereChoosesBetweenTwoConvertedColumns([DataSources(false)] string context)
+		{
+			var ms = CreateMappingSchema();
+
+			var testData = MainClass.TestData();
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable(testData);
+
+			var count = table.Count(t => (t.EnumNullable != null ? t.EnumNullable : t.Enum) == EnumValue.Value1);
+
+			count.ShouldBe(4);
+		}
+
 		[Test]
 		public void CoalesceConcatTest([DataSources(false)] string context)
 		{
@@ -884,9 +933,7 @@ namespace Tests.Linq
 #pragma warning disable CA2263 // Prefer generic overload when type is known
 					v => (EnumValue)Enum.Parse(typeof(EnumValue), v),
 #pragma warning restore CA2263 // Prefer generic overload when type is known
-					false)
-				{
-				}
+					false);
 
 				public static readonly Table[] Data =
 				[
@@ -1325,7 +1372,182 @@ namespace Tests.Linq
 				Assert.That(res[1].IntStructRequiredWithNull?.Value, Is.EqualTo(1));
 				Assert.That(res[1].IntStructNullableWithNull?.Value, Is.EqualTo(1));
 			}
+		}
 
+		[Table]
+		sealed class ScaledRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			// Access has no 64-bit integer type, so it stores the count as CURRENCY - which carries one exactly.
+			// The storage type is a provider detail here: what is under test is that the conversion survives.
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		/// <summary>
+		/// A converted column keeps its conversion when it is read through a set operation.
+		/// </summary>
+		/// <remarks>
+		/// The conversion is not applied by the SQL - it is applied when the row is materialised, by walking the
+		/// column expression back to the descriptor that carries it. A provider that wraps a set-operation column
+		/// breaks that walk unless the wrapper is transparent to it, and then the stored number is read raw: this
+		/// one stores seconds, so losing the conversion reads ninety minutes as fifty-four hundred ticks.
+		/// <para>
+		/// Informix is the provider that does the wrapping, in <c>NVL(x, NULL)</c>, to stop its driver typing the
+		/// column from the first branch alone. Nothing here is provider-specific though, and the assertion is the
+		/// same everywhere.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ConversionSurvivesASetOperation([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ScaledRow>()
+					.Property(e => e.Span)
+						.HasConversion(
+							ts => ts.Ticks / TimeSpan.TicksPerSecond,
+							v  => TimeSpan.FromTicks(v * TimeSpan.TicksPerSecond))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<ScaledRow>();
+
+			db.Insert(new ScaledRow { Id = 1, Span = value });
+
+			var rows = t
+				.Select(r => new { Source = 1, r.Span })
+				.Concat(t.Select(r => new { Source = 2, r.Span }))
+				.OrderBy(r => r.Source)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Span).ShouldBe([value, value]);
+		}
+
+		sealed class SeparatelyDeclaredRowA
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		sealed class SeparatelyDeclaredRowB
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Int64)]
+			[Column(Configuration = ProviderName.Access, DataType = DataType.Money)]
+			public TimeSpan Span { get; set; }
+		}
+
+		/// <summary>
+		/// Two columns declaring the same conversion separately are read the same way, and the comparison that
+		/// establishes it does not depend on how the conversion spells its nullability.
+		/// </summary>
+		/// <remarks>
+		/// The sibling above pairs a column with itself, so the two descriptors are one object and the comparison
+		/// short-circuits on identity before looking at either conversion. Declared twice they are two objects that
+		/// behave alike, which is what the comparison exists to recognise - and the only shape that reaches it.
+		/// <para>
+		/// Nullable storage under a non-nullable member is what makes the parameter and the value it stands for
+		/// disagree: the conversion reads <c>v.Value</c>, so substituting a bare <see cref="long"/> for a
+		/// <c>long?</c> parameter asks for a member that type does not have. That threw
+		/// <em>Property 'Int64 Value' is not defined for type 'System.Int64'</em> while the query was still being
+		/// built. The nullable-member spelling of the same thing failed the other way, silently: its conversion is
+		/// wrapped in a nullability cast, and stripping the cast used to abandon the substitution underneath it, so
+		/// two identical conversions compared unequal.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void SeparatelyDeclaredConversionsAreReadTheSameWay([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SeparatelyDeclaredRowA>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Entity<SeparatelyDeclaredRowB>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable<SeparatelyDeclaredRowA>();
+			using var b  = db.CreateLocalTable<SeparatelyDeclaredRowB>();
+
+			db.Insert(new SeparatelyDeclaredRowA { Id = 1, Span = value });
+			db.Insert(new SeparatelyDeclaredRowB { Id = 2, Span = value });
+
+			var rows = a
+				.Select(r => new { r.Id, r.Span })
+				.Concat(b.Select(r => new { r.Id, r.Span }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Span).ShouldBe([value, value]);
+		}
+
+		sealed class ScaledValueRow
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column    ] public int Value { get; set; }
+
+			public static readonly ScaledValueRow[] Data =
+			{
+				new() { Id = 1, Value = 10 },
+				new() { Id = 2, Value = 20 },
+				new() { Id = 3, Value = 30 },
+			};
+		}
+
+		/// <summary>
+		/// A count over a column carrying a conversion answers how many rows there are, not a value of that column.
+		/// </summary>
+		/// <remarks>
+		/// The descriptor walk treats a single-argument aggregate as transparent, which is right for <c>MIN</c>,
+		/// <c>MAX</c> and <c>SUM</c> - they answer in the operand's own domain - and wrong for <c>COUNT</c>, which
+		/// answers in a type of its own. The type guard meant to separate them compares the result type with the
+		/// column's <em>member</em> type, so it cannot tell the two apart once that type is already <see cref="int"/>.
+		/// <para>
+		/// The conversion is deliberately <c>int</c> to <c>int</c> and lossy in a visible way: one mapping to a
+		/// different provider type would be stopped by that guard and hide the defect. Halving is what makes it
+		/// show - a running count of 1, 2, 3 came back as 0, 1, 1.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void CountOverAConvertedColumnIsNotConverted([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ScaledValueRow>()
+					.Property(e => e.Value)
+						.HasConversion(v => v * 2, p => p / 2)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ScaledValueRow.Data);
+
+			var counted = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.Window.Count(r.Value, w => w.OrderBy(r.Id)))
+				.ToArray();
+
+			counted.ShouldBe([1, 2, 3]);
+
+			// The aggregates that do answer in the column's own domain still read through the conversion.
+			t.Max(r => r.Value).ShouldBe(30);
+			t.Min(r => r.Value).ShouldBe(10);
 		}
 	}
 }

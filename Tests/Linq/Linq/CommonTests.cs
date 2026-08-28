@@ -500,7 +500,7 @@ namespace Tests.Linq
 			return ++_i % 2 == 0 ? "John" : null;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Issue288Test([DataSources] string context)
 		{
 			_i = 0;

@@ -62,7 +62,7 @@ jobs:
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
 
-  # linq2db.Analyzers unit tests — Roslyn analyzer/code-fix tests. DB-free and provider-independent, so they
+  # Roslyn analyzer/code-fix unit tests for Source/LinqToDB.Analyzers*. DB-free and provider-independent, so they
   # run here on the build agent rather than in the provider test matrix. Fast (seconds); the MTP NUnit runner
   # is selected via global.json.
   - task: DotNetCoreCLI@2
@@ -286,7 +286,7 @@ jobs:
         $version = dotnet msbuild Source\LinqToDB\LinqToDB.csproj -getProperty:Version
         $relnotesVersion = $version -replace '\.',''
         Write-Host "Create release v$version draft"
-        $output = gh release create v$version "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $version"
+        $output = gh release create v$version "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $version"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
             exit 1

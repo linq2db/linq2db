@@ -30,7 +30,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<!-- `analyzers` stays out of PrivateAssets so the linq2db.Analyzers subtree reaches this
+		     package's consumers; the default (contentfiles;analyzers;build) makes pack write
+		     exclude="Build,Analyzers", which suppresses it. See Source/LinqToDB/LinqToDB.csproj. -->
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" PrivateAssets="contentfiles;build" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
