@@ -484,6 +484,10 @@ let Issue5790Test(db : IDataContext) =
     // has to reach the SQL for the assertion to hold, and both joins still have to stay LEFT.
     Assert.That(encodeJoins result, Is.EqualTo "1-1-0,1-4-0,2-0-3,3-0-0,4-3-0")
 
+// F# on net462 cannot resolve the arity of `System.Action` at a constructor application (FS1124), so
+// the parameterless one is named once here, in type position, where the resolution is unambiguous.
+type private VoidAction = System.Action
+
 // Issue5790Test is [ActiveIssue]-gated and so never runs, leaving the flatten's fail-loud refusal itself
 // unexecuted. This pins the refusal, so downgrading the invariant back to a silent decline is caught.
 // Delete together with the gate when #5790 is fixed.
@@ -504,6 +508,6 @@ let Issue5790RefusalTest(db : IDataContext) =
     }
 
     Assert.That(
-        System.Action(fun () -> query.Take(90) |> Seq.toArray |> ignore),
+        VoidAction(fun () -> query.Take(90) |> Seq.toArray |> ignore),
         Throws.InstanceOf<System.InvalidOperationException>().And.Message.Contains("5790"))
 
