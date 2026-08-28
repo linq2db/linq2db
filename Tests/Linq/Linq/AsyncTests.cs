@@ -1,15 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.DuckDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Async;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 using Tests.UserTests;
@@ -313,6 +322,112 @@ namespace Tests.Linq
 
 			foreach (var g in g1)
 				AreEqual(g1[g.Key], g2[g.Key]);
+		}
+
+		// Queries, returned by LoadWith/database-specific extensions or by temporary table creation, are wrappers
+		// over linq2db query. Materialization extensions below must recognize them, otherwise query is executed
+		// synchronously on a thread pool thread instead of using async ADO.NET API.
+		[Test]
+		public async Task LoadWithQueryMaterializedAsynchronously([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db = GetDataConnection(context, interceptor: interceptor);
+
+			var records = await db.Child.LoadWith(c => c.Parent).ToListAsync();
+
+			records.ShouldNotBeEmpty();
+			records.ShouldAllBe(c => c.Parent != null);
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		[Test]
+		public async Task TempTableMaterializedAsynchronously([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db    = GetDataConnection(context, interceptor: interceptor);
+			using var table = db.CreateLocalTable(new[] { new AsyncMaterializationRecord { Id = 1 } });
+
+			interceptor.Reset();
+
+			var records = await table.ToListAsync();
+
+			records.ShouldHaveSingleItem();
+
+			var asyncRecords = new List<AsyncMaterializationRecord>();
+
+			await foreach (var record in table.AsAsyncEnumerable())
+				asyncRecords.Add(record);
+
+			asyncRecords.ShouldHaveSingleItem();
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		[Test]
+		public async Task DatabaseSpecificTableMaterializedAsynchronously([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db = GetDataConnection(context, interceptor: interceptor);
+
+			var records = await db.Child.AsSQLite().ToListAsync();
+
+			records.ShouldNotBeEmpty();
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		// AsDuckDB over IQueryable (rather than ITable) is the only shape that produces
+		// DatabaseSpecificQueryable; SQLite has no such overload.
+		[Test]
+		public async Task DatabaseSpecificQueryableMaterializedAsynchronously([IncludeDataSources(TestProvName.AllDuckDB)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db = GetDataConnection(context, interceptor: interceptor);
+
+			var records = await db.Child.Where(c => c.ChildID > 0).AsDuckDB().ToListAsync();
+
+			records.ShouldNotBeEmpty();
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		[Table]
+		sealed class AsyncMaterializationRecord
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		sealed class DataReaderApiInterceptor : CommandInterceptor
+		{
+			public int SyncCalls  { get; private set; }
+			public int AsyncCalls { get; private set; }
+
+			public void Reset()
+			{
+				SyncCalls  = 0;
+				AsyncCalls = 0;
+			}
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				SyncCalls++;
+				return base.ExecuteReader(eventData, command, commandBehavior, result);
+			}
+
+			public override Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
+			{
+				AsyncCalls++;
+				return base.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken);
+			}
 		}
 	}
 }
