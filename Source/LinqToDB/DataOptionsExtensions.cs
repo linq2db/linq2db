@@ -1730,6 +1730,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// If set, overrides the provider-specific limit on the length of the generated statement per batch.
+		/// Used by <see cref="BulkCopyType.MultipleRows"/> mode to decide when to send the current batch and start a new one.
+		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
+		/// </summary>
+		[Pure]
+		public static BulkCopyOptions WithMaxSqlLengthForBatch(this BulkCopyOptions options, int? maxSqlLengthForBatch)
+		{
+			return options with { MaxSqlLengthForBatch = maxSqlLengthForBatch };
+		}
+
+		/// <summary>
 		/// Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
 		/// </summary>
 		[Pure]
@@ -1977,6 +1988,17 @@ namespace LinqToDB
 		public static DataOptions UseBulkCopyMaxParametersForBatch(this DataOptions options, int? maxParametersForBatch)
 		{
 			return options.WithOptions<BulkCopyOptions>(o => o with { MaxParametersForBatch = maxParametersForBatch });
+		}
+
+		/// <summary>
+		/// If set, overrides the provider-specific limit on the length of the generated statement per batch.
+		/// Used by <see cref="BulkCopyType.MultipleRows"/> mode to decide when to send the current batch and start a new one.
+		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseBulkCopyMaxSqlLengthForBatch(this DataOptions options, int? maxSqlLengthForBatch)
+		{
+			return options.WithOptions<BulkCopyOptions>(o => o with { MaxSqlLengthForBatch = maxSqlLengthForBatch });
 		}
 
 		/// <summary>

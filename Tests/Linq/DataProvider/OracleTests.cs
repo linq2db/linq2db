@@ -1176,6 +1176,47 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table("BULK_SPLIT")]
+		sealed class BulkSplitTable
+		{
+			[PrimaryKey, Column("ID")]      public int     Id  { get; set; }
+			[Column("VAL", Length = 1000)]  public string? Val { get; set; }
+		}
+
+		/// <summary>
+		/// Covers the batch-splitting path in <see cref="LinqToDB.Internal.DataProvider.BasicBulkCopy"/>: the payload is
+		/// large enough to cross the generated-statement length limit many times over, in every Oracle bulk copy mode.
+		/// </summary>
+		[Test]
+		public void BulkCopyMultipleRowsCrossesSqlLengthLimit(
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy,
+			[Values]                                     bool                useParameters)
+		{
+			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
+			using var db = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = useAlternativeBulkCopy }));
+
+			using var table = db.CreateLocalTable<BulkSplitTable>();
+
+			var rows = Enumerable.Range(1, 500)
+				.Select(i => new BulkSplitTable { Id = i, Val = new string((char)('a' + i % 26), 1000) })
+				.ToList();
+
+			db.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType  = BulkCopyType.MultipleRows,
+					MaxBatchSize  = 5000,
+					UseParameters = useParameters,
+				},
+				rows);
+
+			var loaded = table.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(loaded.Select(r => r.Id),  Is.EqualTo(rows.Select(r => r.Id)));
+			Assert.That(loaded.Select(r => r.Val), Is.EqualTo(rows.Select(r => r.Val)));
+		}
+
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
