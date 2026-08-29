@@ -316,8 +316,10 @@ namespace Tests.Linq
 				.HasTableName("ConcurrencyRefreshShape")
 				.Property(e => e.Stamp)
 					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid));
+			// not "ConcurrencyRefreshShapeOuter": Oracle 11's 30-char identifier limit truncates the generated
+			// "PK_" + table name down to "PK_ConcurrencyRefreshShape", colliding with the other table's own PK
 			mb.Entity<RefreshTable<int>>()
-				.HasTableName("ConcurrencyRefreshShapeOuter");
+				.HasTableName("ConcurrencyRefreshOuter");
 			mb.Build();
 
 			using var db = GetDataContext(context, ms);
