@@ -337,13 +337,14 @@ namespace Tests.xUpdate
 		// matrix. These three cover every distinct statement shape the splitter has to survive:
 		//   SQLite     - MultipleRowsCopy1, plain INSERT INTO ... VALUES (row), (row) (same path as SqlServer/MySql/ClickHouse)
 		//   PostgreSQL - MultipleRowsCopy1 plus a GetMultipleRowsSuffix (ON CONFLICT DO NOTHING, which only
-		//                ConflictAction.Ignore turns on) that must be re-emitted on every batch
+		//                ConflictAction.Ignore turns on) that must be re-emitted on every batch.
+		//                9.5+ only: ON CONFLICT does not exist before that, and this test always asks for it
 		//   Firebird   - MultipleRowsCopy2 (SELECT ... UNION ALL) and the only provider with Cast*OnUnionAll,
 		//                where the first row of each batch renders differently from the rest
 		// Oracle has its own coverage in OracleTests.BulkCopyMultipleRowsCrossesSqlLengthLimit.
 		[Test]
 		public void MaxSqlLengthForBatchSplitsStatements(
-			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllFirebird)] string context,
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL95Plus, TestProvName.AllFirebird)] string context,
 			[Values]                                                                                                 bool   useParameters,
 			[Values]                                                                                                 bool   viaDataOptions)
 		{
