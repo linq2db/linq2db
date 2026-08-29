@@ -866,6 +866,10 @@ namespace Tests.Linq
 		// projection asks translators for strict SQL and the translator reports an error rather than
 		// declining. Each operand must instead select the columns the projection reads and let the
 		// materializer build the string.
+		// The flag's other users are deliberately not pinned here: the four ExpressionBuilder.EagerLoadUnion
+		// sites that set it build a ContextRefExpression rather than a user lambda body, so an untranslatable
+		// member never reaches the fall-through from there - forcing EagerLoadingStrategy.CteUnion over this
+		// shape still throws.
 		[Test]
 		public void Concat_SetOperationOperand_UntranslatableConcatOperand([DataSources] string context)
 		{
