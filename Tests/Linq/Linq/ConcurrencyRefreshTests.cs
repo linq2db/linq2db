@@ -308,6 +308,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UpdateViaQueryWithIgnoreFiltersAboveWhere([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<RefreshTable<Guid>>()
+					.HasTableName("ConcurrencyRefreshFiltered")
+					.HasQueryFilter(e => e.Id != 1)
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+
+			// only the SELECT-fallback read-back path is affected: no UPDATE OUTPUT/RETURNING but reliable rowcount
+			if (db.SqlProviderFlags.IsUpdateOutputRowsSupported || !db.SqlProviderFlags.IsAffectedRowsCountSupported)
+				Assert.Ignore("Exercises the SELECT-fallback read-back path only.");
+
+			using var _ = new DisableBaseline("guid used");
+			using var t = db.CreateLocalTable<RefreshTable<Guid>>();
+
+			var record = new RefreshTable<Guid> { Id = 1, Stamp = default, Value = "initial" };
+			db.Insert(record);
+			record.Stamp = t.IgnoreFilters().Single().Stamp;
+			var before   = record.Stamp;
+
+			// a droppable operator sits between the table and IgnoreFilters, so the read-back is rebuilt rather than
+			// returned as-is: the Where must be dropped (it tests a column the UPDATE rewrites) while IgnoreFilters
+			// must be re-issued over the reduced source. Dropping the operator hides the row behind the entity filter;
+			// keeping the Where stops it matching the updated row - either way the entity keeps a stale token
+			record.Value = "updated";
+			var cnt = t.Where(r => r.Value == "initial").IgnoreFilters().UpdateOptimisticWithRefresh(record);
+
+			cnt.ShouldBe(1);
+			record.Stamp.ShouldNotBe(before);
+			record.Stamp.ShouldBe(t.IgnoreFilters().Single().Stamp);
+		}
+
+		[Test]
 		public void UpdateThroughUnsupportedSourceShapeThrows([DataSources] string context)
 		{
 			var ms = new MappingSchema();

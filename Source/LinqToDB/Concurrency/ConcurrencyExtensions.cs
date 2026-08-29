@@ -366,9 +366,10 @@ namespace LinqToDB.Concurrency
 		}
 
 		// Table-shaping calls on the caller's source (TableName / SchemaName / ...) are kept so the read-back hits
-		// the same table the UPDATE targeted; the caller's query operators are dropped, because their predicates
-		// may test columns the UPDATE itself rewrites - the updated row would then no longer match and the
-		// refresh would silently not happen. A source the peel cannot reduce to that table is rejected outright.
+		// the same table the UPDATE targeted; the caller's query operators are dropped (except IgnoreFilters, which
+		// is re-issued - see below), because their predicates may test columns the UPDATE itself rewrites - the
+		// updated row would then no longer match and the refresh would silently not happen. A source the peel
+		// cannot reduce to that table is rejected outright.
 		private static IQueryable<T> ReadBackSource<T>(IQueryable<T> source, IDataContext dc)
 			where T : class
 		{
@@ -393,8 +394,8 @@ namespace LinqToDB.Concurrency
 
 			var inner = ReadBackExpression<T>(call.Arguments[0]);
 
-			// IgnoreFilters is the one dropped operator that changes which rows are visible: without it the
-			// read-back re-enables entity query filters the caller disabled, hiding the row the UPDATE reached
+			// IgnoreFilters is the one operator that must not be dropped: it changes which rows are visible, and
+			// without it the read-back re-enables entity query filters the caller disabled, hiding the row the UPDATE reached
 			if (call.Method.DeclaringType == typeof(LinqExtensions) && string.Equals(call.Method.Name, nameof(LinqExtensions.IgnoreFilters), StringComparison.Ordinal))
 			{
 				if (ReferenceEquals(inner, call.Arguments[0]))
