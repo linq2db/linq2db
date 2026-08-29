@@ -1,0 +1,34 @@
+<Project>
+	<Import Project="..\linq2db.BasicTestProjects.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.NHibernate.Tests</AssemblyName>
+		<RootNamespace>LinqToDB.NHibernate.Tests</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+
+		<PackageReference Include="NHibernate" />
+		<PackageReference Include="FluentNHibernate" />
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+		<PackageReference Include="SourceGear.sqlite3" />
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="MySql.Data" />
+		<!-- Oracle.ManagedDataAccess.Core is netstandard2.1 and cannot load on .NET Framework; use the netfx-native
+		     Oracle.ManagedDataAccess there instead. -->
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" Condition="'$(TargetFramework)' != 'net462'" />
+		<PackageReference Include="Oracle.ManagedDataAccess"      Condition="'$(TargetFramework)' == 'net462'" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+	</ItemGroup>
+
+	<!-- dotnet publish drops System.Data.SQLite's native SQLite.Interop.dll: the Stub.System.Data.SQLite.Core
+	     package copies it into the build output's x64/x86 subfolders, but publish ignores them. NHibernate's
+	     SQLite20Driver P/Invokes it, so copy it from the build output into the publish output on net462. -->
+	<Target Name="_CopySQLiteInteropToPublish" AfterTargets="Publish" Condition="'$(TargetFramework)' == 'net462'">
+		<Copy SourceFiles="$(TargetDir)x64\SQLite.Interop.dll" DestinationFolder="$(PublishDir)x64" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)x64\SQLite.Interop.dll')" />
+		<Copy SourceFiles="$(TargetDir)x86\SQLite.Interop.dll" DestinationFolder="$(PublishDir)x86" SkipUnchangedFiles="true" Condition="Exists('$(TargetDir)x86\SQLite.Interop.dll')" />
+	</Target>
+</Project>

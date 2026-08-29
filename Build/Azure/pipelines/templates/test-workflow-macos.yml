@@ -114,6 +114,13 @@ steps:
     condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
     displayName: 'EF.Core Tests (${{ tfm.label }}): $(title)'
 
+  # NHibernate tests are built for net10.0 and .NET Framework; this image has no netfx leg, so only
+  # the net10.0 one runs here, and x64 only.
+  - ${{ if eq(tfm.flag, 'net100') }}:
+    - script: dotnet ./${{ tfm.dir }}/nhibernate/x64/linq2db.NHibernate.Tests.dll --filter "TestCategory != SkipCI" --settings ./${{ tfm.dir }}/nhibernate/x64/.runsettings --report-trx --report-trx-filename ${{ tfm.dir }}-nhibernate-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
+      displayName: 'NHibernate Tests (${{ tfm.label }}): $(title)'
+
   - task: CmdLine@2
     inputs:
       script: 'rm -rf $(System.DefaultWorkingDirectory)/${{ tfm.dir }}'

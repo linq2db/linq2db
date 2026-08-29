@@ -288,5 +288,21 @@ namespace Tests
 			//TestProvName.AllSapHana,
 			//TestProvName.AllClickHouse
 		}.SplitAll())).ToList();
+
+		// Provider families the LinqToDB.NHibernate integration tests support. Like EFProviders it is the
+		// intersection of this curated list with --provider (via ApplyEFProviderOverride).
+		public static readonly IReadOnlyList<string> NHProviders = ApplyEFProviderOverride(CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
+		{
+			ProviderName.SQLiteClassic,
+			// Restricted to recent versions that support the modern SQL this integration exercises (recursive CTEs,
+			// window functions, OFFSET/FETCH, DATETIME2), so NHibernate's newest dialect per family is the correct
+			// one; older versions (SQL 2005/2008, MySQL 5.7, Oracle 11, Firebird 2.5) that lack those features are
+			// not tested.
+			TestProvName.AllSqlServer2019Plus,
+			TestProvName.AllPostgreSQL19Plus,
+			TestProvName.AllMySql8Plus,
+			TestProvName.Oracle23Managed,
+			TestProvName.AllFirebird5Plus,
+		}.SplitAll())).ToList();
 	}
 }

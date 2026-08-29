@@ -1,0 +1,14 @@
+<Project>
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.NHibernate</AssemblyName>
+		<RootNamespace>LinqToDB.NHibernate</RootNamespace>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<PackageReference Include="NHibernate" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+	</ItemGroup>
+
+</Project>
