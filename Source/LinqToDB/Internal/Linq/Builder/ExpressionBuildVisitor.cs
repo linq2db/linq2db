@@ -2924,12 +2924,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// A projection built with <see cref="BuildFlags.ForSetProjection"/> — a set-operation operand, or one of
-		/// the CTE-union branches an eager load builds — makes <see cref="GetTranslationFlags"/> ask translators
-		/// for strict SQL, so a member they cannot translate (e.g. <c>Guid.ToString("N")</c>) comes back as an
-		/// error instead of being declined. Such a member is still projectable: each operand selects the columns
-		/// it reads and the materializer computes the value, exactly as for a terminal <c>Select</c>. Treat the
-		/// error as "not translated" so the caller falls through to the client-side path.
+		/// A projection built with <see cref="BuildFlags.ForSetProjection"/> — a set-operation operand, a row of an
+		/// in-memory sequence, or one of the CTE-union branches an eager load builds — makes
+		/// <see cref="GetTranslationFlags"/> ask translators for strict SQL, so a member they cannot translate
+		/// (e.g. <c>Guid.ToString("N")</c>) comes back as an error instead of being declined. Such a member is
+		/// still projectable: each operand selects the columns it reads and the materializer computes the value,
+		/// exactly as for a terminal <c>Select</c>. Treat the error as "not translated" so the caller falls
+		/// through to the client-side path.
 		/// </summary>
 		/// <remarks>
 		/// Only where the translator would have declined had SQL not been demanded, which is what asking it a
