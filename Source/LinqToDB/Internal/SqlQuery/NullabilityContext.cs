@@ -156,7 +156,17 @@ namespace LinqToDB.Internal.SqlQuery
 							if (index >= set.SelectQuery.Select.Columns.Count)
 								return true;
 
-							if (set.SelectQuery.Select.Columns[index].CanBeNullable(this))
+							// the branch query is reachable only through SetOperators, which the source walk does not enter.
+							// Without registering it the branch's own tables resolve as unreachable, so a value that is nullable
+							// only through a join inside the branch is reported as not nullable to the enclosing query.
+							var setNullability = WithQuery(set.SelectQuery);
+
+							// carry the cycle guard over - WithQuery allocates a fresh context, which would otherwise start
+							// with an empty visited set and lose the protection against self-referencing column chains
+							if (!ReferenceEquals(setNullability, this))
+								setNullability._visitedColumns = _visitedColumns;
+
+							if (set.SelectQuery.Select.Columns[index].CanBeNullable(setNullability))
 								return true;
 						}
 					}

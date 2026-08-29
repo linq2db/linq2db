@@ -924,6 +924,50 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void SetOperationBranchNullabilityReachesEnclosingQuery([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// The enclosing query resolves a set-operation column by fanning out over SetOperators. Branch 1 is
+			// deliberately non-nullable so that fan-out is actually reached, and branch 2 is nullable only through
+			// a LEFT JOIN living inside the branch - which the source walk cannot see unless the branch query is
+			// registered in the nullability scope. Without that the null check folds away and the NULL surfaces
+			// as a default value.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   },
+				new DetailClass { Id = 2, MasterId = 100 }
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(details))
+			{
+				// branch 1 is non-nullable, so CanBeNull cannot short-circuit before the set-operator fan-out
+				var branch1 = from d in db.GetTable<DetailClass>().Where(d => d.Id == 1)
+					select new { Key = (int?)d.Id };
+
+				// branch 2's key is nullable only through the LEFT JOIN, which lives inside SetOperators
+				var branch2 = from d in db.GetTable<DetailClass>().Where(d => d.Id == 2)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					select new { Key = (int?)m.Id };
+
+				var query = from u in branch1.Concat(branch2)
+					select u.Key != null ? u.Key.Value : -1;
+
+				query.ToList().ShouldBe([1, -1], ignoreOrder: true);
+			}
+		}
+
+		[Test]
 		public void NamedFilter_InterfaceTypedLambda_FastPath([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// Regression: a filter lambda typed against an interface (Func<ISoftDelete, ...>) applied to a concrete
