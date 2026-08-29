@@ -1594,8 +1594,24 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression or SqlPlaceholderExpression))
 					{
-						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot)
+						// Dropping the member and continuing with the root alone is only valid while the member
+						// cannot survive the type change. When the resolved root is a subtype of the member's
+						// declaring type the member is still reachable, and it is the member path that carries
+						// the answer: TableContext maps a member access onto the table that owns the column.
+						// Dropping it there asks the whole-entity question instead, which a projection over
+						// several sources cannot answer.
+						//
+						// Scoped to Table on purpose: AggregationRoot keeps the unconditional drop. It resolves
+						// its root through Visit rather than BuildRoot (above), so it stays in its own purpose,
+						// and no test exercises a type change there - note that VisitContextRefExpression bails
+						// out on a root type change for BuildPurpose.Root only, so it is not ruled out by
+						// construction.
+						if (root.Type != node.Expression!.Type
+							&& (_buildPurpose is BuildPurpose.AggregationRoot
+								|| (_buildPurpose is BuildPurpose.Table && node.Member.DeclaringType?.IsSameOrParentOf(root.Type) != true)))
+						{
 							return Visit(root);
+						}
 
 						var updated = node.Update(root);
 						var visited = Visit(updated);
