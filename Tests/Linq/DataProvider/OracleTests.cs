@@ -1409,6 +1409,10 @@ namespace Tests.DataProvider
 
 		void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
+			// RetrieveIdentity inlines sequence-allocated ids as literals, so the captured SQL records
+			// SEQUENCETESTSEQ state - same reason SequenceInsert/SequenceInsertWithIdentity opt out
+			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
+
 			var data = new[]
 			{
 				new OracleSpecific.SequenceTest { Value = "Value"},
@@ -1441,6 +1445,10 @@ namespace Tests.DataProvider
 
 		async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
+			// RetrieveIdentity inlines sequence-allocated ids as literals, so the captured SQL records
+			// SEQUENCETESTSEQ state - same reason SequenceInsert/SequenceInsertWithIdentity opt out
+			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
+
 			var data = new[]
 			{
 				new OracleSpecific.SequenceTest { Value = "Value"},
