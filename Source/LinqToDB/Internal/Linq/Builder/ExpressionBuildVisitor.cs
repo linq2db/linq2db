@@ -2018,6 +2018,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					return sqlResult;
 				}
 
+				// The rebuilt conditional still has to go back through Visit. Returning it as-is leaves an operand
+				// that a later pass would have folded — a constant compared against a set-operation column is the
+				// case that surfaced — resolved as a projected column instead, which then has to be carried by
+				// every branch of the set operation (IntervalTranslationTests.ConcatSurroundsADifferenceWithColumns).
+				if (!IsSame(newNode, node))
+					return Visit(newNode);
+
 				return newNode;
 			}
 		}
