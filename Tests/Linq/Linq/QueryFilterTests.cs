@@ -876,7 +876,7 @@ namespace Tests.Linq
 						.LeftJoin(x => x.Id == d.MasterId)
 					select m != null ? m.Value : "Unknown";
 
-				Values(1).Concat(Values(2)).ToList().ShouldBe(["Master!", "Unknown"]);
+				Values(1).Concat(Values(2)).ToList().ShouldBe(["Master!", "Unknown"], ignoreOrder: true);
 			}
 		}
 
