@@ -2833,7 +2833,8 @@ namespace Tests.Linq
 
 		[ActiveIssue("Wrong Date manipulations on Oracle 11 (ORA-01841), and DuckDB does not type a bare date parameter inside EXTRACT", Configurations = [TestProvName.AllOracle11, TestProvName.AllDuckDB])]
 		[Test]
-		public void AggressiveCteOptimization([RecursiveCteContextSource] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void AggressiveCteOptimization([RecursiveCteContextSource(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2876,7 +2877,8 @@ namespace Tests.Linq
 		// distinct ones, so folding the wrapper into the union has to substitute both per leg.
 		[ActiveIssue("Wrong Date manipulations on Oracle 11 (ORA-01841), and DuckDB does not type a bare date parameter inside EXTRACT", Configurations = [TestProvName.AllOracle11, TestProvName.AllDuckDB])]
 		[Test]
-		public void AggressiveCteOptimizationTwoColumns([RecursiveCteContextSource] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void AggressiveCteOptimizationTwoColumns([RecursiveCteContextSource(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 
