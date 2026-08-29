@@ -1035,6 +1035,24 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expression;
 		}
 
+		/// <summary>
+		/// Whether the expression projects a constructed object, seen through whatever conversion states the type it
+		/// is read as. A set operation unifies branch projections of differing but assignable types by converting
+		/// one of them, so a branch is a constructor with a conversion in front of it as often as a bare one.
+		/// </summary>
+		public static bool IsConstructorBranch(Expression expression)
+		{
+			return IsConstructorBranch(expression, out _);
+		}
+
+		/// <inheritdoc cref="IsConstructorBranch(Expression)"/>
+		public static bool IsConstructorBranch(Expression expression, [NotNullWhen(true)] out SqlGenericConstructorExpression? constructor)
+		{
+			constructor = expression.UnwrapConvert() as SqlGenericConstructorExpression;
+
+			return constructor != null;
+		}
+
 		public static Expression UnwrapProxy(Expression expression)
 		{
 			if (expression is ContextRefExpression { BuildContext: IBuildProxy proxy })
