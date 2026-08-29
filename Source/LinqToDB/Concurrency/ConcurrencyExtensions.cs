@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -160,7 +161,7 @@ namespace LinqToDB.Concurrency
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).Update();
 		}
@@ -183,7 +184,7 @@ namespace LinqToDB.Concurrency
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).UpdateAsync(cancellationToken);
 		}
@@ -284,7 +285,7 @@ namespace LinqToDB.Concurrency
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
@@ -300,12 +301,6 @@ namespace LinqToDB.Concurrency
 				.ToArray();
 		}
 
-		private const string UpdateWithRefreshNotSupportedMessage =
-			"UpdateOptimisticWithRefresh requires the provider to support UPDATE OUTPUT / RETURNING " +
-			"(SqlProviderFlags.IsUpdateOutputRowsSupported) or a reliable affected-rows count " +
-			"(SqlProviderFlags.IsAffectedRowsCountSupported); the current provider supports neither, so the " +
-			"optimistic-concurrency result cannot be guaranteed.";
-
 		private static void CopyColumns<T>(ColumnDescriptor[] columns, T from, T to)
 			where T : class
 		{
@@ -319,7 +314,7 @@ namespace LinqToDB.Concurrency
 		{
 			foreach (var cd in lockColumns)
 				if (!cd.MemberAccessor.HasSetter)
-					throw new LinqToDBException($"UpdateOptimisticWithRefresh cannot refresh '{objType.Name}.{cd.MemberName}': the optimistic-lock member has no setter, so the regenerated value cannot be written back onto the entity.");
+					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Concurrency_UpdateWithRefresh_ReadOnlyLockMember, objType.Name, cd.MemberName));
 		}
 
 		// new T { lockCol = <source>.lockCol, ... } — only the optimistic-lock column(s), nothing else
@@ -390,7 +385,7 @@ namespace LinqToDB.Concurrency
 			// outer, OfType / Cast over a base type), so the caller's filters cannot be dropped from the read-back:
 			// a predicate over a column the UPDATE rewrites would hide the updated row and leave the entity stale
 			if (call.Arguments.Count == 0 || !typeof(IQueryable<T>).IsAssignableFrom(call.Arguments[0].Type))
-				throw new LinqToDBException($"UpdateOptimisticWithRefresh cannot refresh through '{call.Method.Name}': the query operator does not expose the updated table as its source, so the regenerated value cannot be read back reliably.");
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Concurrency_UpdateWithRefresh_UnsupportedSource, call.Method.Name));
 
 			var inner = ReadBackExpression<T>(call.Arguments[0]);
 
@@ -439,7 +434,7 @@ namespace LinqToDB.Concurrency
 			// No single-statement OUTPUT / RETURNING and no reliable affected-row count (e.g. ClickHouse) -> the
 			// optimistic-concurrency result cannot be reported, so the operation is unsupported for this provider.
 			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
-				throw new LinqToDBException(UpdateWithRefreshNotSupportedMessage);
+				throw new LinqToDBException(ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported);
 
 			// built before the UPDATE so an unsupported source shape is rejected without having modified anything
 			var readBack = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns));
@@ -487,7 +482,7 @@ namespace LinqToDB.Concurrency
 			// No single-statement OUTPUT / RETURNING and no reliable affected-row count (e.g. ClickHouse) -> the
 			// optimistic-concurrency result cannot be reported, so the operation is unsupported for this provider.
 			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
-				throw new LinqToDBException(UpdateWithRefreshNotSupportedMessage);
+				throw new LinqToDBException(ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported);
 
 			// built before the UPDATE so an unsupported source shape is rejected without having modified anything
 			var readBack = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns));
@@ -534,6 +529,8 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
 		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
 		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
 		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
@@ -576,6 +573,8 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
 		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
 		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
 		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
@@ -617,6 +616,8 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
 		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
 		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
 		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
@@ -627,7 +628,7 @@ namespace LinqToDB.Concurrency
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 
 			return UpdateOptimisticWithRefreshCore(source, dc, obj);
 		}
@@ -661,6 +662,8 @@ namespace LinqToDB.Concurrency
 		/// <exception cref="LinqToDBException">
 		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
 		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
 		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
 		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
 		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
@@ -671,7 +674,7 @@ namespace LinqToDB.Concurrency
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 
 			return UpdateOptimisticWithRefreshCoreAsync(source, dc, obj, cancellationToken);
 		}

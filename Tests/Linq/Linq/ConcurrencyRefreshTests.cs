@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Concurrency;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -384,7 +386,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 
 			Action act = () => source.UpdateOptimisticWithRefresh(record);
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("does not expose the updated table");
+			act.ShouldThrow<LinqToDBException>().Message.ShouldBe(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Concurrency_UpdateWithRefresh_UnsupportedSource, nameof(Queryable.SelectMany)));
 
 			// the guard fires before the UPDATE, so nothing was written
 			t.Single().Value.ShouldBe("initial");
@@ -413,7 +415,7 @@ namespace Tests.Linq
 			var record = new RefreshReadOnlyStampTable(1, t.Single().Stamp, "updated");
 
 			Action act = () => db.UpdateOptimisticWithRefresh(record);
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("has no setter");
+			act.ShouldThrow<LinqToDBException>().Message.ShouldBe(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Concurrency_UpdateWithRefresh_ReadOnlyLockMember, nameof(RefreshReadOnlyStampTable), nameof(RefreshReadOnlyStampTable.Stamp)));
 
 			// the guard fires before the UPDATE, so nothing was written
 			t.Single().Value.ShouldBe("initial");
@@ -706,7 +708,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 
 			Action act = () => db.UpdateOptimisticWithRefresh(record);
-			act.ShouldThrow<LinqToDBException>().Message.ShouldContain("requires the provider to support");
+			act.ShouldThrow<LinqToDBException>().Message.ShouldBe(ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported);
 		}
 
 		[Test]
@@ -727,7 +729,7 @@ namespace Tests.Linq
 			record.Value = "updated";
 
 			Func<Task> act = () => db.UpdateOptimisticWithRefreshAsync(record);
-			(await act.ShouldThrowAsync<LinqToDBException>()).Message.ShouldContain("requires the provider to support");
+			(await act.ShouldThrowAsync<LinqToDBException>()).Message.ShouldBe(ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported);
 		}
 
 		// Guard test: keep SqlProviderFlags.IsUpdateOutputRowsSupported honest. It probes the provider's actual UPDATE

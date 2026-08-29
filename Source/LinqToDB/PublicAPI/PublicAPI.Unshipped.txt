@@ -1,12 +1,16 @@
 ﻿#nullable enable
 ~override LinqToDB.Internal.SqlQuery.SqlIntervalType.Equals(object obj) -> bool
 ~override LinqToDB.Internal.SqlQuery.SqlIntervalType.ToString() -> string
+const LinqToDB.Internal.Common.ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported = "UpdateOptimisticWithRefresh requires the provider to either return updated rows from the UPDATE statement (OUTPUT / RETURNING) or report the number of affected rows. The current provider supports neither, so the optimistic-concurrency result cannot be guaranteed." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Concurrency_UpdateWithRefresh_ReadOnlyLockMember = "UpdateOptimisticWithRefresh cannot refresh '{0}.{1}': the optimistic-lock member has no setter, so the regenerated value cannot be written back onto the entity." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_Concurrency_UpdateWithRefresh_UnsupportedSource = "UpdateOptimisticWithRefresh cannot refresh through '{0}': the query operator does not expose the updated table as its source, so the regenerated value cannot be read back reliably." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_ComponentBelowResolution = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Difference = "Subtracting one date/time value from another is not supported by current provider. Compute the difference in .NET, or use Sql.DateDiff where a count of crossed unit boundaries answers the question." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Member = "This TimeSpan member is not supported by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Operation = "This TimeSpan operation is not supported by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Shift = "Adding a TimeSpan to a date/time value is not supported by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_UndeclaredOperand = "Cannot combine a duration whose unit is declared with one stored through a value converter, which does not say what its number counts. Declare that column with DurationAttribute, or combine the two in .NET." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_LinqToDBQueryExpected = "Linq To DB query expected" -> string!
 LinqToDB.Internal.SqlProvider.IntervalLowering
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.get -> bool
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.set -> void
