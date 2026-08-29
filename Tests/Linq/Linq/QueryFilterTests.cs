@@ -862,7 +862,8 @@ namespace Tests.Linq
 			var details = new[]
 			{
 				new DetailClass { Id = 1, MasterId = 1   }, // resolves
-				new DetailClass { Id = 2, MasterId = 100 }  // does not
+				new DetailClass { Id = 2, MasterId = 100 }, // does not
+				new DetailClass { Id = 3, MasterId = 200 }  // does not either
 			};
 
 			using var db = new MyDataContext(context, builder.MappingSchema);
@@ -876,7 +877,49 @@ namespace Tests.Linq
 						.LeftJoin(x => x.Id == d.MasterId)
 					select m != null ? m.Value : "Unknown";
 
-				Values(1).Concat(Values(2)).ToList().ShouldBe(["Master!", "Unknown"], ignoreOrder: true);
+				Values(1).Concat(Values(2)).Concat(Values(3)).ToList().ShouldBe(["Master!", "Unknown", "Unknown"], ignoreOrder: true);
+			}
+		}
+
+		[Test]
+		public void FilteredLeftJoinFallbackChainSurvivesSetOperation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Companion to FilteredLeftJoinNullCheckSurvivesSetOperation: with a two-level fallback the whole chain
+			// collapsed to the first join's column in every branch after the first, so the second join stayed in the
+			// FROM clause but was never referenced in the projection.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			builder.Entity<InfoClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var infos   = new[] { new InfoClass   { Id = 1, Value = "Info", MasterId = 2 } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   }, // resolves through master
+				new DetailClass { Id = 2, MasterId = 2   }, // resolves through info only
+				new DetailClass { Id = 3, MasterId = 100 }  // resolves through neither
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(infos))
+			using (db.CreateLocalTable(details))
+			{
+				IQueryable<string> Values(int id) =>
+					from d in db.GetTable<DetailClass>().Where(d => d.Id == id)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					from i in db.GetTable<InfoClass>()
+						.Select(x => new { x.Id, x.MasterId, Value = x.Value + "?" })
+						.LeftJoin(x => x.MasterId == d.MasterId)
+					select m != null ? m.Value : i != null ? i.Value : "Unknown";
+
+				Values(1).Concat(Values(2)).Concat(Values(3)).ToList().ShouldBe(["Master!", "Info?", "Unknown"], ignoreOrder: true);
 			}
 		}
 
