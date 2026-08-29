@@ -264,6 +264,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (expr is ContextRefExpression refExpression)
 						return refExpression.WithType(type);
+					if (expr is SqlErrorExpression errorExpression)
+						return errorExpression.WithType(type);
 					return Expression.Convert(expr, type);
 				}
 

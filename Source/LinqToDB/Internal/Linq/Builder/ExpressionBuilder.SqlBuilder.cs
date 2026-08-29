@@ -1580,6 +1580,12 @@ namespace LinqToDB.Internal.Linq.Builder
 							return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[paramAccess.ParamIndex], strict);
 						}
 
+						// With no member and nothing left in the path, the whole object is what was asked for - the
+						// New case above answers with its own body for the same question. Reached when a constructed
+						// object is read through `as`, which projects through the conversion rather than round it.
+						if (next == null)
+							return mi;
+
 						throw new NotImplementedException($"Projecting '{next}' is not supported yet.");
 					}
 
@@ -1803,7 +1809,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (isPredicate is ConstantExpression constExpr)
 					{
 						if (constExpr.Value is true)
-							return truePath;
+						{
+							// A set operation pairs its branches by the type the projection is read as, so a
+							// projection handed back with its conversion stripped would key by the type it
+							// constructs instead and pair with nothing. See issue #5683.
+							return SequenceHelper.EnsureType(truePath, unary.Type);
+						}
+
 						return new DefaultValueExpression(MappingSchema, truePath.Type, true);
 					}
 
