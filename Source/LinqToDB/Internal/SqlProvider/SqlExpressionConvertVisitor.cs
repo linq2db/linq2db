@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return selectQuery;
 
 			var saveNullabilityContext = NullabilityContext;
-			NullabilityContext = NullabilityContext.WithJoinSource(selectQuery);
+			NullabilityContext = NullabilityContext.WithQuery(selectQuery).WithJoinSource(selectQuery);
 
 			var newQuery = base.VisitSqlQuery(selectQuery);
 
