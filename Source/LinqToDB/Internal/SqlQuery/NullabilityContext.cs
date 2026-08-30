@@ -153,6 +153,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 						foreach (var set in column.Parent.SetOperators)
 						{
+							// EXCEPT / INTERSECT narrow the accumulated left side and contribute no values of their
+							// own, so a branch that is nullable only in itself cannot put a NULL into this column.
+							if (set.Operation is not (SetOperation.Union or SetOperation.UnionAll))
+								continue;
+
 							if (index >= set.SelectQuery.Select.Columns.Count)
 								return true;
 

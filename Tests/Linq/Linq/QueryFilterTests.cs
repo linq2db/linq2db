@@ -968,6 +968,51 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void SetOperationNullabilityIgnoresNarrowingBranches([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// EXCEPT / INTERSECT narrow the accumulated left side and contribute no values of their own, so a
+			// branch that is nullable only through a join inside itself must not make the enclosing column
+			// nullable. The UNION ALL case shares the shape and must keep the check - that is the #5792 fix.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   },
+				new DetailClass { Id = 2, MasterId = 100 }
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(details))
+			{
+				var head = from d in db.GetTable<DetailClass>().Where(d => d.Id == 1)
+					select new { Key = (int?)d.Id };
+
+				// nullable only through the LEFT JOIN, which lives inside the branch
+				var branch = from d in db.GetTable<DetailClass>().Where(d => d.Id == 2)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					select new { Key = (int?)m.Id };
+
+				head.Concat(branch).Select(u => u.Key != null ? u.Key.Value : -1).ToList().ShouldBe([1, -1], ignoreOrder: true);
+				db.LastQuery!.ShouldContain("IS NOT NULL");
+
+				head.Except(branch).Select(u => u.Key != null ? u.Key.Value : -1).ToList().ShouldBe([1]);
+				db.LastQuery!.ShouldNotContain("IS NOT NULL");
+
+				head.Intersect(branch).Select(u => u.Key != null ? u.Key.Value : -1).ToList().ShouldBeEmpty();
+				db.LastQuery!.ShouldNotContain("IS NOT NULL");
+			}
+		}
+
+		[Test]
 		public void NamedFilter_InterfaceTypedLambda_FastPath([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// Regression: a filter lambda typed against an interface (Func<ISoftDelete, ...>) applied to a concrete
