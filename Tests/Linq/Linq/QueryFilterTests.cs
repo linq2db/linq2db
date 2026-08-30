@@ -927,10 +927,10 @@ namespace Tests.Linq
 		public void SetOperationBranchNullabilityReachesEnclosingQuery([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			// The enclosing query resolves a set-operation column by fanning out over SetOperators. Branch 1 is
-			// deliberately non-nullable so that fan-out is actually reached, and branch 2 is nullable only through
-			// a LEFT JOIN living inside the branch - which the source walk cannot see unless the branch query is
-			// registered in the nullability scope. Without that the null check folds away and the NULL surfaces
-			// as a default value.
+			// deliberately non-nullable so that the fan-out is the only thing that can report the column nullable,
+			// and branch 2 is nullable only through a LEFT JOIN living inside the branch - which the source walk
+			// cannot see unless the branch query is registered in the nullability scope. Without that the null
+			// check folds away and the NULL surfaces as a default value.
 
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
