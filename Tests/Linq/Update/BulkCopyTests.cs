@@ -410,15 +410,13 @@ namespace Tests.xUpdate
 				.Where(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
 				.ToList();
 
-			using (Assert.EnterMultipleScope())
-			{
-				// the option must actually split: a single statement would mean it was ignored
-				Assert.That(inserts, Has.Count.GreaterThan(1));
-				// a row is appended before the limit is checked, so one row may overshoot - but no more than that.
-				// Without the option this is what goes red: the provider default (1MB on SQLite) would let every
-				// row into a single statement, in both literal and parameterized mode.
-				Assert.That(inserts.Select(q => q.Length).DefaultIfEmpty().Max(), Is.LessThan(maxSqlLength + 4 * valueLength));
-			}
+			// the option must actually split. Decisive only on PostgreSQL and on SQLite in literal mode - see the
+			// clamps noted above, which already split the batch on the other legs.
+			inserts.Count.ShouldBeGreaterThan(1);
+			// the overflowing row is rewound out of the flushed batch, so a statement exceeds the cap only by the
+			// trailing separator plus any GetMultipleRowsSuffix (~25 chars). The unbounded case is the opposite
+			// one: a single row longer than the cap is emitted whole.
+			inserts.Max(q => q.Length).ShouldBeLessThan(maxSqlLength + 4 * valueLength);
 
 			// PostgreSQL is the only provider here with a GetMultipleRowsSuffix; the suffix is appended after the
 			// length check, so a batch could lose it without any of the assertions above noticing
