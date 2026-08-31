@@ -3,7 +3,7 @@
 namespace LinqToDB.DataProvider.Oracle
 {
 	/// <summary>
-	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
+	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.MultipleRows"/> bulk copy mode.
 	/// </summary>
 	public enum AlternativeBulkCopy
 	{
@@ -24,6 +24,9 @@ namespace LinqToDB.DataProvider.Oracle
 		/// INSERT INTO target_table(/*columns*/)
 		///     VALUES(:column1ArrayParameter, ..., :columnXArrayParameter)
 		/// </code>
+		/// Because the statement is a single fixed row template, this mode is bounded only by
+		/// <see cref="BulkCopyOptions.MaxBatchSize"/> — it does not consult
+		/// <see cref="BulkCopyOptions.MaxSqlLengthForBatch"/> or <see cref="BulkCopyOptions.MaxParametersForBatch"/>.
 		/// </summary>
 		InsertInto,
 		/// <summary>
