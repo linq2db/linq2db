@@ -95,9 +95,22 @@ jobs:
             pre_test_win_local: ${{ test_config.pre_test_win_local }}
             post_test_win_local: ${{ test_config.post_test_win_local }}
             netfx: ${{ test_config.enable_fw_netfx }}
-            net80: ${{ test_config.enable_fw_net80 }}
-            net90: ${{ test_config.enable_fw_net90 }}
-            net100: ${{ test_config.enable_fw_net100 }}
+            # Windows runs a non-netfx TFM only for a leg Linux cannot cover. netfx is Windows-only,
+            # so it always runs here; net8/9/10 on a leg that also has a linux job would repeat what
+            # that job already ran - the EF.Core suite runs on every enabled TFM unconditionally, and
+            # on a release run so does the main suite. Every leg needing its non-netfx TFMs on windows
+            # (Access, SqlCE, SQL Server 2005-2016) has no linux job, so enable_os_ubuntu decides it
+            # and no matrix entry has to state it twice. win_tfms_always opts an entry out, for the
+            # one case where the windows leg tests something the linux one cannot reach even on the
+            # same TFM - see w_DB2InformixDuckDB in test-matrix.yml.
+            ${{ if or(ne(test_config.enable_os_ubuntu, 'true'), eq(test_config.win_tfms_always, true)) }}:
+              net80: ${{ test_config.enable_fw_net80 }}
+              net90: ${{ test_config.enable_fw_net90 }}
+              net100: ${{ test_config.enable_fw_net100 }}
+            ${{ if and(eq(test_config.enable_os_ubuntu, 'true'), ne(test_config.win_tfms_always, true)) }}:
+              net80: false
+              net90: false
+              net100: false
             # Resolved here rather than branched on in the workflow, so each test/setup step exists
             # once with an $(arch) path instead of twice with one half always skipped.
             ${{ if eq(test_config.x86, true) }}:

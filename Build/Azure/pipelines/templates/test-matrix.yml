@@ -67,6 +67,10 @@ parameters:
 # - post_test_win_local (string): contains name of local cmd setup script for windows runs (with extension) executed after test run
 
 # MISC
+# - win_tfms_always (true/false string, optional) : windows-only. By default the windows job enables
+#   net8/9/10 only for an entry with no linux job, because for an entry that has one the linux leg
+#   already ran those TFMs (see test-jobs.yml). Set this when the windows leg tests something the
+#   linux leg cannot reach on the same TFM - a windows-native provider binary, for instance.
 # - win_efcore_only (true/false string, optional) : windows-only, run just the EF.Core suite on non-release
 #   runs and leave the main suite to the linux legs. Since netfx runs only on windows, that also makes the
 #   entry's netfx main suite release-run only. Release runs (full_run) run the main suite for every TFM.
@@ -523,6 +527,11 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
+          # The windows leg runs DuckDB alone, against the windows-native DuckDB binary, which the
+          # linux leg cannot exercise on any TFM - so it keeps net8/9/10 rather than following the
+          # default "linux leg covers net8+" rule. DuckDB has no netfx tests, so without this the
+          # leg would have no TFM enabled at all and fail on a missing .trx.
+          win_tfms_always: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
