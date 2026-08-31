@@ -2018,12 +2018,18 @@ namespace LinqToDB.Internal.Linq.Builder
 					return sqlResult;
 				}
 
-				// The rebuilt conditional still has to go back through Visit. Returning it as-is leaves an operand
-				// that a later pass would have folded — a constant compared against a set-operation column is the
-				// case that surfaced — resolved as a projected column instead, which then has to be carried by
-				// every branch of the set operation (IntervalTranslationTests.ConcatSurroundsADifferenceWithColumns).
-				if (!IsSame(newNode, node))
-					return Visit(newNode);
+				// Only the test needs a second pass. Visiting the arms can resolve an operand the test still holds
+				// unfolded — a set-operation branch selector compares a column against a per-branch constant, and
+				// leaving that comparison unresolved projects it as a column every branch of the set operation then
+				// has to carry (IntervalTranslationTests.ConcatSurroundsADifferenceWithColumns).
+				//
+				// The arms must NOT be re-visited: they were just built, re-walking them is what compounds at every
+				// nesting level, and it bought nothing — on the #5719 TPH repro re-visiting the whole conditional
+				// cost 2.2x across 1960 re-visits that all returned an unchanged tree.
+				var revisitedTest = Visit(newNode.Test);
+
+				if (!IsSame(revisitedTest, newNode.Test))
+					newNode = newNode.Update(revisitedTest, newNode.IfTrue, newNode.IfFalse);
 
 				return newNode;
 			}
