@@ -2,7 +2,6 @@ parameters:
   enabled: false
   with_baselines: false
   test_matrix: []
-  mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
   full_run: false # disable by default
   # Linux legs allowed to run at once, out of the ten slots the project has. 0 leaves the job
   # uncapped, which is the default because a cap measured worse than none.
@@ -152,44 +151,6 @@ jobs:
 
   steps:
   - template: test-workflow-linux.yml
-    parameters:
-      with_baselines: ${{ parameters.with_baselines }}
-      full_run: ${{ parameters.full_run }}
-
-#################
-#  Tests: MacOS #
-#################
-- job: test_macos_job
-  pool:
-    vmImage: 'macOS-15'
-  displayName: 'Mac'
-  ${{ if eq(parameters.full_run, true) }}:
-    timeoutInMinutes: 300
-  ${{ if not(eq(parameters.full_run, true)) }}:
-    timeoutInMinutes: 240
-  dependsOn: create_baselines_branch
-  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
-  variables:
-    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
-    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
-
-  strategy:
-    matrix:
-      ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true')) }}:
-          ${{ test_config.name }}:
-            title: ${{ test_config.title }}
-            config: ${{ test_config.config_macos }}
-            script_global: ${{ test_config.script_macos_global }}
-            script_local: ${{ test_config.script_macos_local }}
-            docker: ${{ test_config.install_docker_macos }}
-            net80: ${{ test_config.enable_fw_net80 }}
-            net90: ${{ test_config.enable_fw_net90 }}
-            net100: ${{ test_config.enable_fw_net100 }}
-            retry: ${{ test_config.retry }}
-
-  steps:
-  - template: test-workflow-macos.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
       full_run: ${{ parameters.full_run }}
