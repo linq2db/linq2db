@@ -595,6 +595,8 @@ namespace LinqToDB.Mapping
 				HasComplexColumns = true;
 		}
 
+		Dictionary<MemberInfo, ColumnDescriptor>? _columnsByMember;
+
 		/// <summary>
 		/// Returns column descriptor based on its MemberInfo
 		/// </summary>
@@ -602,7 +604,29 @@ namespace LinqToDB.Mapping
 		/// <returns></returns>
 		public ColumnDescriptor? FindColumnDescriptor(MemberInfo memberInfo)
 		{
-			return Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
+			// Built lazily and kept: the query builder asks for a column descriptor once per generic assignment, so
+			// a linear scan here is walked once per column per constructor — millions of comparisons on a wide
+			// entity (#5719). First-wins mirrors the FirstOrDefault this replaces.
+			var byMember = _columnsByMember;
+
+			if (byMember == null)
+			{
+				byMember = new Dictionary<MemberInfo, ColumnDescriptor>(Columns.Count);
+
+				foreach (var c in Columns)
+				{
+#if NETSTANDARD2_0 || NETFRAMEWORK
+					if (!byMember.ContainsKey(c.MemberInfo))
+						byMember.Add(c.MemberInfo, c);
+#else
+					byMember.TryAdd(c.MemberInfo, c);
+#endif
+				}
+
+				_columnsByMember = byMember;
+			}
+
+			return byMember.TryGetValue(memberInfo, out var found) ? found : null;
 		}
 
 		/// <summary>
