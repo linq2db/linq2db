@@ -25,6 +25,7 @@
 		public const string Error_RowNumber                        = "Provider does not support ROW_NUMBER function.";
 		public const string Error_OrderByRequiredForIndexing       = "For retrieving index of row, specify OrderBy part.";
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
+		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";
@@ -105,6 +106,18 @@
 		public const string Error_Upsert_EmulationDisallowed =
 			"Upsert cannot be expressed natively for this provider / configuration and would fall back to an emulated UPDATE+INSERT sequence. "
 			+ "LinqOptions.UpsertEmulationPolicy is set to Throw — change the provider, adjust the Upsert configuration, or set it to Allow to permit emulation.";
+
+		public const string Error_Concurrency_UpdateWithRefresh_NotSupported =
+			"UpdateOptimisticWithRefresh requires the provider to either return updated rows from the UPDATE statement (OUTPUT / RETURNING) "
+			+ "or report the number of affected rows. The current provider supports neither, so the optimistic-concurrency result cannot be guaranteed.";
+
+		public const string Error_Concurrency_UpdateWithRefresh_ReadOnlyLockMember =
+			"UpdateOptimisticWithRefresh cannot refresh '{0}.{1}': the optimistic-lock member has no setter, "
+			+ "so the regenerated value cannot be written back onto the entity.";
+
+		public const string Error_Concurrency_UpdateWithRefresh_UnsupportedSource =
+			"UpdateOptimisticWithRefresh cannot refresh through '{0}': the query operator does not expose the updated table as its source, "
+			+ "so the regenerated value cannot be read back reliably.";
 
 		public const string Error_GroupGuard =
 							"""
