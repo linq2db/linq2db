@@ -373,13 +373,13 @@ namespace LinqToDB.Internal.DataProvider
 			int                                       maxParameters,
 			int                                       maxSqlLength)
 		{
-			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch.GetValueOrDefault(maxParameters);
+			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch ?? maxParameters;
 
 			var adjustedBatchSize = helper.Options.BulkCopyOptions.UseParameters
 				? Math.Min(helper.BatchSize, adjustedMaxParameters / helper.Columns.Length)
 				: helper.BatchSize;
 
-			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch.GetValueOrDefault(maxSqlLength);
+			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch ?? maxSqlLength;
 
 			prepFunction(helper);
 
@@ -440,13 +440,13 @@ namespace LinqToDB.Internal.DataProvider
 			int                                         maxParameters,
 			int                                         maxSqlLength)
 		{
-			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch.GetValueOrDefault(maxParameters);
+			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch ?? maxParameters;
 
 			var adjustedBatchSize = helper.Options.BulkCopyOptions.UseParameters
 				? Math.Min(helper.BatchSize, adjustedMaxParameters / helper.Columns.Length)
 				: helper.BatchSize;
 
-			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch.GetValueOrDefault(maxSqlLength);
+			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch ?? maxSqlLength;
 
 			prepFunction(helper);
 
@@ -525,13 +525,13 @@ namespace LinqToDB.Internal.DataProvider
 			int                                         maxParameters,
 			int                                         maxSqlLength)
 		{
-			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch.GetValueOrDefault(maxParameters);
+			var adjustedMaxParameters = helper.Options.BulkCopyOptions.MaxParametersForBatch ?? maxParameters;
 
 			var adjustedBatchSize = helper.Options.BulkCopyOptions.UseParameters
 				? Math.Min(helper.BatchSize, adjustedMaxParameters / helper.Columns.Length)
 				: helper.BatchSize;
 
-			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch.GetValueOrDefault(maxSqlLength);
+			var adjustedMaxSqlLength = helper.Options.BulkCopyOptions.MaxSqlLengthForBatch ?? maxSqlLength;
 
 			prepFunction(helper);
 
