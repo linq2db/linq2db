@@ -614,14 +614,7 @@ namespace LinqToDB.Mapping
 				byMember = new Dictionary<MemberInfo, ColumnDescriptor>(Columns.Count);
 
 				foreach (var c in Columns)
-				{
-#if NETSTANDARD2_0 || NETFRAMEWORK
-					if (!byMember.ContainsKey(c.MemberInfo))
-						byMember.Add(c.MemberInfo, c);
-#else
 					byMember.TryAdd(c.MemberInfo, c);
-#endif
-				}
 
 				_columnsByMember = byMember;
 			}
