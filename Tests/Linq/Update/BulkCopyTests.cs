@@ -373,14 +373,18 @@ namespace Tests.xUpdate
 				.Select(i => new WideBulkCopyTable { Id = i, Value = new string((char)('a' + i % 26), valueLength) })
 				.ToList();
 
-			// MaxBatchSize is deliberately larger than rowCount so statement length is the only splitter
+			// MaxBatchSize is deliberately larger than rowCount, but it is not the only clamp: Firebird's
+			// MaxMultipleRows (254; 127 on 2.5) overrides it inside MultipleRowsCopy2, and with useParameters the
+			// batch is additionally capped at MaxParameters/columns (499 on SQLite).
+			BulkCopyRowsCopied copied;
+
 			if (viaDataOptions)
 			{
-				table.BulkCopy(rows);
+				copied = table.BulkCopy(rows);
 			}
 			else
 			{
-				db.BulkCopy(
+				copied = db.BulkCopy(
 					new BulkCopyOptions
 					{
 						BulkCopyType         = BulkCopyType.MultipleRows,
@@ -393,6 +397,11 @@ namespace Tests.xUpdate
 			}
 
 			var loaded = table.OrderBy(r => r.Id).ToArray();
+
+			// the splitter rewinds the overflowing row out of the flushed batch and re-adds it to the next one;
+			// a rewind that leaves the row behind writes it twice, which ConflictAction.Ignore swallows and the
+			// round-trip assertions below cannot see. RowsCopied counts rows emitted into statements, so it can.
+			copied.RowsCopied.ShouldBe(rowCount);
 
 			loaded.Select(r => r.Id).   ShouldBe(rows.Select(r => r.Id));
 			loaded.Select(r => r.Value).ShouldBe(rows.Select(r => r.Value));
