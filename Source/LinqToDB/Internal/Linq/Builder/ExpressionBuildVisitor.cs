@@ -880,7 +880,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
 				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
 				{
-					if (TranslateMember(BuildContext, node, out var translatedMember))
+					if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
 					{
 						return Visit(translatedMember);
 					}
@@ -1594,8 +1594,24 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression or SqlPlaceholderExpression))
 					{
-						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot)
+						// Dropping the member and continuing with the root alone is only valid while the member
+						// cannot survive the type change. When the resolved root is a subtype of the member's
+						// declaring type the member is still reachable, and it is the member path that carries
+						// the answer: TableContext maps a member access onto the table that owns the column.
+						// Dropping it there asks the whole-entity question instead, which a projection over
+						// several sources cannot answer.
+						//
+						// Scoped to Table on purpose: AggregationRoot keeps the unconditional drop. It resolves
+						// its root through Visit rather than BuildRoot (above), so it stays in its own purpose,
+						// and no test exercises a type change there - note that VisitContextRefExpression bails
+						// out on a root type change for BuildPurpose.Root only, so it is not ruled out by
+						// construction.
+						if (root.Type != node.Expression!.Type
+							&& (_buildPurpose is BuildPurpose.AggregationRoot
+								|| (_buildPurpose is BuildPurpose.Table && node.Member.DeclaringType?.IsSameOrParentOf(root.Type) != true)))
+						{
 							return Visit(root);
+						}
 
 						var updated = node.Update(root);
 						var visited = Visit(updated);
@@ -1625,7 +1641,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
 					return translatedLocal;
 
-				if (TranslateMember(BuildContext, memberExpression: node, translated: out translatedLocal))
+				if (TranslateMember(BuildContext, memberExpression: node, translated: out translatedLocal)
+					&& !DeclinedForSetProjection(node, translatedLocal))
 				{
 					translatedLocal = RegisterTranslatedSql(translatedLocal, node);
 
@@ -2906,6 +2923,35 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool));
 		}
 
+		/// <summary>
+		/// A projection built with <see cref="BuildFlags.ForSetProjection"/> — a set-operation operand, a row of an
+		/// in-memory sequence, or one of the CTE-union branches an eager load builds — makes
+		/// <see cref="GetTranslationFlags"/> ask translators for strict SQL, so a member they cannot translate
+		/// (e.g. <c>Guid.ToString("N")</c>) comes back as an error instead of being declined. Such a member is
+		/// still projectable: each operand selects the columns it reads and the materializer computes the value,
+		/// exactly as for a terminal <c>Select</c>. Treat the error as "not translated" so the caller falls
+		/// through to the client-side path.
+		/// </summary>
+		/// <remarks>
+		/// Only where the translator would have declined had SQL not been demanded, which is what asking it a
+		/// second time decides - the error alone does not say which kind of refusal it is. A refusal raised
+		/// whatever the flags say is about the construct rather than about a missing SQL form, so there is no
+		/// half of it left for the client side to read the operands through: swallowing one leaves the generic
+		/// handling to answer with a value instead, which is what the refusal exists to stop. The second ask
+		/// happens only on a path that has already failed, so the successful one is unchanged.
+		/// </remarks>
+		bool DeclinedForSetProjection(Expression node, Expression translated)
+		{
+			if (!_buildFlags.HasFlag(BuildFlags.ForSetProjection) || translated is not SqlErrorExpression { IsCritical: false })
+				return false;
+
+			using var translationContext = _translationContexts.Allocate();
+
+			translationContext.Value.Init(this, BuildContext, Alias);
+
+			return Builder._memberTranslator.Translate(translationContext.Value, node, TranslationFlags.Expression) == null;
+		}
+
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
 			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
@@ -2914,7 +2960,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// carries none, and a translator can still have something to say about it - a duration's total
 				// compared against a bound is a comparison of doubles, and the scaling it puts on the column can
 				// move to the other side only where the comparison is in view.
-				if (TranslateMember(BuildContext, node, out var translatedMember))
+				if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
 					return Visit(translatedMember);
 
 				// The attribute machinery reads its instructions off a member, so it is asked only where there is
