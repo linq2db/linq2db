@@ -117,8 +117,8 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="MaxParametersForBatch">
 	/// If set, will set the maximum parameters per batch statement. Also see <see cref="UseParameters"/>.
-	/// This can only lower the provider's own parameter limit, never raise it: the per-row check that closes a
-	/// batch still compares against the provider value.
+	/// Overrides the provider's own parameter limit in both directions, so raising it past what the driver
+	/// accepts surfaces as a driver error rather than being silently clamped.
 	/// </param>
 	/// <param name="MaxDegreeOfParallelism">
 	/// Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.

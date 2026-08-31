@@ -426,6 +426,43 @@ namespace Tests.xUpdate
 			}
 		}
 
+		// MaxParametersForBatch is substituted into the per-row guard, not only into the initial batch-size
+		// estimate, so it overrides the provider limit in both directions. SQLiteBulkCopy.MaxParameters is 998:
+		// without the option 1000 rows x 2 columns close a batch every 499 rows, and raising it packs them into
+		// one statement of 2000 parameters.
+		[Test]
+		public void MaxParametersForBatchRaisesProviderLimit([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			const int rowCount = 1000;
+
+			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
+			using var db = GetDataConnection(context);
+
+			var queries = new SaveQueriesInterceptor();
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<WideBulkCopyTable>();
+
+			var rows = Enumerable.Range(1, rowCount)
+				.Select(i => new WideBulkCopyTable { Id = i, Value = "v" })
+				.ToList();
+
+			var copied = db.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType          = BulkCopyType.MultipleRows,
+					MaxBatchSize          = rowCount * 10,
+					UseParameters         = true,
+					MaxParametersForBatch = 4000,
+				},
+				rows);
+
+			copied.RowsCopied.ShouldBe(rowCount);
+			table.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(rows.Select(r => r.Id));
+
+			queries.Queries.Count(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase)).ShouldBe(1);
+		}
+
 #if SUPPORTS_DATEONLY
 		[Table]
 		public class DateOnlyTable

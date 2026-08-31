@@ -1722,8 +1722,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If set, will set the maximum parameters per batch statement. Also see <see cref="WithUseParameters"/>.
-		/// This can only lower the provider's own parameter limit, never raise it: the per-row check that closes a
-		/// batch still compares against the provider value.
+		/// Overrides the provider's own parameter limit in both directions, so raising it past what the driver
+		/// accepts surfaces as a driver error rather than being silently clamped.
 		/// </summary>
 		[Pure]
 		public static BulkCopyOptions WithMaxParametersForBatch(this BulkCopyOptions options, int? maxParametersForBatch)
@@ -1992,8 +1992,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If set, will set the maximum parameters per batch statement. Also see <see cref="UseBulkCopyUseParameters"/>.
-		/// This can only lower the provider's own parameter limit, never raise it: the per-row check that closes a
-		/// batch still compares against the provider value.
+		/// Overrides the provider's own parameter limit in both directions, so raising it past what the driver
+		/// accepts surfaces as a driver error rather than being silently clamped.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseBulkCopyMaxParametersForBatch(this DataOptions options, int? maxParametersForBatch)
