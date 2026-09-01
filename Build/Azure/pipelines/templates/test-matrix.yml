@@ -1,7 +1,6 @@
 parameters:
   enabled: false
   with_baselines: false
-  mac_enabled: false
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
   linux_max_parallel: 0 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
   db_filter: '[all]'
@@ -44,7 +43,6 @@ parameters:
 # OPERATION SYSTEM SELECTORS
 # - enable_os_windows  (true/false string) : enables testrun for windows 2025 image (windows-2025)
 # - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 24.04 image (ubuntu-24.04)
-# - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-13)
 
 # TARGET FRAMEWORK SELECTORS
 # - enable_fw_netfx    (true/false string) : enables testrun against .net framework 4.6.2
@@ -55,24 +53,24 @@ parameters:
 # TEST CONFIG SELECTOR
 # - config_win   (string) : contains name of test config json file for windows runs (without extension)
 # - config_linux (string) : contains name of test config json file for linux runs (without extension)
-# - config_macos (string) : contains name of test config json file for macos runs (without extension)
 
 # SETUP SCRIPT SELECTOR
 # GLOBAL (run once per test instance). E.g. used to setup database once
 # - script_win_global   (string) : contains name of global cmd setup script for windows runs (with extension)
 # - psscript_win_global (string) : contains name of global powershell setup script for windows runs (with extension)
 # - script_linux_global (string) : contains name of global shell setup script for linux runs (with extension)
-# - script_macos_global (string) : contains name of global shell setup script for MacOS runs (with extension)
 # LOCAL (run once per test framework). E.g. used to setup test files for specific framework run
 # - script_win_local   (string) : contains name of local cmd setup script for windows runs (with extension)
 # - psscript_win_local (string) : contains name of local powershell setup script for windows runs (with extension)
 # - script_linux_local (string) : contains name of local shell setup script for linux runs (with extension)
-# - script_macos_local (string) : contains name of local shell setup script for MacOS runs (with extension)
 # - pre_test_win_local (string) : contains name of local cmd setup script for windows runs (with extension) executed before test run
 # - post_test_win_local (string): contains name of local cmd setup script for windows runs (with extension) executed after test run
 
 # MISC
-# - install_docker_macos (true/false string) : enables pre-installation of docker for macos testruns
+# - win_tfms_always (true/false string, optional) : windows-only. By default the windows job enables
+#   net8/9/10 only for an entry with no linux job, because for an entry that has one the linux leg
+#   already ran those TFMs (see test-jobs.yml). Set this when the windows leg tests something the
+#   linux leg cannot reach on the same TFM - a windows-native provider binary, for instance.
 # - win_efcore_only (true/false string, optional) : windows-only, run just the EF.Core suite on non-release
 #   runs and leave the main suite to the linux legs. Since netfx runs only on windows, that also makes the
 #   entry's netfx main suite release-run only. Release runs (full_run) run the main suite for every TFM.
@@ -82,7 +80,6 @@ jobs:
     parameters:
       enabled: ${{ parameters.enabled }}
       with_baselines: ${{ parameters.with_baselines }}
-      mac_enabled: ${{ parameters.mac_enabled }}
       full_run: ${{ parameters.full_run }}
       linux_max_parallel: ${{ parameters.linux_max_parallel }}
       test_matrix:
@@ -144,7 +141,6 @@ jobs:
           script_win_global: sqlserver.2014.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -159,13 +155,9 @@ jobs:
         - name: b_ClickHouse
           title: ClickHouse (all providers)
           config_linux: clickhouse
-          config_macos: clickhouse
           script_linux_global: clickhouse.sh
-          script_macos_global: clickhouse.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -178,13 +170,9 @@ jobs:
         - name: c_PostgreSQL2
           title: PostgreSQL (13-19)
           config_linux: pgsql2
-          config_macos: pgsql2
           script_linux_global: pgsql2.sh
-          script_macos_global: mac.pgsql2.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -200,7 +188,6 @@ jobs:
           script_win_global: sqlserver.2012.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -216,7 +203,6 @@ jobs:
           script_win_global: sqlserver.2008.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -232,7 +218,6 @@ jobs:
           script_win_global: sqlserver.2016.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -248,7 +233,6 @@ jobs:
           psscript_win_global: sqlce.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -261,15 +245,10 @@ jobs:
         - name: h_SAPHANA2
           title: SAP HANA 2
           config_linux: hana2
-          config_macos: hana2
           script_linux_global: hana2.sh
-          script_macos_global: mac.hana2.sh
           script_linux_local: hana2.tests.sh
-          script_macos_local: hana2.tests.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -282,13 +261,9 @@ jobs:
         - name: i_PostgreSQL1
           title: PostgreSQL (9.2-12)
           config_linux: pgsql1
-          config_macos: pgsql1
           script_linux_global: pgsql1.sh
-          script_macos_global: mac.pgsql1.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -301,13 +276,9 @@ jobs:
         - name: j_Oracle1819
           title: Oracle 18c + 19c
           config_linux: oracle1819
-          config_macos: oracle1819
           script_linux_global: oracle1819.sh
-          script_macos_global: oracle1819.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -321,13 +292,9 @@ jobs:
         - name: k_Firebird
           title: Firebird (all versions)
           config_linux: firebird
-          config_macos: firebird
           script_linux_global: firebird.sh
-          script_macos_global: firebird.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -341,14 +308,10 @@ jobs:
           title: SQL Server 2017 + 2019
           config_win: sqlserver.2017_2019
           config_linux: sqlserver.fts.2017_2019
-          config_macos: sqlserver.fts.2017_2019
           script_win_global: sqlserver.2017_2019.cmd
           script_linux_global: sqlserver.2017_2019.sh
-          script_macos_global: sqlserver.2017_2019.sh
-          install_docker_macos: true
           enable_os_windows: true
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -366,14 +329,10 @@ jobs:
           title: SQL Server 2022 + 2025
           config_win: sqlserver.2022_2025
           config_linux: sqlserver.2022_2025
-          config_macos: sqlserver.2022_2025
           script_win_global: sqlserver.2022_2025.cmd
           script_linux_global: sqlserver.2022_2025.sh
-          script_macos_global: sqlserver.2022_2025.sh
-          install_docker_macos: true
           enable_os_windows: true
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -389,14 +348,10 @@ jobs:
           title: SQL Server EXTRAS
           config_win: sqlserver.extras
           config_linux: sqlserver.extras
-          config_macos: sqlserver.extras
           script_win_global: sqlserver.extras.cmd
           script_linux_global: sqlserver.extras.sh
-          script_macos_global: sqlserver.extras.sh
-          install_docker_macos: true
           enable_os_windows: true
           enable_os_ubuntu: true
-          enable_os_macos:  true
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -416,7 +371,6 @@ jobs:
           post_test_win_local: disable_tls11.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -429,13 +383,9 @@ jobs:
         - name: p_MySQL
           title: MySQL/MariaDB (all providers)
           config_linux: mysql
-          config_macos: mysql
           script_linux_global: mysql.sh
-          script_macos_global: mac.mysql.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -448,13 +398,9 @@ jobs:
         - name: q_Oracle2123
           title: Oracle 21c + 23c
           config_linux: oracle2123
-          config_macos: oracle2123
           script_linux_global: oracle2123.sh
-          script_macos_global: oracle2123.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -470,7 +416,6 @@ jobs:
           config_win: access.mdb
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -485,10 +430,8 @@ jobs:
           title: SQLite (all providers)
           config_win: sqlite
           config_linux: sqlite
-          config_macos: sqlite
           enable_os_windows: true
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -509,13 +452,9 @@ jobs:
         - name: t_Oracle1112
           title: Oracle 11g + 12c
           config_linux: oracle1112
-          config_macos: oracle1112
           script_linux_global: oracle1112.sh
-          script_macos_global: oracle1112.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -535,13 +474,9 @@ jobs:
         - name: u_YdbSybase
           title: YDB + Sybase
           config_linux: ydbsybase
-          config_macos: ydbsybase
           script_linux_global: ydbsybase.sh
-          script_macos_global: ydbsybase.sh
-          install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
@@ -566,7 +501,6 @@ jobs:
           psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -582,22 +516,22 @@ jobs:
           title: DB2 + Informix + DuckDB
           config_win: duckdb
           config_linux: db2informixduckdb
-          config_macos: db2informixduckdb
           script_linux_global: db2informixduckdb.sh
-          script_macos_global: db2informixduckdb.sh
           script_linux_local: db2.provider.sh
-          script_macos_local: mac.db2.provider.sh
-          install_docker_macos: true
           ${{ if eq(parameters.full_run, true) }}:
             enable_os_windows: true
           ${{ if not(eq(parameters.full_run, true)) }}:
             enable_os_windows: false
           enable_os_ubuntu: true
-          enable_os_macos: true
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
+          # The windows leg runs DuckDB alone, against the windows-native DuckDB binary, which the
+          # linux leg cannot exercise on any TFM - so it keeps net8/9/10 rather than following the
+          # default "linux leg covers net8+" rule. DuckDB has no netfx tests, so without this the
+          # leg would have no TFM enabled at all and fail on a missing .trx.
+          win_tfms_always: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
@@ -609,7 +543,6 @@ jobs:
           psscript_win_global: access.ace.ps1
           enable_os_windows: true
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
@@ -627,7 +560,6 @@ jobs:
           psscript_win_global: access.ace.x64.ps1
           enable_os_windows: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
           enable_os_ubuntu: false
-          enable_os_macos: false
           enable_fw_netfx: true
           enable_fw_net80: true
           enable_fw_net90: true
