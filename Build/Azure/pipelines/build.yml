@@ -15,8 +15,10 @@
 trigger: none
 pr:
   branches:
+    # A PR trigger's branch filter matches the PR's TARGET branch, not its source. Listing the probe
+    # branch here matched nothing and Azure reported the definition as "skipping" - keep master's '*'.
     include:
-    - probe/win-linux-db
+    - '*'
 
 stages:
 - stage: ''

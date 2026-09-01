@@ -73,6 +73,42 @@ jobs:
           "=== Hyper-V / virtualisation"
           (Get-CimInstance Win32_ComputerSystem).HypervisorPresent
 
+      # 1b. WSL2. The first run found HypervisorPresent=True and WSL 2.7.12 on the image manifest, which
+      # is how Docker Desktop runs Linux containers on Windows in the first place: a lightweight VM with
+      # its ports forwarded to Windows localhost. If a distro boots and can run docker, then a Linux DB
+      # container *is* reachable from a netfx test process on the same agent - which is the whole
+      # premise behind the Windows-only providers (Informix IDS, netfx Oracle, Devart, SAP HANA netfx,
+      # Sybase native) having no CI coverage. Slow and allowed to fail: a partial answer still tells us
+      # which step is the wall.
+      - name: WSL2 - does a distro boot
+        id: wsl
+        continue-on-error: true
+        timeout-minutes: 15
+        shell: pwsh
+        run: |
+          wsl --version
+          "=== installed distros"
+          wsl -l -v
+          "=== install"
+          wsl --install -d Ubuntu-24.04 --no-launch
+          "install exit=$LASTEXITCODE"
+          wsl -l -v
+          "=== boot"
+          wsl -d Ubuntu-24.04 -- uname -a
+          "uname exit=$LASTEXITCODE"
+
+      - name: WSL2 - can it run a Linux container
+        id: wsldocker
+        continue-on-error: true
+        timeout-minutes: 20
+        shell: pwsh
+        run: |
+          wsl -d Ubuntu-24.04 -u root -- bash -lc "apt-get update -qq && apt-get install -y -qq docker.io >/dev/null 2>&1 && dockerd >/tmp/dockerd.log 2>&1 & sleep 15; docker run --rm hello-world"
+          "docker-in-wsl exit=$LASTEXITCODE"
+          "=== is a port published into WSL reachable from Windows"
+          wsl -d Ubuntu-24.04 -u root -- bash -lc "docker run -d -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine >/dev/null 2>&1; sleep 25; ss -lntp | grep 15432"
+          Test-NetConnection -ComputerName localhost -Port 15432 -InformationLevel Detailed
+
       # 2. The native PostgreSQL server. This is the one that decides the question.
       - name: Native PostgreSQL service
         id: pg
