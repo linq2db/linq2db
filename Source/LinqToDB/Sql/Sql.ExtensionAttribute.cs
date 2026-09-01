@@ -63,7 +63,34 @@ namespace LinqToDB
 			object GetObjectValue(int    index);
 			object GetObjectValue(string argName);
 
+			/// <summary>
+			/// Translates extension method argument to SQL.
+			/// </summary>
+			/// <param name="index">Argument position in the extension method call.</param>
+			/// <param name="unwrap">When <see langword="true"/>, conversion operators are removed from the argument expression before translation.</param>
+			/// <param name="inlineParameters">When <see langword="true"/>, argument value is rendered as a literal instead of a parameter. <see langword="null"/> keeps current query setting.</param>
+			/// <returns>Argument SQL or <see langword="null"/> when argument cannot be translated.</returns>
+			/// <remarks>
+			/// Translated argument is passed to the database, so its value doesn't affect shape of generated SQL and is not
+			/// compared on query cache lookup. Argument, read with <see cref="GetValue{T}(int)"/> or taken from
+			/// <see cref="Arguments"/> instead, is baked into generated SQL by the builder, so it becomes a part of the
+			/// query cache key.
+			/// </remarks>
 			ISqlExpression? GetExpression(int    index,   bool unwrap = false, bool? inlineParameters = null);
+
+			/// <summary>
+			/// Translates extension method argument to SQL.
+			/// </summary>
+			/// <param name="argName">Name of the extension method parameter.</param>
+			/// <param name="unwrap">When <see langword="true"/>, conversion operators are removed from the argument expression before translation.</param>
+			/// <param name="inlineParameters">When <see langword="true"/>, argument value is rendered as a literal instead of a parameter. <see langword="null"/> keeps current query setting.</param>
+			/// <returns>Argument SQL or <see langword="null"/> when argument cannot be translated.</returns>
+			/// <remarks>
+			/// Translated argument is passed to the database, so its value doesn't affect shape of generated SQL and is not
+			/// compared on query cache lookup. Argument, read with <see cref="GetValue{T}(string)"/> or taken from
+			/// <see cref="Arguments"/> instead, is baked into generated SQL by the builder, so it becomes a part of the
+			/// query cache key.
+			/// </remarks>
 			ISqlExpression? GetExpression(string argName, bool unwrap = false, bool? inlineParameters = null);
 			ISqlExpression? ConvertToSqlExpression();
 			ISqlExpression? ConvertToSqlExpression(int        precedence);
@@ -832,6 +859,7 @@ namespace LinqToDB
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpression, System.Linq.Expressions.Expression.Default(systemType));
 			}
 
+			/// <inheritdoc/>
 			public override Expression GetExpression<TContext>(TContext context, IDataContext dataContext, IExpressionEvaluator evaluator, SelectQuery query, Expression expression, ConvertFunc<TContext> converter)
 			{
 				// chain starts from the tail

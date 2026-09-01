@@ -382,15 +382,49 @@ namespace LinqToDB.Internal.Linq.Builder
 			return new SqlErrorExpression(expression);
 		}
 
-		public void RegisterExtensionAccessors(Expression expression)
+		/// <summary>
+		/// Registers extension member/arguments, which are not translated into SQL, for by-value comparison during query
+		/// cache lookup. Extension builder may read such value to generate SQL, which makes it a part of the query shape.
+		/// </summary>
+		/// <param name="expression">Extension member or method call expression.</param>
+		/// <param name="translatedToSql">Expressions, translated into SQL while extension was built.</param>
+		public void RegisterExtensionAccessors(Expression expression, HashSet<Expression> translatedToSql)
 		{
 			void Register(Expression expr)
 			{
-				if (!MappingSchema.IsScalarType(expr.Type) && CanBeEvaluatedOnClient(expr))
+				// Translated value is passed to the database as a parameter (or registered as SqlValue by
+				// ParametersContext), so it is already compared through its own accessor.
+				//
+				if (IsTranslatedToSql(expr) || !CanBeEvaluatedOnClient(expr))
+					return;
+
+				var value = EvaluateExpression(expr);
+				ParametersContext.MarkAsValue(expr, value);
+			}
+
+			bool IsTranslatedToSql(Expression expr)
+			{
+				if (translatedToSql.Contains(expr))
+					return true;
+
+				// builders may request conversion of unwrapped argument
+				var unwrapped = expr.UnwrapConvert();
+				if (!ReferenceEquals(unwrapped, expr) && translatedToSql.Contains(unwrapped))
+					return true;
+
+				// params/array arguments are translated element-wise
+				if (expr is NewArrayExpression { Expressions.Count: > 0 } array)
 				{
-					var value = EvaluateExpression(expr);
-					ParametersContext.MarkAsValue(expr, value);
+					foreach (var element in array.Expressions)
+					{
+						if (!translatedToSql.Contains(element))
+							return false;
+					}
+
+					return true;
 				}
+
+				return false;
 			}
 
 			// Extensions may have instance reference. Try to register them as parameterized to disallow caching objects in Expression Tree

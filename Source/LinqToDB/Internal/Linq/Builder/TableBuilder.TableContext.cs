@@ -137,8 +137,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
+				var translatedToSql = new HashSet<Expression>();
+
+				attr.SetTable(builder.DataOptions, (context: this, builder, translatedToSql), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
 				{
+					context.translatedToSql.Add(argument);
+
 					using var saveState = context.builder.UsingColumnDescriptor(null);
 
 					if (inline == true)
@@ -171,7 +175,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return sqlExpr;
 				});
 
-				builder.RegisterExtensionAccessors(mc);
+				builder.RegisterExtensionAccessors(mc, translatedToSql);
 
 				Init(true);
 			}

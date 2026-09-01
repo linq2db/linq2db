@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -123,14 +124,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			var translatedToSql = new HashSet<Expression>();
+
 			var sqlExpression = finalFunction.GetExpression(
-				(builder, context: placeholderSequence, forselect: placeholderSelect),
+				(builder, context: placeholderSequence, forselect: placeholderSelect, translatedToSql),
 				builder.DataContext,
 				builder,
 				placeholderSelect,
 				methodCall,
 				static (ctx, e, descriptor, inline) =>
 				{
+					ctx.translatedToSql.Add(e);
+
 					var result = ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor, inline);
 					result = ctx.builder.UpdateNesting(ctx.forselect, result);
 					return result;
@@ -139,7 +144,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (sqlExpression is not SqlPlaceholderExpression placeholder)
 				return BuildSequenceResult.Error(methodCall);
 
-			builder.RegisterExtensionAccessors(methodCall);
+			builder.RegisterExtensionAccessors(methodCall, translatedToSql);
 
 			var context = new ChainContext(buildInfo.Parent, placeholderSequence, methodCall);
 

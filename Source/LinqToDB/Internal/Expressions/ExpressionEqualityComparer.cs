@@ -31,6 +31,48 @@ namespace LinqToDB.Internal.Expressions
 		{
 		}
 
+		/// <summary>
+		/// Compares two values the same way as constants in the cache key are compared: collections are compared by
+		/// their content, so a re-evaluated collection with the same items stays equal to the recorded one.
+		/// </summary>
+		internal static bool CompareValues(object? a, object? b)
+		{
+			if (ReferenceEquals(a, b))
+				return true;
+
+			if (a is null || b is null)
+				return false;
+
+			if (a is EnumerableQuery || b is EnumerableQuery)
+				return false; // EnumerableQueries are opaque
+
+			if (a is string || b is string)
+				return a.Equals(b);
+
+			if (a is IEnumerable ae && b is IEnumerable be)
+				return SequencesEqual(ae, be);
+
+			return a.Equals(b);
+		}
+
+		static bool SequencesEqual(IEnumerable a, IEnumerable b)
+		{
+			var enum1 = a.GetEnumerator();
+			var enum2 = b.GetEnumerator();
+
+			using (enum1 as IDisposable)
+			using (enum2 as IDisposable)
+			{
+				while (enum1.MoveNext())
+				{
+					if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
+						return false;
+				}
+
+				return !enum2.MoveNext();
+			}
+		}
+
 		public int GetHashCode(Expression? obj)
 		{
 			var hashCode = new HashCode();
@@ -513,22 +555,7 @@ namespace LinqToDB.Internal.Expressions
 
 				if (a.Value is IEnumerable ae && b.Value is IEnumerable be)
 				{
-					var enum1 = ae.GetEnumerator();
-					var enum2 = be.GetEnumerator();
-					using (enum1 as IDisposable)
-					using (enum2 as IDisposable)
-					{
-						while (enum1.MoveNext())
-						{
-							if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
-								return false;
-						}
-
-						if (enum2.MoveNext())
-							return false;
-					}
-
-					return true;
+					return SequencesEqual(ae, be);
 				}
 
 				if (typeof(ExpressionQuery<>).IsSameOrParentOf(a.GetType())
