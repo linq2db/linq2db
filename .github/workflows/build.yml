@@ -30,23 +30,12 @@ concurrency:
   group: build-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# Every actions/setup-dotnet step below carries `DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet`, which
-# installs the SDKs into a clean directory instead of alongside the image's preinstalled ones.
-#
-# That is not tidiness - the build does not compile without it. CodeGenerators is a source generator
-# built against Roslyn 5.6 (Microsoft.CodeAnalysis.CSharp 5.6.0, Directory.Packages.props:105), so
-# loading it needs an SDK whose compiler is at least 5.6, i.e. 10.0.4xx. global.json asks for 10.0.200
-# with rollForward: minor, and that policy prefers the highest patch of the 10.0.2xx band over rolling
-# forward - so on a runner image shipping 10.0.2xx, 10.0.3xx and 10.0.4xx side by side it picks a
-# 10.0.2xx whose compiler is 5.3, and every project fails with CS9057.
-#
-# Azure never hits this because UseDotNet@2 installs into an isolated tool directory, so the only SDKs
-# it can see are the ones it just installed. This reproduces that.
-#
-# It has to sit on each step rather than in a workflow-level `env:` block: the `runner` context is not
-# available there, and referencing it makes the whole workflow fail to compile with no job ever
-# starting. setup-dotnet exports DOTNET_ROOT and prepends PATH for later steps, so setting it on the
-# setup step alone is enough.
+# SDK selection is global.json's job, not this file's. It asks for rollForward: latestFeature, so a
+# runner image carrying 10.0.2xx, 10.0.3xx and 10.0.4xx side by side resolves to the newest - which is
+# what CodeGenerators needs, being built against Roslyn 5.6 and failing to load with CS9057 under the
+# 5.3 compiler a 10.0.2xx ships. setup-dotnet installs alongside the image's preinstalled SDKs rather
+# than isolating them the way Azure's UseDotNet@2 does, so that resolution is load-bearing here in a
+# way it never was on Azure.
 env:
   # Mirrors Build/Azure/pipelines/templates/build-vars.yml. Keep them in step.
   SOLUTION: linq2db.slnx
@@ -68,8 +57,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        env:
-          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
         with:
           dotnet-version: |
             8.x
@@ -130,8 +117,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        env:
-          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
         with:
           dotnet-version: |
             9.x
@@ -149,8 +134,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        env:
-          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
         with:
           dotnet-version: |
             8.x
@@ -172,8 +155,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        env:
-          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
         with:
           dotnet-version: 10.x
 
@@ -199,8 +180,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
-        env:
-          DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
         with:
           dotnet-version: |
             8.x
