@@ -1953,6 +1953,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			return _buildPurpose is BuildPurpose.Root or BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot;
 		}
 
+		static readonly object _probeLock = new();
+
+		void Probe(string exit, ConditionalExpression node, object? extra = null)
+		{
+			var text = node.ToString();
+			if (!text.Contains("Source") || !text.Contains("Duration")) return;
+			if (text.Length > 200) text = text.Substring(0, 200);
+			text = text.Replace("\r", " ").Replace("\n", " ");
+			lock (_probeLock)
+				Console.WriteLine($"L2DBPROBE|exit={exit}|purpose={_buildPurpose}|flags={_buildFlags}|extra={extra}|node={text}");
+		}
+
 		protected override Expression VisitConditional(ConditionalExpression node)
 		{
 #if DEBUG
@@ -2007,8 +2019,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (test is ConstantExpression { Value: bool boolValue })
 				{
+					Probe("const-fold", node);
 					return boolValue ? ifTrue : ifFalse;
 				}
+
+				Probe("after-children", node, $"test={test.GetType().Name} ifTrue={ifTrue.GetType().Name} ifFalse={ifFalse.GetType().Name} share={(test is SqlPlaceholderExpression && ifTrue is SqlPlaceholderExpression tp && ifFalse is SqlPlaceholderExpression fp ? CanShareOneReading(tp, fp).ToString() : "n/a")}");
 
 				// Deliberately not gated on BuildPurpose.Sql: under BuildPurpose.Expression such conditionals used to
 				// be collapsed by the whole-expression conversion that ran before the children were visited, and
@@ -2022,6 +2037,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					truePlaceholder  = UpdateNesting(truePlaceholder);
 					falsePlaceholder = UpdateNesting(falsePlaceholder);
 
+					Probe("fast-path", node, testPlaceholder.Sql);
 					return CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node);
 				}
 
@@ -2030,8 +2046,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Whole-expression conversion is attempted only after the fast path above failed, so a conditional that
 				// is already made of placeholders never pays for it. It must run on the original node: the visited
 				// children may have been materialized client-side, and such a tree no longer converts to SQL.
-				if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
+				if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression sqlPh)
 				{
+					Probe("deferred-tryconvert", node, sqlPh.Sql);
 					return sqlResult;
 				}
 
@@ -2048,6 +2065,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (!IsSame(revisitedTest, newNode.Test))
 					newNode = newNode.Update(revisitedTest, newNode.IfTrue, newNode.IfFalse);
 
+				Probe("client-side", node, $"revisitChanged={!IsSame(revisitedTest, newNode.Test)} revisited={revisitedTest.GetType().Name}");
 				return newNode;
 			}
 		}
