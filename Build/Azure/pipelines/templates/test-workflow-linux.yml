@@ -153,6 +153,23 @@ steps:
     condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'))
     displayName: 'Remove ${{ tfm.label }} test binaries'
 
+# TEMPORARY - diagnostics for the ClickHouse 26.8 Octonica session drop. Do not merge.
+- task: CmdLine@2
+  inputs:
+    script: |
+      echo "===== docker logs clickhouse (tail 800) ====="
+      docker logs clickhouse 2>&1 | tail -n 800
+      echo "===== SYSTEM FLUSH LOGS ====="
+      docker exec clickhouse clickhouse-client --host 127.0.0.1 -u testuser --password testuser -q "SYSTEM FLUSH LOGS" || true
+      echo "===== system.errors ====="
+      docker exec clickhouse clickhouse-client --host 127.0.0.1 -u testuser --password testuser -q "SELECT name, code, value, last_error_message FROM system.errors WHERE value > 0 ORDER BY value DESC FORMAT Vertical" || true
+      echo "===== system.query_log exceptions ====="
+      docker exec clickhouse clickhouse-client --host 127.0.0.1 -u testuser --password testuser -q "SELECT event_time, type, exception_code, exception, left(query, 200) AS q FROM system.query_log WHERE exception_code != 0 ORDER BY event_time FORMAT Vertical" || true
+      echo "===== server version ====="
+      docker exec clickhouse clickhouse-client --host 127.0.0.1 -u testuser --password testuser -q "SELECT version()" || true
+  condition: and(variables.title, eq(variables.config, 'clickhouse'), succeededOrFailed())
+  displayName: 'ClickHouse server diagnostics (temporary)'
+
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
   inputs:
