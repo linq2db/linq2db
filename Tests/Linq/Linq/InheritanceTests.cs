@@ -1430,6 +1430,133 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void Issue5729_InsertDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			db.GetTable<BaseClass>().Insert(() => new Child1 { Id = 1, Code = 1, Child1Field = 11 });
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Does.Contain("Child1Field"));
+
+			var result = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(result.Child1Field, Is.EqualTo(11));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void Issue5729_UpdateDerivedThroughBaseTable_Setter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.Update(t => new Child1 { Id = t.Id, Code = t.Code, Child1Field = 99 });
+
+			var result = db.GetTable<BaseClass>().OfType<Child1>().Single(c => c.Id == 1);
+			Assert.That(result.Child1Field, Is.EqualTo(99));
+		}
+
+		[Obsolete("Exercises the obsolete ITable<TTarget> Update() overload on purpose - covers Issue 5729's explicit-target path")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void Issue5729_UpdateDerivedThroughBaseTable_ExplicitTarget([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 2)
+				.Update(db.GetTable<BaseClass>(), s => new Child2 { Id = s.Id, Code = s.Code, Child2Field = 88 });
+
+			var result = db.GetTable<BaseClass>().OfType<Child2>().Single(c => c.Id == 2);
+			Assert.That(result.Child2Field, Is.EqualTo(88));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void Issue5729_InsertOrUpdateDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			db.GetTable<BaseClass>().InsertOrUpdate(
+				() => new Child1 { Id = 1, Code = 1, Child1Field = 55 },
+				_ => new Child1 { Child1Field = 66 },
+				() => new Child1 { Id = 1 });
+
+			var result = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(result.Child1Field, Is.EqualTo(55));
+		}
+
+		[Table("InheritanceFilterPositional")]
+		[InheritanceMapping(Code = 1, Type = typeof(PositionalChild))]
+		abstract class PositionalBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		// Constructor-parameter (positional/record-style) TPH subtype: BaseClass/Child1 above are
+		// property-only and can only exercise the Assignments arm of UpdateBuilder.ParseSetter's switch;
+		// this exercises the Parameters arm, since Value only ever arrives via the constructor.
+		class PositionalChild : PositionalBase
+		{
+			public PositionalChild(int id, int code, int value)
+			{
+				Id    = id;
+				Code  = code;
+				Value = value;
+			}
+
+			[Column(CanBeNull = true)] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void Issue5729_InsertPositionalDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<PositionalBase>();
+
+			db.GetTable<PositionalBase>().Insert(() => new PositionalChild(1, 1, 42));
+
+			var result = db.GetTable<PositionalBase>().OfType<PositionalChild>().Single();
+			Assert.That(result.Id,    Is.EqualTo(1));
+			Assert.That(result.Value, Is.EqualTo(42));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void Issue5729_UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			// BaseClass is abstract, so the setter must construct a concrete leaf type, but it assigns only
+			// Id/Code - both declared on BaseClass itself. The pre-fix ArgumentException does not come from
+			// the setter: UpdateWithOutput<T> without an explicit outputExpression defaults to projecting
+			// Deleted/Inserted as full BaseClass instances, and that default projection flattens in every
+			// mapped subtype's columns (Child1Field, Child2Field, ...) against a BaseClass-typed target -
+			// the same EnsureDeclaringType mismatch as the setter case, just reached through the default
+			// OUTPUT projection instead of the setter. Once fixed, the query still fails, now with a
+			// LinqToDBException about a discriminator value - a separate, still-open bug:
+			// https://github.com/linq2db/linq2db/issues/5838. So we assert only that the failure is no
+			// longer ArgumentException.
+			// Deliberately not Assert.Catch: that would require a throw, so this test would start
+			// failing the day #5838 is fixed and the query succeeds. Only the regression is asserted.
+			try
+			{
+				db.GetTable<BaseClass>()
+					.Where(t => t.Id == 1)
+					.UpdateWithOutput(t => new Child1 { Id = t.Id, Code = t.Code })
+					.ToArray();
+			}
+			catch (Exception ex)
+			{
+				Assert.That(ex, Is.Not.InstanceOf<ArgumentException>());
+			}
+		}
+
 		#endregion
 	}
 }

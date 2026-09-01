@@ -606,7 +606,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var (f, v) in pairs)
 				{
-					var currentPath = Expression.MakeMemberAccess(targetPath, f.MemberInfo);
+					var currentPath = Expression.MakeMemberAccess(EnsureDeclaringType(targetPath, f.MemberInfo), f.MemberInfo);
 					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
 				}
 			}
@@ -625,6 +625,25 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes, forceParameters);
 		}
+
+		/// <summary>
+		/// Retypes <paramref name="target"/> to <paramref name="memberInfo"/>'s declaring type when the
+		/// member is declared on a subtype of what the target currently carries.
+		/// </summary>
+		/// <remarks>
+		/// A setter may construct a type derived from the table's entity type, as in
+		/// <c>GetTable&lt;Base&gt;().Insert(() =&gt; new Derived { ... })</c>; an output projection over an
+		/// inheritance root carries the subtypes' columns for the same reason. Either way the member is
+		/// declared on a subtype while the target carries the table's type, a pairing
+		/// <see cref="Expression.MakeMemberAccess(Expression, MemberInfo)"/> rejects. Retyping is enough for
+		/// the column to resolve: the subtype's <see cref="ColumnDescriptor"/> is merged into the base
+		/// entity descriptor, and the field lookup matches on member identity rather than on the target's
+		/// type.
+		/// </remarks>
+		static Expression EnsureDeclaringType(Expression target, MemberInfo memberInfo)
+			=> memberInfo.DeclaringType?.IsAssignableFrom(target.Type) == false
+				? SequenceHelper.EnsureType(target, memberInfo.DeclaringType)
+				: target;
 
 		internal static void ParseSetter(
 			ExpressionBuilder           builder,
@@ -646,7 +665,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					foreach (var assignment in generic.Assignments)
 					{
-						var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
+						var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef,assignment.MemberInfo), assignment.MemberInfo);
 
 						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 					}
@@ -655,7 +674,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						if (parameter.MemberInfo != null)
 						{
-							var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+							var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef,parameter.MemberInfo), parameter.MemberInfo);
 
 							ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
 						}
