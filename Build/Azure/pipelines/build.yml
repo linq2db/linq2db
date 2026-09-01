@@ -79,6 +79,62 @@ stages:
           "=== Hyper-V / virtualisation"
           (Get-CimInstance Win32_ComputerSystem).HypervisorPresent
 
+    # The WSL2 route, mirroring the GitHub half. On GitHub this already got as far as dockerd running
+    # inside WSL2 (server=29.1.3) and a real amd64 Linux container executing, with only -p publishing
+    # failing on an iptables-alternative ordering bug. Azure needs the same answer, because the Windows
+    # legs live here - a capability GitHub has and Azure lacks would be the one thing that genuinely
+    # makes the migration, rather than provider config, the unblocker for the netfx-only providers.
+    - task: PowerShell@2
+      displayName: WSL2 - does a distro boot
+      continueOnError: true
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          wsl --version
+          "=== installed distros"
+          wsl -l -v
+          "=== install"
+          wsl --install -d Ubuntu-24.04 --no-launch
+          "install exit=$LASTEXITCODE"
+          wsl -l -v
+          "=== boot"
+          wsl -d Ubuntu-24.04 -- uname -a
+          "uname exit=$LASTEXITCODE"
+
+    - task: PowerShell@2
+      displayName: WSL2 - can it run a Linux container
+      continueOnError: true
+      timeoutInMinutes: 25
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          $sh = @'
+          set -x
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq docker.io iptables >/dev/null
+          update-alternatives --set iptables /usr/sbin/iptables-legacy || true
+          update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true
+          nohup dockerd >/tmp/dockerd.log 2>&1 &
+          for i in $(seq 1 40); do docker info >/dev/null 2>&1 && break; sleep 2; done
+          echo "--- docker info"
+          docker info --format 'server={{.ServerVersion}} driver={{.Driver}}' || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 10; }
+          echo "--- hello-world"
+          docker run --rm hello-world || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 11; }
+          echo "--- postgres with a published port"
+          docker run -d -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 13; }
+          for i in $(seq 1 40); do (echo > /dev/tcp/127.0.0.1/15432) >/dev/null 2>&1 && break; sleep 2; done
+          ss -lntp | grep 15432 || { echo "port never opened inside wsl"; exit 12; }
+          '@ -replace "`r`n", "`n"
+          $sh | wsl -d Ubuntu-24.04 -u root -- bash
+          "docker-in-wsl exit=$LASTEXITCODE"
+
+          "=== is the published port reachable from Windows (localhostForwarding)"
+          $r = Test-NetConnection -ComputerName localhost -Port 15432 -WarningAction SilentlyContinue
+          "TcpTestSucceeded=$($r.TcpTestSucceeded)"
+
     - task: PowerShell@2
       displayName: Native PostgreSQL service
       continueOnError: true

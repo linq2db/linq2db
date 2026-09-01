@@ -117,7 +117,12 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           apt-get update -qq
           apt-get install -y -qq docker.io iptables >/dev/null
+          # Before dockerd, not after. The previous run set this once the daemon was already up, so
+          # dockerd had built its chains under nftables and the legacy binary could not see them:
+          # "Unable to enable DNAT rule ... iptables: No chain/target/match by that name". Containers
+          # ran fine, only -p publishing broke - which is the one thing this probe needs.
           update-alternatives --set iptables /usr/sbin/iptables-legacy || true
+          update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true
           nohup dockerd >/tmp/dockerd.log 2>&1 &
           for i in $(seq 1 40); do docker info >/dev/null 2>&1 && break; sleep 2; done
           echo "--- docker info"
@@ -125,7 +130,7 @@ jobs:
           echo "--- hello-world"
           docker run --rm hello-world || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 11; }
           echo "--- postgres with a published port"
-          docker run -d -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine
+          docker run -d -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 13; }
           for i in $(seq 1 40); do (echo > /dev/tcp/127.0.0.1/15432) >/dev/null 2>&1 && break; sleep 2; done
           ss -lntp | grep 15432 || { echo "port never opened inside wsl"; exit 12; }
           '@ -replace "`r`n", "`n"
