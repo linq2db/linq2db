@@ -1431,7 +1431,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void Issue5729_InsertDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void InsertDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<BaseClass>();
@@ -1446,7 +1446,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void Issue5729_UpdateDerivedThroughBaseTable_Setter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void UpdateDerivedThroughBaseTable_Setter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable(BaseClass.Data);
@@ -1461,7 +1461,7 @@ namespace Tests.Linq
 
 		[Obsolete("Exercises the obsolete ITable<TTarget> Update() overload on purpose - covers Issue 5729's explicit-target path")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void Issue5729_UpdateDerivedThroughBaseTable_ExplicitTarget([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void UpdateDerivedThroughBaseTable_ExplicitTarget([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable(BaseClass.Data);
@@ -1475,7 +1475,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void Issue5729_InsertOrUpdateDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void InsertOrUpdateDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<BaseClass>();
@@ -1514,7 +1514,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void Issue5729_InsertPositionalDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void InsertPositionalDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<PositionalBase>();
@@ -1527,7 +1527,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void Issue5729_UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable(BaseClass.Data);
