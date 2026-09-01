@@ -31,6 +31,18 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # Install the SDKs into a clean directory instead of alongside the image's preinstalled ones.
+  #
+  # This is not tidiness - the build does not compile without it. CodeGenerators is a source generator
+  # built against Roslyn 5.6 (Microsoft.CodeAnalysis.CSharp 5.6.0, Directory.Packages.props:105), so
+  # loading it needs an SDK whose compiler is at least 5.6, i.e. 10.0.4xx. global.json asks for
+  # 10.0.200 with rollForward: minor, and that policy prefers the highest patch of the 10.0.2xx band
+  # over rolling forward - so on a runner image that ships 10.0.2xx, 10.0.3xx and 10.0.4xx side by
+  # side, it picks a 10.0.2xx whose compiler is 5.3 and every project fails with CS9057.
+  #
+  # Azure never hits this because UseDotNet@2 installs into an isolated tool directory, so the only
+  # SDKs it can see are the ones it just installed. Isolating here reproduces that.
+  DOTNET_INSTALL_DIR: ${{ runner.temp }}/dotnet
   # Mirrors Build/Azure/pipelines/templates/build-vars.yml. Keep them in step.
   SOLUTION: linq2db.slnx
   RELEASE_CONFIGURATION: Release
@@ -133,7 +145,10 @@ jobs:
             8.x
             10.x
 
-      - run: dotnet test Tests/Tests.Analyzers/Tests.Analyzers.csproj --configuration ${{ env.TEST_CONFIGURATION }}
+      # --project, not a positional path: global.json selects the Microsoft.Testing.Platform runner,
+      # whose CLI rejects a bare project argument with "Specifying a project for 'dotnet test' should
+      # be via '--project'". The AzDO DotNetCoreCLI@2 task hides this behind its `projects:` input.
+      - run: dotnet test --project Tests/Tests.Analyzers/Tests.Analyzers.csproj --configuration ${{ env.TEST_CONFIGURATION }}
 
   # Regression guard for #5488: provider detectors must not rely on Assembly.Location / File.Exists
   # heuristics that misbehave inside a single-file bundle. Publishes win-x64 self-contained, so Windows.
