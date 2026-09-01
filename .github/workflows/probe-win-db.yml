@@ -97,49 +97,117 @@ jobs:
           wsl -d Ubuntu-24.04 -- uname -a
           "uname exit=$LASTEXITCODE"
 
-      # The script goes in over stdin rather than as a `bash -lc "..."` argument: it avoids quoting
-      # through pwsh -> wsl -> bash, and it is why the previous attempt returned a meaningless 127.
-      # That run chained `apt-get install ... && dockerd ... &`, which backgrounds the *whole* chain -
-      # so `docker run` fired while apt was still working and reported command-not-found, saying
-      # nothing about whether docker works here.
+      # Diagnostics first, then three fixes in order, all in one job - each stage is seconds except
+      # the container starts, so one run either fixes this or names the exact layer that is absent.
       #
-      # WSL2 has no systemd unless it is switched on, so dockerd is started by hand and waited for.
-      # Ubuntu 24.04 defaults to nftables while dockerd wants iptables, hence the legacy alternative -
-      # a known wall rather than a guess, and if it is wrong /tmp/dockerd.log says so.
+      # Diagnosis being tested: since the 6.6.y series the WSL2 kernel ships netfilter pieces as
+      # *modules* in a separate VHD - NF_NAT and NFT_NAT are built in (=y) but NETFILTER_XT_NAT,
+      # NFT_COMPAT and IP_NF_NAT are =m. That matches the failure exactly: chain creation went through
+      # native nftables and succeeded (we saw a live DOCKER chain and docker0), and only the DNAT
+      # *target* failed, because that path needs nft_compat + xt_nat.
+      #
+      # It also explains why the previous run's "switch to iptables-legacy before dockerd" changed
+      # nothing: had legacy actually taken effect, dockerd would have failed at *startup* with
+      # "Table does not exist (do you need to insmod?)" rather than at -p time. The `|| true` hid it.
+      #
+      # Worth knowing: this whole approach is in production on these runners - Particular/setup-wsl-
+      # action and setup-ibmmq-action provision WSL2 + docker on windows-latest and publish ports from
+      # a Linux container to Windows-side .NET tests, with no iptables handling at all. So a failure
+      # here is environmental, not structural.
+      #
+      # The docker subnet is pinned to 10.x up front. WSL2 hands the VM a random /20 out of
+      # 172.16.0.0/12 each boot and docker's default 172.17.0.0/16 collides with it intermittently -
+      # our failing container sat at 172.17.0.2, so that variable is removed rather than left to chance.
       - name: WSL2 - can it run a Linux container
         id: wsldocker
         continue-on-error: true
-        timeout-minutes: 25
+        timeout-minutes: 30
         shell: pwsh
         run: |
           $sh = @'
-          set -x
           export DEBIAN_FRONTEND=noninteractive
+          # docker.io's postinst tries to start a service and this distro has no systemd - the likely
+          # cause of the Azure leg blowing a 25-minute step timeout inside apt. 101 means "do not start".
+          printf '#!/bin/sh\nexit 101\n' > /usr/sbin/policy-rc.d
+          chmod +x /usr/sbin/policy-rc.d
           apt-get update -qq
           apt-get install -y -qq docker.io iptables >/dev/null
-          # Before dockerd, not after. The previous run set this once the daemon was already up, so
-          # dockerd had built its chains under nftables and the legacy binary could not see them:
-          # "Unable to enable DNAT rule ... iptables: No chain/target/match by that name". Containers
-          # ran fine, only -p publishing broke - which is the one thing this probe needs.
-          update-alternatives --set iptables /usr/sbin/iptables-legacy || true
-          update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy || true
-          nohup dockerd >/tmp/dockerd.log 2>&1 &
-          for i in $(seq 1 40); do docker info >/dev/null 2>&1 && break; sleep 2; done
-          echo "--- docker info"
-          docker info --format 'server={{.ServerVersion}} driver={{.Driver}}' || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 10; }
-          echo "--- hello-world"
-          docker run --rm hello-world || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 11; }
-          echo "--- postgres with a published port"
-          docker run -d -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 13; }
-          for i in $(seq 1 40); do (echo > /dev/tcp/127.0.0.1/15432) >/dev/null 2>&1 && break; sleep 2; done
-          ss -lntp | grep 15432 || { echo "port never opened inside wsl"; exit 12; }
+          mkdir -p /etc/docker
+          printf '{ "bip": "10.11.0.1/24", "default-address-pools": [ { "base": "10.12.0.0/16", "size": 24 } ] }' > /etc/docker/daemon.json
+
+          echo "===== STAGE 0 diagnostics"
+          iptables --version
+          readlink -f /etc/alternatives/iptables
+          uname -r
+          ls /usr/lib/modules /lib/modules 2>/dev/null
+          if [ -f /proc/config.gz ]; then
+            zcat /proc/config.gz | grep -E 'CONFIG_(NF_NAT|IP_NF_NAT|IP_NF_IPTABLES|NETFILTER_XT_NAT|NFT_NAT|NFT_CHAIN_NAT|NFT_COMPAT|NF_TABLES_IPV4|BRIDGE)='
+          else
+            echo "no /proc/config.gz"
+          fi
+          find /usr/lib/modules /lib/modules \( -name 'xt_nat.ko*' -o -name 'nft_compat.ko*' -o -name 'iptable_nat.ko*' \) 2>/dev/null
+          for m in iptable_nat xt_nat nft_compat xt_MASQUERADE xt_conntrack xt_addrtype; do
+            modprobe -v $m; echo "modprobe $m rc=$?"
+          done
+          echo "--- direct DNAT probes, docker not involved"
+          iptables-nft    -t nat -A OUTPUT -p tcp --dport 19999 -j DNAT --to-destination 127.0.0.1:19998; echo "nft rc=$?"
+          iptables-legacy -t nat -A OUTPUT -p tcp --dport 19999 -j DNAT --to-destination 127.0.0.1:19998; echo "legacy rc=$?"
+          dmesg | tail -20
+
+          start_dockerd() {
+            pkill dockerd 2>/dev/null; sleep 3
+            nohup dockerd >/tmp/dockerd.log 2>&1 &
+            for i in $(seq 1 40); do docker info >/dev/null 2>&1 && return 0; sleep 2; done
+            echo "dockerd did not come up"; tail -30 /tmp/dockerd.log; return 1
+          }
+          try_publish() {
+            docker rm -f probe-pg >/dev/null 2>&1
+            docker run -d --name probe-pg -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine
+            return $?
+          }
+
+          echo "===== STAGE 1 modprobe then publish"
+          PUBLISHED=0
+          start_dockerd && docker info --format 'server={{.ServerVersion}}' && try_publish && PUBLISHED=1
+          echo "stage1 published=$PUBLISHED"
+
+          if [ $PUBLISHED -eq 0 ]; then
+            echo "===== STAGE 2 docker 29 native nftables firewall backend"
+            printf '{ "bip": "10.11.0.1/24", "firewall-backend": "nftables", "default-address-pools": [ { "base": "10.12.0.0/16", "size": 24 } ] }' > /etc/docker/daemon.json
+            start_dockerd && try_publish && PUBLISHED=1
+            echo "stage2 published=$PUBLISHED"
+            [ $PUBLISHED -eq 0 ] && tail -30 /tmp/dockerd.log
+          fi
+
+          if [ $PUBLISHED -eq 0 ]; then
+            echo "===== STAGE 3 --network host, no NAT at all"
+            docker rm -f probe-pg >/dev/null 2>&1
+            docker run -d --name probe-pg --network host -e POSTGRES_PASSWORD=probe postgres:17-alpine
+            echo "stage3 run rc=$?"
+            HOSTMODE=1
+          fi
+
+          PORT=15432
+          [ -n "$HOSTMODE" ] && PORT=5432
+          for i in $(seq 1 40); do (echo > /dev/tcp/127.0.0.1/$PORT) >/dev/null 2>&1 && break; sleep 2; done
+          echo "--- listening inside wsl (expecting $PORT)"
+          ss -lntp | grep -E "$PORT" || echo "port $PORT never opened inside wsl"
+          echo "WSLPORT=$PORT"
+          hostname -I
           '@ -replace "`r`n", "`n"
-          $sh | wsl -d Ubuntu-24.04 -u root -- bash
+
+          $sh | wsl -d Ubuntu-24.04 -u root -- bash 2>&1 | Tee-Object -Variable out
           "docker-in-wsl exit=$LASTEXITCODE"
 
-          "=== is the published port reachable from Windows (localhostForwarding)"
-          $r = Test-NetConnection -ComputerName localhost -Port 15432 -WarningAction SilentlyContinue
-          "TcpTestSucceeded=$($r.TcpTestSucceeded)"
+          # Which port ended up in play depends on which stage succeeded, so read it back rather than
+          # assuming, and try both channels: the WSL VM's own IP (robust) and localhost (forwarded).
+          $port = if ($out -match 'WSLPORT=(\d+)') { $Matches[1] } else { '15432' }
+          $wslIp = (wsl -d Ubuntu-24.04 -- hostname -I).Trim().Split(' ')[0]
+          "=== reaching the container from Windows: port=$port wslIp=$wslIp"
+          foreach ($target in @($wslIp, 'localhost')) {
+            $r = Test-NetConnection -ComputerName $target -Port $port -WarningAction SilentlyContinue
+            "$target`:$port TcpTestSucceeded=$($r.TcpTestSucceeded)"
+          }
 
       # 2. The native PostgreSQL server. This is the one that decides the question.
       - name: Native PostgreSQL service
