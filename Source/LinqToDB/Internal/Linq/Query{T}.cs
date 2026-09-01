@@ -62,14 +62,14 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		public static long CacheMissCount => QueryCache.Default.GetMissCount(typeof(T));
 
-		static Expression ExposeAndPrepareExpression(Expression expr, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext)
+		static Expression ExposeAndPrepareExpression(Expression expr, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, object?[]? parameterValues)
 		{
 			var        beforeExpose = expr;
 			Expression exposed;
 			var        iteration    = 0;
 			do
 			{
-				exposed = ExpressionBuilder.ExposeExpression(beforeExpose, dataContext, optimizationContext, null,
+				exposed = ExpressionBuilder.ExposeExpression(beforeExpose, dataContext, optimizationContext, parameterValues,
 					optimizeConditions: true, compactBinary: false /* binary already compacted by AggregateExpression*/);
 
 				if (iteration > 0 && ReferenceEquals(beforeExpose, exposed))
@@ -104,6 +104,18 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters)
+		{
+			return GetQuery(dataContext, null, ref expressions, out dependsOnParameters);
+		}
+
+		/// <summary>
+		/// Builds query for <paramref name="expressions"/>.
+		/// </summary>
+		/// <param name="parameterValues">
+		/// Compiled query argument values, or <see langword="null"/> for a regular query. Required when the expression
+		/// addresses its arguments through the compiled query parameters array, which cannot be evaluated without them.
+		/// </param>
+		internal static Query<T> GetQuery(IDataContext dataContext, object?[]? parameterValues, ref IQueryExpressions expressions, out bool dependsOnParameters)
 		{
 			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
 
@@ -161,7 +173,7 @@ namespace LinqToDB.Internal.Linq
 				// Parameters with SqlQueryDependentAttribute will be transferred to constants
 				// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
 				//
-				var exposed = ExposeAndPrepareExpression(expr, dataContext, optimizationContext);
+				var exposed = ExposeAndPrepareExpression(expr, dataContext, optimizationContext, parameterValues);
 
 				// simple trees do not mutate
 				var isExposed = !ReferenceEquals(exposed, expr);
@@ -201,7 +213,8 @@ namespace LinqToDB.Internal.Linq
 					optimizationContext,
 					 new ParametersContext(expressions, optimizationContext, dataContext),
 					dataContext,
-					ref expressions
+					ref expressions,
+					parameterValues
 				);
 			}
 
@@ -213,20 +226,20 @@ namespace LinqToDB.Internal.Linq
 			return query;
 		}
 
-		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, ref IQueryExpressions expressions)
+		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, ref IQueryExpressions expressions, object?[]? parameterValues)
 		{
 			var query = new Query<T>(dataContext);
 
 			try
 			{
 				var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(dataContext);
-				query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+				query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, dataContext, expressions.MainExpression, parameterValues).Build<T>(ref expressions);
 				if (query.ErrorExpression != null)
 				{
 					if (!validateSubqueries)
 					{
 						query = new Query<T>(dataContext);
-						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
+						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, parameterValues).Build<T>(ref expressions);
 					}
 
 					if (query.ErrorExpression != null)

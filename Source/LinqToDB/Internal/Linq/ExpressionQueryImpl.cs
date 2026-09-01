@@ -12,6 +12,13 @@ namespace LinqToDB.Internal.Linq
 		{
 			Init(dataContext, expression);
 		}
+
+		public ExpressionQueryImpl(IDataContext dataContext, Expression? expression, object?[]? parameters)
+		{
+			Init(dataContext, expression);
+
+			Parameters = parameters;
+		}
 	}
 
 	static class ExpressionQueryImpl

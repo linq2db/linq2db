@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.Linq
 				return Info;
 			}
 
-			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
+			var info = Query<T>.GetQuery(DataContext, Parameters, ref expression, out dependsOnParameters);
 
 			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
 			{
@@ -190,7 +190,7 @@ namespace LinqToDB.Internal.Linq
 			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
-			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
+			return Query<TResult>.GetQuery(DataContext, Parameters, ref expressions, out _)
 				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 		}
 
@@ -288,7 +288,10 @@ namespace LinqToDB.Internal.Linq
 		{
 			ArgumentNullException.ThrowIfNull(expression);
 
-			return new ExpressionQueryImpl<TElement>(DataContext, expression);
+			// Parameters are carried over: a compiled query's expression addresses its arguments through the
+			// 'ps' array, so a query composed over one (LoadWith, Where, ...) can only be built when it has them.
+			//
+			return new ExpressionQueryImpl<TElement>(DataContext, expression, Parameters);
 		}
 
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
@@ -300,7 +303,8 @@ namespace LinqToDB.Internal.Linq
 			return ActivatorExt.CreateInstance<IQueryable>(
 				typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
 				DataContext,
-				expression
+				expression,
+				Parameters
 			);
 		}
 
