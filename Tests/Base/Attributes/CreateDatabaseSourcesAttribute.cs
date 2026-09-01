@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Tests
 {
@@ -14,29 +13,15 @@ namespace Tests
 
 		protected override IEnumerable<string> GetProviders()
 		{
-			var list = new List<string>();
-
 			try
 			{
-				if (!TestConfiguration.UserProviders.Contains(TestConfiguration.DefaultProvider!))
-				{
-					// initialize default database, even if we don't run tests against it
-					// because it is used as source of test data
-					list.Add(TestConfiguration.DefaultProvider!);
-				}
-
-				foreach (var provider in TestConfiguration.UserProviders.Where(p => !Providers.Contains(p) && TestConfiguration.Providers.Contains(p)))
-				{
-					list.Add(provider);
-				}
+				return TestConfiguration.GetCreateDatabaseProviders(Providers);
 			}
 			catch (Exception e)
 			{
 				TestUtils.Log(e);
 				throw;
 			}
-
-			return list;
 		}
 	}
 }

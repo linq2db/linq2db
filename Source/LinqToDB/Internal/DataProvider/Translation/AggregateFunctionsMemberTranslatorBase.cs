@@ -371,7 +371,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							canBeNull: canBeNull,
 							isAggregate : true,
 							filter: filterCondition,
-							canBeAffectedByOrderBy : false
+							canBeAffectedByOrderBy : false,
+							// MIN and MAX return a row's value unchanged, so the argument's column describes the
+							// result completely. SUM answers in the same terms but can outgrow the width that column
+							// is declared with. AVG is neither, and COUNT is built elsewhere. Resolved through the
+							// shared map because a window function builds these same names on the other surface.
+							argumentDomain : SqlArgumentDomains.ForAggregate(functionName)
 						);
 
 						composer.SetResult(fn);

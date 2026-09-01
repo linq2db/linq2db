@@ -295,5 +295,43 @@ namespace Tests.Linq
 			actual.ShouldBe(expected);
 		}
 
+		/// <summary>
+		/// A value added to a sum keeps its own precision rather than the summand column's.
+		/// </summary>
+		/// <remarks>
+		/// The descriptor of the summed column describes how the sum is read back, and for a duration that is what
+		/// carries its unit - but it does not describe how wide the sum is, because a sum outgrows the column it is
+		/// taken from. A literal typed from that descriptor is narrowed to the column's own scale, and one finer than
+		/// the column holds rounds to zero, which makes the addition disappear with nothing raised to report it.
+		/// <para>
+		/// Asserted on ClickHouse because it writes the width into the literal itself - <c>toDecimal64(…, 4)</c>
+		/// against <c>toDecimal128(…, 10)</c> - so the narrowing is visible in the result rather than only in a plan.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ValueBesideASumKeepsItsOwnPrecision([IncludeDataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sums = db.Types
+				.GroupBy(x => x.ID)
+				.Select(g => g.Sum(x => x.MoneyValue))
+				.ToArray();
+
+			var shifted = db.Types
+				.GroupBy(x => x.ID)
+				.Select(g => g.Sum(x => x.MoneyValue))
+				.Select(s => s + 0.00005m)
+				.ToArray();
+
+			// The addend is smaller than the column's declared scale, so an empty set would satisfy the comparison
+			// below without exercising anything.
+			sums.ShouldNotBeEmpty();
+
+			// Order-insensitive because nothing here is about order: the two queries are executed separately and
+			// grouped without one, and ClickHouse aggregates in parallel, so a positional match would hold by
+			// accident. What is asserted is that the addend keeps its own scale, which is per-value.
+			shifted.ShouldBe(sums.Select(s => s + 0.00005m), ignoreOrder: true);
+		}
 	}
 }

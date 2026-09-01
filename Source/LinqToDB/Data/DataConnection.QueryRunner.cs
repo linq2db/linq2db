@@ -342,16 +342,18 @@ namespace LinqToDB.Data
 			static DbParameter CreateParameter(DataConnection dataConnection, DbCommand command, SqlParameter parameter, SqlParameterValue parmValue)
 			{
 				var paramValue = parameter.CorrectParameterValue(parmValue.ProviderValue);
-				var p          = dataConnection.DataProvider.CreateParameter(
+
+				// Some providers (managed Sybase, YDB's '$' prefix) rewrite the name of the DbParameter we hand them.
+				// That name must NOT be written back onto `parameter`: this is the very instance whose Name was
+				// rendered into this command's SQL, and for a non-parameter-dependent query it belongs to the CACHED
+				// statement - shared by every later execution and by concurrent threads, so the write is a data race.
+				// It also buys nothing: nothing here rebinds a parameter by name (GetSqlTextImpl and PrintParameterName
+				// both read DbParameter.ParameterName directly), and the rewritten name is stripped back out by the
+				// parameters normalizer on the next render anyway.
+				return dataConnection.DataProvider.CreateParameter(
 					dataConnection,
 					command,
 					new DataProviderParameterContext(parameter.Name!, parmValue.DbDataType, paramValue, isDbDataTypeExplicit: parmValue.IsDbDataTypeExplicit));
-
-				// some providers (e.g. managed sybase provider) could change parameter name
-				// which breaks parameters rebind logic
-				parameter.Name = p.ParameterName;
-
-				return p;
 			}
 
 			protected override void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText)

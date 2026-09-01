@@ -41,17 +41,52 @@ example:
 
 ```cs
 var optionsBuilder = new DbContextOptionsBuilder<MyDbContext>();
-optionsBuilder.UseSqlite();
+optionsBuilder.UseOracle(connectionString);
 optionsBuilder.UseLinqToDB(builder =>
 {
     // add custom command interceptor
     builder.AddInterceptor(new MyCommandInterceptor());
     // add additional mappings
     builder.AddMappingSchema(myCustomMappings);
-    // configure SQL Server dialect explicitly
-    builder.AddCustomOptions(o => o.UseSqlServer(SqlServerVersion.v2022));
+    // configure provider-specific options
+    builder.AddCustomOptions(o => o.WithOptions<OracleOptions>(oo => oo with
+    {
+        AlternativeBulkCopy = AlternativeBulkCopy.InsertInto
+    }));
 });
 ```
+
+### Configuring provider-specific options
+
+`AddCustomOptions` receives an **empty** `DataOptions` instance. Connection string, connection and data provider are
+not part of it: they are taken from the EF Core context later, when a `LINQ To DB` context is created for it. This
+matters when you pick the method to configure a provider with:
+
+* use `WithOptions<TOptions>` to change provider behavior (bulk copy mode, identifier quoting, and so on). It updates
+  only the corresponding option record and leaves connection and provider detection to the EF Core integration - this
+  is what you want in almost all cases:
+
+  ```cs
+  builder.AddCustomOptions(o => o.WithOptions<OracleOptions>(oo => oo with
+  {
+      AlternativeBulkCopy = AlternativeBulkCopy.InsertInto
+  }));
+  ```
+
+* `UseSqlServer`, `UseOracle`, `UseMySql` and other `UseXxx` methods do more than that: they resolve a concrete
+  `IDataProvider` instance and pin it on the options. A pinned provider takes precedence over the provider detected
+  from the EF Core context, so use these methods only when you deliberately want to override that detection, e.g. to
+  force a dialect:
+
+  ```cs
+  // force SQL Server 2022 dialect instead of detecting it from the server
+  builder.AddCustomOptions(o => o.UseSqlServer(SqlServerVersion.v2022));
+  ```
+
+* `UseXxx` overloads that leave the dialect at `AutoDetect` - including short ones such as `UseOracle(optionSetter)` -
+  need to connect to the server to read its version. There is no connection string on the options at this point, so
+  such a call fails with `Connection string is not provided.`. Pass an explicit dialect version, or configure the
+  options with `WithOptions<TOptions>` instead.
 
 There are many extensions for CRUD Operations missing in vanilla EF ([watch our
 video](https://www.youtube.com/watch?v=m--oX73EGeQ)):
