@@ -1,0 +1,121 @@
+# THROWAWAY PROBE - not part of the CI. Delete with the branch.
+#
+# Question: can we run the EF.Core netfx tests against PostgreSQL and MySQL?
+#
+# The standing assumption is "no, because the Windows agent cannot run Linux docker images". netfx runs
+# only on Windows, and those servers run in Linux containers, so the two never meet. This probe checks
+# whether that framing is still the right one, by asking three things:
+#
+#   1. Can a Windows runner run a Linux container at all? (Expected no - the runner VMs are not enabled
+#      for nested virtualization. Worth measuring rather than citing.)
+#   2. Is the PostgreSQL server that ships *natively* on the image usable? images/windows/Windows2025-
+#      Readme.md lists PostgreSQL 17.11 as service postgresql-x64-17, Stopped and Disabled but present,
+#      with a known postgres/root credential. If it starts, no container is needed and the whole
+#      Linux-container question is beside the point.
+#   3. Is there a MySQL *server*, or only client tools? The image manifest lists "MySQL 8.0.46.0" under
+#      "Database tools" rather than under "Databases" with a ServiceName, which suggests client-only -
+#      but that is an inference from a heading, so ask the machine.
+#
+# The Azure half of this probe lives in Build/Azure/pipelines/build.yml on the same branch and asks the
+# identical questions. Both CIs run the same runner image (actions/runner-images), so the interesting
+# outcome is whether they answer differently at all.
+name: probe-win-db
+
+on:
+  push:
+    branches: [probe/win-linux-db]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-2022]
+
+    steps:
+      - name: Host and docker facts
+        shell: pwsh
+        run: |
+          "=== host"
+          (Get-CimInstance Win32_OperatingSystem).Caption
+          (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').BuildLabEx
+          "=== docker"
+          docker version
+          docker info --format 'ostype={{.OSType}} isolation={{.Isolation}} osversion={{.OSVersion}}'
+
+      # 1. Linux containers. Both attempts are expected to fail; the value is in *how*, since the error
+      # distinguishes "daemon is in Windows mode" from "no nested virtualisation".
+      - name: Can this runner run a Linux container
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          "=== docker run --platform linux hello-world"
+          docker run --rm --platform linux hello-world
+          "exit=$LASTEXITCODE"
+
+      - name: Is a Linux daemon switch even available
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $cli = Join-Path $env:ProgramFiles 'Docker\Docker\DockerCli.exe'
+          if (Test-Path $cli) { "DockerCli.exe present (Docker Desktop) - a -SwitchDaemon is conceivable" }
+          else { "no DockerCli.exe - this is Moby/EE with no Linux mode to switch to" }
+          "=== WSL"
+          $wsl = Get-Command wsl -ErrorAction SilentlyContinue
+          if ($wsl) { wsl --status; "wsl exit=$LASTEXITCODE" } else { 'wsl not on PATH' }
+          "=== Hyper-V / virtualisation"
+          (Get-CimInstance Win32_ComputerSystem).HypervisorPresent
+
+      # 2. The native PostgreSQL server. This is the one that decides the question.
+      - name: Native PostgreSQL service
+        id: pg
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $svc = Get-Service -Name 'postgresql*' -ErrorAction SilentlyContinue
+          if (-not $svc) { throw 'no postgresql service on this image' }
+          $svc | Format-Table -AutoSize Name, Status, StartType
+          foreach ($s in $svc) {
+            Set-Service -Name $s.Name -StartupType Manual
+            Start-Service -Name $s.Name
+          }
+          Get-Service -Name 'postgresql*' | Format-Table -AutoSize Name, Status
+          $env:PGPASSWORD = 'root'
+          & "$env:PGBIN\psql.exe" -U postgres -h localhost -c 'select version()'
+          if ($LASTEXITCODE -ne 0) { throw "psql failed with $LASTEXITCODE" }
+          & "$env:PGBIN\psql.exe" -U postgres -h localhost -c 'create database testdata'
+          "create database exit=$LASTEXITCODE"
+
+      # 3. MySQL: server or client-only?
+      - name: Native MySQL
+        id: mysql
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          "=== services"
+          $svc = Get-Service -Name '*mysql*' -ErrorAction SilentlyContinue
+          if ($svc) { $svc | Format-Table -AutoSize Name, Status, StartType } else { 'no mysql service' }
+          "=== binaries on PATH"
+          foreach ($n in 'mysql', 'mysqld', 'mysqladmin') {
+            $c = Get-Command $n -ErrorAction SilentlyContinue
+            if ($c) { "$n -> $($c.Source)" } else { "$n not on PATH" }
+          }
+          "=== install roots"
+          Get-ChildItem 'C:\Program Files\MySQL', 'C:\tools\mysql' -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty FullName
+
+      - name: Summary
+        if: always()
+        shell: pwsh
+        run: |
+          "| runner | linux container | native postgres | native mysql |",
+          "|---|---|---|---|",
+          "| ${{ matrix.runner }} | see step | ${{ steps.pg.outcome }} | ${{ steps.mysql.outcome }} |" |
+            Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8

@@ -1,28 +1,118 @@
-# build solution only
-variables:
-  - template: templates/build-vars.yml
-
-# always trigger on PRs
+# THROWAWAY PROBE - this file normally holds the `build` pipeline. It is replaced on this branch only,
+# because the `build` definition is bound to this path and triggers on every PR, which makes it the
+# cheapest way to ask Azure a question. Restore from master before this branch goes anywhere near a
+# merge; the branch is meant to be deleted instead.
+#
+# Same three questions the GitHub half asks in .github/workflows/probe-win-db.yml:
+#
+#   1. Can a Windows agent run a Linux container?
+#   2. Does the PostgreSQL server that ships natively on the image start and accept connections?
+#   3. Is there a MySQL server, or only client tools?
+#
+# Both CIs run the same runner image (actions/runner-images), so if the answers differ, the difference
+# is in the host or the agent, not in what is installed - and that is the thing worth knowing before
+# concluding that migrating CI is what unblocks netfx EF.Core coverage for PostgreSQL and MySQL.
 trigger: none
 pr:
   branches:
     include:
-    - '*'
+    - probe/win-linux-db
 
 stages:
-
 - stage: ''
   displayName: ''
   jobs:
-##############
-#  BUILD JOB #
-##############
-  - template: templates/build-job.yml
-    parameters:
-      with_nugets: true
-      with_examples: true
-      with_tests: false
-      with_analyzer_tests: true
-      with_singlefile_smoke: true
-      with_analyzers: false # true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
-      with_release: false
+  - job: probe_win_db
+    strategy:
+      matrix:
+        windows_2025:
+          imageName: windows-2025
+        windows_2022:
+          imageName: windows-2022
+    pool:
+      vmImage: $(imageName)
+    displayName: 'Probe'
+    timeoutInMinutes: 30
+
+    steps:
+    - checkout: none
+
+    - task: PowerShell@2
+      displayName: Host and docker facts
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          "=== host"
+          (Get-CimInstance Win32_OperatingSystem).Caption
+          (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion').BuildLabEx
+          "=== docker"
+          docker version
+          docker info --format 'ostype={{.OSType}} isolation={{.Isolation}} osversion={{.OSVersion}}'
+
+    - task: PowerShell@2
+      displayName: Can this agent run a Linux container
+      continueOnError: true
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          "=== docker run --platform linux hello-world"
+          docker run --rm --platform linux hello-world
+          "exit=$LASTEXITCODE"
+
+    - task: PowerShell@2
+      displayName: Is a Linux daemon switch even available
+      continueOnError: true
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          $cli = Join-Path $env:ProgramFiles 'Docker\Docker\DockerCli.exe'
+          if (Test-Path $cli) { "DockerCli.exe present (Docker Desktop) - a -SwitchDaemon is conceivable" }
+          else { "no DockerCli.exe - this is Moby/EE with no Linux mode to switch to" }
+          "=== WSL"
+          $wsl = Get-Command wsl -ErrorAction SilentlyContinue
+          if ($wsl) { wsl --status; "wsl exit=$LASTEXITCODE" } else { 'wsl not on PATH' }
+          "=== Hyper-V / virtualisation"
+          (Get-CimInstance Win32_ComputerSystem).HypervisorPresent
+
+    - task: PowerShell@2
+      displayName: Native PostgreSQL service
+      continueOnError: true
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          $svc = Get-Service -Name 'postgresql*' -ErrorAction SilentlyContinue
+          if (-not $svc) { throw 'no postgresql service on this image' }
+          $svc | Format-Table -AutoSize Name, Status, StartType
+          foreach ($s in $svc) {
+            Set-Service -Name $s.Name -StartupType Manual
+            Start-Service -Name $s.Name
+          }
+          Get-Service -Name 'postgresql*' | Format-Table -AutoSize Name, Status
+          $env:PGPASSWORD = 'root'
+          & "$env:PGBIN\psql.exe" -U postgres -h localhost -c 'select version()'
+          if ($LASTEXITCODE -ne 0) { throw "psql failed with $LASTEXITCODE" }
+          & "$env:PGBIN\psql.exe" -U postgres -h localhost -c 'create database testdata'
+          "create database exit=$LASTEXITCODE"
+
+    - task: PowerShell@2
+      displayName: Native MySQL
+      continueOnError: true
+      inputs:
+        pwsh: true
+        targetType: inline
+        script: |
+          "=== services"
+          $svc = Get-Service -Name '*mysql*' -ErrorAction SilentlyContinue
+          if ($svc) { $svc | Format-Table -AutoSize Name, Status, StartType } else { 'no mysql service' }
+          "=== binaries on PATH"
+          foreach ($n in 'mysql', 'mysqld', 'mysqladmin') {
+            $c = Get-Command $n -ErrorAction SilentlyContinue
+            if ($c) { "$n -> $($c.Source)" } else { "$n not on PATH" }
+          }
+          "=== install roots"
+          Get-ChildItem 'C:\Program Files\MySQL', 'C:\tools\mysql' -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty FullName
