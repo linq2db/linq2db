@@ -642,25 +642,57 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var parent = query(db, 1).First();
+			var other  = query(db, 2).First();
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(parent.ParentID, Is.EqualTo(1));
 				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,  Is.EqualTo(2));
+				Assert.That(other.Children,  Has.Count.EqualTo(2));
 			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public void ComposedOverCompiledQueryTest([DataSources] string context)
+		public void LoadWithThenLoadTest([DataSources] string context)
 		{
-			var query = CompiledQuery.Compile<ITestDataContext,int,IQueryable<Parent>>(static (db, id) =>
-				db.Parent.Where(p => p.ParentID >= id && Sql.CurrentTimestamp > TestData.Date));
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.ThenLoad(c => c.GrandChildren));
 
 			using var db = GetDataContext(context);
 
-			var parent = query(db, 1).Where(p => p.ParentID == 2).Single();
+			var parent = query(db, 1).First();
 
-			Assert.That(parent.ParentID, Is.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID, Is.EqualTo(1));
+				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(parent.Children[0].GrandChildren, Is.Not.Null);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public void MultipleLoadWithTest([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.LoadWith(p => p.GrandChildren));
+
+			using var db = GetDataContext(context);
+
+			var parent = query(db, 1).First();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID,      Is.EqualTo(1));
+				Assert.That(parent.Children,      Has.Count.EqualTo(1));
+				Assert.That(parent.GrandChildren, Is.Not.Null);
+			}
 		}
 	}
 }
