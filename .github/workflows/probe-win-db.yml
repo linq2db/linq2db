@@ -97,17 +97,44 @@ jobs:
           wsl -d Ubuntu-24.04 -- uname -a
           "uname exit=$LASTEXITCODE"
 
+      # The script goes in over stdin rather than as a `bash -lc "..."` argument: it avoids quoting
+      # through pwsh -> wsl -> bash, and it is why the previous attempt returned a meaningless 127.
+      # That run chained `apt-get install ... && dockerd ... &`, which backgrounds the *whole* chain -
+      # so `docker run` fired while apt was still working and reported command-not-found, saying
+      # nothing about whether docker works here.
+      #
+      # WSL2 has no systemd unless it is switched on, so dockerd is started by hand and waited for.
+      # Ubuntu 24.04 defaults to nftables while dockerd wants iptables, hence the legacy alternative -
+      # a known wall rather than a guess, and if it is wrong /tmp/dockerd.log says so.
       - name: WSL2 - can it run a Linux container
         id: wsldocker
         continue-on-error: true
-        timeout-minutes: 20
+        timeout-minutes: 25
         shell: pwsh
         run: |
-          wsl -d Ubuntu-24.04 -u root -- bash -lc "apt-get update -qq && apt-get install -y -qq docker.io >/dev/null 2>&1 && dockerd >/tmp/dockerd.log 2>&1 & sleep 15; docker run --rm hello-world"
+          $sh = @'
+          set -x
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          apt-get install -y -qq docker.io iptables >/dev/null
+          update-alternatives --set iptables /usr/sbin/iptables-legacy || true
+          nohup dockerd >/tmp/dockerd.log 2>&1 &
+          for i in $(seq 1 40); do docker info >/dev/null 2>&1 && break; sleep 2; done
+          echo "--- docker info"
+          docker info --format 'server={{.ServerVersion}} driver={{.Driver}}' || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 10; }
+          echo "--- hello-world"
+          docker run --rm hello-world || { echo "--- dockerd.log"; tail -40 /tmp/dockerd.log; exit 11; }
+          echo "--- postgres with a published port"
+          docker run -d -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine
+          for i in $(seq 1 40); do (echo > /dev/tcp/127.0.0.1/15432) >/dev/null 2>&1 && break; sleep 2; done
+          ss -lntp | grep 15432 || { echo "port never opened inside wsl"; exit 12; }
+          '@ -replace "`r`n", "`n"
+          $sh | wsl -d Ubuntu-24.04 -u root -- bash
           "docker-in-wsl exit=$LASTEXITCODE"
-          "=== is a port published into WSL reachable from Windows"
-          wsl -d Ubuntu-24.04 -u root -- bash -lc "docker run -d -p 15432:5432 -e POSTGRES_PASSWORD=probe postgres:17-alpine >/dev/null 2>&1; sleep 25; ss -lntp | grep 15432"
-          Test-NetConnection -ComputerName localhost -Port 15432 -InformationLevel Detailed
+
+          "=== is the published port reachable from Windows (localhostForwarding)"
+          $r = Test-NetConnection -ComputerName localhost -Port 15432 -WarningAction SilentlyContinue
+          "TcpTestSucceeded=$($r.TcpTestSucceeded)"
 
       # 2. The native PostgreSQL server. This is the one that decides the question.
       - name: Native PostgreSQL service
