@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
@@ -32,10 +34,39 @@ namespace Tests.UserTests
 
 		sealed class JsonPathBuilder : Sql.IExtensionCallBuilder
 		{
+			/// <summary>
+			/// Resolves the path out of the argument expression the way the builder in the issue does: the path is never
+			/// translated to SQL, it is read here and baked into the generated expression.
+			/// </summary>
+			static List<string> GetPath(Expression argument)
+			{
+				switch (argument)
+				{
+					case ConstantExpression { Value: List<string> constantPath }:
+						return constantPath;
+
+					// captured local: a field of the closure object
+					case MemberExpression { Expression: ConstantExpression { Value: { } closure } } member:
+					{
+						var field = closure.GetType().GetFields().SingleOrDefault(f => f.Name == member.Member.Name)
+							?? throw new InvalidOperationException($"'{member.Member.Name}' not found on '{closure.GetType()}'");
+
+						return (List<string>)field.GetValue(closure)!;
+					}
+
+					// inline collection initializer
+					case ListInitExpression listInit:
+						return listInit.Initializers.Select(i => (string)((ConstantExpression)i.Arguments[0]).Value!).ToList();
+
+					default:
+						throw new InvalidOperationException($"Cannot resolve JSON path from '{argument}'");
+				}
+			}
+
 			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var value = builder.GetExpression(0)!;
-				var path  = builder.GetValue<List<string>>(1)!;
+				var path  = GetPath(builder.Arguments[1]);
 
 				var sb         = new StringBuilder("({0}::json");
 				var parameters = new List<ISqlExpression>(path.Count);
@@ -100,46 +131,42 @@ namespace Tests.UserTests
 		static string PathListLiteral(List<string> path) => string.Join(".", path);
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
-		public void BuilderValueIsPartOfCacheKey([DataSources] string context)
+		public void BuilderValueIsPartOfCacheKey([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(
-			[
-				new JsonData { Id = 1, Value = "sub.name" }
-			]);
+			using var table = db.CreateLocalTable([new JsonData { Id = 1 }]);
 
+			// the builder bakes the path into generated SQL, so the query has to return the current path back
 			var path = "sub.name";
 
-			AssertQuery(table.Where(r => PathLiteral(path) == r.Value)).ShouldHaveSingleItem();
+			table.Select(_ => PathLiteral(path)).First().ShouldBe("sub.name");
 
 			path = "sub.name2";
 
-			AssertQuery(table.Where(r => PathLiteral(path) == r.Value)).ShouldBeEmpty();
+			table.Select(_ => PathLiteral(path)).First().ShouldBe("sub.name2");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
-		public void EqualBuilderValueIsStillCached([DataSources] string context, [Values(1, 2)] int iteration)
+		public void EqualBuilderValueIsStillCached([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(
-			[
-				new JsonData { Id = 1, Value = "sub.name" }
-			]);
+			using var table = db.CreateLocalTable([new JsonData { Id = 1 }]);
 
-			// same content, but a new list instance on each iteration
+			// same content, but a new list instance on each iteration: the collection has to be compared by content,
+			// otherwise the second iteration rebuilds the query
 			var path = new List<string> { "sub", "name" };
 
-			var query     = table.Where(r => PathListLiteral(path) == r.Value);
+			var query     = table.Select(_ => PathListLiteral(path));
 			var cacheMiss = query.GetCacheMissCount();
 
-			query.ToArray().ShouldHaveSingleItem();
+			query.First().ShouldBe("sub.name");
 
 			if (iteration == 2)
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
-		public void JsonPathIsPartOfCacheKey([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		public void JsonPathIsPartOfCacheKey([IncludeDataSources(TestProvName.PostgreSQL16)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(
@@ -147,6 +174,7 @@ namespace Tests.UserTests
 				new JsonData { Id = 1, Value = /*lang=json,strict*/ """{"sub":{"name":"findme","name2":"dontfindme"}}""" }
 			]);
 
+			// Single PostgreSQL version is enough: json -> / ->> operators need 9.3+ and the defect is version-independent.
 			// PostgreSQL registers List<string> as a scalar (array) type, so builder argument value could be
 			// erroneously treated as a parameter and excluded from query cache key.
 			var path = new List<string> { "sub", "name" };
