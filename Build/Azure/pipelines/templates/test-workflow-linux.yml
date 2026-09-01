@@ -101,6 +101,16 @@ steps:
   condition: and(variables.title, variables.script_global, succeeded())
   displayName: Setup tests
 
+# TEMPORARY - raw ADO.NET repro for the Octonica session drop, to be reported upstream.
+# Runs before the test suite so it executes even if the suite fails, and never fails the leg.
+- task: CmdLine@2
+  inputs:
+    script: 'dotnet run --project $(System.DefaultWorkingDirectory)/scripts/octonica-repro/OctonicaRepro.csproj -c Release -- "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts/octonica-repro'
+  condition: and(variables.title, eq(variables.config, 'clickhouse'), succeeded())
+  continueOnError: true
+  displayName: 'Octonica raw ADO.NET repro (temporary)'
+
 # One block per TFM, run in list order.
 - ${{ each tfm in parameters.tfms }}:
   - task: DownloadPipelineArtifact@2

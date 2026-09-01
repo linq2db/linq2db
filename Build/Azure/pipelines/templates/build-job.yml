@@ -154,7 +154,8 @@ jobs:
             if %errorlevel% neq 0 exit
         )
 
-        xcopy /i Build\$(test_configuration)\scripts testing\scripts
+        rem /s added for the temporary octonica-repro subfolder; without it xcopy drops subdirectories.
+        xcopy /i /s Build\$(test_configuration)\scripts testing\scripts
         if %errorlevel% neq 0 exit
 
         copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql

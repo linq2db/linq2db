@@ -1,0 +1,5 @@
+root = true
+
+[*.cs]
+indent_style = tab
+dotnet_analyzer_diagnostic.severity = none
