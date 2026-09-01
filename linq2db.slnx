@@ -165,7 +165,6 @@
     <File Path="Build/Azure/pipelines/templates/test-jobs.yml" />
     <File Path="Build/Azure/pipelines/templates/test-matrix.yml" />
     <File Path="Build/Azure/pipelines/templates/test-workflow-linux.yml" />
-    <File Path="Build/Azure/pipelines/templates/test-workflow-macos.yml" />
     <File Path="Build/Azure/pipelines/templates/test-workflow-windows.yml" />
   </Folder>
   <Folder Name="/Build/Azure/scripts/">
@@ -180,11 +179,6 @@
     <File Path="Build/Azure/scripts/firebird.sh" />
     <File Path="Build/Azure/scripts/hana2.sh" />
     <File Path="Build/Azure/scripts/hana2.tests.sh" />
-    <File Path="Build/Azure/scripts/mac.db2.provider.sh" />
-    <File Path="Build/Azure/scripts/mac.hana2.sh" />
-    <File Path="Build/Azure/scripts/mac.mysql.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql1.sh" />
-    <File Path="Build/Azure/scripts/mac.pgsql2.sh" />
     <File Path="Build/Azure/scripts/mysql.sh" />
     <File Path="Build/Azure/scripts/oracle1112.sh" />
     <File Path="Build/Azure/scripts/oracle1819.sh" />
