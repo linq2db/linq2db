@@ -134,10 +134,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				methodCall,
 				static (ctx, e, descriptor, inline) =>
 				{
-					ctx.translatedToSql.Add(e);
-
 					var result = ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor, inline);
 					result = ctx.builder.UpdateNesting(ctx.forselect, result);
+
+					if (result is SqlPlaceholderExpression)
+						ctx.translatedToSql.Add(e);
+
 					return result;
 				});
 

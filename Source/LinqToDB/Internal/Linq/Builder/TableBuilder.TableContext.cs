@@ -141,8 +141,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				attr.SetTable(builder.DataOptions, (context: this, builder, translatedToSql), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
 				{
-					context.translatedToSql.Add(argument);
-
 					using var saveState = context.builder.UsingColumnDescriptor(null);
 
 					if (inline == true)
@@ -171,6 +169,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							sqlExpr = new SqlPlaceholderExpression(null, param, argument);
 						}
 					}
+
+					if (sqlExpr is SqlPlaceholderExpression)
+						context.translatedToSql.Add(argument);
 
 					return sqlExpr;
 				});

@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		sealed class JsonData
 		{
 			[Column, PrimaryKey              ] public int     Id    { get; set; }
-			[Column(DataType = DataType.Text)] public string? Value { get; set; }
+			[Column                          ] public string? Value { get; set; }
 		}
 
 		sealed class JsonPathBuilder : Sql.IExtensionCallBuilder
@@ -99,7 +99,7 @@ namespace Tests.UserTests
 		[Sql.Extension("", BuilderType = typeof(PathListLiteralBuilder), ServerSideOnly = true)]
 		static string PathListLiteral(List<string> path) => string.Join(".", path);
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
 		public void BuilderValueIsPartOfCacheKey([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -138,7 +138,7 @@ namespace Tests.UserTests
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
 		public void JsonPathIsPartOfCacheKey([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db    = GetDataContext(context);

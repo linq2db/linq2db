@@ -550,9 +550,10 @@ namespace LinqToDB
 			/// <param name="query">Query, which the extension belongs to.</param>
 			/// <param name="expression">Extension member or method call expression.</param>
 			/// <param name="converter">
-			/// Function, which translates an expression to SQL. Every expression, passed to it, is considered translated to
-			/// the database: its value is supplied through a parameter (or an inlined literal) and doesn't take part in the
-			/// query cache key. Value, which is read instead of being translated, is baked into generated SQL and has to be
+			/// Function, which translates an expression to SQL. An expression, which it translates successfully, has its
+			/// value supplied to the database through a parameter or an inlined literal, and the parameters context
+			/// registers that value for comparison, so the extension does not have to make it a part of the query cache
+			/// key itself. Value, which is read instead of being translated, is baked into generated SQL and has to be
 			/// compared on query cache lookup - see <see cref="ISqlExtensionBuilder.GetExpression(int, bool, bool?)"/>.
 			/// </param>
 			/// <returns>Expression with generated SQL, or an error expression when the extension cannot be translated.</returns>

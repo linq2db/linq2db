@@ -43,8 +43,8 @@ namespace LinqToDB.Internal.Expressions
 			if (a is null || b is null)
 				return false;
 
-			if (a is EnumerableQuery || b is EnumerableQuery)
-				return false; // EnumerableQueries are opaque
+			if (a is IQueryable || b is IQueryable)
+				return false; // queryables are opaque, enumerating them may execute a query
 
 			if (a is string || b is string)
 				return a.Equals(b);

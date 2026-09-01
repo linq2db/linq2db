@@ -1291,8 +1291,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					expr,
 					static (context, e, descriptor, inline) =>
 					{
-						context.translatedToSql.Add(e);
-						return context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline);
+						var result = context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline);
+
+						if (result is SqlPlaceholderExpression)
+							context.translatedToSql.Add(e);
+
+						return result;
 					});
 			}
 
