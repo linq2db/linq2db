@@ -29,5 +29,6 @@ if [ $? != 0 ]; then exit 1; fi
 cp -f "$(find ./Net.IBM.Data.Db2-lnx/lib -name IBM.Data.Db2.dll | head -1)" ./IBM.Data.Db2.dll
 if [ $? != 0 ]; then exit 1; fi
 
-echo "##vso[task.setvariable variable=PATH;]$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
-echo "##vso[task.setvariable variable=LD_LIBRARY_PATH;]$PWD/clidriver/lib/"
+. "$(dirname "$0")/ci-setvar.sh"
+ci_setvar PATH "$PATH:$PWD/clidriver/bin:$PWD/clidriver/lib"
+ci_setvar LD_LIBRARY_PATH "$PWD/clidriver/lib/"
