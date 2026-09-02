@@ -114,8 +114,6 @@ namespace Tests.Linq
 				_ = query.ToList();
 		}
 
-		// DISTINCT in a window aggregate is supported by Oracle, ClickHouse and DuckDB; on the providers below it is
-		// rejected and gated with a descriptive error.
 		// The argument modifier (DISTINCT) has to survive the boolean fold: the folded value replaces the
 		// argument expression, not the SqlFunctionArgument that carries the modifier.
 		[Test]
@@ -143,6 +141,8 @@ namespace Tests.Linq
 			result.ShouldAllBe(r => r.Count == (r.Id == 1 || r.Id == 2 || r.Id == 5 || r.Id == 8 || r.Id == 9 ? 2 : 1));
 		}
 
+		// DISTINCT in a window aggregate is supported by Oracle, ClickHouse and DuckDB; on the providers below it is
+		// rejected and gated with a descriptive error.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
