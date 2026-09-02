@@ -178,6 +178,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			// Tables collected by a nested scope are still in scope for the enclosing one, so hand them
+			// over: without this a chained hint (q.TablesInScopeHint(a).TablesInScopeHint(b)) would see
+			// an empty scope and silently generate nothing.
+			//
+			if (prevTablesInScope != null && !ReferenceEquals(prevTablesInScope, builder.TablesInScope))
+				prevTablesInScope.AddRange(builder.TablesInScope!);
+
 			builder.TablesInScope = prevTablesInScope;
 
 			return BuildSequenceResult.FromContext(joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence);

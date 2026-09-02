@@ -6,6 +6,8 @@ using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Extensions
 {
 	[TestFixture]
@@ -505,13 +507,40 @@ namespace Tests.Extensions
 
 			var test = LastQuery?.Replace("\r", "");
 
-			Assert.That(test, Contains.Substring("[Parent] [p] WITH (NoLock)"));
-			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
+			// Tables of a nested scope stay in scope for the enclosing hint, so they get both hints.
+			//
+			Assert.That(test, Contains.Substring("[Parent] [p] WITH (NoLock, NoWait)"));
+			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock, NoWait)"));
 			Assert.That(test, Contains.Substring("[Child] [c_2] WITH (NoWait)"));
 			Assert.That(test, Contains.Substring("[Parent] [a_Parent] WITH (NoWait)"));
-			Assert.That(test, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock)"));
-			Assert.That(test, Contains.Substring("[Parent] [p1] WITH (HoldLock)"));
+			Assert.That(test, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock, NoWait)"));
+			Assert.That(test, Contains.Substring("[Parent] [p1] WITH (HoldLock, NoWait)"));
 			Assert.That(test, Contains.Substring("[Child] [c_3]\n"));
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5714
+		[Test]
+		public void ChainedTablesInScopeHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsSqlServer()
+			.WithUpdLockInScope()
+			.WithRowLockInScope();
+
+			_ = q.FirstOrDefault();
+
+			var sql = LastQuery!;
+
+			sql.ShouldContain("[p] WITH (UpdLock, RowLock)",   Case.Sensitive);
+			sql.ShouldContain("[c_1] WITH (UpdLock, RowLock)", Case.Sensitive);
 		}
 
 		[Test]
