@@ -1,8 +1,24 @@
 parameters:
-  enabled: false
-  with_baselines: false
-  test_matrix: []
-  full_run: false # disable by default
+# Typed list form, not the `key: value` map, so db_filter can be declared with NO default and Azure
+# fails at compile time when a caller forgets to pass it. That is not hypothetical: the entry filter
+# moved into this file and read parameters.db_filter, which was neither declared here nor forwarded by
+# test-matrix.yml. An undefined parameter is not an error in a template expression - it evaluates to
+# empty, contains(anything, '') is true, and build 23199 therefore ran the whole 29-leg matrix for a
+# test-sqlite run. A default of '[all]' would have hidden it exactly the same way.
+- name: enabled
+  type: string
+  default: 'false'
+- name: with_baselines
+  type: string
+  default: 'false'
+- name: test_matrix
+  type: object
+  default: []
+- name: db_filter
+  type: string
+- name: full_run
+  type: boolean
+  default: false
   # Linux legs allowed to run at once, out of the ten slots the project has. 0 leaves the job
   # uncapped, which is the default because a cap measured worse than none.
   #
@@ -21,7 +37,9 @@ parameters:
   #
   # Put a number here only with a measurement behind it, and note that a cap also makes the file
   # order of test-matrix.yml load-bearing, which the note above that matrix explains.
-  linux_max_parallel: 0
+- name: linux_max_parallel
+  type: number
+  default: 0
 
 jobs:
 ##############################################################################################
