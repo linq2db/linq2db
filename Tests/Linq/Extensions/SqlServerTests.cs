@@ -507,8 +507,6 @@ namespace Tests.Extensions
 
 			var test = LastQuery?.Replace("\r", "");
 
-			// Tables of a nested scope stay in scope for the enclosing hint, so they get both hints.
-			//
 			Assert.That(test, Contains.Substring("[Parent] [p] WITH (NoLock, NoWait)"));
 			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock, NoWait)"));
 			Assert.That(test, Contains.Substring("[Child] [c_2] WITH (NoWait)"));

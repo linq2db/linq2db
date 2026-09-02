@@ -457,8 +457,6 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			// Tables of a nested scope stay in scope for the enclosing hint, so they get both hints.
-			//
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ NOCACHE(p) CLUSTER(p) NOCACHE(c_1) CLUSTER(c_1) FULL(c1) NOCACHE(c1) CLUSTER(c1) CLUSTER(c_2) CLUSTER(a_Parent) PARALLEL(p1) CLUSTER(p1) */"));
 		}
 
