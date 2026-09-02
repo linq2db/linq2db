@@ -1719,8 +1719,12 @@ namespace Tests.Linq
 						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2).ToValue()
 					};
 
-			query
-				.ToList();
+			var result = query.ToList();
+
+			// RANK() over the folded flag: false sorts first, so every non-matching row ties at rank 1 and only
+			// the single ID == 2 row ranks above it. An inverted fold puts that row at 1 and every other row at 2,
+			// and a constant fold flattens them all to 1 - so the count below is 1 only when the fold is correct.
+			result.Count(r => r.rank > 1).ShouldBe(1);
 		}
 
 		[Table]
