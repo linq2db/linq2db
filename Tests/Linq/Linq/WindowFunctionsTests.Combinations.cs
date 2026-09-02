@@ -5,6 +5,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
@@ -358,6 +360,38 @@ namespace Tests.Linq
 				};
 
 			_ = query.ToList();
+		}
+
+		// A window function whose whole call — argument and window definition — references no table column is still
+		// server-side: without the ServerSideOnly marker the enclosing comparison looked client-evaluable and was
+		// folded into a query parameter, so the throwing stub was invoked at execution time (issue #5782).
+		[Test]
+		public void FunctionWithoutColumnReference([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data     = WindowFunctionTestEntity.Seed();
+			var rowCount = data.Length;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					CountAll   = Sql.Window.Count(w => w),
+					CountConst = Sql.Window.Count(1, w => w),
+					SumConst   = Sql.Window.Sum(1, w => w),
+					AllRows    = Sql.Window.Count(w => w) == rowCount     && Sql.Window.Sum(t.IntValue, w => w) > 0,
+					WrongCount = Sql.Window.Count(w => w) == rowCount + 1 && Sql.Window.Sum(t.IntValue, w => w) > 0,
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(data.Length);
+			result.ShouldAllBe(r => r.CountAll   == data.Length);
+			result.ShouldAllBe(r => r.CountConst == data.Length);
+			result.ShouldAllBe(r => r.SumConst   == data.Length);
+			result.ShouldAllBe(r => r.AllRows);
+			result.ShouldAllBe(r => !r.WrongCount);
 		}
 
 		[Test]

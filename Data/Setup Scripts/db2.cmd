@@ -30,3 +30,9 @@ REM   https://community.ibm.com/community/user/discussion/121-container-communit
 REM ---------------------------------------------------------------------------
 
 docker exec db2 sed -i "/^if ! create_instance; then$/i [ -f /database/config/db2inst1/sqllib/adm/fencedid ] && chown root:db2iadm1 /database/config/db2inst1/sqllib/adm/fencedid" /var/db2_setup/lib/setup_db2_instance.sh
+
+REM AUTO_STMT_STATS (real-time statistics) makes the optimizer synchronously profile a table's stats
+REM during query compilation whenever they're missing/stale - our tests constantly create/drop small
+REM tables and immediately query them, so this fires on nearly every fresh table. Measured 3.7x slower
+REM with it on (confirmed via a controlled run: identical test counts, only this setting differed).
+docker exec -u db2inst1 db2 bash -lc "db2 connect to testdb && db2 UPDATE DB CFG FOR testdb USING AUTO_STMT_STATS OFF"

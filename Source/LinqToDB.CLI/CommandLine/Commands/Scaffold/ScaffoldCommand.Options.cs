@@ -1222,13 +1222,13 @@ static class CustomFluentExtensions
 					/*lang=json,strict*/
 					new[] { "{ \"schema\": { \"objects\": [\"table\", \"view\", \"table-function\"] } }" },
 					false,
-					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.Table            ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.Table            ) != 0, "table"             , "load tables"                    ),
-					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.View             ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.View             ) != 0, "view"              , "load views"                     ),
-					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ForeignKey       ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ForeignKey       ) != 0, "foreign-key"       , "load foreign key constraints"   ),
-					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.StoredProcedure  ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.StoredProcedure  ) != 0, "stored-procedure"  , "load stored procedures"         ),
-					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ScalarFunction   ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.ScalarFunction   ) != 0, "scalar-function"   , "load scalar functions"          ),
-					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.TableFunction    ) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.TableFunction    ) != 0, "table-function"    , "load table functions"           ),
-					new ((_defaultOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.AggregateFunction) != 0, (_t4ModeOptions.Schema.LoadedObjects & global::LinqToDB.Schema.SchemaObjects.AggregateFunction) != 0, "aggregate-function", "load aggregate/window functions"));
+					new (_defaultOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.Table            ), _t4ModeOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.Table            ), "table"             , "load tables"                    ),
+					new (_defaultOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.View             ), _t4ModeOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.View             ), "view"              , "load views"                     ),
+					new (_defaultOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.ForeignKey       ), _t4ModeOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.ForeignKey       ), "foreign-key"       , "load foreign key constraints"   ),
+					new (_defaultOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.StoredProcedure  ), _t4ModeOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.StoredProcedure  ), "stored-procedure"  , "load stored procedures"         ),
+					new (_defaultOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.ScalarFunction   ), _t4ModeOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.ScalarFunction   ), "scalar-function"   , "load scalar functions"          ),
+					new (_defaultOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.TableFunction    ), _t4ModeOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.TableFunction    ), "table-function"    , "load table functions"           ),
+					new (_defaultOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.AggregateFunction), _t4ModeOptions.Schema.LoadedObjects.HasFlag(global::LinqToDB.Schema.SchemaObjects.AggregateFunction), "aggregate-function", "load aggregate/window functions"));
 
 			/// <summary>
 			/// Prefer provider-specific types over general .net types for columns and parameters option.

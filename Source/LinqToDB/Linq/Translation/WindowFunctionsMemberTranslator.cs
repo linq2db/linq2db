@@ -922,7 +922,12 @@ namespace LinqToDB.Linq.Translation
 				keepClause      : keepClause,
 				nullTreatment   : information.NullTreatment,
 				fromPosition    : information.FromPosition,
-				isWindowFunction: true
+				isWindowFunction: true,
+				// The same three names an ordinary aggregate builds, so they answer about their argument the same
+				// way here. Nothing reaches this with a declared duration today - the window aggregates are typed
+				// per overload and none takes a TimeSpan - but a name carrying two domains would make two otherwise
+				// identical nodes stop comparing equal.
+				argumentDomain  : SqlArgumentDomains.ForAggregate(functionName)
 			);
 
 			var finalExpression = transform != null ? transform(function) : function;

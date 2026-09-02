@@ -6,7 +6,5 @@ namespace LinqToDB.Mapping
 	/// Used to define queryable members.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Method)]
-	public class IsQueryableAttribute : Attribute
-	{
-	}
+	public class IsQueryableAttribute : Attribute;
 }
