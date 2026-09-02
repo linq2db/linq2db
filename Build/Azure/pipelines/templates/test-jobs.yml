@@ -2,7 +2,6 @@ parameters:
   enabled: false
   with_baselines: false
   test_matrix: []
-  mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
   full_run: false # disable by default
   # Linux legs allowed to run at once, out of the ten slots the project has. 0 leaves the job
   # uncapped, which is the default because a cap measured worse than none.
@@ -96,9 +95,22 @@ jobs:
             pre_test_win_local: ${{ test_config.pre_test_win_local }}
             post_test_win_local: ${{ test_config.post_test_win_local }}
             netfx: ${{ test_config.enable_fw_netfx }}
-            net80: ${{ test_config.enable_fw_net80 }}
-            net90: ${{ test_config.enable_fw_net90 }}
-            net100: ${{ test_config.enable_fw_net100 }}
+            # Windows runs a non-netfx TFM only for a leg Linux cannot cover. netfx is Windows-only,
+            # so it always runs here; net8/9/10 on a leg that also has a linux job would repeat what
+            # that job already ran - the EF.Core suite runs on every enabled TFM unconditionally, and
+            # on a release run so does the main suite. Every leg needing its non-netfx TFMs on windows
+            # (Access, SqlCE, SQL Server 2005-2016) has no linux job, so enable_os_ubuntu decides it
+            # and no matrix entry has to state it twice. win_tfms_always opts an entry out, for the
+            # one case where the windows leg tests something the linux one cannot reach even on the
+            # same TFM - see w_DB2InformixDuckDB in test-matrix.yml.
+            ${{ if or(ne(test_config.enable_os_ubuntu, 'true'), eq(test_config.win_tfms_always, true)) }}:
+              net80: ${{ test_config.enable_fw_net80 }}
+              net90: ${{ test_config.enable_fw_net90 }}
+              net100: ${{ test_config.enable_fw_net100 }}
+            ${{ if and(eq(test_config.enable_os_ubuntu, 'true'), ne(test_config.win_tfms_always, true)) }}:
+              net80: false
+              net90: false
+              net100: false
             # Resolved here rather than branched on in the workflow, so each test/setup step exists
             # once with an $(arch) path instead of twice with one half always skipped.
             ${{ if eq(test_config.x86, true) }}:
@@ -152,44 +164,6 @@ jobs:
 
   steps:
   - template: test-workflow-linux.yml
-    parameters:
-      with_baselines: ${{ parameters.with_baselines }}
-      full_run: ${{ parameters.full_run }}
-
-#################
-#  Tests: MacOS #
-#################
-- job: test_macos_job
-  pool:
-    vmImage: 'macOS-15'
-  displayName: 'Mac'
-  ${{ if eq(parameters.full_run, true) }}:
-    timeoutInMinutes: 300
-  ${{ if not(eq(parameters.full_run, true)) }}:
-    timeoutInMinutes: 240
-  dependsOn: create_baselines_branch
-  condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
-  variables:
-    baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
-    source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
-
-  strategy:
-    matrix:
-      ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true')) }}:
-          ${{ test_config.name }}:
-            title: ${{ test_config.title }}
-            config: ${{ test_config.config_macos }}
-            script_global: ${{ test_config.script_macos_global }}
-            script_local: ${{ test_config.script_macos_local }}
-            docker: ${{ test_config.install_docker_macos }}
-            net80: ${{ test_config.enable_fw_net80 }}
-            net90: ${{ test_config.enable_fw_net90 }}
-            net100: ${{ test_config.enable_fw_net100 }}
-            retry: ${{ test_config.retry }}
-
-  steps:
-  - template: test-workflow-macos.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
       full_run: ${{ parameters.full_run }}
