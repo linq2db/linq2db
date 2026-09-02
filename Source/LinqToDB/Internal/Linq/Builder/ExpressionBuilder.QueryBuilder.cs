@@ -398,6 +398,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (IsTranslatedToSql(expr) || !CanBeEvaluatedOnClient(expr))
 					return;
 
+				// A constant the cache key keeps is already compared there, structurally and for free. Registering it
+				// would replace it with a placeholder and move that comparison onto a compiled accessor instead.
+				//
+				if (expr is ConstantExpression constant && !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, MappingSchema))
+					return;
+
 				var value = EvaluateExpression(expr);
 				ParametersContext.MarkAsValue(expr, value);
 			}
