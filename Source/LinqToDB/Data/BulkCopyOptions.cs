@@ -144,6 +144,8 @@ namespace LinqToDB.Data
 	/// A batch always contains at least one row, so a value below the length of a single rendered row does not
 	/// truncate: it degrades to one statement per row.
 	/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
+	/// A batch is also capped at <see cref="MaxBatchSize"/> rows (1000 when unset), so raising this value alone
+	/// has no effect once that row cap is the binding clamp.
 	/// </param>
 	/// <summary>
 	/// Defines behavior of <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/> method.

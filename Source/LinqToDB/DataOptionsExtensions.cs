@@ -1744,6 +1744,8 @@ namespace LinqToDB
 		/// A batch always contains at least one row, so a value below the length of a single rendered row does not
 		/// truncate: it degrades to one statement per row.
 		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
+		/// A batch is also capped at <see cref="BulkCopyOptions.MaxBatchSize"/> rows (1000 when unset), so raising
+		/// this value alone has no effect once that row cap is the binding clamp.
 		/// </summary>
 		[Pure]
 		public static BulkCopyOptions WithMaxSqlLengthForBatch(this BulkCopyOptions options, int? maxSqlLengthForBatch)
@@ -2016,6 +2018,8 @@ namespace LinqToDB
 		/// A batch always contains at least one row, so a value below the length of a single rendered row does not
 		/// truncate: it degrades to one statement per row.
 		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
+		/// A batch is also capped at <see cref="BulkCopyOptions.MaxBatchSize"/> rows (1000 when unset), so raising
+		/// this value alone has no effect once that row cap is the binding clamp.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseBulkCopyMaxSqlLengthForBatch(this DataOptions options, int? maxSqlLengthForBatch)
