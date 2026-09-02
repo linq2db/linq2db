@@ -61,6 +61,8 @@ internal static class Program
 		failures += Run("F  BooleanTable GROUP BY, fully drained",           DrainFailingQuery);
 		failures += Run("G  BooleanTable GROUP BY, abandoned after 1 row",   AbandonFailingQueryAfterFirstRow);
 		failures += Run("H  BooleanTable GROUP BY, abandoned before any row",AbandonFailingQueryWithoutRead);
+		failures += Run("I  full session replay, one pass",                 () => ReplaySession(1));
+		failures += Run("J  full session replay, two passes",               () => ReplaySession(2));
 
 		Cleanup();
 
@@ -105,6 +107,20 @@ internal static class Program
 		Execute(connection, $"INSERT INTO {NumericTable} SELECT number, toFloat64(number) / 7 FROM numbers({RowCount})");
 		Console.WriteLine($"Seeded {StringTable} / {NumericTable} with {RowCount} rows each.");
 
+		SeedBooleanTable();
+
+		using var check2 = connection.CreateCommand($"SELECT count() FROM {BooleanTable}");
+		Console.WriteLine($"Seeded {BooleanTable} with {check2.ExecuteScalar()} rows (expected {BooleanRowCount}).");
+	}
+
+	// Kept separate because the replayed session ends with DROP TABLE, so each session case has to
+	// re-seed - and it must do so on its own connection, leaving the replayed one pristine.
+	private static void SeedBooleanTable()
+	{
+		using var connection = Open();
+
+		Execute(connection, $"DROP TABLE IF EXISTS {BooleanTable}");
+
 		// Exactly the table linq2db's BooleanTests.Test creates: [PrimaryKey] int Id plus bool /
 		// bool? / int / int? / decimal / decimal? / double / double?, mapped to these ClickHouse
 		// types, with ENGINE = MergeTree() ORDER BY Id because Id is a primary key.
@@ -136,9 +152,6 @@ SELECT
 	toFloat64(toInt32(intDiv(number, 4) % 3) - 1) / 10                                      AS Double,
 	if(number % 4 = 3, NULL, toFloat64(toInt32(number % 4) - 1) / 10)                       AS DoubleN
 FROM numbers({BooleanRowCount})");
-
-		using var check = connection.CreateCommand($"SELECT count() FROM {BooleanTable}");
-		Console.WriteLine($"Seeded {BooleanTable} with {check.ExecuteScalar()} rows (expected {BooleanRowCount}).");
 	}
 
 	private static void Cleanup()
@@ -305,6 +318,59 @@ FROM numbers({BooleanRowCount})");
 		}
 
 		FollowUp(connection);
+	}
+
+	// ---- full session replay --------------------------------------------------------------
+
+	// linq2db runs every statement of BooleanTests.Test on one connection, and the test body runs
+	// twice (the second time with InlineParameters = true). Session.Statements is that sequence,
+	// extracted verbatim from the CI log: 21 SELECTs ending with the 24-column GROUP BY, then the
+	// DROP TABLE that reports "The connection is closed.". Only the tail of one pass survives the
+	// runner's output capture, so `passes` re-runs the same sequence to approximate both.
+	private static void ReplaySession(int passes)
+	{
+		SeedBooleanTable();
+
+		using var connection = Open();
+
+		_traceFirstChance = true;
+
+		for (var pass = 1; pass <= passes; pass++)
+		{
+			for (var i = 0; i < Session.Statements.Length; i++)
+			{
+				var sql = Session.Statements[i];
+
+				// The trailing DROP is only meaningful on the last pass; re-seed otherwise.
+				if (sql.StartsWith("DROP", StringComparison.OrdinalIgnoreCase) && pass < passes)
+					continue;
+
+				try
+				{
+					using var command = connection.CreateCommand(sql);
+
+					if (sql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase))
+					{
+						var rows = 0;
+						using var reader = command.ExecuteReader();
+						while (reader.Read())
+							rows++;
+					}
+					else
+					{
+						command.ExecuteNonQuery();
+					}
+				}
+				catch (Exception ex)
+				{
+					var firstLine = sql.Split('\n')[0].Trim();
+					throw new InvalidOperationException(
+						$"pass {pass}, statement {i + 1}/{Session.Statements.Length} ({firstLine}...): {ex.GetType().Name}: {ex.Message}", ex);
+				}
+			}
+		}
+
+		_traceFirstChance = false;
 	}
 
 	// The command that surfaces a broken connection.
