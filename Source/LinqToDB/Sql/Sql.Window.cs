@@ -41,6 +41,12 @@ namespace LinqToDB
 		}
 
 		/// <summary>Provides ORDER BY for the window function.</summary>
+		/// <remarks>
+		/// A key that holds the same value for every row - a literal, or a captured local that reaches SQL as a
+		/// parameter - orders nothing, so it is dropped. Where dropping would empty the clause and the provider
+		/// requires an ordering inside <c>OVER</c>, the key comes back as a scalar subquery keeping its value,
+		/// direction and NULLS position.
+		/// </remarks>
 		public interface IOrderByPart<out TThenPart>
 			where TThenPart : class
 		{
@@ -143,6 +149,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>Provides additional ORDER BY columns via ThenBy/ThenByDesc.</summary>
+		/// <remarks>
+		/// As with <see cref="IOrderByPart{TThenPart}"/>, a key that is constant for every row is dropped rather
+		/// than emitted.
+		/// </remarks>
 		public interface IThenOrderPart<out TThenPart>
 			where TThenPart : class
 		{

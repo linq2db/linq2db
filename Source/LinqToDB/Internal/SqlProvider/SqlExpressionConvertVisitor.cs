@@ -907,7 +907,9 @@ namespace LinqToDB.Internal.SqlProvider
 		/// A sort key that holds the same value for every row orders nothing - all rows tie - so it is dropped, the
 		/// same treatment <see cref="BasicSqlBuilder.BuildOrderByClause"/> gives a statement's <c>ORDER BY</c>. That
 		/// alone settles the dialects that refuse a constant there (SQL Server and SAP HANA reject any constant;
-		/// MySQL 8 reads an integer one as a legacy column position), because none of them ever sees one.
+		/// MySQL 8 reads an integer one as a legacy column position), because none of them ever sees one inside
+		/// <c>OVER</c>. Only that ordering is rewritten here: the same node's <c>WITHIN GROUP</c> and <c>KEEP</c>
+		/// order lists are built elsewhere and still carry a constant through verbatim.
 		/// <para>
 		/// Dropping can empty the clause, which is a problem of its own: on some providers a ranking function needs
 		/// an <c>ORDER BY</c>, and so does a frame. <see cref="IsWindowOrderByRequired"/> says
@@ -992,6 +994,13 @@ namespace LinqToDB.Internal.SqlProvider
 			=> functionName is "RANK" or "DENSE_RANK" or "PERCENT_RANK" or "CUME_DIST" or "LAG" or "LEAD";
 
 		/// <summary>
+		/// Whether the scalar subquery <see cref="WrapWindowOrderByConstant"/> builds is parseable as a window sort
+		/// key here. DuckDB is the exception: it takes one in a plain window but not inside a <c>RANGE</c> frame,
+		/// and it accepts the bare constant there instead, so it keeps the caller's key rather than the stand-in.
+		/// </summary>
+		protected virtual bool CanWrapWindowOrderByConstant => true;
+
+		/// <summary>
 		/// Restates a constant window sort key as a scalar subquery, for a provider that demands an <c>ORDER BY</c>
 		/// but refuses a constant one.
 		/// </summary>
@@ -1003,13 +1012,6 @@ namespace LinqToDB.Internal.SqlProvider
 		/// a 5, and a captured local stays the parameter it became instead of vanishing from the command.
 		/// <see cref="SelectQuery.DoNotRemove"/> stops query optimization from folding the subquery away.
 		/// </remarks>
-		/// <summary>
-		/// Whether the scalar subquery <see cref="WrapWindowOrderByConstant"/> builds is parseable as a window sort
-		/// key here. DuckDB is the exception: it takes one in a plain window but not inside a <c>RANGE</c> frame,
-		/// and it accepts the bare constant there instead, so it keeps the caller's key rather than the stand-in.
-		/// </summary>
-		protected virtual bool CanWrapWindowOrderByConstant => true;
-
 		protected virtual ISqlExpression WrapWindowOrderByConstant(ISqlExpression expression)
 		{
 			var query = new SelectQuery { DoNotRemove = true };

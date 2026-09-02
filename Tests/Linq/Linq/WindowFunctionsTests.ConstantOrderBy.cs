@@ -116,7 +116,6 @@ namespace Tests.Linq
 		// the frame arm in the base requirement it emits OVER ( RANGE ...) and the server refuses it, e.g.
 		// SQLite "RANGE with offset PRECEDING/FOLLOWING requires one ORDER BY expression".
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
 		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
 		public void ConstantWindowOrderByWithOffsetFrame([SupportsAnalyticFunctionsContext(
 			// SQL Server does not support RANGE with value offsets
