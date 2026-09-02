@@ -70,124 +70,130 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (attrs.Any(a => a.Scope == Sql.QueryExtensionScope.TablesInScopeHint))
 				builder.TablesInScope = new();
 
-			var sequence = builder.BuildSequence(new(buildInfo, methodCall.Object ?? methodCall.Arguments[0]));
-
-			for (var i = startIndex; i < list.Count; i++)
+			try
 			{
-				var data = list[i];
+				var sequence = builder.BuildSequence(new(buildInfo, methodCall.Object ?? methodCall.Arguments[0]));
 
-				if (data.SqlExpression == null)
+				for (var i = startIndex; i < list.Count; i++)
 				{
-					if (data.ParamsIndex >= 0)
+					var data = list[i];
+
+					if (data.SqlExpression == null)
 					{
-						var converted = data.Expression.Unwrap() switch
+						if (data.ParamsIndex >= 0)
 						{
-							LambdaExpression lex => builder.BuildSqlExpression(sequence, SequenceHelper.PrepareBody(lex, sequence)),
-							var ex => builder.BuildSqlExpression(sequence, ex),
-						};
-
-						if (converted is SqlPlaceholderExpression placeholder)
-							data.SqlExpression = placeholder.Sql;
-						else
-							return BuildSequenceResult.Error(methodCall);
-					}
-					else if (data.Expression is LambdaExpression le)
-					{
-						var converted = builder.ConvertToExtensionSql(sequence, le, null, null);
-
-						if (converted is SqlPlaceholderExpression placeholder)
-							data.SqlExpression = placeholder.Sql;
-						else
-							return BuildSequenceResult.Error(methodCall);
-					}
-					else
-					{
-						//TODO: These QueryExtensions needs tp be rewritten completely. Workaround over DateTime.
-
-						var isQueryDepended = data.Parameter.GetAttributes<SqlQueryDependentAttribute>().Length > 0;
-
-						var additionalFlags = isQueryDepended ? BuildFlags.None : BuildFlags.ForceParameter;
-
-						var converted = builder.BuildSqlExpression(sequence, data.Expression, BuildPurpose.Sql, buildFlags : additionalFlags);
-
-						if (converted is SqlPlaceholderExpression placeholder)
-							data.SqlExpression = placeholder.Sql;
-						else
-							return BuildSequenceResult.Error(methodCall);
-					}
-				}
-			}
-
-			List<SqlQueryExtension>? joinExtensions = null;
-
-			foreach (var attr in attrs)
-			{
-				switch (attr.Scope)
-				{
-					case Sql.QueryExtensionScope.TableHint    :
-					case Sql.QueryExtensionScope.IndexHint    :
-					case Sql.QueryExtensionScope.TableNameHint:
-					{
-						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-						attr.ExtendTable(table.SqlTable, list);
-						break;
-					}
-					case Sql.QueryExtensionScope.TablesInScopeHint:
-					{
-						foreach (var table in builder.TablesInScope!)
-							attr.ExtendTable(table.SqlTable, list);
-						break;
-					}
-					case Sql.QueryExtensionScope.JoinHint:
-					{
-						attr.ExtendJoin(joinExtensions ??= new(), list);
-						break;
-					}
-					case Sql.QueryExtensionScope.SubQueryHint:
-					{
-						if (sequence is SetOperationBuilder.SetOperationContext { SubQuery.SelectQuery : { HasSetOperators: true } q })
-							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
-						else
-						{
-							var queryToUpdate = sequence.SelectQuery;
-							if (sequence is AsSubqueryContext { SelectQuery.IsSimple: true } subquery)
+							var converted = data.Expression.Unwrap() switch
 							{
-								queryToUpdate = subquery.SubQuery.SelectQuery;
-							}
+								LambdaExpression lex => builder.BuildSqlExpression(sequence, SequenceHelper.PrepareBody(lex, sequence)),
+								var ex => builder.BuildSqlExpression(sequence, ex),
+							};
 
-							if (!queryToUpdate.IsSimple)
-							{
-								sequence      = new SubQueryContext(sequence);
-								queryToUpdate = sequence.SelectQuery;
-							}
-
-							attr.ExtendSubQuery(queryToUpdate.SqlQueryExtensions ??= new(), list);
+							if (converted is SqlPlaceholderExpression placeholder)
+								data.SqlExpression = placeholder.Sql;
+							else
+								return BuildSequenceResult.Error(methodCall);
 						}
+						else if (data.Expression is LambdaExpression le)
+						{
+							var converted = builder.ConvertToExtensionSql(sequence, le, null, null);
 
-						break;
-					}
-					case Sql.QueryExtensionScope.QueryHint:
-					{
-						attr.ExtendQuery(builder.SqlQueryExtensions ??= new(), list);
-						break;
-					}
-					case Sql.QueryExtensionScope.None:
-					{
-						break;
+							if (converted is SqlPlaceholderExpression placeholder)
+								data.SqlExpression = placeholder.Sql;
+							else
+								return BuildSequenceResult.Error(methodCall);
+						}
+						else
+						{
+							//TODO: These QueryExtensions needs tp be rewritten completely. Workaround over DateTime.
+
+							var isQueryDepended = data.Parameter.GetAttributes<SqlQueryDependentAttribute>().Length > 0;
+
+							var additionalFlags = isQueryDepended ? BuildFlags.None : BuildFlags.ForceParameter;
+
+							var converted = builder.BuildSqlExpression(sequence, data.Expression, BuildPurpose.Sql, buildFlags : additionalFlags);
+
+							if (converted is SqlPlaceholderExpression placeholder)
+								data.SqlExpression = placeholder.Sql;
+							else
+								return BuildSequenceResult.Error(methodCall);
+						}
 					}
 				}
+
+				List<SqlQueryExtension>? joinExtensions = null;
+
+				foreach (var attr in attrs)
+				{
+					switch (attr.Scope)
+					{
+						case Sql.QueryExtensionScope.TableHint    :
+						case Sql.QueryExtensionScope.IndexHint    :
+						case Sql.QueryExtensionScope.TableNameHint:
+						{
+							var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+							attr.ExtendTable(table.SqlTable, list);
+							break;
+						}
+						case Sql.QueryExtensionScope.TablesInScopeHint:
+						{
+							foreach (var table in builder.TablesInScope!)
+								attr.ExtendTable(table.SqlTable, list);
+							break;
+						}
+						case Sql.QueryExtensionScope.JoinHint:
+						{
+							attr.ExtendJoin(joinExtensions ??= new(), list);
+							break;
+						}
+						case Sql.QueryExtensionScope.SubQueryHint:
+						{
+							if (sequence is SetOperationBuilder.SetOperationContext { SubQuery.SelectQuery : { HasSetOperators: true } q })
+								attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
+							else
+							{
+								var queryToUpdate = sequence.SelectQuery;
+								if (sequence is AsSubqueryContext { SelectQuery.IsSimple: true } subquery)
+								{
+									queryToUpdate = subquery.SubQuery.SelectQuery;
+								}
+
+								if (!queryToUpdate.IsSimple)
+								{
+									sequence      = new SubQueryContext(sequence);
+									queryToUpdate = sequence.SelectQuery;
+								}
+
+								attr.ExtendSubQuery(queryToUpdate.SqlQueryExtensions ??= new(), list);
+							}
+
+							break;
+						}
+						case Sql.QueryExtensionScope.QueryHint:
+						{
+							attr.ExtendQuery(builder.SqlQueryExtensions ??= new(), list);
+							break;
+						}
+						case Sql.QueryExtensionScope.None:
+						{
+							break;
+						}
+					}
+				}
+
+				// Tables collected by a nested scope are still in scope for the enclosing one, so hand them
+				// over: without this a chained hint (q.TablesInScopeHint(a).TablesInScopeHint(b)) would see
+				// an empty scope and silently generate nothing. Only on the success path - a failed sub-tree
+				// has nothing to hand up.
+				//
+				if (prevTablesInScope != null && !ReferenceEquals(prevTablesInScope, builder.TablesInScope))
+					prevTablesInScope.AddRange(builder.TablesInScope!);
+
+				return BuildSequenceResult.FromContext(joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence);
 			}
-
-			// Tables collected by a nested scope are still in scope for the enclosing one, so hand them
-			// over: without this a chained hint (q.TablesInScopeHint(a).TablesInScopeHint(b)) would see
-			// an empty scope and silently generate nothing.
-			//
-			if (prevTablesInScope != null && !ReferenceEquals(prevTablesInScope, builder.TablesInScope))
-				prevTablesInScope.AddRange(builder.TablesInScope!);
-
-			builder.TablesInScope = prevTablesInScope;
-
-			return BuildSequenceResult.FromContext(joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence);
+			finally
+			{
+				builder.TablesInScope = prevTablesInScope;
+			}
 		}
 
 		public sealed class JoinHintContext : PassThroughContext
