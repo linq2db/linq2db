@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- net10.0 matches the CI test host; net8.0 exists so the hook can be smoke-tested against
+         the net8.0 repro locally. A startup hook must target the host's runtime major version. -->
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>OctonicaHook</AssemblyName>
+    <!-- StartupHook must be a non-namespaced type named StartupHook; the runtime looks it up by name. -->
+    <RootNamespace></RootNamespace>
+  </PropertyGroup>
+
+</Project>

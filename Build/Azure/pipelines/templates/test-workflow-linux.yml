@@ -143,10 +143,27 @@ steps:
 
   # Main suite. Retry legs (Access, Oracle) get MTP's in-process failed-test retry plus a whole-step
   # retry for the crash case, which is what forces the pair of otherwise identical steps.
+  # TEMPORARY - build the Octonica first-chance hook for the net10 leg. It is attached to the main
+  # suite below via DOTNET_STARTUP_HOOKS so the exception that
+  # ClickHouseDataReader.Close(disposing: true) discards becomes visible. Built unconditionally
+  # because `env:` on the test step cannot be made conditional, and a DOTNET_STARTUP_HOOKS path
+  # that does not exist aborts the process.
+  - ${{ if eq(tfm.flag, 'net100') }}:
+    - task: CmdLine@2
+      inputs:
+        script: 'dotnet build $(System.DefaultWorkingDirectory)/scripts/octonica-hook/OctonicaHook.csproj -c Release -f net10.0'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/scripts/octonica-hook'
+      condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded())
+      displayName: 'Build Octonica first-chance hook (temporary)'
+
   - ${{ if or(eq(tfm.pr_main, true), eq(parameters.full_run, true)) }}:
     - script: dotnet ./${{ tfm.dir }}/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./${{ tfm.dir }}/main/x64/.runsettings --report-trx --report-trx-filename ${{ tfm.dir }}-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m
       condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), ne(variables.retry, 'true'))
       displayName: 'Tests (${{ tfm.label }}): $(title)'
+      ${{ if eq(tfm.flag, 'net100') }}:
+        env:
+          DOTNET_STARTUP_HOOKS: '$(System.DefaultWorkingDirectory)/scripts/octonica-hook/bin/Release/net10.0/OctonicaHook.dll'
+          OCTONICA_HOOK_LOG: '$(System.DefaultWorkingDirectory)/octonica-hook.log'
 
     - script: dotnet ./${{ tfm.dir }}/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" --settings ./${{ tfm.dir }}/main/x64/.runsettings --report-trx --report-trx-filename ${{ tfm.dir }}-main-x64.trx --results-directory TestResults --hangdump --hangdump-timeout 5m $(test_retry_args)
       condition: and(variables.title, eq(variables['${{ tfm.flag }}'], 'true'), succeeded(), eq(variables.retry, 'true'))
@@ -167,6 +184,8 @@ steps:
 - task: CmdLine@2
   inputs:
     script: |
+      echo "===== octonica first-chance hook log ====="
+      cat $(System.DefaultWorkingDirectory)/octonica-hook.log 2>/dev/null || echo "(no hook log - nothing was caught)"
       echo "===== docker logs clickhouse (tail 800) ====="
       docker logs clickhouse 2>&1 | tail -n 800
       echo "===== SYSTEM FLUSH LOGS ====="

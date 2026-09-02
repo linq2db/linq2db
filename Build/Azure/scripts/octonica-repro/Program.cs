@@ -63,6 +63,7 @@ internal static class Program
 		failures += Run("H  BooleanTable GROUP BY, abandoned before any row",AbandonFailingQueryWithoutRead);
 		failures += Run("I  full session replay, one pass",                 () => ReplaySession(1));
 		failures += Run("J  full session replay, two passes",               () => ReplaySession(2));
+		failures += Run("K  8 concurrent session replays",                  () => ReplaySessionConcurrently(8));
 
 		Cleanup();
 
@@ -371,6 +372,46 @@ FROM numbers({BooleanRowCount})");
 		}
 
 		_traceFirstChance = false;
+	}
+
+	// Since the test suite was parallelised, fixtures inside one provider lane run concurrently, so
+	// the real run drives many native connections against the server at once. This case reproduces
+	// that pressure: N threads, each with its own connection, replaying the same session.
+	private static void ReplaySessionConcurrently(int degree)
+	{
+		SeedBooleanTable();
+
+		var errors = new System.Collections.Concurrent.ConcurrentBag<Exception>();
+
+		Parallel.For(0, degree, _ =>
+		{
+			try
+			{
+				using var connection = Open();
+
+				foreach (var sql in Session.Statements)
+				{
+					// The DROP would race the other threads' SELECTs; the shared table has to survive.
+					if (sql.StartsWith("DROP", StringComparison.OrdinalIgnoreCase))
+						continue;
+
+					using var command = connection.CreateCommand(sql);
+					using var reader  = command.ExecuteReader();
+					while (reader.Read())
+					{
+					}
+				}
+
+				FollowUp(connection);
+			}
+			catch (Exception ex)
+			{
+				errors.Add(ex);
+			}
+		});
+
+		if (!errors.IsEmpty)
+			throw new AggregateException($"{errors.Count}/{degree} concurrent replays failed", errors);
 	}
 
 	// The command that surfaces a broken connection.
