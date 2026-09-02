@@ -694,5 +694,36 @@ namespace Tests.Linq
 				Assert.That(parent.GrandChildren, Is.Not.Null);
 			}
 		}
+
+		[Table]
+		sealed class CompiledOutputTable
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Value { get; set; }
+		}
+
+		[Test]
+		public void CompiledDeleteWithOutputTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<CompiledOutputTable>>(static (db, id) =>
+				db.GetTable<CompiledOutputTable>()
+					.Where(t => t.Id == id)
+					.DeleteWithOutput());
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
+			{
+				new CompiledOutputTable { Id = 1, Value = 10 },
+				new CompiledOutputTable { Id = 2, Value = 20 },
+			});
+
+			var deleted = query(db, 1).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(deleted,          Has.Length.EqualTo(1));
+				Assert.That(deleted[0].Value, Is.EqualTo(10));
+			}
+		}
 	}
 }

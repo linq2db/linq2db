@@ -124,11 +124,12 @@ namespace LinqToDB
 							var qtype       = type.GetGenericType(expr.Type);
 							var elementType = qtype?.GetGenericArguments()[0];
 
-							// The Queryable form substitutes a Table<T>, so it applies only where the call really is a
-							// queryable. A client-side materializer such as ToList() is typed List<T> and is not:
-							// leave the call in place so the inner queryable becomes the compiled table instead, which
-							// is what already happens for its async counterpart.
-							if (elementType == null || isQueryable)
+							// The Queryable form substitutes a Table<T>, so it applies where the call really is a
+							// queryable, or where its static type can hold the substituted table (IEnumerable<T>, as
+							// the *WithOutput operators are typed). A client-side materializer such as ToList() is
+							// typed List<T> and is neither: leave the call in place so the inner queryable becomes the
+							// compiled table instead, which is what already happens for its async counterpart.
+							if (elementType == null || isQueryable || expr.Type.IsAssignableFrom(typeof(Table<>).MakeGenericType(elementType)))
 							{
 								var helper = ActivatorExt.CreateInstance<ITableHelper>(
 									typeof(TableHelper<>).MakeGenericType(elementType ?? expr.Type));
