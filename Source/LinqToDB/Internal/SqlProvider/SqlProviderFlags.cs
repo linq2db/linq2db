@@ -470,7 +470,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// keys, which follow <see cref="SupportsBooleanType"/> only.
 		/// Default value: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 77), DefaultValue(true)]
+		[DataMember(Order = 79), DefaultValue(true)]
 		public bool SupportsPredicateInFunctionValuePosition { get; set; } = true;
 
 		/// <summary>
