@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -169,8 +170,16 @@ namespace LinqToDB.Internal.Linq
 		/// </summary>
 		/// <param name="paramExpr"></param>
 		/// <param name="paramEntry"></param>
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, out int finalParameterId)
+		public void RegisterParameterEntry(
+			Expression                 paramExpr,
+			ParameterCacheEntry        paramEntry,
+			Func<Expression, object?>? evaluator,
+			LinqOptions                options,
+			out int                    finalParameterId)
 		{
+			var optimizeDuplicateParameters         = options.OptimizeDuplicateParameters;
+			var optimizeDuplicatePropertyParameters = options.OptimizeDuplicatePropertyParameters;
+
 			void EnsureEvaluated(ParameterCacheEntry localEntry, Expression expr)
 			{
 				if (localEntry.IsEvaluated)
@@ -183,12 +192,15 @@ namespace LinqToDB.Internal.Linq
 
 			foreach (var (param, entry) in _parameterEntries.Values)
 			{
-				if (ExpressionEqualityComparer.Instance.Equals(param, paramExpr)
-					&& entry.DbDataType.Equals(paramEntry.DbDataType)
-					&& ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter, paramEntry.ClientValueGetter)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor)
-				    && ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
+				if (entry.DbDataType.Equals(paramEntry.DbDataType)                                                                    &&
+				    (optimizeDuplicateParameters
+				        ? paramEntry.ItemAccessor == null && entry.ItemAccessor == null
+				        : ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor))                    &&
+				    ExpressionEqualityComparer.Instance.Equals(param,                           paramExpr)                            &&
+				    ExpressionEqualityComparer.Instance.Equals(entry.ClientValueGetter,         paramEntry.ClientValueGetter)         &&
+				    ExpressionEqualityComparer.Instance.Equals(entry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
+				    ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor)        &&
+				    (!optimizeDuplicateParameters || IsStableParameterAccess(paramExpr, optimizeDuplicatePropertyParameters)))
 				{
 					// found duplicate, we have to register value comparison
 
@@ -232,16 +244,43 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			_parameterEntries.Add(paramEntry.ParameterId, (paramExpr, paramEntry));
+
 			finalParameterId = paramEntry.ParameterId;
+
+			static bool IsStableParameterAccess(Expression expression, bool allowProperties)
+			{
+				expression = expression.UnwrapConvert();
+
+				if (expression is MemberExpression member && member.Member.IsNullableValueMember())
+					expression = member.Expression?.UnwrapConvert() ?? expression;
+
+				if (expression is not MemberExpression)
+					return false;
+
+				while (expression is MemberExpression next)
+				{
+					if (next.Expression == null)
+						return false;
+
+					if (!allowProperties && next.Member is not FieldInfo && !next.Member.IsNullableValueMember())
+						return false;
+
+					expression = next.Expression.UnwrapConvert();
+				}
+
+				return expression.NodeType == ExpressionType.Constant;
+			}
 
 			static bool CanBeDuplicate(ParameterCacheEntry paramEntry, Expression paramExpression, string paramName, Expression testedExprExpression, ParameterCacheEntry testedEntry, string? testedName)
 			{
-				return string.Equals(paramName, testedName, StringComparison.Ordinal) && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
-					   && !ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)
-				       && testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ItemAccessor, paramEntry.ItemAccessor)
-				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor);
+				return
+					string.Equals(paramName, testedName, StringComparison.Ordinal)                                                          &&
+					paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()                             &&
+					!ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)                                      &&
+					testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)                                                              &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter) &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.ItemAccessor,              paramEntry.ItemAccessor)              &&
+					ExpressionEqualityComparer.Instance.Equals(testedEntry.DbDataTypeAccessor,        paramEntry.DbDataTypeAccessor);
 			}
 		}
 
