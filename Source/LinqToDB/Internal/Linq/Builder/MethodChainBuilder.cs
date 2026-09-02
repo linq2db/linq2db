@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 
@@ -124,7 +125,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			var translatedToSql = new HashSet<Expression>();
+			var translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
 			var sqlExpression = finalFunction.GetExpression(
 				(builder, context: placeholderSequence, forselect: placeholderSelect, translatedToSql),

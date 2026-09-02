@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
@@ -137,7 +138,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				var translatedToSql = new HashSet<Expression>();
+				var translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
 				attr.SetTable(builder.DataOptions, (context: this, builder, translatedToSql), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
 				{

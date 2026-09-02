@@ -1282,7 +1282,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
-				translatedToSql = new HashSet<Expression>();
+				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 
 				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, translatedToSql),
 					Builder.DataContext,
