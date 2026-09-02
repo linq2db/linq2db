@@ -695,6 +695,23 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void CompiledLoadWithInferredResultTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// TResult infers to ILoadWithQueryable<,>, which the folded compiled table cannot satisfy -
+			// it substitutes a Table<T>. Pinned here so the failure stays a diagnosable one.
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children));
+
+			using var db = GetDataContext(context);
+
+			var ex = Assert.Throws<LinqToDBException>(() => query(db, 1));
+
+			Assert.That(ex!.Message, Contains.Substring("IQueryable<T>"));
+		}
+
 		[Table]
 		sealed class CompiledOutputTable
 		{

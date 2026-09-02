@@ -40,7 +40,18 @@ namespace LinqToDB
 					_compiledQuery ??= CompileQuery(_query);
 
 			//TODO: pass preambles
-			return (TResult)_compiledQuery(args, null)!;
+			var result = _compiledQuery(args, null);
+
+			// The substitution replaces the folded call with a Table<T>, which does not implement the
+			// wrapper interfaces some operators return (ILoadWithQueryable<,>, I<Provider>SpecificQueryable<>).
+			// A caller who let TResult infer from such a call gets an unhelpful InvalidCastException here.
+			if (result is not null and not TResult)
+				throw new LinqToDBException(
+					$"Compiled query returned '{result.GetType()}', which cannot be converted to the declared result type '{typeof(TResult)}'. "
+					+ "The outermost call was folded into the compiled table, so the result is a table rather than that call's own type. "
+					+ "Declare the compiled query result type as 'IQueryable<T>' or 'IEnumerable<T>'.");
+
+			return (TResult)result!;
 		}
 
 		enum MethodType
