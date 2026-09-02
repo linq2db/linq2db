@@ -30,6 +30,10 @@ namespace LinqToDB.Linq.Translation
 		protected virtual bool IsFirstLastValueBooleanSupported => true;
 		protected virtual bool IsPercentileContSupported        => true;
 		protected virtual bool IsPercentileDiscSupported           => true;
+		// PERCENTILE_DISC selects a stored value rather than interpolating, so a boolean sort key is meaningful
+		// and accepted almost everywhere. DB2 is the exception: it requires a built-in numeric sort key for both
+		// ordered-set aggregates (SQLSTATE 42822), and having a native boolean type it never folds the key.
+		protected virtual bool IsPercentileDiscBooleanOrderBySupported => true;
 		// Windowed ordered-set form: PERCENTILE_CONT/DISC(f) WITHIN GROUP (ORDER BY k) OVER (PARTITION BY ...). Distinct
 		// from the two group flags above — SQL Server and MariaDB support only the windowed form, PostgreSQL only the group form, Oracle both.
 		protected virtual bool IsOrderedSetWindowedSupported       => false;
@@ -1032,7 +1036,7 @@ namespace LinqToDB.Linq.Translation
 			if (!IsPercentileContSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileCont, methodCall.Type);
 
-			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true, allowBooleanOrderBy: false);
+			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true, booleanOrderByError: ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy);
 		}
 
 		public virtual Expression? TranslatePercentileDisc(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -1042,10 +1046,10 @@ namespace LinqToDB.Linq.Translation
 			if (!IsPercentileDiscSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileDisc, methodCall.Type);
 
-			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false);
+			return TranslatePercentileFunction(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false, booleanOrderByError: IsPercentileDiscBooleanOrderBySupported ? null : ErrorHelper.Error_WindowFunction_PercentileDiscBooleanOrderBy);
 		}
 
-		Expression? TranslatePercentileFunction(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool requireSingleOrderBy, bool allowBooleanOrderBy = true)
+		Expression? TranslatePercentileFunction(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool requireSingleOrderBy, string? booleanOrderByError = null)
 		{
 			if (!IsWindowFunctionsSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_NotSupported, methodCall.Type);
@@ -1094,9 +1098,9 @@ namespace LinqToDB.Linq.Translation
 							return;
 						}
 
-						if (!allowBooleanOrderBy && HasBooleanOrderKey(withinGroupOrder))
+						if (booleanOrderByError != null && HasBooleanOrderKey(withinGroupOrder))
 						{
-							composer.SetError(translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy, methodCall.Type));
+							composer.SetError(translationContext.CreateErrorExpression(methodCall, booleanOrderByError, methodCall.Type));
 							return;
 						}
 
@@ -1167,7 +1171,7 @@ namespace LinqToDB.Linq.Translation
 			if (!IsOrderedSetWindowedSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileCont, methodCall.Type);
 
-			return TranslatePercentileWindowed(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true, allowBooleanOrderBy: false);
+			return TranslatePercentileWindowed(translationContext, methodCall, "PERCENTILE_CONT", requireSingleOrderBy: true, booleanOrderByError: ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy);
 		}
 
 		public virtual Expression? TranslatePercentileDiscWindowed(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -1177,7 +1181,7 @@ namespace LinqToDB.Linq.Translation
 			if (!IsOrderedSetWindowedSupported)
 				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileDisc, methodCall.Type);
 
-			return TranslatePercentileWindowed(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false);
+			return TranslatePercentileWindowed(translationContext, methodCall, "PERCENTILE_DISC", requireSingleOrderBy: false, booleanOrderByError: IsPercentileDiscBooleanOrderBySupported ? null : ErrorHelper.Error_WindowFunction_PercentileDiscBooleanOrderBy);
 		}
 
 		// True when any WITHIN GROUP sort key is a predicate or a boolean-typed expression. PERCENTILE_CONT
@@ -1193,7 +1197,7 @@ namespace LinqToDB.Linq.Translation
 		// Windowed ordered-set aggregate: PERCENTILE_CONT/DISC(fraction) WITHIN GROUP (ORDER BY key) OVER (PARTITION BY ...).
 		// The builder lambda's OrderBy maps to WITHIN GROUP (not the OVER ORDER BY) and PartitionBy maps to OVER; the form
 		// exposes neither FILTER nor a frame. Distinct from the group-source TranslatePercentileFunction (no group-element composer).
-		Expression? TranslatePercentileWindowed(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool requireSingleOrderBy, bool allowBooleanOrderBy = true)
+		Expression? TranslatePercentileWindowed(ITranslationContext translationContext, MethodCallExpression methodCall, string functionName, bool requireSingleOrderBy, string? booleanOrderByError = null)
 		{
 			var fraction = translationContext.Translate(methodCall.Arguments[1]);
 			if (fraction is not SqlPlaceholderExpression fractionPlaceholder)
@@ -1218,8 +1222,8 @@ namespace LinqToDB.Linq.Translation
 			if (!TranslateOrderItems(translationContext, translationContext.ProviderFlags.DefaultNullsOrdering, translationContext.ProviderFlags.IsNullsOrderingSupported, methodCall.Type, information.OrderBy, withinGroupOrder, out var orderError))
 				return orderError;
 
-			if (!allowBooleanOrderBy && HasBooleanOrderKey(withinGroupOrder))
-				return translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy, methodCall.Type);
+			if (booleanOrderByError != null && HasBooleanOrderKey(withinGroupOrder))
+				return translationContext.CreateErrorExpression(methodCall, booleanOrderByError, methodCall.Type);
 
 			List<ISqlExpression>? partitionBy = null;
 			if (information.PartitionBy != null)
