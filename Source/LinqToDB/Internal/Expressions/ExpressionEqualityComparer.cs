@@ -32,8 +32,10 @@ namespace LinqToDB.Internal.Expressions
 		}
 
 		/// <summary>
-		/// Compares two values the same way as constants in the cache key are compared: collections are compared by
-		/// their content, so a re-evaluated collection with the same items stays equal to the recorded one.
+		/// Compares two values by content: collections are compared item by item, so a re-evaluated collection with
+		/// the same items stays equal to the recorded one. This is deliberately laxer than the comparison a constant
+		/// left in the query cache key gets, which is reference equality for a collection. A queryable on either side
+		/// is treated as opaque, because enumerating it may execute a query.
 		/// </summary>
 		internal static bool CompareValues(object? a, object? b)
 		{
