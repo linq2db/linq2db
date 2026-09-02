@@ -670,7 +670,7 @@ namespace Tests.Linq
 			{
 				Assert.That(parent.ParentID, Is.EqualTo(1));
 				Assert.That(parent.Children, Has.Count.EqualTo(1));
-				Assert.That(parent.Children[0].GrandChildren, Is.Not.Null);
+				Assert.That(parent.Children[0].GrandChildren, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -691,7 +691,7 @@ namespace Tests.Linq
 			{
 				Assert.That(parent.ParentID,      Is.EqualTo(1));
 				Assert.That(parent.Children,      Has.Count.EqualTo(1));
-				Assert.That(parent.GrandChildren, Is.Not.Null);
+				Assert.That(parent.GrandChildren, Has.Count.EqualTo(1));
 			}
 		}
 
