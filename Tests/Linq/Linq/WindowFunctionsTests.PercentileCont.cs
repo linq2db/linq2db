@@ -16,13 +16,14 @@ namespace Tests.Linq
 		// WITHIN GROUP (ORDER BY ...) items are SqlWindowOrderItem, same as OVER (ORDER BY): a boolean sort key
 		// is a value position and has to be folded.
 		//
-		// PostgreSQL, DuckDB and DB2 have a native boolean type, so nothing is folded there, and PERCENTILE_CONT
-		// interpolates and needs a numeric sort key — percentile_cont(numeric, boolean), quantile_cont(BOOLEAN,
-		// ...) and DB2's SQL0214N all reject it. They report that at translation time rather than surfacing the
-		// driver error, so the expectation here is a descriptive exception, not a skip.
+		// PERCENTILE_CONT interpolates, so a boolean sort key is refused on every provider, not only the ones that
+		// reject it themselves. PostgreSQL, DuckDB and DB2 have a native boolean type and error out on their own
+		// (percentile_cont(numeric, boolean), quantile_cont(BOOLEAN, ...), DB2's SQL0214N). Oracle folds the key to
+		// 1/0, which Oracle accepts and then interpolates — an evenly split partition yields 0.5, which reads back
+		// as true whichever side holds the majority — so it has to be refused at translation time too.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL95Plus, TestProvName.AllDuckDB, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL95Plus, TestProvName.AllDuckDB, TestProvName.AllDB2, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy)]
 		public void PercentileContWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
