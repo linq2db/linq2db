@@ -1,0 +1,8 @@
+{
+	"NET80.Azure": {
+		"Providers": [
+			"ClickHouse.Driver",
+			"ClickHouse.MySql"
+		]
+	}
+}

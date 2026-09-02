@@ -64,7 +64,8 @@ using LinqToDB.Internal.DataProvider.SqlCe;
 
 namespace Tests.Data
 {
-	[TestFixture]
+	// relies on the global MiniProfiler.Current in its connection factory
+	[TestFixture, NonParallelizable]
 	public class MiniProfilerTests : TestBase
 	{
 		// IMPORTANT:

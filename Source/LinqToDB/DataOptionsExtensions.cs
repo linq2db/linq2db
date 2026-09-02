@@ -1754,11 +1754,35 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If set, will set the maximum parameters per batch statement. Also see <see cref="WithUseParameters"/>.
+		/// Overrides the provider's own parameter limit in both directions, so raising it past what the driver
+		/// accepts surfaces as a driver error rather than being silently clamped.
 		/// </summary>
 		[Pure]
 		public static BulkCopyOptions WithMaxParametersForBatch(this BulkCopyOptions options, int? maxParametersForBatch)
 		{
 			return options with { MaxParametersForBatch = maxParametersForBatch };
+		}
+
+		/// <summary>
+		/// If set, overrides the provider-specific limit on the length of the generated statement per batch,
+		/// measured in characters of the generated SQL, not bytes. When <see langword="null"/> (the default),
+		/// the provider's own limit is used.
+		/// Honored by the MultipleRows copy path — <see cref="BulkCopyType.MultipleRows"/>, and also
+		/// <see cref="BulkCopyType.Default"/> / <see cref="BulkCopyType.ProviderSpecific"/> on providers that have
+		/// no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's
+		/// <c>AlternativeBulkCopy.InsertInto</c> mode, which array-binds a single fixed-length statement, nor on
+		/// Access, Informix and SAP HANA, whose <see cref="BulkCopyType.MultipleRows"/> mode falls back to
+		/// row-by-row inserts and so never reaches the batch splitter.
+		/// A batch always contains at least one row, so a value below the length of a single rendered row does not
+		/// truncate: it degrades to one statement per row.
+		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
+		/// A batch is also capped at <see cref="BulkCopyOptions.MaxBatchSize"/> rows (1000 when unset), so raising
+		/// this value alone has no effect once that row cap is the binding clamp.
+		/// </summary>
+		[Pure]
+		public static BulkCopyOptions WithMaxSqlLengthForBatch(this BulkCopyOptions options, int? maxSqlLengthForBatch)
+		{
+			return options with { MaxSqlLengthForBatch = maxSqlLengthForBatch };
 		}
 
 		/// <summary>
@@ -2004,11 +2028,35 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If set, will set the maximum parameters per batch statement. Also see <see cref="UseBulkCopyUseParameters"/>.
+		/// Overrides the provider's own parameter limit in both directions, so raising it past what the driver
+		/// accepts surfaces as a driver error rather than being silently clamped.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseBulkCopyMaxParametersForBatch(this DataOptions options, int? maxParametersForBatch)
 		{
 			return options.WithOptions<BulkCopyOptions>(o => o with { MaxParametersForBatch = maxParametersForBatch });
+		}
+
+		/// <summary>
+		/// If set, overrides the provider-specific limit on the length of the generated statement per batch,
+		/// measured in characters of the generated SQL, not bytes. When <see langword="null"/> (the default),
+		/// the provider's own limit is used.
+		/// Honored by the MultipleRows copy path — <see cref="BulkCopyType.MultipleRows"/>, and also
+		/// <see cref="BulkCopyType.Default"/> / <see cref="BulkCopyType.ProviderSpecific"/> on providers that have
+		/// no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's
+		/// <c>AlternativeBulkCopy.InsertInto</c> mode, which array-binds a single fixed-length statement, nor on
+		/// Access, Informix and SAP HANA, whose <see cref="BulkCopyType.MultipleRows"/> mode falls back to
+		/// row-by-row inserts and so never reaches the batch splitter.
+		/// A batch always contains at least one row, so a value below the length of a single rendered row does not
+		/// truncate: it degrades to one statement per row.
+		/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
+		/// A batch is also capped at <see cref="BulkCopyOptions.MaxBatchSize"/> rows (1000 when unset), so raising
+		/// this value alone has no effect once that row cap is the binding clamp.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseBulkCopyMaxSqlLengthForBatch(this DataOptions options, int? maxSqlLengthForBatch)
+		{
+			return options.WithOptions<BulkCopyOptions>(o => o with { MaxSqlLengthForBatch = maxSqlLengthForBatch });
 		}
 
 		/// <summary>

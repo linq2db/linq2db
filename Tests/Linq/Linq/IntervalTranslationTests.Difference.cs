@@ -240,6 +240,44 @@ namespace Tests.Linq
 			row.TotalHours.ShouldBe(elapsed.TotalHours, 1e-9);
 		}
 
+#if NET8_0_OR_GREATER
+		/// <summary>
+		/// A member a provider cannot express, projected from an operand of a set operation rather than from a
+		/// terminal <c>Select</c>.
+		/// </summary>
+		/// <remarks>
+		/// Such a member is refused only where SQL is required, so a plain projection reads both dates and answers
+		/// it in .NET. A set operand's projection is built asking translators for strict SQL, which took that answer
+		/// away and failed the whole query instead - for a member the same projection answers everywhere else, on
+		/// every provider measuring elapsed time no finer than the millisecond, which is most of the matrix.
+		/// <para>
+		/// Asserted against the terminal projection rather than against a computed expectation, because what the
+		/// two must agree on is the answer the provider can give: where the member translates the comparison holds
+		/// server-side, and where it does not both sides read the stored dates and compute it in .NET.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ADifferenceMemberReadableInAProjectionIsReadableInsideASetOperation([DataSources] string context)
+		{
+			var start = new DateTime(2026, 1, 1, 10, 0, 0);
+			var end   = start.AddTicks(TimeSpan.TicksPerMillisecond * 6 + 4560);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var terminal = t.Select(r => (r.FinishedOn - r.StartedOn).Microseconds).ToArray();
+
+			var setOperand = t.Where(r => r.Id >  0).Select(r => (r.FinishedOn - r.StartedOn).Microseconds)
+				.Concat  (t.Where(r => r.Id <= 0).Select(r => (r.FinishedOn - r.StartedOn).Microseconds))
+				.ToArray();
+
+			setOperand.ShouldBe(terminal);
+		}
+#endif
+
 		/// <summary>
 		/// A total the provider cannot reach at all, asked for in a plain projection.
 		/// </summary>

@@ -546,7 +546,11 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsOrderBySubQuerySupported { get; set; } = true;
 
 		/// <summary>
-		/// When disabled, all conditions from INNER JOIN ON moved to WHERE except conjunction of equality predicates.
+		/// When disabled, an AND-joined ON clause has each predicate that is not a plain equality of two non-literal
+		/// expressions moved out of ON: for an INNER JOIN it goes to WHERE; for a LEFT JOIN one depending only on the
+		/// outer side goes to WHERE, one depending only on the joined subtree is pushed into a wrapped derived table,
+		/// and one referencing both join inputs has to stay in ON. An ON clause that is itself a disjunction is left
+		/// untouched.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
 		/// -- with flag:
@@ -696,11 +700,42 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsDistinctOnSupported { get; set; }
 
 		/// <summary>
+		/// Provider's <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> returns the new (post-update) values as a result set of
+		/// the rows the statement actually updated — so an <c>UPDATE</c> matching no row returns no rows.
+		/// <para>
+		/// This is narrower than "the provider has some form of UPDATE output". A provider whose <c>RETURNING</c> is a
+		/// singleton, yielding one record whatever the statement matched, does <b>not</b> qualify: a zero-row update is
+		/// then indistinguishable from a one-row update. Firebird before v5 behaves that way and is therefore
+		/// <see langword="false"/> here even though it can return new values for a matched row.
+		/// </para>
+		/// <para>
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads to read the regenerated optimistic-lock value back in the same statement, and to take the number
+		/// of returned rows as the affected-row count. When <see langword="false"/> the value is read with a follow-up
+		/// <c>SELECT</c> instead, gated on <see cref="IsAffectedRowsCountSupported"/>.
+		/// </para>
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 77), DefaultValue(false)]
+		public bool IsUpdateOutputRowsSupported { get; set; }
+
+		/// <summary>
+		/// Provider reports the number of affected rows from <c>INSERT</c> / <c>UPDATE</c> / <c>DELETE</c> / <c>MERGE</c> execution.
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads: when <see langword="false"/> the affected-row count is unreliable, so — unless the provider
+		/// also supports UPDATE <c>OUTPUT</c> / <c>RETURNING</c> — the optimistic-concurrency result cannot be
+		/// reported and the operation throws.
+		/// Default: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 78), DefaultValue(true)]
+		public bool IsAffectedRowsCountSupported { get; set; } = true;
+
+		/// <summary>
 		/// Indicates that the provider can execute several statements sent as a single command and return their
 		/// result sets in order, enabling multiple scenario steps to run in one round-trip. Enabled conservatively
 		/// per provider. Default: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 77)]
+		[DataMember(Order = 79)]
 		public bool IsMultiStatementBatchSupported { get; set; }
 
 		/// <summary>
@@ -710,7 +745,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// is one result set); with it, many readers combine into one round-trip (eager loading). Enabled conservatively
 		/// per provider. Default: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 79)]
+		[DataMember(Order = 80)]
 		public bool IsMultipleResultSetsSupported { get; set; }
 
 		/// <summary>
@@ -726,7 +761,7 @@ namespace LinqToDB.Internal.SqlProvider
 		//   SQL Server 65536 x packet (256 MB @ 4 KB, 32 MB @ min) · MySQL/MariaDB max_allowed_packet (16-64 MB, min 4) ·
 		//   SQLite 1 GB · PostgreSQL ~1 GB · SAP HANA ~2 GB · DB2 LUW ~2 MB · ClickHouse max_query_size (~1 MB) ·
 		//   Oracle ~64 KB · Firebird 64 KB (<3.0) / 10 MB (3.0+) · Informix 64 KB (SQLi) / 2 MB (DRDA) · Sybase ASE ~64 KB.
-		[DataMember(Order = 80)]
+		[DataMember(Order = 81)]
 		public int MaxCombinedCommandLength { get; set; }
 
 		/// <summary>
@@ -737,7 +772,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// least 1. Default (set by <see cref="DataProviderBase"/>): 32 — a few KB of SQL, well under provider batch /
 		/// parameter limits, while still collapsing the common N+1 case to a single round-trip.
 		/// </summary>
-		[DataMember(Order = 81)]
+		[DataMember(Order = 82)]
 		public int MaxStatementsPerCombinedGroup { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
@@ -838,6 +873,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
+				^ IsUpdateOutputRowsSupported                          .GetHashCode()
+				^ IsAffectedRowsCountSupported                         .GetHashCode()
 				^ IsMultiStatementBatchSupported                       .GetHashCode()
 				^ IsMultipleResultSetsSupported                        .GetHashCode()
 				^ MaxCombinedCommandLength                             .GetHashCode()
@@ -922,6 +959,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
+				&& IsUpdateOutputRowsSupported                           == other.IsUpdateOutputRowsSupported
+				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
 				&& IsMultiStatementBatchSupported                        == other.IsMultiStatementBatchSupported
 				&& IsMultipleResultSetsSupported                         == other.IsMultipleResultSetsSupported
 				&& MaxCombinedCommandLength                              == other.MaxCombinedCommandLength

@@ -363,7 +363,6 @@ namespace Tests.Linq
 			FSharp.Issue5598.UpdateNoOpExcludesPrimaryKey(db, false);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test1([DataSources] string context)
 		{
@@ -385,7 +384,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test3(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test4([DataSources] string context)
 		{
@@ -393,7 +391,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test4(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test5([DataSources] string context)
 		{
@@ -401,7 +398,6 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test5(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test6([DataSources] string context)
 		{
@@ -409,12 +405,70 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test6(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
 		public void Issue1813Test7([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue1813.Issue1813Test7(db);
+		}
+
+		// YDB rejects the constant carried into the join ON clause ("each equality predicate argument must depend on exactly one JOIN input").
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test8([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test8(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test9([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test9(db);
+		}
+
+		// The nullable-string join key makes linq2db emit the null-aware equality
+		// (ON a.Text = b.Name OR a.Text IS NULL AND b.Name IS NULL), which YDB rejects ("JOIN ON expression must be
+		// a conjunction of equality predicates"). IsComplexJoinConditionSupported=false cannot relocate it either:
+		// the predicate references both join inputs, so it has to stay in ON.
+		[ThrowsForProvider("Ydb.Sdk.Ado.YdbException", TestProvName.AllYdb)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test10([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test10(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test11([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test11(db);
+		}
+
+		[ActiveIssue(5794)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5794")]
+		public void Issue5794Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue5794Test(db);
+		}
+
+		[ActiveIssue(5790)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5790")]
+		public void Issue5790Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue5790Test(db);
+		}
+
+		// The refusal is a client-side translation decision, so one provider covers it.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5790")]
+		public void Issue5790RefusalTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue5790RefusalTest(db);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5428")]
