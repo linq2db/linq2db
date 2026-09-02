@@ -681,6 +681,43 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("OPTION (RECOMPILE, FAST 10)"));
 		}
 
+		// A CTE body is its own scope: an enclosing hint stops at the boundary. CteContext.InitQuery
+		// enforces that; without it, whether the outer hint reached the body depended on the query
+		// shape, since the boundary was only ever a matter of build order.
+		// https://github.com/linq2db/linq2db/issues/5714
+		[Test]
+		public void CteBodyTablesInScopeHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte =
+			(
+				from c in db.Child
+				where c.ParentID > 0
+				select c
+			)
+			.AsSqlServer()
+			.WithRowLockInScope()
+			.AsCte();
+
+			var q =
+			(
+				from p in db.Parent
+				from c in cte
+				where c.ParentID == p.ParentID
+				select p
+			)
+			.AsSqlServer()
+			.WithUpdLockInScope();
+
+			_ = q.FirstOrDefault();
+
+			var sql = LastQuery!;
+
+			sql.ShouldContain("[c_1] WITH (RowLock)", Case.Sensitive);
+			sql.ShouldContain("[p] WITH (UpdLock)",   Case.Sensitive);
+		}
+
 		[Test]
 		public void UnionTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
