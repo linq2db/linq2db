@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -31,7 +33,7 @@ namespace LinqToDB
 
 		readonly Lock                     _sync = new ();
 		readonly LambdaExpression         _query;
-		volatile Func<object?[],object?[]?,object?>? _compiledQuery;
+		volatile Func<object?[],object?>? _compiledQuery;
 
 		TResult ExecuteQuery<TResult>(params object?[] args)
 		{
@@ -39,8 +41,7 @@ namespace LinqToDB
 				lock (_sync)
 					_compiledQuery ??= CompileQuery(_query);
 
-			//TODO: pass preambles
-			var result = _compiledQuery(args, null);
+			var result = _compiledQuery(args);
 
 			// The substitution replaces the folded call with a Table<T>, which does not implement the
 			// wrapper interfaces some operators return (ILoadWithQueryable<,>, I<Provider>SpecificQueryable<>).
@@ -63,33 +64,128 @@ namespace LinqToDB
 
 		interface ITableHelper
 		{
-			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type);
+			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type);
 		}
 
 		sealed class TableHelper<T> : ITableHelper
 			where T : notnull
 		{
-			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)
+			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type)
 			{
 				var table = new CompiledTable<T>(query, expr);
 
 				return Expression.Call(
 					Expression.Constant(table),
 					type == MethodType.Queryable ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null!, null!)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null!)) :
 					type == MethodType.Element ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null!, null!)) :
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!, null!)),
-					ps, preambles);
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null!)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!)),
+					ps);
 			}
 		}
 
-		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
+		static bool ReplaceAsyncWithSync(MethodCallExpression methodCall, out MethodCallExpression newMethodCall)
 		{
-			var ps        = ExpressionBuilder.ParametersParam;
-			var preambles = Expression.Parameter(typeof(object[]), "preambles");
+			newMethodCall = methodCall;
+			var returnType = methodCall.Method.ReturnType;
+			if (!typeof(Task).IsAssignableFrom(returnType))
+			{
+				return true;
+			}
 
-			var info = query.Body.Transform((query, ps, preambles), static (context, pi) =>
+			var methodName = methodCall.Method.Name;
+			if (!methodName.EndsWith("Async", StringComparison.Ordinal))
+			{
+				return true;
+			}
+
+			var newMethodName = methodName.Substring(0, methodName.Length - "Async".Length);
+			var methods = GetSimilarMethods(methodCall.Type.DeclaringType)
+				.Concat(GetSimilarMethods(typeof(Queryable)))
+				.ToList();
+
+			if (methods.Count == 0)
+			{
+				return false;
+			}
+
+			var sourceParametersArray = methodCall.Method.GetParameters();
+
+			var destArguments         = methodCall.Arguments;
+
+			ICollection<ParameterInfo> sourceParameters = sourceParametersArray;
+
+			if (sourceParametersArray.Length > 0 && sourceParametersArray[^1].ParameterType == typeof(CancellationToken))
+			{
+				sourceParameters = sourceParametersArray.Take(sourceParametersArray.Length - 1).ToList();
+				destArguments = destArguments.Take(destArguments.Count - 1).ToList().AsReadOnly();
+			}
+
+			var         sourceGenericArguments = methodCall.Method.GetGenericArguments();
+			MethodInfo? targetMethod           = null;
+
+			foreach (var method in methods)
+			{
+				if (methodCall.Method.IsGenericMethod)
+				{
+					if (!method.IsGenericMethod)
+					{
+						continue;
+					}
+
+					var genericArgs = method.GetGenericArguments();
+					if (sourceGenericArguments.Length != genericArgs.Length)
+						continue;
+
+					var candidateMethod = method.MakeGenericMethod(sourceGenericArguments);
+
+					if (TypeHelper.IsEqualParameters(sourceParameters, candidateMethod.GetParameters()))
+					{
+						targetMethod = candidateMethod;
+						break;
+					}
+				}
+				else
+				{
+					if (method.IsGenericMethod)
+					{
+						continue;
+					}
+
+					if (TypeHelper.IsEqualParameters(sourceParameters, method.GetParameters()))
+					{
+						targetMethod = method;
+						break;
+					}
+				}
+			}
+
+			if (targetMethod == null)
+			{
+				return false;
+			}
+
+			newMethodCall = Expression.Call(targetMethod, destArguments);
+			return true;
+
+			List<MethodInfo> GetSimilarMethods(Type? methodsContainer)
+			{
+				if (methodsContainer == null)
+					return [];
+
+				var methodInfos = methodsContainer.GetMethods()
+					.Where(m => string.Equals(m.Name, newMethodName, StringComparison.Ordinal))
+					.ToList();
+				return methodInfos;
+			}
+		}
+
+		static Func<object?[],object?> CompileQuery(LambdaExpression query)
+		{
+			var ps = ExpressionBuilder.ParametersParam;
+
+			var info = query.Body.Transform((query, ps), static (context, pi) =>
 			{
 				switch (pi.NodeType)
 				{
@@ -107,7 +203,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			info = info.Transform((query, ps, preambles), static (context, pi) =>
+			info = info.Transform((query, ps), static (context, pi) =>
 			{
 				switch (pi.NodeType)
 				{
@@ -120,9 +216,14 @@ namespace LinqToDB
 						{
 							var type = expr.Type.GetGenericArguments()[0];
 
+							// The compiled table builds and caches the query from the synchronous form; only the
+							// call into it stays async.
+							if (!ReplaceAsyncWithSync(expr, out var syncCall))
+								throw new InvalidOperationException("Cannot convert async method call to sync.");
+
 							var helper = ActivatorExt.CreateInstance<ITableHelper>(typeof(TableHelper<>).MakeGenericType(type));
 
-							return helper.CallTable(context.query, expr, context.ps, context.preambles, MethodType.ElementAsync);
+							return helper.CallTable(context.query, syncCall, context.ps, MethodType.ElementAsync);
 						}
 						else if (expr.IsQueryable)
 						{
@@ -145,7 +246,7 @@ namespace LinqToDB
 								var helper = ActivatorExt.CreateInstance<ITableHelper>(
 									typeof(TableHelper<>).MakeGenericType(elementType ?? expr.Type));
 
-								return helper.CallTable(context.query, expr, context.ps, context.preambles, elementType != null ? MethodType.Queryable : MethodType.Element);
+								return helper.CallTable(context.query, expr, context.ps, elementType != null ? MethodType.Queryable : MethodType.Element);
 							}
 						}
 
@@ -161,7 +262,7 @@ namespace LinqToDB
 							var helper = ActivatorExt
 								.CreateInstance<ITableHelper>(typeof(TableHelper<>)
 								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
-							return helper.CallTable(context.query, pi, context.ps, context.preambles, MethodType.Queryable);
+							return helper.CallTable(context.query, pi, context.ps, MethodType.Queryable);
 						}
 
 						break;
@@ -170,7 +271,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			return Expression.Lambda<Func<object?[],object?[]?,object?>>(Expression.Convert(info, typeof(object)), ps, preambles).CompileExpression();
+			return Expression.Lambda<Func<object?[],object?>>(Expression.Convert(info, typeof(object)), ps).CompileExpression();
 		}
 
 		#region Invoke

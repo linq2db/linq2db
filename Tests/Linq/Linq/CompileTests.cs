@@ -742,5 +742,50 @@ namespace Tests.Linq
 				Assert.That(deleted[0].Value, Is.EqualTo(10));
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public void ElementFormLoadWithTest([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,Parent>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.First());
+
+			using var db = GetDataContext(context);
+
+			var parent = query(db, 1);
+			var other  = query(db, 2);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID, Is.EqualTo(1));
+				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,  Is.EqualTo(2));
+				Assert.That(other.Children,  Has.Count.EqualTo(2));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public void ElementFormLoadWithThenLoadTest([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,Parent>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.ThenLoad(c => c.GrandChildren)
+					.First());
+
+			using var db = GetDataContext(context);
+
+			var parent = query(db, 1);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID,                  Is.EqualTo(1));
+				Assert.That(parent.Children,                  Has.Count.EqualTo(1));
+				Assert.That(parent.Children[0].GrandChildren, Is.Not.Null);
+			}
+		}
 	}
 }
