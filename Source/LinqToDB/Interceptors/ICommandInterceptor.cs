@@ -8,6 +8,15 @@ using LinqToDB.Common;
 
 namespace LinqToDB.Interceptors
 {
+	/// <summary>
+	/// Interceptors for <see cref="System.Data.Common.DbCommand"/> initialization and execution.
+	/// </summary>
+	/// <remarks>
+	/// Registering an <see cref="ICommandInterceptor"/> disables DbBatch-based command batching: combined
+	/// multi-statement execution (for example eager loading run as one round-trip) falls back to a single
+	/// semicolon-concatenated command so the interceptor still observes execution. See
+	/// <see cref="LinqToDB.LinqOptions.UseDbBatch"/>.
+	/// </remarks>
 	public interface ICommandInterceptor : IInterceptor
 	{
 		/// <summary>

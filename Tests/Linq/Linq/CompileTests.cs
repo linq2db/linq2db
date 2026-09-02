@@ -11,6 +11,8 @@ using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -270,6 +272,48 @@ namespace Tests.Linq
 				Assert.That(query(db, 2).ToList(), Has.Count.EqualTo(2));
 		}
 
+		// A compiled query carries its arguments in an object?[] array that is threaded through the
+		// execution context; LoadWith children run their own queries and must see those same compiled
+		// arguments. Regression guard for folding the parameters array into SqlCommandExecutionContext:
+		// here the one context carries both the compiled args AND the eager-load (harvester) results.
+		[Test]
+		public void CompiledQueryWithEagerLoad([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent.LoadWith(p => p.Children).Where(p => p.ParentID == id));
+
+			using var db = GetDataContext(context);
+
+			foreach (var id in new[] { 1, 2 })
+			{
+				var parent = query(db, id).ToList().Single();
+
+				Assert.That(parent.ParentID, Is.EqualTo(id));
+				Assert.That(
+					parent.Children.Select(c => c.ChildID).OrderBy(x => x),
+					Is.EqualTo(db.Child.Where(c => c.ParentID == id).Select(c => c.ChildID).OrderBy(x => x).ToList()));
+			}
+		}
+
+		[Test]
+		public async Task CompiledQueryWithEagerLoadAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent.LoadWith(p => p.Children).Where(p => p.ParentID == id));
+
+			using var db = GetDataContext(context);
+
+			foreach (var id in new[] { 1, 2 })
+			{
+				var parent = (await query(db, id).ToListAsync()).Single();
+
+				Assert.That(parent.ParentID, Is.EqualTo(id));
+				Assert.That(
+					parent.Children.Select(c => c.ChildID).OrderBy(x => x),
+					Is.EqualTo(db.Child.Where(c => c.ParentID == id).Select(c => c.ChildID).OrderBy(x => x).ToList()));
+			}
+		}
+
 		[Test]
 		public void ElementTest1([DataSources] string context)
 		{
@@ -525,6 +569,27 @@ namespace Tests.Linq
 					Assert.That(query(db, -1), Is.Null);
 				}
 			}
+		}
+
+		// ForEachUntilAsync had no coverage anywhere in the suite, which is how ExpressionQuery.GetForEachUntilAsync came
+		// to be the one enumeration path never reworked alongside its siblings. It still passes the bare Preambles field,
+		// which nothing on this path assigns — and since the compiled-query argument array was folded out of
+		// GetResultEnumerable's signature and into that carrier, a compiled query reaching this path finds no execution
+		// context at all.
+		[Test]
+		public async Task CompiledQuery_ForEachUntilAsync([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) =>
+				db.Parent.Where(p => p.ParentID == id));
+
+			using var db = GetDataContext(context);
+
+			var seen = new List<int>();
+
+			// Returning false keeps the enumeration going, so this walks every matching row.
+			await query(db, 1).ForEachUntilAsync(p => { seen.Add(p.ParentID); return false; });
+
+			seen.ShouldBe([1]);
 		}
 
 		[Test]
