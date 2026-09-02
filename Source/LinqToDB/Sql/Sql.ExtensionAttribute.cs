@@ -81,11 +81,12 @@ namespace LinqToDB
 			/// <param name="inlineParameters">When <see langword="true"/>, argument value is rendered as a literal instead of a parameter. <see langword="null"/> keeps current query setting.</param>
 			/// <returns>Argument SQL or <see langword="null"/> when argument cannot be translated.</returns>
 			/// <remarks>
-			/// Translated argument travels to the database as a parameter, or as a literal when
-			/// <paramref name="inlineParameters"/> is <see langword="true"/>; in both cases the value is registered for
-			/// comparison by the parameters context, so the builder does not have to make it a part of the query cache
-			/// key itself. Argument, read with <see cref="GetValue{T}(int)"/> or taken from <see cref="Arguments"/>
-			/// instead, is baked into generated SQL by the builder, so it becomes a part of the query cache key.
+			/// Translated argument travels to the database as a parameter, whose value is re-read from the query
+			/// expression on every execution, or as a literal when <paramref name="inlineParameters"/> is
+			/// <see langword="true"/>, in which case the parameters context registers the value for comparison. Either
+			/// way the builder does not have to make it a part of the query cache key itself. Argument, read with
+			/// <see cref="GetValue{T}(int)"/> or taken from <see cref="Arguments"/> instead, is baked into generated
+			/// SQL by the builder, so it becomes a part of the query cache key.
 			/// </remarks>
 			ISqlExpression? GetExpression(int    index,   bool unwrap = false, bool? inlineParameters = null);
 
@@ -97,11 +98,12 @@ namespace LinqToDB
 			/// <param name="inlineParameters">When <see langword="true"/>, argument value is rendered as a literal instead of a parameter. <see langword="null"/> keeps current query setting.</param>
 			/// <returns>Argument SQL or <see langword="null"/> when argument cannot be translated.</returns>
 			/// <remarks>
-			/// Translated argument travels to the database as a parameter, or as a literal when
-			/// <paramref name="inlineParameters"/> is <see langword="true"/>; in both cases the value is registered for
-			/// comparison by the parameters context, so the builder does not have to make it a part of the query cache
-			/// key itself. Argument, read with <see cref="GetValue{T}(string)"/> or taken from <see cref="Arguments"/>
-			/// instead, is baked into generated SQL by the builder, so it becomes a part of the query cache key.
+			/// Translated argument travels to the database as a parameter, whose value is re-read from the query
+			/// expression on every execution, or as a literal when <paramref name="inlineParameters"/> is
+			/// <see langword="true"/>, in which case the parameters context registers the value for comparison. Either
+			/// way the builder does not have to make it a part of the query cache key itself. Argument, read with
+			/// <see cref="GetValue{T}(string)"/> or taken from <see cref="Arguments"/> instead, is baked into generated
+			/// SQL by the builder, so it becomes a part of the query cache key.
 			/// </remarks>
 			ISqlExpression? GetExpression(string argName, bool unwrap = false, bool? inlineParameters = null);
 			ISqlExpression? ConvertToSqlExpression();
