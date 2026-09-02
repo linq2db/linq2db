@@ -31,11 +31,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/logical-database-limits.html
 		/// The previous 65535 came from Oracle 8 documentation, which no longer applies to any supported version.
 		/// <para>
-		/// 384KB was chosen from measurement (2026-08, issue #5825): on Oracle 11 - the oldest supported version -
-		/// and on Oracle 23, both <c>INSERT ALL</c> and <c>INSERT ... SELECT FROM DUAL UNION ALL</c> statements of
-		/// inlined literals parsed and executed correctly up to 4MB (8MB of bytes for a multi-byte payload under
-		/// AL32UTF8). This value therefore keeps better than 10x headroom over what was verified, while staying in
-		/// line with the other providers here and bounding the cost of a hard parse: the default Oracle path inlines
+		/// 393,216 characters - 384 * 1024, counted in UTF-16 characters of the generated SQL rather than in bytes,
+		/// the same unit as <see cref="BulkCopyOptions.MaxSqlLengthForBatch"/> - was chosen from measurement
+		/// (2026-08, issue #5825): on Oracle 11 - the oldest supported version - and on Oracle 23, both
+		/// <c>INSERT ALL</c> and <c>INSERT ... SELECT FROM DUAL UNION ALL</c> statements of inlined literals parsed
+		/// and executed correctly up to 4M characters (8MB of bytes for a multi-byte payload under AL32UTF8). This
+		/// value therefore keeps better than 10x headroom over what was verified, while staying in line with the
+		/// other providers here and bounding the cost of a hard parse: the default Oracle path inlines
 		/// literals, so every batch is a distinct statement that is parsed from scratch.
 		/// </para>
 		/// Users whose database and driver accept longer statements can raise it with
