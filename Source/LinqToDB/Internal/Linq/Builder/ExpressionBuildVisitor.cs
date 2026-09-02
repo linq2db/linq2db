@@ -2043,16 +2043,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				// The arms must NOT be re-visited: they were just built, re-walking them is what compounds at every
 				// nesting level, and it bought nothing — on the #5719 TPH repro re-visiting the whole conditional
 				// cost 2.2x across 1960 re-visits that all returned an unchanged tree.
-				Expression revisitedTest;
-
-				using (UsingColumnDescriptor(null))
-				using (UsingAlias(null))
+				if (!IsSame(newNode, node))
 				{
-					revisitedTest = Visit(newNode.Test);
-				}
+					Expression revisitedTest;
 
-				if (!IsSame(revisitedTest, newNode.Test))
-					newNode = newNode.Update(revisitedTest, newNode.IfTrue, newNode.IfFalse);
+					using (UsingColumnDescriptor(null))
+					using (UsingAlias(null))
+					{
+						revisitedTest = Visit(newNode.Test);
+					}
+
+					if (!IsSame(revisitedTest, newNode.Test))
+						newNode = newNode.Update(revisitedTest, newNode.IfTrue, newNode.IfFalse);
+				}
 
 				return newNode;
 			}
