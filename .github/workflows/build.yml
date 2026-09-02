@@ -1,0 +1,205 @@
+# Database-free CI, ported from the Azure Pipelines `build` definition
+# (Build/Azure/pipelines/build.yml -> templates/build-job.yml, plus templates/test-cli.yml).
+#
+# Nothing here needs a database, a container or a secret, so it runs on every PR automatically. The
+# provider test matrix is a separate, dispatched workflow.
+#
+# Two things are deliberate and easy to "fix" wrongly:
+#
+#   * `-c Azure` for anything under Tests/. Tests/Directory.Build.props defines the AZURE symbol from
+#     that configuration name, TestConfiguration.cs then appends ".Azure" to the config key, and that
+#     is what selects the CI connection strings and BaselinesPath. Building `-c Release` instead is
+#     silently wrong rather than broken.
+#   * Every job that touches net462 runs on Windows. That is the Release build of linq2db.slnx and the
+#     Examples solution (which has net462 projects of its own); the repo carries no
+#     Microsoft.NETFramework.ReferenceAssemblies reference, so a Linux build of those fails.
+#
+# Actions are pinned by SHA and limited to GitHub-owned ones, matching the repository's
+# `allowed_actions: selected` + `github_owned_allowed` policy.
+name: build
+
+on:
+  pull_request:
+  push:
+    branches: [master, release]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# SDK selection is global.json's job, not this file's. It asks for rollForward: latestFeature, so a
+# runner image carrying 10.0.2xx, 10.0.3xx and 10.0.4xx side by side resolves to the newest - which is
+# what CodeGenerators needs, being built against Roslyn 5.6 and failing to load with CS9057 under the
+# 5.3 compiler a 10.0.2xx ships. setup-dotnet installs alongside the image's preinstalled SDKs rather
+# than isolating them the way Azure's UseDotNet@2 does, so that resolution is load-bearing here in a
+# way it never was on Azure.
+env:
+  # Mirrors Build/Azure/pipelines/templates/build-vars.yml. Keep them in step.
+  SOLUTION: linq2db.slnx
+  RELEASE_CONFIGURATION: Release
+  TEST_CONFIGURATION: Azure
+  # Per-test retry for the MTP runner, as build-vars.yml:24.
+  TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
+
+jobs:
+  # Release build + pack + the two pre-publish package gates. Windows because the solution targets
+  # net462. Nothing is published from here - publishing stays on Azure Pipelines - so the artifacts
+  # exist for inspection and for the LINQPad .lpx.
+  build:
+    name: Build and pack
+    runs-on: windows-2025
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            8.x
+            9.x
+            10.x
+
+      # Same shape as build-job.yml:49-55: a dev suffix everywhere except the release branch.
+      - name: Resolve version suffix
+        shell: pwsh
+        run: |
+          if ('${{ github.ref }}' -eq 'refs/heads/release') {
+            'VERSION_ARGS=-p:ApplyVersionSuffix=false' | Out-File -FilePath $env:GITHUB_ENV -Append
+          } else {
+            'VERSION_ARGS=-p:VersionSuffix=-dev.${{ github.run_number }}' | Out-File -FilePath $env:GITHUB_ENV -Append
+          }
+
+      # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
+      # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
+      - name: Build solution
+        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+
+      - name: Pack solution
+        run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+
+      # Both scripts already carry -NoAzdoLogs and signal through their exit code, so they need no
+      # porting - only the switch. nuget-job.yml runs these before publishing; on a PR they are the
+      # only thing standing between a size or delivery-metadata regression and the release branch.
+      - name: Verify nupkg sizes
+        shell: pwsh
+        run: ./Build/Azure/scripts/verify-nuget-sizes.ps1 -PackagesDir .build/package/release -WarnMB 180 -FailMB 200 -NoAzdoLogs
+
+      - name: Verify analyzer delivery metadata
+        shell: pwsh
+        run: ./Build/Azure/scripts/verify-analyzer-delivery.ps1 -PackagesDir .build/package/release -NoAzdoLogs
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nugets
+          path: .build/package/release
+          if-no-files-found: error
+
+      # The .lpx is produced during the net472 build of LinqToDB.LINQPad (GenerateLpxArtifacts,
+      # default true). `error` rather than `warn`: a silently missing .lpx is how the LINQPad 5
+      # artifact goes stale without anyone noticing.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linq2db_linqpad_lpx
+          path: .build/lpx
+          if-no-files-found: error
+
+  # Windows because Examples has net462 projects (Examples/**/*.csproj: net462, net9.0, net10.0).
+  examples:
+    name: Examples build
+    runs-on: windows-2025
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            9.x
+            10.x
+
+      - run: dotnet build Examples/Examples.slnx --configuration Debug
+
+  # Roslyn analyzer/code-fix unit tests. DB-free and net8.0-only, so Linux is fine.
+  analyzer-tests:
+    name: Analyzer tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            8.x
+            10.x
+
+      # --project, not a positional path: global.json selects the Microsoft.Testing.Platform runner,
+      # whose CLI rejects a bare project argument with "Specifying a project for 'dotnet test' should
+      # be via '--project'". The AzDO DotNetCoreCLI@2 task hides this behind its `projects:` input.
+      - run: dotnet test --project Tests/Tests.Analyzers/Tests.Analyzers.csproj --configuration ${{ env.TEST_CONFIGURATION }}
+
+  # Regression guard for #5488: provider detectors must not rely on Assembly.Location / File.Exists
+  # heuristics that misbehave inside a single-file bundle. Publishes win-x64 self-contained, so Windows.
+  singlefile-smoke:
+    name: PublishSingleFile smoke test
+    runs-on: windows-2025
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.x
+
+      - run: dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net10.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
+
+      - run: .build/publish/singlefile/linq2db.Tests.SingleFile.exe
+
+  # Port of templates/test-cli.yml. No database, so it belongs here rather than in the provider matrix.
+  cli-tests:
+    name: CLI tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            exe: linq2db.CLI.Tests
+          - os: windows-2025
+            exe: linq2db.CLI.Tests.exe
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            8.x
+            9.x
+            10.x
+
+      - run: dotnet build Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj --configuration ${{ env.TEST_CONFIGURATION }}
+
+      - name: Run CLI tests
+        shell: pwsh
+        run: |
+          foreach ($tfm in @('net8.0', 'net9.0', 'net10.0')) {
+            $exe = Join-Path ".build/bin/Tests.LinqToDB.CLI/${{ env.TEST_CONFIGURATION }}/$tfm" '${{ matrix.exe }}'
+            & $exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename "cli-$tfm.trx" --results-directory CliTestResults --hangdump --hangdump-timeout 5m $env:TEST_RETRY_ARGS.Split(' ')
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: cli-test-results-${{ matrix.os }}
+          path: CliTestResults/*.trx
+          if-no-files-found: error

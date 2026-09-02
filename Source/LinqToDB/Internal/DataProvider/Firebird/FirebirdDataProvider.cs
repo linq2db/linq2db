@@ -40,6 +40,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
 			SqlProviderFlags.OutputMergeUseSpecialTables       = true;
+			// before v5 RETURNING is a singleton: it yields one record whatever the UPDATE matched, so a zero-row
+			// update is indistinguishable from a one-row update and the output cannot report the affected rows
+			SqlProviderFlags.IsUpdateOutputRowsSupported       = Version >= FirebirdVersion.v5;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= FirebirdVersion.v3;
 			SqlProviderFlags.IsApplyJoinSupported              = Version >= FirebirdVersion.v4;

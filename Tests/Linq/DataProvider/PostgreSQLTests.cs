@@ -1199,6 +1199,11 @@ namespace Tests.DataProvider
 			public string Value = null!;
 		}
 
+		// Does committed (non-transactional) writes to SequenceTest1 and the sequence sequencetestseq, and
+		// asserts exact sequence values 1..40 - so nothing else may touch them while it runs. Both are
+		// scoped to one database, and every test against a database runs on that database's lane, so no
+		// concurrent test can reach them: this needs no NonParallelizable. Different PostgreSQL versions are
+		// different databases.
 		[Test]
 		public void BulkCopyRetrieveSequences(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,

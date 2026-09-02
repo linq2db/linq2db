@@ -279,7 +279,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							keepClause : keepClause,
 							nullTreatment : element.NullTreatment,
 							fromPosition : element.FromPosition,
-							isWindowFunction: element.IsWindowFunction), element);
+							isWindowFunction: element.IsWindowFunction,
+							argumentDomain: element.ArgumentDomain), element);
 					}
 
 					break;
@@ -3450,6 +3451,138 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, expression) || !ReferenceEquals(element.FromType, fromType))
 					{
 						return NotifyReplaced(new SqlCastExpression(expression, element.ToType, fromType, element.IsMandatory), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlIntervalExpression(SqlIntervalExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Value);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Value), element.Type, element.IntervalType);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var value = (ISqlExpression)Visit(element.Value);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Value, value))
+					{
+						return NotifyReplaced(new SqlIntervalExpression(value, element.Type, element.IntervalType), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Start);
+					Visit(element.End);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Start), (ISqlExpression)Visit(element.End), element.Type, element.IntervalType);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var start = (ISqlExpression)Visit(element.Start);
+					var end   = (ISqlExpression)Visit(element.End);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Start, start) || !ReferenceEquals(element.End, end))
+					{
+						return NotifyReplaced(new SqlIntervalDifferenceExpression(start, end, element.Type, element.IntervalType), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Interval);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Interval), element.Unit, element.Kind, element.Type, element.Within);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var interval = (ISqlExpression)Visit(element.Interval);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Interval, interval))
+					{
+						return NotifyReplaced(new SqlIntervalPartExpression(interval, element.Unit, element.Kind, element.Type, element.Within), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected internal virtual IQueryElement VisitSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Temporal);
+					Visit(element.Interval);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Temporal), (ISqlExpression)Visit(element.Interval), element.Type);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var temporal = (ISqlExpression)Visit(element.Temporal);
+					var interval = (ISqlExpression)Visit(element.Interval);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Temporal, temporal) || !ReferenceEquals(element.Interval, interval))
+					{
+						return NotifyReplaced(new SqlTemporalArithmeticExpression(temporal, interval, element.IsSubtract, element.Type), element);
 					}
 
 					break;

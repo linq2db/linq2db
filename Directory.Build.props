@@ -1,12 +1,12 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<!-- Update to next after release -->
-		<Version>6.4.0</Version>
-		<EF3Version>3.33.0</EF3Version>
-		<EF8Version>8.7.0</EF8Version>
-		<EF9Version>9.6.0</EF9Version>
-		<EF10Version>10.5.0</EF10Version>
-		
+		<Version>6.5.0</Version>
+		<EF3Version>3.34.0</EF3Version>
+		<EF8Version>8.8.0</EF8Version>
+		<EF9Version>9.7.0</EF9Version>
+		<EF10Version>10.6.0</EF10Version>
+
 		<!-- Baselines update on next major release -->
 		<BaselineVersion>6.0.0</BaselineVersion>
 		<EF3BaselineVersion>3.28.0</EF3BaselineVersion>
@@ -18,7 +18,7 @@
 		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<VersionSuffix Condition=" '$(VersionSuffix)' == '' ">-local.1</VersionSuffix>
 		<ApplyVersionSuffix Condition=" '$(ApplyVersionSuffix)' == '' ">true</ApplyVersionSuffix>
-		
+
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
@@ -36,7 +36,11 @@
 		<!--MA0038, MA0041: MakeMethodStatic / MakePropertyStatic (deprecated, redirected to CA1822) — analyzer still runs even at severity=none-->
 		<!--ASP0017, ASP0018: ASP.NET routing — irrelevant for ORM-->
 		<!--NUnit1002: TestCaseSource string-arg restriction — too strict for our test patterns-->
-		<NoWarn>1573;1591;MA0182;CA1304;CA1307;CA1310;CA1812;CA2301;CA2302;CA3004;CA3075;CA5360;CA5380;CA5381;CA5387;CA5388;CA5399;CA5400;CA5401;CA5402;ASP0017;ASP0018;NUnit1002;MA0003;MA0026;MA0038;MA0041</NoWarn>
+		<!--MA0209, MA0210: UseInKeywordForInParameter — 275s/build (8th costliest analyzer) for 2 findings, both trivial-->
+		<!--MA0202: ConditionalCompilationBranchesAreIdentical — 100s/build for 1 finding-->
+		<!--NoWarn, not severity=none: the analyzer still executes at severity=none (measured on 6.4.0 - the
+		    disabled MA0204's analyzer still cost 3.6s), so only NoWarn actually reclaims the build time-->
+		<NoWarn>1573;1591;MA0182;CA1304;CA1307;CA1310;CA1812;CA2301;CA2302;CA3004;CA3075;CA5360;CA5380;CA5381;CA5387;CA5388;CA5399;CA5400;CA5401;CA5402;ASP0017;ASP0018;NUnit1002;MA0003;MA0026;MA0038;MA0041;MA0202;MA0209;MA0210</NoWarn>
 		<Features>strict</Features>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
@@ -136,6 +140,8 @@
 		<Polyfill>$(Polyfill)|T:System.HashCode</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Index</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Range</Polyfill>
+		<!--prefix covers NullabilityInfo/NullabilityInfoContext/NullabilityState; replaces the Nullability.Source package-->
+		<Polyfill>$(Polyfill)|T:System.Reflection.Nullability</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.CallerArgumentExpressionAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IsExternalInit</Polyfill>

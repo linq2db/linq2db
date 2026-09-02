@@ -11,9 +11,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 {
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-		}
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault;
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{

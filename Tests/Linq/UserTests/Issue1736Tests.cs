@@ -20,13 +20,9 @@ namespace Tests.UserTests.Issue1736
 			public Guid Id { get; set; }
 		}
 
-		public class BasicDTOwithExtensionData : BasicDTO, IExtensionData
-		{
-		}
+		public class BasicDTOwithExtensionData : BasicDTO, IExtensionData;
 
-		public class BasicDTOwithoutID : IMccEntityState
-		{
-		}
+		public class BasicDTOwithoutID : IMccEntityState;
 
 		public interface ICreatedTimeStamp
 		{
@@ -53,9 +49,7 @@ namespace Tests.UserTests.Issue1736
 			public AisleStatus Status { get; set; }
 		}
 
-		public class ChannelDTO : BasicDTOwithExtensionData, IModifiedTimeStamp
-		{
-		}
+		public class ChannelDTO : BasicDTOwithExtensionData, IModifiedTimeStamp;
 
 		public class InventoryResourceDTO : WmsBasicDTO<InventoryResourceDTO>, IHasArchiveTable
 		{
@@ -105,13 +99,9 @@ namespace Tests.UserTests.Issue1736
 			public Guid ChannelID { get; set; }
 		}
 
-		public abstract class WmsBasicDTO<T> : WmsBasicWithoutCustomFieldsDTO<T>
-		{
-		}
+		public abstract class WmsBasicDTO<T> : WmsBasicWithoutCustomFieldsDTO<T>;
 
-		public abstract class WmsBasicWithoutCustomFieldsDTO<T> : BasicDTOwithExtensionData, IModifiedTimeStamp, ICreatedTimeStamp
-		{
-		}
+		public abstract class WmsBasicWithoutCustomFieldsDTO<T> : BasicDTOwithExtensionData, IModifiedTimeStamp, ICreatedTimeStamp;
 
 		public class WmsLoadCarrierDTO : WmsBasicDTO<WmsLoadCarrierDTO>, IHasArchiveTable
 		{

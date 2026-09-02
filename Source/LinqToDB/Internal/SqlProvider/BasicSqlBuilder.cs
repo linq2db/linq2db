@@ -2674,10 +2674,10 @@ namespace LinqToDB.Internal.SqlProvider
 			if (selectQuery.Select.TakeHints == null)
 				return;
 
-			if ((selectQuery.Select.TakeHints.Value & TakeHints.Percent) != 0)
+			if (selectQuery.Select.TakeHints.Value.HasFlag(TakeHints.Percent))
 				StringBuilder.Append(' ').Append(TakePercent);
 
-			if ((selectQuery.Select.TakeHints.Value & TakeHints.WithTies) != 0)
+			if (selectQuery.Select.TakeHints.Value.HasFlag(TakeHints.WithTies))
 				StringBuilder.Append(' ').Append(TakeTies);
 		}
 
@@ -3583,11 +3583,55 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlExtendedFunction((SqlExtendedFunction)expr);
 					break;
 
+				case QueryElementType.SqlInterval:
+					BuildSqlIntervalExpression((SqlIntervalExpression)expr);
+					break;
+
+				case QueryElementType.SqlIntervalDifference:
+					BuildSqlIntervalDifferenceExpression((SqlIntervalDifferenceExpression)expr);
+					break;
+
+				case QueryElementType.SqlIntervalPart:
+					BuildSqlIntervalPartExpression((SqlIntervalPartExpression)expr);
+					break;
+
+				case QueryElementType.SqlTemporalArithmetic:
+					BuildSqlTemporalArithmeticExpression((SqlTemporalArithmeticExpression)expr);
+					break;
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
 
 			return StringBuilder;
+		}
+
+		/// <summary>
+		/// Renders an interval that survived to the builder. There is no portable form, so the default reports the
+		/// operation as unsupported; a provider with a native <c>INTERVAL</c> type overrides these to render it,
+		/// and a provider without one lowers the node away in its <c>SqlExpressionConvertVisitor</c> first.
+		/// </summary>
+		protected virtual void BuildSqlIntervalExpression(SqlIntervalExpression element)
+		{
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Operation);
+		}
+
+		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
+		protected virtual void BuildSqlIntervalDifferenceExpression(SqlIntervalDifferenceExpression element)
+		{
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Difference);
+		}
+
+		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
+		protected virtual void BuildSqlIntervalPartExpression(SqlIntervalPartExpression element)
+		{
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Member);
+		}
+
+		/// <inheritdoc cref="BuildSqlIntervalExpression"/>
+		protected virtual void BuildSqlTemporalArithmeticExpression(SqlTemporalArithmeticExpression element)
+		{
+			throw new LinqToDBException(ErrorHelper.Error_Interval_Shift);
 		}
 
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)

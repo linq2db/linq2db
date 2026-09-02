@@ -1877,5 +1877,39 @@ namespace Tests.Linq
 			[Column(Precision = 6), PrimaryKey]
 			public DateTime CreatedOnUtc { get; set; }
 		}
+
+		sealed class ScaledBoundRow
+		{
+			[PrimaryKey                      ] public int     Id    { get; set; }
+			[Column(Precision = 6, Scale = 2)] public decimal Value { get; set; }
+		}
+
+		/// <summary>
+		/// A bound compared against a widened column keeps enough scale to hold itself.
+		/// </summary>
+		/// <remarks>
+		/// The descriptor walk lends a column's declared type to a value written down beside it, and stops where a
+		/// cast changed that type - but it compared only the data type, which a cast between two decimals does not
+		/// change. So a bound beside <c>CAST(x AS Decimal(22,9))</c> over a <c>Decimal(6,2)</c> column was written
+		/// down as <c>Decimal(6,2)</c>: a declared scale too small for its own digits.
+		/// <para>
+		/// Asked in both directions because the two ways of losing the third decimal place fail on opposite rows.
+		/// Rounding the bound up to <c>0.01</c> drops the row above it; truncating it down to <c>0.00</c> drops the
+		/// row below. One assertion cannot see both.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ABoundBesideAWideningCastKeepsItsOwnScale([IncludeDataSources(false, TestProvName.AllYdb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new ScaledBoundRow { Id = 1, Value = 0.00m },
+				new ScaledBoundRow { Id = 2, Value = 0.01m },
+			});
+
+			t.Count(r => Convert.ToDecimal(r.Value) > 0.005m).ShouldBe(1);
+			t.Count(r => Convert.ToDecimal(r.Value) < 0.005m).ShouldBe(1);
+		}
 	}
 }
