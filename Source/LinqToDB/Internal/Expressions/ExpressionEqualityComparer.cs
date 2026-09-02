@@ -536,7 +536,7 @@ namespace LinqToDB.Internal.Expressions
 				   && Compare(a.IfTrue, b.IfTrue)
 				   && Compare(a.IfFalse, b.IfFalse);
 
-			static bool CompareConstant(ConstantExpression a, ConstantExpression b)
+			bool CompareConstant(ConstantExpression a, ConstantExpression b)
 			{
 				if (a.Value == b.Value)
 				{
@@ -555,16 +555,17 @@ namespace LinqToDB.Internal.Expressions
 					return false; // EnumerableQueries are opaque
 				}
 
+				// Compare a captured query by its expression: it is an IEnumerable, so the branch below would
+				// enumerate it and execute the query, while its identity says nothing about the SQL it produces.
+				if (a.Value.GetType() == b.Value.GetType()
+					&& typeof(ExpressionQuery<>).IsSameOrParentOf(a.Value.GetType()))
+				{
+					return Compare(((IQueryable)a.Value).Expression, ((IQueryable)b.Value).Expression);
+				}
+
 				if (a.Value is IEnumerable ae && b.Value is IEnumerable be)
 				{
 					return SequencesEqual(ae, be);
-				}
-
-				if (typeof(ExpressionQuery<>).IsSameOrParentOf(a.GetType())
-					&& typeof(ExpressionQuery<>).IsSameOrParentOf(b.GetType())
-					&& a.Value.GetType() == b.Value.GetType())
-				{
-					return true;
 				}
 
 				return Equals(a.Value, b.Value);
