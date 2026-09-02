@@ -248,5 +248,9 @@ LinqToDB.Internal.SqlQuery.SqlArgumentDomains
 LinqToDB.Internal.SqlQuery.SqlArgumentDomain.Element = 2 -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain
 LinqToDB.Internal.SqlQuery.SqlArgumentDomain.None = 0 -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain
 LinqToDB.Internal.SqlQuery.SqlArgumentDomain.SameKind = 1 -> LinqToDB.Internal.SqlQuery.SqlArgumentDomain
+LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch.get -> int?
+LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch.init -> void
+static LinqToDB.DataOptionsExtensions.UseBulkCopyMaxSqlLengthForBatch(this LinqToDB.DataOptions! options, int? maxSqlLengthForBatch) -> LinqToDB.DataOptions!
+static LinqToDB.DataOptionsExtensions.WithMaxSqlLengthForBatch(this LinqToDB.Data.BulkCopyOptions! options, int? maxSqlLengthForBatch) -> LinqToDB.Data.BulkCopyOptions!
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition.get -> bool
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition.set -> void
