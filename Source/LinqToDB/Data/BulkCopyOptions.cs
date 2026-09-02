@@ -138,7 +138,9 @@ namespace LinqToDB.Data
 	/// Honored by the MultipleRows copy path — <see cref="BulkCopyType.MultipleRows"/>, and also
 	/// <see cref="BulkCopyType.Default"/> / <see cref="BulkCopyType.ProviderSpecific"/> on providers that have
 	/// no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's
-	/// <c>AlternativeBulkCopy.InsertInto</c> mode, which array-binds a single fixed-length statement.
+	/// <c>AlternativeBulkCopy.InsertInto</c> mode, which array-binds a single fixed-length statement, nor on
+	/// Access, Informix and SAP HANA, whose <see cref="BulkCopyType.MultipleRows"/> mode falls back to
+	/// row-by-row inserts and so never reaches the batch splitter.
 	/// A batch always contains at least one row, so a value below the length of a single rendered row does not
 	/// truncate: it degrades to one statement per row.
 	/// Provider defaults are conservative; raise this value if your database and driver accept longer statements.
