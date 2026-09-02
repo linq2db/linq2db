@@ -61,12 +61,18 @@ namespace LinqToDB
 			/// <remarks>
 			/// Read value is baked into generated SQL by the builder, so it becomes a part of the query cache key.
 			/// See <see cref="GetExpression(int, bool, bool?)"/> for the translated-argument counterpart.
+			/// Only the outermost call of a chained extension has its arguments registered, so a builder reading an
+			/// argument of an inner element must mark it with <see cref="SqlQueryDependentAttribute"/> to keep the
+			/// value in the key.
 			/// </remarks>
 			T      GetValue<T>   (int    index);
 
 			/// <remarks>
 			/// Read value is baked into generated SQL by the builder, so it becomes a part of the query cache key.
 			/// See <see cref="GetExpression(string, bool, bool?)"/> for the translated-argument counterpart.
+			/// Only the outermost call of a chained extension has its arguments registered, so a builder reading an
+			/// argument of an inner element must mark it with <see cref="SqlQueryDependentAttribute"/> to keep the
+			/// value in the key.
 			/// </remarks>
 			T      GetValue<T>   (string argName);
 
