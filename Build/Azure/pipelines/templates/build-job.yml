@@ -157,6 +157,11 @@ jobs:
         xcopy /i Build\$(test_configuration)\scripts testing\scripts
         if %errorlevel% neq 0 exit
 
+        REM CI-agnostic scripts shared with the GitHub Actions legs land in the same scripts folder, so a
+        REM leg invokes them by the same path whichever CI it is on.
+        xcopy /i Build\CI testing\scripts
+        if %errorlevel% neq 0 exit
+
         copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
         if %errorlevel% neq 0 exit
     condition: and(succeeded(), ${{ parameters.with_tests }})
