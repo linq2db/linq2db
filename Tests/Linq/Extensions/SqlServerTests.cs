@@ -533,14 +533,15 @@ namespace Tests.Extensions
 			)
 			.AsSqlServer()
 			.WithUpdLockInScope()
-			.WithRowLockInScope();
+			.WithRowLockInScope()
+			.WithHoldLockInScope();
 
 			_ = q.FirstOrDefault();
 
 			var sql = LastQuery!;
 
-			sql.ShouldContain("[p] WITH (UpdLock, RowLock)",   Case.Sensitive);
-			sql.ShouldContain("[c_1] WITH (UpdLock, RowLock)", Case.Sensitive);
+			sql.ShouldContain("[p] WITH (UpdLock, RowLock, HoldLock)",   Case.Sensitive);
+			sql.ShouldContain("[c_1] WITH (UpdLock, RowLock, HoldLock)", Case.Sensitive);
 		}
 
 		[Test]
