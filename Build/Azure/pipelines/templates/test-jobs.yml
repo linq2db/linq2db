@@ -84,7 +84,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(containsValue(test_config.filters, parameters.db_filter), eq(test_config.enable_os_windows, 'true')) }}:
+        ${{ if and(contains(test_config.filters, parameters.db_filter), eq(test_config.enable_os_windows, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -151,7 +151,7 @@ jobs:
       maxParallel: ${{ parameters.linux_max_parallel }}
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(containsValue(test_config.filters, parameters.db_filter), eq(test_config.enable_os_ubuntu, 'true')) }}:
+        ${{ if and(contains(test_config.filters, parameters.db_filter), eq(test_config.enable_os_ubuntu, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
