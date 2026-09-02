@@ -668,7 +668,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					foreach (var assignment in generic.Assignments)
 					{
-						var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef,assignment.MemberInfo), assignment.MemberInfo);
+						var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef, assignment.MemberInfo), assignment.MemberInfo);
 
 						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 					}
@@ -677,7 +677,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						if (parameter.MemberInfo != null)
 						{
-							var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef,parameter.MemberInfo), parameter.MemberInfo);
+							var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef, parameter.MemberInfo), parameter.MemberInfo);
 
 							ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
 						}
