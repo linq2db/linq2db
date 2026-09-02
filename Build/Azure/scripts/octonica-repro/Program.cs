@@ -1,20 +1,20 @@
-// Repro for Octonica.ClickHouseClient: abandoning a ClickHouseDataReader before the result set is
-// drained silently breaks the ClickHouseConnection. No exception reaches the caller at that point;
-// the *next* command on the same connection fails with
+// Repro harness for Octonica.ClickHouseClient against ClickHouse 26.8.
+//
+// Symptom seen in CI: a command fails with
 //
 //     Octonica.ClickHouseClient.Exceptions.ClickHouseException : The connection is closed.
 //     ErrorCode: 3
 //
-// which is ClickHouseErrorCodes.ConnectionClosed, thrown from the ConnectionSession constructor
-// because ClickHouseConnection's TcpClient is already null.
+// That is ClickHouseErrorCodes.ConnectionClosed, thrown from the ConnectionSession constructor
+// (ClickHouseConnection.cs:1041-1044) because TcpClient is already null. It is a *secondary*
+// symptom: a previous operation on the connection called SetFailed, which nulls TcpClient via
+// ReleaseOnFailure and disposes the socket. Server-side, ClickHouse logs exactly one
+// NETWORK_ERROR (210) "Broken pipe, while writing to socket", i.e. the client hung up while the
+// server was still writing the result.
 //
-// The swallow happens in ClickHouseDataReader.Close(disposing: true, ...): it sends Cancel and then
-// drains server messages to EndOfStream; anything the drain switch does not handle throws, and the
-// catch discards the exception when disposing:
-//
+// ClickHouseDataReader.Close(disposing: true) discards whatever went wrong:
 //     catch (Exception ex) { State = Broken; await _session.SetFailed(ex, false, async); if (disposing) return; }
-//
-// The FirstChanceException hook below prints that discarded exception, which is otherwise invisible.
+// The FirstChanceException hook below prints that discarded exception.
 //
 // Usage: OctonicaRepro "Host=localhost;Port=9000;Database=default;User=default;Password="
 
@@ -25,7 +25,11 @@ internal static class Program
 {
 	private const string StringTable  = "octonica_repro_s";
 	private const string NumericTable = "octonica_repro_n";
+	private const string BooleanTable = "BooleanTable";
 	private const int    RowCount     = 200_000;
+
+	// 2 * 3 * 3 * 4 * 3 * 4 * 3 * 4 - the cross product linq2db's BooleanTests.Test builds.
+	private const int BooleanRowCount = 10368;
 
 	private static string _connectionString = "Host=localhost;Port=9000;Database=default;User=default;Password=";
 	private static volatile bool _traceFirstChance;
@@ -45,21 +49,25 @@ internal static class Program
 
 		Console.WriteLine();
 		Setup();
+		Console.WriteLine();
 
 		var failures = 0;
 
-		failures += Run("A  control: reader fully drained, String column",  () => DrainFully(StringTable));
-		failures += Run("B  reader abandoned after 1 row, String column",   () => AbandonAfterFirstRow(StringTable));
-		failures += Run("C  reader abandoned after 1 row, Float64 column",  () => AbandonAfterFirstRow(NumericTable));
-		failures += Run("D  reader abandoned before any row, String column",() => AbandonWithoutRead(StringTable));
-		failures += Run("E  reader abandoned after 1 row, async",           () => AbandonAfterFirstRowAsync(StringTable).GetAwaiter().GetResult());
+		failures += Run("A  plain SELECT, reader fully drained (control)",   () => DrainFully(StringTable));
+		failures += Run("B  plain SELECT, abandoned after 1 row",            () => AbandonAfterFirstRow(StringTable));
+		failures += Run("C  plain SELECT, abandoned after 1 row, Float64",   () => AbandonAfterFirstRow(NumericTable));
+		failures += Run("D  plain SELECT, abandoned before any row",         () => AbandonWithoutRead(StringTable));
+		failures += Run("E  plain SELECT, abandoned after 1 row, async",     () => AbandonAfterFirstRowAsync(StringTable).GetAwaiter().GetResult());
+		failures += Run("F  BooleanTable GROUP BY, fully drained",           DrainFailingQuery);
+		failures += Run("G  BooleanTable GROUP BY, abandoned after 1 row",   AbandonFailingQueryAfterFirstRow);
+		failures += Run("H  BooleanTable GROUP BY, abandoned before any row",AbandonFailingQueryWithoutRead);
 
 		Cleanup();
 
 		Console.WriteLine();
 		Console.WriteLine(failures == 0
 			? "NOT REPRODUCED - every case ran a follow-up command successfully."
-			: $"REPRODUCED - {failures} case(s) broke the connection.");
+			: $"REPRODUCED - {failures} case(s) failed.");
 
 		return failures == 0 ? 0 : 1;
 	}
@@ -89,12 +97,48 @@ internal static class Program
 
 		Execute(connection, $"DROP TABLE IF EXISTS {StringTable}");
 		Execute(connection, $"DROP TABLE IF EXISTS {NumericTable}");
+		Execute(connection, $"DROP TABLE IF EXISTS {BooleanTable}");
+
 		Execute(connection, $"CREATE TABLE {StringTable} (Id UInt64, Value String) ENGINE = MergeTree ORDER BY Id");
 		Execute(connection, $"CREATE TABLE {NumericTable} (Id UInt64, Value Float64) ENGINE = MergeTree ORDER BY Id");
 		Execute(connection, $"INSERT INTO {StringTable} SELECT number, toString(number) FROM numbers({RowCount})");
 		Execute(connection, $"INSERT INTO {NumericTable} SELECT number, toFloat64(number) / 7 FROM numbers({RowCount})");
+		Console.WriteLine($"Seeded {StringTable} / {NumericTable} with {RowCount} rows each.");
 
-		Console.WriteLine($"Seeded {StringTable} and {NumericTable} with {RowCount} rows each.");
+		// Exactly the table linq2db's BooleanTests.Test creates: [PrimaryKey] int Id plus bool /
+		// bool? / int / int? / decimal / decimal? / double / double?, mapped to these ClickHouse
+		// types, with ENGINE = MergeTree() ORDER BY Id because Id is a primary key.
+		Execute(connection, $@"CREATE TABLE {BooleanTable}
+(
+	Id       Int32,
+	Boolean  Bool,
+	BooleanN Nullable(Bool),
+	Int32    Int32,
+	Int32N   Nullable(Int32),
+	Decimal  Decimal128(10),
+	DecimalN Nullable(Decimal128(10)),
+	Double   Float64,
+	DoubleN  Nullable(Float64)
+)
+ENGINE = MergeTree()
+ORDER BY Id");
+
+		// The same cross product, laid out by positional strides so every combination appears once.
+		Execute(connection, $@"INSERT INTO {BooleanTable}
+SELECT
+	toInt32(number) + 1                                                                     AS Id,
+	intDiv(number, 5184) % 2 = 0                                                            AS Boolean,
+	multiIf(intDiv(number, 1728) % 3 = 0, true, intDiv(number, 1728) % 3 = 1, false, NULL)  AS BooleanN,
+	toInt32(intDiv(number, 576) % 3) - 1                                                    AS Int32,
+	if(intDiv(number, 144) % 4 = 3, NULL, toInt32(intDiv(number, 144) % 4) - 1)             AS Int32N,
+	toDecimal128(toFloat64(toInt32(intDiv(number, 48) % 3) - 1) / 10, 10)                   AS Decimal,
+	if(intDiv(number, 12) % 4 = 3, NULL, toDecimal128(toFloat64(toInt32(intDiv(number, 12) % 4) - 1) / 10, 10)) AS DecimalN,
+	toFloat64(toInt32(intDiv(number, 4) % 3) - 1) / 10                                      AS Double,
+	if(number % 4 = 3, NULL, toFloat64(toInt32(number % 4) - 1) / 10)                       AS DoubleN
+FROM numbers({BooleanRowCount})");
+
+		using var check = connection.CreateCommand($"SELECT count() FROM {BooleanTable}");
+		Console.WriteLine($"Seeded {BooleanTable} with {check.ExecuteScalar()} rows (expected {BooleanRowCount}).");
 	}
 
 	private static void Cleanup()
@@ -104,6 +148,7 @@ internal static class Program
 			using var connection = Open();
 			Execute(connection, $"DROP TABLE IF EXISTS {StringTable}");
 			Execute(connection, $"DROP TABLE IF EXISTS {NumericTable}");
+			Execute(connection, $"DROP TABLE IF EXISTS {BooleanTable}");
 		}
 		catch (Exception ex)
 		{
@@ -118,7 +163,7 @@ internal static class Program
 		try
 		{
 			body();
-			Console.WriteLine("    ok - follow-up command succeeded");
+			Console.WriteLine("    ok");
 			return 0;
 		}
 		catch (Exception ex)
@@ -131,6 +176,8 @@ internal static class Program
 			_traceFirstChance = false;
 		}
 	}
+
+	// ---- plain SELECT shapes -------------------------------------------------------------
 
 	private static void DrainFully(string table)
 	{
@@ -157,7 +204,7 @@ internal static class Program
 			reader.Read();
 
 			_traceFirstChance = true;
-			reader.Dispose();   // cancel + drain happens here
+			reader.Dispose();
 			_traceFirstChance = false;
 		}
 
@@ -199,7 +246,68 @@ internal static class Program
 		await followUp.ExecuteScalarAsync();
 	}
 
-	// The command that actually surfaces the break.
+	// ---- the query that actually fails in CI ---------------------------------------------
+
+	// 24 columns: the grouping key plus 23 COUNT(CASE WHEN ... THEN 1 ELSE NULL END) aggregates
+	// over Bool / Nullable(Bool) / Int32 / Nullable(Int32) / Decimal128(10) / Nullable(Decimal128)
+	// / Float64 / Nullable(Float64), grouped by Id so it yields one row per source row.
+	private static void DrainFailingQuery()
+	{
+		using var connection = Open();
+
+		var rows = 0;
+
+		_traceFirstChance = true;
+		using (var command = connection.CreateCommand(FailingQuery.Sql))
+		using (var reader = command.ExecuteReader())
+		{
+			while (reader.Read())
+				rows++;
+		}
+		_traceFirstChance = false;
+
+		Console.WriteLine($"    read {rows} rows (expected {BooleanRowCount})");
+
+		FollowUp(connection);
+
+		if (rows != BooleanRowCount)
+			throw new InvalidOperationException($"expected {BooleanRowCount} rows, got {rows}");
+	}
+
+	private static void AbandonFailingQueryAfterFirstRow()
+	{
+		using var connection = Open();
+
+		using (var command = connection.CreateCommand(FailingQuery.Sql))
+		{
+			var reader = command.ExecuteReader();
+			reader.Read();
+
+			_traceFirstChance = true;
+			reader.Dispose();
+			_traceFirstChance = false;
+		}
+
+		FollowUp(connection);
+	}
+
+	private static void AbandonFailingQueryWithoutRead()
+	{
+		using var connection = Open();
+
+		using (var command = connection.CreateCommand(FailingQuery.Sql))
+		{
+			var reader = command.ExecuteReader();
+
+			_traceFirstChance = true;
+			reader.Dispose();
+			_traceFirstChance = false;
+		}
+
+		FollowUp(connection);
+	}
+
+	// The command that surfaces a broken connection.
 	private static void FollowUp(ClickHouseConnection connection)
 	{
 		using var command = connection.CreateCommand("SELECT 1");
