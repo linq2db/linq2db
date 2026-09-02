@@ -17,6 +17,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		protected virtual bool IsCountDistinctSupported       => true;
 		protected virtual bool IsAggregationDistinctSupported => true;
 		protected virtual bool IsFilterSupported              => false;
+		// Whether MIN/MAX accept a boolean operand directly. Off by default, because most providers reject it
+		// (MAX(bit), max(boolean), ...) - see the fold in TranslateMinMaxSumAverage. Providers whose boolean is
+		// an integer accept the aggregate as-is and opt in, so they are not given a redundant CASE.
+		protected virtual bool IsMinMaxOverBooleanSupported    => false;
 
 		public AggregateFunctionsMemberTranslatorBase()
 		{
@@ -354,9 +358,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						// expression, so the generic boolean-argument wrapping has nothing left to fold and the
 						// two mechanisms cannot interfere.
 						//
+						// Providers that accept the aggregate over a boolean opt out via
+						// IsMinMaxOverBooleanSupported, so they keep the bare operand instead of a redundant CASE.
+						//
 						var functionType = resultType;
 
-						if (functionName is "MIN" or "MAX" && resultType.SystemType?.ToUnderlying() == typeof(bool))
+						if (!IsMinMaxOverBooleanSupported && functionName is "MIN" or "MAX" && resultType.SystemType?.ToUnderlying() == typeof(bool))
 						{
 							functionType = factory.GetDbDataType(typeof(int));
 
