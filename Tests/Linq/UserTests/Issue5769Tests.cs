@@ -130,6 +130,19 @@ namespace Tests.UserTests
 		[Sql.Extension("", BuilderType = typeof(PathListLiteralBuilder), ServerSideOnly = true)]
 		static string PathListLiteral(List<string> path) => string.Join(".", path);
 
+		sealed class UnwrapArgBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				// unwrap: true translates the argument with its conversion stripped, so the recorded expression
+				// is not the one registration walks
+				builder.ResultExpression = builder.GetExpression(0, unwrap: true)!;
+			}
+		}
+
+		[Sql.Extension("", BuilderType = typeof(UnwrapArgBuilder), ServerSideOnly = true)]
+		static int UnwrapArg(object value) => (int)value;
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
 		public void BuilderValueIsPartOfCacheKey([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
@@ -160,6 +173,44 @@ namespace Tests.UserTests
 			var cacheMiss = query.GetCacheMissCount();
 
 			query.First().ShouldBe("sub.name");
+
+			if (iteration == 2)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
+		public void TranslatedUnwrappedArgumentStaysOutOfCacheKey([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable([new JsonData { Id = 1 }]);
+
+			// the builder translates the argument, so its value travels as a parameter and must not be compared
+			// by value: a different value has to reuse the query cached by the previous iteration
+			var value = iteration;
+
+			var query     = table.Select(_ => UnwrapArg(value));
+			var cacheMiss = query.GetCacheMissCount();
+
+			query.First().ShouldBe(iteration);
+
+			if (iteration == 2)
+				query.GetCacheMissCount().ShouldBe(cacheMiss);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5769"), QueryCacheTest]
+		public void TranslatedParamsArgumentsStayOutOfCacheKey([IncludeDataSources(ProviderName.SQLiteClassic)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable([new JsonData { Id = 1 }]);
+
+			// params arguments are translated element-wise, while registration walks the whole array, so a
+			// different element value has to reuse the query cached by the previous iteration
+			var value = iteration;
+
+			var query     = table.Select(_ => Sql.Expr<int>("{0}", value));
+			var cacheMiss = query.GetCacheMissCount();
+
+			query.First().ShouldBe(iteration);
 
 			if (iteration == 2)
 				query.GetCacheMissCount().ShouldBe(cacheMiss);
