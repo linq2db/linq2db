@@ -500,15 +500,30 @@ function Test-PayloadVersions {
     Add-Note ("{0}: {1} package versions checked against the {2} payload" -f $Label, $checked, $Tfm)
 }
 
+# An optional manifest field has to be probed, not read: Set-StrictMode turns a missing property on a
+# PSCustomObject into a terminating error, and only the tool artifact carries packageIdPrefixes. Reading
+# it directly means the first package belonging to *no* artifact kills the run - and that is every
+# package the manifest deliberately excludes, so the failure cannot appear against a directory holding
+# only the notices-bearing artifacts. It needs a full solution pack to show up, which is exactly what
+# CI produces and a hand-assembled local check does not.
+function Get-OptionalProperty {
+    param($Object, [string] $Name)
+    if ($null -eq $Object) { return $null }
+    if ($Object.PSObject.Properties.Name -notcontains $Name) { return $null }
+    return $Object.$Name
+}
+
 function Resolve-ArtifactForPackageId {
     param($Manifest, [string] $PackageId)
     if (-not $PackageId) { return $null }
     foreach ($a in $Manifest.artifacts) {
-        if ($a.packageIds -and ($a.packageIds -contains $PackageId)) { return $a }
+        $ids = Get-OptionalProperty -Object $a -Name 'packageIds'
+        if ($ids -and ($ids -contains $PackageId)) { return $a }
     }
     foreach ($a in $Manifest.artifacts) {
-        if (-not $a.packageIdPrefixes) { continue }
-        foreach ($p in $a.packageIdPrefixes) {
+        $prefixes = Get-OptionalProperty -Object $a -Name 'packageIdPrefixes'
+        if (-not $prefixes) { continue }
+        foreach ($p in $prefixes) {
             if ($PackageId.StartsWith($p, [System.StringComparison]::OrdinalIgnoreCase)) { return $a }
         }
     }
