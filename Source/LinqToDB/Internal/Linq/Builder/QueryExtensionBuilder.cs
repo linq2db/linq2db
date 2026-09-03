@@ -182,8 +182,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// Tables collected by a nested scope are still in scope for the enclosing one, so hand them
 				// over: without this a chained hint (q.TablesInScopeHint(a).TablesInScopeHint(b)) would see
-				// an empty scope and silently generate nothing. Only on the success path - a failed sub-tree
-				// has nothing to hand up.
+				// an empty scope and silently generate nothing. Only on the success path: an Error return
+				// rejects this whole method call, so its scope contribution is discarded with it.
 				//
 				if (prevTablesInScope != null && !ReferenceEquals(prevTablesInScope, builder.TablesInScope))
 					prevTablesInScope.AddRange(builder.TablesInScope!);
