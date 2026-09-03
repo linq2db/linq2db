@@ -75,11 +75,32 @@ jobs:
 
       # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
       # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
+      #
+      # UseSharedCompilation=false, or this step intermittently dies with:
+      #
+      #   CSC : error CS2012: Cannot open '.build\obj\CodeGenerators\Release\CodeGenerators.dll' for
+      #   writing -- ... because it is being used by another process.; file may be locked by
+      #   'VBCSCompiler' [Source\CodeGenerators\CodeGenerators.csproj]
+      #
+      # LinqToDB.csproj consumes CodeGenerators with OutputItemType="Analyzer", and its five TFMs
+      # compile in parallel; each one loads CodeGenerators.dll into VBCSCompiler, which caches
+      # analyzer assemblies across invocations. The same solution build also compiles CodeGenerators
+      # itself, and ReferenceOutputAssembly="false" weakens the ordering guarantee, so that write can
+      # race a consumer compile already holding the file. Whether it does comes down to MSBuild node
+      # scheduling, which is why it fails on some runs and not others.
+      #
+      # Without the compiler server, csc loads the analyzer per process and releases it on exit, so
+      # the persistent handle that causes this cannot exist. Upstream: dotnet/roslyn#77538, open and
+      # untriaged. The cost is losing compiler-server reuse for one solution build; a hosted runner's
+      # server is single-tenant and dies with the job, so nothing else wants it.
       - name: Build solution
-        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:UseSharedCompilation=false -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
 
+      # --no-build because the step above already produced everything for this configuration and both
+      # pass identical properties, so a recompile here is redundant - and a redundant compile is one
+      # more chance to hit the CS2012 lock described above.
       - name: Pack solution
-        run: dotnet pack ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        run: dotnet pack ${{ env.SOLUTION }} --no-build --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
 
       # Both scripts already carry -NoAzdoLogs and signal through their exit code, so they need no
       # porting - only the switch. nuget-job.yml runs these before publishing; on a PR they are the
