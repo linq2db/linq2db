@@ -1597,6 +1597,44 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table("InheritanceShadow")]
+		[InheritanceMapping(Code = 1, Type = typeof(ShadowChild))]
+		[InheritanceMapping(Code = 2, Type = typeof(ShadowGrandchild))]
+		abstract class ShadowBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		class ShadowChild : ShadowBase
+		{
+			[Column("ChildValue", CanBeNull = true)] public int Value { get; set; }
+		}
+
+		class ShadowGrandchild : ShadowChild
+		{
+			[Column("GrandchildValue", CanBeNull = true)] public new int Value { get; set; }
+		}
+
+		// Raw SQL below, so SQLite only.
+		[ActiveIssue(5852)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5852")]
+		public void InsertShadowedMemberThroughBaseTable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<ShadowBase>();
+
+			db.GetTable<ShadowBase>().Insert(() => new ShadowGrandchild { Id = 1, Code = 2, Value = 42 });
+
+			var dc = (DataConnection)db;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(dc.Execute<int?>("SELECT GrandchildValue FROM InheritanceShadow"), Is.EqualTo(42));
+				Assert.That(dc.Execute<int?>("SELECT ChildValue FROM InheritanceShadow"),      Is.Null);
+			}
+		}
+
 		// Derives from BaseClass but carries no [InheritanceMapping] entry, so UnmappedField maps to no
 		// column on the base entity descriptor. EnsureDeclaringType retypes the target for it just the
 		// same, so the guard must not turn the failure into a silently omitted column.
