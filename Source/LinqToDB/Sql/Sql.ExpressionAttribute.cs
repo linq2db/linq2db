@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -540,6 +540,24 @@ namespace LinqToDB
 				return parms.Select(static p => p ?? UnknownExpression).ToArray();
 			}
 
+			/// <summary>
+			/// Builds SQL for the extension member or method call.
+			/// </summary>
+			/// <typeparam name="TContext">Type of the context, passed to <paramref name="converter"/>.</typeparam>
+			/// <param name="context">Context, passed to <paramref name="converter"/> on each call.</param>
+			/// <param name="dataContext">Data context, which query is built for.</param>
+			/// <param name="evaluator">Evaluator, used to calculate values of client-side expressions.</param>
+			/// <param name="query">Query, which the extension belongs to.</param>
+			/// <param name="expression">Extension member or method call expression.</param>
+			/// <param name="converter">
+			/// Function, which translates an expression to SQL. An expression, which it translates successfully, has its
+			/// value supplied to the database through a parameter, which is re-read from the query expression on every
+			/// execution, or through an inlined literal, which the parameters context registers for comparison. Either
+			/// way the extension does not have to make it a part of the query cache key itself. Value, which is read
+			/// instead of being translated, is baked into generated SQL and has to be compared on query cache lookup -
+			/// see <see cref="ISqlExtensionBuilder.GetExpression(int, bool, bool?)"/>.
+			/// </param>
+			/// <returns>Expression with generated SQL, or an error expression when the extension cannot be translated.</returns>
 			public virtual Expression GetExpression<TContext>(
 				TContext              context,
 				IDataContext          dataContext,
