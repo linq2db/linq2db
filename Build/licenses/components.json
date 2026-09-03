@@ -13,7 +13,8 @@
     "LinqToDB.Analyzers.dll",
     "LinqToDB.Analyzers.CodeFixes.dll",
     "dotnet-linq2db.dll",
-    "dotnet-linq2db.exe"
+    "dotnet-linq2db.exe",
+    "dotnet-linq2db"
   ],
   "ignore": [
     "*.nuspec",
@@ -318,6 +319,8 @@
       "redistribution": "permitted",
       "files": [
         "duckdb.dll",
+      "libduckdb.so",
+      "libduckdb.dylib",
         "DuckDB.NET.Bindings.dll"
       ],
       "artifacts": [
@@ -2347,7 +2350,9 @@
       "projectUrl": "",
       "redistribution": "permitted",
       "files": [
-        "e_sqlite3.dll"
+        "e_sqlite3.dll",
+      "libe_sqlite3.so",
+      "libe_sqlite3.dylib"
       ],
       "artifacts": [
         "linq2db.cli",

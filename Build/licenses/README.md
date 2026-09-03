@@ -80,6 +80,17 @@ Notes on the fields that are easy to get wrong:
 - **`files` matches by exact name first, then by glob**, and a file claimed by two components is an error
   rather than a silent pick. Satellite resources are attributed to their parent:
   `<culture>/Foo.resources.dll` resolves through `Foo.dll`.
+- **`files` must cover every RID's naming, not just the one you happened to publish.** One native ships as
+  `duckdb.dll` on Windows, `libduckdb.so` on Linux and `libduckdb.dylib` on macOS; our own tool's apphost
+  is `dotnet-linq2db.exe` on Windows and extensionless `dotnet-linq2db` everywhere else. A manifest seeded
+  from a single `dotnet publish -r win-x64` therefore looks complete and fails on every other RID. CI packs
+  all seven and will say so, but to find out before pushing, publish one non-Windows RID too — it
+  cross-publishes fine from Windows:
+
+  ```
+  dotnet publish Source/LinqToDB.CLI/LinqToDB.CLI.csproj -c Debug -f net10.0 -r linux-x64 --no-self-contained -o <dir>
+  pwsh -NoProfile -File Build/Azure/scripts/third-party-notices.ps1 -Action verify -PublishDir <dir>
+  ```
 - **`redistribution: "unresolved"`** is a deliberate, shipping state for components whose vendor terms have
   not yet been adjudicated. It changes nothing about what is packed; it marks the entry for the audit.
 - **A component with no `licenseTexts` is not automatically a defect.** Public-domain software has no text
