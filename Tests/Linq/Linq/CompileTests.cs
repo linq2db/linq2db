@@ -845,5 +845,41 @@ namespace Tests.Linq
 				Assert.That(result.Larger, Does.Not.Contain(1));
 			}
 		}
+
+		[ActiveIssue(5854)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void WrappedLoadWithTest([DataSources] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWithWrapper(p => p.Children));
+
+			using var db = GetDataContext(context);
+
+			var parent = query(db, 1).First();
+			var other  = query(db, 2).First();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID, Is.EqualTo(1));
+				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,  Is.EqualTo(2));
+				Assert.That(other.Children,  Has.Count.EqualTo(2));
+			}
+		}
+	}
+
+	static class CompiledQueryWrapperExtensions
+	{
+		// A user-defined pass-through is not on IsQueryable's declaring-type allowlist, so it is never
+		// folded: the compiled table ends at the inner Where and LoadWith composes onto it at run time.
+		public static IQueryable<TEntity> LoadWithWrapper<TEntity,TProperty>(
+			this IQueryable<TEntity>             source,
+			Expression<Func<TEntity,TProperty?>> selector)
+			where TEntity : class
+		{
+			return source.LoadWith(selector);
+		}
 	}
 }
