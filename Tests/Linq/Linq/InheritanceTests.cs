@@ -1557,6 +1557,32 @@ namespace Tests.Linq
 			}
 		}
 
+		// OUTPUT ... INTO builds its target ref from the output table's object type rather than the
+		// updated table's, so it reaches EnsureDeclaringType by a route no other test covers. Unlike the
+		// row-returning form above it materializes nothing, so this one can assert success.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateWithOutputIntoDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db          = GetDataContext(context);
+			using var _           = db.CreateLocalTable(BaseClass.Data);
+			using var destination = db.CreateLocalTable<BaseClass>(tableName: "InheritanceFilterOutput");
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.UpdateWithOutputInto(
+					t => new Child1 { Id = t.Id, Code = t.Code, Child1Field = 77 },
+					destination,
+					(deleted, inserted) => new Child1 { Id = inserted.Id, Code = inserted.Code, Child1Field = 88 });
+
+			var updated = db.GetTable<BaseClass>().OfType<Child1>().Single(c => c.Id == 1);
+			var written = destination.OfType<Child1>().Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(updated.Child1Field, Is.EqualTo(77));
+				Assert.That(written.Child1Field, Is.EqualTo(88));
+			}
+		}
+
 		// Derives from BaseClass but carries no [InheritanceMapping] entry, so UnmappedField maps to no
 		// column on the base entity descriptor. EnsureDeclaringType retypes the target for it just the
 		// same, so the guard must not turn the failure into a silently omitted column.
