@@ -466,11 +466,20 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					}
 				}
 
-				if (IsCompilable(node) || node is MethodCallExpression)
+				if (IsCompilable(node))
 				{
 					converted = ConvertIQueryable(node);
 
 					return !ExpressionEqualityComparer.Instance.Equals(converted, node);
+				}
+
+				// A method the builder does not know, held non-evaluable by its own source - a compiled query's
+				// argument array, typically. Expanding it over that source leaves those reads in the tree.
+				if (node is MethodCallExpression call && !call.IsQueryable && ExpandOverSource(call) is { } expanded)
+				{
+					converted = expanded;
+
+					return true;
 				}
 			}
 
@@ -514,9 +523,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				var mc = (MethodCallExpression)expression;
 				if (mc.Method.DeclaringType != null && MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
 					return mc;
-
-				if (!IsCompilable(mc))
-					return ExpandOverSource(mc) ?? expression;
 			}
 
 			if (expression.NodeType is ExpressionType.MemberAccess or ExpressionType.Call)
