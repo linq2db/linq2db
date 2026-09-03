@@ -778,12 +778,43 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var parent = await query(db, 1, default);
+			var other  = await query(db, 2, default);
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(parent.ParentID, Is.EqualTo(1));
 				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,  Is.EqualTo(2));
+				Assert.That(other.Children,  Has.Count.EqualTo(2));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public void ElementFormLoadWithHonorsCancellation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.FirstAsync(token));
+
+			using var cts = new CancellationTokenSource();
+			cts.Cancel();
+
+			using var db = GetDataContext(context);
+
+			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			{
+				try
+				{
+					await query(db, 1, cts.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					// normalizes TaskCanceledException, which the assert above would not match
+					throw new OperationCanceledException();
+				}
+			});
 		}
 
 		[ActiveIssue]

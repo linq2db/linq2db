@@ -64,23 +64,27 @@ namespace LinqToDB
 
 		interface ITableHelper
 		{
-			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type);
+			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, Expression? token, MethodType type);
 		}
 
 		sealed class TableHelper<T> : ITableHelper
 			where T : notnull
 		{
-			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, MethodType type)
+			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, Expression? token, MethodType type)
 			{
 				var table = new CompiledTable<T>(query, expr);
+
+				if (type == MethodType.ElementAsync)
+					return Expression.Call(
+						Expression.Constant(table),
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!, CancellationToken.None)),
+						ps, token!);
 
 				return Expression.Call(
 					Expression.Constant(table),
 					type == MethodType.Queryable ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create      (null!)) :
-					type == MethodType.Element ?
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute     (null!)) :
-						MemberHelper.MethodOf<CompiledTable<T>>(t => t.ExecuteAsync(null!)),
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Create (null!)) :
+						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute(null!)),
 					ps);
 			}
 		}
@@ -101,7 +105,7 @@ namespace LinqToDB
 			}
 
 			var newMethodName = methodName.Substring(0, methodName.Length - "Async".Length);
-			var methods = GetSimilarMethods(methodCall.Type.DeclaringType)
+			var methods = GetSimilarMethods(methodCall.Method.DeclaringType)
 				.Concat(GetSimilarMethods(typeof(Queryable)))
 				.ToList();
 
@@ -216,6 +220,13 @@ namespace LinqToDB
 						{
 							var type = expr.Type.GetGenericArguments()[0];
 
+							// Taken before ReplaceAsyncWithSync strips it: the compiled table needs the caller's
+							// token, and nothing downstream can recover it from the untyped argument array.
+							var methodParameters = expr.Method.GetParameters();
+							var token            = methodParameters.Length > 0 && methodParameters[^1].ParameterType == typeof(CancellationToken)
+								? expr.Arguments[^1]
+								: Expression.Constant(CancellationToken.None);
+
 							// The compiled table builds and caches the query from the synchronous form; only the
 							// call into it stays async.
 							if (!ReplaceAsyncWithSync(expr, out var syncCall))
@@ -223,7 +234,7 @@ namespace LinqToDB
 
 							var helper = ActivatorExt.CreateInstance<ITableHelper>(typeof(TableHelper<>).MakeGenericType(type));
 
-							return helper.CallTable(context.query, syncCall, context.ps, MethodType.ElementAsync);
+							return helper.CallTable(context.query, syncCall, context.ps, token, MethodType.ElementAsync);
 						}
 						else if (expr.IsQueryable)
 						{
@@ -246,7 +257,7 @@ namespace LinqToDB
 								var helper = ActivatorExt.CreateInstance<ITableHelper>(
 									typeof(TableHelper<>).MakeGenericType(elementType ?? expr.Type));
 
-								return helper.CallTable(context.query, expr, context.ps, elementType != null ? MethodType.Queryable : MethodType.Element);
+								return helper.CallTable(context.query, expr, context.ps, null, elementType != null ? MethodType.Queryable : MethodType.Element);
 							}
 						}
 
@@ -262,7 +273,7 @@ namespace LinqToDB
 							var helper = ActivatorExt
 								.CreateInstance<ITableHelper>(typeof(TableHelper<>)
 								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
-							return helper.CallTable(context.query, pi, context.ps, MethodType.Queryable);
+							return helper.CallTable(context.query, pi, context.ps, null, MethodType.Queryable);
 						}
 
 						break;

@@ -1,8 +1,10 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq.Builder;
 
 namespace LinqToDB.Internal.Linq
@@ -84,17 +86,26 @@ namespace LinqToDB.Internal.Linq
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
 
-			return (T)query.GetElement(db, expressions, parameters, query.InitPreambles(db, expressions, parameters))!;
+			using (query.StartLoadTransaction(db))
+			{
+				var preambles = query.InitPreambles(db, expressions, parameters);
+
+				return (T)query.GetElement(db, expressions, parameters, preambles)!;
+			}
 		}
 
-		public async Task<T> ExecuteAsync(object[] parameters)
+		public async Task<T> ExecuteAsync(object[] parameters, CancellationToken cancellationToken)
 		{
 			var db          = (IDataContext)parameters[0];
 			var query       = GetInfo(db, parameters);
 			var expressions = query.CompiledExpressions!;
-			var preambles   = await query.InitPreamblesAsync(db, expressions, parameters, default).ConfigureAwait(false);
 
-			return (T)(await query.GetElementAsync(db, expressions, parameters, preambles, default).ConfigureAwait(false))!;
+			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
+			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+
+			var preambles = await query.InitPreamblesAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
+
+			return (T)(await query.GetElementAsync(db, expressions, parameters, preambles, cancellationToken).ConfigureAwait(false))!;
 		}
 	}
 }

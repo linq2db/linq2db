@@ -39,9 +39,9 @@ namespace LinqToDB.Internal.Expressions
 				MethodCallExpression { NodeType: ExpressionType.Call } mc =>
 					IsSimpleEvaluatable(mc.Object) && mc.Arguments.All(IsSimpleEvaluatable),
 
-				// A quote evaluates to its operand, so nothing inside it needs to be closed over. Going
-				// through a compiled lambda instead would substitute captured values into the quoted
-				// tree, which is exactly what a caller holding on to that tree must not get.
+				// A quote evaluates to its operand, so it needs no compiled lambda - which also cannot handle
+				// an operand referencing a free parameter, as a compiled-query tree does after CompileQuery
+				// rewrites its parameters to ArrayIndex(ps, i).
 				UnaryExpression { NodeType: ExpressionType.Quote } => true,
 
 				_ => false,

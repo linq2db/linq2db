@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.EntityServices;
 
@@ -784,7 +785,43 @@ namespace Tests.Linq
 			{
 				Assert.That(parent.ParentID,                  Is.EqualTo(1));
 				Assert.That(parent.Children,                  Has.Count.EqualTo(1));
-				Assert.That(parent.Children[0].GrandChildren, Is.Not.Null);
+				Assert.That(parent.Children[0].GrandChildren, Has.Count.EqualTo(1));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public void ElementFormLoadWithOpensLoadTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var queryable = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children));
+
+			var element = CompiledQuery.Compile<ITestDataContext,int,Parent>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.First());
+
+			var transactions = 0;
+
+			using var db = GetDataContext(context, o => o.UseTracing(e =>
+			{
+				if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.BeginTransaction)
+					transactions++;
+			}));
+
+			var viaQueryable   = queryable(db, 1).First();
+			var afterQueryable = transactions;
+			var viaElement     = element(db, 1);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(viaQueryable.Children, Has.Count.EqualTo(1));
+				Assert.That(viaElement.Children,   Has.Count.EqualTo(1));
+
+				Assert.That(afterQueryable, Is.EqualTo(1), "queryable form must open the implicit eager-loading transaction");
+				Assert.That(transactions,   Is.EqualTo(2), "element form must open one as well");
 			}
 		}
 	}

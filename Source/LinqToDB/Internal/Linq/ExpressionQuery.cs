@@ -117,66 +117,12 @@ namespace LinqToDB.Internal.Linq
 
 		IDisposable? StartLoadTransaction(Query query)
 		{
-			// Do not start implicit transaction if there is no preambles
-			//
-			if (!query.IsAnyPreambles())
-				return null;
-
-			var dc = DataContext switch
-			{
-				DataConnection dataConnection => dataConnection,
-				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null,
-			};
-
-			if (dc == null)
-				return null;
-
-			// transaction will be maintained by TransactionScope
-			//
-			if (TransactionScopeHelper.IsInsideTransactionScope)
-				return null;
-
-			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
-				return null;
-
-			if (DataContext is DataContext ctx)
-				return ctx!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
-
-			return dc!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+			return query.StartLoadTransaction(DataContext);
 		}
 
-		async Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
+		Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
-			// Do not start implicit transaction if there is no preambles
-			//
-			if (!query.IsAnyPreambles())
-				return null;
-
-			var dc = DataContext switch
-			{
-				DataConnection dataConnection => dataConnection,
-				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null,
-			};
-
-			if (dc == null)
-				return null;
-
-			// transaction will be maintained by TransactionScope
-			//
-			if (TransactionScopeHelper.IsInsideTransactionScope)
-				return null;
-
-			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
-				return null;
-
-			if (DataContext is DataContext ctx)
-				return await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
-					.ConfigureAwait(false);
-
-			return await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
-				.ConfigureAwait(false);
+			return query.StartLoadTransactionAsync(DataContext, cancellationToken);
 		}
 
 		async Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
