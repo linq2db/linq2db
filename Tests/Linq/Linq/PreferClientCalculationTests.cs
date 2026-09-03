@@ -219,7 +219,15 @@ namespace Tests.Linq
 
 			// A server-side-only API inside a conditional must stay in SQL even when client calculation is
 			// preferred (the IsServerSideOnly gate) — otherwise it would be illegally evaluated on the client.
-			query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }).ShouldNotBeNull();
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.Find(e => e is SqlFunction { Name: "ABS" }).ShouldNotBeNull();
+
+			// The conditional AROUND it has to stay in SQL too. Emitting the three operands as separate columns and
+			// picking a branch on the client keeps ABS in the query (so the check above still passes) but evaluates
+			// the server-side-only call for every row, not just the matching ones.
+			selectQuery.Find(e => e is SqlConditionExpression).ShouldNotBeNull();
+			selectQuery.Select.Columns.Count.ShouldBe(1);
 
 			_ = query.ToArray(); // must not throw
 		}

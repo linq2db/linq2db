@@ -1986,11 +1986,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!IsSame(optimized, node))
 				return Visit(optimized);
 
-			if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
-			{
-				return sqlResult;
-			}
-
 			{
 				Expression test;
 
@@ -2001,22 +1996,22 @@ namespace LinqToDB.Internal.Linq.Builder
 				using (UsingAlias(null))
 				{
 					test = Visit(node.Test);
-				}
 
-				if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
-				{
-					var binary = (BinaryExpression)test;
-					if (HandleDefaultIfEmptyInBinary(binary.Left,     binary.Right, out var newTest)
-					    || HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
+					// The rewritten test has to be visited in the same scope as the original one: the descriptor/alias
+					// suppression is what keeps a conditional from picking up the enclosing column's type (#5216).
+					if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
-						if (binary.NodeType == ExpressionType.Equal)
+						var binary = (BinaryExpression)test;
+						if (HandleDefaultIfEmptyInBinary(binary.Left,  binary.Right, out var newTest) ||
+						    HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
 						{
-							newTest = Expression.Not(newTest);
+							if (binary.NodeType == ExpressionType.Equal)
+							{
+								newTest = Expression.Not(newTest);
+							}
+
+							test = Visit(newTest);
 						}
-
-						var newCondition = Expression.Condition(newTest, node.IfTrue, node.IfFalse);
-
-						return Visit(newCondition);
 					}
 				}
 
@@ -2028,27 +2023,55 @@ namespace LinqToDB.Internal.Linq.Builder
 					return boolValue ? ifTrue : ifFalse;
 				}
 
-				if (_buildPurpose is BuildPurpose.Sql)
+				// Deliberately not gated on BuildPurpose.Sql: under BuildPurpose.Expression such conditionals used to
+				// be collapsed by the whole-expression conversion that ran before the children were visited, and
+				// that call now runs after this fast path — on the original node, where it may no longer convert.
+				if (test    is SqlPlaceholderExpression testPlaceholder  &&
+				    ifTrue  is SqlPlaceholderExpression truePlaceholder  &&
+				    ifFalse is SqlPlaceholderExpression falsePlaceholder &&
+				    CanShareOneReading(truePlaceholder, falsePlaceholder))
 				{
-					if (test is SqlPlaceholderExpression testPlaceholder
-					    && ifTrue is SqlPlaceholderExpression truePlaceholder
-					    && ifFalse is SqlPlaceholderExpression falsePlaceholder
-					    && CanShareOneReading(truePlaceholder, falsePlaceholder))
-					{
-						testPlaceholder  = UpdateNesting(testPlaceholder);
-						truePlaceholder  = UpdateNesting(truePlaceholder);
-						falsePlaceholder = UpdateNesting(falsePlaceholder);
+					testPlaceholder  = UpdateNesting(testPlaceholder);
+					truePlaceholder  = UpdateNesting(truePlaceholder);
+					falsePlaceholder = UpdateNesting(falsePlaceholder);
 
-						return Visit(CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node));
-					}
+					return CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node);
 				}
 
 				var newNode = node.Update(test, ifTrue, ifFalse);
-				if (!IsSame(newNode, node))
-					return Visit(newNode);
-			}
 
-			return node;
+				// Whole-expression conversion is attempted only after the fast path above failed, so a conditional that
+				// is already made of placeholders never pays for it. It must run on the original node: the visited
+				// children may have been materialized client-side, and such a tree no longer converts to SQL.
+				if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
+				{
+					return sqlResult;
+				}
+
+				// Only the test needs a second pass. Visiting the arms can resolve an operand the test still holds
+				// unfolded — a set-operation branch selector compares a column against a per-branch constant, and
+				// leaving that comparison unresolved projects it as a column every branch of the set operation then
+				// has to carry (IntervalTranslationTests.ConcatSurroundsADifferenceWithColumns).
+				//
+				// The arms must NOT be re-visited: they were just built, re-walking them is what compounds at every
+				// nesting level, and it bought nothing — on the #5719 TPH repro re-visiting the whole conditional
+				// cost 2.2x across 1960 re-visits that all returned an unchanged tree.
+				if (!IsSame(newNode, node))
+				{
+					Expression revisitedTest;
+
+					using (UsingColumnDescriptor(null))
+					using (UsingAlias(null))
+					{
+						revisitedTest = Visit(newNode.Test);
+					}
+
+					if (!IsSame(revisitedTest, newNode.Test))
+						newNode = newNode.Update(revisitedTest, newNode.IfTrue, newNode.IfFalse);
+				}
+
+				return newNode;
+			}
 		}
 
 		/// <summary>
