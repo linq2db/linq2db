@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -607,19 +608,22 @@ namespace LinqToDB.Mapping
 			// Built lazily and kept: the query builder asks for a column descriptor once per generic assignment, so
 			// a linear scan here is walked once per column per constructor — millions of comparisons on a wide
 			// entity (#5719). First-wins mirrors the FirstOrDefault this replaces.
-			var byMember = _columnsByMember;
-
-			if (byMember == null)
-			{
-				byMember = new Dictionary<MemberInfo, ColumnDescriptor>(Columns.Count);
-
-				foreach (var c in Columns)
-					byMember.TryAdd(c.MemberInfo, c);
-
-				_columnsByMember = byMember;
-			}
+			// Read the field once: the null check must not be able to disagree with the lookup below. The factory
+			// is behind that check so the delegate is only allocated while the cache is still cold.
+			// (the older reference assemblies do not annotate EnsureInitialized as returning non-null)
+			var byMember = _columnsByMember ?? LazyInitializer.EnsureInitialized(ref _columnsByMember, BuildColumnsByMember)!;
 
 			return byMember.TryGetValue(memberInfo, out var found) ? found : null;
+		}
+
+		Dictionary<MemberInfo, ColumnDescriptor> BuildColumnsByMember()
+		{
+			var byMember = new Dictionary<MemberInfo, ColumnDescriptor>(Columns.Count);
+
+			foreach (var c in Columns)
+				byMember.TryAdd(c.MemberInfo, c);
+
+			return byMember;
 		}
 
 		/// <summary>
