@@ -62,7 +62,10 @@ namespace Tests.Extensions
 				where c.ParentID == p.ID
 				select p
 			)
-			.TablesInScopeHint(SqlCeHints.Table.NoLock);
+			// UpdLock rather than NoLock: stacking would make it WITH (NoLock, PagLock), which SQL CE
+			// refuses — see ConflictingTablesInScopeHintTest.
+			//
+			.TablesInScopeHint(SqlCeHints.Table.UpdLock);
 
 			q =
 			(
@@ -84,11 +87,34 @@ namespace Tests.Extensions
 
 			var test = LastQuery?.Replace("\r", "");
 
-			Assert.That(test, Contains.Substring("[Person] [p] WITH (Index(PK_Person), NoLock)"));
-			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
-			Assert.That(test, Contains.Substring("[Parent] [p1] WITH (HoldLock)"));
+			Assert.That(test, Contains.Substring("[Person] [p] WITH (Index(PK_Person), UpdLock, PagLock)"));
+			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (UpdLock, PagLock)"));
+			Assert.That(test, Contains.Substring("[Parent] [p1] WITH (HoldLock, PagLock)"));
 			Assert.That(test, Contains.Substring("[Child] [c_2] WITH (PagLock)"));
 			Assert.That(test, Contains.Substring("[Parent] [a_Parent] WITH (PagLock)"));
+		}
+
+		// A nested scope no longer shields its tables from the enclosing hint, so a hint pair the engine
+		// refuses now reaches the server. SQL CE has no scope hint that combines with NoLock.
+		// https://github.com/linq2db/linq2db/issues/5714
+		[Test]
+		[ThrowsForProvider("System.Data.SqlServerCe.SqlCeException", ProviderName.SqlCe)]
+		public void ConflictingTablesInScopeHintTest([IncludeDataSources(false, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Person.TablesInScopeHint(SqlCeHints.Table.NoLock)
+				from c in db.Child
+				where c.ParentID == p.ID
+				select p
+			)
+			.TablesInScopeHint(SqlCeHints.Table.PagLock);
+
+			Assert.That(q.ToSqlQuery().Sql, Contains.Substring("[Person] [p] WITH (NoLock, PagLock)"));
+
+			_ = q.ToList();
 		}
 
 		[Test]
