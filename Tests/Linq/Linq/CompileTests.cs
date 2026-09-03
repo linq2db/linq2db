@@ -824,5 +824,26 @@ namespace Tests.Linq
 				Assert.That(transactions,   Is.EqualTo(2), "element form must open one as well");
 			}
 		}
+
+		[Test]
+		public void TwoFoldSitesOfSameTypeDoNotShareQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile((ITestDataContext db, int id) => new
+			{
+				Exact  = db.Parent.Where(p => p.ParentID == id).Select(p => p.ParentID).ToList(),
+				Larger = db.Parent.Where(p => p.ParentID >  id).Select(p => p.ParentID).ToList(),
+			});
+
+			using var db = GetDataContext(context);
+
+			var result = query(db, 1);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Exact,  Is.EqualTo(new[] { 1 }));
+				Assert.That(result.Larger, Is.Not.Empty);
+				Assert.That(result.Larger, Does.Not.Contain(1));
+			}
+		}
 	}
 }

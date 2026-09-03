@@ -64,15 +64,15 @@ namespace LinqToDB
 
 		interface ITableHelper
 		{
-			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, Expression? token, MethodType type);
+			Expression CallTable(Expression expr, ParameterExpression ps, Expression? token, MethodType type);
 		}
 
 		sealed class TableHelper<T> : ITableHelper
 			where T : notnull
 		{
-			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, Expression? token, MethodType type)
+			public Expression CallTable(Expression expr, ParameterExpression ps, Expression? token, MethodType type)
 			{
-				var table = new CompiledTable<T>(query, expr);
+				var table = new CompiledTable<T>(expr);
 
 				if (type == MethodType.ElementAsync)
 					return Expression.Call(
@@ -207,7 +207,7 @@ namespace LinqToDB
 				return pi;
 			});
 
-			info = info.Transform((query, ps), static (context, pi) =>
+			info = info.Transform(ps, static (context, pi) =>
 			{
 				switch (pi.NodeType)
 				{
@@ -234,7 +234,7 @@ namespace LinqToDB
 
 							var helper = ActivatorExt.CreateInstance<ITableHelper>(typeof(TableHelper<>).MakeGenericType(type));
 
-							return helper.CallTable(context.query, syncCall, context.ps, token, MethodType.ElementAsync);
+							return helper.CallTable(syncCall, context, token, MethodType.ElementAsync);
 						}
 						else if (expr.IsQueryable)
 						{
@@ -257,7 +257,7 @@ namespace LinqToDB
 								var helper = ActivatorExt.CreateInstance<ITableHelper>(
 									typeof(TableHelper<>).MakeGenericType(elementType ?? expr.Type));
 
-								return helper.CallTable(context.query, expr, context.ps, null, elementType != null ? MethodType.Queryable : MethodType.Element);
+								return helper.CallTable(expr, context, null, elementType != null ? MethodType.Queryable : MethodType.Element);
 							}
 						}
 
@@ -273,7 +273,7 @@ namespace LinqToDB
 							var helper = ActivatorExt
 								.CreateInstance<ITableHelper>(typeof(TableHelper<>)
 								.MakeGenericType(pi.Type.GetGenericArguments()[0]));
-							return helper.CallTable(context.query, pi, context.ps, null, MethodType.Queryable);
+							return helper.CallTable(pi, context, null, MethodType.Queryable);
 						}
 
 						break;

@@ -12,14 +12,12 @@ namespace LinqToDB.Internal.Linq
 	sealed class CompiledTable<T>
 		where T : notnull
 	{
-		public CompiledTable(LambdaExpression lambda, Expression expression)
+		public CompiledTable(Expression expression)
 		{
-			_lambda     = lambda;
 			_expression = expression;
 		}
 
-		readonly LambdaExpression _lambda;
-		readonly Expression       _expression;
+		readonly Expression _expression;
 
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
@@ -30,16 +28,18 @@ namespace LinqToDB.Internal.Linq
 				(
 					operation: "CT",
 					configurationID,
-					expression : _expression,
+					// Identity of this fold site, not a structural comparison: the cache is global per T,
+					// and one compiled query can fold more than one table of the same type.
+					table      : this,
 					queryFlags : dataContext.GetQueryFlags()
 				),
-				(dataContext, lambda: _lambda, dataOptions, parameterValues),
+				(dataContext, dataOptions, parameterValues),
 				static (o, key, ctx) =>
 				{
 					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var exposed = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext,
+					var exposed = ExpressionBuilder.ExposeExpression(key.table._expression, ctx.dataContext,
 						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
 
 					var query             = new Query<T>(ctx.dataContext);
