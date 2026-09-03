@@ -76,25 +76,45 @@ jobs:
       # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
       # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       #
-      # UseSharedCompilation=false, or this step intermittently dies with:
+      # Retried once, because a *clean* build of this solution intermittently loses a CS2012 race:
       #
       #   CSC : error CS2012: Cannot open '.build\obj\CodeGenerators\Release\CodeGenerators.dll' for
-      #   writing -- ... because it is being used by another process.; file may be locked by
-      #   'VBCSCompiler' [Source\CodeGenerators\CodeGenerators.csproj]
+      #   writing -- ... because it is being used by another process.
       #
-      # LinqToDB.csproj consumes CodeGenerators with OutputItemType="Analyzer", and its five TFMs
-      # compile in parallel; each one loads CodeGenerators.dll into VBCSCompiler, which caches
-      # analyzer assemblies across invocations. The same solution build also compiles CodeGenerators
-      # itself, and ReferenceOutputAssembly="false" weakens the ordering guarantee, so that write can
-      # race a consumer compile already holding the file. Whether it does comes down to MSBuild node
-      # scheduling, which is why it fails on some runs and not others.
+      # The project is built twice concurrently - once as an inner build carrying an explicit
+      # TargetFramework global property, once plain - and both write the same obj path, so one loses.
+      # dotnet/roslyn#77538 has the SDK printing both instances of the same project, one failed and
+      # one succeeded, and .NET triage places the cause in how this repo declares its generator
+      # dependency. It has been open since 2024.
       #
-      # Without the compiler server, csc loads the analyzer per process and releases it on exit, so
-      # the persistent handle that causes this cannot exist. Upstream: dotnet/roslyn#77538, open and
-      # untriaged. The cost is losing compiler-server reuse for one solution build; a hosted runner's
-      # server is single-tenant and dies with the job, so nothing else wants it.
+      # A second build over the populated .build tree succeeds, which is what the issue reports and
+      # what we have been doing by hand on Azure ("as workaround we restart build"). This automates
+      # that. Azure hits it far less often: its agents have 2 vCPU against a GitHub runner's 4, so
+      # there is much less parallelism for the two instances to overlap in.
+      #
+      # Deliberately not -p:UseSharedCompilation=false: tried on this branch, and it only changed
+      # which racer lost - the locking process went from VBCSCompiler to csc and the build still
+      # failed, on linq2db.dll instead of CodeGenerators.dll. Nor -m:1, which would serialize every
+      # build to dodge a first-build-only race.
+      #
+      # The retry is visible in the log as a warning rather than silent, and a real compile error
+      # fails both attempts, so this cannot turn a broken build green.
       - name: Build solution
-        run: dotnet build ${{ env.SOLUTION }} --configuration ${{ env.RELEASE_CONFIGURATION }} -p:UseSharedCompilation=false -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        shell: pwsh
+        run: |
+          $buildArgs = @(
+            '${{ env.SOLUTION }}'
+            '--configuration', '${{ env.RELEASE_CONFIGURATION }}'
+            '-p:RunAnalyzersDuringBuild=false'
+            '-p:RunApiAnalyzersDuringBuild=false'
+          ) + ('${{ env.VERSION_ARGS }}' -split ' ' | Where-Object { $_ })
+
+          dotnet build @buildArgs
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning title=Retrying solution build::First build failed; retrying over the warm .build tree (dotnet/roslyn#77538)."
+            dotnet build @buildArgs
+          }
+          exit $LASTEXITCODE
 
       # --no-build because the step above already produced everything for this configuration and both
       # pass identical properties, so a recompile here is redundant - and a redundant compile is one
