@@ -1431,7 +1431,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void InsertDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void InsertDerivedThroughBaseTable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<BaseClass>();
@@ -1446,14 +1446,14 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void UpdateDerivedThroughBaseTable_Setter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void UpdateDerivedThroughBaseTable_Setter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable(BaseClass.Data);
 
 			db.GetTable<BaseClass>()
 				.Where(t => t.Id == 1)
-				.Update(t => new Child1 { Id = t.Id, Code = t.Code, Child1Field = 99 });
+				.Update(t => new Child1 { Code = t.Code, Child1Field = 99 });
 
 			var result = db.GetTable<BaseClass>().OfType<Child1>().Single(c => c.Id == 1);
 			Assert.That(result.Child1Field, Is.EqualTo(99));
@@ -1461,21 +1461,21 @@ namespace Tests.Linq
 
 		[Obsolete("Exercises the obsolete ITable<TTarget> Update() overload on purpose - covers Issue 5729's explicit-target path")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void UpdateDerivedThroughBaseTable_ExplicitTarget([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void UpdateDerivedThroughBaseTable_ExplicitTarget([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable(BaseClass.Data);
 
 			db.GetTable<BaseClass>()
 				.Where(t => t.Id == 2)
-				.Update(db.GetTable<BaseClass>(), s => new Child2 { Id = s.Id, Code = s.Code, Child2Field = 88 });
+				.Update(db.GetTable<BaseClass>(), s => new Child2 { Code = s.Code, Child2Field = 88 });
 
 			var result = db.GetTable<BaseClass>().OfType<Child2>().Single(c => c.Id == 2);
 			Assert.That(result.Child2Field, Is.EqualTo(88));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void InsertOrUpdateDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void InsertOrUpdateDerivedThroughBaseTable([InsertOrUpdateDataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<BaseClass>();
@@ -1514,7 +1514,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void InsertPositionalDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void InsertPositionalDerivedThroughBaseTable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<PositionalBase>();
@@ -1526,8 +1526,12 @@ namespace Tests.Linq
 			Assert.That(result.Value, Is.EqualTo(42));
 		}
 
+		// Matches FeatureUpdateOutputWithoutOldSingle in UpdateWithOutputTests: UpdateWithOutput returning
+		// a single set built from INSERTED only.
+		const string FeatureUpdateOutput = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, FeatureUpdateOutput)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable(BaseClass.Data);
@@ -1548,7 +1552,7 @@ namespace Tests.Linq
 			{
 				db.GetTable<BaseClass>()
 					.Where(t => t.Id == 1)
-					.UpdateWithOutput(t => new Child1 { Id = t.Id, Code = t.Code })
+					.UpdateWithOutput(t => new Child1 { Code = t.Code })
 					.ToArray();
 			}
 			catch (Exception ex)
@@ -1570,7 +1574,7 @@ namespace Tests.Linq
 			db.GetTable<BaseClass>()
 				.Where(t => t.Id == 1)
 				.UpdateWithOutputInto(
-					t => new Child1 { Id = t.Id, Code = t.Code, Child1Field = 77 },
+					t => new Child1 { Code = t.Code, Child1Field = 77 },
 					destination,
 					(deleted, inserted) => new Child1 { Id = inserted.Id, Code = inserted.Code, Child1Field = 88 });
 
@@ -1592,7 +1596,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
-		public void InsertUnmappedDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		public void InsertUnmappedDerivedThroughBaseTable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable<BaseClass>();
