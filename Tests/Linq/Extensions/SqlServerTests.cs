@@ -6,6 +6,8 @@ using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Extensions
 {
 	[TestFixture]
@@ -505,13 +507,39 @@ namespace Tests.Extensions
 
 			var test = LastQuery?.Replace("\r", "");
 
-			Assert.That(test, Contains.Substring("[Parent] [p] WITH (NoLock)"));
-			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
+			Assert.That(test, Contains.Substring("[Parent] [p] WITH (NoLock, NoWait)"));
+			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock, NoWait)"));
 			Assert.That(test, Contains.Substring("[Child] [c_2] WITH (NoWait)"));
 			Assert.That(test, Contains.Substring("[Parent] [a_Parent] WITH (NoWait)"));
-			Assert.That(test, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock)"));
-			Assert.That(test, Contains.Substring("[Parent] [p1] WITH (HoldLock)"));
+			Assert.That(test, Contains.Substring("[Child] [c1] WITH (Index(IX_ChildIndex), NoLock, NoWait)"));
+			Assert.That(test, Contains.Substring("[Parent] [p1] WITH (HoldLock, NoWait)"));
 			Assert.That(test, Contains.Substring("[Child] [c_3]\n"));
+		}
+
+		// https://github.com/linq2db/linq2db/issues/5714
+		[Test]
+		public void ChainedTablesInScopeHintTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsSqlServer()
+			.WithUpdLockInScope()
+			.WithRowLockInScope()
+			.WithHoldLockInScope();
+
+			_ = q.FirstOrDefault();
+
+			var sql = LastQuery!;
+
+			sql.ShouldContain("[p] WITH (UpdLock, RowLock, HoldLock)",   Case.Sensitive);
+			sql.ShouldContain("[c_1] WITH (UpdLock, RowLock, HoldLock)", Case.Sensitive);
 		}
 
 		[Test]
@@ -650,6 +678,43 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("WITH (NoLock, NoWait)"));
 			Assert.That(LastQuery, Contains.Substring("WITH (HoldLock)"));
 			Assert.That(LastQuery, Contains.Substring("OPTION (RECOMPILE, FAST 10)"));
+		}
+
+		// A CTE body is its own scope: an enclosing hint stops at the boundary. CteContext.InitQuery
+		// enforces that; without it, whether the outer hint reached the body depended on the query
+		// shape, since the boundary was only ever a matter of build order.
+		// https://github.com/linq2db/linq2db/issues/5714
+		[Test]
+		public void CteBodyTablesInScopeHintTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte =
+			(
+				from c in db.Child
+				where c.ParentID > 0
+				select c
+			)
+			.AsSqlServer()
+			.WithRowLockInScope()
+			.AsCte();
+
+			var q =
+			(
+				from p in db.Parent
+				from c in cte
+				where c.ParentID == p.ParentID
+				select p
+			)
+			.AsSqlServer()
+			.WithUpdLockInScope();
+
+			_ = q.FirstOrDefault();
+
+			var sql = LastQuery!;
+
+			sql.ShouldContain("[c_1] WITH (RowLock)", Case.Sensitive);
+			sql.ShouldContain("[p] WITH (UpdLock)",   Case.Sensitive);
 		}
 
 		[Test]
