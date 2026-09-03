@@ -92,9 +92,10 @@ if [ -n "$setup" ]; then
 
 	# A local setup script may export variables the test process needs - db2.provider.sh publishes
 	# the clidriver's PATH and LD_LIBRARY_PATH, without which the DB2 provider cannot load its
-	# native library. On Azure those arrive as `##vso[task.setvariable]` and the agent applies them
-	# to the *following* steps; here the setup and the suites are one step, so $GITHUB_ENV would
-	# drop them. Point ci-setvar.sh at a private file instead and load it back.
+	# native library. On Azure those arrive as a task.setvariable logging command and the agent
+	# applies them to the *following* steps; here the setup and the suites are one step, so
+	# $GITHUB_ENV would drop them. Point ci-setvar.sh at a private file instead and load it back.
+	# (Prefix spelled out nowhere in this file on purpose - see the note in ci-setvar.sh.)
 	env_file="$root/.ci-env.$tfm"
 	: > "$env_file"
 

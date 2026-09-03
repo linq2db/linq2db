@@ -3,8 +3,13 @@
 # Sourced, not executed:  . "$(dirname "$0")/ci-setvar.sh"
 #
 # Azure DevOps and GitHub Actions both scope a step's environment to that step and offer their own
-# channel for exporting a variable onwards - `##vso[task.setvariable]` and $GITHUB_ENV. A plain
-# `export` reaches neither, so the provider setup scripts have to use the host's channel.
+# channel for exporting a variable onwards - Azure's task.setvariable logging command and GitHub's
+# $GITHUB_ENV file. A plain `export` reaches neither, so a setup script has to use the host's.
+#
+# Note the deliberate absence of a literal logging-command prefix in this prose. The Azure agent
+# matches that token anywhere in a line of step output, so writing it in a comment is enough to have
+# the comment executed as a command whenever a caller echoes this file's text - which is exactly what
+# `bash -v` in db2.provider.sh used to do. Only the emitting line below may spell it out.
 #
 # GitHub is detected by $GITHUB_ENV being set rather than by $GITHUB_ACTIONS, which matters: a
 # caller that needs the variables in its *own* step - not a later one - can point GITHUB_ENV at a
