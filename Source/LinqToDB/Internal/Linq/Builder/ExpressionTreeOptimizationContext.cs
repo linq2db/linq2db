@@ -248,7 +248,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		public bool CanBeEvaluatedOnClient(Expression expr)
 		{
-			var visitor = _canBeEvaluatedOnClientCheckVisitorPool.Allocate();
+			using var visitor = _canBeEvaluatedOnClientCheckVisitorPool.Allocate();
 
 			var result = visitor.Value.CanBeEvaluatedOnClient(expr, MappingSchema, this);
 

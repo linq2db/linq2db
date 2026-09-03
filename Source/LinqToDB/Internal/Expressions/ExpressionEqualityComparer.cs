@@ -31,6 +31,50 @@ namespace LinqToDB.Internal.Expressions
 		{
 		}
 
+		/// <summary>
+		/// Compares two values by content: collections are compared item by item, so a re-evaluated collection with
+		/// the same items stays equal to the recorded one. This is deliberately laxer than the comparison a constant
+		/// left in the query cache key gets, which is reference equality for a collection. A queryable on either side
+		/// is treated as opaque, because enumerating it may execute a query.
+		/// </summary>
+		internal static bool CompareValues(object? a, object? b)
+		{
+			if (ReferenceEquals(a, b))
+				return true;
+
+			if (a is null || b is null)
+				return false;
+
+			if (a is IQueryable || b is IQueryable)
+				return false; // queryables are opaque, enumerating them may execute a query
+
+			if (a is string || b is string)
+				return a.Equals(b);
+
+			if (a is IEnumerable ae && b is IEnumerable be)
+				return SequencesEqual(ae, be);
+
+			return a.Equals(b);
+		}
+
+		static bool SequencesEqual(IEnumerable a, IEnumerable b)
+		{
+			var enum1 = a.GetEnumerator();
+			var enum2 = b.GetEnumerator();
+
+			using (enum1 as IDisposable)
+			using (enum2 as IDisposable)
+			{
+				while (enum1.MoveNext())
+				{
+					if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
+						return false;
+				}
+
+				return !enum2.MoveNext();
+			}
+		}
+
 		public int GetHashCode(Expression? obj)
 		{
 			var hashCode = new HashCode();
@@ -492,7 +536,7 @@ namespace LinqToDB.Internal.Expressions
 				   && Compare(a.IfTrue, b.IfTrue)
 				   && Compare(a.IfFalse, b.IfFalse);
 
-			static bool CompareConstant(ConstantExpression a, ConstantExpression b)
+			bool CompareConstant(ConstantExpression a, ConstantExpression b)
 			{
 				if (a.Value == b.Value)
 				{
@@ -511,31 +555,17 @@ namespace LinqToDB.Internal.Expressions
 					return false; // EnumerableQueries are opaque
 				}
 
-				if (a.Value is IEnumerable ae && b.Value is IEnumerable be)
+				// Compare a captured query by its expression: it is an IEnumerable, so the branch below would
+				// enumerate it and execute the query, while its identity says nothing about the SQL it produces.
+				if (a.Value.GetType() == b.Value.GetType()
+					&& typeof(ExpressionQuery<>).IsSameOrParentOf(a.Value.GetType()))
 				{
-					var enum1 = ae.GetEnumerator();
-					var enum2 = be.GetEnumerator();
-					using (enum1 as IDisposable)
-					using (enum2 as IDisposable)
-					{
-						while (enum1.MoveNext())
-						{
-							if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
-								return false;
-						}
-
-						if (enum2.MoveNext())
-							return false;
-					}
-
-					return true;
+					return Compare(((IQueryable)a.Value).Expression, ((IQueryable)b.Value).Expression);
 				}
 
-				if (typeof(ExpressionQuery<>).IsSameOrParentOf(a.GetType())
-					&& typeof(ExpressionQuery<>).IsSameOrParentOf(b.GetType())
-					&& a.Value.GetType() == b.Value.GetType())
+				if (a.Value is IEnumerable ae && b.Value is IEnumerable be)
 				{
-					return true;
+					return SequencesEqual(ae, be);
 				}
 
 				return Equals(a.Value, b.Value);
