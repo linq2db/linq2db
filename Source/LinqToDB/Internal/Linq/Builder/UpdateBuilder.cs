@@ -637,9 +637,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// the column to resolve in the reported shape: the subtype's <see cref="ColumnDescriptor"/> is
 		/// merged into the base entity descriptor unless its member name collides with an already-merged
 		/// one, and the field lookup compares members by name and declaring-type relationship rather than
-		/// by the target's type. The relationship half matters in both directions: identity alone would be
-		/// too narrow to resolve at all, while requiring a same-or-parent relation is what keeps two
-		/// sibling-declared members of the same name from matching each other.
+		/// by the target's type. Requiring a same-or-parent relation rather than plain name equality is
+		/// also what keeps two sibling-declared members of the same name from matching each other.
 		/// </remarks>
 		static Expression EnsureDeclaringType(Expression target, MemberInfo memberInfo)
 			=> memberInfo.DeclaringType?.IsAssignableFrom(target.Type) == false
