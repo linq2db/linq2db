@@ -95,7 +95,8 @@ jobs:
       # Deliberately not -p:UseSharedCompilation=false: tried on this branch, and it only changed
       # which racer lost - the locking process went from VBCSCompiler to csc and the build still
       # failed, on linq2db.dll instead of CodeGenerators.dll. Nor -m:1, which would serialize every
-      # build to dodge a first-build-only race.
+      # build to dodge a first-build-only race. The real fix is to stop the double-build by changing
+      # how Source/LinqToDB references Source/CodeGenerators, which is not a CI concern.
       #
       # The retry is visible in the log as a warning rather than silent, and a real compile error
       # fails both attempts, so this cannot turn a broken build green.
@@ -116,11 +117,27 @@ jobs:
           }
           exit $LASTEXITCODE
 
-      # --no-build because the step above already produced everything for this configuration and both
-      # pass identical properties, so a recompile here is redundant - and a redundant compile is one
-      # more chance to hit the CS2012 lock described above.
+      # Retried on the same grounds as the build step: pack compiles the solution again, so it is
+      # exposed to the same race. Not --no-build - LinqToDB.CLI packs a .NET tool with per-RID
+      # publishes, and pack has to produce those RID outputs itself because a plain build never does.
+      # Tried it here and pack failed with MSB3030, unable to copy
+      # .build/bin/LinqToDB.CLI/Release/net9.0/osx-x64/dotnet-linq2db.runtimeconfig.json.
       - name: Pack solution
-        run: dotnet pack ${{ env.SOLUTION }} --no-build --configuration ${{ env.RELEASE_CONFIGURATION }} -p:RunAnalyzersDuringBuild=false -p:RunApiAnalyzersDuringBuild=false ${{ env.VERSION_ARGS }}
+        shell: pwsh
+        run: |
+          $packArgs = @(
+            '${{ env.SOLUTION }}'
+            '--configuration', '${{ env.RELEASE_CONFIGURATION }}'
+            '-p:RunAnalyzersDuringBuild=false'
+            '-p:RunApiAnalyzersDuringBuild=false'
+          ) + ('${{ env.VERSION_ARGS }}' -split ' ' | Where-Object { $_ })
+
+          dotnet pack @packArgs
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "::warning title=Retrying pack::First pack failed; retrying over the warm .build tree (dotnet/roslyn#77538)."
+            dotnet pack @packArgs
+          }
+          exit $LASTEXITCODE
 
       # Both scripts already carry -NoAzdoLogs and signal through their exit code, so they need no
       # porting - only the switch. nuget-job.yml runs these before publishing; on a PR they are the
