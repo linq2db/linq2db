@@ -198,6 +198,7 @@
     <File Path="Build/Azure/scripts/sqlserver.2022_2025.sh" />
     <File Path="Build/Azure/scripts/sqlserver.extras.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.extras.sh" />
+    <File Path="Build/Azure/scripts/third-party-notices.ps1" />
     <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
     <File Path="Build/Azure/scripts/verify-analyzer-delivery.ps1" />
@@ -256,6 +257,10 @@
     <File Path="Data/Setup Scripts/wait-exit.cmd" />
     <File Path="Data/Setup Scripts/wait.cmd" />
     <File Path="Data/Setup Scripts/ydb.cmd" />
+  </Folder>
+  <Folder Name="/Build/licenses/">
+    <File Path="Build/licenses/README.md" />
+    <File Path="Build/licenses/components.json" />
   </Folder>
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />

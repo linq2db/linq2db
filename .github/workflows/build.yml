@@ -116,6 +116,19 @@ jobs:
         shell: pwsh
         run: ./Build/Azure/scripts/verify-analyzer-delivery.ps1 -PackagesDir .build/package/release -NoAzdoLogs
 
+      # linq2db.cli, the 14 T4 packages and the LINQPad 5 .lpx physically redistribute third-party
+      # binaries under an MIT license expression that covers only linq2db's own code. `check` catches a
+      # hand-edited or un-regenerated notices file; `verify` opens the packed output and fails on a
+      # bundled binary that no notices file accounts for - which is how a new transitive dependency
+      # announces itself. See Build/licenses/README.md and linq2db/linq2db#5731.
+      - name: Check third-party notices are up to date
+        shell: pwsh
+        run: ./Build/Azure/scripts/third-party-notices.ps1 -Action check -NoAzdoLogs
+
+      - name: Verify third-party notices cover the packed output
+        shell: pwsh
+        run: ./Build/Azure/scripts/third-party-notices.ps1 -Action verify -PackagesDir .build/package/release -LpxDir .build/lpx -NoAzdoLogs
+
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: nugets
