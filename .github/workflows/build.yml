@@ -73,36 +73,12 @@ jobs:
             'VERSION_ARGS=-p:VersionSuffix=-dev.${{ github.run_number }}' | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      # Build the Roslyn components on their own first, or a clean solution build intermittently
-      # loses this race:
-      #
-      #   CSC : error CS2012: Cannot open '.build\obj\CodeGenerators\Release\CodeGenerators.dll' for
-      #   writing -- ... because it is being used by another process.
-      #
-      # Each one gets built twice concurrently: once plain, and once as an inner build carrying an
-      # explicit TargetFramework global property, which is how a ProjectReference from
-      # multi-targeting LinqToDB resolves it. Being single-TFM, their obj path under ArtifactsPath
-      # has no target-framework segment - .build/obj/<name>/Release/<name>.dll - so both instances
-      # write the very same file and one of them loses. dotnet/roslyn#77538 shows the SDK printing
-      # both, one failed and one succeeded; .NET triage put the cause in how this repo declares the
-      # dependency, and it has been open since 2024.
-      #
-      # Building them up front means both instances find them current and skip compiling, so there
-      # is no second write left to race.
-      #
-      # This is the whole class, not one project: every Roslyn component here is single-TFM and
-      # reached from multi-TFM LinqToDB. CodeGenerators sets TargetFramework itself; the other two
-      # inherit it from Source/Analyzers.Common.props, which pins netstandard2.0 and clears the
-      # inherited TargetFrameworks list. A new Roslyn component belongs in this list - fixing only
-      # CodeGenerators just moved the failure onto LinqToDB.Analyzers.
-      #
-      # The properties have to match the solution build below, VERSION_ARGS in particular:
-      # VersionSuffix feeds the assembly version, and a mismatch would make the solution build
-      # recompile these, putting the race straight back.
-      #
-      # Azure hits this far less often: 2 vCPU against a GitHub runner's 4 leaves much less
-      # parallelism for the two instances to overlap in, which is why it surfaced only after the
-      # DB-free checks moved to GitHub in #5836.
+      # Avoids intermittent CS2012 on these projects (dotnet/roslyn#77538): single-TFM and reached
+      # from multi-TFM LinqToDB, so each builds twice concurrently - plain, and as a
+      # TargetFramework-pinned inner build - into one obj path. Pre-building makes both skip.
+      # The set is CodeGenerators plus everything pinned by Source/Analyzers.Common.props; add new
+      # Roslyn components here. Properties must match the solution build - a VERSION_ARGS mismatch
+      # recompiles these and the race is back.
       - name: Build Roslyn components
         shell: pwsh
         run: |
