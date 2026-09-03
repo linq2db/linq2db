@@ -1,0 +1,3196 @@
+{
+  "$comment": [
+    "Inventory of every third-party binary physically redistributed inside a linq2db artifact.",
+    "Read Build/licenses/README.md before editing. Regenerate the notices after any change:",
+    "  pwsh -NoProfile -File Build/Azure/scripts/third-party-notices.ps1 -Action generate",
+    "To find out what changed after a dependency bump, run -Action harvest."
+  ],
+  "firstPartyAssemblies": [
+    "linq2db.dll",
+    "linq2db.Tools.dll",
+    "linq2db.Scaffold.dll",
+    "linq2db.LINQPad.dll",
+    "LinqToDB.Analyzers.dll",
+    "LinqToDB.Analyzers.CodeFixes.dll",
+    "dotnet-linq2db.dll",
+    "dotnet-linq2db.exe"
+  ],
+  "ignore": [
+    "*.nuspec",
+    "_rels/**",
+    "package/**",
+    "[Content_Types].xml",
+    "**/*.png",
+    "**/*.md",
+    "**/*.txt",
+    "**/*.xml",
+    "**/*.json",
+    "**/*.pdb",
+    "**/*.tt",
+    "**/*.ttinclude",
+    "**/*.props",
+    "**/*.targets",
+    "**/*.rtf",
+    "**/*.manifest",
+    "**/*.lst",
+    "**/*.bnd",
+    "**/*.cnv",
+    "**/*.ucs",
+    "**/*.mo",
+    "**/*.lib",
+    "**/*.log",
+    "**/*.cfg",
+    "**/*.xsd",
+    "**/*.sample",
+    "**/*.arm",
+    "**/*.swidtag"
+  ],
+  "artifacts": [
+    {
+      "key": "linq2db.cli",
+      "title": "linq2db.cli",
+      "kind": "tool",
+      "packageIds": [
+        "linq2db.cli"
+      ],
+      "packageIdPrefixes": [
+        "linq2db.cli."
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.cli.txt"
+    },
+    {
+      "key": "linq2db.Access",
+      "title": "linq2db.Access",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.Access"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.Access.txt"
+    },
+    {
+      "key": "linq2db.ClickHouse",
+      "title": "linq2db.ClickHouse",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.ClickHouse"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.ClickHouse.txt"
+    },
+    {
+      "key": "linq2db.DB2",
+      "title": "linq2db.DB2",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.DB2"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.DB2.txt"
+    },
+    {
+      "key": "linq2db.Firebird",
+      "title": "linq2db.Firebird",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.Firebird"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.Firebird.txt"
+    },
+    {
+      "key": "linq2db.Informix",
+      "title": "linq2db.Informix",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.Informix"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.Informix.txt"
+    },
+    {
+      "key": "linq2db.MySql",
+      "title": "linq2db.MySql",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.MySql"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.MySql.txt"
+    },
+    {
+      "key": "linq2db.Oracle",
+      "title": "linq2db.Oracle",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.Oracle"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.Oracle.txt"
+    },
+    {
+      "key": "linq2db.PostgreSQL",
+      "title": "linq2db.PostgreSQL",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.PostgreSQL"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.PostgreSQL.txt"
+    },
+    {
+      "key": "linq2db.SapHana",
+      "title": "linq2db.SapHana",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.SapHana"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.SapHana.txt"
+    },
+    {
+      "key": "linq2db.SqlCe",
+      "title": "linq2db.SqlCe",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.SqlCe"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.SqlCe.txt"
+    },
+    {
+      "key": "linq2db.SQLite",
+      "title": "linq2db.SQLite",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.SQLite"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.SQLite.txt"
+    },
+    {
+      "key": "linq2db.SqlServer",
+      "title": "linq2db.SqlServer",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.SqlServer"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.SqlServer.txt"
+    },
+    {
+      "key": "linq2db.Sybase",
+      "title": "linq2db.Sybase",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.Sybase"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.Sybase.txt"
+    },
+    {
+      "key": "linq2db.t4models",
+      "title": "linq2db.t4models",
+      "kind": "package",
+      "packageIds": [
+        "linq2db.t4models"
+      ],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.t4models.txt"
+    },
+    {
+      "key": "linq2db.LINQPad.lpx",
+      "title": "linq2db.LINQPad (LINQPad 5 plugin)",
+      "kind": "lpx",
+      "packageIds": [],
+      "notices": "THIRD-PARTY-NOTICES.linq2db.LINQPad.lpx.txt"
+    }
+  ],
+  "components": [
+    {
+      "id": "adonetcore.aseclient",
+      "displayName": "AdoNetCore.AseClient",
+      "packageId": "AdoNetCore.AseClient",
+      "versions": {
+        "net10.0": "0.19.2",
+        "net8.0": "0.19.2",
+        "net9.0": "0.19.2",
+        "net462": "0.19.2",
+        "net472": "0.19.2",
+        "net8.0-windows7.0": "0.19.2"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "",
+      "projectUrl": "https://github.com/DataAction/AdoNetCore.AseClient",
+      "redistribution": "permitted",
+      "files": [
+        "AdoNetCore.AseClient.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx",
+        "linq2db.Sybase",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "apache.arrow",
+      "displayName": "Apache.Arrow",
+      "packageId": "Apache.Arrow",
+      "versions": {
+        "net10.0": "23.0.0",
+        "net8.0": "23.0.0",
+        "net9.0": "23.0.0",
+        "net8.0-windows7.0": "23.0.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2016-2025 The Apache Software Foundation",
+      "projectUrl": "https://arrow.apache.org/",
+      "redistribution": "permitted",
+      "files": [
+        "Apache.Arrow.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "apache.arrow.scalars",
+      "displayName": "Apache.Arrow.Scalars",
+      "packageId": "Apache.Arrow.Scalars",
+      "versions": {
+        "net10.0": "23.0.0",
+        "net8.0": "23.0.0",
+        "net9.0": "23.0.0",
+        "net8.0-windows7.0": "23.0.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2016-2025 The Apache Software Foundation",
+      "projectUrl": "https://arrow.apache.org/",
+      "redistribution": "permitted",
+      "files": [
+        "Apache.Arrow.Scalars.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "clickhouse.driver",
+      "displayName": "ClickHouse.Driver",
+      "packageId": "ClickHouse.Driver",
+      "versions": {
+        "net10.0": "1.3.0",
+        "net8.0": "1.3.0",
+        "net9.0": "1.3.0",
+        "net462": "0.9.0",
+        "net472": "0.9.0",
+        "net8.0-windows7.0": "1.3.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "",
+      "projectUrl": "https://github.com/ClickHouse/clickhouse-cs",
+      "redistribution": "permitted",
+      "files": [
+        "ClickHouse.Driver.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "duckdb.net.bindings.full",
+      "displayName": "DuckDB.NET.Bindings.Full",
+      "packageId": "DuckDB.NET.Bindings.Full",
+      "versions": {
+        "net10.0": "1.5.5",
+        "net8.0": "1.5.5",
+        "net9.0": "1.5.5",
+        "net8.0-windows7.0": "1.5.5"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright © 2020 - 2026 Giorgi Dalakishvili",
+      "projectUrl": "https://github.com/Giorgi/DuckDB.NET",
+      "redistribution": "permitted",
+      "files": [
+        "duckdb.dll",
+        "DuckDB.NET.Bindings.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "duckdb.net.data.full",
+      "displayName": "DuckDB.NET.Data.Full",
+      "packageId": "DuckDB.NET.Data.Full",
+      "versions": {
+        "net10.0": "1.5.5",
+        "net8.0": "1.5.5",
+        "net9.0": "1.5.5",
+        "net8.0-windows7.0": "1.5.5"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright © 2020 - 2026 Giorgi Dalakishvili",
+      "projectUrl": "https://github.com/Giorgi/DuckDB.NET",
+      "redistribution": "permitted",
+      "files": [
+        "DuckDB.NET.Data.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "firebirdsql.data.firebirdclient",
+      "displayName": "FirebirdSql.Data.FirebirdClient",
+      "packageId": "FirebirdSql.Data.FirebirdClient",
+      "versions": {
+        "net10.0": "10.3.4",
+        "net8.0": "10.3.4",
+        "net9.0": "10.3.4",
+        "net462": "10.3.4",
+        "net472": "10.3.4",
+        "net8.0-windows7.0": "10.3.4"
+      },
+      "license": "Initial Developer's Public License 1.0",
+      "licenseTexts": [
+        "firebirdsql-data-firebirdclient-license.txt"
+      ],
+      "copyright": "(c) 2002-2025",
+      "projectUrl": "http://www.firebirdsql.org/en/net-provider/",
+      "redistribution": "permitted",
+      "files": [
+        "FirebirdSql.Data.FirebirdClient.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.Firebird",
+        "linq2db.LINQPad.lpx",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "google.protobuf",
+      "displayName": "Google.Protobuf",
+      "packageId": "Google.Protobuf",
+      "versions": {
+        "net10.0": "3.18.0",
+        "net8.0": "3.18.0",
+        "net9.0": "3.18.0",
+        "net8.0-windows7.0": "3.18.0"
+      },
+      "license": "BSD-3-Clause",
+      "licenseTexts": [
+        "google-protobuf-bsd3.txt"
+      ],
+      "copyright": "Copyright 2015, Google Inc.",
+      "projectUrl": "https://github.com/protocolbuffers/protobuf",
+      "redistribution": "permitted",
+      "files": [
+        "Google.Protobuf.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "grpc.core.api",
+      "displayName": "Grpc.Core.Api",
+      "packageId": "Grpc.Core.Api",
+      "versions": {
+        "net10.0": "2.67.0",
+        "net8.0": "2.67.0",
+        "net9.0": "2.67.0",
+        "net8.0-windows7.0": "2.67.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2019 The gRPC Authors",
+      "projectUrl": "https://github.com/grpc/grpc-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Grpc.Core.Api.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "grpc.net.client",
+      "displayName": "Grpc.Net.Client",
+      "packageId": "Grpc.Net.Client",
+      "versions": {
+        "net10.0": "2.67.0",
+        "net8.0": "2.67.0",
+        "net9.0": "2.67.0",
+        "net8.0-windows7.0": "2.67.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2019 The gRPC Authors",
+      "projectUrl": "https://github.com/grpc/grpc-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Grpc.Net.Client.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "grpc.net.common",
+      "displayName": "Grpc.Net.Common",
+      "packageId": "Grpc.Net.Common",
+      "versions": {
+        "net10.0": "2.67.0",
+        "net8.0": "2.67.0",
+        "net9.0": "2.67.0",
+        "net8.0-windows7.0": "2.67.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2019 The gRPC Authors",
+      "projectUrl": "https://github.com/grpc/grpc-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Grpc.Net.Common.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "humanizer.core",
+      "displayName": "Humanizer.Core",
+      "packageId": "Humanizer.Core",
+      "versions": {
+        "net10.0": "3.0.10",
+        "net8.0": "3.0.10",
+        "net9.0": "3.0.10",
+        "net462": "3.0.10",
+        "net472": "3.0.10",
+        "net8.0-windows7.0": "3.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright (c) .NET Foundation and Contributors",
+      "projectUrl": "https://github.com/Humanizr/Humanizer",
+      "redistribution": "permitted",
+      "files": [
+        "Humanizer.dll"
+      ],
+      "artifacts": [
+        "linq2db.Access",
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.DB2",
+        "linq2db.Firebird",
+        "linq2db.Informix",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.Oracle",
+        "linq2db.PostgreSQL",
+        "linq2db.SapHana",
+        "linq2db.SqlCe",
+        "linq2db.SQLite",
+        "linq2db.SqlServer",
+        "linq2db.Sybase",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "ibm-clidriver",
+      "displayName": "IBM Data Server Driver for ODBC and CLI (clidriver)",
+      "packageId": "IBM.Data.DB.Provider",
+      "versions": {
+        "net462": "11.5.9000.4",
+        "net472": "11.5.9000.4"
+      },
+      "license": "IBM International Program License Agreement - Redistributables",
+      "licenseTexts": [
+        "ibm-clidriver-redist.txt"
+      ],
+      "copyright": "Copyright IBM Corporation",
+      "projectUrl": "https://www.nuget.org/packages/IBM.Data.DB.Provider",
+      "redistribution": "permitted",
+      "notes": "IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source. Note on scope: IBM ships its own enumeration at clidriver/license/odbc_REDIST.txt, reproduced below. Of the 86 distinct clidriver binaries shipped here, 34 do not appear on that list - 30 GSKit crypto libraries (gsk8*.dll), 2 ICC crypto libraries (icclib084/085.dll) and Microsoft Visual C++ 12.0 runtime (msvcp120.dll, msvcr120.dll). All of them are delivered inside IBM own NuGet package as runtime dependencies of the driver (GSKit provides its TLS support), so the list reads as incomplete rather than exclusive.",
+      "files": [
+        "clidriver/**",
+        "tools/clidriver/**"
+      ],
+      "artifacts": [
+        "linq2db.DB2",
+        "linq2db.Informix",
+        "linq2db.LINQPad.lpx",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "k4os.compression.lz4",
+      "displayName": "K4os.Compression.LZ4",
+      "packageId": "K4os.Compression.LZ4",
+      "versions": {
+        "net10.0": "1.3.8",
+        "net8.0": "1.3.8",
+        "net9.0": "1.3.8",
+        "net8.0-windows7.0": "1.3.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "k4os-lz4-mit.txt"
+      ],
+      "copyright": "Milosz Krajewski",
+      "projectUrl": "https://github.com/MiloszKrajewski/K4os.Compression.LZ4",
+      "redistribution": "permitted",
+      "files": [
+        "K4os.Compression.LZ4.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "linq2db4iseries",
+      "displayName": "linq2db4iSeries",
+      "packageId": "linq2db4iSeries",
+      "versions": {
+        "net472": "6.3.0",
+        "net8.0-windows7.0": "6.3.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "linq2db4iseries-license.txt"
+      ],
+      "copyright": "",
+      "projectUrl": "https://github.com/LinqToDB4iSeries/Linq2DB4iSeries",
+      "redistribution": "permitted",
+      "files": [
+        "LinqToDB.DataProvider.DB2iSeries.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.bcl.asyncinterfaces",
+      "displayName": "Microsoft.Bcl.AsyncInterfaces",
+      "packageId": "Microsoft.Bcl.AsyncInterfaces",
+      "versions": {
+        "net462": "10.0.3",
+        "net472": "10.0.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Bcl.AsyncInterfaces.dll"
+      ],
+      "artifacts": [
+        "linq2db.Access",
+        "linq2db.ClickHouse",
+        "linq2db.DB2",
+        "linq2db.Firebird",
+        "linq2db.Informix",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.Oracle",
+        "linq2db.PostgreSQL",
+        "linq2db.SapHana",
+        "linq2db.SqlCe",
+        "linq2db.SQLite",
+        "linq2db.SqlServer",
+        "linq2db.Sybase",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "microsoft.bcl.cryptography",
+      "displayName": "Microsoft.Bcl.Cryptography",
+      "packageId": "Microsoft.Bcl.Cryptography",
+      "versions": {
+        "net10.0": "9.0.13",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.13",
+        "net462": "8.0.0",
+        "net472": "8.0.0",
+        "net8.0-windows7.0": "8.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-40686c64.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Bcl.Cryptography.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.bcl.hashcode",
+      "displayName": "Microsoft.Bcl.HashCode",
+      "packageId": "Microsoft.Bcl.HashCode",
+      "versions": {
+        "net462": "6.0.0",
+        "net472": "6.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/maintenance-packages",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Bcl.HashCode.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "microsoft.bcl.timeprovider",
+      "displayName": "Microsoft.Bcl.TimeProvider",
+      "packageId": "Microsoft.Bcl.TimeProvider",
+      "versions": {
+        "net462": "8.0.1",
+        "net472": "8.0.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-19c19dca.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Bcl.TimeProvider.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.codeanalysis.common",
+      "displayName": "Microsoft.CodeAnalysis.Common",
+      "packageId": "Microsoft.CodeAnalysis.Common",
+      "versions": {
+        "net10.0": "5.6.0",
+        "net8.0": "5.6.0",
+        "net9.0": "5.6.0",
+        "net472": "5.6.0",
+        "net8.0-windows7.0": "4.13.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/roslyn",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.CodeAnalysis.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.codeanalysis.csharp",
+      "displayName": "Microsoft.CodeAnalysis.CSharp",
+      "packageId": "Microsoft.CodeAnalysis.CSharp",
+      "versions": {
+        "net10.0": "5.6.0",
+        "net8.0": "5.6.0",
+        "net9.0": "5.6.0",
+        "net472": "5.6.0",
+        "net8.0-windows7.0": "4.13.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/roslyn",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.CodeAnalysis.CSharp.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.data.sqlclient",
+      "displayName": "Microsoft.Data.SqlClient",
+      "packageId": "Microsoft.Data.SqlClient",
+      "versions": {
+        "net10.0": "7.0.2",
+        "net8.0": "7.0.2",
+        "net9.0": "7.0.2",
+        "net462": "7.0.2",
+        "net472": "7.0.2",
+        "net8.0-windows7.0": "7.0.2"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/sqlclientproject",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Data.SqlClient.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.data.sqlclient.extensions.abstractions",
+      "displayName": "Microsoft.Data.SqlClient.Extensions.Abstractions",
+      "packageId": "Microsoft.Data.SqlClient.Extensions.Abstractions",
+      "versions": {
+        "net10.0": "7.0.2",
+        "net8.0": "7.0.2",
+        "net9.0": "7.0.2",
+        "net462": "7.0.2",
+        "net472": "7.0.2",
+        "net8.0-windows7.0": "7.0.2"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/sqlclientproject",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Data.SqlClient.Extensions.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.data.sqlclient.internal.logging",
+      "displayName": "Microsoft.Data.SqlClient.Internal.Logging",
+      "packageId": "Microsoft.Data.SqlClient.Internal.Logging",
+      "versions": {
+        "net10.0": "7.0.2",
+        "net8.0": "7.0.2",
+        "net9.0": "7.0.2",
+        "net462": "7.0.2",
+        "net472": "7.0.2",
+        "net8.0-windows7.0": "7.0.2"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/sqlclientproject",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Data.SqlClient.Internal.Logging.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.data.sqlclient.sni.runtime",
+      "displayName": "Microsoft.Data.SqlClient.SNI.runtime",
+      "packageId": "Microsoft.Data.SqlClient.SNI.runtime",
+      "versions": {
+        "net10.0": "6.0.2",
+        "net8.0": "6.0.2",
+        "net9.0": "6.0.2",
+        "net8.0-windows7.0": "6.0.2"
+      },
+      "license": "Microsoft Software License Terms (Distributable Code)",
+      "licenseTexts": [
+        "microsoft-data-sqlclient-sni-runtime-license.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/sqlclientproject",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Data.SqlClient.SNI.arm64.dll",
+        "Microsoft.Data.SqlClient.SNI.dll",
+        "Microsoft.Data.SqlClient.SNI.x64.dll",
+        "Microsoft.Data.SqlClient.SNI.x86.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.data.sqlite.core",
+      "displayName": "Microsoft.Data.Sqlite.Core",
+      "packageId": "Microsoft.Data.Sqlite.Core",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net472": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://docs.microsoft.com/dotnet/standard/data/sqlite/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Data.Sqlite.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.ai.abstractions",
+      "displayName": "Microsoft.Extensions.AI.Abstractions",
+      "packageId": "Microsoft.Extensions.AI.Abstractions",
+      "versions": {
+        "net10.0": "10.8.3",
+        "net8.0": "10.8.3",
+        "net9.0": "10.8.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.AI.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.caching.abstractions",
+      "displayName": "Microsoft.Extensions.Caching.Abstractions",
+      "packageId": "Microsoft.Extensions.Caching.Abstractions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "8.0.0",
+        "net472": "8.0.0",
+        "net8.0-windows7.0": "8.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Caching.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.caching.memory",
+      "displayName": "Microsoft.Extensions.Caching.Memory",
+      "packageId": "Microsoft.Extensions.Caching.Memory",
+      "versions": {
+        "net10.0": "9.0.13",
+        "net8.0": "8.0.1",
+        "net9.0": "9.0.13",
+        "net462": "8.0.1",
+        "net472": "8.0.1",
+        "net8.0-windows7.0": "8.0.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-40686c64.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Caching.Memory.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration",
+      "displayName": "Microsoft.Extensions.Configuration",
+      "packageId": "Microsoft.Extensions.Configuration",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.8",
+        "net9.0": "10.0.8",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration.abstractions",
+      "displayName": "Microsoft.Extensions.Configuration.Abstractions",
+      "packageId": "Microsoft.Extensions.Configuration.Abstractions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration.binder",
+      "displayName": "Microsoft.Extensions.Configuration.Binder",
+      "packageId": "Microsoft.Extensions.Configuration.Binder",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.8",
+        "net9.0": "10.0.8",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.Binder.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration.commandline",
+      "displayName": "Microsoft.Extensions.Configuration.CommandLine",
+      "packageId": "Microsoft.Extensions.Configuration.CommandLine",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.CommandLine.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration.environmentvariables",
+      "displayName": "Microsoft.Extensions.Configuration.EnvironmentVariables",
+      "packageId": "Microsoft.Extensions.Configuration.EnvironmentVariables",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.EnvironmentVariables.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration.fileextensions",
+      "displayName": "Microsoft.Extensions.Configuration.FileExtensions",
+      "packageId": "Microsoft.Extensions.Configuration.FileExtensions",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.FileExtensions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration.json",
+      "displayName": "Microsoft.Extensions.Configuration.Json",
+      "packageId": "Microsoft.Extensions.Configuration.Json",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.Json.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.configuration.usersecrets",
+      "displayName": "Microsoft.Extensions.Configuration.UserSecrets",
+      "packageId": "Microsoft.Extensions.Configuration.UserSecrets",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Configuration.UserSecrets.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.dependencyinjection",
+      "displayName": "Microsoft.Extensions.DependencyInjection",
+      "packageId": "Microsoft.Extensions.DependencyInjection",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.8",
+        "net9.0": "10.0.8",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.DependencyInjection.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.dependencyinjection.abstractions",
+      "displayName": "Microsoft.Extensions.DependencyInjection.Abstractions",
+      "packageId": "Microsoft.Extensions.DependencyInjection.Abstractions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.DependencyInjection.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.dependencymodel",
+      "displayName": "Microsoft.Extensions.DependencyModel",
+      "packageId": "Microsoft.Extensions.DependencyModel",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.DependencyModel.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.diagnostics",
+      "displayName": "Microsoft.Extensions.Diagnostics",
+      "packageId": "Microsoft.Extensions.Diagnostics",
+      "versions": {
+        "net10.0": "10.0.8",
+        "net8.0": "10.0.8",
+        "net9.0": "10.0.8",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Diagnostics.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.diagnostics.abstractions",
+      "displayName": "Microsoft.Extensions.Diagnostics.Abstractions",
+      "packageId": "Microsoft.Extensions.Diagnostics.Abstractions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Diagnostics.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.fileproviders.abstractions",
+      "displayName": "Microsoft.Extensions.FileProviders.Abstractions",
+      "packageId": "Microsoft.Extensions.FileProviders.Abstractions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.FileProviders.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.fileproviders.physical",
+      "displayName": "Microsoft.Extensions.FileProviders.Physical",
+      "packageId": "Microsoft.Extensions.FileProviders.Physical",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.FileProviders.Physical.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.filesystemglobbing",
+      "displayName": "Microsoft.Extensions.FileSystemGlobbing",
+      "packageId": "Microsoft.Extensions.FileSystemGlobbing",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.FileSystemGlobbing.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.hosting",
+      "displayName": "Microsoft.Extensions.Hosting",
+      "packageId": "Microsoft.Extensions.Hosting",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Hosting.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.hosting.abstractions",
+      "displayName": "Microsoft.Extensions.Hosting.Abstractions",
+      "packageId": "Microsoft.Extensions.Hosting.Abstractions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Hosting.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.http",
+      "displayName": "Microsoft.Extensions.Http",
+      "packageId": "Microsoft.Extensions.Http",
+      "versions": {
+        "net10.0": "10.0.8",
+        "net8.0": "10.0.8",
+        "net9.0": "10.0.8",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Http.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.logging",
+      "displayName": "Microsoft.Extensions.Logging",
+      "packageId": "Microsoft.Extensions.Logging",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.8",
+        "net9.0": "10.0.8",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Logging.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.logging.abstractions",
+      "displayName": "Microsoft.Extensions.Logging.Abstractions",
+      "packageId": "Microsoft.Extensions.Logging.Abstractions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Logging.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.logging.configuration",
+      "displayName": "Microsoft.Extensions.Logging.Configuration",
+      "packageId": "Microsoft.Extensions.Logging.Configuration",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "8.0.1",
+        "net9.0": "9.0.18"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Logging.Configuration.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.logging.console",
+      "displayName": "Microsoft.Extensions.Logging.Console",
+      "packageId": "Microsoft.Extensions.Logging.Console",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "8.0.1",
+        "net9.0": "9.0.18"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Logging.Console.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.logging.debug",
+      "displayName": "Microsoft.Extensions.Logging.Debug",
+      "packageId": "Microsoft.Extensions.Logging.Debug",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Logging.Debug.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.logging.eventlog",
+      "displayName": "Microsoft.Extensions.Logging.EventLog",
+      "packageId": "Microsoft.Extensions.Logging.EventLog",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Logging.EventLog.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.logging.eventsource",
+      "displayName": "Microsoft.Extensions.Logging.EventSource",
+      "packageId": "Microsoft.Extensions.Logging.EventSource",
+      "versions": {
+        "net10.0": "10.0.0",
+        "net8.0": "8.0.0",
+        "net9.0": "9.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Logging.EventSource.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.options",
+      "displayName": "Microsoft.Extensions.Options",
+      "packageId": "Microsoft.Extensions.Options",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Options.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.options.configurationextensions",
+      "displayName": "Microsoft.Extensions.Options.ConfigurationExtensions",
+      "packageId": "Microsoft.Extensions.Options.ConfigurationExtensions",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.8",
+        "net9.0": "10.0.8",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Options.ConfigurationExtensions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.extensions.primitives",
+      "displayName": "Microsoft.Extensions.Primitives",
+      "packageId": "Microsoft.Extensions.Primitives",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.0",
+        "net472": "10.0.0",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.Extensions.Primitives.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.identitymodel.abstractions",
+      "displayName": "Microsoft.IdentityModel.Abstractions",
+      "packageId": "Microsoft.IdentityModel.Abstractions",
+      "versions": {
+        "net10.0": "8.16.0",
+        "net8.0": "8.16.0",
+        "net9.0": "8.16.0",
+        "net462": "8.16.0",
+        "net472": "8.16.0",
+        "net8.0-windows7.0": "8.16.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.IdentityModel.Abstractions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.identitymodel.jsonwebtokens",
+      "displayName": "Microsoft.IdentityModel.JsonWebTokens",
+      "packageId": "Microsoft.IdentityModel.JsonWebTokens",
+      "versions": {
+        "net10.0": "8.16.0",
+        "net8.0": "8.16.0",
+        "net9.0": "8.16.0",
+        "net462": "8.16.0",
+        "net472": "8.16.0",
+        "net8.0-windows7.0": "8.16.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.IdentityModel.JsonWebTokens.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.identitymodel.logging",
+      "displayName": "Microsoft.IdentityModel.Logging",
+      "packageId": "Microsoft.IdentityModel.Logging",
+      "versions": {
+        "net10.0": "8.16.0",
+        "net8.0": "8.16.0",
+        "net9.0": "8.16.0",
+        "net462": "8.16.0",
+        "net472": "8.16.0",
+        "net8.0-windows7.0": "8.16.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.IdentityModel.Logging.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.identitymodel.protocols",
+      "displayName": "Microsoft.IdentityModel.Protocols",
+      "packageId": "Microsoft.IdentityModel.Protocols",
+      "versions": {
+        "net10.0": "8.16.0",
+        "net8.0": "8.16.0",
+        "net9.0": "8.16.0",
+        "net462": "8.16.0",
+        "net472": "8.16.0",
+        "net8.0-windows7.0": "8.16.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.IdentityModel.Protocols.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.identitymodel.protocols.openidconnect",
+      "displayName": "Microsoft.IdentityModel.Protocols.OpenIdConnect",
+      "packageId": "Microsoft.IdentityModel.Protocols.OpenIdConnect",
+      "versions": {
+        "net10.0": "8.16.0",
+        "net8.0": "8.16.0",
+        "net9.0": "8.16.0",
+        "net462": "8.16.0",
+        "net472": "8.16.0",
+        "net8.0-windows7.0": "8.16.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.IdentityModel.Protocols.OpenIdConnect.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.identitymodel.tokens",
+      "displayName": "Microsoft.IdentityModel.Tokens",
+      "packageId": "Microsoft.IdentityModel.Tokens",
+      "versions": {
+        "net10.0": "8.16.0",
+        "net8.0": "8.16.0",
+        "net9.0": "8.16.0",
+        "net462": "8.16.0",
+        "net472": "8.16.0",
+        "net8.0-windows7.0": "8.16.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.IdentityModel.Tokens.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.io.recyclablememorystream",
+      "displayName": "Microsoft.IO.RecyclableMemoryStream",
+      "packageId": "Microsoft.IO.RecyclableMemoryStream",
+      "versions": {
+        "net10.0": "3.0.1",
+        "net8.0": "3.0.1",
+        "net9.0": "3.0.1",
+        "net462": "3.0.1",
+        "net472": "3.0.1",
+        "net8.0-windows7.0": "3.0.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.IO.RecyclableMemoryStream.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "microsoft.sqlserver.server",
+      "displayName": "Microsoft.SqlServer.Server",
+      "packageId": "Microsoft.SqlServer.Server",
+      "versions": {
+        "net10.0": "1.0.0",
+        "net8.0": "1.0.0",
+        "net9.0": "1.0.0",
+        "net462": "1.0.0",
+        "net472": "1.0.0",
+        "net8.0-windows7.0": "1.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://aka.ms/sqlclientproject",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.SqlServer.Server.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx",
+        "linq2db.SqlServer",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "microsoft.sqlserver.transactsql.scriptdom",
+      "displayName": "Microsoft.SqlServer.TransactSql.ScriptDom",
+      "packageId": "Microsoft.SqlServer.TransactSql.ScriptDom",
+      "versions": {
+        "net10.0": "180.78.1",
+        "net8.0": "180.78.1",
+        "net9.0": "180.78.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/microsoft/SqlScriptDOM",
+      "redistribution": "permitted",
+      "files": [
+        "Microsoft.SqlServer.TransactSql.ScriptDom.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "microsoft.sqlserver.types",
+      "displayName": "Microsoft.SqlServer.Types",
+      "packageId": "Microsoft.SqlServer.Types",
+      "versions": {
+        "net10.0": "170.1000.7",
+        "net8.0": "170.1000.7",
+        "net9.0": "170.1000.7",
+        "net462": "170.1000.7",
+        "net472": "170.1000.7"
+      },
+      "license": "Microsoft Software License Terms - Microsoft System CLR Types for Microsoft SQL Server 2022",
+      "licenseTexts": [
+        "microsoft-sqlserver-types-license.md"
+      ],
+      "copyright": "Copyright (c) Microsoft Corporation.",
+      "projectUrl": "https://learn.microsoft.com/dotnet/api/microsoft.sqlserver.types",
+      "redistribution": "permitted",
+      "notes": "The bundled binary is version 170.1000.7, whose embedded license.md is the MICROSOFT SQL SERVER VNEXT COMMUNITY PREVIEW pre-release text: its term ended 09/30/2022, it grants installation \"solely to internally evaluate it and provide feedback to Microsoft\", and it contains no DISTRIBUTABLE CODE section or any distribution grant. That appears to be a packaging error on a stable release - 160.1000.6 of the same package carries ordinary MICROSOFT SOFTWARE LICENSE TERMS for MICROSOFT SYSTEM CLR TYPES FOR MICROSOFT SQL SERVER 2022, with an explicit DISTRIBUTABLE CODE grant covering third-party distribution. Reported to Microsoft. The terms reproduced here are the 160.1000.6 ones, which is what we understand to have been intended for this package; the text Microsoft actually attached to 170.1000.7 is the pre-release one described above.",
+      "revisit": "Drop the licence substitution once Microsoft ships a 170.x package carrying corrected terms: replace texts/microsoft-sqlserver-types-license.md with that package own license.md and clear this marker. Reported to Microsoft; tracked on issue #5731.",
+      "files": [
+        "Microsoft.SqlServer.Types.dll",
+        "SqlServerSpatial170.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx",
+        "linq2db.SqlServer",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "modelcontextprotocol",
+      "displayName": "ModelContextProtocol",
+      "packageId": "ModelContextProtocol",
+      "versions": {
+        "net10.0": "2.0.0",
+        "net8.0": "2.0.0",
+        "net9.0": "2.0.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "© Model Context Protocol a Series of LF Projects, LLC.",
+      "projectUrl": "https://csharp.sdk.modelcontextprotocol.io/",
+      "redistribution": "permitted",
+      "files": [
+        "ModelContextProtocol.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "modelcontextprotocol.core",
+      "displayName": "ModelContextProtocol.Core",
+      "packageId": "ModelContextProtocol.Core",
+      "versions": {
+        "net10.0": "2.0.0",
+        "net8.0": "2.0.0",
+        "net9.0": "2.0.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "© Model Context Protocol a Series of LF Projects, LLC.",
+      "projectUrl": "https://csharp.sdk.modelcontextprotocol.io/",
+      "redistribution": "permitted",
+      "files": [
+        "ModelContextProtocol.Core.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "mono.texttemplating",
+      "displayName": "Mono.TextTemplating",
+      "packageId": "Mono.TextTemplating",
+      "versions": {
+        "net10.0": "3.0.0",
+        "net8.0": "3.0.0",
+        "net9.0": "3.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "",
+      "projectUrl": "https://github.com/mono/t4",
+      "redistribution": "permitted",
+      "files": [
+        "Mono.TextTemplating.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "msvc90-crt",
+      "displayName": "Microsoft Visual C++ 9.0 Runtime (required by SQL Server Compact natives)",
+      "packageId": "",
+      "versions": {
+        "net462": "9.0"
+      },
+      "license": "Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1 (section 1b)",
+      "licenseTexts": [
+      "msvc90-crt-readme.txt",
+      "microsoft-sqlserver-compact-4.0-eula.txt"
+    ],
+      "copyright": "Copyright (c) Microsoft Corporation",
+      "projectUrl": "https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist",
+      "redistribution": "permitted",
+      "notes": "Shipped inside the SQL CE native folder. Its own README_ENU.txt states these are not SQL Server Compact files and refers to section 1b of the SQL Server Compact 4.0 licence terms, which is the document reproduced for the SQL CE component.",
+      "files": [
+        "amd64/Microsoft.VC90.CRT/*",
+        "tools/amd64/Microsoft.VC90.CRT/*",
+        "x86/Microsoft.VC90.CRT/*"
+      ],
+      "artifacts": [
+        "linq2db.SqlCe",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "mysqlconnector",
+      "displayName": "MySqlConnector",
+      "packageId": "MySqlConnector",
+      "versions": {
+        "net10.0": "2.6.1",
+        "net8.0": "2.6.1",
+        "net9.0": "2.6.1",
+        "net462": "2.6.1",
+        "net472": "2.6.1",
+        "net8.0-windows7.0": "2.6.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright 2016–2026 Bradley Grainger",
+      "projectUrl": "https://mysqlconnector.net/",
+      "redistribution": "permitted",
+      "files": [
+        "MySqlConnector.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "net.ibm.data.db2",
+      "displayName": "Net.IBM.Data.Db2",
+      "packageId": "Net.IBM.Data.Db2",
+      "versions": {
+        "net8.0-windows7.0": "9.0.0.400"
+      },
+      "license": "IBM International Program License Agreement - Redistributables",
+      "licenseTexts": [
+        "net-ibm-data-db2-license.txt"
+      ],
+      "copyright": "Copyright(c) 2025 IBM Corporation. All rights reserved",
+      "projectUrl": "",
+      "redistribution": "permitted",
+      "notes": "IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.",
+      "files": [
+        "IBM.Data.DB2.dll",
+        "IBM.Data.DB2.DLL"
+      ],
+      "artifacts": [
+        "linq2db.DB2",
+        "linq2db.Informix",
+        "linq2db.LINQPad.lpx",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "nodatime",
+      "displayName": "NodaTime",
+      "packageId": "NodaTime",
+      "versions": {
+        "net10.0": "3.2.3",
+        "net8.0": "3.2.3",
+        "net9.0": "3.2.3",
+        "net462": "3.2.2",
+        "net472": "3.2.2",
+        "net8.0-windows7.0": "3.2.3"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "",
+      "projectUrl": "https://nodatime.org/",
+      "redistribution": "permitted",
+      "files": [
+        "NodaTime.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "npgsql",
+      "displayName": "Npgsql",
+      "packageId": "Npgsql",
+      "versions": {
+        "net10.0": "10.0.3",
+        "net8.0": "10.0.3",
+        "net9.0": "10.0.3",
+        "net462": "8.0.9",
+        "net472": "8.0.9",
+        "net8.0-windows7.0": "10.0.3"
+      },
+      "license": "PostgreSQL",
+      "licenseTexts": [
+        "npgsql-postgresql.txt"
+      ],
+      "copyright": "Copyright 2025 © The Npgsql Development Team",
+      "projectUrl": "https://github.com/npgsql/npgsql",
+      "redistribution": "permitted",
+      "files": [
+        "Npgsql.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "octonica.clickhouseclient",
+      "displayName": "Octonica.ClickHouseClient",
+      "packageId": "Octonica.ClickHouseClient",
+      "versions": {
+        "net10.0": "4.1.4",
+        "net8.0": "4.1.4",
+        "net9.0": "4.1.4",
+        "net8.0-windows7.0": "4.1.4"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "© 2019 – 2026 Octonica",
+      "projectUrl": "https://github.com/Octonica/ClickHouseClient",
+      "redistribution": "permitted",
+      "files": [
+        "Octonica.ClickHouseClient.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "oracle.manageddataaccess.core",
+      "displayName": "Oracle.ManagedDataAccess.Core",
+      "packageId": "Oracle.ManagedDataAccess.Core",
+      "versions": {
+        "net10.0": "23.26.300",
+        "net8.0": "23.26.300",
+        "net9.0": "23.26.300",
+        "net8.0-windows7.0": "23.26.300"
+      },
+      "license": "Oracle Free Distribution, Hosting, and Use Terms and Conditions",
+      "licenseTexts": [
+        "oracle-manageddataaccess-core-license.txt"
+      ],
+      "copyright": "Copyright © 2026, Oracle and/or its affiliates",
+      "projectUrl": "https://www.oracle.com/database/technologies/appdev/dotnet.html",
+      "redistribution": "permitted",
+      "files": [
+        "Oracle.ManagedDataAccess.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx",
+        "linq2db.Oracle",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "portable.bouncycastle",
+      "displayName": "Portable.BouncyCastle",
+      "packageId": "Portable.BouncyCastle",
+      "versions": {
+        "net10.0": "1.9.0",
+        "net8.0": "1.9.0",
+        "net9.0": "1.9.0",
+        "net8.0-windows7.0": "1.9.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "bouncycastle-mit.txt"
+      ],
+      "copyright": "© 2000-2021 Legion of the Bouncy Castle Inc.",
+      "projectUrl": "https://www.bouncycastle.org/csharp/",
+      "redistribution": "permitted",
+      "files": [
+        "BouncyCastle.Crypto.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "sap-hana-client",
+      "displayName": "SAP HANA .NET Data Provider",
+      "packageId": "",
+      "versions": {
+        "net462": "v4.5"
+      },
+      "license": "SAP Developer License Agreement 3.2 (see notes - provenance is not certain for this build)",
+      "licenseTexts": [
+      "sap-developer-license-3.2.txt"
+    ],
+      "copyright": "Copyright (c) SAP SE",
+      "projectUrl": "https://help.sap.com/docs/SAP_HANA_CLIENT",
+      "redistribution": "unresolved",
+      "notes": "Sap.Data.Hana.v4.5.dll is checked into Redist/SapHana and copied into the T4 tools folder; no licence accompanied that copy in this repository. The text reproduced here is the SAP Developer License Agreement 3.2, which SAP attaches to the HANA .NET providers it publishes on nuget.org (Sap.Data.Hana.Net.v6.0/v8.0/v10.0) - it is the best available statement of SAP terms for this provider, but it is not necessarily the agreement under which the .NET Framework copy here was obtained, which came from a HANA client installation. Read it before relying on this component: section 1 grants a non-transferable, non-sublicensable licence and section 2(a) states the software may not be provided or made available to any third party. Note also that only the managed assembly is packed, not the native libadonetHDB it calls into, so it cannot connect unless the SAP HANA client is already installed.",
+      "revisit": "Redistribution of Sap.Data.Hana.v4.5.dll is unresolved and needs a decision: either establish terms that permit it, or stop packing it from linq2db.SapHana and linq2db.t4models. Tracked on issue #5862.",
+      "files": [
+        "Sap.Data.Hana.v4.5.dll"
+      ],
+      "artifacts": [
+        "linq2db.SapHana",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "sqlce-runtime",
+      "displayName": "Microsoft SQL Server Compact 4.0",
+      "packageId": "",
+      "versions": {
+        "net462": "4.0"
+      },
+      "license": "Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1",
+      "licenseTexts": [
+      "microsoft-sqlserver-compact-4.0-eula.txt"
+    ],
+      "copyright": "Copyright (c) Microsoft Corporation",
+      "projectUrl": "https://www.microsoft.com/en-us/download/details.aspx?id=30709",
+      "redistribution": "permitted",
+      "notes": "Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the Microsoft.SqlServer.Compact 4.0.8876.1 package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - \"you are permitted to distribute in programs you develop\", \"You may copy and distribute the object code form of code listed in REDIST.TXT files\" and \"Third Party Distribution\" - subject to adding significant primary functionality, which linq2db scaffolding does. The binaries in Redist/SqlCe are byte-identical to that package's contents (verified by SHA-256 on System.Data.SqlServerCe.dll, sqlceca40.dll x86 and amd64, sqlcese40.dll and msvcr90.dll); sourcing them from the package instead is tracked on issue #5861.",
+      "files": [
+        "System.Data.SqlServerCe.dll",
+        "amd64/sqlce*.dll",
+        "tools/amd64/sqlce*.dll",
+        "x86/sqlce*.dll"
+      ],
+      "artifacts": [
+        "linq2db.SqlCe",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "sqlitepclraw.bundle_e_sqlite3",
+      "displayName": "SQLitePCLRaw.bundle_e_sqlite3",
+      "packageId": "SQLitePCLRaw.bundle_e_sqlite3",
+      "versions": {
+        "net10.0": "2.1.11",
+        "net8.0": "2.1.11",
+        "net9.0": "2.1.11",
+        "net472": "2.1.11",
+        "net8.0-windows7.0": "2.1.11"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2014-2024 SourceGear, LLC",
+      "projectUrl": "",
+      "redistribution": "permitted",
+      "files": [
+        "SQLitePCLRaw.batteries_v2.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "sqlitepclraw.core",
+      "displayName": "SQLitePCLRaw.core",
+      "packageId": "SQLitePCLRaw.core",
+      "versions": {
+        "net10.0": "2.1.11",
+        "net8.0": "2.1.11",
+        "net9.0": "2.1.11",
+        "net472": "2.1.11",
+        "net8.0-windows7.0": "2.1.11"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2014-2024 SourceGear, LLC",
+      "projectUrl": "",
+      "redistribution": "permitted",
+      "files": [
+        "SQLitePCLRaw.core.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "sqlitepclraw.lib.e_sqlite3",
+      "displayName": "SQLitePCLRaw.lib.e_sqlite3",
+      "packageId": "SQLitePCLRaw.lib.e_sqlite3",
+      "versions": {
+        "net10.0": "2.1.11",
+        "net8.0": "2.1.11",
+        "net9.0": "2.1.11",
+        "net472": "2.1.11",
+        "net8.0-windows7.0": "2.1.11"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2014-2024 SourceGear, LLC",
+      "projectUrl": "",
+      "redistribution": "permitted",
+      "files": [
+        "e_sqlite3.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx",
+        "linq2db.SQLite",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "sqlitepclraw.provider.dynamic_cdecl",
+      "displayName": "SQLitePCLRaw.provider.dynamic_cdecl",
+      "packageId": "SQLitePCLRaw.provider.dynamic_cdecl",
+      "versions": {
+        "net472": "2.1.11"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2014-2024 SourceGear, LLC",
+      "projectUrl": "",
+      "redistribution": "permitted",
+      "files": [
+        "SQLitePCLRaw.provider.dynamic_cdecl.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "sqlitepclraw.provider.e_sqlite3",
+      "displayName": "SQLitePCLRaw.provider.e_sqlite3",
+      "packageId": "SQLitePCLRaw.provider.e_sqlite3",
+      "versions": {
+        "net10.0": "2.1.11",
+        "net8.0": "2.1.11",
+        "net9.0": "2.1.11",
+        "net8.0-windows7.0": "2.1.11"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "Copyright 2014-2024 SourceGear, LLC",
+      "projectUrl": "",
+      "redistribution": "permitted",
+      "files": [
+        "SQLitePCLRaw.provider.e_sqlite3.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.buffers",
+      "displayName": "System.Buffers",
+      "packageId": "System.Buffers",
+      "versions": {
+        "net462": "4.6.1",
+        "net472": "4.6.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/maintenance-packages",
+      "redistribution": "permitted",
+      "files": [
+        "System.Buffers.dll"
+      ],
+      "artifacts": [
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.codedom",
+      "displayName": "System.CodeDom",
+      "packageId": "System.CodeDom",
+      "versions": {
+        "net10.0": "6.0.0",
+        "net8.0": "6.0.0",
+        "net9.0": "6.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-a6344bfb.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.CodeDom.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.collections.immutable",
+      "displayName": "System.Collections.Immutable",
+      "packageId": "System.Collections.Immutable",
+      "versions": {
+        "net8.0": "10.0.3",
+        "net9.0": "10.0.3",
+        "net462": "9.0.10",
+        "net472": "10.0.3",
+        "net8.0-windows7.0": "8.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Collections.Immutable.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.componentmodel.annotations",
+      "displayName": "System.ComponentModel.Annotations",
+      "packageId": "System.ComponentModel.Annotations",
+      "versions": {
+        "net462": "5.0.0",
+        "net472": "5.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-78e22d4d.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/runtime",
+      "redistribution": "permitted",
+      "files": [
+        "System.ComponentModel.Annotations.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.configuration.configurationmanager",
+      "displayName": "System.Configuration.ConfigurationManager",
+      "packageId": "System.Configuration.ConfigurationManager",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Configuration.ConfigurationManager.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.data.odbc",
+      "displayName": "System.Data.Odbc",
+      "packageId": "System.Data.Odbc",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Data.Odbc.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.SapHana",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.data.oledb",
+      "displayName": "System.Data.OleDb",
+      "packageId": "System.Data.OleDb",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Data.OleDb.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.data.sqlite",
+      "displayName": "System.Data.SQLite",
+      "packageId": "System.Data.SQLite",
+      "versions": {
+        "net462": "2.0.3",
+        "net472": "2.0.3",
+        "net8.0-windows7.0": "2.0.3"
+      },
+      "license": "Public Domain",
+      "licenseTexts": [],
+      "copyright": "Public Domain",
+      "projectUrl": "",
+      "redistribution": "permitted",
+      "files": [
+        "System.Data.SQLite.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx",
+        "linq2db.SQLite",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.diagnostics.diagnosticsource",
+      "displayName": "System.Diagnostics.DiagnosticSource",
+      "packageId": "System.Diagnostics.DiagnosticSource",
+      "versions": {
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.3",
+        "net472": "10.0.3",
+        "net8.0-windows7.0": "10.0.8"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Diagnostics.DiagnosticSource.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.diagnostics.eventlog",
+      "displayName": "System.Diagnostics.EventLog",
+      "packageId": "System.Diagnostics.EventLog",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Diagnostics.EventLog.dll",
+        "System.Diagnostics.EventLog.Messages.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.diagnostics.performancecounter",
+      "displayName": "System.Diagnostics.PerformanceCounter",
+      "packageId": "System.Diagnostics.PerformanceCounter",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Diagnostics.PerformanceCounter.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.directoryservices.protocols",
+      "displayName": "System.DirectoryServices.Protocols",
+      "packageId": "System.DirectoryServices.Protocols",
+      "versions": {
+        "net10.0": "8.0.2",
+        "net8.0": "8.0.2",
+        "net9.0": "8.0.2",
+        "net8.0-windows7.0": "8.0.2"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-b60b2912.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.DirectoryServices.Protocols.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.formats.asn1",
+      "displayName": "System.Formats.Asn1",
+      "packageId": "System.Formats.Asn1",
+      "versions": {
+        "net462": "8.0.1",
+        "net472": "8.0.1",
+        "net8.0-windows7.0": "8.0.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-b60b2912.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Formats.Asn1.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.identitymodel.tokens.jwt",
+      "displayName": "System.IdentityModel.Tokens.Jwt",
+      "packageId": "System.IdentityModel.Tokens.Jwt",
+      "versions": {
+        "net10.0": "8.16.0",
+        "net8.0": "8.16.0",
+        "net9.0": "8.16.0",
+        "net462": "8.16.0",
+        "net472": "8.16.0",
+        "net8.0-windows7.0": "8.16.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+      "redistribution": "permitted",
+      "files": [
+        "System.IdentityModel.Tokens.Jwt.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.io.hashing",
+      "displayName": "System.IO.Hashing",
+      "packageId": "System.IO.Hashing",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net472": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.IO.Hashing.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.io.pipelines",
+      "displayName": "System.IO.Pipelines",
+      "packageId": "System.IO.Pipelines",
+      "versions": {
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.3",
+        "net472": "10.0.3",
+        "net8.0-windows7.0": "10.0.5"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.IO.Pipelines.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.memory",
+      "displayName": "System.Memory",
+      "packageId": "System.Memory",
+      "versions": {
+        "net462": "4.6.3",
+        "net472": "4.6.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/maintenance-packages",
+      "redistribution": "permitted",
+      "files": [
+        "System.Memory.dll"
+      ],
+      "artifacts": [
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.net.serversentevents",
+      "displayName": "System.Net.ServerSentEvents",
+      "packageId": "System.Net.ServerSentEvents",
+      "versions": {
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Net.ServerSentEvents.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.numerics.vectors",
+      "displayName": "System.Numerics.Vectors",
+      "packageId": "System.Numerics.Vectors",
+      "versions": {
+        "net462": "4.6.1",
+        "net472": "4.6.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/maintenance-packages",
+      "redistribution": "permitted",
+      "files": [
+        "System.Numerics.Vectors.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.reflection.metadata",
+      "displayName": "System.Reflection.Metadata",
+      "packageId": "System.Reflection.Metadata",
+      "versions": {
+        "net8.0": "10.0.1",
+        "net9.0": "10.0.1",
+        "net472": "10.0.1",
+        "net8.0-windows7.0": "8.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Reflection.Metadata.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.runtime.compilerservices.unsafe",
+      "displayName": "System.Runtime.CompilerServices.Unsafe",
+      "packageId": "System.Runtime.CompilerServices.Unsafe",
+      "versions": {
+        "net462": "6.1.2",
+        "net472": "6.1.2"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/maintenance-packages",
+      "redistribution": "permitted",
+      "files": [
+        "System.Runtime.CompilerServices.Unsafe.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.security.cryptography.pkcs",
+      "displayName": "System.Security.Cryptography.Pkcs",
+      "packageId": "System.Security.Cryptography.Pkcs",
+      "versions": {
+        "net10.0": "9.0.13",
+        "net8.0": "8.0.1",
+        "net9.0": "9.0.13",
+        "net462": "8.0.1",
+        "net472": "8.0.1",
+        "net8.0-windows7.0": "8.0.1"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-40686c64.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Security.Cryptography.Pkcs.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.security.cryptography.protecteddata",
+      "displayName": "System.Security.Cryptography.ProtectedData",
+      "packageId": "System.Security.Cryptography.ProtectedData",
+      "versions": {
+        "net10.0": "10.0.10",
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Security.Cryptography.ProtectedData.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.security.permissions",
+      "displayName": "System.Security.Permissions",
+      "packageId": "System.Security.Permissions",
+      "versions": {
+        "net10.0": "4.5.0",
+        "net8.0": "4.5.0",
+        "net9.0": "4.5.0",
+        "net8.0-windows7.0": "4.5.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+      "mit.txt",
+      "notices-7864a01e.txt"
+    ],
+      "copyright": "© Microsoft Corporation.  All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Security.Permissions.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.text.encoding.codepages",
+      "displayName": "System.Text.Encoding.CodePages",
+      "packageId": "System.Text.Encoding.CodePages",
+      "versions": {
+        "net472": "8.0.0"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-19c19dca.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Text.Encoding.CodePages.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.text.encodings.web",
+      "displayName": "System.Text.Encodings.Web",
+      "packageId": "System.Text.Encodings.Web",
+      "versions": {
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.3",
+        "net472": "10.0.3",
+        "net8.0-windows7.0": "10.0.5"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Text.Encodings.Web.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.LINQPad.lpx"
+      ]
+    },
+    {
+      "id": "system.text.json",
+      "displayName": "System.Text.Json",
+      "packageId": "System.Text.Json",
+      "versions": {
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net462": "10.0.3",
+        "net472": "10.0.3",
+        "net8.0-windows7.0": "10.0.5"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Text.Json.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli",
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.threading.accesscontrol",
+      "displayName": "System.Threading.AccessControl",
+      "packageId": "System.Threading.AccessControl",
+      "versions": {
+        "net8.0": "10.0.10",
+        "net9.0": "10.0.10",
+        "net8.0-windows7.0": "10.0.10"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Threading.AccessControl.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "system.threading.channels",
+      "displayName": "System.Threading.Channels",
+      "packageId": "System.Threading.Channels",
+      "versions": {
+        "net462": "10.0.3",
+        "net472": "10.0.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "notices-6d15e10a.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://dot.net/",
+      "redistribution": "permitted",
+      "files": [
+        "System.Threading.Channels.dll"
+      ],
+      "artifacts": [
+        "linq2db.LINQPad.lpx",
+        "linq2db.PostgreSQL",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "system.threading.tasks.extensions",
+      "displayName": "System.Threading.Tasks.Extensions",
+      "packageId": "System.Threading.Tasks.Extensions",
+      "versions": {
+        "net462": "4.6.3",
+        "net472": "4.6.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "© Microsoft Corporation. All rights reserved.",
+      "projectUrl": "https://github.com/dotnet/maintenance-packages",
+      "redistribution": "permitted",
+      "files": [
+        "System.Threading.Tasks.Extensions.dll"
+      ],
+      "artifacts": [
+        "linq2db.ClickHouse",
+        "linq2db.LINQPad.lpx",
+        "linq2db.MySql",
+        "linq2db.t4models"
+      ]
+    },
+    {
+      "id": "ydb.protos",
+      "displayName": "Ydb.Protos",
+      "packageId": "Ydb.Protos",
+      "versions": {
+        "net10.0": "1.2.0",
+        "net8.0": "1.2.0",
+        "net9.0": "1.2.0",
+        "net8.0-windows7.0": "1.2.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "",
+      "projectUrl": "https://github.com/ydb-platform/ydb-dotnet-genproto",
+      "redistribution": "permitted",
+      "files": [
+        "Ydb.Protos.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "ydb.sdk",
+      "displayName": "Ydb.Sdk",
+      "packageId": "Ydb.Sdk",
+      "versions": {
+        "net10.0": "0.35.0",
+        "net8.0": "0.35.0",
+        "net9.0": "0.35.0",
+        "net8.0-windows7.0": "0.35.0"
+      },
+      "license": "Apache-2.0",
+      "licenseTexts": [
+        "apache-2.0.txt"
+      ],
+      "copyright": "",
+      "projectUrl": "https://github.com/ydb-platform/ydb-dotnet-sdk",
+      "redistribution": "permitted",
+      "files": [
+        "Ydb.Sdk.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    }
+  ]
+}
