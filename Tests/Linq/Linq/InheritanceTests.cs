@@ -1536,9 +1536,10 @@ namespace Tests.Linq
 			Assert.That(result.Value, Is.EqualTo(42));
 		}
 
-		// Matches FeatureUpdateOutputWithoutOldSingle in UpdateWithOutputTests: UpdateWithOutput returning
-		// a single set built from INSERTED only.
-		const string FeatureUpdateOutput = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllYdb},{TestProvName.AllDuckDB}";
+		// FeatureUpdateOutputWithoutOldSingle from UpdateWithOutputTests, minus YDB: the default projection
+		// emits Deleted and Inserted, so every column appears twice in RETURNING and YDB rejects that with
+		// "Duplicated member".
+		const string FeatureUpdateOutput = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllDuckDB}";
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
 		public void UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, FeatureUpdateOutput)] string context)
@@ -1546,28 +1547,23 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var _  = db.CreateLocalTable(BaseClass.Data);
 
-			// BaseClass is abstract, so the setter must construct a concrete leaf type, but it assigns only
-			// Id/Code - both declared on BaseClass itself. The pre-fix ArgumentException does not come from
-			// the setter: UpdateWithOutput<T> without an explicit outputExpression defaults to projecting
-			// Deleted/Inserted as full BaseClass instances, and that default projection flattens in every
-			// mapped subtype's columns (Child1Field, Child2Field, ...) against a BaseClass-typed target -
-			// the same EnsureDeclaringType mismatch as the setter case, just reached through the default
-			// OUTPUT projection instead of the setter. Once fixed, the query still fails, now with a
-			// LinqToDBException about a discriminator value - a separate, still-open bug:
-			// https://github.com/linq2db/linq2db/issues/5838. So we assert only that the failure is no
-			// longer ArgumentException.
-			// Deliberately not Assert.Catch: that would require a throw, so this test would start
-			// failing the day #5838 is fixed and the query succeeds. Only the regression is asserted.
-			try
+			// The setter names only Code, declared on BaseClass itself, so it reaches the guard nowhere. The
+			// projection does: UpdateWithOutput without an explicit output expression builds full entities
+			// for Deleted and Inserted, and over an inheritance root those carry every mapped subtype's
+			// merged columns against a BaseClass-typed target. Pre-fix that threw ArgumentException before
+			// any SQL was emitted. Asserting on Inserted only - the providers here do not supply the old
+			// row, per FeatureUpdateOutputWithoutOldSingle.
+			var output = db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.UpdateWithOutput(t => new Child1 { Code = t.Code })
+				.ToArray();
+
+			Assert.That(output, Has.Length.EqualTo(1));
+			using (Assert.EnterMultipleScope())
 			{
-				db.GetTable<BaseClass>()
-					.Where(t => t.Id == 1)
-					.UpdateWithOutput(t => new Child1 { Code = t.Code })
-					.ToArray();
-			}
-			catch (Exception ex)
-			{
-				Assert.That(ex, Is.Not.InstanceOf<ArgumentException>());
+				Assert.That(output[0].Inserted, Is.InstanceOf<Child1>());
+				Assert.That(output[0].Inserted.Id, Is.EqualTo(1));
+				Assert.That(((Child1)output[0].Inserted).Child1Field, Is.EqualTo(11));
 			}
 		}
 
