@@ -1,30 +1,19 @@
 #!/bin/bash
-# Run one TFM's test suites for one provider leg, then free the binaries.
-#
-# This is the body of the `${{ each tfm in parameters.tfms }}` loop in
-# Build/Azure/pipelines/templates/test-workflow-linux.yml, extracted so the GitHub Actions leg runs
-# the same sequence. GitHub cannot express Azure's loop: a matrix leg's steps are fixed at parse
-# time, and the artifact download has to be an action, so the workflow keeps one download step per
-# TFM and calls this once per downloaded TFM.
-#
-# Ordering, and the exit behaviour, mirror the Azure steps deliberately:
+# Run one TFM's test suites for one provider leg, then free the binaries:
 #   config -> local setup -> main suite (optional) -> EF.Core suite -> remove binaries
-# Azure guards every step with succeeded(), so a failed main suite skips the EF.Core suite and every
-# later TFM while still publishing the .trx written so far. Here that falls out of exiting non-zero
-# plus the workflow's default `if: success()` on the following steps, with the report step on
-# `if: always()`.
 #
 # Usage:
 #   run-provider-tests.sh --tfm net8.0 --flag net80 --config sqlite.core \
 #                         --setup mysql.local.sh --main true --retry false
 #
-# Every switch takes a value, and --setup accepts an empty one, so a caller can forward matrix
-# fields straight through without building the argument list conditionally. That matters on the
-# GitHub side: `shell: bash` runs under `set -e`, so a `[ -n "$x" ] && args+=(…)` guard aborts the
-# step when the test is false.
+# The body of test-workflow-linux.yml's per-TFM loop, which GitHub cannot express: a matrix leg's
+# steps are fixed at parse time and artifact downloads must be actions, so the workflow downloads
+# per TFM and calls this per downloaded TFM. Exiting non-zero reproduces Azure's succeeded() guards,
+# skipping the EF.Core suite and later TFMs while leaving the .trx already written.
 #
-# Paths are relative to the working directory, which must be the leg's root - the one holding
-# scripts/, configs/ and the downloaded <tfm>/ directory.
+# Every switch takes a value, --setup accepting an empty one, so matrix fields forward straight
+# through: `shell: bash` runs under set -e, where a `[ -n "$x" ] && args+=(…)` guard aborts the step.
+# Run from the leg root - the directory holding scripts/, configs/ and the downloaded <tfm>/.
 
 set -u
 
@@ -90,12 +79,9 @@ if [ -n "$setup" ]; then
 	echo "::group::Setup $tfm ($setup)"
 	chmod +x "scripts/$setup"
 
-	# A local setup script may export variables the test process needs - db2.provider.sh publishes
-	# the clidriver's PATH and LD_LIBRARY_PATH, without which the DB2 provider cannot load its
-	# native library. On Azure those arrive as a task.setvariable logging command and the agent
-	# applies them to the *following* steps; here the setup and the suites are one step, so
-	# $GITHUB_ENV would drop them. Point ci-setvar.sh at a private file instead and load it back.
-	# (Prefix spelled out nowhere in this file on purpose - see the note in ci-setvar.sh.)
+	# db2.provider.sh publishes the clidriver's PATH/LD_LIBRARY_PATH, which its native library needs.
+	# Azure applies those to the *following* steps; here setup and suites share one step, so point
+	# ci-setvar.sh at a private file and load it back.
 	env_file="$root/.ci-env.$tfm"
 	: > "$env_file"
 

@@ -1,9 +1,6 @@
 #!/bin/bash
-# No -v. It echoed every line this script *reads* - including the body of any file it sources - into
-# the step output, which the Azure agent scans for `task.setvariable` logging commands anywhere in a
-# line. So a sourced file's comments and its unexpanded source lines both got parsed as commands:
-# the real one twice (harmlessly, with a literal unexpanded value), and any prose mentioning the
-# command at all as a malformed one that fails the step. See build 23225.
+# Not -v: it echoes sourced files' text into step output, where the Azure agent parses any
+# task.setvariable it finds - including one merely mentioned in a comment. Failed build 23225.
 
 # Net.IBM.Data.Db2-lnx ships one TFM build per major version (9.x -> net8.0, 10.x -> net10.0).
 # The version picked here MUST match Net.IBM.Data.Db2-lnx in Directory.Packages.props for this TFM
