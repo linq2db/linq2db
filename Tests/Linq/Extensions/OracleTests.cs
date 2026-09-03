@@ -457,7 +457,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ NOCACHE(p) NOCACHE(c_1) FULL(c1) NOCACHE(c1) CLUSTER(c_2) CLUSTER(a_Parent) PARALLEL(p1) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ NOCACHE(p) CLUSTER(p) NOCACHE(c_1) CLUSTER(c_1) FULL(c1) NOCACHE(c1) CLUSTER(c1) CLUSTER(c_2) CLUSTER(a_Parent) PARALLEL(p1) CLUSTER(p1) */"));
 		}
 
 		[Test]
