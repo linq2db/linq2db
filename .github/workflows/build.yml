@@ -73,6 +73,30 @@ jobs:
             'VERSION_ARGS=-p:VersionSuffix=-dev.${{ github.run_number }}' | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
+      # Avoids intermittent CS2012 on these projects (dotnet/roslyn#77538): single-TFM and reached
+      # from multi-TFM LinqToDB, so each builds twice concurrently - plain, and as a
+      # TargetFramework-pinned inner build - into one obj path. Pre-building makes both skip.
+      # The set is CodeGenerators plus everything pinned by Source/Analyzers.Common.props; add new
+      # Roslyn components here. Properties must match the solution build - a VERSION_ARGS mismatch
+      # recompiles these and the race is back.
+      - name: Build Roslyn components
+        shell: pwsh
+        run: |
+          $common = @(
+            '--configuration', '${{ env.RELEASE_CONFIGURATION }}'
+            '-p:RunAnalyzersDuringBuild=false'
+            '-p:RunApiAnalyzersDuringBuild=false'
+          ) + ('${{ env.VERSION_ARGS }}' -split ' ' | Where-Object { $_ })
+
+          foreach ($project in @(
+            'Source/CodeGenerators/CodeGenerators.csproj'
+            'Source/LinqToDB.Analyzers/LinqToDB.Analyzers.csproj'
+            'Source/LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj'
+          )) {
+            dotnet build $project @common
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
       # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
       # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       - name: Build solution
