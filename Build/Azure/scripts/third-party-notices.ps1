@@ -592,8 +592,20 @@ function Test-Artifact {
     return $true
 }
 
+# A package that is not in the manifest is one of ours, and the assembly it exists to ship is normally
+# named after it - linq2db.Remote.Grpc ships linq2db.Remote.Grpc.dll. Treating that as first-party by
+# *shape* rather than by name keeps the check correct as satellite packages come and go; enumerating
+# them instead means every new one turns this gate red for no reason. The explicit allow-list stays for
+# the assemblies whose name differs from their package id (linq2db.Analyzers ships LinqToDB.Analyzers.dll,
+# linq2db.cli ships dotnet-linq2db).
+#
+# It does not weaken the exact-name rule that U-5 exists for: the exemption is only ever the package's
+# *own* id, so a bundled dependency - linq2db4iSeries above all, whose id starts with linq2db and whose
+# namespace starts with LinqToDB - can never match it.
 function Test-ExcludedPackage {
-    param($Manifest, [string] $Label, [string[]] $Entries)
+    param($Manifest, [string] $Label, [string[]] $Entries, [string] $PackageId)
+
+    $ownAssembly = if ($PackageId) { $PackageId + '.dll' } else { $null }
 
     $foreign = [System.Collections.Generic.List[string]]::new()
     foreach ($e in $Entries) {
@@ -602,6 +614,7 @@ function Test-ExcludedPackage {
         if (Test-Ignored -Manifest $Manifest -Path $e) { continue }
         $effective = Resolve-EffectiveName -Path $e
         if (Test-FirstParty -Manifest $Manifest -FileName $effective) { continue }
+        if ($ownAssembly -and [string]::Equals($effective, $ownAssembly, [System.StringComparison]::OrdinalIgnoreCase)) { continue }
         $foreign.Add($e) | Out-Null
     }
 
@@ -648,7 +661,7 @@ function Invoke-Verify {
                 $inspected++
             }
             else {
-                Test-ExcludedPackage -Manifest $manifest -Label $info.id -Entries $info.entries
+                Test-ExcludedPackage -Manifest $manifest -Label $info.id -Entries $info.entries -PackageId $info.id
                 $inspected++
             }
         }
