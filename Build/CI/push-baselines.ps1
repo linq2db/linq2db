@@ -74,7 +74,10 @@ if ($LASTEXITCODE -ne 0) {
 # behind, which is what retired create_baselines_pr - a job that cost a fresh agent acquisition
 # at the very end of the run (78 min on build 23009) for 0.3 min of work. Whichever leg commits
 # first wins the ref; the rest are rejected and rebase onto it.
-$repoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${Org}/${BaselinesRepo}.git"
+# x-access-token: rather than the bare token, per #5859 - git asks for the password it is missing if
+# the credential is incomplete. The clone this runs in was made with http.proactiveAuth=basic, which
+# is written into its config, so the fetch in the rebase below authenticates from that.
+$repoUrl = "https://x-access-token:${Env:GITHUB_TOKEN}@github.com/${Org}/${BaselinesRepo}.git"
 $pushed = $false
 $attempts = 10
 while ($attempts -gt 0) {
