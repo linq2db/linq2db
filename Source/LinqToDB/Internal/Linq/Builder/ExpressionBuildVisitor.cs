@@ -1272,25 +1272,38 @@ namespace LinqToDB.Internal.Linq.Builder
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 			}
 
-			Expression transformed;
+			Expression           transformed;
+			HashSet<Expression>? translatedToSql = null;
+
 			if (GetAlreadyTranslated(rootSelectQuery, expr, out var translated))
 			{
+				// Equal expression was already translated for this query, so its values are registered by that translation.
 				transformed = translated;
 			}
 			else
 			{
-				transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
+				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
+
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, translatedToSql),
 					Builder.DataContext,
 					Builder,
 					rootSelectQuery,
 					expr,
 					static (context, e, descriptor, inline) =>
-						context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
+					{
+						var result = context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline);
+
+						if (result is SqlPlaceholderExpression)
+							context.translatedToSql.Add(e);
+
+						return result;
+					});
 			}
 
 			if (transformed is SqlPlaceholderExpression placeholder)
 			{
-				Builder.RegisterExtensionAccessors(expr);
+				if (translatedToSql != null)
+					Builder.RegisterExtensionAccessors(expr, translatedToSql);
 
 				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
 				placeholder = placeholder.WithPath(expr);
