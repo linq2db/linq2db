@@ -1485,8 +1485,18 @@ namespace Tests.Linq
 				_ => new Child1 { Child1Field = 66 },
 				() => new Child1 { Id = 1 });
 
-			var result = db.GetTable<BaseClass>().OfType<Child1>().Single();
-			Assert.That(result.Child1Field, Is.EqualTo(55));
+			var inserted = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(inserted.Child1Field, Is.EqualTo(55));
+
+			// The row now exists, so the second call takes the update branch and the derived column is
+			// exercised through the update setter as well as the insert one.
+			db.GetTable<BaseClass>().InsertOrUpdate(
+				() => new Child1 { Id = 1, Code = 1, Child1Field = 55 },
+				_ => new Child1 { Child1Field = 66 },
+				() => new Child1 { Id = 1 });
+
+			var updated = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(updated.Child1Field, Is.EqualTo(66));
 		}
 
 		[Table("InheritanceFilterPositional")]
