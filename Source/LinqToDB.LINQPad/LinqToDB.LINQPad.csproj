@@ -155,6 +155,16 @@
 		<!-- Drop architectures LINQPad 5 can't run; the SDK copies the full win-* set automatically. -->
 		<RemoveDir Directories="$(TargetDir)\runtimes\win-arm;$(TargetDir)\runtimes\win-arm64" />
 
+		<!-- The .lpx is the whole output directory (Pack.cmd globs %OUTDIR%*.*), so it redistributes every
+		     provider client and native asset in it - including linq2db4iSeries and IBM's clidriver - under
+		     a package whose license expression covers only linq2db's own code. Dropping the generated
+		     notices into TargetDir is what puts them in the archive; the glob needs no change. Same
+		     ordering constraint as the copies above: this must run before Pack.cmd, not from a separate
+		     target hooked on PostBuildEvent. Generated from Build/licenses/components.json; see
+		     Build/licenses/README.md. -->
+		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Build\licenses\generated\THIRD-PARTY-NOTICES.linq2db.LINQPad.lpx.txt"
+		      DestinationFiles="$(TargetDir)\THIRD-PARTY-NOTICES.txt" />
+
 		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot;" Condition="'$(GenerateLpxArtifacts)' != 'false'" />
 	</Target>
 

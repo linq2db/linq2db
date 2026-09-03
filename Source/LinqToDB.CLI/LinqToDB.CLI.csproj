@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CommandLine</RootNamespace>
@@ -60,6 +60,26 @@
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md"             Pack="true" PackagePath="readme.md"        />
 		<None Include="..\..\Nuget\icon.png"  Pack="true" PackagePath="icon.png"         />
+
+		<!--
+		Two items, because a tool package needs the notices in two places and Pack alone reaches only one
+		of them. PackAsTool publishes the whole dependency closure into tools/<tfm>/<rid>/, so this package
+		physically redistributes ~90 third-party components that its MIT expression does not cover.
+
+		 * Pack="true"                -> the package root, next to readme.md. Each RID sub-package is a full
+		                                 Pack, so this lands in all of them and in the pointer package.
+		 * CopyToPublishDirectory     -> the tool payload. The RID payload is literally $(PublishDir)/**/*
+		                                 (Microsoft.NET.PackTool.targets), so the file has to reach publish
+		                                 output to end up beside the installed tool. Pack="true" does not
+		                                 put anything in publish output.
+
+		Generated from Build/licenses/components.json; see Build/licenses/README.md.
+		-->
+		<None Include="..\..\Build\licenses\generated\THIRD-PARTY-NOTICES.linq2db.cli.txt"
+		      Pack="true" PackagePath="THIRD-PARTY-NOTICES.txt" Visible="false" />
+		<None Include="..\..\Build\licenses\generated\THIRD-PARTY-NOTICES.linq2db.cli.txt"
+		      Link="THIRD-PARTY-NOTICES.txt" Pack="false" Visible="false"
+		      CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
