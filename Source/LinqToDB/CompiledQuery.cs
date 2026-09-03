@@ -236,7 +236,7 @@ namespace LinqToDB
 
 							return helper.CallTable(syncCall, context, token, MethodType.ElementAsync);
 						}
-						else if (expr.IsQueryable)
+						else if (expr.IsQueryable || typeof(IQueryable).IsSameOrParentOf(expr.Type))
 						{
 							var isQueryable = typeof(IQueryable).IsSameOrParentOf(expr.Type);
 

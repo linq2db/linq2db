@@ -328,6 +328,29 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return null;
 		}
 
+		// Recognises the shape CompileQuery leaves for a compiled query's own parameters - Convert(ps[i], T) -
+		// and resolves it only when that slot actually holds the data context.
+		IDataContext? GetCompiledQueryRootContext(Expression expression)
+		{
+			if (_parameterValues == null)
+				return null;
+
+			var expr = expression;
+
+			if (expr is UnaryExpression { NodeType: ExpressionType.Convert } convert)
+				expr = convert.Operand;
+
+			if (expr is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
+				&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+				&& arrayIndex.Right is ConstantExpression { Value: int idx }
+				&& idx >= 0 && idx < _parameterValues.Length)
+			{
+				return _parameterValues[idx] as IDataContext;
+			}
+
+			return null;
+		}
+
 		object? EvaluateExpression(Expression? expression)
 		{
 			if (expression == null)
@@ -400,6 +423,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 					if (mc.IsQueryable)
 					{
+						// Only the root argument is resolved out of the argument array; the remaining ones keep
+						// their ps[i] parameters, so no call's parameter values are baked into the cached tree.
+						if (GetCompiledQueryRootContext(mc.Arguments[0]) is { } rootContext)
+						{
+							var rootArgs = mc.Arguments.ToArray();
+
+							rootArgs[0] = SqlQueryRootExpression.Create(rootContext, mc.Arguments[0].Type);
+							converted   = mc.Update(mc.Object, rootArgs);
+
+							return true;
+						}
+
 						if (mc.Arguments[0] is MemberExpression or ConstantExpression)
 						{
 							if (IsCompilable(mc))
@@ -431,7 +466,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					}
 				}
 
-				if (IsCompilable(node))
+				if (IsCompilable(node) || node is MethodCallExpression)
 				{
 					converted = ConvertIQueryable(node);
 
@@ -443,6 +478,35 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return false;
 		}
 
+		// Expands a call by invoking it over a query built on its own source expression as-is. The source is never
+		// evaluated, so whatever it references - a compiled query's argument array, for one - survives into the
+		// returned tree. Same shape AssociationHelper and TableBuilder use to apply user filter functions.
+		Expression? ExpandOverSource(MethodCallExpression call)
+		{
+			if (!call.Method.IsStatic || call.Arguments.Count == 0)
+				return null;
+
+			var source      = call.Arguments[0];
+			var elementType = typeof(IQueryable<>).GetGenericType(source.Type)?.GetGenericArguments()[0];
+
+			if (elementType == null)
+				return null;
+
+			var args = call.Arguments.ToArray();
+
+			for (var i = 1; i < args.Length; i++)
+			{
+				// A quote is left as it is: it evaluates to its own operand, so whatever the lambda closes over -
+				// the argument array included - stays inside it instead of being folded to a value.
+				if (args[i] is not UnaryExpression { NodeType: ExpressionType.Quote } && !IsCompilable(args[i]))
+					return null;
+			}
+
+			args[0] = Expression.Constant(ExpressionQueryImpl.CreateQuery(elementType, DataContext, source), source.Type);
+
+			return EvaluateExpression(call.Update(call.Object, args)) is IQueryable expanded ? expanded.Expression : null;
+		}
+
 		Expression ConvertIQueryable(Expression expression)
 		{
 			if (expression.NodeType is ExpressionType.Call)
@@ -450,6 +514,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				var mc = (MethodCallExpression)expression;
 				if (mc.Method.DeclaringType != null && MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
 					return mc;
+
+				if (!IsCompilable(mc))
+					return ExpandOverSource(mc) ?? expression;
 			}
 
 			if (expression.NodeType is ExpressionType.MemberAccess or ExpressionType.Call)

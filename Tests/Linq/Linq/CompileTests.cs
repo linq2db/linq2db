@@ -846,9 +846,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(5854)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
-		public void WrappedLoadWithTest([DataSources] string context)
+		public void WrappedLoadWithTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
 				db.Parent
