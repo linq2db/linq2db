@@ -231,6 +231,27 @@ jobs:
     displayName: Pack Solution for Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
+  # These two live here rather than in nuget-job.yml, where the other pre-publish guards sit, for two
+  # reasons. nuget-job only runs from the `default` pipeline (master/release and release-targeting PRs),
+  # so a PR that pulls in a new bundled dependency would pass, merge, and only fail on master. And the
+  # .lpx exists only in this job - nuget-job downloads the nuget artifact and never sees it.
+  # .github/workflows/build.yml carries the same two steps; both pipelines pack on every PR today.
+  - task: PowerShell@2
+    displayName: Check third-party notices are up to date
+    inputs:
+      pwsh: true
+      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/third-party-notices.ps1'
+      arguments: '-Action check'
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PowerShell@2
+    displayName: Verify third-party notices cover the packed output
+    inputs:
+      pwsh: true
+      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/third-party-notices.ps1'
+      arguments: '-Action verify -PackagesDir "$(Build.SourcesDirectory)/.build/package/release" -LpxDir "$(Build.SourcesDirectory)/.build/lpx"'
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/package/release'
