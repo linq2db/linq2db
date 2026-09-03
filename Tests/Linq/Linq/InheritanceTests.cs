@@ -1557,6 +1557,26 @@ namespace Tests.Linq
 			}
 		}
 
+		// Derives from BaseClass but carries no [InheritanceMapping] entry, so UnmappedField maps to no
+		// column on the base entity descriptor. EnsureDeclaringType retypes the target for it just the
+		// same, so the guard must not turn the failure into a silently omitted column.
+		class UnmappedChild : BaseClass
+		{
+			[Column(CanBeNull = true)] public int UnmappedField { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertUnmappedDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer2016)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			Assert.Throws<LinqToDBException>(
+				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }));
+
+			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
+		}
+
 		#endregion
 	}
 }
