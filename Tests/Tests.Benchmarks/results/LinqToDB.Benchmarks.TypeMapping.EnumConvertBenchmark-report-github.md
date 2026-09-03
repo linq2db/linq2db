@@ -13,27 +13,27 @@ Jit=RyuJit  Platform=X64
 ```
 | Method                                | Runtime              | Mean        | Allocated |
 |-------------------------------------- |--------------------- |------------:|----------:|
-| TestCastConvertTypeMapper             | .NET 8.0             |   1.5524 ns |         - |
-| TestCastConvertDirectAccess           | .NET 8.0             |   1.7654 ns |         - |
-| TestDictionaryConvertTypeMapper       | .NET 8.0             |  20.2274 ns |         - |
-| TestDictionaryConvertDirectAccess     | .NET 8.0             |   1.6775 ns |         - |
-| TestDictionaryCastConvertTypeMapper   | .NET 8.0             |  21.3362 ns |         - |
-| TestDictionaryCastConvertDirectAccess | .NET 8.0             |   0.4489 ns |         - |
-| TestFlagsCastConvertTypeMapper        | .NET 8.0             |   2.7060 ns |         - |
-| TestFlagsCastConvertDirectAccess      | .NET 8.0             |   0.4190 ns |         - |
-| TestCastConvertTypeMapper             | .NET 9.0             |   2.4274 ns |         - |
-| TestCastConvertDirectAccess           | .NET 9.0             |   0.9388 ns |         - |
-| TestDictionaryConvertTypeMapper       | .NET 9.0             |  18.8217 ns |         - |
-| TestDictionaryConvertDirectAccess     | .NET 9.0             |   0.3917 ns |         - |
-| TestDictionaryCastConvertTypeMapper   | .NET 9.0             |  15.7817 ns |         - |
-| TestDictionaryCastConvertDirectAccess | .NET 9.0             |   0.4565 ns |         - |
-| TestFlagsCastConvertTypeMapper        | .NET 9.0             |   1.2689 ns |         - |
-| TestFlagsCastConvertDirectAccess      | .NET 9.0             |   0.4406 ns |         - |
-| TestCastConvertTypeMapper             | .NET Framework 4.6.2 |  15.1217 ns |         - |
-| TestCastConvertDirectAccess           | .NET Framework 4.6.2 |   0.8872 ns |         - |
-| TestDictionaryConvertTypeMapper       | .NET Framework 4.6.2 |  65.1004 ns |         - |
-| TestDictionaryConvertDirectAccess     | .NET Framework 4.6.2 |   0.9127 ns |         - |
-| TestDictionaryCastConvertTypeMapper   | .NET Framework 4.6.2 | 109.4963 ns |      48 B |
-| TestDictionaryCastConvertDirectAccess | .NET Framework 4.6.2 |   0.8971 ns |         - |
-| TestFlagsCastConvertTypeMapper        | .NET Framework 4.6.2 |  21.1430 ns |         - |
-| TestFlagsCastConvertDirectAccess      | .NET Framework 4.6.2 |   0.8962 ns |         - |
+| TestCastConvertTypeMapper             | .NET 8.0             |   2.8444 ns |         - |
+| TestCastConvertDirectAccess           | .NET 8.0             |   0.4601 ns |         - |
+| TestDictionaryConvertTypeMapper       | .NET 8.0             |  22.1769 ns |         - |
+| TestDictionaryConvertDirectAccess     | .NET 8.0             |   0.0000 ns |         - |
+| TestDictionaryCastConvertTypeMapper   | .NET 8.0             |  21.6984 ns |         - |
+| TestDictionaryCastConvertDirectAccess | .NET 8.0             |   0.4379 ns |         - |
+| TestFlagsCastConvertTypeMapper        | .NET 8.0             |   3.2079 ns |         - |
+| TestFlagsCastConvertDirectAccess      | .NET 8.0             |   0.3910 ns |         - |
+| TestCastConvertTypeMapper             | .NET 9.0             |   4.0514 ns |         - |
+| TestCastConvertDirectAccess           | .NET 9.0             |   0.4650 ns |         - |
+| TestDictionaryConvertTypeMapper       | .NET 9.0             |  20.8388 ns |         - |
+| TestDictionaryConvertDirectAccess     | .NET 9.0             |   1.8009 ns |         - |
+| TestDictionaryCastConvertTypeMapper   | .NET 9.0             |  14.0538 ns |         - |
+| TestDictionaryCastConvertDirectAccess | .NET 9.0             |   0.4393 ns |         - |
+| TestFlagsCastConvertTypeMapper        | .NET 9.0             |   2.5972 ns |         - |
+| TestFlagsCastConvertDirectAccess      | .NET 9.0             |   0.3757 ns |         - |
+| TestCastConvertTypeMapper             | .NET Framework 4.6.2 |  23.8261 ns |         - |
+| TestCastConvertDirectAccess           | .NET Framework 4.6.2 |   1.3621 ns |         - |
+| TestDictionaryConvertTypeMapper       | .NET Framework 4.6.2 |  59.6044 ns |         - |
+| TestDictionaryConvertDirectAccess     | .NET Framework 4.6.2 |   1.4441 ns |         - |
+| TestDictionaryCastConvertTypeMapper   | .NET Framework 4.6.2 | 108.0474 ns |      48 B |
+| TestDictionaryCastConvertDirectAccess | .NET Framework 4.6.2 |   1.3142 ns |         - |
+| TestFlagsCastConvertTypeMapper        | .NET Framework 4.6.2 |  21.3492 ns |         - |
+| TestFlagsCastConvertDirectAccess      | .NET Framework 4.6.2 |   1.4333 ns |         - |

@@ -11,11 +11,11 @@ AMD Ryzen 9 5950X 3.39GHz, 2 CPU, 32 logical and 16 physical cores
 Jit=RyuJit  Platform=X64  
 
 ```
-| Method       | Runtime              | Mean     | Allocated |
-|------------- |--------------------- |---------:|----------:|
-| BuildFunc    | .NET 8.0             | 5.016 ns |         - |
-| DirectAccess | .NET 8.0             | 3.280 ns |         - |
-| BuildFunc    | .NET 9.0             | 2.328 ns |         - |
-| DirectAccess | .NET 9.0             | 3.349 ns |         - |
-| BuildFunc    | .NET Framework 4.6.2 | 7.960 ns |         - |
-| DirectAccess | .NET Framework 4.6.2 | 1.375 ns |         - |
+| Method       | Runtime              | Mean      | Allocated |
+|------------- |--------------------- |----------:|----------:|
+| BuildFunc    | .NET 8.0             |  3.252 ns |         - |
+| DirectAccess | .NET 8.0             |  4.230 ns |         - |
+| BuildFunc    | .NET 9.0             |  5.203 ns |         - |
+| DirectAccess | .NET 9.0             |  3.726 ns |         - |
+| BuildFunc    | .NET Framework 4.6.2 | 12.707 ns |         - |
+| DirectAccess | .NET Framework 4.6.2 |  2.888 ns |         - |
