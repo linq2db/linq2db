@@ -867,10 +867,58 @@ namespace Tests.Linq
 				Assert.That(other.Children,  Has.Count.EqualTo(2));
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void WrappedWhereUsesCurrentArgumentsTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID > 0)
+					.WhereWrapper(p => p.ParentID == id));
+
+			using var db = GetDataContext(context);
+
+			var first  = query(db, 1).Select(p => p.ParentID).ToList();
+			var second = query(db, 2).Select(p => p.ParentID).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(first,  Is.EqualTo(new[] { 1 }));
+				Assert.That(second, Is.EqualTo(new[] { 2 }));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void WrappedLoadWithOnTableTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// The wrapper's source is ITestDataContext.Parent, declared ITable<Parent> rather than IQueryable<Parent>.
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent.LoadWithWrapper(p => p.Children));
+
+			using var db = GetDataContext(context);
+
+			var parents = query(db, 1).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parents.First(p => p.ParentID == 1).Children, Has.Count.EqualTo(1));
+				Assert.That(parents.First(p => p.ParentID == 2).Children, Has.Count.EqualTo(2));
+			}
+		}
 	}
 
 	static class CompiledQueryWrapperExtensions
 	{
+		// Unlike LoadWithWrapper's selector, this predicate closes over a compiled argument, so it fails when
+		// the expansion folds the array into the quote instead of leaving its ps[i] reads alone.
+		public static IQueryable<TEntity> WhereWrapper<TEntity>(
+			this IQueryable<TEntity>       source,
+			Expression<Func<TEntity,bool>> predicate)
+		{
+			return source.Where(predicate);
+		}
+
+
 		// A user-defined pass-through is not on IsQueryable's declaring-type allowlist, so it is never
 		// folded: the compiled table ends at the inner Where and LoadWith composes onto it at run time.
 		public static IQueryable<TEntity> LoadWithWrapper<TEntity,TProperty>(

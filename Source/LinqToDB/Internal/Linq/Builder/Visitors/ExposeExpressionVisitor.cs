@@ -185,13 +185,16 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							// evaluated while ps is a free parameter, so it would reach the SQL as a parameter
 							// and never take part in the query's identity. Its value is that identity, so
 							// materialise it here; CompiledTable carries the same values in its cache key.
-							if (ReferenceEquals(newArgument, argument) && _parameterValues != null)
+							// Resolved against newArgument rather than argument: PrepareForCache rebuilds a
+							// params array when any element folds, and leaves the ps-reading elements in place.
+							if (_parameterValues != null)
 							{
-								var resolved = ResolveCompiledQueryArguments(argument);
+								var resolved = ResolveCompiledQueryArguments(newArgument);
 
-								if (!ReferenceEquals(resolved, argument) && IsCompilable(resolved))
+								if (!ReferenceEquals(resolved, newArgument) && IsCompilable(resolved))
 									newArgument = Expression.Constant(EvaluateExpression(resolved), argument.Type);
 							}
+
 							if (newArgument.Type != argument.Type)
 								newArgument = Expression.Convert(newArgument, argument.Type);
 
@@ -496,9 +499,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					return !ExpressionEqualityComparer.Instance.Equals(converted, node);
 				}
 
-				// A method the builder does not know, held non-evaluable by its own source - a compiled query's
-				// argument array, typically. Expanding it over that source leaves those reads in the tree.
-				if (node is MethodCallExpression call && !call.IsQueryable && ExpandOverSource(call) is { } expanded)
+				// A method the builder does not know, held non-evaluable by the compiled query's argument array.
+				// Expanding it over that source leaves those reads in the tree. Confined to the compiled path:
+				// an ordinary query reaches the same shapes through association and ExpressionMethod expansion,
+				// where the call is left in the tree for the builder to report as it is on master.
+				if (_parameterValues != null && node is MethodCallExpression call && !call.IsQueryable && ExpandOverSource(call) is { } expanded)
 				{
 					converted = expanded;
 
@@ -534,9 +539,26 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					return null;
 			}
 
-			args[0] = Expression.Constant(ExpressionQueryImpl.CreateQuery(elementType, DataContext, source), source.Type);
+			var expandedSource = ExpressionQueryImpl.CreateQuery(elementType, DataContext, source);
 
-			return EvaluateExpression(call.Update(call.Object, args)) is IQueryable expanded ? expanded.Expression : null;
+			// ExpressionQueryImpl<T> is only an IQueryable<T>, so a source declared narrower cannot hold one.
+			// ITable<T> is the common case and Table<T> satisfies it; anything narrower still declines, which
+			// leaves the call in the tree for the builder to report instead of letting Expression.Constant throw.
+			if (!source.Type.IsInstanceOfType(expandedSource))
+			{
+				var tableType = typeof(Table<>).MakeGenericType(elementType);
+
+				if (!source.Type.IsAssignableFrom(tableType))
+					return null;
+
+				expandedSource = ActivatorExt.CreateInstance<IQueryable>(tableType, DataContext, source);
+			}
+
+			args[0] = Expression.Constant(expandedSource, source.Type);
+
+			// Evaluated without the visitor's ps substitution: that one rewrites the array parameter inside the
+			// quote too, which would bind the expansion to the invocation that first built the cached query.
+			return call.Update(call.Object, args).EvaluateExpression() is IQueryable expanded ? expanded.Expression : null;
 		}
 
 		Expression ConvertIQueryable(Expression expression)
