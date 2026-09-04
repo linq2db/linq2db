@@ -9,8 +9,6 @@ parameters:
 
 variables:
   - template: templates/build-vars.yml
-  # Carries GITHUB_DISPATCH_PAT for the dispatch job.
-  - group: github-dispatch
 
 trigger: none
 pr:

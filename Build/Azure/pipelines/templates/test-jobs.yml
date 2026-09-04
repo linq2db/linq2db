@@ -100,9 +100,20 @@ jobs:
     # from CI. The carve-out also keeps the Azure path exercised on real work rather than letting it
     # rot into an untested fallback.
     condition: and(eq(${{ parameters.enabled }}, 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    # List form, because the group has to be scoped here rather than pipeline-wide: a top-level
+    # `- group:` would hand the dispatch PAT to every job in every test definition, including the
+    # provider legs that run third-party database images.
     variables:
-      source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
-      baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+    - group: github-dispatch
+    - name: source_pr_id
+      value: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
+    - name: baselines_branch
+      value: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+      # The PR's head branch on a PR build; Build.SourceBranch otherwise. Never Build.SourceBranch on
+      # a PR build - that is refs/pull/<n>/merge, which workflow_dispatch rejects. The fallback is
+      # what makes a manual run work, which is the only way to set all_in_azure from the UI.
+    - name: dispatch_ref
+      value: $[coalesce(variables['System.PullRequest.SourceBranch'], variables['Build.SourceBranch'])]
 
     steps:
     - checkout: none
@@ -116,7 +127,7 @@ jobs:
         pwsh: true
         filePath: '$(System.DefaultWorkingDirectory)/scripts/dispatch-github-tests.ps1'
         arguments: >
-          -Ref "$(System.PullRequest.SourceBranch)"
+          -Ref "$(dispatch_ref)"
           -Surface "${{ parameters.db_filter }}"
           -BaselinesBranch "$(baselines_branch)"
           -PrId "$(source_pr_id)"

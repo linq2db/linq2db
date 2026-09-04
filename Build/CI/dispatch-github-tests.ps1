@@ -16,7 +16,9 @@ Exit codes: 0 = run created, 1 = dispatch rejected or no run appeared, 2 = bad a
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][string] $Ref,
+    # AllowEmptyString, or parameter binding rejects an empty $(dispatch_ref) with "Cannot bind
+    # argument to parameter 'Ref'" before the validation below can say what is actually wrong.
+    [Parameter(Mandatory)][AllowEmptyString()][string] $Ref,
     [Parameter(Mandatory)][string] $Surface,
     [string] $BaselinesBranch = '',
     [string] $PrId            = '',
@@ -33,8 +35,19 @@ if (-not $Env:GITHUB_TOKEN) {
     exit 2
 }
 
-# Branch name without refs/heads/, which is what Azure's SourceBranch carries.
-$branch = $Ref -replace '^refs/heads/', ''
+# Validated here rather than left to the API, which answers every bad ref with the same 422 and no
+# indication of which of these it was.
+if ([string]::IsNullOrWhiteSpace($Ref)) {
+    Write-Host "##vso[task.logissue type=error]-Ref is empty - on a non-PR run it should fall back to Build.SourceBranch"
+    exit 2
+}
+if ($Ref -like 'refs/pull/*') {
+    Write-Host "##vso[task.logissue type=error]-Ref is '$Ref'. workflow_dispatch takes a branch or tag; a pull ref is rejected. Fork PRs must be skipped by the caller, and a PR build must pass System.PullRequest.SourceBranch, not Build.SourceBranch (which is refs/pull/<n>/merge)."
+    exit 2
+}
+
+# Azure's SourceBranch carries the refs/ prefix; the API wants the short name.
+$branch = $Ref -replace '^refs/(heads|tags)/', ''
 
 $headers = @{
     Authorization          = "Bearer $Env:GITHUB_TOKEN"
