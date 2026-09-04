@@ -63,6 +63,9 @@ jobs:
         shell: bash
         run: |
           if ! python3 -c 'import yaml' 2>/dev/null; then
+            # update first: the image's apt indexes can be stale, and install would then fail with
+            # "Unable to locate package" - at the run's first step, before any leg exists.
+            sudo apt-get update
             sudo apt-get install -y python3-yaml
           fi
 
