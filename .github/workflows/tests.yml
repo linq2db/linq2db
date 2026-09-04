@@ -70,8 +70,16 @@ jobs:
         shell: bash
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          import json, os, yaml
+          import json, os, sys, yaml
           surface = os.environ['SURFACE']
+          # Selection is a substring test, and '' is a substring of everything - an empty surface
+          # would silently select every leg. workflow_dispatch cannot produce one (the input is
+          # required and defaulted), but any other trigger leaves inputs.* empty, so guard it here
+          # rather than relying on the trigger. This is the same defect Azure build 23199 hit, where
+          # an unforwarded db_filter ran all 29 legs for a single-provider request.
+          if not surface.strip():
+              print('::error::surface is empty - refusing to select every leg by accident', file=sys.stderr)
+              raise SystemExit(1)
           doc = yaml.safe_load(open('Build/Azure/pipelines/templates/test-matrix.yml', encoding='utf-8'))
           entries = doc['jobs'][0]['parameters']['test_matrix']
           legs = []
