@@ -63,7 +63,13 @@ mkdir -p "$results"
 
 # The config lands in the TFM root rather than beside the test app: TestConfiguration walks up from
 # the assembly location to find UserDataProviders.json.
-cp "configs/$flag/$config.json" "$tfm/UserDataProviders.json"
+#
+# Checked, because this script runs without set -e: an unnoticed failure here leaves the suite to
+# fall back to DataProviders.json defaults and run a different provider set to a green finish.
+if ! cp "configs/$flag/$config.json" "$tfm/UserDataProviders.json"; then
+	echo "::error::run-provider-tests: could not stage configs/$flag/$config.json - the leg would test the wrong providers"
+	exit 2
+fi
 echo ">>> config: configs/$flag/$config.json -> $tfm/UserDataProviders.json"
 
 # Azure removes the TFM directory whether or not the suites passed, so the next TFM's download has
