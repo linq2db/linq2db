@@ -1,0 +1,122 @@
+# Starts the GitHub test legs from the same `/azp run test-<db>` comment Azure listens for, so one
+# comment starts both CIs at once.
+#
+# It calls tests.yml rather than dispatching it, which is what makes fork PRs work: workflow_dispatch
+# needs a branch in this repo and a fork PR has only refs/pull/<n>/head, but a called workflow takes
+# the ref as an input and actions/checkout fetches refs/pull/<n>/merge happily.
+#
+# issue_comment always runs the default branch's copy of this file, whatever the PR contains - so a PR
+# cannot alter its own trigger, and changes here only take effect once merged.
+name: tests (comment)
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write   # the refusal comment and the acknowledgement reaction
+
+jobs:
+  authorize:
+    # Cheap gate first: PR comments that look like a trigger. The membership check is a step, not
+    # part of this, so a refusal can be reported rather than silently skipped.
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/azp run')
+    runs-on: ubuntu-24.04
+    outputs:
+      go: ${{ steps.resolve.outputs.go }}
+      surface: ${{ steps.resolve.outputs.surface }}
+      ref: ${{ steps.resolve.outputs.ref }}
+      baselines_branch: ${{ steps.resolve.outputs.baselines_branch }}
+    steps:
+      # MEMBER is "member of the organization that owns the repository", which is the requirement:
+      # a fork PR's author is CONTRIBUTOR and cannot trigger even on their own PR, and an outside
+      # COLLABORATOR cannot either. OWNER is accepted because it is strictly more privileged.
+      #
+      # author_association is used rather than the members API on purpose: GITHUB_TOKEN is not an org
+      # member, so /orgs/{org}/members only reveals *public* members to it and every private member
+      # would be refused. Fixing that needs a PAT, which this trigger exists to avoid.
+      - name: Check org membership
+        id: gate
+        env:
+          ASSOC: ${{ github.event.comment.author_association }}
+        run: |
+          case "$ASSOC" in
+            MEMBER|OWNER) echo "ok=true"  >> "$GITHUB_OUTPUT" ;;
+            *)            echo "ok=false" >> "$GITHUB_OUTPUT" ;;
+          esac
+          echo "association=$ASSOC" >> "$GITHUB_OUTPUT"
+
+      # Refusals are announced. A silent skip would be indistinguishable from the workflow being
+      # broken, and this gate's values are not something we have observed across every real caller yet.
+      - name: Explain the refusal
+        if: steps.gate.outputs.ok != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ASSOC: ${{ steps.gate.outputs.association }}
+          NUMBER: ${{ github.event.issue.number }}
+          WHO: ${{ github.event.comment.user.login }}
+        run: |
+          gh pr comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body \
+            "@$WHO the GitHub test legs can only be started by a linq2db organization member (your association here is \`$ASSOC\`). Azure Pipelines will still pick up this comment."
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.gate.outputs.ok == 'true'
+        with:
+          sparse-checkout: Build/Azure/pipelines/templates/test-matrix.yml
+          sparse-checkout-cone-mode: false
+
+      - name: Resolve surface
+        id: resolve
+        if: steps.gate.outputs.ok == 'true'
+        env:
+          BODY: ${{ github.event.comment.body }}
+          NUMBER: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! python3 -c 'import yaml' 2>/dev/null; then
+            sudo apt-get update
+            sudo apt-get install -y python3-yaml
+          fi
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import os, re, sys, yaml
+          body = os.environ['BODY']
+          # `/azp run <definition>`, the same spelling Azure accepts. A bare `/azp run` means every
+          # pipeline on the Azure side; here it maps to test-all's surface.
+          m = re.match(r'^/azp\s+run\s*(\S+)?', body.strip())
+          name = (m.group(1) if m and m.group(1) else 'test-all').strip()
+
+          doc = yaml.safe_load(open('Build/Azure/pipelines/templates/test-matrix.yml', encoding='utf-8'))
+          surfaces = doc['parameters']['surfaces']
+          surface = surfaces.get(name)
+          if not surface:
+              print(f"::notice::'{name}' has no GitHub surface - leaving it to Azure", file=sys.stderr)
+              print('go=false')
+              raise SystemExit(0)
+
+          n = os.environ['NUMBER']
+          print('go=true')
+          print('surface=' + surface)
+          print(f'ref=refs/pull/{n}/merge')
+          # Same branch Azure's ensure-baselines-branch.ps1 derives, so both CIs append to one branch.
+          print(f'baselines_branch=baselines/pr_{n}')
+          PY
+
+      - name: Acknowledge
+        if: steps.resolve.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content=rocket --silent
+
+  tests:
+    needs: authorize
+    if: needs.authorize.outputs.go == 'true'
+    uses: ./.github/workflows/tests.yml
+    with:
+      surface: ${{ needs.authorize.outputs.surface }}
+      ref: ${{ needs.authorize.outputs.ref }}
+      baselines_branch: ${{ needs.authorize.outputs.baselines_branch }}
+      pr: ${{ github.event.issue.number }}
+    secrets: inherit
