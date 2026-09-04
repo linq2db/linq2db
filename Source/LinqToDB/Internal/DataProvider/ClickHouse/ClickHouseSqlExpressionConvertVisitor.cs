@@ -507,5 +507,14 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					or DataType.IntervalQuarter
 					or DataType.IntervalYear;
 		}
+
+		/// <summary>
+		/// <c>NTILE</c> alone, and by way of the frame rather than the ordering: unordered, the window defaults to a
+		/// frame ClickHouse will not accept for it (<c>Unsupported window frame type for function 'NTILE'</c>).
+		/// Giving it a sort key restores the default frame it wants.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> base.IsWindowOrderByRequired(func)
+				|| func.FunctionName is "NTILE";
 	}
 }

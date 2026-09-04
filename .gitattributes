@@ -5,5 +5,11 @@
 *.csproj   text      eol=crlf
 *.sh       text      eol=lf
 *.yml      text      eol=lf
+# Third-party notices are generated and byte-compared by Build/Azure/scripts/third-party-notices.ps1.
+# Without these pins `* text=auto` above checks them out CRLF on Windows and LF elsewhere, so the
+# drift check would be red on one platform and green on the other. The license texts are pinned too
+# because the generator embeds their bytes verbatim into the generated files.
+Build/licenses/generated/** text eol=lf
+Build/licenses/texts/**     text eol=lf
 .githooks/** text    eol=lf
 "/Data/Setup Scripts/ase.sql" text eol=lf

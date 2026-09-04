@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
-				StringBuilder.Append("FROM DUMMY").AppendLine();
+				AppendIndent().Append("FROM DUMMY").AppendLine();
 			else
 				base.BuildFromClause(statement, selectQuery);
 		}

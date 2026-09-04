@@ -1,0 +1,333 @@
+# Provider tests on GitHub Actions - first increment: the Linux legs, baselines off, no Azure dispatch.
+#
+# Deliberately scoped. Baselines need BASELINES_GH_PAT as a repository secret and the dispatch needs a
+# PAT on the Azure side; neither exists yet, and neither is needed to prove the part that is actually
+# uncertain - that a provider leg can download the build artifacts, resolve its config, start its
+# database, run the suite and report. Those two are additive on top.
+#
+# Triggered by hand for now (`gh workflow run tests.yml -f surface='[sqlite.all]'`). The Azure pipeline
+# will dispatch it later, which is why the inputs already carry the values that handshake needs.
+name: tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      surface:
+        description: "db_filter value, e.g. [sqlite.all] or [all]"
+        required: true
+        default: '[sqlite.all]'
+      full_run:
+        description: "Run every TFM's main suite, not just net10 (release-run behaviour)"
+        type: boolean
+        default: false
+      ref:
+        description: 'Ref to test. Defaults to the branch this workflow was dispatched on.'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # Per surface, so two concurrent single-provider runs coexist the way separate Azure definitions do.
+  group: tests-${{ inputs.ref || github.ref }}-${{ inputs.surface }}
+  cancel-in-progress: true
+
+env:
+  # Mirrors Build/Azure/pipelines/templates/build-vars.yml.
+  TEST_SOLUTION_FILTER: linq2db.Testing.slnf
+  TEST_CONFIGURATION: Azure
+  TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
+
+jobs:
+  # Reads the same test-matrix.yml Azure compiles, which is the point of expressing entry selection as
+  # data. Python rather than pwsh because no YAML module ships with PowerShell and python3 is on every
+  # runner image; it is inline rather than a script file until it needs to be more than this.
+  prepare:
+    name: Select legs
+    runs-on: ubuntu-24.04
+    outputs:
+      linux: ${{ steps.select.outputs.linux }}
+      any: ${{ steps.select.outputs.any }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          sparse-checkout: Build/Azure/pipelines/templates/test-matrix.yml
+          sparse-checkout-cone-mode: false
+
+      # PyYAML is not in the documented software list for the runner image, and this is the run's
+      # first step - guessing wrong fails the whole thing before a leg exists. apt rather than pip
+      # because Ubuntu 24.04's system Python is externally managed (PEP 668), so a plain
+      # `pip install` fails there.
+      - name: Ensure PyYAML
+        shell: bash
+        run: |
+          if ! python3 -c 'import yaml' 2>/dev/null; then
+            # update first: the image's apt indexes can be stale, and install would then fail with
+            # "Unable to locate package" - at the run's first step, before any leg exists.
+            sudo apt-get update
+            sudo apt-get install -y python3-yaml
+          fi
+
+      - id: select
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, sys, yaml
+          surface = os.environ['SURFACE']
+          # Selection is a substring test, and '' is a substring of everything - an empty surface
+          # would silently select every leg. workflow_dispatch cannot produce one (the input is
+          # required and defaulted), but any other trigger leaves inputs.* empty, so guard it here
+          # rather than relying on the trigger. This is the same defect Azure build 23199 hit, where
+          # an unforwarded db_filter ran all 29 legs for a single-provider request.
+          if not surface.strip():
+              print('::error::surface is empty - refusing to select every leg by accident', file=sys.stderr)
+              raise SystemExit(1)
+          doc = yaml.safe_load(open('Build/Azure/pipelines/templates/test-matrix.yml', encoding='utf-8'))
+          entries = doc['jobs'][0]['parameters']['test_matrix']
+          legs = []
+          for e in entries:
+              if surface not in e['filters']:
+                  continue
+              if e.get('enable_os_ubuntu') is not True:
+                  continue
+              legs.append({
+                  'name':          e['name'],
+                  'title':         e['title'],
+                  'config':        e['config_linux'],
+                  'script_global': e.get('script_linux_global', ''),
+                  'script_local':  e.get('script_linux_local', ''),
+                  'retry':         bool(e.get('retry', False)),
+                  'net80':         e.get('enable_fw_net80') is True,
+                  'net90':         e.get('enable_fw_net90') is True,
+                  'net100':        e.get('enable_fw_net100') is True,
+              })
+          legs.sort(key=lambda l: l['name'])          # the a_..y_ duration ordering from #5819
+          print('linux=' + json.dumps({'include': legs}))
+          print('any=' + ('true' if legs else 'false'))
+          for l in legs:
+              print(f"::notice::selected {l['name']} ({l['title']})", file=__import__('sys').stderr)
+          PY
+        env:
+          SURFACE: ${{ inputs.surface }}
+
+      # An empty selection is the failure that looks like success - build 23192 on the Azure side went
+      # green having run nothing. Fail here instead.
+      - if: steps.select.outputs.any != 'true'
+        run: |
+          echo "::error::no Linux legs match surface '${{ inputs.surface }}' - nothing would run"
+          exit 1
+
+  # Windows because Tests.csproj targets net462 and restore covers every TFM, so a Linux host cannot
+  # restore it without the reference assemblies the repo does not reference. Only the x64 net8/9/10
+  # output is staged, which is all a Linux leg consumes.
+  build:
+    name: Build test artifacts
+    # Gated on prepare only to avoid burning a 15-minute Windows build on a surface that selects
+    # nothing - a typo in a hand-dispatched run. prepare costs a minute or two of critical path.
+    needs: prepare
+    runs-on: windows-2025
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            8.x
+            9.x
+            10.x
+
+      - run: dotnet build ${{ env.TEST_SOLUTION_FILTER }} --configuration ${{ env.TEST_CONFIGURATION }}
+
+      - name: Publish and stage
+        shell: pwsh
+        run: |
+          $cfg = '${{ env.TEST_CONFIGURATION }}'
+          $tfms = @(
+            @{ dir = 'net8.0';  flag = 'net80';  ef = 'EF8'  },
+            @{ dir = 'net9.0';  flag = 'net90';  ef = 'EF9'  },
+            @{ dir = 'net10.0'; flag = 'net100'; ef = 'EF10' }
+          )
+          foreach ($t in $tfms) {
+            dotnet publish Tests/Linq/Tests.csproj -f $t.dir -c $cfg -o ".build/publish/Tests/$cfg/$($t.dir)_x64"
+            if ($LASTEXITCODE) { throw "publish Tests $($t.dir) failed" }
+            dotnet publish "Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.$($t.ef).csproj" -f $t.dir -c $cfg -o ".build/publish/EFTests/$cfg/$($t.dir)_x64"
+            if ($LASTEXITCODE) { throw "publish EF $($t.dir) failed" }
+          }
+
+          foreach ($t in $tfms) {
+            foreach ($kind in @(@{ n = 'main'; src = "Tests/$cfg/$($t.dir)_x64" }, @{ n = 'efcore'; src = "EFTests/$cfg/$($t.dir)_x64" })) {
+              $dest = "testing/$($t.dir)/$($kind.n)/x64"
+              New-Item -ItemType Directory -Force -Path $dest | Out-Null
+              Copy-Item -Recurse -Force ".build/publish/$($kind.src)/*" $dest
+              # Both files sit next to each test app: MTP does not auto-discover .runsettings, and
+              # DataProviders.json is where the *.Azure connection strings come from.
+              Copy-Item DataProviders.json, .runsettings $dest
+            }
+            Copy-Item -Recurse -Force "Build/$cfg/$($t.flag)" "testing/configs/$($t.flag)"
+          }
+
+          New-Item -ItemType Directory -Force -Path testing/scripts | Out-Null
+          Copy-Item -Recurse -Force "Build/$cfg/scripts/*" testing/scripts
+          Copy-Item -Recurse -Force 'Build/CI/*' testing/scripts
+          Copy-Item 'Data/Create Scripts/Northwind.sql' testing/scripts/northwind.sql
+
+      # include-hidden-files on every upload below: .runsettings is a dotfile, which upload-artifact
+      # drops by default and without warning, and MTP does not auto-discover it - so each leg fails
+      # on a missing runsettings file having tested nothing.
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test_scripts
+          path: testing/scripts
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test_configs
+          path: testing/configs
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test_net80_binaries
+          path: testing/net8.0
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test_net90_binaries
+          path: testing/net9.0
+          if-no-files-found: error
+          include-hidden-files: true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test_net100_binaries
+          path: testing/net10.0
+          if-no-files-found: error
+          include-hidden-files: true
+
+  linux-tests:
+    name: Lin ${{ matrix.name }}
+    needs: [prepare, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.linux) }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_scripts
+          path: scripts
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_configs
+          path: configs
+
+      # The scripts artifact is uploaded from the Windows build job, which has no execute bit to
+      # preserve, so everything arrives non-executable. Azure chmods each script it invokes
+      # individually; one sweep here covers the setup scripts and the shared Build/CI ones alike.
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh
+
+      - name: Free disk space
+        run: scripts/free-disk-space.sh
+
+      # One call installs all three SDKs and keeps them, so unlike Azure there is no per-TFM
+      # UseDotNet@2 step - see phase 2 of the migration plan.
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: |
+            8.x
+            9.x
+            10.x
+
+      - name: Start the database
+        if: matrix.script_global != ''
+        working-directory: scripts
+        env:
+          SCRIPT: ${{ matrix.script_global }}
+        run: "./$SCRIPT"
+
+      # One download/run/delete cycle per TFM, in Azure's order. Per-TFM rather than
+      # download-everything-then-loop: the binaries dominate the leg's disk, and the Oracle and SAP
+      # HANA legs only fit after free-disk-space.sh. Matrix values go through env, not `run:`
+      # interpolation, which would turn test-matrix.yml data into code.
+
+      - name: Extract .NET 8 test binaries
+        if: matrix.net80
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_net80_binaries
+          path: net8.0
+
+      - name: Tests (.NET 8)
+        if: matrix.net80
+        env:
+          CONFIG: ${{ matrix.config }}
+          SETUP: ${{ matrix.script_local }}
+          RETRY: ${{ matrix.retry }}
+          # net8/net9 run the main suite on release runs only; the EF.Core suite always runs.
+          # Mirrors pr_main in test-workflow-linux.yml.
+          RUN_MAIN: ${{ inputs.full_run }}
+        run: >
+          scripts/run-provider-tests.sh --tfm net8.0 --flag net80
+          --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
+
+      - name: Extract .NET 9 test binaries
+        if: matrix.net90
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_net90_binaries
+          path: net9.0
+
+      - name: Tests (.NET 9)
+        if: matrix.net90
+        env:
+          CONFIG: ${{ matrix.config }}
+          SETUP: ${{ matrix.script_local }}
+          RETRY: ${{ matrix.retry }}
+          RUN_MAIN: ${{ inputs.full_run }}
+        run: >
+          scripts/run-provider-tests.sh --tfm net9.0 --flag net90
+          --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
+
+      - name: Extract .NET 10 test binaries
+        if: matrix.net100
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: test_net100_binaries
+          path: net10.0
+
+      - name: Tests (.NET 10)
+        if: matrix.net100
+        env:
+          CONFIG: ${{ matrix.config }}
+          SETUP: ${{ matrix.script_local }}
+          RETRY: ${{ matrix.retry }}
+          # The newest TFM carries the main suite on every run - pr_main: true.
+          RUN_MAIN: 'true'
+        run: >
+          scripts/run-provider-tests.sh --tfm net10.0 --flag net100
+          --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
+
+      # Stands in for PublishTestResults@2, including its failTaskOnMissingResultsFile: a leg whose
+      # test app never ran writes no .trx, and without this it would finish green having tested
+      # nothing. always() so results are reported for a leg that failed mid-run.
+      - name: Report test results
+        if: always()
+        shell: pwsh
+        env:
+          TITLE: ${{ matrix.title }}
+        run: |
+          ./scripts/report-trx.ps1 -ResultsDirectory TestResults -Title "Lin $Env:TITLE"
+          exit $LASTEXITCODE
+

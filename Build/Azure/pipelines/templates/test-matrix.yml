@@ -24,8 +24,8 @@ parameters:
 # - '[duckdb.all]' - DuckDB targets supported
 # - '[clickhouse.all]' - Yandex ClickHouse targets supported
 # - '[ydb.all]' - YDB targets supported
-# Note that filter value enclosed in [] brackets as we check filter using contains substring function and this allows
-# us to avoid naming conflicts
+# Note that filter value enclosed in [] brackets, which is what makes the substring test in each entry's
+# `filters` string exact: without them '[sqlserver.2019]' could match inside another tag.
 
 # Test matrix (list of all database test runs with configuration options)
 # Because azure pipelines doesn't support non-string variables and strategy templates
@@ -37,7 +37,16 @@ parameters:
 # - name    (string, required)            : name of test matrix entry (unique, no spaces/dots)
 # - title   (string, required)            : test run name, added to display name for testrun
 # - x86     (true/false string, optional) : windows-only, install dotnet sdk x86
-# - enabled (true/false string, required) : enables/disables test matrix entry completely for current run
+# - filters (string, required)            : the db_filter values that select this entry, concatenated -
+#   '[all][sqlserver.all]'. The entry runs when parameters.db_filter appears in it, tested with
+#   contains() in test-jobs.yml. Plain data rather than the paired ${{ if }} / ${{ if not }} blocks it
+#   replaced, so the same file is readable by Azure natively and by an ordinary YAML parser on the
+#   GitHub side - one matrix, no generator, nothing to keep in sync. Every entry carries '[all]'.
+#   A concatenated string rather than a YAML list on purpose: containsValue() over a list compiles but
+#   matches nothing here, which produced an empty matrix and a green run with zero tests on build
+#   23192. contains() over a string is what the removed blocks already used, so it is proven in this
+#   exact position. The [] brackets are what keeps the substring test exact - '[sqlserver.2019]' cannot
+#   match inside another tag - so they are load-bearing again rather than vestigial.
 # - retry   (true/false string, optional) : specify that test run should retry on failue, use only for unstable runs like access and oracle
 
 # OPERATION SYSTEM SELECTORS
@@ -82,6 +91,9 @@ jobs:
       with_baselines: ${{ parameters.with_baselines }}
       full_run: ${{ parameters.full_run }}
       linux_max_parallel: ${{ parameters.linux_max_parallel }}
+      # Required by test-jobs.yml, which does the per-entry filter test. Forgetting it is a compile
+      # error there by design - see the note on its parameters block.
+      db_filter: ${{ parameters.db_filter }}
       test_matrix:
 # Two things decide the order legs run in, and which one you see depends on whether the job caps its
 # parallelism. Both were measured on build 23050, the first run to carry a cap.
@@ -145,10 +157,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all]'
 
 # All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
 # databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
@@ -162,10 +171,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
-            enabled: false
+          filters: '[all][clickhouse.all]'
 
         - name: c_PostgreSQL2
           title: PostgreSQL (13-19)
@@ -177,10 +183,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
+          filters: '[all][postgresql.all]'
 
         - name: d_SqlServer2012
           title: SQL Server 2012
@@ -192,10 +195,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all]'
 
         - name: e_SqlServer2008
           title: SQL Server 2008
@@ -207,10 +207,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all]'
 
         - name: f_SqlServer2016
           title: SQL Server 2016
@@ -222,10 +219,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all]'
 
         - name: g_SqlCE
           title: SQL CE
@@ -237,10 +231,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]'))) }}:
-            enabled: false
+          filters: '[all][sqlce.all]'
 
         - name: h_SAPHANA2
           title: SAP HANA 2
@@ -253,10 +244,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:
-            enabled: false
+          filters: '[all][saphana.all]'
 
         - name: i_PostgreSQL1
           title: PostgreSQL (9.2-12)
@@ -268,10 +256,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
+          filters: '[all][postgresql.all]'
 
         - name: j_Oracle1819
           title: Oracle 18c + 19c
@@ -284,10 +269,7 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           retry: true # provider has issue with resource management
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
-            enabled: false
+          filters: '[all][oracle.all]'
 
         - name: k_Firebird
           title: Firebird (all versions)
@@ -299,10 +281,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
-            enabled: false
+          filters: '[all][firebird.all]'
 
         - name: l_SqlServer2017_2019
           title: SQL Server 2017 + 2019
@@ -320,10 +299,7 @@ jobs:
           # library then runs on Linux alone, i.e. net8/9/10 - this config's netfx main suite is
           # release-run only, deliberately. Release runs (full_run) run it on Windows for every TFM.
           win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all][sqlserver.2019]'
 
         - name: m_SqlServer2022_2025
           title: SQL Server 2022 + 2025
@@ -338,10 +314,7 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all][sqlserver.2022]'
 
 # additional test runner as SqlServer2019 already takes a lot of time
         - name: n_SqlServer2019Extras
@@ -358,10 +331,7 @@ jobs:
           enable_fw_net100: true
           # extras counts as 2017+ for the EF.Core-only-on-Windows-for-non-release rule
           win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all][sqlserver.2019]'
 
         - name: o_SqlServer2005
           title: SQL Server 2005
@@ -375,10 +345,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
-            enabled: false
+          filters: '[all][sqlserver.all]'
 
         - name: p_MySQL
           title: MySQL/MariaDB (all providers)
@@ -390,10 +357,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
-            enabled: false
+          filters: '[all][mysql.all]'
 
         - name: q_Oracle2123
           title: Oracle 21c + 23c
@@ -406,10 +370,7 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           retry: true # provider has issue with resource management
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
-            enabled: false
+          filters: '[all][oracle.all]'
 
         - name: r_Access_MDB
           title: Access MDB (Jet/ODBC)
@@ -421,10 +382,7 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           x86: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
+          filters: '[all][access.all]'
 
         - name: s_SQLite
           title: SQLite (all providers)
@@ -444,10 +402,7 @@ jobs:
           # tests are in the same position. Release runs (full_run) run the main suite on Windows for
           # every TFM.
           win_efcore_only: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
-            enabled: false
+          filters: '[all][sqlite.all]'
 
         - name: t_Oracle1112
           title: Oracle 11g + 12c
@@ -460,10 +415,7 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           retry: true # provider has issue with resource management
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
-            enabled: false
+          filters: '[all][oracle.all]'
 
 # DB2 + Informix + DuckDB and YDB + Sybase - fast providers paired per-job (distinct ports, no
 # conflict) to save CI agent capacity without running several DB engines on one agent. DB2 keeps its
@@ -481,10 +433,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           enable_fw_net100: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
-            enabled: false
+          filters: '[all][sybase.ase.all][ydb.all]'
 
 # The two ACE providers run as separate entries, one provider each. Together they put ~14.9k tests through a
 # single x86 process, which reaches ~1.7GB of reserved address space by the end - and NUnit's last act is to
@@ -507,10 +456,7 @@ jobs:
           enable_fw_net100: true
           x86: true
           retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
+          filters: '[all][access.all]'
 
         - name: w_DB2InformixDuckDB
           title: DB2 + Informix + DuckDB
@@ -532,10 +478,7 @@ jobs:
           # default "linux leg covers net8+" rule. DuckDB has no netfx tests, so without this the
           # leg would have no TFM enabled at all and fail on a missing .trx.
           win_tfms_always: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'), contains(parameters.db_filter, '[informix.all]'), contains(parameters.db_filter, '[duckdb.all]'))) }}:
-            enabled: false
+          filters: '[all][db2.all][informix.all][duckdb.all]'
 
         - name: x_Access_ACE_OleDb
           title: Access ACE (OLEDB) x86
@@ -549,10 +492,7 @@ jobs:
           enable_fw_net100: true
           x86: true
           retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
+          filters: '[all][access.all]'
 
         - name: y_Access_ACE_x64
           title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
@@ -565,9 +505,6 @@ jobs:
           enable_fw_net90: true
           enable_fw_net100: true
           retry: true # x64 provider could crash with AV
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
-            enabled: false
+          filters: '[all][access.all]'
 
 # DuckDB runs as part of the DB2 + Informix + DuckDB job above.
