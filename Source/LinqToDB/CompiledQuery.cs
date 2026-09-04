@@ -72,7 +72,7 @@ namespace LinqToDB
 		{
 			public Expression CallTable(Expression expr, ParameterExpression ps, Expression? token, MethodType type)
 			{
-				var table = new CompiledTable<T>(expr);
+				var table = new CompiledTable<T>(expr, CollectDependentArgumentIndexes(expr, ps));
 
 				if (type == MethodType.ElementAsync)
 					return Expression.Call(
@@ -87,6 +87,46 @@ namespace LinqToDB
 						MemberHelper.MethodOf<CompiledTable<T>>(t => t.Execute(null!)),
 					ps);
 			}
+		}
+
+		// Expose materialises a [SqlQueryDependent] argument that reads the argument array, so the query the
+		// compiled table caches is only valid for the values it was built from. Collect the slots those
+		// arguments read - once, here - so the table can key its cache on them.
+		static int[] CollectDependentArgumentIndexes(Expression expression, ParameterExpression ps)
+		{
+			var indexes = new List<int>();
+
+			expression.Visit((ps, indexes), static (context, e) =>
+			{
+				if (e is not MethodCallExpression mc)
+					return;
+
+				var dependent = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(mc.Method);
+
+				if (dependent == null)
+					return;
+
+				for (var i = 0; i < mc.Arguments.Count && i < dependent.Count; i++)
+				{
+					if (dependent[i] == null)
+						continue;
+
+					mc.Arguments[i].Visit(context, static (c, a) =>
+					{
+						if (a is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
+							&& arrayIndex.Left == c.ps
+							&& arrayIndex.Right is ConstantExpression { Value: int idx }
+							&& !c.indexes.Contains(idx))
+						{
+							c.indexes.Add(idx);
+						}
+					});
+				}
+			});
+
+			indexes.Sort();
+
+			return indexes.Count == 0 ? [] : indexes.ToArray();
 		}
 
 		static bool ReplaceAsyncWithSync(MethodCallExpression methodCall, out MethodCallExpression newMethodCall)

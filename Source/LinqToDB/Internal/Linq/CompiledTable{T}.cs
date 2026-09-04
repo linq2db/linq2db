@@ -12,12 +12,29 @@ namespace LinqToDB.Internal.Linq
 	sealed class CompiledTable<T>
 		where T : notnull
 	{
-		public CompiledTable(Expression expression)
+		public CompiledTable(Expression expression, int[] dependentArgumentIndexes)
 		{
-			_expression = expression;
+			_expression               = expression;
+			_dependentArgumentIndexes = dependentArgumentIndexes;
 		}
 
 		readonly Expression _expression;
+		readonly int[]      _dependentArgumentIndexes;
+
+		// Expose materialises a [SqlQueryDependent] argument read from the argument array, so the cached query
+		// belongs to those values and not just to this fold site.
+		DependentArgumentValues GetDependentArgumentValues(object?[] parameterValues)
+		{
+			if (_dependentArgumentIndexes.Length == 0)
+				return DependentArgumentValues.None;
+
+			var values = new object?[_dependentArgumentIndexes.Length];
+
+			for (var i = 0; i < values.Length; i++)
+				values[i] = parameterValues[_dependentArgumentIndexes[i]];
+
+			return new DependentArgumentValues(values);
+		}
 
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
@@ -31,7 +48,8 @@ namespace LinqToDB.Internal.Linq
 					// Identity of this fold site, not a structural comparison: the cache is global per T,
 					// and one compiled query can fold more than one table of the same type.
 					table      : this,
-					queryFlags : dataContext.GetQueryFlags()
+					queryFlags : dataContext.GetQueryFlags(),
+					dependent  : GetDependentArgumentValues(parameterValues)
 				),
 				(dataContext, dataOptions, parameterValues),
 				static (o, key, ctx) =>

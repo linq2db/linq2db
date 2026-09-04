@@ -136,6 +136,30 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE NOWAIT").Using(StringComparison.Ordinal));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5856")]
+		public void CompiledQueryHintFromArgumentTest([IncludeDataSources(false, TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			var query = CompiledQuery.Compile<Model.ITestDataContext,int,string,System.Collections.Generic.IEnumerable<Model.Parent>>(
+				static (db, id, hint) => db.Parent
+					.Where(p => p.ParentID >= id)
+					.AsPostgreSQL()
+					.SubQueryTableHint(hint));
+
+			using var db = GetDataContext(context);
+
+			_ = query(db, 1, PostgreSQLHints.ForUpdate).ToArray();
+
+			var forUpdate = LastQuery;
+
+			_ = query(db, 1, PostgreSQLHints.ForShare).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(forUpdate, Contains.Substring("\nFOR UPDATE").Using(StringComparison.Ordinal));
+				Assert.That(LastQuery, Contains.Substring("\nFOR SHARE").Using(StringComparison.Ordinal));
+			}
+		}
+
 		[Test]
 		public void TableHintTest([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{

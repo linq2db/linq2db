@@ -180,6 +180,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						if (argument.NodeType != ExpressionType.Constant)
 						{
 							var newArgument = attr.PrepareForCache(argument, this);
+
+							// A dependent argument taken from a compiled query's own arguments cannot be
+							// evaluated while ps is a free parameter, so it would reach the SQL as a parameter
+							// and never take part in the query's identity. Its value is that identity, so
+							// materialise it here; CompiledTable carries the same values in its cache key.
+							if (ReferenceEquals(newArgument, argument) && _parameterValues != null)
+							{
+								var resolved = ResolveCompiledQueryArguments(argument);
+
+								if (!ReferenceEquals(resolved, argument) && IsCompilable(resolved))
+									newArgument = Expression.Constant(EvaluateExpression(resolved), argument.Type);
+							}
 							if (newArgument.Type != argument.Type)
 								newArgument = Expression.Convert(newArgument, argument.Type);
 
@@ -326,6 +338,17 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			}
 
 			return null;
+		}
+
+		// Substitutes the compiled query's argument array with its values, so an expression reading them can be
+		// evaluated. Returns the expression unchanged when it reads nothing from the array.
+		Expression ResolveCompiledQueryArguments(Expression expression)
+		{
+			if (_parameterValues == null)
+				return expression;
+
+			return expression.Transform(_parameterValues, static (values, e) =>
+				e == ExpressionBuilder.ParametersParam ? Expression.Constant(values, e.Type) : e)!;
 		}
 
 		// Recognises the shape CompileQuery leaves for a compiled query's own parameters - Convert(ps[i], T) -
