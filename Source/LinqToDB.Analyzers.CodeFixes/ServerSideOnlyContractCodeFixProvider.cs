@@ -259,7 +259,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 		{
 			public static readonly ContractFixAllProvider Instance = new();
 
-			protected override string GetFixAllTitle(FixAllContext fixAllContext) => AddMarkerTitle;
+			// The provider fixes both rules, so the Fix-All menu text has to follow the diagnostic being
+			// fixed rather than defaulting to the marker wording.
+			protected override string GetFixAllTitle(FixAllContext fixAllContext)
+				=> fixAllContext.DiagnosticIds.Contains(ServerSideOnlyContractAnalyzer.WrongExceptionDiagnosticId)
+					? ReplaceExceptionTitle
+					: AddMarkerTitle;
 
 			protected override async Task<Document?> FixAllAsync(FixAllContext fixAllContext, Document document, ImmutableArray<Diagnostic> diagnostics)
 			{
