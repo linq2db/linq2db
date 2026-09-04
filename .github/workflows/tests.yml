@@ -1,12 +1,9 @@
-# Provider tests on GitHub Actions - first increment: the Linux legs, baselines off, no Azure dispatch.
+# Provider tests on GitHub Actions - the Linux legs.
 #
-# Deliberately scoped. Baselines need BASELINES_GH_PAT as a repository secret and the dispatch needs a
-# PAT on the Azure side; neither exists yet, and neither is needed to prove the part that is actually
-# uncertain - that a provider leg can download the build artifacts, resolve its config, start its
-# database, run the suite and report. Those two are additive on top.
-#
-# Triggered by hand for now (`gh workflow run tests.yml -f surface='[sqlite.all]'`). The Azure pipeline
-# will dispatch it later, which is why the inputs already carry the values that handshake needs.
+# Run it by hand (`gh workflow run tests.yml -f surface='[sqlite.all]'`), from Azure's dispatch job, or
+# through tests-comment.yml when someone comments `/azp run test-<db>` on a PR. The comment path is the
+# one that reaches fork PRs: it calls this workflow rather than dispatching it, so `ref` can be
+# refs/pull/<n>/merge, which workflow_dispatch refuses.
 name: tests
 
 on:
@@ -28,6 +25,26 @@ on:
         required: false
       pr:
         description: 'Source PR number, for the courtesy comment on the baselines PR.'
+        required: false
+
+  # Same inputs, because workflow_call cannot reuse the workflow_dispatch block and Actions has no
+  # anchors. Keep the two in step.
+  workflow_call:
+    inputs:
+      surface:
+        type: string
+        required: true
+      full_run:
+        type: boolean
+        default: false
+      ref:
+        type: string
+        required: false
+      baselines_branch:
+        type: string
+        required: false
+      pr:
+        type: string
         required: false
 
 permissions:

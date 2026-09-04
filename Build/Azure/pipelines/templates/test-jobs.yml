@@ -19,13 +19,12 @@ parameters:
 - name: full_run
   type: boolean
   default: false
-  # Default true, so merging the dispatch job changes nothing: Azure keeps running the whole matrix
-  # and GitHub is not asked to. Flip it to false in the same change that moves legs to GitHub, or
-  # both CIs run everything. Settable per-run from the Azure UI, which is how the dispatch gets
-  # exercised before that.
-- name: all_in_azure
+  # Off by default: Azure keeps running the whole matrix and GitHub is not asked to, so this changes
+  # no run until legs actually move. Named for what it enables - the earlier all_in_azure spelling
+  # inverted the UI checkbox, and build 23357 ran a full matrix proving nothing because of it.
+- name: dispatch_github
   type: boolean
-  default: true
+  default: false
   # Linux legs allowed to run at once, out of the ten slots the project has. 0 leaves the job
   # uncapped, which is the default because a cap measured worse than none.
   #
@@ -88,7 +87,7 @@ jobs:
 #  fire-and-forget: the job ends as soon as the run is confirmed created, so no Azure slot is  #
 #  held while GitHub tests.                                                                    #
 ##############################################################################################
-- ${{ if eq(parameters.all_in_azure, false) }}:
+- ${{ if eq(parameters.dispatch_github, true) }}:
   - job: dispatch_github
     pool:
       vmImage: 'ubuntu-24.04'
@@ -111,7 +110,7 @@ jobs:
       value: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
       # The PR's head branch on a PR build; Build.SourceBranch otherwise. Never Build.SourceBranch on
       # a PR build - that is refs/pull/<n>/merge, which workflow_dispatch rejects. The fallback is
-      # what makes a manual run work, which is the only way to set all_in_azure from the UI.
+      # what makes a manual run work, which is the only way to set dispatch_github from the UI.
     - name: dispatch_ref
       value: $[coalesce(variables['System.PullRequest.SourceBranch'], variables['Build.SourceBranch'])]
 
