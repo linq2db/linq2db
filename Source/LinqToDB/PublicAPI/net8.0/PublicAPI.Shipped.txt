@@ -25,6 +25,7 @@ override LinqToDB.CreateTempTableOptions.ToString() -> string!
 override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.DataProvider.Access.AccessOptions!
 override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!
 override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.DataProvider.DB2.DB2Options!
+override LinqToDB.DataProvider.DuckDB.DuckDBOptions.<Clone>$() -> LinqToDB.DataProvider.DuckDB.DuckDBOptions!
 override LinqToDB.DataProvider.Firebird.FirebirdOptions.<Clone>$() -> LinqToDB.DataProvider.Firebird.FirebirdOptions!
 override LinqToDB.DataProvider.Informix.InformixOptions.<Clone>$() -> LinqToDB.DataProvider.Informix.InformixOptions!
 override LinqToDB.DataProvider.MySql.MySqlOptions.<Clone>$() -> LinqToDB.DataProvider.MySql.MySqlOptions!
@@ -38,7 +39,6 @@ override LinqToDB.DataProvider.Sybase.SybaseOptions.<Clone>$() -> LinqToDB.DataP
 override LinqToDB.DataProvider.Ydb.YdbOptions.<Clone>$() -> LinqToDB.DataProvider.Ydb.YdbOptions!
 override LinqToDB.DataProvider.Ydb.YdbOptions.ToString() -> string!
 override LinqToDB.Internal.DataProvider.BulkCopyReader<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
-override LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.SqlTypesTranslation.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 override System.Data.Linq.Binary.Equals(object? obj) -> bool
 override System.Data.Linq.Binary.GetHashCode() -> int
 override System.Data.Linq.Binary.ToString() -> string!

@@ -880,7 +880,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
 				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
 				{
-					if (TranslateMember(BuildContext, node, out var translatedMember))
+					if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
 					{
 						return Visit(translatedMember);
 					}
@@ -1272,25 +1272,38 @@ namespace LinqToDB.Internal.Linq.Builder
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 			}
 
-			Expression transformed;
+			Expression           transformed;
+			HashSet<Expression>? translatedToSql = null;
+
 			if (GetAlreadyTranslated(rootSelectQuery, expr, out var translated))
 			{
+				// Equal expression was already translated for this query, so its values are registered by that translation.
 				transformed = translated;
 			}
 			else
 			{
-				transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
+				translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
+
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext, translatedToSql),
 					Builder.DataContext,
 					Builder,
 					rootSelectQuery,
 					expr,
 					static (context, e, descriptor, inline) =>
-						context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
+					{
+						var result = context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline);
+
+						if (result is SqlPlaceholderExpression)
+							context.translatedToSql.Add(e);
+
+						return result;
+					});
 			}
 
 			if (transformed is SqlPlaceholderExpression placeholder)
 			{
-				Builder.RegisterExtensionAccessors(expr);
+				if (translatedToSql != null)
+					Builder.RegisterExtensionAccessors(expr, translatedToSql);
 
 				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
 				placeholder = placeholder.WithPath(expr);
@@ -1594,17 +1607,33 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression or SqlPlaceholderExpression))
 					{
-						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot)
-							return Visit(root);
-
-						var updated = node.Update(root);
-						var result  = Visit(updated);
-						if (result is SqlPlaceholderExpression placeholder)
+						// Dropping the member and continuing with the root alone is only valid while the member
+						// cannot survive the type change. When the resolved root is a subtype of the member's
+						// declaring type the member is still reachable, and it is the member path that carries
+						// the answer: TableContext maps a member access onto the table that owns the column.
+						// Dropping it there asks the whole-entity question instead, which a projection over
+						// several sources cannot answer.
+						//
+						// Scoped to Table on purpose: AggregationRoot keeps the unconditional drop. It resolves
+						// its root through Visit rather than BuildRoot (above), so it stays in its own purpose,
+						// and no test exercises a type change there - note that VisitContextRefExpression bails
+						// out on a root type change for BuildPurpose.Root only, so it is not ruled out by
+						// construction.
+						if (root.Type != node.Expression!.Type
+							&& (_buildPurpose is BuildPurpose.AggregationRoot
+								|| (_buildPurpose is BuildPurpose.Table && node.Member.DeclaringType?.IsSameOrParentOf(root.Type) != true)))
 						{
-							result = placeholder.WithTrackingPath(updated);
+							return Visit(root);
 						}
 
-						return result;
+						var updated = node.Update(root);
+						var visited = Visit(updated);
+						if (visited is SqlPlaceholderExpression placeholder)
+						{
+							visited = placeholder.WithTrackingPath(updated);
+						}
+
+						return visited;
 					}
 
 					if (root is SqlErrorExpression error)
@@ -1625,7 +1654,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
 					return translatedLocal;
 
-				if (TranslateMember(BuildContext, memberExpression: node, translated: out translatedLocal))
+				if (TranslateMember(BuildContext, memberExpression: node, translated: out translatedLocal)
+					&& !DeclinedForSetProjection(node, translatedLocal))
 				{
 					translatedLocal = RegisterTranslatedSql(translatedLocal, node);
 
@@ -1956,11 +1986,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!IsSame(optimized, node))
 				return Visit(optimized);
 
-			if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
-			{
-				return sqlResult;
-			}
-
 			{
 				Expression test;
 
@@ -1971,22 +1996,22 @@ namespace LinqToDB.Internal.Linq.Builder
 				using (UsingAlias(null))
 				{
 					test = Visit(node.Test);
-				}
 
-				if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
-				{
-					var binary = (BinaryExpression)test;
-					if (HandleDefaultIfEmptyInBinary(binary.Left,     binary.Right, out var newTest)
-					    || HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
+					// The rewritten test has to be visited in the same scope as the original one: the descriptor/alias
+					// suppression is what keeps a conditional from picking up the enclosing column's type (#5216).
+					if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
-						if (binary.NodeType == ExpressionType.Equal)
+						var binary = (BinaryExpression)test;
+						if (HandleDefaultIfEmptyInBinary(binary.Left,  binary.Right, out var newTest) ||
+						    HandleDefaultIfEmptyInBinary(binary.Right, binary.Left,  out newTest))
 						{
-							newTest = Expression.Not(newTest);
+							if (binary.NodeType == ExpressionType.Equal)
+							{
+								newTest = Expression.Not(newTest);
+							}
+
+							test = Visit(newTest);
 						}
-
-						var newCondition = Expression.Condition(newTest, node.IfTrue, node.IfFalse);
-
-						return Visit(newCondition);
 					}
 				}
 
@@ -1998,26 +2023,97 @@ namespace LinqToDB.Internal.Linq.Builder
 					return boolValue ? ifTrue : ifFalse;
 				}
 
-				if (_buildPurpose is BuildPurpose.Sql)
+				// Deliberately not gated on BuildPurpose.Sql: under BuildPurpose.Expression such conditionals used to
+				// be collapsed by the whole-expression conversion that ran before the children were visited, and
+				// that call now runs after this fast path — on the original node, where it may no longer convert.
+				if (test    is SqlPlaceholderExpression testPlaceholder  &&
+				    ifTrue  is SqlPlaceholderExpression truePlaceholder  &&
+				    ifFalse is SqlPlaceholderExpression falsePlaceholder &&
+				    CanShareOneReading(truePlaceholder, falsePlaceholder))
 				{
-					if (test is SqlPlaceholderExpression testPlaceholder
-					    && ifTrue is SqlPlaceholderExpression truePlaceholder
-					    && ifFalse is SqlPlaceholderExpression falsePlaceholder)
-					{
-						testPlaceholder  = UpdateNesting(testPlaceholder);
-						truePlaceholder  = UpdateNesting(truePlaceholder);
-						falsePlaceholder = UpdateNesting(falsePlaceholder);
+					testPlaceholder  = UpdateNesting(testPlaceholder);
+					truePlaceholder  = UpdateNesting(truePlaceholder);
+					falsePlaceholder = UpdateNesting(falsePlaceholder);
 
-						return Visit(CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node));
-					}
+					return CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node);
 				}
 
 				var newNode = node.Update(test, ifTrue, ifFalse);
-				if (!IsSame(newNode, node))
-					return Visit(newNode);
-			}
 
-			return node;
+				// Whole-expression conversion is attempted only after the fast path above failed, so a conditional that
+				// is already made of placeholders never pays for it. It must run on the original node: the visited
+				// children may have been materialized client-side, and such a tree no longer converts to SQL.
+				if (TryConvertToSql(node, out var sqlResult) && sqlResult is SqlPlaceholderExpression)
+				{
+					return sqlResult;
+				}
+
+				// Only the test needs a second pass. Visiting the arms can resolve an operand the test still holds
+				// unfolded — a set-operation branch selector compares a column against a per-branch constant, and
+				// leaving that comparison unresolved projects it as a column every branch of the set operation then
+				// has to carry (IntervalTranslationTests.ConcatSurroundsADifferenceWithColumns).
+				//
+				// The arms must NOT be re-visited: they were just built, re-walking them is what compounds at every
+				// nesting level, and it bought nothing — on the #5719 TPH repro re-visiting the whole conditional
+				// cost 2.2x across 1960 re-visits that all returned an unchanged tree.
+				if (!IsSame(newNode, node))
+				{
+					Expression revisitedTest;
+
+					using (UsingColumnDescriptor(null))
+					using (UsingAlias(null))
+					{
+						revisitedTest = Visit(newNode.Test);
+					}
+
+					if (!IsSame(revisitedTest, newNode.Test))
+						newNode = newNode.Update(revisitedTest, newNode.IfTrue, newNode.IfFalse);
+				}
+
+				return newNode;
+			}
+		}
+
+		/// <summary>
+		/// Refuses to bring the two answers of a conditional into a single SQL value when they are not read the
+		/// same way.
+		/// </summary>
+		/// <remarks>
+		/// A <c>CASE</c> hands the reader one value with one conversion, which is right for both answers only while
+		/// they are stored on the same terms. Two columns holding a duration in different units, or carrying
+		/// different value converters, are not - collapsing them would read one through the other's conversion,
+		/// which is exactly the difference the conditional was built to keep. Asking for the choice in SQL leaves
+		/// nobody to make it per row, so it is refused by name instead of answered wrongly.
+		/// <para>
+		/// A literal or a parameter never stands in the way: it is written through the descriptor of whatever it is
+		/// being chosen against, so it arrives on those terms by construction. A <em>computed</em> value does not -
+		/// an elapsed difference lowers to a bare tick count that carries no unit and is converted by nothing - so
+		/// it stands in terms of its own and cannot share a reading with a column that carries one. Collapsing those
+		/// two reads the tick count through the column's unit, which is the silent factor-of-10000000 error the
+		/// declaration exists to prevent.
+		/// </para>
+		/// </remarks>
+		static bool CanShareOneReading(SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)
+		{
+			var descriptor1 = QueryHelper.GetColumnDescriptor(placeholder1.Sql);
+			var descriptor2 = QueryHelper.GetColumnDescriptor(placeholder2.Sql);
+
+			if (descriptor1 != null && descriptor2 != null)
+				return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
+
+			var declared = descriptor1 ?? descriptor2;
+
+			// Neither side says how it is stored, so there is no conversion for the other to be read through.
+			if (declared == null || (declared.DurationUnit == null && declared.ValueConverter == null))
+				return true;
+
+			// One side is stored on terms of its own. A literal or a parameter is written through the other's
+			// descriptor, so it arrives on those terms; a computed value - an elapsed difference is a bare tick
+			// count converted by nothing - stands in its own and cannot share a reading with a column that
+			// carries one.
+			var computed = descriptor1 == null ? placeholder1.Sql : placeholder2.Sql;
+
+			return QueryHelper.UnwrapNullablity(computed) is SqlValue or SqlParameter;
 		}
 
 		bool HandleDefaultIfEmptyInBinary(Expression left, Expression right, [NotNullWhen(true)] out Expression? newCondition)
@@ -2833,7 +2929,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (converted is not SqlPlaceholderExpression placeholderTest)
 				return null;
 
-			var descriptor = QueryHelper.GetColumnDescriptor(placeholderTest.Sql);
+			// Asked for typing: whatever is written down on the other side of this expression takes its terms from
+			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered.
+			var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql);
 			return descriptor;
 		}
 
@@ -2861,14 +2959,49 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool));
 		}
 
+		/// <summary>
+		/// A projection built with <see cref="BuildFlags.ForSetProjection"/> — a set-operation operand, a row of an
+		/// in-memory sequence, or one of the CTE-union branches an eager load builds — makes
+		/// <see cref="GetTranslationFlags"/> ask translators for strict SQL, so a member they cannot translate
+		/// (e.g. <c>Guid.ToString("N")</c>) comes back as an error instead of being declined. Such a member is
+		/// still projectable: each operand selects the columns it reads and the materializer computes the value,
+		/// exactly as for a terminal <c>Select</c>. Treat the error as "not translated" so the caller falls
+		/// through to the client-side path.
+		/// </summary>
+		/// <remarks>
+		/// Only where the translator would have declined had SQL not been demanded, which is what asking it a
+		/// second time decides - the error alone does not say which kind of refusal it is. A refusal raised
+		/// whatever the flags say is about the construct rather than about a missing SQL form, so there is no
+		/// half of it left for the client side to read the operands through: swallowing one leaves the generic
+		/// handling to answer with a value instead, which is what the refusal exists to stop. The second ask
+		/// happens only on a path that has already failed, so the successful one is unchanged.
+		/// </remarks>
+		bool DeclinedForSetProjection(Expression node, Expression translated)
+		{
+			if (!_buildFlags.HasFlag(BuildFlags.ForSetProjection) || translated is not SqlErrorExpression { IsCritical: false })
+				return false;
+
+			using var translationContext = _translationContexts.Allocate();
+
+			translationContext.Value.Init(this, BuildContext, Alias);
+
+			return Builder._memberTranslator.Translate(translationContext.Value, node, TranslationFlags.Expression) == null;
+		}
+
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
-			if (node.Method != null && IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
+			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
-				if (TranslateMember(BuildContext, node, out var translatedMember))
+				// Offered to the translators whether or not the operator is a method: a comparison between numbers
+				// carries none, and a translator can still have something to say about it - a duration's total
+				// compared against a bound is a comparison of doubles, and the scaling it puts on the column can
+				// move to the other side only where the comparison is in view.
+				if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
 					return Visit(translatedMember);
 
-				if (HandleExtension(BuildContext, node, out translatedMember))
+				// The attribute machinery reads its instructions off a member, so it is asked only where there is
+				// one to read them off.
+				if (node.Method != null && HandleExtension(BuildContext, node, out translatedMember))
 					return Visit(translatedMember);
 			}
 
@@ -3751,30 +3884,30 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (originalExpression != null)
 					return originalExpression;
 
-				var rightExpr = right;
-				var leftExpr  = left;
-				if (rightExpr.Type != leftExpr.Type)
+				var origRight = right;
+				var origLeft  = left;
+				if (origRight.Type != origLeft.Type)
 				{
-					if (rightExpr.Type.CanConvertTo(leftExpr.Type))
-						rightExpr = Expression.Convert(rightExpr, leftExpr.Type);
-					else if (left.Type.CanConvertTo(leftExpr.Type))
-						leftExpr = Expression.Convert(leftExpr, right.Type);
+					if (origRight.Type.CanConvertTo(origLeft.Type))
+						origRight = Expression.Convert(origRight, origLeft.Type);
+					else if (left.Type.CanConvertTo(origLeft.Type))
+						origLeft = Expression.Convert(origLeft, right.Type);
 				}
 				else
 				{
 					if (nodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
 						// Fore generating Path for SqlPlaceholderExpression
-						if (!rightExpr.Type.IsPrimitive)
+						if (!origRight.Type.IsPrimitive)
 						{
 							return new SqlPathExpression(
-								new[] { leftExpr, Expression.Constant(nodeType), rightExpr },
+								new[] { origLeft, Expression.Constant(nodeType), origRight },
 								typeof(bool));
 						}
 					}
 				}
 
-				return Expression.MakeBinary(nodeType, leftExpr, rightExpr);
+				return Expression.MakeBinary(nodeType, origLeft, origRight);
 			}
 
 			Expression GenerateNullComparison(Expression placeholdersExpression, bool isNot)
@@ -4019,6 +4152,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!RestoreCompare(ref left, ref right))
 				RestoreCompare(ref right, ref left);
+
+			// After RestoreCompare, never before: it pattern-matches on the nested shape itself (the
+			// lifted char cases, and its own double-conversion branch), so collapsing first hides the
+			// operands it is looking for.
+			left  = CollapseNullableConvert(left);
+			right = CollapseNullableConvert(right);
 
 			if (BuildContext == null)
 				throw new InvalidOperationException();
@@ -4509,6 +4648,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return false;
+		}
+
+		// Convert(Convert(x, T), T?) states nothing the inner conversion has not already stated - the outer
+		// one only adds the nullable wrapper. Comparison operands arrive in this shape from two directions:
+		// the C# compiler emits it for a lifted implicit conversion, and ExpressionBuilder.Equal builds it
+		// when it reconciles the unwrapped types and the nullable wrapper in two independent steps.
+		//
+		// Left alone: a chain through a different intermediate type, where the direct conversion may not
+		// exist at all (a wrapper struct reached via object), and a user-defined conversion operator.
+		static Expression CollapseNullableConvert(Expression expr)
+		{
+			return expr is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } outer
+				&& outer.Operand is UnaryExpression { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked, Method: null } inner
+				&& outer.Type.UnwrapNullableType() == inner.Type.UnwrapNullableType()
+					? Expression.Convert(inner.Operand, outer.Type)
+					: expr;
 		}
 
 		// restores original types, lost due to C# compiler optimizations

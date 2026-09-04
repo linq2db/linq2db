@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -255,7 +255,7 @@ namespace Tests.Linq
 		// Expected running (cumulative) population/sample variance over a window PARTITION BY CategoryId
 		// ORDER BY Id (default RANGE UNBOUNDED PRECEDING .. CURRENT ROW): the set is every row in the same
 		// category with Id <= the current row's Id. Sample variance is undefined (NULL) for a single row.
-		internal static double? ExpectedRunningVariance(WindowFunctionTestEntity[] data, int id, bool population)
+		private static double? ExpectedRunningVariance(WindowFunctionTestEntity[] data, int id, bool population)
 		{
 			var current = System.Array.Find(data, d => d.Id == id)!;
 			var values  = new System.Collections.Generic.List<double>();
@@ -286,7 +286,7 @@ namespace Tests.Linq
 		// DuckDB), 0 (Oracle, MySQL, SAP HANA, Informix), or NaN (ClickHouse) — and it is not a sample-vs-population
 		// discriminator. For windows of 2+ rows the assertion is strict, so a provider that computes a population
 		// statistic where the API promises a sample one (e.g. bare STDDEV = STDDEV_POP on MySQL/DB2) fails here.
-		internal static void AssertRunningStat(double? actual, double? expectedVariance, bool stdDev)
+		private static void AssertRunningStat(double? actual, double? expectedVariance, bool stdDev)
 		{
 			if (expectedVariance is null)
 			{
@@ -306,7 +306,7 @@ namespace Tests.Linq
 		// IS the filter column, the filter is all-true inside the CategoryId==1 partition and all-false elsewhere,
 		// so categories 2/3 aggregate over an empty set and the window function returns NULL — a dropped/mangled
 		// FILTER (or its CASE-WHEN emulation) would instead return the unfiltered running value here.
-		internal static int? ExpectedRunningFilteredSum(WindowFunctionTestEntity[] data, int id)
+		private static int? ExpectedRunningFilteredSum(WindowFunctionTestEntity[] data, int id)
 		{
 			var current = System.Array.Find(data, d => d.Id == id)!;
 			var sum     = 0;
@@ -322,7 +322,7 @@ namespace Tests.Linq
 			return any ? sum : (int?)null;
 		}
 
-		internal static double? ExpectedRunningFilteredAvg(WindowFunctionTestEntity[] data, int id)
+		private static double? ExpectedRunningFilteredAvg(WindowFunctionTestEntity[] data, int id)
 		{
 			var current = System.Array.Find(data, d => d.Id == id)!;
 			var sum     = 0d;
@@ -345,7 +345,7 @@ namespace Tests.Linq
 		// tests), so the empty case returns 0 here. Boundary kinds: "UP" unbounded preceding, "UF" unbounded
 		// following, "CR" current row, "P" <offset> preceding, "F" <offset> following. exclude: "none" | "current"
 		// | "group" | "ties" (with unique keys, "group" == "current" and "ties" removes nothing).
-		internal static int ExpectedFrameSum(
+		private static int ExpectedFrameSum(
 			WindowFunctionTestEntity[] data, int id, bool range,
 			string startKind, int startOffset, string endKind, int endOffset,
 			string exclude = "none")

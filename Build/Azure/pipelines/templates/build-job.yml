@@ -2,6 +2,7 @@ parameters:
   with_nugets: false
   with_examples: false
   with_tests: false
+  with_analyzer_tests: false
   with_singlefile_smoke: false
   with_analyzers: false
   with_api_analyzers: false
@@ -32,6 +33,18 @@ jobs:
       packageType: sdk
       version: 10.x
 
+  # Tests.Analyzers targets net8.0 (to match the Net80 reference pack the Roslyn testing SDK compiles snippets
+  # against); the windows-2025 image no longer ships an x64 .NET 8 runtime, so provision it or the net8.0 test
+  # host fails to launch ("You must install or update .NET"). Runtime only — SDK 10 builds the net8.0 target.
+  - task: UseDotNet@2
+    displayName: 'Use .NET 8 runtime (Tests.Analyzers net8.0 host)'
+    inputs:
+      packageType: runtime
+      version: 8.x
+    # Only when the analyzer tests actually run — the provider matrix inherits with_analyzer_tests: false
+    # and skips them, so it needn't provision the net8.0 runtime.
+    condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
+
 # tag version numbers appropriately
   - powershell: echo "##vso[task.setvariable variable=versionSuffix]-dev.$(Build.BuildId)"
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
@@ -49,6 +62,17 @@ jobs:
     displayName: Build Examples (verify)
     condition: and(succeeded(), ${{ parameters.with_examples }})
 
+  # Roslyn analyzer/code-fix unit tests for Source/LinqToDB.Analyzers*. DB-free and provider-independent, so they
+  # run here on the build agent rather than in the provider test matrix. Fast (seconds); the MTP NUnit runner
+  # is selected via global.json.
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: test
+      projects: 'Tests/Tests.Analyzers/Tests.Analyzers.csproj'
+      arguments: '--configuration $(test_configuration)'
+    displayName: Run Analyzer Tests
+    condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
+
   # PublishSingleFile smoke test — regression guard for linq2db/linq2db#5488.
   # Provider detectors must not rely on Assembly.Location / File.Exists heuristics
   # that silently misbehave in a single-file bundle. The Tests.SingleFile binary
@@ -65,10 +89,15 @@ jobs:
     displayName: PublishSingleFile Smoke Test
     condition: and(succeeded(), ${{ parameters.with_singlefile_smoke }})
 
+# Only the graph Build Test Artifacts publishes, not the whole solution: LinqToDB.CLI has the slowest
+# restore in the run at 1.4 min and finishes it last, and Tests.T4 is the last project to compile, so
+# between them they add ~2.3 min to a step whose every minute is serial prefix. Nothing is left
+# unchecked - the build pipeline compiles all of linq2db.slnx on the same PR, and Tests.LinqToDB.CLI
+# has its own test-cli pipeline.
   - task: DotNetCoreCLI@2
     inputs:
       command: build
-      projects: $(solution)
+      projects: $(test_solution_filter)
       arguments: --configuration $(test_configuration)
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})
@@ -98,33 +127,12 @@ jobs:
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net10.0_x64
         if %errorlevel% neq 0 exit
 
-        REM publish main and ef.core tests for all TFMs for win-x86
-        dotnet publish Tests/Linq/Tests.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/net462_x86
-        if %errorlevel% neq 0 exit
-    
-        FOR %%f IN (net8.0 net9.0 net10.0) DO (
-            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:X86STUBS=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
-            if %errorlevel% neq 0 exit
-        )
-
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net462_x86
-        if %errorlevel% neq 0 exit
-
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net8.0_x86
-        if %errorlevel% neq 0 exit
-
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f net9.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net9.0_x86
-        if %errorlevel% neq 0 exit
-        
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net10.0_x86
-        if %errorlevel% neq 0 exit
-
         mkdir testing
         if %errorlevel% neq 0 exit
 
         REM prepare test artifacts with binaries and test configs
         FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
-            FOR %%a IN (x86 x64) DO (
+            FOR %%a IN (x64) DO (
                 xcopy /i /s .build\publish\Tests\$(test_configuration)\%%f_%%a testing\%%f\main\%%a
                 if %errorlevel% neq 0 exit
                 xcopy /i /s .build\publish\EFTests\$(test_configuration)\%%f_%%a testing\%%f\efcore\%%a
@@ -147,6 +155,11 @@ jobs:
         )
 
         xcopy /i Build\$(test_configuration)\scripts testing\scripts
+        if %errorlevel% neq 0 exit
+
+        REM CI-agnostic scripts shared with the GitHub Actions legs land in the same scripts folder, so a
+        REM leg invokes them by the same path whichever CI it is on.
+        xcopy /i Build\CI testing\scripts
         if %errorlevel% neq 0 exit
 
         copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
@@ -223,6 +236,27 @@ jobs:
     displayName: Pack Solution for Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
+  # These two live here rather than in nuget-job.yml, where the other pre-publish guards sit, for two
+  # reasons. nuget-job only runs from the `default` pipeline (master/release and release-targeting PRs),
+  # so a PR that pulls in a new bundled dependency would pass, merge, and only fail on master. And the
+  # .lpx exists only in this job - nuget-job downloads the nuget artifact and never sees it.
+  # .github/workflows/build.yml carries the same two steps; both pipelines pack on every PR today.
+  - task: PowerShell@2
+    displayName: Check third-party notices are up to date
+    inputs:
+      pwsh: true
+      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/third-party-notices.ps1'
+      arguments: '-Action check'
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PowerShell@2
+    displayName: Verify third-party notices cover the packed output
+    inputs:
+      pwsh: true
+      filePath: '$(Build.SourcesDirectory)/Build/Azure/scripts/third-party-notices.ps1'
+      arguments: '-Action verify -PackagesDir "$(Build.SourcesDirectory)/.build/package/release" -LpxDir "$(Build.SourcesDirectory)/.build/lpx"'
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/package/release'
@@ -244,7 +278,7 @@ jobs:
         $version = dotnet msbuild Source\LinqToDB\LinqToDB.csproj -getProperty:Version
         $relnotesVersion = $version -replace '\.',''
         Write-Host "Create release v$version draft"
-        $output = gh release create v$version "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $version"
+        $output = gh release create v$version "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $version"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
             exit 1
@@ -254,3 +288,103 @@ jobs:
     condition: and(succeeded(), ${{ parameters.with_release }})
     env:
       GITHUB_TOKEN: $(RELEASES_GH_PAT)
+
+################################################################################################
+#  WIN-X86 TEST ARTIFACTS                                                                      #
+#                                                                                              #
+#  -a x86 rebuilds the whole graph for the win-x86 RID, so these eight publishes take ~6.8 min #
+#  against ~2.1 for their x64 counterparts, which reuse "Build Solution for Tests". Doing them #
+#  here lifts that off the critical path, in a window where 9 of the 10 slots sit idle anyway. #
+#                                                                                              #
+#  The margin is thinner than it looks, so measure before assuming it. This job finished 36s   #
+#  ahead of build_job on build 23050, 0.6 min on 23028 and 1.9 on 23045 - the windows legs are #
+#  kept clear of it only because create_baselines_branch then takes another 2-3 min. And the   #
+#  two grow differently: build_job publishes from a warm tree, while these eight publishes run #
+#  cold, so adding a TFM or a project moves them apart. If it ever overtakes build_job plus    #
+#  create_baselines_branch, every windows leg starts late and the timeline will not say why.   #
+#                                                                                              #
+#  Only the three Access legs run x86 (x86: true in test-matrix.yml), but the binaries used to #
+#  ride along inside every per-TFM artifact - so every linux leg downloaded win-x86 binaries   #
+#  it cannot execute. Publishing them separately is what stops that.                           #
+################################################################################################
+- job: build_x86_job
+  pool:
+    vmImage: 'windows-2025'
+  displayName: 'Build (win-x86)'
+  timeoutInMinutes: 60
+  condition: and(succeeded(), ${{ parameters.with_tests }})
+
+  steps:
+
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 9.x
+
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 10.x
+
+# stamped the same way as build_job, so both halves of a leg's binaries carry one version
+  - powershell: echo "##vso[task.setvariable variable=versionSuffix]-dev.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Set version suffix (non-release)
+
+  - powershell: echo "##vso[task.setvariable variable=applyVersionSuffix]false"
+    condition: eq(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Remove version suffix (release)
+
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
+        REM publish main and ef.core tests for all TFMs for win-x86
+        dotnet publish Tests/Linq/Tests.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/net462_x86
+        if %errorlevel% neq 0 exit
+
+        FOR %%f IN (net8.0 net9.0 net10.0) DO (
+            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:X86STUBS=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
+            if %errorlevel% neq 0 exit
+        )
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net462_x86
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net8.0_x86
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f net9.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net9.0_x86
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net10.0_x86
+        if %errorlevel% neq 0 exit
+
+        mkdir testing_x86
+        if %errorlevel% neq 0 exit
+
+        REM same layout as the x64 artifacts, so a leg finds main/x86 and efcore/x86 where it expects
+        FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
+            xcopy /i /s .build\publish\Tests\$(test_configuration)\%%f_x86 testing_x86\%%f\main\x86
+            if %errorlevel% neq 0 exit
+            xcopy /i /s .build\publish\EFTests\$(test_configuration)\%%f_x86 testing_x86\%%f\efcore\x86
+            if %errorlevel% neq 0 exit
+            copy DataProviders.json testing_x86\%%f\main\x86
+            if %errorlevel% neq 0 exit
+            copy DataProviders.json testing_x86\%%f\efcore\x86
+            if %errorlevel% neq 0 exit
+            REM ship .runsettings next to each test app: MTP does not auto-discover it, NUnit honors it via --settings (AssemblySelectLimit)
+            copy .runsettings testing_x86\%%f\main\x86
+            if %errorlevel% neq 0 exit
+            copy .runsettings testing_x86\%%f\efcore\x86
+            if %errorlevel% neq 0 exit
+        )
+    displayName: Build Test Artifacts (win-x86)
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing_x86'
+      artifact: $(artifact_test_x86_binaries)
+    displayName: Publish win-x86 Test Binaries

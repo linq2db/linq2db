@@ -130,6 +130,9 @@ namespace LinqToDB.Internal.Linq
 					if (dataContext is IExpressionPreprocessor preprocessor)
 						expr = preprocessor.ProcessExpression(expr);
 
+					// The cache key below is built from the rewritten tree, so this runs before the lookup and
+					// therefore on every execution. Keying the cache on the pre-interception tree would let a hit
+					// skip the rewrite, but only by retaining both trees - one to match on, one to run.
 					if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
 						expr = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
 				}

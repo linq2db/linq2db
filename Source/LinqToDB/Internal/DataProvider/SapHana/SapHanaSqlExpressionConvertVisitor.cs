@@ -1,4 +1,5 @@
-﻿using LinqToDB.Internal.Extensions;
+﻿using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
@@ -12,6 +13,18 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override bool SupportsDistinctAsExistsIntersect => true;
 		protected override bool ConcatRequiresExplicitStringCast  => false;
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// <c>NANO100_BETWEEN</c> counts hundred-nanosecond units, which is a tick and is also what a SAP HANA
+		/// timestamp stores, so the elapsed count needs no scaling and loses nothing.
+		/// </summary>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			return Factory.Function(Factory.GetDbDataType(typeof(long)), "Nano100_Between", element.Start, element.End);
+		}
 
 		#region LIKE
 
@@ -81,5 +94,17 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 			return base.WrapColumnExpression(expr);
 		}
+
+		/// <summary>
+		/// <c>feature not supported: Function must have ORDER BY clause</c> - for every ranking function except
+		/// <c>ROW_NUMBER</c>, which SAP HANA is happy to leave unordered, and for the five that read a neighbouring
+		/// row. A frame needs one too (<c>Window functions must have ORDER BY clause</c>); an unframed aggregate
+		/// does not. <c>NTH_VALUE</c> belongs here and nowhere else - Oracle and DB2 both execute
+		/// <c>NTH_VALUE(x, 2) OVER ()</c> without complaint.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE" or "FIRST_VALUE" or "LAST_VALUE" or "NTH_VALUE";
 	}
 }

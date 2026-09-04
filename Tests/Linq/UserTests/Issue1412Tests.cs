@@ -15,17 +15,13 @@ namespace Tests.UserTests
 			public Guid Id { get; set; }
 		}
 
-		public class BasicDTOwithExtensionData : BasicDTO
-		{ }
+		public class BasicDTOwithExtensionData : BasicDTO;
 
-		public class BasicDTOwithoutID
-		{ }
+		public class BasicDTOwithoutID;
 
-		public abstract class WmsBasicDTO<T> : WmsBasicWithoutCustomFieldsDTO<T>
-		{ }
+		public abstract class WmsBasicDTO<T> : WmsBasicWithoutCustomFieldsDTO<T>;
 
-		public abstract class WmsBasicWithoutCustomFieldsDTO<T> : BasicDTOwithExtensionData
-		{ }
+		public abstract class WmsBasicWithoutCustomFieldsDTO<T> : BasicDTOwithExtensionData;
 
 		public enum ResourceStatus
 		{

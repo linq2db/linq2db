@@ -23,14 +23,28 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
 		/// We subtract 1 based on possibility of provider using parameter for command.
 		/// </remarks>
-		private const      int                _maxParameters = 32766;
-		/// <summary>
-		/// Setting is conservative, based on https://docs.oracle.com/cd/A58617_01/server.804/a58242/ch5.htm
-		/// Max is actually more arbitrary in later versions than Oracle 8.
-		/// </summary>
-		private const      int                _maxSqlLength  = 65535;
-		protected override int                 MaxParameters => _maxParameters;
-		protected override int                 MaxSqlLength  => _maxSqlLength;
+		protected override int                 MaxParameters => 32766;
+
+		/// <remarks>
+		/// Oracle publishes no fixed maximum statement length. "Logical Database Limits" only says the limit
+		/// "depends on many factors, including database configuration, disk space, and memory":
+		/// https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/logical-database-limits.html
+		/// The previous 65535 came from Oracle 8 documentation, which no longer applies to any supported version.
+		/// <para>
+		/// 393,216 characters - 384 * 1024, counted in UTF-16 characters of the generated SQL rather than in bytes,
+		/// the same unit as <see cref="BulkCopyOptions.MaxSqlLengthForBatch"/> - was chosen from measurement
+		/// (2026-08, issue #5825): on Oracle 11 - the oldest supported version - and on Oracle 23, both
+		/// <c>INSERT ALL</c> and <c>INSERT ... SELECT FROM DUAL UNION ALL</c> statements of inlined literals parsed
+		/// and executed correctly up to 4M characters (8MB of bytes for a multi-byte payload under AL32UTF8). This
+		/// value therefore keeps better than 10x headroom over what was verified, while staying in line with the
+		/// other providers here and bounding the cost of a hard parse: the default Oracle path inlines
+		/// literals, so every batch is a distinct statement that is parsed from scratch.
+		/// </para>
+		/// Users whose database and driver accept longer statements can raise it with
+		/// <see cref="BulkCopyOptions.MaxSqlLengthForBatch"/>.
+		/// </remarks>
+		protected override int                 MaxSqlLength  => 384 * 1024;
+
 		private readonly   OracleDataProvider  _provider;
 		private readonly   AlternativeBulkCopy _useAlternativeBulkCopy;
 
@@ -223,14 +237,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.StringBuilder.AppendLine("SELECT * FROM dual");
 		}
 
-		static BulkCopyRowsCopied OracleMultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
-			=> MultipleRowsCopyHelper(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, _maxParameters,_maxSqlLength);
+		BulkCopyRowsCopied OracleMultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
+			=> MultipleRowsCopyHelper(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, MaxParameters, MaxSqlLength);
 
-		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
-			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, _maxParameters,_maxSqlLength);
+		Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
+			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
-		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
-			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, _maxParameters,_maxSqlLength);
+		Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
 		static List<object> OracleMultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
@@ -473,13 +487,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.StringBuilder.AppendLine();
 		}
 
-		static BulkCopyRowsCopied OracleMultipleRowsCopy3(MultipleRowsHelper helper, IEnumerable source)
-			=> MultipleRowsCopyHelper(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, _maxParameters, _maxSqlLength);
+		BulkCopyRowsCopied OracleMultipleRowsCopy3(MultipleRowsHelper helper, IEnumerable source)
+			=> MultipleRowsCopyHelper(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, MaxParameters, MaxSqlLength);
 
-		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
-			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, _maxParameters, _maxSqlLength);
+		Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
+			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
-		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
-			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, _maxParameters, _maxSqlLength);
+		Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, MaxParameters, MaxSqlLength);
 	}
 }

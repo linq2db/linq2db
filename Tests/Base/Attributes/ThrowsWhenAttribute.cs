@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -33,6 +34,27 @@ namespace Tests
 		{
 			// Add a property to the test to indicate that it expects an exception
 			test.Properties.Add("ThrowsWhen", this);
+		}
+
+		/// <summary>
+		/// Whether the thrown message matches the expected one. A message carrying <c>{0}</c>-style placeholders is
+		/// matched as a pattern rather than literally.
+		/// </summary>
+		/// <remarks>
+		/// Lets a test name an <c>ErrorHelper</c> constant that happens to be a format string, instead of copying
+		/// its wording with the arguments filled in. Copying is what rots: the constant changes, the test keeps
+		/// passing against the stale text it embedded. Each placeholder matches any run of characters, so the
+		/// assertion stays on the wording and not on the values substituted into it.
+		/// </remarks>
+		internal static bool MessageMatches(string actual, string expected)
+		{
+			if (!Regex.IsMatch(expected, @"\{\d+\}"))
+				return actual.Contains(expected);
+
+			var pattern = Regex.Replace(Regex.Escape(expected), @"\\\{\d+\}", ".*?");
+
+			// Singleline so a placeholder can also swallow a line break - linq2db composes multi-line messages.
+			return Regex.IsMatch(actual, pattern, RegexOptions.Singleline);
 		}
 
 		public TestCommand Wrap(TestCommand command)
@@ -88,6 +110,30 @@ namespace Tests
 
 			public override TestResult Execute(TestExecutionContext context)
 			{
+				// The TestProgressReporter heartbeat action runs *inside* this IWrapSetUpTearDown wrapper, so the
+				// outcome it samples is the pre-rewrite one. Hold the unit back for the duration of this wrapper and
+				// hand the tracker our final verdict instead, so no provisional result is ever counted or published.
+				// Deferrals nest: with several ThrowsWhen attributes on one test only the outermost wrapper — the one
+				// that sees the final result — books the unit.
+				var fullName = context.CurrentTest.FullName;
+
+				TestProgressTracker.BeginDeferred(fullName);
+
+				TestResult? testResult = null;
+
+				try
+				{
+					testResult = ExecuteInner(context);
+					return testResult;
+				}
+				finally
+				{
+					TestProgressTracker.CommitDeferred(fullName, testResult);
+				}
+			}
+
+			TestResult ExecuteInner(TestExecutionContext context)
+			{
 				var expectsException = false;
 				var expectsFirst     = true;
 
@@ -130,7 +176,9 @@ namespace Tests
 					}
 					else
 					{
-						if (!string.IsNullOrEmpty(_attribute.ErrorMessage) && !testResult.Message.Contains(_attribute.ErrorMessage))
+						// Pattern-matched rather than string.IsNullOrEmpty: the net462 reference assembly carries no
+						// [NotNullWhen] on it, so the compiler would not narrow ErrorMessage to non-null there.
+						if (_attribute.ErrorMessage is { Length: > 0 } expectedMessage && !MessageMatches(testResult.Message, expectedMessage))
 						{
 							testResult.SetResult(ResultState.Failure, $"Expected a <{_attribute.ExpectedException}> to be thrown with message containing '{_attribute.ErrorMessage}', but found: '{testResult.Message}'");
 						}

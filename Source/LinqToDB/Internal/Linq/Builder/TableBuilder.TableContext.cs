@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
@@ -137,7 +138,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
+				var translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
+
+				attr.SetTable(builder.DataOptions, (context: this, builder, translatedToSql), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
 				{
 					using var saveState = context.builder.UsingColumnDescriptor(null);
 
@@ -168,10 +171,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
+					if (sqlExpr is SqlPlaceholderExpression)
+						context.translatedToSql.Add(argument);
+
 					return sqlExpr;
 				});
 
-				builder.RegisterExtensionAccessors(mc);
+				builder.RegisterExtensionAccessors(mc, translatedToSql);
 
 				Init(true);
 			}

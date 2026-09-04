@@ -74,13 +74,9 @@ namespace Tests.Mapping
 			int MarkedOnType { get; set; }
 		}
 
-		class MyInheritedClass : MyBaseClass
-		{
-		}
+		class MyInheritedClass : MyBaseClass;
 
-		sealed class MyInheritedClass2 : MyInheritedClass
-		{
-		}
+		sealed class MyInheritedClass2 : MyInheritedClass;
 
 		class MyInheritedClass3 : IInheritedInterface
 		{
@@ -99,29 +95,23 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 			var mb = new FluentMappingBuilder(ms);
 
-			MappingSchema.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
+			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
+
+			// per-call callback rather than the process-wide MappingSchema.EntityDescriptorCreatedCallback:
+			// the global one lowercases every descriptor built while it is set, this schema's or not
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), (mappingSchema, entityDescriptor) =>
 			{
 				entityDescriptor.TableName = entityDescriptor.TableName.ToLowerInvariant();
 				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
 				{
 					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLowerInvariant();
 				}
-			};
+			});
 
-			try
+			using (Assert.EnterMultipleScope())
 			{
-				mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
-
-				var ed = ms.GetEntityDescriptor(typeof(MyClass));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(ed.TableName, Is.EqualTo("newname"));
-					Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
-				}
-			}
-			finally
-			{
-				MappingSchema.EntityDescriptorCreatedCallback = null;
+				Assert.That(ed.TableName, Is.EqualTo("newname"));
+				Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
 			}
 		}
 
@@ -411,9 +401,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		sealed class DescendantEntity : BaseEntity
-		{
-		}
+		sealed class DescendantEntity : BaseEntity;
 
 		[Test]
 		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
