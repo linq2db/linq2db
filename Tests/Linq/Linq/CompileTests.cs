@@ -905,6 +905,52 @@ namespace Tests.Linq
 				Assert.That(parents.First(p => p.ParentID == 2).Children, Has.Count.EqualTo(2));
 			}
 		}
+
+		sealed class FilteredRow
+		{
+			[PrimaryKey] public int Id      { get; set; }
+			             public bool Hidden { get; set; }
+		}
+
+		// The IgnoreFilters call - and so the [SqlQueryDependent] position its argument occupies - exists only
+		// after this is expanded, which is after the compiled table has already collected its cache-key slots.
+		[ExpressionMethod(nameof(VisibleRowsImpl))]
+		static IQueryable<FilteredRow> VisibleRows(IDataContext db, Type ignoreFor) => throw new InvalidOperationException();
+
+		static Expression<Func<IDataContext,Type,IQueryable<FilteredRow>>> VisibleRowsImpl()
+			=> (db, ignoreFor) => db.GetTable<FilteredRow>().IgnoreFilters(ignoreFor);
+
+		[Test]
+		public void DependentArgumentCreatedByExpansionTest([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<FilteredRow>()
+					.HasQueryFilter((q, dc) => q.Where(r => !r.Hidden))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable(
+			[
+				new FilteredRow { Id = 1, Hidden = false },
+				new FilteredRow { Id = 2, Hidden = true  },
+			]);
+
+			var query = CompiledQuery.Compile<IDataContext,Type,IEnumerable<FilteredRow>>(
+				static (dc, t) => VisibleRows(dc, t));
+
+			var ignored = query(db, typeof(FilteredRow)).Select(r => r.Id).ToList();
+			var applied = query(db, typeof(Parent)).Select(r => r.Id).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				// Ignoring the filter for FilteredRow returns the hidden row too, ignoring it for an unrelated
+				// entity leaves the filter in place - so the two invocations cannot share one cached query.
+				Assert.That(ignored, Is.EquivalentTo(new[] { 1, 2 }));
+				Assert.That(applied, Is.EquivalentTo(new[] { 1 }));
+			}
+		}
 	}
 
 	static class CompiledQueryWrapperExtensions

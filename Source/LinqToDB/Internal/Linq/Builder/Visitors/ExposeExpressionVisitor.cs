@@ -33,9 +33,17 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
 		bool                              _isSingleConvert;
+		List<int>?                        _materializedArgumentSlots;
 
 		public IDataContext  DataContext   => _dataContext;
 		public MappingSchema MappingSchema => _dataContext.MappingSchema;
+
+		/// <summary>
+		/// Argument-array slots whose values this pass baked into the tree. Expansion can create a
+		/// <see cref="SqlQueryDependentAttribute"/> position that did not exist before it ran, so a caller
+		/// caching the result cannot know these up front - it has to be told which ones were used.
+		/// </summary>
+		public int[] MaterializedArgumentSlots => _materializedArgumentSlots is null ? [] : _materializedArgumentSlots.ToArray();
 
 		Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
 
@@ -68,6 +76,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_optimizeConditions  = default;
 			_compactBinary       = false;
 			_isSingleConvert     = false;
+
+			_materializedArgumentSlots = null;
 
 			_allowedParameters?.Clear();
 
@@ -192,7 +202,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 								var resolved = ResolveCompiledQueryArguments(newArgument);
 
 								if (!ReferenceEquals(resolved, newArgument) && IsCompilable(resolved))
+								{
+									RecordMaterializedArgumentSlots(newArgument);
+
 									newArgument = Expression.Constant(EvaluateExpression(resolved), argument.Type);
+								}
 							}
 
 							if (newArgument.Type != argument.Type)
@@ -341,6 +355,22 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			}
 
 			return null;
+		}
+
+		void RecordMaterializedArgumentSlots(Expression materialized)
+		{
+			materialized.Visit(this, static (visitor, e) =>
+			{
+				if (e is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
+					&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+					&& arrayIndex.Right is ConstantExpression { Value: int idx })
+				{
+					visitor._materializedArgumentSlots ??= new List<int>();
+
+					if (!visitor._materializedArgumentSlots.Contains(idx))
+						visitor._materializedArgumentSlots.Add(idx);
+				}
+			});
 		}
 
 		// Substitutes the compiled query's argument array with its values, so an expression reading them can be

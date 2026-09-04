@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,29 +21,50 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		readonly Expression _expression;
-		readonly int[]      _dependentArgumentIndexes;
+
+		// Grows when a build reports a slot the pre-expose scan could not see - expansion is recursive, so a
+		// dependent position can appear only after several rewrites. Written under _learnLock, read unlocked.
+		volatile int[] _dependentArgumentIndexes;
+
+		readonly Lock _learnLock = new();
 
 		// Expose materialises a [SqlQueryDependent] argument read from the argument array, so the cached query
 		// belongs to those values and not just to this fold site.
-		DependentArgumentValues GetDependentArgumentValues(object?[] parameterValues)
+		static DependentArgumentValues GetDependentArgumentValues(int[] indexes, object?[] parameterValues)
 		{
-			if (_dependentArgumentIndexes.Length == 0)
+			if (indexes.Length == 0)
 				return DependentArgumentValues.None;
 
-			var values = new object?[_dependentArgumentIndexes.Length];
+			var values = new object?[indexes.Length];
 
 			for (var i = 0; i < values.Length; i++)
-				values[i] = parameterValues[_dependentArgumentIndexes[i]];
+				values[i] = parameterValues[indexes[i]];
 
 			return new DependentArgumentValues(values);
 		}
 
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
+			for (;;)
+			{
+				var indexes = _dependentArgumentIndexes;
+				var query   = GetInfo(dataContext, parameterValues, indexes, out var unseenSlots);
+
+				if (unseenSlots == null)
+					return query;
+
+				lock (_learnLock)
+					_dependentArgumentIndexes = Union(_dependentArgumentIndexes, unseenSlots);
+			}
+		}
+
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots)
+		{
 			var configurationID = dataContext.ConfigurationID;
 			var dataOptions     = dataContext.Options;
+			var reported        = new List<int[]>(1);
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+			var cacheKey =
 				(
 					operation: "CT",
 					configurationID,
@@ -49,16 +72,22 @@ namespace LinqToDB.Internal.Linq
 					// and one compiled query can fold more than one table of the same type.
 					table      : this,
 					queryFlags : dataContext.GetQueryFlags(),
-					dependent  : GetDependentArgumentValues(parameterValues)
-				),
-				(dataContext, dataOptions, parameterValues),
+					dependent  : GetDependentArgumentValues(indexes, parameterValues)
+				);
+
+			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+				cacheKey,
+				(dataContext, dataOptions, parameterValues, reported),
 				static (o, key, ctx) =>
 				{
 					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
 					var exposed = ExpressionBuilder.ExposeExpression(key.table._expression, ctx.dataContext,
-						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
+						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true,
+						out var materializedSlots);
+
+					ctx.reported.Add(materializedSlots);
 
 					var query             = new Query<T>(ctx.dataContext);
 					var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
@@ -87,7 +116,42 @@ namespace LinqToDB.Internal.Linq
 					return query;
 				})!;
 
+			if (reported.Count == 0 || IsCovered(reported[0], indexes))
+			{
+				unseenSlots = null;
+
+				return result;
+			}
+
+			// A slot the pre-expose scan could not see took part in this build, so the entry just made is keyed
+			// too weakly to tell two argument values apart. Drop it and report the slot so the caller can retry.
+			QueryRunner.Cache<T>.QueryCache.Remove(cacheKey);
+
+			unseenSlots = reported[0];
+
 			return result;
+		}
+
+		static bool IsCovered(int[] materializedSlots, int[] indexes)
+		{
+			foreach (var slot in materializedSlots)
+				if (Array.IndexOf(indexes, slot) < 0)
+					return false;
+
+			return true;
+		}
+
+		static int[] Union(int[] indexes, int[] materializedSlots)
+		{
+			var union = new List<int>(indexes);
+
+			foreach (var slot in materializedSlots)
+				if (!union.Contains(slot))
+					union.Add(slot);
+
+			union.Sort();
+
+			return union.ToArray();
 		}
 
 		public IQueryable<T> Create(object[] parameters)
