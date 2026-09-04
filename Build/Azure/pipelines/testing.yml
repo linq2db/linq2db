@@ -1,5 +1,16 @@
+parameters:
+# Settable from the Azure "Run pipeline" dialog. Default true keeps every leg on Azure and dispatches
+# nothing, so this pipeline behaves exactly as before; set it false for a run to hand the same surface
+# to GitHub Actions as well.
+- name: all_in_azure
+  type: boolean
+  default: true
+  displayName: 'Run everything on Azure (no GitHub Actions dispatch)'
+
 variables:
   - template: templates/build-vars.yml
+  # Carries GITHUB_DISPATCH_PAT for the dispatch job.
+  - group: github-dispatch
 
 trigger: none
 pr:
@@ -35,6 +46,7 @@ stages:
         enabled: succeeded()
         with_baselines: true
         full_run: false
+        all_in_azure: ${{ parameters.all_in_azure }}
         # db_filter parameter. [] wrap used to avoid potential naming conflicts
         ${{ if eq(variables['Build.DefinitionName'], 'test-access') }}:
           db_filter: '[access.all]'

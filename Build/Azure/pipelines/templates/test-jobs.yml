@@ -19,6 +19,13 @@ parameters:
 - name: full_run
   type: boolean
   default: false
+  # Default true, so merging the dispatch job changes nothing: Azure keeps running the whole matrix
+  # and GitHub is not asked to. Flip it to false in the same change that moves legs to GitHub, or
+  # both CIs run everything. Settable per-run from the Azure UI, which is how the dispatch gets
+  # exercised before that.
+- name: all_in_azure
+  type: boolean
+  default: true
   # Linux legs allowed to run at once, out of the ten slots the project has. 0 leaves the job
   # uncapped, which is the default because a cap measured worse than none.
   #
@@ -75,6 +82,50 @@ jobs:
       EMAIL: azp@linq2db.com
       GIT_AUTHOR_NAME: Azure Pipelines Bot
       GIT_COMMITTER_NAME: Azure Pipelines Bot
+
+##############################################################################################
+#  Hands the same surface to the GitHub Actions `tests` workflow. Fire-and-verify, not        #
+#  fire-and-forget: the job ends as soon as the run is confirmed created, so no Azure slot is  #
+#  held while GitHub tests.                                                                    #
+##############################################################################################
+- ${{ if eq(parameters.all_in_azure, false) }}:
+  - job: dispatch_github
+    pool:
+      vmImage: 'ubuntu-24.04'
+    displayName: 'Dispatch GitHub tests'
+    dependsOn: create_baselines_branch
+    # Fork PRs are deliberately excluded, and stay Azure-only: workflow_dispatch needs a branch or
+    # tag in this repo, and a fork PR has only refs/pull/<n>/head, which the endpoint rejects with
+    # 422 "No ref found". Pushing the head to a scratch branch would work but writes back to the repo
+    # from CI. The carve-out also keeps the Azure path exercised on real work rather than letting it
+    # rot into an untested fallback.
+    condition: and(eq(${{ parameters.enabled }}, 'true'), ne(variables['System.PullRequest.IsFork'], 'True'))
+    variables:
+      source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
+      baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
+
+    steps:
+    - checkout: none
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(artifact_test_scripts)
+        targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+      displayName: Extract test scripts
+    - task: PowerShell@2
+      inputs:
+        pwsh: true
+        filePath: '$(System.DefaultWorkingDirectory)/scripts/dispatch-github-tests.ps1'
+        arguments: >
+          -Ref "$(System.PullRequest.SourceBranch)"
+          -Surface "${{ parameters.db_filter }}"
+          -BaselinesBranch "$(baselines_branch)"
+          -PrId "$(source_pr_id)"
+          -FullRun $${{ parameters.full_run }}
+        workingDirectory: '$(System.DefaultWorkingDirectory)'
+      displayName: Dispatch GitHub tests
+      name: gh_dispatch
+      env:
+        GITHUB_TOKEN: $(GITHUB_DISPATCH_PAT)
 
 ###################
 #  Tests: Windows #
