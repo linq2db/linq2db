@@ -4,6 +4,7 @@ parameters:
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
   linux_max_parallel: 0 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
   db_filter: '[all]'
+  all_in_azure: true # when true, no GitHub Actions dispatch. See test-jobs.yml.
 
 # db_filter specify test db selection filter for pipeline. Current list of supported values:
 # - '[all]' - any target supported
@@ -94,6 +95,7 @@ jobs:
       # Required by test-jobs.yml, which does the per-entry filter test. Forgetting it is a compile
       # error there by design - see the note on its parameters block.
       db_filter: ${{ parameters.db_filter }}
+      all_in_azure: ${{ parameters.all_in_azure }}
       test_matrix:
 # Two things decide the order legs run in, and which one you see depends on whether the job caps its
 # parallelism. Both were measured on build 23050, the first run to carry a cap.
