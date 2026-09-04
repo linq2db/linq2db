@@ -15,7 +15,9 @@ on:
 
 permissions:
   contents: read
-  pull-requests: write   # the refusal comment and the acknowledgement reaction
+  pull-requests: write   # the refusal comment - POST /issues/{n}/comments takes either of these two
+  issues: write          # the acknowledgement reaction - POST /issues/comments/{id}/reactions takes
+                         # only this one, so pull-requests alone would 403
 
 jobs:
   authorize:
