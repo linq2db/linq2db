@@ -73,16 +73,24 @@ fi
 echo ">>> config: configs/$flag/$config.json -> $tfm/UserDataProviders.json"
 
 # Azure removes the TFM directory whether or not the suites passed, so the next TFM's download has
-# the disk. Keep that: the trap re-raises the suite's status after cleaning up.
+# the disk. Re-raise $? as captured at trap entry, not a variable: an `exit N` anywhere below would
+# otherwise be reset to whatever that variable last held.
 status=0
 cleanup() {
+	rc=$?
 	rm -rf "$root/$tfm"
-	exit $status
+	exit $rc
 }
 trap cleanup EXIT
 
 if [ -n "$setup" ]; then
 	echo "::group::Setup $tfm ($setup)"
+	# Checked separately from the run below so an absent script reads as a staging bug rather than a
+	# provider one - the two get debugged in different places.
+	if [ ! -f "scripts/$setup" ]; then
+		echo "::error::run-provider-tests: scripts/$setup is not in the test-scripts artifact"
+		exit 2
+	fi
 	chmod +x "scripts/$setup"
 
 	# db2.provider.sh publishes the clidriver's PATH/LD_LIBRARY_PATH, which its native library needs.
