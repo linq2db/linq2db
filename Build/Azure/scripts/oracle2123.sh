@@ -1,6 +1,7 @@
 #!/bin/bash
 
-echo "##vso[task.setvariable variable=TZ]CET"
+. "$(dirname "$0")/ci-setvar.sh"
+ci_setvar TZ CET
 
 # Oracle 21c (host port 1521) and 23c (host port 1522) run as concurrent lanes in one job.
 docker run -d --name oracle21 -e ORACLE_PWD=oracle -p 1521:1521 container-registry.oracle.com/database/express:21.3.0-xe

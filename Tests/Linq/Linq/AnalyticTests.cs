@@ -2305,5 +2305,76 @@ namespace Tests.Linq
 
 			AssertNullsFirstHonored(db);
 		}
+
+		// #5806: the legacy Sql.Ext analytic chain feeds the same window pipeline, so a constant ORDER BY key
+		// misbehaved here identically - ROW_NUMBER() OVER (ORDER BY 1), which SQL Server and SAP HANA reject
+		// outright and MySQL 8 reads as a legacy column position. The issue recorded this API as unchecked; it
+		// was affected, and the same normalization fixes both spellings.
+		[Test]
+		public void LegacyAnalytic_ConstantWindowOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					ConstantOnly  = Sql.Ext.RowNumber().Over().OrderBy(1).ToValue(),
+					TrailingConst = Sql.Ext.RowNumber().Over().OrderBy(p.ParentID).ThenBy(1).ToValue(),
+					LeadingConst  = Sql.Ext.RowNumber().Over().OrderBy(1).ThenBy(p.ParentID).ToValue(),
+				};
+
+			var rows = query.ToList();
+
+			// A constant never breaks a tie, so wherever it sits the real key alone decides the numbering.
+			var expected = rows
+				.OrderBy(r => r.ParentID)
+				.Select((r, i) => (r.ParentID, Number: (long)(i + 1)))
+				.ToDictionary(x => x.ParentID, x => x.Number);
+
+			foreach (var row in rows)
+			{
+				row.TrailingConst.ShouldBe(expected[row.ParentID]);
+				row.LeadingConst.ShouldBe(expected[row.ParentID]);
+			}
+
+			// Ordering by nothing but a constant leaves every row tied, so which row gets which number is the
+			// server's business - but the numbering must still be a complete 1..N with no repeats.
+			rows.Select(r => r.ConstantOnly)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, rows.Count).Select(n => (long)n));
+
+			query.ToSqlQuery().Sql.ShouldNotContain("ORDER BY 1");
+		}
+
+		// #5806 companion, in its legacy spelling: Over().PartitionBy(...) completes with no ORDER BY at all,
+		// which SQL Server, Oracle and SAP HANA refuse for a ranking function.
+		[Test]
+		public void LegacyAnalytic_RankingFunctionWithoutWindowOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					p.Value1,
+					Number = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1).ToValue(),
+				};
+
+			var rows = query.ToList();
+
+			// Unordered, so the numbering within a partition is arbitrary - but it must still cover
+			// 1..partition size exactly once.
+			foreach (var partition in rows.GroupBy(r => r.Value1))
+			{
+				partition.Select(r => r.Number)
+					.OrderBy(n => n)
+					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
+
 	}
 }

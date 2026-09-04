@@ -185,5 +185,16 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			return columnExpression;
 		}
+
+		/// <summary>
+		/// Every ranking function, <c>NTILE</c>, and <c>LAG</c>/<c>LEAD</c> - all of them <c>SQL0104N ... Expected
+		/// tokens may include: "ORDER BY"</c> - plus any frame, which is <c>SQL20117N A window specification for an
+		/// OLAP function is not valid</c> on its own. <c>ROW_NUMBER</c> and the <c>*_VALUE</c> pair are fine
+		/// unordered, and so is an unframed aggregate.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE";
 	}
 }
