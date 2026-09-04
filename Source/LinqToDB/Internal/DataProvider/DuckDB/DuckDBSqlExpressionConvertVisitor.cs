@@ -152,5 +152,18 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			cast = FloorBeforeConvert(cast);
 			return base.ConvertConversion(cast);
 		}
+
+		/// <summary>
+		/// DuckDB takes a scalar subquery as a window sort key in general, but not inside a <c>RANGE</c> frame -
+		/// there it fails with <c>Serialization Error: Cannot copy BoundSubqueryExpression</c>. It runs
+		/// <c>ORDER BY 1 RANGE BETWEEN 1 PRECEDING AND 2 FOLLOWING</c> happily, so the caller's own key is kept.
+		/// </summary>
+		/// <remarks>
+		/// Keeping it is safe because DuckDB reads the integer as a constant expression rather than an output
+		/// column position, unlike MySQL 8: <c>ORDER BY 99</c> is accepted with only four columns in play, and a
+		/// <c>RANGE</c> frame over <c>ORDER BY 1</c> covers the whole partition instead of ordering by the first
+		/// column. So the key ties every row exactly as the dropped constant did.
+		/// </remarks>
+		protected override bool CanWrapWindowOrderByConstant => false;
 	}
 }

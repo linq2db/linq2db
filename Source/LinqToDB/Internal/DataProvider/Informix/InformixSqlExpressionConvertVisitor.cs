@@ -327,5 +327,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			return base.ConvertSqlFunction(func);
 		}
+
+		/// <summary>
+		/// <c>The ntile, lead, lag and ranking window functions require window order</c>, and a frame separately
+		/// reports <c>The window frame extent specification requires window order clause</c>. <c>ROW_NUMBER</c> and
+		/// the <c>*_VALUE</c> pair are not counted as ranking functions here, and an unframed aggregate is free.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE";
 	}
 }

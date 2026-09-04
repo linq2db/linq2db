@@ -73,6 +73,30 @@ jobs:
             'VERSION_ARGS=-p:VersionSuffix=-dev.${{ github.run_number }}' | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
+      # Avoids intermittent CS2012 on these projects (dotnet/roslyn#77538): single-TFM and reached
+      # from multi-TFM LinqToDB, so each builds twice concurrently - plain, and as a
+      # TargetFramework-pinned inner build - into one obj path. Pre-building makes both skip.
+      # The set is CodeGenerators plus everything pinned by Source/Analyzers.Common.props; add new
+      # Roslyn components here. Properties must match the solution build - a VERSION_ARGS mismatch
+      # recompiles these and the race is back.
+      - name: Build Roslyn components
+        shell: pwsh
+        run: |
+          $common = @(
+            '--configuration', '${{ env.RELEASE_CONFIGURATION }}'
+            '-p:RunAnalyzersDuringBuild=false'
+            '-p:RunApiAnalyzersDuringBuild=false'
+          ) + ('${{ env.VERSION_ARGS }}' -split ' ' | Where-Object { $_ })
+
+          foreach ($project in @(
+            'Source/CodeGenerators/CodeGenerators.csproj'
+            'Source/LinqToDB.Analyzers/LinqToDB.Analyzers.csproj'
+            'Source/LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj'
+          )) {
+            dotnet build $project @common
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
       # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
       # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       - name: Build solution
@@ -91,6 +115,19 @@ jobs:
       - name: Verify analyzer delivery metadata
         shell: pwsh
         run: ./Build/Azure/scripts/verify-analyzer-delivery.ps1 -PackagesDir .build/package/release -NoAzdoLogs
+
+      # linq2db.cli, the 14 T4 packages and the LINQPad 5 .lpx physically redistribute third-party
+      # binaries under an MIT license expression that covers only linq2db's own code. `check` catches a
+      # hand-edited or un-regenerated notices file; `verify` opens the packed output and fails on a
+      # bundled binary that no notices file accounts for - which is how a new transitive dependency
+      # announces itself. See Build/licenses/README.md and linq2db/linq2db#5731.
+      - name: Check third-party notices are up to date
+        shell: pwsh
+        run: ./Build/Azure/scripts/third-party-notices.ps1 -Action check -NoAzdoLogs
+
+      - name: Verify third-party notices cover the packed output
+        shell: pwsh
+        run: ./Build/Azure/scripts/third-party-notices.ps1 -Action verify -PackagesDir .build/package/release -LpxDir .build/lpx -NoAzdoLogs
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -455,5 +455,16 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			return FloorBeforeConvert(cast);
 		}
+
+		/// <summary>
+		/// Every ranking function, plus <c>LAG</c>/<c>LEAD</c>, plus any frame - all of them <c>ORA-30485: missing
+		/// ORDER BY expression in the window specification</c>. Unlike SQL Server, Oracle is content to leave
+		/// <c>FIRST_VALUE</c>/<c>LAST_VALUE</c> unordered, and an unframed aggregate is unconstrained.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> base.IsWindowOrderByRequired(func)
+				|| func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE";
 	}
 }
