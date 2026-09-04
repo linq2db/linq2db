@@ -10,6 +10,12 @@
 name: tests
 
 on:
+  # TEMPORARY, REVERT BEFORE MERGE - see #5866. workflow_dispatch is only triggerable when the
+  # workflow is on the default branch, so this is the only way to exercise the workflow pre-merge.
+  # The two `inputs.x ||` fallbacks below exist for the same reason and go with it: a push event
+  # supplies no inputs, so surface would be empty (refused by design) and full_run unparseable.
+  push:
+    branches: [feature/gh-actions-linux-legs]
   workflow_dispatch:
     inputs:
       surface:
@@ -109,7 +115,7 @@ jobs:
               print(f"::notice::selected {l['name']} ({l['title']})", file=__import__('sys').stderr)
           PY
         env:
-          SURFACE: ${{ inputs.surface }}
+          SURFACE: ${{ inputs.surface || '[sqlite.all]' }}   # TEMPORARY fallback - revert with the push trigger
 
       # An empty selection is the failure that looks like success - build 23192 on the Azure side went
       # green having run nothing. Fail here instead.
@@ -269,7 +275,7 @@ jobs:
           RETRY: ${{ matrix.retry }}
           # net8/net9 run the main suite on release runs only; the EF.Core suite always runs.
           # Mirrors pr_main in test-workflow-linux.yml.
-          RUN_MAIN: ${{ inputs.full_run }}
+          RUN_MAIN: ${{ inputs.full_run || false }}   # TEMPORARY fallback - revert with the push trigger
         run: >
           scripts/run-provider-tests.sh --tfm net8.0 --flag net80
           --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
@@ -287,7 +293,7 @@ jobs:
           CONFIG: ${{ matrix.config }}
           SETUP: ${{ matrix.script_local }}
           RETRY: ${{ matrix.retry }}
-          RUN_MAIN: ${{ inputs.full_run }}
+          RUN_MAIN: ${{ inputs.full_run || false }}   # TEMPORARY fallback - revert with the push trigger
         run: >
           scripts/run-provider-tests.sh --tfm net9.0 --flag net90
           --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
