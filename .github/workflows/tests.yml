@@ -253,10 +253,16 @@ jobs:
         if: inputs.baselines_branch != ''
         env:
           TOKEN: ${{ secrets.BASELINES_GH_PAT }}
-        run: >
-          git clone --depth 1 --single-branch --sparse -c http.proactiveAuth=basic
-          --branch "$BASELINES_MASTER"
-          "https://x-access-token:$TOKEN@github.com/linq2db/linq2db.baselines.git" baselines
+        run: |
+          # Named, because an empty token clones as x-access-token:@... and git then fails on the
+          # password it is missing rather than on the thing that is actually wrong.
+          if [ -z "$TOKEN" ]; then
+            echo "::error::BASELINES_GH_PAT is not set, but baselines_branch was supplied - nothing could be pushed"
+            exit 1
+          fi
+          git clone --depth 1 --single-branch --sparse -c http.proactiveAuth=basic \
+            --branch "$BASELINES_MASTER" \
+            "https://x-access-token:$TOKEN@github.com/linq2db/linq2db.baselines.git" baselines
 
       - name: Free disk space
         run: scripts/free-disk-space.sh
