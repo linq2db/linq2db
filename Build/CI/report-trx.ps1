@@ -100,11 +100,20 @@ if ($Env:GITHUB_STEP_SUMMARY) {
 }
 $md -join "`n" | Write-Host
 
+# A workflow command's data and its property values need escaping, and property values need more of
+# it: an unescaped comma ends the property, so a name like Method("a","b") - any multi-argument
+# TestCase - would silently truncate or void the annotation.
+function Get-EscapedData([string] $value) {
+    $value -replace '%', '%25' -replace "`r", '%0D' -replace "`n", '%0A'
+}
+function Get-EscapedProperty([string] $value) {
+    (Get-EscapedData $value) -replace ':', '%3A' -replace ',', '%2C'
+}
+
 foreach ($f in @($failures | Select-Object -First $MaxAnnotations)) {
     $msg = ($f.Message -replace '\s+', ' ')
     if ($msg.Length -gt 300) { $msg = $msg.Substring(0, 300) + '...' }
-    # ::error:: takes no newlines, hence the collapse above.
-    Write-Host "::error title=$($f.Test)::$msg"
+    Write-Host "::error title=$(Get-EscapedProperty $f.Test)::$(Get-EscapedData $msg)"
 }
 if ($failures.Count -gt $MaxAnnotations) {
     Write-Host "::warning::$($failures.Count - $MaxAnnotations) further failures are in the summary table and the log"
