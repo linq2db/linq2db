@@ -767,6 +767,22 @@ namespace Tests.Linq
 			Assert.That(result2[0], Is.SameAs(result1[0]));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
+		public async Task ClosureValueSurvivesRebalancedPredicateAsyncTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// GetForEachAsync takes the same cached-Info shortcut as the synchronous enumeration, so the
+			// async path needs its own guard that the table was handed the exposed tree.
+			var id    = 2;
+			var query = CompiledQuery.Compile<ITestDataContext,IQueryable<Parent>>(d =>
+				d.Parent.Where(p => p.ParentID == id && p.ParentID > 0 && p.ParentID < 1000 && p.ParentID != -1));
+
+			var parents = await query(db).ToListAsync();
+
+			Assert.That(parents.Select(p => p.ParentID).ToList(), Is.EqualTo(new[] { 2 }));
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
 		// Sybase excluded by https://github.com/linq2db/linq2db/issues/5865 - the element-form eager-load
 		// preamble joins a derived table carrying TOP, which SybaseDataProvider already declares invalid

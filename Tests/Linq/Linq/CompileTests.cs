@@ -929,6 +929,67 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
+		public void ClosureValueSurvivesRebalancedPredicateTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Four conjuncts is where BinaryExpressionAggregatorVisitor rebalances the tree, so the exposed
+			// predicate stops matching the one Create hands the table and the closure accessor reads the wrong node.
+			var id    = 2;
+			var query = CompiledQuery.Compile<ITestDataContext,IEnumerable<Parent>>(d =>
+				d.Parent.Where(p => p.ParentID == id && p.ParentID > 0 && p.ParentID < 1000 && p.ParentID != -1));
+
+			Assert.That(query(db).Select(p => p.ParentID).ToList(), Is.EqualTo(new[] { 2 }));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
+		public void ClosureValueSurvivesRebalancedPredicateWithLoadWithTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Same shape through the eager-loading path: preambles are initialised from the same container.
+			var id    = 2;
+			var query = CompiledQuery.Compile<ITestDataContext,IEnumerable<Parent>>(d =>
+				d.Parent
+					.Where(p => p.ParentID == id && p.ParentID > 0 && p.ParentID < 1000 && p.ParentID != -1)
+					.LoadWith(p => p.Children));
+
+			Assert.That(query(db).Single().Children, Has.Count.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
+		public void ClosureAndArgumentSurviveRebalancedPredicateTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Both accessor kinds in one rebalanced predicate: the argument is read out of the array, the
+			// captured local by walking the tree, and only the second one depends on the two trees agreeing.
+			var floor = 0;
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>((d, id) =>
+				d.Parent.Where(p => p.ParentID == id && p.ParentID > floor && p.ParentID < 1000 && p.ParentID != -1));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(query(db, 1).Select(p => p.ParentID).ToList(), Is.EqualTo(new[] { 1 }));
+				Assert.That(query(db, 2).Select(p => p.ParentID).ToList(), Is.EqualTo(new[] { 2 }));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
+		public void ElementFormSurvivesRebalancedPredicateTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Symmetry guard on the path Create does not take: Execute passes CompiledExpressions itself, so
+			// this shape has to stay green whether or not Create hands the table the exposed tree.
+			var id    = 2;
+			var query = CompiledQuery.Compile<ITestDataContext,Parent>(d =>
+				d.Parent.First(p => p.ParentID == id && p.ParentID > 0 && p.ParentID < 1000 && p.ParentID != -1));
+
+			Assert.That(query(db).ParentID, Is.EqualTo(2));
+		}
+
 		sealed class FilteredRow
 		{
 			[PrimaryKey] public int Id      { get; set; }

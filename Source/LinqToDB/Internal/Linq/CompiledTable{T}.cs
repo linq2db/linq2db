@@ -159,7 +159,9 @@ namespace LinqToDB.Internal.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return new Table<T>(db, _expression) { Info = query, Parameters = parameters };
+			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
+			// pre-set Info makes ExpressionQuery skip the expose that would otherwise reconcile the two.
+			return new Table<T>(db, query.CompiledExpressions!.MainExpression) { Info = query, Parameters = parameters };
 		}
 
 		public T Execute(object[] parameters)
