@@ -80,6 +80,31 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task UpdatesAnExistingServerSideOnlyFalseArgument()
+		{
+			// Appending a second ServerSideOnly argument here is CS0643. Dogfooding over Tests/Linq caught
+			// exactly this - the fix compiled everywhere else and broke on the one site that already said
+			// ServerSideOnly = false.
+			var source = Usings + """
+				static class C
+				{
+					[Sql.Function("F", ServerSideOnly = false)]
+					public static int {|L2DB1003:M|}() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			var fixedSource = Usings + """
+				static class C
+				{
+					[Sql.Function("F", ServerSideOnly = true)]
+					public static int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+		}
+
+		[Test]
 		public Task ReplacesTheThrownExceptionInAMarkedStub()
 		{
 			var source = Usings + """

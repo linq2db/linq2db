@@ -200,12 +200,25 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 		static AttributeSyntax SetServerSideOnlyTrue(AttributeSyntax attribute)
 		{
+			var trueLiteral = SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression);
+			var arguments   = attribute.ArgumentList ?? SyntaxFactory.AttributeArgumentList();
+
+			// The member may already declare ServerSideOnly = false - that is one of the shapes the rule
+			// reports. Update the existing argument instead of appending a second one, which is CS0643.
+			foreach (var existing in arguments.Arguments)
+			{
+				if (existing.NameEquals is { } nameEquals
+					&& string.Equals(nameEquals.Name.Identifier.ValueText, "ServerSideOnly", System.StringComparison.Ordinal))
+				{
+					return attribute.WithArgumentList(
+						arguments.WithArguments(arguments.Arguments.Replace(existing, existing.WithExpression(trueLiteral))));
+				}
+			}
+
 			var argument = SyntaxFactory.AttributeArgument(
 				SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName("ServerSideOnly")),
 				null,
-				SyntaxFactory.LiteralExpression(SyntaxKind.TrueLiteralExpression));
-
-			var arguments = attribute.ArgumentList ?? SyntaxFactory.AttributeArgumentList();
+				trueLiteral);
 
 			return attribute.WithArgumentList(arguments.AddArguments(argument));
 		}
