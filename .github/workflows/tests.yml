@@ -175,13 +175,14 @@ jobs:
           Copy-Item -Recurse -Force 'Build/CI/*' testing/scripts
           Copy-Item 'Data/Create Scripts/Northwind.sql' testing/scripts/northwind.sql
 
+      # include-hidden-files on every upload below: .runsettings is a dotfile, which upload-artifact
+      # drops by default and without warning, and MTP does not auto-discover it - so each leg fails
+      # on a missing runsettings file having tested nothing.
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: test_scripts
           path: testing/scripts
           if-no-files-found: error
-          # .runsettings is a dotfile, and upload-artifact drops those by default - silently, with
-          # no warning. Every leg then fails on a missing runsettings file.
           include-hidden-files: true
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -189,8 +190,6 @@ jobs:
           name: test_configs
           path: testing/configs
           if-no-files-found: error
-          # .runsettings is a dotfile, and upload-artifact drops those by default - silently, with
-          # no warning. Every leg then fails on a missing runsettings file.
           include-hidden-files: true
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -198,8 +197,6 @@ jobs:
           name: test_net80_binaries
           path: testing/net8.0
           if-no-files-found: error
-          # .runsettings is a dotfile, and upload-artifact drops those by default - silently, with
-          # no warning. Every leg then fails on a missing runsettings file.
           include-hidden-files: true
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -207,8 +204,6 @@ jobs:
           name: test_net90_binaries
           path: testing/net9.0
           if-no-files-found: error
-          # .runsettings is a dotfile, and upload-artifact drops those by default - silently, with
-          # no warning. Every leg then fails on a missing runsettings file.
           include-hidden-files: true
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -216,8 +211,6 @@ jobs:
           name: test_net100_binaries
           path: testing/net10.0
           if-no-files-found: error
-          # .runsettings is a dotfile, and upload-artifact drops those by default - silently, with
-          # no warning. Every leg then fails on a missing runsettings file.
           include-hidden-files: true
 
   linux-tests:
