@@ -23,6 +23,12 @@ on:
       ref:
         description: 'Ref to test. Defaults to the branch this workflow was dispatched on.'
         required: false
+      baselines_branch:
+        description: 'Baselines branch to push to, e.g. baselines/pr_5848. Empty = do not capture baselines.'
+        required: false
+      pr:
+        description: 'Source PR number, for the courtesy comment on the baselines PR.'
+        required: false
 
 permissions:
   contents: read
@@ -37,6 +43,7 @@ env:
   TEST_SOLUTION_FILTER: linq2db.Testing.slnf
   TEST_CONFIGURATION: Azure
   TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
+  BASELINES_MASTER: master
 
 jobs:
   # Reads the same test-matrix.yml Azure compiles, which is the point of expressing entry selection as
@@ -238,6 +245,19 @@ jobs:
       - name: Make scripts executable
         run: chmod +x scripts/*.sh
 
+      # Cloned to <leg root>/baselines because AzureConnectionStrings sets
+      # BaselinesPath: ./../../../baselines, resolved from the test assembly. Sparse and shallow: the
+      # leg only ever appends whole files, and the full tree is 343541 files. Master, not the run
+      # branch - the push is what creates that.
+      - name: Checkout test baselines
+        if: inputs.baselines_branch != ''
+        env:
+          TOKEN: ${{ secrets.BASELINES_GH_PAT }}
+        run: >
+          git clone --depth 1 --single-branch --sparse -c http.proactiveAuth=basic
+          --branch "$BASELINES_MASTER"
+          "https://x-access-token:$TOKEN@github.com/linq2db/linq2db.baselines.git" baselines
+
       - name: Free disk space
         run: scripts/free-disk-space.sh
 
@@ -329,5 +349,25 @@ jobs:
           TITLE: ${{ matrix.title }}
         run: |
           ./scripts/report-trx.ps1 -ResultsDirectory TestResults -Title "Lin $Env:TITLE"
+          exit $LASTEXITCODE
+
+      # Default success() gating, matching Azure: a failed leg pushes nothing, because the report
+      # step above has already failed the job by then. The first leg to get here creates the branch
+      # and opens the PR; the rest rebase onto it.
+      - name: Commit test baselines
+        if: inputs.baselines_branch != ''
+        shell: pwsh
+        working-directory: baselines
+        env:
+          GITHUB_TOKEN: ${{ secrets.BASELINES_GH_PAT }}
+          EMAIL: actions@linq2db.com
+          GIT_AUTHOR_NAME: GitHub Actions Bot
+          GIT_COMMITTER_NAME: GitHub Actions Bot
+          TITLE: ${{ matrix.title }}
+          BRANCH: ${{ inputs.baselines_branch }}
+          PR_ID: ${{ inputs.pr }}
+        run: |
+          ../scripts/push-baselines.ps1 -Platform Linux -Title "$Env:TITLE" -Branch "$Env:BRANCH" `
+            -BaselinesMaster "$Env:BASELINES_MASTER" -PrId "$Env:PR_ID" -GitHubAnnotations
           exit $LASTEXITCODE
 
