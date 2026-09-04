@@ -137,7 +137,7 @@ namespace Tests.Extensions
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5856")]
-		public void CompiledQueryHintFromArgumentTest([IncludeDataSources(false, TestProvName.AllPostgreSQL95Plus)] string context)
+		public void CompiledQueryHintFromArgumentTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var query = CompiledQuery.Compile<Model.ITestDataContext,int,string,System.Collections.Generic.IEnumerable<Model.Parent>>(
 				static (db, id, hint) => db.Parent

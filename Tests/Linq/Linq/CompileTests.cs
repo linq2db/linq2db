@@ -666,12 +666,16 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var parent = query(db, 1).First();
+			var other  = query(db, 2).First();
 
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(parent.ParentID, Is.EqualTo(1));
-				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(parent.ParentID,                 Is.EqualTo(1));
+				Assert.That(parent.Children,                 Has.Count.EqualTo(1));
 				Assert.That(parent.Children[0].GrandChildren, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,                  Is.EqualTo(2));
+				Assert.That(other.Children,                  Has.Count.EqualTo(2));
+				Assert.That(other.Children[0].GrandChildren,  Has.Count.EqualTo(2));
 			}
 		}
 
@@ -687,12 +691,16 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var parent = query(db, 1).First();
+			var other  = query(db, 2).First();
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(parent.ParentID,      Is.EqualTo(1));
 				Assert.That(parent.Children,      Has.Count.EqualTo(1));
 				Assert.That(parent.GrandChildren, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,       Is.EqualTo(2));
+				Assert.That(other.Children,       Has.Count.EqualTo(2));
+				Assert.That(other.GrandChildren,  Has.Count.EqualTo(4));
 			}
 		}
 
@@ -710,7 +718,13 @@ namespace Tests.Linq
 
 			var ex = Assert.Throws<LinqToDBException>(() => query(db, 1));
 
-			Assert.That(ex!.Message, Contains.Substring("IQueryable<T>"));
+			using (Assert.EnterMultipleScope())
+			{
+				// Both halves matter: the declared type is what tells the reader which annotation to change,
+				// and the advice is what tells them what to change it to.
+				Assert.That(ex!.Message, Contains.Substring("ILoadWithQueryable"));
+				Assert.That(ex.Message,  Contains.Substring("IQueryable<T>"));
+			}
 		}
 
 		[Table]
@@ -745,7 +759,11 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public void ElementFormLoadWithTest([DataSources] string context)
+		// Sybase excluded by https://github.com/linq2db/linq2db/issues/5865 - the element-form eager-load
+		// preamble joins a derived table carrying TOP, which SybaseDataProvider already declares invalid
+		// through IsJoinDerivedTableWithTakeInvalid, but the preamble reaches the provider without that
+		// check running, so only the first detail row comes back.
+		public void ElementFormLoadWithTest([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,Parent>(static (db, id) =>
 				db.Parent
@@ -768,7 +786,8 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public void ElementFormLoadWithThenLoadTest([DataSources] string context)
+		// Sybase excluded by https://github.com/linq2db/linq2db/issues/5865 - see ElementFormLoadWithTest.
+		public void ElementFormLoadWithThenLoadTest([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,Parent>(static (db, id) =>
 				db.Parent
@@ -780,12 +799,16 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var parent = query(db, 1);
+			var other  = query(db, 2);
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(parent.ParentID,                  Is.EqualTo(1));
 				Assert.That(parent.Children,                  Has.Count.EqualTo(1));
 				Assert.That(parent.Children[0].GrandChildren, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,                   Is.EqualTo(2));
+				Assert.That(other.Children,                   Has.Count.EqualTo(2));
+				Assert.That(other.Children[0].GrandChildren,  Has.Count.EqualTo(2));
 			}
 		}
 
@@ -964,9 +987,9 @@ namespace Tests.Linq
 			return source.Where(predicate);
 		}
 
-
-		// A user-defined pass-through is not on IsQueryable's declaring-type allowlist, so it is never
-		// folded: the compiled table ends at the inner Where and LoadWith composes onto it at run time.
+		// A user-defined pass-through is not on IsQueryable's declaring-type allowlist, but its IQueryable<T>
+		// return type is enough for CompileQuery to fold it into the compiled table anyway. Expose then
+		// expands it over its own source, so the argument-array reads inside it survive into the built tree.
 		public static IQueryable<TEntity> LoadWithWrapper<TEntity,TProperty>(
 			this IQueryable<TEntity>             source,
 			Expression<Func<TEntity,TProperty?>> selector)

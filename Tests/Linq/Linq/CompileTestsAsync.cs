@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.EntityServices;
 
@@ -767,7 +768,11 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public async Task ElementFormLoadWithTest([DataSources] string context)
+		// Sybase excluded by https://github.com/linq2db/linq2db/issues/5865 - the element-form eager-load
+		// preamble joins a derived table carrying TOP, which SybaseDataProvider already declares invalid
+		// through IsJoinDerivedTableWithTakeInvalid, but the preamble reaches the provider without that
+		// check running, so only the first detail row comes back.
+		public async Task ElementFormLoadWithTest([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
 				db.Parent
@@ -786,6 +791,43 @@ namespace Tests.Linq
 				Assert.That(parent.Children, Has.Count.EqualTo(1));
 				Assert.That(other.ParentID,  Is.EqualTo(2));
 				Assert.That(other.Children,  Has.Count.EqualTo(2));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public async Task ElementFormLoadWithOpensLoadTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var queryable = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<List<Parent>>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.ToListAsync(token));
+
+			var element = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.FirstAsync(token));
+
+			var transactions = 0;
+
+			using var db = GetDataContext(context, o => o.UseTracing(e =>
+			{
+				if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.BeginTransaction)
+					transactions++;
+			}));
+
+			var viaQueryable   = (await queryable(db, 1, default))[0];
+			var afterQueryable = transactions;
+			var viaElement     = await element(db, 1, default);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(viaQueryable.Children, Has.Count.EqualTo(1));
+				Assert.That(viaElement.Children,   Has.Count.EqualTo(1));
+
+				Assert.That(afterQueryable, Is.EqualTo(1), "queryable form must open the implicit eager-loading transaction");
+				Assert.That(transactions,   Is.EqualTo(2), "element form must open one as well");
 			}
 		}
 
