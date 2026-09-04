@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 using NUnit.Framework;
@@ -29,6 +30,16 @@ namespace Tests.Analyzers
 			end_of_line = lf
 			""";
 
+		// .gitattributes pins `*.cs text eol=crlf`, so these raw string literals hold CRLF on every platform
+		// once git has normalised the file - but a freshly written working copy can still hold LF. Feeding
+		// the harness whichever the checkout happens to have makes the expected text disagree with what the
+		// formatter emits under `end_of_line = lf`, which passes locally and fails on CI. Normalise both
+		// sides so the comparison is about the fix, not about the checkout.
+		static Task Run(string source, string fixedSource) => Verify.VerifyAsync(
+			source     .Replace("\r\n", "\n", StringComparison.Ordinal),
+			fixedSource.Replace("\r\n", "\n", StringComparison.Ordinal),
+			TabIndent);
+
 		[Test]
 		public Task AddsServerSideOnlyAttributeWhenNoAttributeIsPresent()
 		{
@@ -47,7 +58,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+			return Run(source, fixedSource);
 		}
 
 		[Test]
@@ -76,7 +87,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+			return Run(source, fixedSource);
 		}
 
 		[Test]
@@ -101,7 +112,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+			return Run(source, fixedSource);
 		}
 
 		[Test]
@@ -123,7 +134,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+			return Run(source, fixedSource);
 		}
 
 		[Test]
@@ -151,7 +162,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+			return Run(source, fixedSource);
 		}
 
 		[Test]
@@ -178,7 +189,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+			return Run(source, fixedSource);
 		}
 
 		[Test]
@@ -207,7 +218,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, fixedSource, TabIndent);
+			return Run(source, fixedSource);
 		}
 	}
 }
