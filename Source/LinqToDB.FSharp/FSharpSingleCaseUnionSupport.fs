@@ -19,7 +19,8 @@ type internal FSharpSingleCaseUnionSupport =
     static let cache = ConcurrentDictionary<Type, IValueConverter>()
 
     // Builds the bidirectional converter for a single-case union `Case of 'T`: to-DB reads the wrapped field,
-    // from-DB calls the case constructor.
+    // from-DB calls the case constructor. handlesNulls=false because that constructor has no null branch -
+    // linq2db must short-circuit a NULL read to null rather than calling it with default('T').
     static let build (unionType: Type) : IValueConverter =
         let case         = (FSharpType.GetUnionCases(unionType, true)).[0]
         let field        = (case.GetFields()).[0]                                    // the single wrapped field
@@ -33,7 +34,7 @@ type internal FSharpSingleCaseUnionSupport =
         let fromProvider = Expression.Lambda(Expression.Call(ctor, pParam), pParam)
 
         let converterType = typedefof<ValueConverter<_, _>>.MakeGenericType(unionType, providerType)
-        match Activator.CreateInstance(converterType, [| box toProvider; box fromProvider; box true |]) with
+        match Activator.CreateInstance(converterType, [| box toProvider; box fromProvider; box false |]) with
         | :? IValueConverter as c -> c
         | _ -> raise (InvalidOperationException $"Failed to create F# single-case union value converter for '{unionType}'")
 
