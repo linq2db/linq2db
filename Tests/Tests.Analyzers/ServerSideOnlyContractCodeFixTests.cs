@@ -176,6 +176,141 @@ namespace Tests.Analyzers
 			return Run(source, fixedSource);
 		}
 
+		// The marker-capable attribute can sit on the implemented INTERFACE member - AnalyticFunctions.cs builds
+		// the whole Sql.Ext API that way, and the runtime reads attributes up the interface chain. Setting it on
+		// the implementation would not help a call bound to the interface, so the fix has to update the
+		// interface's own attribute. Same file here, which is the in-repo shape (Sql.GroupBy.cs).
+		[Test]
+		public Task SetsNamedArgumentOnAnAttributeDeclaredOnTheInterface()
+		{
+			var source = Usings + """
+				interface I
+				{
+					[Sql.Function("F")]
+					int M();
+				}
+
+				class C : I
+				{
+					public int {|L2DB1003:M|}() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			var fixedSource = Usings + """
+				interface I
+				{
+					[Sql.Function("F", ServerSideOnly = true)]
+					int M();
+				}
+
+				class C : I
+				{
+					public int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Run(source, fixedSource);
+		}
+
+		// An explicit interface implementation is admitted by the rule's symbol-kind set, and its name is not in
+		// the class's declaration space - so the bare nameof(M) the fix used to emit was CS0103. The SDK
+		// recompiles FixedCode, so these three are what catch a regression to the unqualified form.
+		[Test]
+		public Task ReplacesTheStubOfAnExplicitInterfaceImplementation()
+		{
+			var source = Usings + """
+				interface I
+				{
+					int M();
+				}
+
+				class C : I
+				{
+					[ServerSideOnly]
+					int I.{|L2DB1004:M|}() => throw new NotImplementedException();
+				}
+				""";
+
+			var fixedSource = Usings + """
+				interface I
+				{
+					int M();
+				}
+
+				class C : I
+				{
+					[ServerSideOnly]
+					int I.M() => throw new ServerSideOnlyException(nameof(I.M));
+				}
+				""";
+
+			return Run(source, fixedSource);
+		}
+
+		[Test]
+		public Task ReplacesTheStubOfAnExplicitGenericInterfaceImplementation()
+		{
+			var source = Usings + """
+				interface IFoo<T>
+				{
+					int M();
+				}
+
+				class C : IFoo<int>
+				{
+					[ServerSideOnly]
+					int IFoo<int>.{|L2DB1004:M|}() => throw new NotImplementedException();
+				}
+				""";
+
+			var fixedSource = Usings + """
+				interface IFoo<T>
+				{
+					int M();
+				}
+
+				class C : IFoo<int>
+				{
+					[ServerSideOnly]
+					int IFoo<int>.M() => throw new ServerSideOnlyException(nameof(IFoo<int>.M));
+				}
+				""";
+
+			return Run(source, fixedSource);
+		}
+
+		[Test]
+		public Task ReplacesTheStubOfAnExplicitInterfacePropertyImplementation()
+		{
+			var source = Usings + """
+				interface I
+				{
+					int P { get; }
+				}
+
+				class C : I
+				{
+					[ServerSideOnly]
+					int I.{|L2DB1004:P|} => throw new NotImplementedException();
+				}
+				""";
+
+			var fixedSource = Usings + """
+				interface I
+				{
+					int P { get; }
+				}
+
+				class C : I
+				{
+					[ServerSideOnly]
+					int I.P => throw new ServerSideOnlyException(nameof(I.P));
+				}
+				""";
+
+			return RunOnProperty(source, fixedSource);
+		}
+
 		[Test]
 		public Task ReplacesTheGetterStubWhenTheSetterIsDeclaredFirst()
 		{
@@ -231,6 +366,31 @@ namespace Tests.Analyzers
 				""";
 
 			return RunOnProperty(source, fixedSource);
+		}
+
+		// The add-attribute fix has two branches and only the no-attributes one is covered above. This is the
+		// other: an existing attribute carrying a same-line comment, which the inserted list must not copy.
+		[Test]
+		public Task PreservesATrailingCommentOnAnExistingAttribute()
+		{
+			var source = Usings + """
+				static class C
+				{
+					[Obsolete("x")] // legacy
+					public static int {|L2DB1003:M|}() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			var fixedSource = Usings + """
+				static class C
+				{
+					[ServerSideOnly]
+					[Obsolete("x")] // legacy
+					public static int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Run(source, fixedSource);
 		}
 
 		[Test]

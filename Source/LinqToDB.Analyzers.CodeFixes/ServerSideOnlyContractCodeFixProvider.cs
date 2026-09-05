@@ -62,12 +62,30 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			var diagnostic = context.Diagnostics[0];
 
-			if (!TryRewrite(root, model, diagnostic, out var original, out var replacement) || original is null || replacement is null)
-				return;
-
 			var title = string.Equals(diagnostic.Id, ServerSideOnlyContractAnalyzer.WrongExceptionDiagnosticId, System.StringComparison.Ordinal)
 				? ReplaceExceptionTitle
 				: AddMarkerTitle;
+
+			if (!TryRewrite(root, model, diagnostic, out var original, out var replacement) || original is null || replacement is null)
+			{
+				// The attribute to update can be declared on an implemented interface member in ANOTHER file,
+				// which no single-tree rewrite can reach. Offer a solution-level fix for that case rather than
+				// declining: adding the marker to the reported member would not help a call bound to the
+				// interface, since the runtime reads attributes up the interface chain and not back down.
+				var attributeLocation = GetMarkerCapableAttributeLocation(diagnostic);
+
+				if (attributeLocation?.SourceTree is not null && attributeLocation.SourceTree != root.SyntaxTree)
+				{
+					context.RegisterCodeFix(
+						CodeAction.Create(
+							title,
+							ct => ApplyToDeclaringDocumentAsync(context.Document, attributeLocation, ct),
+							equivalenceKey: diagnostic.Id),
+						diagnostic);
+				}
+
+				return;
+			}
 
 			context.RegisterCodeFix(
 				CodeAction.Create(
@@ -76,6 +94,31 @@ namespace LinqToDB.Analyzers.CodeFixes
 					equivalenceKey: diagnostic.Id),
 				diagnostic);
 		}
+
+		static Location? GetMarkerCapableAttributeLocation(Diagnostic diagnostic)
+			=> diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[0] : null;
+
+		static async Task<Solution> ApplyToDeclaringDocumentAsync(Document document, Location location, CancellationToken cancellationToken)
+		{
+			var solution = document.Project.Solution;
+			var target   = solution.GetDocument(location.SourceTree);
+
+			if (target is null)
+				return solution;
+
+			var root = await target.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
+			if (FindAttributeAt(root, location) is not { } attribute)
+				return solution;
+
+			var updated   = target.WithSyntaxRoot(root!.ReplaceNode(attribute, SetServerSideOnlyTrue(attribute)));
+			var processed = await PostProcessAsync(updated, cancellationToken).ConfigureAwait(false);
+
+			return processed.Project.Solution;
+		}
+
+		static AttributeSyntax? FindAttributeAt(SyntaxNode? root, Location location)
+			=> root?.FindNode(location.SourceSpan, getInnermostNodeForTie: true).FirstAncestorOrSelf<AttributeSyntax>();
 
 		// Emitted type names are fully qualified so the result compiles even when the file imports neither
 		// LinqToDB nor LinqToDB.Mapping. Reducing the annotated nodes shortens them again wherever the using
@@ -113,7 +156,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 				case ServerSideOnlyContractAnalyzer.RemedySetNamedArgument:
 					{
-						var attribute = FindMarkerCapableAttribute(member, model);
+						// Own attribute lists first; failing that, the location the analyzer passed through - the
+						// attribute may be declared on an implemented interface member. Same tree only here, so
+						// this stays a single-tree rewrite and Fix-All keeps working; another file is handled by
+						// the solution-level action in RegisterCodeFixesAsync.
+						var attribute = FindMarkerCapableAttribute(member, model)
+							?? FindSameTreeMarkerCapableAttribute(root, diagnostic);
 
 						if (attribute is null)
 							return false;
@@ -130,8 +178,13 @@ namespace LinqToDB.Analyzers.CodeFixes
 						if (creation is null)
 							return false;
 
+						var memberName = GetNameOfArgument(member);
+
+						if (memberName is null)
+							return false;
+
 						original    = creation;
-						replacement = ServerSideOnlyExceptionCreation(GetMemberName(member));
+						replacement = ServerSideOnlyExceptionCreation(memberName);
 						return true;
 					}
 
@@ -161,7 +214,11 @@ namespace LinqToDB.Analyzers.CodeFixes
 					.WithAttributeLists(
 						member.AttributeLists
 							.Replace(first, first.WithLeadingTrivia(SyntaxFactory.ElasticMarker))
-							.Insert(0, attribute.WithTriviaFrom(first)))
+							// Leading trivia only: WithTriviaFrom would copy first's TRAILING trivia across while
+							// first keeps its own, duplicating a same-line comment onto the inserted list.
+							.Insert(0, attribute
+								.WithLeadingTrivia(first.GetLeadingTrivia())
+								.WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed)))
 					.WithAdditionalAnnotations(Formatter.Annotation);
 			}
 
@@ -174,6 +231,13 @@ namespace LinqToDB.Analyzers.CodeFixes
 						.WithLeadingTrivia(leading)
 						.WithTrailingTrivia(SyntaxFactory.ElasticCarriageReturnLineFeed)))
 				.WithAdditionalAnnotations(Formatter.Annotation);
+		}
+
+		static AttributeSyntax? FindSameTreeMarkerCapableAttribute(SyntaxNode root, Diagnostic diagnostic)
+		{
+			var location = GetMarkerCapableAttributeLocation(diagnostic);
+
+			return location?.SourceTree == root.SyntaxTree ? FindAttributeAt(root, location!) : null;
 		}
 
 		static AttributeSyntax? FindMarkerCapableAttribute(MemberDeclarationSyntax member, SemanticModel model)
@@ -267,12 +331,12 @@ namespace LinqToDB.Analyzers.CodeFixes
 			}
 		}
 
-		static ObjectCreationExpressionSyntax ServerSideOnlyExceptionCreation(string memberName)
+		static ObjectCreationExpressionSyntax ServerSideOnlyExceptionCreation(ExpressionSyntax memberName)
 		{
 			var nameOf = SyntaxFactory.InvocationExpression(
 				SyntaxFactory.IdentifierName("nameof"),
 				SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(
-					SyntaxFactory.Argument(SyntaxFactory.IdentifierName(memberName)))));
+					SyntaxFactory.Argument(memberName))));
 
 			return SyntaxFactory.ObjectCreationExpression(
 					SyntaxFactory.ParseTypeName(ServerSideOnlyExceptionName)
@@ -281,12 +345,30 @@ namespace LinqToDB.Analyzers.CodeFixes
 				.WithArgumentList(SyntaxFactory.ArgumentList(SyntaxFactory.SingletonSeparatedList(SyntaxFactory.Argument(nameOf))));
 		}
 
-		static string GetMemberName(MemberDeclarationSyntax member) => member switch
+		// An explicit interface implementation is not in its containing type's declaration space, so a bare
+		// nameof(M) there is CS0103. Qualify it with the interface the declaration already names - nameof(I.M)
+		// still evaluates to "M", so the exception message is unchanged. Any other member kind declines.
+		static ExpressionSyntax? GetNameOfArgument(MemberDeclarationSyntax member)
 		{
-			MethodDeclarationSyntax method     => method.Identifier.ValueText,
-			PropertyDeclarationSyntax property => property.Identifier.ValueText,
-			_                                  => "",
-		};
+			return member switch
+			{
+				MethodDeclarationSyntax method     => Qualify(method.ExplicitInterfaceSpecifier, method.Identifier),
+				PropertyDeclarationSyntax property => Qualify(property.ExplicitInterfaceSpecifier, property.Identifier),
+				_                                  => null,
+			};
+
+			static ExpressionSyntax Qualify(ExplicitInterfaceSpecifierSyntax? specifier, SyntaxToken identifier)
+			{
+				var name = SyntaxFactory.IdentifierName(identifier.ValueText);
+
+				return specifier is null
+					? name
+					: SyntaxFactory.MemberAccessExpression(
+						SyntaxKind.SimpleMemberAccessExpression,
+						specifier.Name.WithoutTrivia(),
+						name);
+			}
+		}
 
 		sealed class ContractFixAllProvider : DocumentBasedFixAllProvider
 		{

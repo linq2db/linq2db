@@ -107,13 +107,24 @@ namespace LinqToDB.Analyzers
 
 					if (violation == ServerSideOnlyContract.Violation.MissingMarker)
 					{
-						var remedy = ServerSideOnlyContract.HasMarkerCapableAttribute(member, symbols)
+						var hasAttribute = ServerSideOnlyContract.TryFindMarkerCapableAttribute(member, symbols, out var attribute);
+
+						var remedy = hasAttribute
 							? RemedySetNamedArgument
 							: RemedyAddAttribute;
+
+						// The attribute to update can be declared on an implemented interface member, in another
+						// file. Pass its location through so the fix does not have to redo the interface walk.
+						var attributeReference = attribute?.ApplicationSyntaxReference;
+
+						var additionalLocations = attributeReference is null
+							? Array.Empty<Location>()
+							: new[] { Location.Create(attributeReference.SyntaxTree, attributeReference.Span) };
 
 						blockContext.ReportDiagnostic(Diagnostic.Create(
 							MissingMarkerRule,
 							location,
+							additionalLocations,
 							ImmutableDictionary<string, string?>.Empty.Add(RemedyPropertyKey, remedy),
 							member.Name));
 					}
