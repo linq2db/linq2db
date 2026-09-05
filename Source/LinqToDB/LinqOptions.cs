@@ -208,11 +208,12 @@ namespace LinqToDB
 	/// single database round-trip and reading their result sets in order. It drives both consumers — eager loading
 	/// (a main query plus its child collections collapse from N+1 round-trips to 1) and multi-step DML.
 	/// <para>
-	/// Off by default in 6.x because enabling it is observable, not merely faster: a combined eager load runs inside an
-	/// implicit read-consistency transaction (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>)
-	/// where sequential loading used none, the emitted SQL changes shape (statements joined by <c>;</c>, sharing one
-	/// parameter scope with deduplicated names), and with <see cref="UseDbBatch"/> the command travels a different
-	/// ADO.NET path, which changes traced output. Planned to default to <see langword="true"/> in version 7.
+	/// Off by default in 6.x because enabling it is observable, not merely faster: the emitted SQL changes shape
+	/// (statements joined by <c>;</c>, sharing one parameter scope with deduplicated names), and with
+	/// <see cref="UseDbBatch"/> the command travels a different ADO.NET path, which changes traced output. The implicit
+	/// read-consistency transaction (<see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel"/>)
+	/// is unchanged: a sequential eager load already opens one whenever the query has harvesters. Planned to default to
+	/// <see langword="true"/> in version 7.
 	/// </para>
 	/// <para>
 	/// Still bounded by provider capability — a provider that does not report
