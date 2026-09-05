@@ -17,7 +17,14 @@ echo Patching ClickHouse settings...
 #     "Unexpected key (8) size when reading a column with 'replicated' serialization."
 #
 # Drop both once the client handles these, or once it stops advertising 54483.
-docker exec clickhouse sed -i "0,/<\/default>/{s/<\/default>/<join_use_nulls>1<\/join_use_nulls><mutations_sync>1<\/mutations_sync><allow_experimental_object_type>1<\/allow_experimental_object_type><allow_experimental_geo_types>1<\/allow_experimental_geo_types><allow_experimental_json_type>1<\/allow_experimental_json_type><allow_experimental_correlated_subqueries>1<\/allow_experimental_correlated_subqueries><enable_analyzer>1<\/enable_analyzer><enable_materialized_cte>1<\/enable_materialized_cte><enable_producing_buckets_out_of_order_in_aggregation>0<\/enable_producing_buckets_out_of_order_in_aggregation><allow_special_serialization_kinds_in_output_formats>0<\/allow_special_serialization_kinds_in_output_formats><\/default>/}" /etc/clickhouse-server/users.xml
+#
+# max_threads - pinned because the two settings above did not stop the replicated-serialization
+#   error on the GitHub runners, which have 4 cores against the Azure agents' 2. max_threads defaults
+#   to the core count, and #5860 found this error to be parallelism-path dependent (it needed a
+#   three-JOIN query under enable_analyzer=0 or enable_parallel_single_level_merge=0), so the wider
+#   default is the one measured difference left between the two CIs: same image digest, same script,
+#   same config, and the patch itself verified as applied. 2 matches what Azure has always run with.
+docker exec clickhouse sed -i "0,/<\/default>/{s/<\/default>/<join_use_nulls>1<\/join_use_nulls><mutations_sync>1<\/mutations_sync><allow_experimental_object_type>1<\/allow_experimental_object_type><allow_experimental_geo_types>1<\/allow_experimental_geo_types><allow_experimental_json_type>1<\/allow_experimental_json_type><allow_experimental_correlated_subqueries>1<\/allow_experimental_correlated_subqueries><enable_analyzer>1<\/enable_analyzer><enable_materialized_cte>1<\/enable_materialized_cte><enable_producing_buckets_out_of_order_in_aggregation>0<\/enable_producing_buckets_out_of_order_in_aggregation><allow_special_serialization_kinds_in_output_formats>0<\/allow_special_serialization_kinds_in_output_formats><max_threads>2<\/max_threads><\/default>/}" /etc/clickhouse-server/users.xml
 docker restart clickhouse
 
 retries=0
