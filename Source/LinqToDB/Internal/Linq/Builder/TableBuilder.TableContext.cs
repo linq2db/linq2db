@@ -217,22 +217,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsAggregationRoot() || flags.IsTraverse() || flags.IsExtractProjection() || flags.IsSubquery())
 					return path;
 
-				// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
-				if (flags.IsExpand() && !flags.IsKeys())
+				// Expand is initiated by Eager Loading. Keys never accompanies Expand - GetProjectFlags adds it
+				// only in the Sql / Expression / Extract arms - so there is no comparison case to exclude here.
+				if (flags.IsExpand())
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					if (flags.IsTable())
 						return path;
-
-					if (flags.IsSubquery() && !(path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type)))
-					{
-						var expr = Builder.GetSequenceExpression(this);
-						if (expr == null)
-							return path;
-						return expr;
-					}
 
 					if (MappingSchema.IsScalarType(ElementType))
 					{
@@ -297,11 +290,6 @@ namespace LinqToDB.Internal.Linq.Builder
 							return projected;
 					}
 
-					return path;
-				}
-
-				if (flags.IsExtractProjection())
-				{
 					return path;
 				}
 
