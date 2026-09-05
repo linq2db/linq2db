@@ -209,6 +209,69 @@ namespace Tests.Analyzers.Internal
 					}
 			""");
 
+		// The block after a try/catch is reached from the handler as well as from the try body, so a value the
+		// try body excluded is still live there. The flow graph models no branch into a handler, so its first
+		// block has no predecessor and a dataflow that seeds only the graph entry leaves it - and every merge
+		// below it - over-constrained, which shows up here as a false LINQ2DB0004.
+		[Test]
+		public Task NotExcludedWhenEarlyReturnIsInsideTry() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						try
+						{
+							if (flags.IsTable())
+								return 1;
+						}
+						catch (System.Exception)
+						{
+						}
+
+						if (flags.IsTable())
+							return 2;
+
+						return 0;
+					}
+			""");
+
+		// Discriminator for the arm above. If the analyzer declined every method containing a try, that arm would
+		// pass vacuously; this one fails instead, so its green cannot be read as "no defect" on its own.
+		[Test]
+		public Task ImpossiblePairInsideTryIsReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						try
+						{
+							if (flags.IsKeys() && {|LINQ2DB0004:flags.IsExpand()|})
+								return 1;
+						}
+						catch (System.Exception)
+						{
+						}
+
+						return 0;
+					}
+			""");
+
+		// Direct test of handler-block seeding: a handler left with an empty state is skipped as unreachable, so
+		// an impossible pair written inside a catch is not reported at all.
+		[Test]
+		public Task ImpossiblePairInsideCatchIsReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						try
+						{
+							return 1;
+						}
+						catch (System.Exception)
+						{
+							if (flags.IsKeys() && {|LINQ2DB0004:flags.IsExpand()|})
+								return 2;
+						}
+
+						return 0;
+					}
+			""");
+
 		// The violation every drift fixture below embeds, so each can show what the rule does once the model it
 		// depends on has changed underneath it.
 		const string KnownViolation = """

@@ -228,12 +228,23 @@ namespace CodeGenerators
 			for (var i = 0; i < entries.Length; i++)
 				entries[i] = new bool[size];
 
-			var entryBlock = graph.Blocks[0];
-			for (var i = 0; i < size; i++)
-				entries[entryBlock.Ordinal][i] = true;
-
+			// The graph models no branch into an exception handler, so a catch / filter region's first block has
+			// no predecessor. Seeding only the entry would leave it empty - over-constrained - and every merge
+			// below the handler would inherit that. An all-possible seed can only ever produce fewer reports.
 			var queue = new Queue<int>();
-			queue.Enqueue(entryBlock.Ordinal);
+
+			foreach (var seed in graph.Blocks)
+			{
+				if (seed.Ordinal != 0 && seed.Predecessors.Length > 0)
+					continue;
+
+				var seedState = entries[seed.Ordinal];
+
+				for (var i = 0; i < size; i++)
+					seedState[i] = true;
+
+				queue.Enqueue(seed.Ordinal);
+			}
 
 			while (queue.Count > 0)
 			{
