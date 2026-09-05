@@ -2,6 +2,9 @@
 
 using CodeGenerators;
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Testing;
+
 using NUnit.Framework;
 
 namespace Tests.Analyzers.Internal
@@ -114,7 +117,15 @@ namespace Tests.Analyzers.Internal
 			}
 			""";
 
-		static Task Verify(string body) => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(Consumer(body));
+		static Task Verify(string body, params DiagnosticResult[] expected) => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(Consumer(body), expected);
+
+		// Most fixtures pin only the id and the span, via {|LINQ2DB0004:...|} markup. The two below also pin the
+		// message's reason argument, because that argument is the rule's affordance - it tells a reader whether
+		// the clause is a modelling mistake or dead code behind an earlier return - and nothing else asserts it.
+		static DiagnosticResult NeverTrue(string clause, string reason) =>
+			new DiagnosticResult("LINQ2DB0004", DiagnosticSeverity.Warning).WithLocation(0).WithArguments(clause, reason);
+
+		const string ExcludedEarlier = "every value that can still reach this point is already excluded by an earlier test on the same path";
 
 		// TO-1 - the #5727 shape. Keys accompanies only SQL / Expression / ExtractProjection, so under IsKeys()
 		// the Expand test can never be true and the 43 lines it guarded never ran.
@@ -122,12 +133,12 @@ namespace Tests.Analyzers.Internal
 		public Task KeysWithExpandIsNeverTrue() => Verify("""
 					public static int M(ProjectFlags flags)
 					{
-						if (flags.IsKeys() && {|LINQ2DB0004:flags.IsExpand()|})
+						if (flags.IsKeys() && {|#0:flags.IsExpand()|})
 							return 1;
 
 						return 0;
 					}
-			""");
+			""", NeverTrue("flags.IsExpand()", ExcludedEarlier));
 
 		// TO-1 control - the same shape with a pair the model permits. Without this arm the rule could be
 		// flagging every conjunction and still pass the test above.
@@ -188,12 +199,12 @@ namespace Tests.Analyzers.Internal
 						if (flags.IsTable())
 							return 1;
 
-						if ({|LINQ2DB0004:flags.IsTable()|})
+						if ({|#0:flags.IsTable()|})
 							return 2;
 
 						return 0;
 					}
-			""");
+			""", NeverTrue("flags.IsTable()", ExcludedEarlier));
 
 		// TO-3 control - the load-bearing false-positive guard. The early return is nested under an unrelated
 		// condition, so the join at the merge point restores the value and the later test is genuine. A dataflow
