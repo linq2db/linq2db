@@ -103,6 +103,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ParameterName_FromRenamedIndexerTarget([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var text = "sx";
+
+			// string declares its indexer as [IndexerName("Chars")], so text[0] is a get_Chars call and not
+			// get_Item - a real indexer read that a test matching on the accessor's name would reject.
+			var sql = db.GetTable<ParameterDeduplication>()
+				.Where(t => t.Int1 == text[0])
+				.ToSqlQuery();
+
+			sql.Parameters.Select(p => p.Name).ShouldBe(["text"]);
+		}
+
+		[Test]
 		[ActiveIssue(5879, Details = "PathVisitor has no ExpressionType.Index case, so GetExpressionAccessors throws before the parameter name is ever suggested. Un-gate once a tree carrying an IndexExpression can be translated.")]
 		public void ParameterName_FromHandBuiltIndexExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{

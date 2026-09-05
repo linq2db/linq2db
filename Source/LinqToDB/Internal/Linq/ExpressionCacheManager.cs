@@ -323,9 +323,10 @@ namespace LinqToDB.Internal.Linq
 			{
 				var method = call.Method;
 
-				// An indexer read hands back an element the container already holds. IsSpecialName keeps this
-				// to real indexers rather than any method that happens to be called get_Item.
-				if (method is { IsSpecialName: true, Name: "get_Item" })
+				// An indexer read hands back an element the container already holds. Matching the shape - a
+				// special-name getter taking at least one argument - rather than the name get_Item keeps
+				// [IndexerName]-renamed indexers in, string's Chars above all, and plain getters out.
+				if (method.IsSpecialName && method.Name.StartsWith("get_", StringComparison.Ordinal) && call.Arguments.Count > 0)
 					return true;
 
 				// Nullable<T>.GetValueOrDefault() returns the target's own value - but the overload taking a
