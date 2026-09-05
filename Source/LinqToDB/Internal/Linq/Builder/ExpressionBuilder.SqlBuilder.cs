@@ -1812,8 +1812,10 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							// A set operation pairs its branches by the type the projection is read as, so a
 							// projection handed back with its conversion stripped would key by the type it
-							// constructs instead and pair with nothing. See issue #5683.
-							return SequenceHelper.EnsureType(truePath, unary.Type);
+							// constructs instead and pair with nothing. See issue #5683. Only when the whole
+							// object is what was asked for - with a member still to resolve truePath is that
+							// member's value, which the cast does not apply to.
+							return next == null ? SequenceHelper.EnsureType(truePath, unary.Type) : truePath;
 						}
 
 						return new DefaultValueExpression(MappingSchema, truePath.Type, true);
