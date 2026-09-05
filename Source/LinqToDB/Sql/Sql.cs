@@ -65,7 +65,7 @@ namespace LinqToDB
 		[Extension("{array, ', '}", ServerSideOnly = true)]
 		internal static T[] Spread<T>([ExprParameter] T[] array)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Spread));
 		}
 
 		// Nullability annotator, handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
@@ -155,6 +155,7 @@ namespace LinqToDB
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns></returns>
 		/// <exception cref="ServerSideOnlyException">'Property' is only server-side method.</exception>
+		[ServerSideOnly]
 		public static T Property<T>(object? entity, [SqlQueryDependent] string propertyName)
 			=> throw new ServerSideOnlyException(nameof(Property));
 

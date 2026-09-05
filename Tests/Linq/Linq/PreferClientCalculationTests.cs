@@ -35,7 +35,7 @@ namespace Tests.Linq
 		// lets it move client-side when client calculation is preferred.
 		[Sql.Function("ABS", PreferServerSide = true )] static int PreferServer(int value) => Math.Abs(value);
 		[Sql.Function("ABS", PreferServerSide = false)] static int PreferClient(int value) => Math.Abs(value);
-		[Sql.Function("ABS", ServerSideOnly   = true )] static int ServerOnly  (int value) => throw new InvalidOperationException();
+		[Sql.Function("ABS", ServerSideOnly   = true )] static int ServerOnly  (int value) => throw new ServerSideOnlyException(nameof(ServerOnly));
 
 		// No SQL mapping — forces client-side evaluation, used to exercise the Sql.ToNullable translator's
 		// "argument can't be turned into SQL" fall-through (it returns null and the call stays client-side).

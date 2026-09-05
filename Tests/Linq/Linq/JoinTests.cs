@@ -1088,7 +1088,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.TableExpression("JSON_TABLE('[ {\"ParentID\": 1}, {\"Value1\": 2} ]', '$[*]' COLUMNS( ParentID INT PATH '$.ParentID', Value1 INT PATH '$.Value1')")]
-		private static ITable<Parent> JsonTable() => throw new NotImplementedException();
+		private static ITable<Parent> JsonTable() => throw new ServerSideOnlyException(nameof(JsonTable));
 
 		[Test]
 		public void BltIssue257([DataSources] string context)

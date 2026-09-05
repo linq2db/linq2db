@@ -24,6 +24,8 @@ than the runtime it runs against degrades to silence rather than to a broken fix
 | Id | Severity | Description |
 |----|----------|-------------|
 | [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+| [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
+| [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
 
 ### L2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
 
@@ -42,6 +44,33 @@ your comments and formatting. Chains that have no direct `Sql.Window` equivalent
 The code fix withholds itself when the `Sql.Window` return type differs from the legacy `ToValue<TR>()`
 slot (e.g. a `double` slot vs `Sql.Window`'s `double?`), so it never turns compiling code into a type
 error. To apply it anyway and resolve the type change yourself, opt in (see below).
+
+### L2DB1003 / L2DB1004 — keep a server-side-only member's declaration and implementation in step
+
+A member that only makes sense on the server is declared so by `[ServerSideOnly]`, by `ServerSideOnly = true`
+on an `Sql.*` attribute (every `Sql.Extension` constructor sets it, so a bare `[Sql.Extension("…")]` already
+counts), by an `Sql.TableFunction`-derived attribute, or by `[ExpressionMethod]`. Its body is then a stub
+that throws. These two rules check the halves agree.
+
+```csharp
+// L2DB1003 - a stub with nothing declaring it server-side only
+[Sql.Function("MY_FUNC")]
+public static int MyFunc(int x) => throw new ServerSideOnlyException(nameof(MyFunc));
+// code fix: [Sql.Function("MY_FUNC", ServerSideOnly = true)]
+
+// L2DB1004 - declared, but the stub throws the wrong thing
+[ServerSideOnly]
+public static int Other(int x) => throw new NotImplementedException();
+// code fix: throw new ServerSideOnlyException(nameof(Other));
+```
+
+`ServerSideOnlyException` names the API that was called on the client; `NotImplementedException` tells the
+caller nothing about why the call could not run.
+
+L2DB1003's other remedy — give the member a real implementation — is never applied automatically, since
+synthesising a body is not a mechanical rewrite. Where the member carries no marker-capable attribute at all,
+the rule only treats it as a stub when it throws `ServerSideOnlyException`, so ordinary
+`throw new NotImplementedException()` placeholders are left alone.
 
 ## Configuration
 
@@ -62,6 +91,21 @@ Apply the L2DB1001 fix even when the `Sql.Window` return type diverges from the 
 
 ```ini
 linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
+
+Both exception-type lists below are **additive** to their defaults and match type names **exactly**, not by
+subclass. Add exception types your own stubs throw, so L2DB1004 accepts them:
+
+```ini
+linq2db.L2DB1004.allowed_exception_types = MyCompany.ServerSideException, MyCompany.SqlOnlyException
+```
+
+Add exception types that mark an *unattributed* stub as server-side-only, widening what L2DB1003 reports
+(the default is `LinqToDB.ServerSideOnlyException` alone, which keeps ordinary `NotImplementedException`
+placeholders out of the results):
+
+```ini
+linq2db.L2DB1003.unmarked_stub_exception_types = MyCompany.ServerSideException
 ```
 
 Disable every rule of this package for a project — including when it arrives as a dependency of
