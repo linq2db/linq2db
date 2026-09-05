@@ -1005,7 +1005,7 @@ namespace Tests.Linq
 			=> (db, ignoreFor) => db.GetTable<FilteredRow>().IgnoreFilters(ignoreFor);
 
 		[Test]
-		public void DependentArgumentCreatedByExpansionTest([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void DependentArgumentCreatedByExpansionTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			var ms = new MappingSchema();
 
