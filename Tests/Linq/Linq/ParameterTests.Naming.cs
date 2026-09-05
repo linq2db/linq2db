@@ -14,9 +14,10 @@ namespace Tests.Linq
 	{
 		// A parameter carries a value, so it reads better named after where that value comes from than
 		// after the column it is compared against. When the expression is not itself a member access, the
-		// nearest member access inside it is used - but only across calls that hand back a value the target
-		// already holds. A call that computes a new value is named exactly as it was before, which may be
-		// the column name or the generic fallback depending on what the call site carries.
+		// walk follows the value's own spine - unary operators, the array or container of an element read,
+		// the target of a parameterless GetValueOrDefault - and takes the first member access it reaches.
+		// A method call that computes a new value is named exactly as it was before, which may be the
+		// column name or the generic fallback depending on what the call site carries.
 		//
 		// Assertions go against DataParameter.Name rather than the SQL text: the name carries no provider
 		// prefix there, and a substring check over the SQL would match "@p" inside "@price".

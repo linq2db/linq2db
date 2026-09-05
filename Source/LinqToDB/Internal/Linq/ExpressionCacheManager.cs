@@ -285,10 +285,12 @@ namespace LinqToDB.Internal.Linq
 		/// Suggests a display name for a parameter built from <paramref name="expression"/>, taken from the
 		/// member the value is read from rather than from the column it is compared against - a parameter
 		/// carries a value, so it reads better named after that value's source. When the expression is not
-		/// itself a member access, the nearest member access inside it is used, but only across calls that
-		/// hand back a value already held by their target: an element read, or <c>GetValueOrDefault</c>.
-		/// A call that <i>computes</i> a new value would give a name that describes the wrong thing - the
-		/// parameter behind <c>today.AddDays(-7)</c> is not <c>today</c> - so those keep returning
+		/// itself a member access, the walk follows the value's own spine and returns the first member access
+		/// it reaches: unary operators (conversions, but also <c>Negate</c> and <c>ArrayLength</c>), the array
+		/// or container of an element read, and the target of a parameterless <c>GetValueOrDefault</c>.
+		/// Arguments and binary operands are never followed, so <c>dict[key]</c> is named after <c>dict</c>.
+		/// A method call that <i>computes</i> a new value would give a name that describes the wrong thing -
+		/// the parameter behind <c>today.AddDays(-7)</c> is not <c>today</c> - so those keep returning
 		/// <see langword="null"/> and are named the way they were before source-based naming existed.
 		/// </summary>
 		public static string? SuggestParameterDisplayName(Expression? expression)
