@@ -272,6 +272,40 @@ namespace Tests.Analyzers.Internal
 					}
 			""");
 
+		// A test hoisted into a local is still a test. The rule reports "where it stands", so a value the
+		// enclosing condition has already fixed has to be caught in the assignment, not only in an if.
+		[Test]
+		public Task HoistedTestIsReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsKeys())
+						{
+							var isExpand = {|LINQ2DB0004:flags.IsExpand()|};
+							if (isExpand)
+								return 1;
+						}
+
+						return 0;
+					}
+			""");
+
+		// Control for the arm above - Keys is permitted with SQL, so the hoisted test is genuine and reporting
+		// it would be a false positive. Without this arm the wider walk could be flagging every hoisted test.
+		[Test]
+		public Task HoistedTestThatIsSatisfiableIsNotReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsSql())
+						{
+							var isKeys = flags.IsKeys();
+							if (isKeys)
+								return 1;
+						}
+
+						return 0;
+					}
+			""");
+
 		// The violation every drift fixture below embeds, so each can show what the rule does once the model it
 		// depends on has changed underneath it.
 		const string KnownViolation = """

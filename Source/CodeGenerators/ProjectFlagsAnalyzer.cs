@@ -278,14 +278,24 @@ namespace CodeGenerators
 
 			foreach (var block in graph.Blocks)
 			{
-				if (block.ConditionKind == ControlFlowConditionKind.None || block.BranchValue == null)
-					continue;
-
 				var state = entries[block.Ordinal];
 				if (IsEmpty(state))
 					continue;
 
-				ReportConstants(block.BranchValue, state, tracked, model, report);
+				// A basic block has no internal branching, so its entry state holds for every operation in it.
+				// Covering Operations - and a BranchValue that is a returned value rather than a condition - is
+				// what reaches a test hoisted into a local, returned directly, or passed as an argument. Without
+				// it the rule only ever sees a test written inline as the condition of an if.
+				foreach (var operation in block.Operations)
+					ReportBooleans(operation, state, tracked, model, report);
+
+				if (block.BranchValue == null)
+					continue;
+
+				if (block.ConditionKind == ControlFlowConditionKind.None)
+					ReportBooleans(block.BranchValue, state, tracked, model, report);
+				else
+					ReportConstants(block.BranchValue, state, tracked, model, report);
 			}
 
 			foreach (var localFunction in graph.LocalFunctions)
@@ -340,6 +350,31 @@ namespace CodeGenerators
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Descends to the outermost boolean-typed sub-expressions of a statement and judges each.
+		/// <see cref="ReportConstants"/> walks through negations and boolean operators only, so handing it a
+		/// statement would stop at the statement node; this finds the expressions worth handing it.
+		/// </summary>
+		static void ReportBooleans(IOperation node, bool[] state, ISymbol tracked, FlagModel model, Action<Diagnostic> report)
+		{
+			// An assignment carries the type of its right-hand side, so a bool one would otherwise be mistaken
+			// for a judgeable expression - and it is exactly the shape that hoists a test into a local.
+			if (node is IAssignmentOperation assignment)
+			{
+				ReportBooleans(assignment.Value, state, tracked, model, report);
+				return;
+			}
+
+			if (node.Type?.SpecialType == SpecialType.System_Boolean)
+			{
+				ReportConstants(node, state, tracked, model, report);
+				return;
+			}
+
+			foreach (var child in node.ChildOperations)
+				ReportBooleans(child, state, tracked, model, report);
 		}
 
 		/// <summary>
