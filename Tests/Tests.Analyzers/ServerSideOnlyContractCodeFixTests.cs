@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
 
+using Microsoft.CodeAnalysis.Testing;
+
 using NUnit.Framework;
 
 using Verify = Tests.Analyzers.CodeFixVerifier<
@@ -39,6 +41,15 @@ namespace Tests.Analyzers
 			source     .Replace("\r\n", "\n", StringComparison.Ordinal),
 			fixedSource.Replace("\r\n", "\n", StringComparison.Ordinal),
 			TabIndent);
+
+		// A property's diagnostic is reported on the property while the analyzed block is the getter, which the
+		// SDK classifies as non-local and refuses to fix. `dotnet format` over the same code applies the fix, so
+		// the check is the harness being stricter than the product, not a defect - skip it for property cases.
+		static Task RunOnProperty(string source, string fixedSource) => Verify.VerifyAsync(
+			source     .Replace("\r\n", "\n", StringComparison.Ordinal),
+			fixedSource.Replace("\r\n", "\n", StringComparison.Ordinal),
+			TabIndent,
+			CodeFixTestBehaviors.SkipLocalDiagnosticCheck);
 
 		[Test]
 		public Task AddsServerSideOnlyAttributeWhenNoAttributeIsPresent()
@@ -163,6 +174,63 @@ namespace Tests.Analyzers
 				""";
 
 			return Run(source, fixedSource);
+		}
+
+		[Test]
+		public Task ReplacesTheGetterStubWhenTheSetterIsDeclaredFirst()
+		{
+			// The analyzer classifies the getter, but the node the fix rewrites is the whole property - so a
+			// descendant scan over the declaration reaches the setter's throw first and rewrites the wrong
+			// accessor, leaving the reported getter untouched. Accessor order is the only trigger.
+			var source = Usings + """
+				static class C
+				{
+					[ServerSideOnly]
+					public static int {|L2DB1004:P|}
+					{
+						set => throw new NotImplementedException();
+						get => throw new NotImplementedException();
+					}
+				}
+				""";
+
+			var fixedSource = Usings + """
+				static class C
+				{
+					[ServerSideOnly]
+					public static int P
+					{
+						set => throw new NotImplementedException();
+						get => throw new ServerSideOnlyException(nameof(P));
+					}
+				}
+				""";
+
+			return RunOnProperty(source, fixedSource);
+		}
+
+		[Test]
+		public Task ReplacesTheStubOfAnExpressionBodiedProperty()
+		{
+			// An expression-bodied property has no accessor list at all, so it takes the other branch of the
+			// narrowing above. Pairs with the setter-first case: together they pin both property shapes.
+			var source = Usings + """
+				static class C
+				{
+					[ServerSideOnly]
+					public static int {|L2DB1004:P|} => throw new NotImplementedException();
+				}
+				""";
+
+			var fixedSource = Usings + """
+				static class C
+				{
+					[ServerSideOnly]
+					public static int P => throw new ServerSideOnlyException(nameof(P));
+				}
+				""";
+
+			return RunOnProperty(source, fixedSource);
 		}
 
 		[Test]

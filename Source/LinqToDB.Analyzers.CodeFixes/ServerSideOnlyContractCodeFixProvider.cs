@@ -225,13 +225,46 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 		static ObjectCreationExpressionSyntax? FindStubObjectCreation(MemberDeclarationSyntax member)
 		{
-			foreach (var node in member.DescendantNodes())
+			var body = GetClassifiedBody(member);
+
+			if (body is null)
+				return null;
+
+			foreach (var node in body.DescendantNodes())
 				if (node is ThrowStatementSyntax { Expression: ObjectCreationExpressionSyntax statementCreation })
 					return statementCreation;
 				else if (node is ThrowExpressionSyntax { Expression: ObjectCreationExpressionSyntax expressionCreation })
 					return expressionCreation;
 
 			return null;
+		}
+
+		// The analyzer classifies a property's GETTER but reports on the property, so the node handed to the
+		// fix is the whole declaration - and a scan over that reaches a setter's throw first whenever `set` is
+		// written before `get`, rewriting the accessor nobody complained about. Search only the body that was
+		// actually classified. Returning null declines the fix, which is the right failure: no rewrite beats
+		// the wrong one.
+		static SyntaxNode? GetClassifiedBody(MemberDeclarationSyntax member)
+		{
+			switch (member)
+			{
+				case MethodDeclarationSyntax method:
+					return method.Body ?? (SyntaxNode?)method.ExpressionBody;
+
+				case PropertyDeclarationSyntax property:
+					if (property.ExpressionBody is not null)
+						return property.ExpressionBody;
+
+					if (property.AccessorList is { } accessors)
+						foreach (var accessor in accessors.Accessors)
+							if (accessor.IsKind(SyntaxKind.GetAccessorDeclaration))
+								return accessor.Body ?? (SyntaxNode?)accessor.ExpressionBody;
+
+					return null;
+
+				default:
+					return null;
+			}
 		}
 
 		static ObjectCreationExpressionSyntax ServerSideOnlyExceptionCreation(string memberName)
