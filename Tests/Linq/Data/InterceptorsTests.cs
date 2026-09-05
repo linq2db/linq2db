@@ -1470,10 +1470,12 @@ namespace Tests.Data
 		// (net8.0+, CanUseDbBatch). A DbBatch is not a DbCommand, so no command interceptor runs on that path - but the
 		// exception interceptor MUST still fire (RunBatchReader). The tables here are intentionally never created, so the
 		// batch execution throws; on net462 the same eager load runs via the semicolon-concat fallback, which also intercepts.
+		// UseCombinedCommands is forced on because it is off by default in 6.x - without it the batch templates are never
+		// rendered, the eager load runs sequentially, and both tests pass while testing the plain ExecuteReader path.
 		[Test]
 		public void EagerLoadExceptionIntercepted([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
 			db.AddInterceptor(new TestExceptionInterceptor());
 
 			Assert.Throws<TestException>(() =>
@@ -1483,7 +1485,7 @@ namespace Tests.Data
 		[Test]
 		public void EagerLoadExceptionInterceptedAsync([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataConnection(context, o => o.UseCombinedCommands(true));
 			db.AddInterceptor(new TestExceptionInterceptor());
 
 			Assert.ThrowsAsync<TestException>(() =>
