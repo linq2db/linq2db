@@ -48,7 +48,7 @@ namespace CodeGenerators
 		static readonly DiagnosticDescriptor NeverTrue = new(
 			id:                 "LINQ2DB0004",
 			title:              "ProjectFlags test can never be true here",
-			messageFormat:      "'{0}' can never be true here: {1}. The code it guards is unreachable.",
+			messageFormat:      "'{0}' can never be true here: {1}. The clause is dead.",
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
