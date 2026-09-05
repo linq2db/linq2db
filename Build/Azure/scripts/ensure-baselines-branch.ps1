@@ -13,8 +13,8 @@ been deleting the empty branch and which cost a fresh agent acquisition - 78 min
 build 23009 - for 0.3 min of work.
 
 What is left here is the one case the legs cannot handle: a branch left by an earlier
-run of the same PR that has fallen behind baselines master. The legs clone master and
-would rebase their commit onto that stale base, so it is rebased onto master here,
+run of the same PR that has fallen behind baselines master. Every leg then bases its
+clone on that stale branch (checkout-baselines.ps1), so it is rebased onto master here,
 once, before any leg starts.
 
 Reads the auth token from the GITHUB_TOKEN environment variable (= BASELINES_GH_PAT).
