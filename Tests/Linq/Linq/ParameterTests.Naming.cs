@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 
@@ -99,6 +100,33 @@ namespace Tests.Linq
 				.ToSqlQuery();
 
 			sql.Parameters.Select(p => p.Name).ShouldBe(["p"]);
+		}
+
+		[Test]
+		[ActiveIssue(5879, Details = "PathVisitor has no ExpressionType.Index case, so GetExpressionAccessors throws before the parameter name is ever suggested. Un-gate once a tree carrying an IndexExpression can be translated.")]
+		public void ParameterName_FromHandBuiltIndexExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var values = new[] { "str", "str1" };
+
+			// The C# compiler never emits IndexExpression - values[0] lowers to BinaryExpression{ArrayIndex}
+			// and list[0] to a get_Item call - so the arm reading through one is reachable only from a tree
+			// built by hand, which is what this constructs.
+			Expression<Func<string[]>> captured = () => values;
+
+			var entity    = Expression.Parameter(typeof(ParameterDeduplication), "t");
+			var predicate = Expression.Lambda<Func<ParameterDeduplication, bool>>(
+				Expression.Equal(
+					Expression.Property(entity, nameof(ParameterDeduplication.String2)),
+					Expression.ArrayAccess(captured.Body, Expression.Constant(0))),
+				entity);
+
+			var sql = db.GetTable<ParameterDeduplication>()
+				.Where(predicate)
+				.ToSqlQuery();
+
+			sql.Parameters.Select(p => p.Name).ShouldBe(["values"]);
 		}
 	}
 }
