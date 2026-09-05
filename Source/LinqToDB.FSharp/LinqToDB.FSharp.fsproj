@@ -26,6 +26,8 @@
 		<Compile Include="FSharpEntityBindingInterceptor.fs" />
 		<Compile Include="FSharpQueryExpressionInterceptor.fs" />
 		<Compile Include="FSharpOptionSupport.fs" />
+		<Compile Include="FSharpSingleCaseUnionSupport.fs" />
+		<Compile Include="FSharpMemberTranslator.fs" />
 		<Compile Include="DataOptionsExtensions.fs" />
 	</ItemGroup>
 
