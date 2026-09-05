@@ -40,7 +40,13 @@ namespace Tests.Analyzers.Internal
 					public static bool IsExpression(this ProjectFlags flags)        => flags.HasFlag(ProjectFlags.Expression);
 					public static bool IsRoot(this ProjectFlags flags)              => flags.HasFlag(ProjectFlags.Root);
 					public static bool IsExtractProjection(this ProjectFlags flags) => flags.HasFlag(ProjectFlags.ExtractProjection);
-					public static bool IsKeys(this ProjectFlags flags)              => flags.HasFlag(ProjectFlags.Keys);
+					// Statement body, as every real ProjectFlagExtensions predicate is written - the reader has a
+					// separate branch for each form, and the expression-bodied ones below cover the other.
+					public static bool IsKeys(this ProjectFlags flags)
+					{
+						return flags.HasFlag(ProjectFlags.Keys);
+					}
+
 					public static bool IsTable(this ProjectFlags flags)             => flags.HasFlag(ProjectFlags.Table);
 					public static bool IsExpand(this ProjectFlags flags)            => flags.HasFlag(ProjectFlags.Expand);
 					public static bool IsMemberRoot(this ProjectFlags flags)        => flags.HasFlag(ProjectFlags.MemberRoot);
