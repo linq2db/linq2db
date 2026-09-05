@@ -1,9 +1,12 @@
 # Provider tests on GitHub Actions - the Linux legs.
 #
-# Run it by hand (`gh workflow run tests.yml -f surface='[sqlite.all]'`), from Azure's dispatch job, or
-# through tests-comment.yml when someone comments `/azp run test-<db>` on a PR. The comment path is the
-# one that reaches fork PRs: it calls this workflow rather than dispatching it, so `ref` can be
-# refs/pull/<n>/merge, which workflow_dispatch refuses.
+# Normally started by tests-comment.yml, when someone comments `/azp run test-<db>` on a PR. That path
+# calls this workflow rather than dispatching it, so `ref` can be refs/pull/<n>/merge - which
+# workflow_dispatch refuses, and which is why fork PRs work.
+#
+# workflow_dispatch remains for running it by hand: `gh workflow run tests.yml --ref <branch>
+# -f surface='[sqlite.all]'`, which is also the only way to test a change to this file before merging,
+# since issue_comment always runs the default branch's copy.
 name: tests
 
 on:
