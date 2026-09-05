@@ -233,6 +233,24 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ServerSideOnlyAggregateStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				group e by e.Id > 1 into g
+				select new { Names = g.StringAggregate(", ", e => e.Name).ToValue() };
+
+			// Executing is the assertion: StringAggregate's IEnumerable overload is a throw-only stub, so a
+			// client fold would throw rather than return rows. Measured: this passes with the [ServerSideOnly]
+			// marker removed too - the aggregate is claimed by the translator before any fold decision, so the
+			// marker is inert here. Kept as coverage that the aggregate survives both option settings.
+			_ = query.ToArray();
+		}
+
+		[Test]
 		public void MixedServerAndClientExpression([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
