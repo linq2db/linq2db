@@ -173,7 +173,9 @@ jobs:
 
       - run: dotnet build Examples/Examples.slnx --configuration Debug
 
-  # Roslyn analyzer/code-fix unit tests. DB-free and net8.0-only, so Linux is fine.
+  # Roslyn analyzer/code-fix unit tests, both the shipped (L2DB1xxx) and the repo-internal (LINQ2DB0xxx) sets.
+  # DB-free and single-TFM, so Linux is fine. Two projects because they host different Roslyn versions: the
+  # shipped analyzers are pinned to 4.8 (the consumer floor) and CodeGenerators builds against 5.6.
   analyzer-tests:
     name: Analyzer tests
     runs-on: ubuntu-24.04
@@ -192,6 +194,8 @@ jobs:
       # whose CLI rejects a bare project argument with "Specifying a project for 'dotnet test' should
       # be via '--project'". The AzDO DotNetCoreCLI@2 task hides this behind its `projects:` input.
       - run: dotnet test --project Tests/Tests.Analyzers/Tests.Analyzers.csproj --configuration ${{ env.TEST_CONFIGURATION }}
+
+      - run: dotnet test --project Tests/Tests.Analyzers.Internal/Tests.Analyzers.Internal.csproj --configuration ${{ env.TEST_CONFIGURATION }}
 
   # Regression guard for #5488: provider detectors must not rely on Assembly.Location / File.Exists
   # heuristics that misbehave inside a single-file bundle. Publishes win-x64 self-contained, so Windows.

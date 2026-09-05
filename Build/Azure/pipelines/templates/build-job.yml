@@ -73,6 +73,17 @@ jobs:
     displayName: Run Analyzer Tests
     condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
 
+  # Repo-internal (LINQ2DB0xxx) analyzer tests. A separate project because CodeGenerators builds against Roslyn
+  # 5.6 and cannot load in the 4.8 host above, which is pinned to the shipped package's consumer floor. net10.0,
+  # so unlike Tests.Analyzers it needs no net8.0 runtime task.
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: test
+      projects: 'Tests/Tests.Analyzers.Internal/Tests.Analyzers.Internal.csproj'
+      arguments: '--configuration $(test_configuration)'
+    displayName: Run Internal Analyzer Tests
+    condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
+
   # PublishSingleFile smoke test — regression guard for linq2db/linq2db#5488.
   # Provider detectors must not rely on Assembly.Location / File.Exists heuristics
   # that silently misbehave in a single-file bundle. The Tests.SingleFile binary

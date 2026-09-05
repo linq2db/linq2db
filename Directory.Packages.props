@@ -201,7 +201,9 @@
 		<PackageVersion Include="NUnit"                                                 Version="4.6.1"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.14.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.2.0"                        />
-		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers.-->
+		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers and Tests/Tests.Analyzers.Internal.
+		    The latter overrides the Workspaces version to 5.6.0: CodeGenerators builds against that Roslyn, while
+		    the 4.8 pin below is the shipped analyzer package's consumer floor and must stay put.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"        Version="1.1.4"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"         Version="1.1.4"                        />
 
