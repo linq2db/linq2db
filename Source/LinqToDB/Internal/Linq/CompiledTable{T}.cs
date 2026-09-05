@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,143 +14,80 @@ namespace LinqToDB.Internal.Linq
 	sealed class CompiledTable<T>
 		where T : notnull
 	{
-		public CompiledTable(LambdaExpression lambda, Expression expression)
+		public CompiledTable(Expression expression, int[] dependentArgumentIndexes)
 		{
-			_lambda     = lambda;
-			_expression = expression;
+			_expression               = expression;
+			_dependentArgumentIndexes = dependentArgumentIndexes;
 		}
 
-		readonly LambdaExpression _lambda;
-		readonly Expression       _expression;
+		readonly Expression _expression;
 
-		static bool ReplaceAsyncWithSync(MethodCallExpression methodCall, out MethodCallExpression newMethodCall)
+		// Grows when a build reports a slot the pre-expose scan could not see - expansion is recursive, so a
+		// dependent position can appear only after several rewrites. Written under _learnLock, read unlocked.
+		volatile int[] _dependentArgumentIndexes;
+
+		readonly Lock _learnLock = new();
+
+		// Expose materialises a [SqlQueryDependent] argument read from the argument array, so the cached query
+		// belongs to those values and not just to this fold site.
+		static DependentArgumentValues GetDependentArgumentValues(int[] indexes, object?[] parameterValues)
 		{
-			newMethodCall = methodCall;
-			var returnType = methodCall.Method.ReturnType;
-			if (!typeof(Task).IsAssignableFrom(returnType))
-			{
-				return true;
-			}
+			if (indexes.Length == 0)
+				return DependentArgumentValues.None;
 
-			var methodName = methodCall.Method.Name;
-			if (!methodName.EndsWith("Async", StringComparison.Ordinal))
-			{
-				return true;
-			}
+			var values = new object?[indexes.Length];
 
-			var newMethodName = methodName.Substring(0, methodName.Length - "Async".Length);
-			var methods = GetSimilarMethods(methodCall.Type.DeclaringType)
-				.Concat(GetSimilarMethods(typeof(Queryable)))
-				.ToList();
+			for (var i = 0; i < values.Length; i++)
+				values[i] = parameterValues[indexes[i]];
 
-			if (methods.Count == 0)
-			{
-				return false;
-			}
-
-			var sourceParametersArray = methodCall.Method.GetParameters();
-
-			var destArguments         = methodCall.Arguments;
-
-			ICollection<ParameterInfo> sourceParameters = sourceParametersArray;
-
-			if (sourceParametersArray.Length > 0 && sourceParametersArray[^1].ParameterType == typeof(CancellationToken))
-			{
-				sourceParameters = sourceParametersArray.Take(sourceParametersArray.Length - 1).ToList();
-				destArguments = destArguments.Take(destArguments.Count - 1).ToList().AsReadOnly();
-			}
-
-			var         sourceGenericArguments = methodCall.Method.GetGenericArguments();
-			MethodInfo? targetMethod           = null;
-
-			foreach (var method in methods)
-			{
-				if (methodCall.Method.IsGenericMethod)
-				{
-					if (!method.IsGenericMethod)
-					{
-						continue;
-					}
-
-					var genericArgs = method.GetGenericArguments();
-					if (sourceGenericArguments.Length != genericArgs.Length)
-						continue;
-
-					var candidateMethod = method.MakeGenericMethod(sourceGenericArguments);
-
-					if (TypeHelper.IsEqualParameters(sourceParameters, candidateMethod.GetParameters()))
-					{
-						targetMethod = candidateMethod;
-						break;
-					}
-				}
-				else
-				{
-					if (method.IsGenericMethod)
-					{
-						continue;
-					}
-
-					if (TypeHelper.IsEqualParameters(sourceParameters, method.GetParameters()))
-					{
-						targetMethod = method;
-						break;
-					}
-				}
-			}
-
-			if (targetMethod == null)
-			{
-				return false;
-			}
-
-			newMethodCall = Expression.Call(targetMethod, destArguments);
-			return true;
-
-			List<MethodInfo> GetSimilarMethods(Type? methodsContainer)
-			{
-				if (methodsContainer == null)
-					return [];
-
-				var methodInfos = methodsContainer.GetMethods()
-					.Where(m => string.Equals(m.Name, newMethodName, StringComparison.Ordinal))
-					.ToList();
-				return methodInfos;
-			}
+			return new DependentArgumentValues(values);
 		}
 
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
+			for (;;)
+			{
+				var indexes = _dependentArgumentIndexes;
+				var query   = GetInfo(dataContext, parameterValues, indexes, out var unseenSlots);
+
+				if (unseenSlots == null)
+					return query;
+
+				lock (_learnLock)
+					_dependentArgumentIndexes = Union(_dependentArgumentIndexes, unseenSlots);
+			}
+		}
+
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots)
+		{
 			var configurationID = dataContext.ConfigurationID;
 			var dataOptions     = dataContext.Options;
+			var reported        = new List<int[]>(1);
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+			var cacheKey =
 				(
 					operation: "CT",
 					configurationID,
-					expression : _expression,
-					queryFlags : dataContext.GetQueryFlags()
-				),
-				(dataContext, lambda: _lambda, dataOptions, parameterValues),
+					// Identity of this fold site, not a structural comparison: the cache is global per T,
+					// and one compiled query can fold more than one table of the same type.
+					table      : this,
+					queryFlags : dataContext.GetQueryFlags(),
+					dependent  : GetDependentArgumentValues(indexes, parameterValues)
+				);
+
+			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+				cacheKey,
+				(dataContext, dataOptions, parameterValues, reported),
 				static (o, key, ctx) =>
 				{
 					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
-					var correctedExpression = key.expression;
-
-					if (key.expression is MethodCallExpression methodCall)
-					{
-						if (!ReplaceAsyncWithSync(methodCall, out var newMethodCall))
-						{
-							throw new InvalidOperationException("Cannot convert async method call to sync.");
-						}
-
-						correctedExpression = newMethodCall;
-					}
-
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var exposed = ExpressionBuilder.ExposeExpression(correctedExpression, ctx.dataContext,
-						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
+					var exposed = ExpressionBuilder.ExposeExpression(key.table._expression, ctx.dataContext,
+						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true,
+						out var materializedSlots);
+
+					ctx.reported.Add(materializedSlots);
 
 					var query             = new Query<T>(ctx.dataContext);
 					var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
@@ -181,32 +116,80 @@ namespace LinqToDB.Internal.Linq
 					return query;
 				})!;
 
+			if (reported.Count == 0 || IsCovered(reported[0], indexes))
+			{
+				unseenSlots = null;
+
+				return result;
+			}
+
+			// A slot the pre-expose scan could not see took part in this build, so the entry just made is keyed
+			// too weakly to tell two argument values apart. Drop it and report the slot so the caller can retry.
+			QueryRunner.Cache<T>.QueryCache.Remove(cacheKey);
+
+			unseenSlots = reported[0];
+
 			return result;
 		}
 
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Method used by two-parameter call in generated expression")]
-		public IQueryable<T> Create(object[] parameters, object[] preambles)
+		static bool IsCovered(int[] materializedSlots, int[] indexes)
 		{
-			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db, parameters);
+			foreach (var slot in materializedSlots)
+				if (Array.IndexOf(indexes, slot) < 0)
+					return false;
 
-			return new Table<T>(db, _expression) { Info = query, Parameters = parameters };
+			return true;
 		}
 
-		public T Execute(object[] parameters, object[] preambles)
+		static int[] Union(int[] indexes, int[] materializedSlots)
 		{
-			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db, parameters);
+			var union = new List<int>(indexes);
 
-			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles)!;
+			foreach (var slot in materializedSlots)
+				if (!union.Contains(slot))
+					union.Add(slot);
+
+			union.Sort();
+
+			return union.ToArray();
 		}
 
-		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
+		public IQueryable<T> Create(object[] parameters)
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, default).ConfigureAwait(false))!;
+			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
+			// pre-set Info makes ExpressionQuery skip the expose that would otherwise reconcile the two.
+			return new Table<T>(db, query.CompiledExpressions!.MainExpression) { Info = query, Parameters = parameters };
+		}
+
+		public T Execute(object[] parameters)
+		{
+			var db          = (IDataContext)parameters[0];
+			var query       = GetInfo(db, parameters);
+			var expressions = query.CompiledExpressions!;
+
+			using (query.StartLoadTransaction(db))
+			{
+				var preambles = query.InitPreambles(db, expressions, parameters);
+
+				return (T)query.GetElement(db, expressions, parameters, preambles)!;
+			}
+		}
+
+		public async Task<T> ExecuteAsync(object[] parameters, CancellationToken cancellationToken)
+		{
+			var db          = (IDataContext)parameters[0];
+			var query       = GetInfo(db, parameters);
+			var expressions = query.CompiledExpressions!;
+
+			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
+			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+
+			var preambles = await query.InitPreamblesAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
+
+			return (T)(await query.GetElementAsync(db, expressions, parameters, preambles, cancellationToken).ConfigureAwait(false))!;
 		}
 	}
 }

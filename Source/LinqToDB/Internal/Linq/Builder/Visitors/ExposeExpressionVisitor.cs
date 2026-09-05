@@ -33,9 +33,17 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
 		bool                              _isSingleConvert;
+		List<int>?                        _materializedArgumentSlots;
 
 		public IDataContext  DataContext   => _dataContext;
 		public MappingSchema MappingSchema => _dataContext.MappingSchema;
+
+		/// <summary>
+		/// Argument-array slots whose values this pass baked into the tree. Expansion can create a
+		/// <see cref="SqlQueryDependentAttribute"/> position that did not exist before it ran, so a caller
+		/// caching the result cannot know these up front - it has to be told which ones were used.
+		/// </summary>
+		public int[] MaterializedArgumentSlots => _materializedArgumentSlots is null ? [] : _materializedArgumentSlots.ToArray();
 
 		Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
 
@@ -68,6 +76,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_optimizeConditions  = default;
 			_compactBinary       = false;
 			_isSingleConvert     = false;
+
+			_materializedArgumentSlots = null;
 
 			_allowedParameters?.Clear();
 
@@ -180,6 +190,25 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						if (argument.NodeType != ExpressionType.Constant)
 						{
 							var newArgument = attr.PrepareForCache(argument, this);
+
+							// A dependent argument taken from a compiled query's own arguments cannot be
+							// evaluated while ps is a free parameter, so it would reach the SQL as a parameter
+							// and never take part in the query's identity. Its value is that identity, so
+							// materialise it here; CompiledTable carries the same values in its cache key.
+							// Resolved against newArgument rather than argument: PrepareForCache rebuilds a
+							// params array when any element folds, and leaves the ps-reading elements in place.
+							if (_parameterValues != null)
+							{
+								var resolved = ResolveCompiledQueryArguments(newArgument);
+
+								if (!ReferenceEquals(resolved, newArgument) && IsCompilable(resolved))
+								{
+									RecordMaterializedArgumentSlots(newArgument);
+
+									newArgument = Expression.Constant(EvaluateExpression(resolved), argument.Type);
+								}
+							}
+
 							if (newArgument.Type != argument.Type)
 								newArgument = Expression.Convert(newArgument, argument.Type);
 
@@ -328,6 +357,56 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return null;
 		}
 
+		void RecordMaterializedArgumentSlots(Expression materialized)
+		{
+			materialized.Visit(this, static (visitor, e) =>
+			{
+				if (e is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
+					&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+					&& arrayIndex.Right is ConstantExpression { Value: int idx })
+				{
+					visitor._materializedArgumentSlots ??= new List<int>();
+
+					if (!visitor._materializedArgumentSlots.Contains(idx))
+						visitor._materializedArgumentSlots.Add(idx);
+				}
+			});
+		}
+
+		// Substitutes the compiled query's argument array with its values, so an expression reading them can be
+		// evaluated. Returns the expression unchanged when it reads nothing from the array.
+		Expression ResolveCompiledQueryArguments(Expression expression)
+		{
+			if (_parameterValues == null)
+				return expression;
+
+			return expression.Transform(_parameterValues, static (values, e) =>
+				e == ExpressionBuilder.ParametersParam ? Expression.Constant(values, e.Type) : e)!;
+		}
+
+		// Recognises the shape CompileQuery leaves for a compiled query's own parameters - Convert(ps[i], T) -
+		// and resolves it only when that slot actually holds the data context.
+		IDataContext? GetCompiledQueryRootContext(Expression expression)
+		{
+			if (_parameterValues == null)
+				return null;
+
+			var expr = expression;
+
+			if (expr is UnaryExpression { NodeType: ExpressionType.Convert } convert)
+				expr = convert.Operand;
+
+			if (expr is BinaryExpression { NodeType: ExpressionType.ArrayIndex } arrayIndex
+				&& arrayIndex.Left == ExpressionBuilder.ParametersParam
+				&& arrayIndex.Right is ConstantExpression { Value: int idx }
+				&& idx >= 0 && idx < _parameterValues.Length)
+			{
+				return _parameterValues[idx] as IDataContext;
+			}
+
+			return null;
+		}
+
 		object? EvaluateExpression(Expression? expression)
 		{
 			if (expression == null)
@@ -400,6 +479,18 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 					if (mc.IsQueryable)
 					{
+						// Only the root argument is resolved out of the argument array; the remaining ones keep
+						// their ps[i] parameters, so no call's parameter values are baked into the cached tree.
+						if (GetCompiledQueryRootContext(mc.Arguments[0]) is { } rootContext)
+						{
+							var rootArgs = mc.Arguments.ToArray();
+
+							rootArgs[0] = SqlQueryRootExpression.Create(rootContext, mc.Arguments[0].Type);
+							converted   = mc.Update(mc.Object, rootArgs);
+
+							return true;
+						}
+
 						if (mc.Arguments[0] is MemberExpression or ConstantExpression)
 						{
 							if (IsCompilable(mc))
@@ -437,10 +528,67 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 					return !ExpressionEqualityComparer.Instance.Equals(converted, node);
 				}
+
+				// A method the builder does not know, held non-evaluable by the compiled query's argument array.
+				// Expanding it over that source leaves those reads in the tree. Confined to the compiled path:
+				// an ordinary query reaches the same shapes through association and ExpressionMethod expansion,
+				// where the call is left in the tree for the builder to report as it is on master.
+				if (_parameterValues != null && node is MethodCallExpression call && !call.IsQueryable && ExpandOverSource(call) is { } expanded)
+				{
+					converted = expanded;
+
+					return true;
+				}
 			}
 
 			converted = node;
 			return false;
+		}
+
+		// Expands a call by invoking it over a query built on its own source expression as-is. The source is never
+		// evaluated, so whatever it references - a compiled query's argument array, for one - survives into the
+		// returned tree. Same shape AssociationHelper and TableBuilder use to apply user filter functions.
+		Expression? ExpandOverSource(MethodCallExpression call)
+		{
+			if (!call.Method.IsStatic || call.Arguments.Count == 0)
+				return null;
+
+			var source      = call.Arguments[0];
+			var elementType = typeof(IQueryable<>).GetGenericType(source.Type)?.GetGenericArguments()[0];
+
+			if (elementType == null)
+				return null;
+
+			var args = call.Arguments.ToArray();
+
+			for (var i = 1; i < args.Length; i++)
+			{
+				// A quote is left as it is: it evaluates to its own operand, so whatever the lambda closes over -
+				// the argument array included - stays inside it instead of being folded to a value.
+				if (args[i] is not UnaryExpression { NodeType: ExpressionType.Quote } && !IsCompilable(args[i]))
+					return null;
+			}
+
+			var expandedSource = ExpressionQueryImpl.CreateQuery(elementType, DataContext, source);
+
+			// ExpressionQueryImpl<T> is only an IQueryable<T>, so a source declared narrower cannot hold one.
+			// ITable<T> is the common case and Table<T> satisfies it; anything narrower still declines, which
+			// leaves the call in the tree for the builder to report instead of letting Expression.Constant throw.
+			if (!source.Type.IsInstanceOfType(expandedSource))
+			{
+				var tableType = typeof(Table<>).MakeGenericType(elementType);
+
+				if (!source.Type.IsAssignableFrom(tableType))
+					return null;
+
+				expandedSource = ActivatorExt.CreateInstance<IQueryable>(tableType, DataContext, source);
+			}
+
+			args[0] = Expression.Constant(expandedSource, source.Type);
+
+			// Evaluated without the visitor's ps substitution: that one rewrites the array parameter inside the
+			// quote too, which would bind the expansion to the invocation that first built the cached query.
+			return call.Update(call.Object, args).EvaluateExpression() is IQueryable expanded ? expanded.Expression : null;
 		}
 
 		Expression ConvertIQueryable(Expression expression)

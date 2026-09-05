@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.EntityServices;
 
@@ -764,6 +765,138 @@ namespace Tests.Linq
 			var result2 = await query(db, default);
 
 			Assert.That(result2[0], Is.SameAs(result1[0]));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
+		public async Task ClosureValueSurvivesRebalancedPredicateAsyncTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// GetForEachAsync takes the same cached-Info shortcut as the synchronous enumeration, so the
+			// async path needs its own guard that the table was handed the exposed tree.
+			var id    = 2;
+			var query = CompiledQuery.Compile<ITestDataContext,IQueryable<Parent>>(d =>
+				d.Parent.Where(p => p.ParentID == id && p.ParentID > 0 && p.ParentID < 1000 && p.ParentID != -1));
+
+			var parents = await query(db).ToListAsync();
+
+			Assert.That(parents.Select(p => p.ParentID).ToList(), Is.EqualTo(new[] { 2 }));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		// Sybase excluded by https://github.com/linq2db/linq2db/issues/5865 - the element-form eager-load
+		// preamble joins a derived table carrying TOP, which SybaseDataProvider already declares invalid
+		// through IsJoinDerivedTableWithTakeInvalid, but the preamble reaches the provider without that
+		// check running, so only the first detail row comes back.
+		public async Task ElementFormLoadWithTest([DataSources(TestProvName.AllSybase)] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.FirstAsync(token));
+
+			using var db = GetDataContext(context);
+
+			var parent = await query(db, 1, default);
+			var other  = await query(db, 2, default);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID, Is.EqualTo(1));
+				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,  Is.EqualTo(2));
+				Assert.That(other.Children,  Has.Count.EqualTo(2));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public async Task ElementFormLoadWithOpensLoadTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var queryable = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<List<Parent>>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.ToListAsync(token));
+
+			var element = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.FirstAsync(token));
+
+			var transactions = 0;
+
+			using var db = GetDataContext(context, o => o.UseTracing(e =>
+			{
+				if (e.TraceInfoStep == TraceInfoStep.BeforeExecute && e.Operation == TraceOperation.BeginTransaction)
+					transactions++;
+			}));
+
+			var viaQueryable   = (await queryable(db, 1, default))[0];
+			var afterQueryable = transactions;
+			var viaElement     = await element(db, 1, default);
+			var afterElement   = transactions;
+			var viaElement2    = await element(db, 2, default);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(viaQueryable.Children, Has.Count.EqualTo(1));
+				Assert.That(viaElement.Children,   Has.Count.EqualTo(1));
+				Assert.That(viaElement2.Children,  Has.Count.EqualTo(2));
+
+				Assert.That(afterQueryable, Is.EqualTo(1), "queryable form must open the implicit eager-loading transaction");
+				Assert.That(afterElement,   Is.EqualTo(2), "element form must open one as well");
+				Assert.That(transactions,   Is.EqualTo(3), "and must dispose it - a leak leaves the connection inside it, so the next call opens none");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
+		public void ElementFormLoadWithHonorsCancellation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var eager = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWith(p => p.Children)
+					.FirstAsync(token));
+
+			// No LoadWith means no preamble and so no implicit transaction, which makes GetElementAsync the
+			// first await able to observe the token - the site that used to receive default.
+			var plain = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.FirstAsync(token));
+
+			using var cts = new CancellationTokenSource();
+			cts.Cancel();
+
+			using var db = GetDataContext(context);
+
+			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			{
+				try
+				{
+					await eager(db, 1, cts.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					// normalizes TaskCanceledException, which the assert above would not match
+					throw new OperationCanceledException();
+				}
+			});
+
+			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			{
+				try
+				{
+					await plain(db, 1, cts.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					// normalizes TaskCanceledException, which the assert above would not match
+					throw new OperationCanceledException();
+				}
+			});
 		}
 
 		[ActiveIssue]
