@@ -749,12 +749,14 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsMultipleResultSetsSupported { get; set; }
 
 		/// <summary>
-		/// Maximum length, in characters, of one combined multi-statement command's SQL text. When the combined engine
-		/// (<see cref="IsMultiStatementBatchSupported"/>) merges scenario steps into a single command, it starts a new
-		/// command once the rendered SQL would exceed this, keeping each command under the provider's command / batch /
-		/// packet size limit. Interpreted with a safety margin (room for statement separators and parameter markers) and
-		/// as a character count, so multi-byte SQL text stays under the provider's byte limit. <c>0</c> disables merging
-		/// (each statement runs as its own command). Default (set by <see cref="DataProviderBase"/>): 60000 — under the
+		/// Maximum length, in characters, of one combined multi-statement command's SQL text, applied when the combined
+		/// eager-loading render (<see cref="IsMultiStatementBatchSupported"/>) merges child statements into a single
+		/// command: it starts a new command once the rendered SQL would exceed this, keeping each command under the
+		/// provider's command / batch / packet size limit. Interpreted with a safety margin (room for statement
+		/// separators and parameter markers) and as a character count, so multi-byte SQL text stays under the provider's
+		/// byte limit. <c>0</c> makes every statement its own command on that path. It does <b>not</b> apply to the DML
+		/// scenario render, whose groups are bounded by <see cref="MaxStatementsPerCombinedGroup"/> alone — a merged DML
+		/// group never exceeds a couple of steps. Default (set by <see cref="DataProviderBase"/>): 60000 — under the
 		/// common 64&#160;KB floor, safe for any provider until tuned.
 		/// </summary>
 		// Researched provider ceilings (pick a value below these when enabling IsMultiStatementBatchSupported for one):
