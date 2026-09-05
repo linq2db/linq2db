@@ -18,6 +18,7 @@ permissions:
   pull-requests: write   # the refusal comment - POST /issues/{n}/comments takes either of these two
   issues: write          # the acknowledgement reaction - POST /issues/comments/{id}/reactions takes
                          # only this one, so pull-requests alone would 403
+  statuses: write        # the commit status that puts this run on the PR - see the report job
 
 jobs:
   authorize:
@@ -30,6 +31,8 @@ jobs:
       surface: ${{ steps.resolve.outputs.surface }}
       ref: ${{ steps.resolve.outputs.ref }}
       baselines_branch: ${{ steps.resolve.outputs.baselines_branch }}
+      head_sha: ${{ steps.status.outputs.head_sha }}
+      context: ${{ steps.status.outputs.context }}
     steps:
       # MEMBER is "member of the organization that owns the repository", which is the requirement:
       # a fork PR's author is CONTRIBUTOR and cannot trigger even on their own PR, and an outside
@@ -112,6 +115,29 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/issues/comments/${{ github.event.comment.id }}/reactions" \
             -f content=rocket --silent
 
+      # An issue_comment run is associated with the default branch's commit, not the PR's, so GitHub
+      # has nothing to attach a check to and the run is invisible on the PR - findable only in the
+      # Actions tab. A commit status on the PR's head puts it in the checks list where a reviewer
+      # actually looks. The context carries the surface, so two surfaces on one PR do not overwrite
+      # each other's status.
+      - name: Report pending on the PR
+        id: status
+        if: steps.resolve.outputs.go == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUMBER: ${{ github.event.issue.number }}
+          SURFACE: ${{ steps.resolve.outputs.surface }}
+        run: |
+          head_sha=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$NUMBER" --jq .head.sha)
+          context="tests $SURFACE"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+          echo "context=$context"   >> "$GITHUB_OUTPUT"
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$head_sha" --silent \
+            -f state=pending \
+            -f context="$context" \
+            -f description='Running on GitHub Actions' \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+
   tests:
     needs: authorize
     if: needs.authorize.outputs.go == 'true'
@@ -122,3 +148,30 @@ jobs:
       baselines_branch: ${{ needs.authorize.outputs.baselines_branch }}
       pr: ${{ github.event.issue.number }}
     secrets: inherit
+
+  # Closes the pending status. always(), or a failed or cancelled run leaves the PR showing "pending"
+  # for good - worse than no status at all, because it reads as still running.
+  report:
+    needs: [authorize, tests]
+    if: always() && needs.authorize.outputs.go == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      statuses: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ needs.tests.result }}
+          HEAD_SHA: ${{ needs.authorize.outputs.head_sha }}
+          CONTEXT: ${{ needs.authorize.outputs.context }}
+        run: |
+          # success/failure are the only states a checks list renders usefully; cancelled and skipped
+          # both mean "no result", which is a failure of the thing the reviewer wanted.
+          case "$RESULT" in
+            success) state=success; desc='All legs passed' ;;
+            *)       state=failure; desc="Run $RESULT" ;;
+          esac
+          gh api "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" --silent \
+            -f state="$state" \
+            -f context="$CONTEXT" \
+            -f description="$desc" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
