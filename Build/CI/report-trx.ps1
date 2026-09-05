@@ -70,13 +70,22 @@ foreach ($group in $trx | Group-Object Name) {
 
         foreach ($r in @($doc.TestRun.Results.UnitTestResult)) {
             $outcome[$r.testName] = $r.outcome
-            if ($r.outcome -eq 'Failed') { $message[$r.testName] = ($r.Output.ErrorInfo.Message -join ' ').Trim() }
+            $message[$r.testName] = ($r.Output.ErrorInfo.Message -join ' ').Trim()
         }
     }
 
-    $stillFailed = @($outcome.Keys | Where-Object { $outcome[$_] -eq 'Failed' })
-    $total   = [int] $baseCounters.total
-    $skipped = $total - [int] $baseCounters.executed
+    # Anything that is not Passed and not NotExecuted counts as a failure - Error, Timeout, Aborted,
+    # Inconclusive and the rest. Classifying by outcome rather than deriving passed as a remainder,
+    # which would have folded every one of those into the passed column and exited 0.
+    $stillFailed = @($outcome.Keys | Where-Object { $outcome[$_] -notin @('Passed', 'NotExecuted') })
+    $skipped     = @($outcome.Keys | Where-Object { $outcome[$_] -eq 'NotExecuted' }).Count
+    $total       = $outcome.Count
+
+    # The counters summarise the same rows, so a disagreement means one of the two is being read
+    # wrongly - say so rather than quietly reporting a different number from Azure's.
+    if ($null -ne $baseCounters -and [int] $baseCounters.total -ne $total) {
+        Write-Host "::warning::report-trx: $($group.Name) lists $total results but its counters say $([int] $baseCounters.total)"
+    }
 
     $rows += [pscustomobject]@{
         File     = $group.Name
@@ -88,7 +97,7 @@ foreach ($group in $trx | Group-Object Name) {
     }
 
     foreach ($name in $stillFailed) {
-        $failures += [pscustomobject]@{ Test = $name; Message = $message[$name] }
+        $failures += [pscustomobject]@{ Test = $name; Message = "[$($outcome[$name])] $($message[$name])".Trim() }
     }
 }
 
