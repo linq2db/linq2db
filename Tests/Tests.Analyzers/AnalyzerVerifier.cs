@@ -18,13 +18,27 @@ namespace Tests.Analyzers
 	{
 		public static Task VerifyAsync(string source, params DiagnosticResult[] expected)
 		{
+			return RunAsync(source, withLinqToDB: true, expected);
+		}
+
+		// Without the linq2db reference, so a rule's capability gate can be exercised: an analyzer that resolves its
+		// anchor types out of the compilation has to stay silent - and not throw - when they are absent.
+		public static Task VerifyWithoutLinqToDBAsync(string source, params DiagnosticResult[] expected)
+		{
+			return RunAsync(source, withLinqToDB: false, expected);
+		}
+
+		static Task RunAsync(string source, bool withLinqToDB, DiagnosticResult[] expected)
+		{
 			var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
 			{
 				TestCode            = source,
 				ReferenceAssemblies = ReferenceAssemblies.Net.Net80,
 			};
 
-			test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Sql).Assembly.Location));
+			if (withLinqToDB)
+				test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Sql).Assembly.Location));
+
 			test.ExpectedDiagnostics.AddRange(expected);
 
 			return test.RunAsync(CancellationToken.None);
