@@ -100,13 +100,27 @@ namespace CodeGenerators
 				var model = new Lazy<FlagModel>(() => FlagModel.Read(flagsType, extensionsType, visitorType), isThreadSafe: true);
 
 				// Drift is reported on the model's own declaration site, once, whether or not anything consumes it.
+				// An unreadable predicate's location is inside ProjectFlagExtensions while a switch-shape failure's
+				// is inside the visitor, and those are different files - so each failure is reported from the type
+				// that declares it. Reporting all of them from one type leaves the other file's diagnostic pointing
+				// outside the symbol it came from, which a host that filters per document is free to drop.
 				startContext.RegisterSymbolAction(symbolContext =>
 				{
-					if (!SymbolEqualityComparer.Default.Equals(symbolContext.Symbol, visitorType))
+					var isVisitor    = SymbolEqualityComparer.Default.Equals(symbolContext.Symbol, visitorType);
+					var isExtensions = SymbolEqualityComparer.Default.Equals(symbolContext.Symbol, extensionsType);
+
+					if (!isVisitor && !isExtensions)
 						return;
 
 					foreach (var (location, reason) in model.Value.Failures)
+					{
+						// Anything the extensions type does not own falls to the visitor, so a location inside
+						// neither declaration is still reported exactly once rather than dropped.
+						if (Declares(extensionsType, location) != isExtensions)
+							continue;
+
 						symbolContext.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, location, reason));
+					}
 				}, SymbolKind.NamedType);
 
 				startContext.RegisterOperationBlockStartAction(blockStart =>
@@ -131,6 +145,19 @@ namespace CodeGenerators
 					});
 				});
 			});
+		}
+
+		/// <summary>
+		/// Whether one of the type's own declarations spans the location, so drift found while reading that type
+		/// is reported from it rather than from whichever type happened to trigger the read.
+		/// </summary>
+		static bool Declares(INamedTypeSymbol type, Location location)
+		{
+			foreach (var reference in type.DeclaringSyntaxReferences)
+				if (reference.SyntaxTree == location.SourceTree && reference.Span.Contains(location.SourceSpan))
+					return true;
+
+			return false;
 		}
 
 		static void Analyze(OperationBlockAnalysisContext context, FlagModel model)
