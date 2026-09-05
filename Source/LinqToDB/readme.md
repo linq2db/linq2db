@@ -698,6 +698,8 @@ Roslyn analyzers and code fixes that flag legacy API usage and offer automatic m
 | Id | Severity | Description |
 |----|----------|-------------|
 | [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+| [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
+| [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
 
 Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
 
@@ -715,6 +717,18 @@ Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from
 
 ```ini
 linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
+
+Both exception-type lists below are **additive** to their defaults and match type names **exactly**, not by subclass. Add exception types your own stubs throw, so L2DB1004 accepts them:
+
+```ini
+linq2db.L2DB1004.allowed_exception_types = MyCompany.ServerSideException, MyCompany.SqlOnlyException
+```
+
+Add exception types that mark an *unattributed* stub as server-side-only, widening what L2DB1003 reports (the default is `LinqToDB.ServerSideOnlyException` alone, which keeps ordinary `NotImplementedException` placeholders out of the results):
+
+```ini
+linq2db.L2DB1003.unmarked_stub_exception_types = MyCompany.ServerSideException
 ```
 
 Turn all of them off for a project:
