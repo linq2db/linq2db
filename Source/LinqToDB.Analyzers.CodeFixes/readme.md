@@ -1,7 +1,8 @@
 # linq2db.Analyzers
 
 Roslyn analyzers and code fixes for [linq2db](https://github.com/linq2db/linq2db) users: they flag legacy
-API usage and offer automatic migrations to the current API. The package ships no runtime assembly.
+API usage and offer automatic migrations to the current API, and they report mistakes the compiler cannot
+see — a query that is valid C# but cannot mean what it says. The package ships no runtime assembly.
 
 You normally don't reference this package: `linq2db` depends on it, so the rules arrive with the library —
 including in a project that references only a satellite package (`linq2db.Tools`, `linq2db.Remote.*`,
@@ -16,7 +17,7 @@ migration before upgrading. It carries no `linq2db` dependency, so any combinati
 <PackageReference Include="linq2db.Analyzers" Version="6.4.0" PrivateAssets="all" />
 ```
 
-A rule withholds itself when the API it migrates to is absent from the compilation, so an analyzer newer
+A rule withholds itself when the API it depends on is absent from the compilation, so an analyzer newer
 than the runtime it runs against degrades to silence rather than to a broken fix.
 
 ## Diagnostics
@@ -24,6 +25,7 @@ than the runtime it runs against degrades to silence rather than to a broken fix
 | Id | Severity | Description |
 |----|----------|-------------|
 | [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+| [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An equality against a `[Duration]` column compares a duration the declared unit cannot represent, so it can never match. Reported only; no code fix. |
 
 ### L2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
 
@@ -42,6 +44,31 @@ your comments and formatting. Chains that have no direct `Sql.Window` equivalent
 The code fix withholds itself when the `Sql.Window` return type differs from the legacy `ToValue<TR>()`
 slot (e.g. a `double` slot vs `Sql.Window`'s `double?`), so it never turns compiling code into a type
 error. To apply it anyway and resolve the type change yourself, opt in (see below).
+
+### L2DB1002 — a duration comparison the declared unit can never match
+
+```csharp
+[Column, Duration(DurationUnit.Second)] public TimeSpan InSeconds { get; set; }
+
+// L2DB1002: InSeconds stores whole seconds, so this can never match
+q.Where(r => r.InSeconds == TimeSpan.FromSeconds(1.5));
+```
+
+A column declared with `[Duration(DurationUnit.Second)]` holds a whole number of seconds, so asking whether
+it equals one and a half of them asks for a value it cannot hold. The query is translated correctly — the
+comparison becomes a range whose ends cross over, which is what equality means for an unrepresentable value —
+and it returns nothing, with nothing in the log to say why. The rule reports the cases that are decidable
+without running the query: where the compared duration is a constant, or reaches the comparison through a
+local or a loop over constants.
+
+Ordering operators are not reported. `> 1.5s` is exactly `> 1s` for a column of whole seconds, which is
+already the right question.
+
+There is no code fix: the intended value cannot be inferred — 1 second, 2 seconds, or a different column
+unit are all plausible — so the rule reports and leaves the choice to you.
+
+Only a unit declared through the **attribute** is visible to an analyzer. One configured through
+`HasDuration` or a mapping schema is not, and is not diagnosed.
 
 ## Configuration
 
