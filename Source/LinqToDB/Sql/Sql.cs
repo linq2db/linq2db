@@ -461,20 +461,29 @@ namespace LinqToDB
 			return str.Substring(index, maxAllowedLength);
 		}
 
+		// Registered to TranslateLike for every provider, so these are server-side-only in fact. The marker is
+		// scoped to the TFMs whose body is a stub: on netfx the body is real, and marking it there would stop a
+		// query client-folding a call that currently works.
+#if !NETFRAMEWORK
+		[ServerSideOnly]
+#endif
 		public static bool Like(string? matchExpression, string? pattern)
 		{
 #if !NETFRAMEWORK
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Like));
 #else
 			return matchExpression != null && pattern != null &&
 				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern);
 #endif
 		}
 
+#if !NETFRAMEWORK
+		[ServerSideOnly]
+#endif
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
 #if !NETFRAMEWORK
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Like));
 #else
 			return matchExpression != null && pattern != null && escapeCharacter != null &&
 				System.Data.Linq.SqlClient.SqlMethods.Like(matchExpression, pattern, escapeCharacter.Value);
