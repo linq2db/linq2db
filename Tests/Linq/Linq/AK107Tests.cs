@@ -54,7 +54,14 @@ namespace Tests.Linq
 			{
 				db.Execute($"DROP USER \"{schema}\" CASCADE");
 			}
-			catch { }
+			catch (Exception ex) when (ex.Message.Contains("ORA-01918", StringComparison.Ordinal))
+			{
+				// ORA-01918: user does not exist, which is the expected state on a fresh container.
+				// Everything else is rethrown: a bare catch here hid ORA-01000 (max open cursors) and
+				// let the following CREATE USER fail with ORA-01920, so the reported failure named
+				// neither the cause nor the resource. Matched on the message rather than an
+				// OracleException type because this runs for the managed, native and Devart providers.
+			}
 
 			db.Execute($"CREATE USER \"{schema}\" IDENTIFIED BY \"secret_password\"");
 			db.Execute($"GRANT CREATE SEQUENCE TO \"{schema}\"");
