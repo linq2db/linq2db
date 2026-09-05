@@ -26,6 +26,15 @@ namespace Tests.Analyzers
 				.WithLocation(0)
 				.WithArguments(member);
 
+		// Arm A carries the marker-capable attribute's location as an additional location, so the code fix can
+		// reach it when it is declared on an implemented interface member rather than on the reported one. That
+		// makes it part of the diagnostic's observable shape, which an explicit DiagnosticResult must declare.
+		static DiagnosticResult MissingMarkerOnAttributed(string member) =>
+			new DiagnosticResult(ServerSideOnlyContractAnalyzer.MissingMarkerDiagnosticId, DiagnosticSeverity.Info)
+				.WithLocation(0)
+				.WithLocation(1)
+				.WithArguments(member);
+
 		static DiagnosticResult WrongException(string member, string thrown) =>
 			new DiagnosticResult(ServerSideOnlyContractAnalyzer.WrongExceptionDiagnosticId, DiagnosticSeverity.Info)
 				.WithLocation(0)
@@ -111,12 +120,12 @@ namespace Tests.Analyzers
 			var source = Usings + """
 				static class C
 				{
-					[Sql.Function("F")]
+					[{|#1:Sql.Function("F")|}]
 					public static int {|#0:M|}() => throw new NotImplementedException();
 				}
 				""";
 
-			return Verify.VerifyAsync(source, MissingMarker("M"));
+			return Verify.VerifyAsync(source, MissingMarkerOnAttributed("M"));
 		}
 
 		[Test]
@@ -125,12 +134,12 @@ namespace Tests.Analyzers
 			var source = Usings + """
 				static class C
 				{
-					[Sql.Function("F", ServerSideOnly = false)]
+					[{|#1:Sql.Function("F", ServerSideOnly = false)|}]
 					public static int {|#0:M|}() => throw new ServerSideOnlyException(nameof(M));
 				}
 				""";
 
-			return Verify.VerifyAsync(source, MissingMarker("M"));
+			return Verify.VerifyAsync(source, MissingMarkerOnAttributed("M"));
 		}
 
 		#endregion
@@ -147,6 +156,25 @@ namespace Tests.Analyzers
 				{
 					[Sql.Extension("F")]
 					public static int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		[Test]
+		public Task DoesNotReportTableExpressionStub()
+		{
+			// Marker form 3, and the only one on its own branch: TableFunctionAttribute derives from
+			// MappingAttribute, not from Sql.ExpressionAttribute, so no other fixture reaches that clause.
+			// SqlFn's two OpenJson overloads are the in-repo shape a forms-1-2-only model would report.
+			var source = Usings + """
+				using System.Collections.Generic;
+
+				static class C
+				{
+					[Sql.TableExpression("F")]
+					public static IEnumerable<int> M() => throw new ServerSideOnlyException(nameof(M));
 				}
 				""";
 
@@ -278,6 +306,68 @@ namespace Tests.Analyzers
 			return Verify.VerifyAsync(source, MissingMarker("M"));
 		}
 
+		// The runtime reads mapping attributes up the BASE-CLASS chain as well as the interface chain
+		// (MappingAttributesCache.GetMappingAttributesTreeInternal), and it does so by walking types explicitly
+		// rather than through reflection inheritance - so ServerSideOnlyAttribute's Inherited = false does not
+		// stop it. Verified against the built assembly: GetAttribute<ServerSideOnlyAttribute> on an override
+		// whose base carries the marker returns it. The walk here has to match, or correct code is reported.
+		[Test]
+		public Task DoesNotReportOverrideWhenBaseCarriesMarker()
+		{
+			var source = Usings + """
+				class B
+				{
+					[ServerSideOnly] public virtual int M() => 0;
+				}
+
+				class D : B
+				{
+					public override int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		// An explicit implementation's ISymbol.Name is the dotted `I.M`, so a walk that prefilters on name
+		// equality reaches nothing for it - and this symbol kind is deliberately in the rule's scope. These two
+		// pin both halves: the marker on the interface must still suppress, and its absence must still report.
+		[Test]
+		public Task DoesNotReportExplicitImplementationWhenInterfaceCarriesMarker()
+		{
+			var source = Usings + """
+				interface I
+				{
+					[ServerSideOnly] int M();
+				}
+
+				class C : I
+				{
+					int I.M() => throw new ServerSideOnlyException(nameof(I.M));
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		[Test]
+		public Task ReportsExplicitImplementationWhenInterfaceUnmarked()
+		{
+			var source = Usings + """
+				interface I
+				{
+					int M();
+				}
+
+				class C : I
+				{
+					int I.{|#0:M|}() => throw new ServerSideOnlyException(nameof(I.M));
+				}
+				""";
+
+			return Verify.VerifyAsync(source, MissingMarker("I.M"));
+		}
+
 		#endregion
 
 		#region Wrong exception in a marked stub
@@ -364,7 +454,7 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
-		public Task AllowedExceptionTypesSuppressesTheExceptionRule()
+		public Task AllowedExceptionTypesIsAdditiveAndDoesNotAffectTheOtherRule()
 		{
 			const string editorConfig = """
 				root = true
@@ -373,11 +463,19 @@ namespace Tests.Analyzers
 				linq2db.L2DB1004.allowed_exception_types = System.NotImplementedException
 				""";
 
+			// M1 - the nominated type is accepted. M2 - the ServerSideOnlyException default is still accepted,
+			// so a "replaces" implementation is caught rather than passing quietly. M3 - this list must not
+			// widen L2DB1003's arm B, which would report every unattributed placeholder in a consumer project.
 			var source = Usings + """
 				static class C
 				{
 					[ServerSideOnly]
-					public static int M() => throw new NotImplementedException();
+					public static int M1() => throw new NotImplementedException();
+
+					[ServerSideOnly]
+					public static int M2() => throw new ServerSideOnlyException(nameof(M2));
+
+					public static int M3() => throw new NotImplementedException();
 				}
 				""";
 

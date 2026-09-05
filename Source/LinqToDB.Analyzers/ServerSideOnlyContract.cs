@@ -199,9 +199,9 @@ namespace LinqToDB.Analyzers
 			foreach (var block in operationBlocks)
 			{
 				// Select the body by kind, never by count: OperationBlocks also carries an entry per
-				// attribute on the member, and every member these rules care about is attributed. A
-				// block-bodied member yields Block; an expression-bodied `=> throw` yields the throw
-				// itself, so both kinds have to be accepted here.
+				// attribute on the member, and every member these rules care about is attributed. Both a
+				// block-bodied member and an expression-bodied `=> throw` arrive as a Block; Throw and
+				// ExpressionStatement are accepted defensively, not because either shape produces them.
 				switch (block.Kind)
 				{
 					case OperationKind.Block:
@@ -270,8 +270,8 @@ namespace LinqToDB.Analyzers
 
 			// A stub implementing an interface member inherits the interface's declaration: Sql.GroupBy is
 			// typed IGroupBy, so a call binds the interface method and that is where the runtime reads it.
-			foreach (var implemented in EnumerateImplementedInterfaceMembers(member))
-				if (DeclaredOn(implemented, symbols))
+			foreach (var inherited in EnumerateInheritedMembers(member))
+				if (DeclaredOn(inherited, symbols))
 					return true;
 
 			return false;
@@ -279,28 +279,41 @@ namespace LinqToDB.Analyzers
 
 		/// <summary>Whether an attribute is present that COULD carry the marker but does not (arm A).</summary>
 		public static bool HasMarkerCapableAttribute(ISymbol member, Symbols symbols)
+			=> TryFindMarkerCapableAttribute(member, symbols, out _);
+
+		/// <summary>
+		/// Arm A's attribute, and - through <see cref="AttributeData.ApplicationSyntaxReference"/> - where it is
+		/// written. It can sit on an implemented INTERFACE member rather than on the reported one, because the
+		/// runtime reads mapping attributes up the interface chain, so the code fix cannot assume it is on the
+		/// member the diagnostic points at, or even in the same file. The analyzer passes this on as an
+		/// additional location instead of making the fixer re-derive the walk.
+		/// </summary>
+		public static bool TryFindMarkerCapableAttribute(ISymbol member, Symbols symbols, out AttributeData? attribute)
 		{
-			if (HasMarkerCapableAttributeOn(member, symbols))
+			if (TryFindMarkerCapableAttributeOn(member, symbols, out attribute))
 				return true;
 
-			foreach (var implemented in EnumerateImplementedInterfaceMembers(member))
-				if (HasMarkerCapableAttributeOn(implemented, symbols))
+			foreach (var inherited in EnumerateInheritedMembers(member))
+				if (TryFindMarkerCapableAttributeOn(inherited, symbols, out attribute))
 					return true;
 
+			attribute = null;
 			return false;
 		}
 
-		static bool HasMarkerCapableAttributeOn(ISymbol member, Symbols symbols)
+		static bool TryFindMarkerCapableAttributeOn(ISymbol member, Symbols symbols, out AttributeData? attribute)
 		{
-			foreach (var attribute in member.GetAttributes())
+			foreach (var candidate in member.GetAttributes())
 			{
-				if (DerivesFrom(attribute.AttributeClass, symbols.ExpressionAttribute)
-					|| DerivesFrom(attribute.AttributeClass, symbols.TableFunctionAttribute))
+				if (DerivesFrom(candidate.AttributeClass, symbols.ExpressionAttribute)
+					|| DerivesFrom(candidate.AttributeClass, symbols.TableFunctionAttribute))
 				{
+					attribute = candidate;
 					return true;
 				}
 			}
 
+			attribute = null;
 			return false;
 		}
 
@@ -343,8 +356,49 @@ namespace LinqToDB.Analyzers
 			return DerivesFrom(attributeClass, symbols.ExtensionAttribute);
 		}
 
+		/// <summary>
+		/// The members the runtime also reads mapping attributes from. <c>MappingAttributesCache</c> walks both
+		/// <c>type.GetInterfaces()</c> and <c>type.BaseType</c>, reading each type's own attributes rather than
+		/// going through reflection inheritance - so <c>ServerSideOnlyAttribute</c>'s <c>Inherited = false</c>
+		/// does not stop a base-class marker being honoured, and this walk has to match or correct code is
+		/// reported. Covers <c>override</c>; a <c>new</c>-shadowed member has no symbol link to shadow.
+		/// </summary>
+		static IEnumerable<ISymbol> EnumerateInheritedMembers(ISymbol member)
+		{
+			foreach (var implemented in EnumerateImplementedInterfaceMembers(member))
+				yield return implemented;
+
+			for (var overridden = OverriddenMember(member); overridden is not null; overridden = OverriddenMember(overridden))
+				yield return overridden;
+
+			static ISymbol? OverriddenMember(ISymbol symbol) => symbol switch
+			{
+				IMethodSymbol method     => method.OverriddenMethod,
+				IPropertySymbol property => property.OverriddenProperty,
+				_                        => null,
+			};
+		}
+
 		static IEnumerable<ISymbol> EnumerateImplementedInterfaceMembers(ISymbol member)
 		{
+			// An explicit implementation's Name is the dotted `I.M`, so the name filter below can never match
+			// one - and the rule admits that symbol kind. Read its interface members off the symbol instead,
+			// which is both exact and cheaper than the scan.
+			switch (member)
+			{
+				case IMethodSymbol { ExplicitInterfaceImplementations.IsEmpty: false } method:
+					foreach (var implementedMethod in method.ExplicitInterfaceImplementations)
+						yield return implementedMethod;
+
+					yield break;
+
+				case IPropertySymbol { ExplicitInterfaceImplementations.IsEmpty: false } property:
+					foreach (var implementedProperty in property.ExplicitInterfaceImplementations)
+						yield return implementedProperty;
+
+					yield break;
+			}
+
 			var containingType = member.ContainingType;
 
 			if (containingType is null)
