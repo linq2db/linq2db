@@ -257,12 +257,14 @@ namespace CodeGenerators
 
 			// The graph models no branch into an exception handler, so a catch / filter region's first block has
 			// no predecessor. Seeding only the entry would leave it empty - over-constrained - and every merge
-			// below the handler would inherit that. An all-possible seed can only ever produce fewer reports.
+			// below the handler would inherit that. Unreachable code has no predecessor either, and there the
+			// empty state is correct: seeding it would analyse code the compiler already discarded, which is the
+			// one direction the extra seed can add a report in.
 			var queue = new Queue<int>();
 
 			foreach (var seed in graph.Blocks)
 			{
-				if (seed.Ordinal != 0 && seed.Predecessors.Length > 0)
+				if (seed.Ordinal != 0 && (seed.Predecessors.Length > 0 || !seed.IsReachable))
 					continue;
 
 				var seedState = entries[seed.Ordinal];

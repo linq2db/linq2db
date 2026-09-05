@@ -289,6 +289,20 @@ namespace Tests.Analyzers.Internal
 					}
 			""");
 
+		// Counterpart to the arm above: a predecessor-less block is a handler entry only sometimes - unreachable
+		// code has no predecessor either, and seeding one analyses code the compiler already discarded. Nothing
+		// may be reported here even though the pair is impossible.
+		[Test]
+		public Task ImpossiblePairInDeadCodeIsNotReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						return 0;
+
+						if (flags.IsKeys() && flags.IsExpand())
+							return 1;
+					}
+			""");
+
 		// A test hoisted into a local is still a test. The rule reports "where it stands", so a value the
 		// enclosing condition has already fixed has to be caught in the assignment, not only in an if.
 		[Test]
