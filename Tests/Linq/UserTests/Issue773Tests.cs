@@ -31,7 +31,7 @@ namespace Tests.UserTests
 			[Sql.Extension("{table_field} match {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
 			public static bool MatchFts<TEntity>([ExprParameter]string match)
 			{
-				throw new InvalidOperationException();
+				throw new ServerSideOnlyException(nameof(MatchFts));
 			}
 		}
 

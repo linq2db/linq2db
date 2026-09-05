@@ -16,7 +16,7 @@ namespace Tests.UserTests
 		public static class SqlServer
 		{
 			[Sql.Function(ServerSideOnly = true, CanBeNull = false)]
-			public static DateTime GetDate() { throw new InvalidOperationException("Use only LINQ expression"); }
+			public static DateTime GetDate() { throw new ServerSideOnlyException(nameof(GetDate)); }
 		}
 
 		public interface ITargetAware

@@ -806,19 +806,19 @@ namespace Tests.DataProvider
 			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunction(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunction));
 			}
 
 			[Sql.Function("TEST_PACKAGE1:TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP1(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP1));
 			}
 
 			[Sql.Function("TEST_PACKAGE2:TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP2(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP2));
 			}
 
 			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]

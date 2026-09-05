@@ -2020,7 +2020,7 @@ namespace Tests.Linq
 			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFields));
 		}
 
 		[Sql.Expression("concat('{{',string_agg(concat('\"', {1}, '\"', ': {{', '\"DateCreated\":\"', cast({3} as datetime2), '\", \"Link\":\"', {4}, '\",\"fields\":',  {2}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
@@ -2031,7 +2031,7 @@ namespace Tests.Linq
 			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsNoIndeces));
 		}
 
 		[Sql.Extension("concat('{{',string_agg(concat('\"', {templateId}, '\"', ': {{', '\"DateCreated\":\"', cast({DateCreated} as datetime2), '\", \"Link\":\"', {Link}, '\",\"fields\":',  {fieldResultsJson}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
@@ -2042,7 +2042,7 @@ namespace Tests.Linq
 			[ExprParameter] Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			[ExprParameter] Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsExtension));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
