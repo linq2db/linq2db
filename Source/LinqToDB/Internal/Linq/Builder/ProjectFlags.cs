@@ -17,6 +17,13 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// the sole producer - rather than from this comment. Adding a member here, or changing which purpose
 	/// carries which modifier there, is a build error until that analyzer's reader agrees.
 	/// </para>
+	/// <para>
+	/// That analyzer applies the model to every <c>ProjectFlags</c> local or parameter in the assembly, not only
+	/// to the values that reach <see cref="IBuildContext.MakeExpression"/>. A value composed by hand out of two
+	/// purpose bits therefore lies outside the model - see <c>ProjectFlagsAnalyzer</c>'s remarks for the two such
+	/// values in the tree and for the <c>#pragma warning disable</c> escape hatch - so check there before writing
+	/// a flag conjunction over a value that did not come from <c>GetProjectFlags</c>.
+	/// </para>
 	/// </summary>
 	[Flags]
 	enum ProjectFlags
