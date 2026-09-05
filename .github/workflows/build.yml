@@ -79,10 +79,11 @@ jobs:
       # Properties must match the solution build - a VERSION_ARGS mismatch recompiles them and the
       # race is back.
       #
-      # The Roslyn components are the clearest case: single-TFM, so the plain build and the
-      # TargetFramework-pinned inner build a multi-TFM consumer asks for share one obj path with no
-      # target-framework segment. That set is CodeGenerators plus everything pinned by
-      # Source/Analyzers.Common.props; a new Roslyn component belongs here.
+      # The Roslyn components are the clearest case. Being single-TFM, their obj path carries no
+      # target-framework segment, so two builds write the same file: the plain one, and the
+      # TargetFramework-pinned inner build that a multi-TFM consumer negotiates. That set is
+      # CodeGenerators plus everything pinned by Source/Analyzers.Common.props; a new Roslyn
+      # component belongs here.
       #
       # LinqToDB is here for a different reason and was added after the first three did not stop it:
       # it is the most-referenced project in the repo, so many consumers request the same
