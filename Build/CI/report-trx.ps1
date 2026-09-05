@@ -45,24 +45,50 @@ if ($trx.Count -eq 0) {
 $rows = @()
 $failures = @()
 
-foreach ($file in $trx) {
-    [xml] $doc = Get-Content -LiteralPath $file.FullName -Raw
+# --retry-failed-tests writes each attempt as its own .trx under Retries/<id>/<attempt>/, holding only
+# the tests it re-ran, next to the full run at the top of the results directory. Summing them all
+# counts a test that failed and then passed as a failure, so every retry leg went red while its own
+# test steps exited 0 - the three Oracle legs on GitHub run 33946658182.
+#
+# So group by file name, which is suite+TFM, and replay the attempts in order: a test's outcome is the
+# one from the last attempt that contains it. Attempt order is the numeric directory under Retries/,
+# with the top-level file first.
+$attemptOrder = {
+    param($file)
+    if ($file.FullName -match '[/\\]Retries[/\\][^/\\]+[/\\](\d+)[/\\]') { [int] $Matches[1] } else { 0 }
+}
 
-    # MTP writes the VSTest schema, so counters are on ResultSummary/Counters.
-    $counters = $doc.TestRun.ResultSummary.Counters
-    $rows += [pscustomobject]@{
-        File    = $file.Name
-        Total   = [int] $counters.total
-        Passed  = [int] $counters.passed
-        Failed  = [int] $counters.failed
-        Skipped = ([int] $counters.total - [int] $counters.executed)
+foreach ($group in $trx | Group-Object Name) {
+    $outcome = [ordered]@{}   # test name -> last outcome seen
+    $message = @{}            # test name -> failure message from that attempt
+    $baseCounters = $null
+
+    foreach ($file in $group.Group | Sort-Object @{ Expression = $attemptOrder }) {
+        [xml] $doc = Get-Content -LiteralPath $file.FullName -Raw
+        # MTP writes the VSTest schema, so counters are on ResultSummary/Counters.
+        if ($null -eq $baseCounters) { $baseCounters = $doc.TestRun.ResultSummary.Counters }
+
+        foreach ($r in @($doc.TestRun.Results.UnitTestResult)) {
+            $outcome[$r.testName] = $r.outcome
+            if ($r.outcome -eq 'Failed') { $message[$r.testName] = ($r.Output.ErrorInfo.Message -join ' ').Trim() }
+        }
     }
 
-    foreach ($r in @($doc.TestRun.Results.UnitTestResult | Where-Object { $_.outcome -eq 'Failed' })) {
-        $failures += [pscustomobject]@{
-            Test    = $r.testName
-            Message = ($r.Output.ErrorInfo.Message -join ' ').Trim()
-        }
+    $stillFailed = @($outcome.Keys | Where-Object { $outcome[$_] -eq 'Failed' })
+    $total   = [int] $baseCounters.total
+    $skipped = $total - [int] $baseCounters.executed
+
+    $rows += [pscustomobject]@{
+        File     = $group.Name
+        Attempts = $group.Count
+        Total    = $total
+        Passed   = $total - $skipped - $stillFailed.Count
+        Failed   = $stillFailed.Count
+        Skipped  = $skipped
+    }
+
+    foreach ($name in $stillFailed) {
+        $failures += [pscustomobject]@{ Test = $name; Message = $message[$name] }
     }
 }
 
@@ -76,12 +102,12 @@ $totals = [pscustomobject]@{
 $md = [System.Collections.Generic.List[string]]::new()
 $md.Add("### $Title")
 $md.Add('')
-$md.Add('| Result file | Total | Passed | Failed | Skipped |')
-$md.Add('|---|---:|---:|---:|---:|')
+$md.Add('| Result file | Attempts | Total | Passed | Failed | Skipped |')
+$md.Add('|---|---:|---:|---:|---:|---:|')
 foreach ($r in $rows) {
-    $md.Add("| $($r.File) | $($r.Total) | $($r.Passed) | $($r.Failed) | $($r.Skipped) |")
+    $md.Add("| $($r.File) | $($r.Attempts) | $($r.Total) | $($r.Passed) | $($r.Failed) | $($r.Skipped) |")
 }
-$md.Add("| **total** | **$($totals.Total)** | **$($totals.Passed)** | **$($totals.Failed)** | **$($totals.Skipped)** |")
+$md.Add("| **total** | | **$($totals.Total)** | **$($totals.Passed)** | **$($totals.Failed)** | **$($totals.Skipped)** |")
 
 if ($failures.Count -gt 0) {
     $md.Add('')
