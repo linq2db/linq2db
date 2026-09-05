@@ -374,7 +374,7 @@ namespace Tests.Analyzers.Internal
 						if (flags.IsExpand() && !flags.IsKeys())
 							return 2;
 
-						if (flags.IsSql() && !flags.HasFlag(OtherFlags.Keys))
+						if (flags.HasFlag(OtherFlags.SQL) && flags.HasFlag(OtherFlags.Expand))
 							return 3;
 
 						return 0;
