@@ -836,24 +836,35 @@ namespace Tests.Linq
 			var viaQueryable   = (await queryable(db, 1, default))[0];
 			var afterQueryable = transactions;
 			var viaElement     = await element(db, 1, default);
+			var afterElement   = transactions;
+			var viaElement2    = await element(db, 2, default);
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(viaQueryable.Children, Has.Count.EqualTo(1));
 				Assert.That(viaElement.Children,   Has.Count.EqualTo(1));
+				Assert.That(viaElement2.Children,  Has.Count.EqualTo(2));
 
 				Assert.That(afterQueryable, Is.EqualTo(1), "queryable form must open the implicit eager-loading transaction");
-				Assert.That(transactions,   Is.EqualTo(2), "element form must open one as well");
+				Assert.That(afterElement,   Is.EqualTo(2), "element form must open one as well");
+				Assert.That(transactions,   Is.EqualTo(3), "and must dispose it - a leak leaves the connection inside it, so the next call opens none");
 			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
 		public void ElementFormLoadWithHonorsCancellation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			var query = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+			var eager = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
 				db.Parent
 					.Where(p => p.ParentID == id)
 					.LoadWith(p => p.Children)
+					.FirstAsync(token));
+
+			// No LoadWith means no preamble and so no implicit transaction, which makes GetElementAsync the
+			// first await able to observe the token - the site that used to receive default.
+			var plain = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
 					.FirstAsync(token));
 
 			using var cts = new CancellationTokenSource();
@@ -865,7 +876,20 @@ namespace Tests.Linq
 			{
 				try
 				{
-					await query(db, 1, cts.Token);
+					await eager(db, 1, cts.Token);
+				}
+				catch (OperationCanceledException)
+				{
+					// normalizes TaskCanceledException, which the assert above would not match
+					throw new OperationCanceledException();
+				}
+			});
+
+			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			{
+				try
+				{
+					await plain(db, 1, cts.Token);
 				}
 				catch (OperationCanceledException)
 				{
