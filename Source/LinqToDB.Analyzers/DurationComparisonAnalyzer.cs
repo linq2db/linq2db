@@ -10,9 +10,10 @@ namespace LinqToDB.Analyzers
 {
 	/// <summary>
 	/// Reports an <c>==</c> / <c>!=</c> comparison, inside a query, between a member whose storage unit is declared
-	/// with <c>[Duration(DurationUnit.X)]</c> and a constant <see cref="TimeSpan"/> that unit cannot represent. Such
-	/// a comparison lowers to an empty range and returns no rows - the right answer for a duration the column cannot
-	/// hold, but indistinguishable in the log from an ordinary range over two parameters.
+	/// with <c>[Duration(DurationUnit.X)]</c> and a constant <see cref="TimeSpan"/> that unit cannot represent. An
+	/// <c>==</c> so written lowers to an empty range and returns no rows; <c>!=</c> is the reverse and excludes none,
+	/// so it matches every row that has a value. Either is the right answer for a duration the column cannot hold,
+	/// and neither is distinguishable in the log from an ordinary range over two parameters.
 	/// </summary>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public sealed class DurationComparisonAnalyzer : DiagnosticAnalyzer
@@ -33,12 +34,12 @@ namespace LinqToDB.Analyzers
 
 		internal static readonly DiagnosticDescriptor Rule = new(
 			id:                 DiagnosticId,
-			title:              "Duration comparison a declared unit can never match",
+			title:              "Duration comparison against a value the declared unit cannot represent",
 			messageFormat:      "'{0}' stores whole {1} and cannot represent {2}, so this comparison {3}",
 			category:           "LinqToDB",
 			defaultSeverity:    DiagnosticSeverity.Info,
 			isEnabledByDefault: true,
-			description:        "A TimeSpan column declared with [Duration(DurationUnit.X)] holds a whole number of X units, so an equality against a duration that is not a whole number of them lowers to an empty range and matches nothing. The translation is correct - an empty range is what equality means for a value the column cannot hold - but neither the query nor the log says why no rows came back. Only a unit declared through the attribute is visible to an analyzer; one declared through HasDuration or a mapping schema is not diagnosed.",
+			description:        "A TimeSpan column declared with [Duration(DurationUnit.X)] holds a whole number of X units, so a comparison against a duration that is not a whole number of them is degenerate: == lowers to an empty range and matches nothing, while != excludes nothing and matches every row that has a value. The translation is correct - that is what those operators mean for a value the column cannot hold - but neither the query nor the log says why the result came back as it did. Only a unit declared through the attribute is visible to an analyzer; one declared through HasDuration or a mapping schema is not diagnosed.",
 			helpLinkUri:        "https://github.com/linq2db/linq2db/wiki/L2DB1002");
 
 		/// <inheritdoc/>
