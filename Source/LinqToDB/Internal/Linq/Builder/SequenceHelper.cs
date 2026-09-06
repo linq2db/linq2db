@@ -1038,9 +1038,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Whether the expression projects a constructed object, seen through whatever conversion states the type it
-		/// is read as. A set operation unifies branch projections of differing but assignable types by converting
-		/// one of them, so a branch is a constructor with a conversion in front of it as often as a bare one.
+		/// Whether the expression projects a constructed object, seen through a <c>Convert</c> / <c>ConvertChecked</c>
+		/// chain carrying no conversion operator, or a <c>SqlAdjustTypeExpression</c>. A set operation unifies branch
+		/// projections of differing but assignable types by converting one of them, so a branch is a constructor with
+		/// a conversion in front of it as often as a bare one. A <c>TypeAs</c> is <b>not</b> one of the node kinds
+		/// seen through here - it is rewritten into a conversion earlier, while the projection is built.
 		/// </summary>
 		public static bool IsConstructorBranch(Expression expression)
 		{
