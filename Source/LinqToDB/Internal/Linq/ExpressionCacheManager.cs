@@ -288,7 +288,7 @@ namespace LinqToDB.Internal.Linq
 		/// itself a member access, the walk follows the value's own spine and returns the first member access
 		/// it reaches: through unary operators, into the array or container of an element read, and into the
 		/// target of a parameterless <c>GetValueOrDefault</c>.
-		/// Arguments and binary operands are not walked for a name, so <c>dict[key]</c> is named after
+		/// Only that spine is walked - indices and call arguments are not - so <c>dict[key]</c> is named after
 		/// <c>dict</c>. The index itself must not reach the name: it is substituted out of the query-cache
 		/// key, so a cached query would carry the index of whichever call site built it first.
 		/// A method call that <i>computes</i> a new value would give a name that describes the wrong thing -
