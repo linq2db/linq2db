@@ -11,8 +11,9 @@ using Microsoft.CodeAnalysis.Testing;
 namespace Tests.Analyzers
 {
 	// Thin wrapper over the Roslyn testing SDK: every analyzed snippet is compiled against the .NET 8 reference
-	// assemblies plus the real linq2db assembly, so Sql.Ext / Sql.Window symbols resolve. The test project targets
-	// net8.0 so the loaded linq2db build matches the Net80 reference pack (a higher ref pack would trip CS1705).
+	// assemblies plus - unless VerifyWithoutLinqToDBAsync is used - the real linq2db assembly, so Sql.Ext /
+	// Sql.Window symbols resolve. The test project targets net8.0 so the loaded linq2db build matches the Net80
+	// reference pack (a higher ref pack would trip CS1705).
 	internal static class AnalyzerVerifier<TAnalyzer>
 		where TAnalyzer : DiagnosticAnalyzer, new()
 	{

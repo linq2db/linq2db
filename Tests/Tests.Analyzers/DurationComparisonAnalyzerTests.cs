@@ -24,8 +24,10 @@ namespace Tests.Analyzers
 
 			class Row
 			{
+				[Column, Duration(DurationUnit.Minute)]      public TimeSpan  InMinutes  { get; set; }
 				[Column, Duration(DurationUnit.Second)]      public TimeSpan  InSeconds  { get; set; }
 				[Column, Duration(DurationUnit.Millisecond)] public TimeSpan  InMillis   { get; set; }
+				[Column, Duration(DurationUnit.Microsecond)] public TimeSpan  InMicros   { get; set; }
 				[Column, Duration(DurationUnit.Tick)]        public TimeSpan  InTicks    { get; set; }
 				[Column, Duration(DurationUnit.Nanosecond)]  public TimeSpan  InNanos    { get; set; }
 				[Column, Duration(DurationUnit.Second)]      public TimeSpan? Grace      { get; set; }
@@ -126,6 +128,138 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task ReportsTicksConstructorConstant()
+		{
+			var source = Source("""
+						q.Where(r => {|#0:r.InMillis == new TimeSpan(15000001)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InMillis", "milliseconds", "00:00:01.5000001", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsThreeArgumentConstructorConstant()
+		{
+			// Against a minute column, so the seconds slot decides the verdict: a transposed arity would report a
+			// different duration rather than the same one.
+			var source = Source("""
+						q.Where(r => {|#0:r.InMinutes == new TimeSpan(0, 0, 90)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InMinutes", "minutes", "00:01:30", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsFourArgumentConstructorConstant()
+		{
+			var source = Source("""
+						q.Where(r => {|#0:r.InMinutes == new TimeSpan(0, 0, 1, 30)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InMinutes", "minutes", "00:01:30", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsSixArgumentConstructorConstant()
+		{
+			// The microseconds slot, which only the six-argument arity has.
+			var source = Source("""
+						q.Where(r => {|#0:r.InMillis == new TimeSpan(0, 0, 0, 0, 0, 1500)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InMillis", "milliseconds", "00:00:00.0015000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsSubtractedConstants()
+		{
+			// The corpus shape at IntervalTranslationTests.Queries.cs:815, proven until now only by the dogfood.
+			var source = Source("""
+						q.Where(r => {|#0:r.InSeconds == TimeSpan.FromMinutes(15) - TimeSpan.FromMilliseconds(500)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:14:59.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsNegatedConstant()
+		{
+			var source = Source("""
+						q.Where(r => {|#0:r.InSeconds == -TimeSpan.FromSeconds(1.5)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "-00:00:01.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsParseExactConstant()
+		{
+			var source = Source("""
+						q.Where(r => {|#0:r.InSeconds == TimeSpan.ParseExact("00:00:01.5000000", "c", null)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:00:01.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsMinValue()
+		{
+			var source = Source("""
+						q.Where(r => {|#0:r.InSeconds == TimeSpan.MinValue|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "-10675199.02:48:05.4775808", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsSubMicrosecondOnMicrosecondColumn()
+		{
+			// Written with FromTicks so the verdict depends on the microsecond ratio and nothing else: it is the one
+			// row of the unit table typed by hand rather than read from TimeSpan.TicksPer*.
+			var source = Source("""
+						q.Where(r => {|#0:r.InMicros == TimeSpan.FromTicks(15)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InMicros", "microseconds", "00:00:00.0000015", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsMicrosecondFactoryConstant()
+		{
+			// TimeSpan.FromMicroseconds is .NET 7+, so .NET Framework's whole-millisecond rounding cannot be one of
+			// this value's readings - carrying it would round 1.5us to zero, which every unit can represent.
+			var source = Source("""
+						q.Where(r => {|#0:r.InSeconds == TimeSpan.FromMicroseconds(1.5)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:00:00.0000015", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsDoubleFactoryOnMillisecondColumn()
+		{
+			// The .NET Framework reading is a whole millisecond by construction, so carrying it on a target that
+			// cannot be .NET Framework silenced every From*(double) constant on millisecond and microsecond columns.
+			var source = Source("""
+						q.Where(r => {|#0:r.InMillis == TimeSpan.FromSeconds(0.0015)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InMillis", "milliseconds", "00:00:00.0015000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsSubMillisecondDoubleFactory()
+		{
+			// Diagnosed because the snippet targets .NET 8. On a target that could be .NET Framework the product
+			// rounds to a whole millisecond and this stays silent, which no fixture leg can express - see below.
+			var source = Source("""
+						q.Where(r => {|#0:r.InMillis == TimeSpan.FromMilliseconds(0.5)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InMillis", "milliseconds", "00:00:00.0005000", "can never match"));
+		}
+
+		[Test]
 		public Task ReportsParsedConstant()
 		{
 			var source = Source("""
@@ -203,11 +337,65 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task ReportsForEachMixedCandidatesInequalityWording()
+		{
+			// The '!=' half of the mixed-candidate wording on a non-nullable member. With the two above and the two
+			// unqualified forms, this closes the outcome matrix - operator x nullability x mixed-vs-total.
+			var source = Source("""
+						foreach (var bound in new[] { TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(2) })
+							q.Where(r => {|#0:r.InSeconds != bound|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:00:01.5000000", "always matches when that value is compared"));
+		}
+
+		[Test]
+		public Task ReportsForEachMixedCandidatesNullableInequalityWording()
+		{
+			// The nullable '!=' cell: a NULL column is excluded by '!=' unless CompareNulls.LikeClr is in force, so
+			// the message promises only the rows that have a value.
+			var source = Source("""
+						foreach (var bound in new[] { TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(2) })
+							q.Where(r => {|#0:r.Grace != bound|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("Grace", "seconds", "00:00:01.5000000", "excludes no row that has a value when that value is compared"));
+		}
+
+		[Test]
 		public Task ReportsRangeVariable()
 		{
 			var source = Source("""
 						var bounds = new[] { TimeSpan.FromSeconds(1.5) };
 						bounds.Select(d => q.Where(r => {|#0:r.InSeconds == d|})).ToList();
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:00:01.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsInAssignedExpressionTree()
+		{
+			// The predicate-builder position: the Expression<T> comes from the local's declaration rather than from
+			// an argument conversion. Every other positive here reaches the gate as an argument, and the node shape
+			// above the lambda is the one thing D-2 was decided on without being able to observe it.
+			var source = Source("""
+						System.Linq.Expressions.Expression<Func<Row, bool>> predicate = r => {|#0:r.InSeconds == TimeSpan.FromSeconds(1.5)|};
+						q.Where(predicate);
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:00:01.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsInReturnedExpressionTree()
+		{
+			// The same question for a return position rather than an initializer.
+			var source = Source("""
+						q.Where(Predicate());
+
+						static System.Linq.Expressions.Expression<Func<Row, bool>> Predicate() =>
+							r => {|#0:r.InSeconds == TimeSpan.FromSeconds(1.5)|};
 				""");
 
 			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:00:01.5000000", "can never match"));
@@ -303,10 +491,32 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotReportParseExactWithStyles()
+		{
+			// AssumeNegative makes the runtime produce -1.5s while this rule parses without the styles argument and
+			// gets +1.5s. Representability is sign-invariant so the verdict would survive, but the message would
+			// name a duration the source never writes - so the overload is left alone instead of half-supported.
+			return Verify.VerifyAsync(Source("""
+						q.Where(r => r.InSeconds == TimeSpan.ParseExact("00:00:01.5000000", "c", null, System.Globalization.TimeSpanStyles.AssumeNegative));
+				"""));
+		}
+
+		[Test]
 		public Task DoesNotReportNonConstantOperand()
 		{
 			return Verify.VerifyAsync(Source("""
 						q.Where(r => r.InSeconds == arbitrary);
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportCapturedInstanceMember()
+		{
+			// 'probe' is captured, so linq2db evaluates probe.InSeconds client-side into a constant and the
+			// comparison is ordinary CLR equality - which a row holding 1.5s does match.
+			return Verify.VerifyAsync(Source("""
+						var probe = new Row { InSeconds = TimeSpan.FromSeconds(1.5) };
+						q.Where(r => probe.InSeconds == TimeSpan.FromSeconds(1.5));
 				"""));
 		}
 
@@ -349,12 +559,30 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
-		public Task DoesNotReportSubMillisecondDoubleFactory()
+		public Task DoesNotReportWholeMicrosecondOnMicrosecondColumn()
 		{
-			// .NET Framework rounds the product to a whole millisecond, which lands this on a representable value,
-			// so the three runtime readings do not agree and nothing is reported.
+			// Paired with ReportsSubMicrosecondOnMicrosecondColumn: 20 ticks against 15, so a wrong ratio fails one
+			// side or the other - 1 would silence the positive, 100 would redden this.
 			return Verify.VerifyAsync(Source("""
-						q.Where(r => r.InMillis == TimeSpan.FromMilliseconds(0.5));
+						q.Where(r => r.InMicros == TimeSpan.FromTicks(20));
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportRepresentableMicrosecondFactory()
+		{
+			// Paired with ReportsMicrosecondFactoryConstant: same factory, same column, only the value varies.
+			return Verify.VerifyAsync(Source("""
+						q.Where(r => r.InSeconds == TimeSpan.FromMicroseconds(2000000));
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportRepresentableDoubleFactoryOnMillisecondColumn()
+		{
+			// Paired with ReportsDoubleFactoryOnMillisecondColumn: same factory, same column, only the value varies.
+			return Verify.VerifyAsync(Source("""
+						q.Where(r => r.InMillis == TimeSpan.FromSeconds(0.002));
 				"""));
 		}
 
@@ -366,6 +594,45 @@ namespace Tests.Analyzers
 			return Verify.VerifyAsync(Source("""
 						foreach (var bound in new[] { TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(2) })
 							q.Where(r => r.InSeconds == bound);
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportForEachOverCollectionExpression()
+		{
+			// Characterization, not a decision about the syntax: Roslyn 4.8 - the line this analyzer is pinned to,
+			// matching the lowest supported SDK - exposes neither ICollectionExpressionOperation nor
+			// OperationKind.CollectionExpression, so [..] cannot be recognized here while the same elements written
+			// new[] { .. } are reported. Recall-only, never a wrong report. Should this go red, the pin was raised
+			// and the arm can be added - update the wiki's recognised-constants list with it.
+			return Verify.VerifyAsync(Source("""
+						TimeSpan[] bounds = [TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(2.5)];
+
+						foreach (var bound in bounds)
+							q.Where(r => r.InSeconds == bound);
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportForEachOverListInitializer()
+		{
+			// Paired with ReportsForEachWhenEveryCandidateFails: same elements, only the collection kind varies.
+			// A List<T> can be mutated after it is built and nothing here can see that happen, so it is refused.
+			return Verify.VerifyAsync(Source("""
+						foreach (var bound in new List<TimeSpan> { TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(2.5) })
+							q.Where(r => r.InSeconds == bound);
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportForEachOverMethodCall()
+		{
+			// The other half of the same refusal: a sequence this rule cannot read at all.
+			return Verify.VerifyAsync(Source("""
+						foreach (var bound in Bounds())
+							q.Where(r => r.InSeconds == bound);
+
+						static IEnumerable<TimeSpan> Bounds() => new[] { TimeSpan.FromSeconds(1.5) };
 				"""));
 		}
 
@@ -382,6 +649,19 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotReportResultSelectorParameterOfAllowlistedOperator()
+		{
+			// The shape where the single-parameter rule is the only guard: SelectMany *is* on the operator
+			// allowlist, so without it the walk resolves argument zero and reports 'wrong''s 1.5s - a duration
+			// this predicate never compares. The Zip control above cannot show that, being rejected by name.
+			return Verify.VerifyAsync(Source("""
+						var wrong = new[] { TimeSpan.FromSeconds(1.5) };
+						var right = new[] { TimeSpan.FromSeconds(2) };
+						wrong.SelectMany(a => right, (a, b) => q.Where(r => r.InSeconds == b)).ToList();
+				"""));
+		}
+
+		[Test]
 		public Task DoesNotReportInnerKeySelectorParameter()
 		{
 			// The shape an argument-position rule cannot tell from a Select: 'b' is a one-parameter lambda in a
@@ -391,6 +671,19 @@ namespace Tests.Analyzers
 						var wrong = new[] { TimeSpan.FromSeconds(1.5) };
 						var right = new[] { TimeSpan.FromSeconds(2) };
 						wrong.Join(right, a => 1, b => q.Where(r => r.InSeconds == b).Count(), (a, b) => a).ToList();
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportLocalWrittenThroughRefAlias()
+		{
+			// The write targets the alias, so a sweep that enumerates write shapes never sees it and folds 1.5s
+			// while the code compares 2s. Paired with ReportsSingleAssignmentLocal: only the alias varies.
+			return Verify.VerifyAsync(Source("""
+						var bound = TimeSpan.FromSeconds(1.5);
+						ref var alias = ref bound;
+						alias = TimeSpan.FromSeconds(2);
+						q.Where(r => r.InSeconds == bound);
 				"""));
 		}
 
@@ -456,6 +749,110 @@ namespace Tests.Analyzers
 				class C
 				{
 					void M(IQueryable<Mixed> q)
+					{
+						q.Where(r => r.Elapsed == TimeSpan.FromSeconds(1.5));
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		[Test]
+		public Task ReportsThroughDerivedDurationAttribute()
+		{
+			// DurationAttribute is public and unsealed, and the mapping resolves it by assignability
+			// (MappingSchema.GetAttribute<DurationAttribute>), so a derived attribute really does declare the unit.
+			const string source = """
+				using System;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.Mapping;
+
+				sealed class MyDurationAttribute : DurationAttribute
+				{
+					public MyDurationAttribute(DurationUnit unit) : base(unit) { }
+				}
+
+				class Derived
+				{
+					[Column, MyDuration(DurationUnit.Second)] public TimeSpan Elapsed { get; set; }
+				}
+
+				class C
+				{
+					void M(IQueryable<Derived> q)
+					{
+						q.Where(r => {|#0:r.Elapsed == TimeSpan.FromSeconds(1.5)|});
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source, Expected("Elapsed", "seconds", "00:00:01.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task DoesNotReportDerivedAttributeThatHardCodesItsUnit()
+		{
+			// The unit is baked into the derived constructor's base call, so it is not in the attribute application
+			// and an analyzer cannot see it. Silent, which is the honest answer rather than a guess.
+			const string source = """
+				using System;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.Mapping;
+
+				sealed class SecondsAttribute : DurationAttribute
+				{
+					public SecondsAttribute() : base(DurationUnit.Second) { }
+				}
+
+				class Derived
+				{
+					[Column, Seconds] public TimeSpan Elapsed { get; set; }
+				}
+
+				class C
+				{
+					void M(IQueryable<Derived> q)
+					{
+						q.Where(r => r.Elapsed == TimeSpan.FromSeconds(1.5));
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		[Test]
+		public Task DoesNotReadAnUnrelatedDerivedArgumentAsAUnit()
+		{
+			// Recognizing derived attributes means the first constructor argument is no longer necessarily a
+			// DurationUnit. Matching this 2 against the enum's numeric values would name a unit nobody wrote.
+			const string source = """
+				using System;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.Mapping;
+
+				sealed class TaggedDurationAttribute : DurationAttribute
+				{
+					public TaggedDurationAttribute(int tag) : base(DurationUnit.Second) { Tag = tag; }
+
+					public int Tag { get; }
+				}
+
+				class Derived
+				{
+					[Column, TaggedDuration(2)] public TimeSpan Elapsed { get; set; }
+				}
+
+				class C
+				{
+					void M(IQueryable<Derived> q)
 					{
 						q.Where(r => r.Elapsed == TimeSpan.FromSeconds(1.5));
 					}
