@@ -794,6 +794,32 @@ namespace LinqToDB.Internal.Linq
 				return false;
 			}
 
+			// BuildGroups' ORDERING INVARIANT as a predicate, so the combined path is only taken where it actually holds.
+			//
+			// The partition is by combinability, not by index, and the non-combinable singletons all run before the combined
+			// groups. Index order therefore survives only WITHIN each partition: a non-combinable harvester sitting above a
+			// combinable one would execute before that sibling and read its slot unpopulated — an empty collection, silently,
+			// with no exception to point at. Build order is dependency order (nested loads build first), so the shape that is
+			// safe is exactly "every non-combinable index below every combinable one", which this single pass checks.
+			//
+			// No strategy in tree produces the inverted shape today — which is the reason to enforce it rather than keep
+			// relying on it: the invariant then holds by construction instead of by coincidence, and a future strategy that
+			// breaks it loses combining rather than rows.
+			internal static bool IsCombinableOrderSafe(Harvester[] harvesters)
+			{
+				var seenCombinable = false;
+
+				foreach (var harvester in harvesters)
+				{
+					if (IsCombinable(harvester))
+						seenCombinable = true;
+					else if (seenCombinable)
+						return false;
+				}
+
+				return true;
+			}
+
 			// Merges every combinable child's and the main query's parameter values into one SqlParameterValues (keyed by
 			// SqlParameter node). Genuinely per-run - the values are this execution's - so it is the only part of the old
 			// PrepareScenario a warm execution still has to do.
@@ -866,8 +892,10 @@ namespace LinqToDB.Internal.Linq
 			// lower-indexed dependencies. Nested eager loads build first, so they get lower indices and materialize earlier; a
 			// parent harvester always reads its child slots after they are populated. A non-combinable harvester that read a
 			// *combinable* sibling's (higher-lifecycle) slot would find it unpopulated and silently produce an empty collection
-			// - no exception. Any new strategy MUST preserve this direction (covered by
-			// MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable).
+			// - no exception. Enforced rather than assumed: TryGetCombinedEagerEnumerable refuses the combined path for a
+			// layout that would invert this (EagerResultEnumerable<T>.IsCombinableOrderSafe), so a new strategy that breaks
+			// the direction loses combining instead of rows (covered by
+			// MixedCombinableAndNonCombinable_NestedKeyedUnderCombinable, which pins the safe mixed shape still combining).
 			//
 			// Parameter-independent (the partition is fixed and each command's step indices come from the cached template), so
 			// it is built on the cold path and cached with the templates.
@@ -1065,6 +1093,12 @@ namespace LinqToDB.Internal.Linq
 				return null;
 
 			if (!EagerResultEnumerable<T>.HasCombinable(harvesters))
+				return null;
+
+			// The combined plan reorders execution — every non-combinable harvester runs before every combinable one — so
+			// take it only for a harvester layout where that reordering cannot move a harvester ahead of a sibling slot it
+			// reads. See EagerResultEnumerable<T>.IsCombinableOrderSafe and BuildGroups' ordering invariant.
+			if (!EagerResultEnumerable<T>.IsCombinableOrderSafe(harvesters))
 				return null;
 
 			return new EagerResultEnumerable<T>(dataContext, expressions, query, parameters, harvesters);

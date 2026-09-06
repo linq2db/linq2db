@@ -746,6 +746,73 @@ namespace Tests.Linq
 			if (!context.IsRemote()) counter.Count.ShouldBeGreaterThan(1);
 		}
 
+		// The other side of the ordering guard. TryGetCombinedEagerEnumerable refuses the combined path for a layout where
+		// a non-combinable harvester sits above a combinable one; the shape above is the SAFE mixed one — the buffered
+		// harvesters take the low indices and the plain sibling the high one — so the guard has to keep letting it combine.
+		// The test above cannot show that: its "more than one round-trip" guard passes just as happily when combining is
+		// refused outright and everything runs sequentially, which is exactly how an over-eager guard would fail. Comparing
+		// the two configurations does show it.
+		[Test]
+		public void MixedCombinableAndNonCombinable_StillCombines([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var off = MixedHierarchySelectCount(context, combinedCommands: false);
+			var on  = MixedHierarchySelectCount(context, combinedCommands: true);
+
+			on.ShouldBeLessThan(off);
+		}
+
+		int MixedHierarchySelectCount(string context, bool combinedCommands)
+		{
+			var (companies, departments, employees, _, _) = GenerateHierarchy();
+
+			using var db = GetDataContext(context, o => o
+				.UseDefaultEagerLoadingStrategy(EagerLoadingStrategy.KeyedQuery)
+				.UseCombinedCommands(combinedCommands));
+
+			var counter = new SelectQueryCounter();
+			db.AddInterceptor(counter);
+
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+			using var tEmp = db.CreateLocalTable(employees);
+
+			counter.Count = 0;
+
+			// The same mixed shape as above: the nested KeyedQuery load makes DeptsWithEmployees buffered and therefore
+			// non-combinable, while PlainDepts stays combinable.
+			var result = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					DeptsWithEmployees = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new
+						{
+							d.Id,
+							CompanyName = c.Name,
+							Employees   = tEmp
+								.Where(e => e.DepartmentId == d.Id)
+								.OrderBy(e => e.Id)
+								.Select(e => new { e.Id, e.Name })
+								.ToList(),
+						})
+						.ToList(),
+					PlainDepts = tDep
+						.Where(d => d.CompanyId == c.Id)
+						.OrderBy(d => d.Id)
+						.Select(d => new { d.Id, CompanyName = c.Name })
+						.ToList(),
+				})
+				.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+
+			return counter.Count;
+		}
+
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentExpressionFallback(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
