@@ -1,12 +1,3 @@
-parameters:
-# Settable from the Azure "Run pipeline" dialog. Default true keeps every leg on Azure and dispatches
-# nothing, so this pipeline behaves exactly as before; set it false for a run to hand the same surface
-# to GitHub Actions as well.
-- name: all_in_azure
-  type: boolean
-  default: true
-  displayName: 'Run everything on Azure (no GitHub Actions dispatch)'
-
 variables:
   - template: templates/build-vars.yml
 
@@ -44,39 +35,7 @@ stages:
         enabled: succeeded()
         with_baselines: true
         full_run: false
-        all_in_azure: ${{ parameters.all_in_azure }}
-        # db_filter parameter. [] wrap used to avoid potential naming conflicts
-        ${{ if eq(variables['Build.DefinitionName'], 'test-access') }}:
-          db_filter: '[access.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-db2') }}:
-          db_filter: '[db2.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-firebird') }}:
-          db_filter: '[firebird.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-informix') }}:
-          db_filter: '[informix.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-mysql') }}:
-          db_filter: '[mysql.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-oracle') }}:
-          db_filter: '[oracle.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-postgresql') }}:
-          db_filter: '[postgresql.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-saphana') }}:
-          db_filter: '[saphana.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-sqlce') }}:
-          db_filter: '[sqlce.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-sqlite') }}:
-          db_filter: '[sqlite.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver') }}:
-          db_filter: '[sqlserver.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver-2019') }}:
-          db_filter: '[sqlserver.2019]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-sqlserver-2022') }}:
-          db_filter: '[sqlserver.2022]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-sybase') }}:
-          db_filter: '[sybase.ase.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-clickhouse') }}:
-          db_filter: '[clickhouse.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-duckdb') }}:
-          db_filter: '[duckdb.all]'
-        ${{ if eq(variables['Build.DefinitionName'], 'test-ydb') }}:
-          db_filter: '[ydb.all]'
+        # db_filter is resolved inside test-matrix.yml from its surfaces map, keyed by definition
+        # name. It used to be a 34-line if-chain here, which only Azure could read - the GitHub side
+        # needs the same mapping, and #5848 already moved entry selection into that file for exactly
+        # this reason.

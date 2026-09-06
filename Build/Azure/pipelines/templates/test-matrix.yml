@@ -3,8 +3,33 @@ parameters:
   with_baselines: false
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
   linux_max_parallel: 0 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
-  db_filter: '[all]'
-  all_in_azure: true # when true, no GitHub Actions dispatch. See test-jobs.yml.
+  db_filter: '[all]' # fallback for a definition absent from `surfaces` below, e.g. default.yml
+
+  # Which surface each Azure pipeline definition tests, keyed by definition name. Data rather than
+  # the if-chain this replaced in testing.yml, for the reason #5848 moved entry selection here: an
+  # Azure template expression is readable only by Azure, and the GitHub side needs the same mapping
+  # to turn `/azp run test-db2` into a surface. A definition not listed here falls back to db_filter.
+  #
+  # Not derivable by convention - four of these do not follow strip-`test-`-and-append-`.all`.
+  surfaces:
+    test-access:          '[access.all]'
+    test-clickhouse:      '[clickhouse.all]'
+    test-db2:             '[db2.all]'
+    test-duckdb:          '[duckdb.all]'
+    test-firebird:        '[firebird.all]'
+    test-informix:        '[informix.all]'
+    test-mysql:           '[mysql.all]'
+    test-oracle:          '[oracle.all]'
+    test-postgresql:      '[postgresql.all]'
+    test-saphana:         '[saphana.all]'
+    test-sqlce:           '[sqlce.all]'
+    test-sqlite:          '[sqlite.all]'
+    test-sqlserver:       '[sqlserver.all]'
+    test-sqlserver-2019:  '[sqlserver.2019]'
+    test-sqlserver-2022:  '[sqlserver.2022]'
+    test-sybase:          '[sybase.ase.all]'
+    test-ydb:             '[ydb.all]'
+    test-all:             '[all]'
 
 # db_filter specify test db selection filter for pipeline. Current list of supported values:
 # - '[all]' - any target supported
@@ -94,8 +119,7 @@ jobs:
       linux_max_parallel: ${{ parameters.linux_max_parallel }}
       # Required by test-jobs.yml, which does the per-entry filter test. Forgetting it is a compile
       # error there by design - see the note on its parameters block.
-      db_filter: ${{ parameters.db_filter }}
-      all_in_azure: ${{ parameters.all_in_azure }}
+      db_filter: ${{ coalesce(parameters.surfaces[variables['Build.DefinitionName']], parameters.db_filter) }}
       test_matrix:
 # Two things decide the order legs run in, and which one you see depends on whether the job caps its
 # parallelism. Both were measured on build 23050, the first run to carry a cap.

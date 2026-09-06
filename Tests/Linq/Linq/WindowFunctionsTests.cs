@@ -40,6 +40,8 @@ namespace Tests.Linq
 			public byte      ByteValue             { get; set; }
 			[Column(Configuration = ProviderName.Access, DataType = DataType.Int32)]
 			public byte?     NullableByteValue     { get; set; }
+			public bool      BoolValue             { get; set; }
+			public bool?     NullableBoolValue     { get; set; }
 
 			public override string ToString()
 			{
@@ -48,7 +50,7 @@ namespace Tests.Linq
 
 			public static WindowFunctionTestEntity[] Seed()
 			{
-				return
+				WindowFunctionTestEntity[] data =
 				[
 					new WindowFunctionTestEntity
 					{
@@ -249,6 +251,17 @@ namespace Tests.Linq
 						NullableByteValue    = null
 					}
 				];
+
+				// Boolean columns, derived so the distribution stays obvious in tests: BoolValue is true for the
+				// four rows whose IntValue is 20/40/60/80, and NullableBoolValue is NULL exactly where
+				// NullableIntValue is (Id 9), giving a real three-valued column.
+				foreach (var item in data)
+				{
+					item.BoolValue         = item.IntValue % 20 == 0;
+					item.NullableBoolValue = item.NullableIntValue == null ? null : item.IntValue % 20 == 0;
+				}
+
+				return data;
 			}
 		}
 
