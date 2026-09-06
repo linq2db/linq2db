@@ -748,7 +748,11 @@ namespace LinqToDB.Internal.SqlProvider
 		/// result sets in order, enabling multiple scenario steps to run in one round-trip. Enabled conservatively
 		/// per provider. Default: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 79)]
+		// Out of sequence on purpose: 79 went to master's SupportsPredicateInFunctionValuePosition while this branch was
+		// open, and both sides picked "the next free number" from the same base. Order must be unique across the contract
+		// - a duplicate makes protobuf-net throw while building it, which surfaces as every LinqService call failing on
+		// the first GetConfigurationInfo. Master's number stays put because it ships first; this one moved.
+		[DataMember(Order = 83)]
 		public bool IsMultiStatementBatchSupported { get; set; }
 
 		/// <summary>
