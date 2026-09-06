@@ -1081,6 +1081,82 @@ namespace Tests.Analyzers
 
 		const string SubMillisecondComparison = "r.InMillis == TimeSpan.FromMilliseconds(0.5)";
 
+		// .NET 9 gave every From* factory a component form, and these shapes do not exist on the Net80 pack the
+		// rest of the fixture compiles against. Every component must be written out: an expression tree may not
+		// contain a call that uses an optional argument (CS0854), so the abbreviated FromSeconds(1, 500) does not
+		// compile in the only context this rule analyses. Same self-declared anchors as above, for the same reason.
+		const string ComponentFactoryModel = """
+			using System;
+			using System.Linq;
+
+			using LinqToDB.Mapping;
+
+			namespace LinqToDB.Mapping
+			{
+				internal enum DurationUnit { Nanosecond, Tick, Microsecond, Millisecond, Second, Minute, Hour, Day }
+
+				internal sealed class DurationAttribute : Attribute
+				{
+					public DurationAttribute(DurationUnit unit) { Unit = unit; }
+
+					public DurationUnit Unit { get; set; }
+				}
+			}
+
+			class Row
+			{
+				[Duration(DurationUnit.Second)] public TimeSpan InSeconds { get; set; }
+			}
+
+			class C
+			{
+				void M(IQueryable<Row> q)
+				{
+					q.Where(r => COMPARISON);
+				}
+			}
+			""";
+
+		static string ComponentSource(string comparison, bool expectDiagnostic)
+		{
+			return ComponentFactoryModel.Replace(
+				"COMPARISON",
+				expectDiagnostic ? "{|#0:" + comparison + "|}" : comparison,
+				StringComparison.Ordinal);
+		}
+
+		[Test]
+		public Task ReportsComponentFactoryConstant()
+		{
+			// The component arities were read as unresolvable, so this spelling of the mistake was not diagnosed.
+			return Verify.VerifyWithoutLinqToDBAsync(
+				ComponentSource("r.InSeconds == TimeSpan.FromSeconds(1, 500, 0)", expectDiagnostic: true),
+				ReferenceAssemblies.Net.Net90,
+				Expected("InSeconds", "seconds", "00:00:01.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsMillisecondComponentFactoryOnNet90()
+		{
+			// FromMilliseconds has no single-parameter integer overload on .NET 9 - only the component form - so
+			// an integer millisecond count must write its microsecond slot out to be usable in an expression tree
+			// at all. Folding a lone argument only, that whole factory was unreachable on this target.
+			return Verify.VerifyWithoutLinqToDBAsync(
+				ComponentSource("r.InSeconds == TimeSpan.FromMilliseconds(1500, 0)", expectDiagnostic: true),
+				ReferenceAssemblies.Net.Net90,
+				Expected("InSeconds", "seconds", "00:00:01.5000000", "can never match"));
+		}
+
+		[Test]
+		public Task DoesNotReportRepresentableComponentFactoryConstant()
+		{
+			// Paired with ReportsComponentFactoryConstant: same arity, only the millisecond slot varies, so a
+			// transposed or dropped component would fail one side or the other.
+			return Verify.VerifyWithoutLinqToDBAsync(
+				ComponentSource("r.InSeconds == TimeSpan.FromSeconds(1, 0, 0)", expectDiagnostic: false),
+				ReferenceAssemblies.Net.Net90);
+		}
+
 		[Test]
 		public Task ReportsSubMillisecondDoubleFactoryOnNet60()
 		{

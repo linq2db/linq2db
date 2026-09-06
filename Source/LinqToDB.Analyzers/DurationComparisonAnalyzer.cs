@@ -532,7 +532,52 @@ namespace LinqToDB.Analyzers
 
 				var scale = FactoryScale(method.Name);
 
-				return scale == 0L ? null : FromScaledArgument(invocation, scale, allowDouble: true, _netFxRoundingPossible);
+				if (scale == 0L)
+					return null;
+
+				// .NET 9 added component overloads - FromSeconds(1, 500) - and gave FromMilliseconds only a
+				// component form, so a single millisecond argument arrives with the microsecond parameter defaulted
+				// rather than alone. Both are read here; the single-argument form keeps the scaled path, which is
+				// the only one that has a double reading to carry.
+				return invocation.Arguments.Length == 1
+					? FromScaledArgument(invocation, scale, allowDouble: true, _netFxRoundingPossible)
+					: FromComponents(invocation, FactoryOffset(method.Name));
+			}
+
+			// The component parameters of every From* factory are a suffix of the constructor's own
+			// days-to-microseconds ladder, starting at the factory's own unit, so they fold through FromParts.
+			static Candidate? FromComponents(IInvocationOperation invocation, int offset)
+			{
+				if (offset < 0)
+					return null;
+
+				var parts = new long[6];
+
+				foreach (var argument in invocation.Arguments)
+				{
+					if (argument.Parameter is null
+						|| offset + argument.Parameter.Ordinal >= parts.Length
+						|| argument.Value.ConstantValue is not { HasValue: true, Value: { } raw }
+						|| !TryToInt64(raw, out parts[offset + argument.Parameter.Ordinal]))
+					{
+						return null;
+					}
+				}
+
+				return FromParts(parts);
+			}
+
+			static int FactoryOffset(string name)
+			{
+				return name switch
+				{
+					"FromDays"         => 0,
+					"FromHours"        => 1,
+					"FromMinutes"      => 2,
+					"FromSeconds"      => 3,
+					"FromMilliseconds" => 4,
+					_                  => -1,
+				};
 			}
 
 			static long FactoryScale(string name)
