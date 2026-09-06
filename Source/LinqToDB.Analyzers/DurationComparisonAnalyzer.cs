@@ -26,6 +26,7 @@ namespace LinqToDB.Analyzers
 		const string TimeSpanMetadataName          = "System.TimeSpan";
 		const string EnumerableMetadataName        = "System.Linq.Enumerable";
 		const string QueryableMetadataName         = "System.Linq.Queryable";
+		const string HalfMetadataName              = "System.Half";
 
 		const long TicksPerMicrosecond   = 10L;
 		const int  MaxResolutionDepth    = 8;
@@ -67,7 +68,8 @@ namespace LinqToDB.Analyzers
 					timeSpan,
 					expressionOfT,
 					startContext.Compilation.GetTypeByMetadataName(EnumerableMetadataName),
-					startContext.Compilation.GetTypeByMetadataName(QueryableMetadataName));
+					startContext.Compilation.GetTypeByMetadataName(QueryableMetadataName),
+					startContext.Compilation.GetTypeByMetadataName(HalfMetadataName));
 
 				startContext.RegisterOperationAction(analyzer.AnalyzeBinary, OperationKind.Binary);
 			});
@@ -136,9 +138,11 @@ namespace LinqToDB.Analyzers
 			readonly INamedTypeSymbol? _enumerable;
 			readonly INamedTypeSymbol? _queryable;
 
-			// TimeSpan.FromMicroseconds and the switch away from whole-millisecond rounding both arrived in .NET 7,
-			// so its presence says the target cannot be .NET Framework and that reading does not apply. Its absence
-			// covers netstandard and .NET 6 and below, where the target may be .NET Framework and it still might.
+			// Whole-millisecond rounding is .NET Framework's alone: .NET 5 already truncates the double tick product
+			// (Interval(double, double) -> IntervalFromDoubleTicks), so the reading only applies where the target can
+			// be netfx. TimeSpan.FromMicroseconds arrived in .NET 7 and System.Half in .NET 5, and neither exists on
+			// netfx or netstandard - so either one present rules netfx out, and their absence leaves netstandard and
+			// netfx itself, where it still might round.
 			readonly bool _netFxRoundingPossible;
 
 			public CompilationAnalyzer(
@@ -147,7 +151,8 @@ namespace LinqToDB.Analyzers
 				INamedTypeSymbol  timeSpan,
 				INamedTypeSymbol  expressionOfT,
 				INamedTypeSymbol? enumerable,
-				INamedTypeSymbol? queryable)
+				INamedTypeSymbol? queryable,
+				INamedTypeSymbol? half)
 			{
 				_durationAttribute = durationAttribute;
 				_durationUnit      = durationUnit;
@@ -156,7 +161,7 @@ namespace LinqToDB.Analyzers
 				_enumerable        = enumerable;
 				_queryable         = queryable;
 
-				_netFxRoundingPossible = timeSpan.GetMembers("FromMicroseconds").IsEmpty;
+				_netFxRoundingPossible = timeSpan.GetMembers("FromMicroseconds").IsEmpty && half is null;
 			}
 
 			// OperationKind.Binary fires on every binary operation in the compilation, so the gates run cheapest
