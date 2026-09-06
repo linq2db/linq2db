@@ -662,6 +662,23 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotReportForEachOverAnArrayWrittenThroughAnElement()
+		{
+			// Paired with ReportsForEachWhenEveryCandidateFails: same array-creation collection, one element
+			// assignment added. The write makes that reference an IArrayElementReferenceOperation, which is not an
+			// admitted read position, so the sweep refuses the local rather than folding its initializer. Relaxing
+			// it makes the rule name 1.5 seconds against code that compares 2 - a duration the source never asks
+			// for, and the one direction this rule may not fail in.
+			return Verify.VerifyAsync(Source("""
+						var bounds = new[] { TimeSpan.FromSeconds(1.5) };
+						bounds[0] = TimeSpan.FromSeconds(2);
+
+						foreach (var bound in bounds)
+							q.Where(r => r.InSeconds == bound);
+				"""));
+		}
+
+		[Test]
 		public Task DoesNotReportTwoParameterLambdaParameter()
 		{
 			// 'b' comes from the second sequence, so resolving the invocation's first argument would report a
