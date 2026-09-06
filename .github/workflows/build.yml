@@ -73,6 +73,42 @@ jobs:
             'VERSION_ARGS=-p:VersionSuffix=-dev.${{ github.run_number }}' | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
+      # Avoids intermittent CS2012 (dotnet/roslyn#77538), where one project is compiled twice
+      # concurrently into the same obj path and the second write loses. Pre-building serialises the
+      # projects it happens to, so the solution build finds them current and skips compiling them.
+      # Properties must match the solution build - a VERSION_ARGS mismatch recompiles them and the
+      # race is back.
+      #
+      # The Roslyn components are the clearest case. Being single-TFM, their obj path carries no
+      # target-framework segment, so two builds write the same file: the plain one, and the
+      # TargetFramework-pinned inner build that a multi-TFM consumer negotiates. That set is
+      # CodeGenerators plus everything pinned by Source/Analyzers.Common.props; a new Roslyn
+      # component belongs here.
+      #
+      # LinqToDB is here for a different reason and was added after the first three did not stop it:
+      # it is the most-referenced project in the repo, so many consumers request the same
+      # TargetFramework=net8.0 instance at once, and two nodes can start it before either registers.
+      # Observed as CS2012 on .build/obj/LinqToDB/Release/net8.0/linq2db.dll, on a PR touching only
+      # Azure YAML.
+      - name: Build hot-spot projects
+        shell: pwsh
+        run: |
+          $common = @(
+            '--configuration', '${{ env.RELEASE_CONFIGURATION }}'
+            '-p:RunAnalyzersDuringBuild=false'
+            '-p:RunApiAnalyzersDuringBuild=false'
+          ) + ('${{ env.VERSION_ARGS }}' -split ' ' | Where-Object { $_ })
+
+          foreach ($project in @(
+            'Source/CodeGenerators/CodeGenerators.csproj'
+            'Source/LinqToDB.Analyzers/LinqToDB.Analyzers.csproj'
+            'Source/LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj'
+            'Source/LinqToDB/LinqToDB.csproj'
+          )) {
+            dotnet build $project @common
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
       # Analyzers stay off, matching build.yml's `with_analyzers: false` until dotnet/roslyn#80621
       # ships. The API analyzers are a release-prep gate (/release-publicapi), not a per-PR one.
       - name: Build solution
@@ -91,6 +127,19 @@ jobs:
       - name: Verify analyzer delivery metadata
         shell: pwsh
         run: ./Build/Azure/scripts/verify-analyzer-delivery.ps1 -PackagesDir .build/package/release -NoAzdoLogs
+
+      # linq2db.cli, the 14 T4 packages and the LINQPad 5 .lpx physically redistribute third-party
+      # binaries under an MIT license expression that covers only linq2db's own code. `check` catches a
+      # hand-edited or un-regenerated notices file; `verify` opens the packed output and fails on a
+      # bundled binary that no notices file accounts for - which is how a new transitive dependency
+      # announces itself. See Build/licenses/README.md and linq2db/linq2db#5731.
+      - name: Check third-party notices are up to date
+        shell: pwsh
+        run: ./Build/Azure/scripts/third-party-notices.ps1 -Action check -NoAzdoLogs
+
+      - name: Verify third-party notices cover the packed output
+        shell: pwsh
+        run: ./Build/Azure/scripts/third-party-notices.ps1 -Action verify -PackagesDir .build/package/release -LpxDir .build/lpx -NoAzdoLogs
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -38,6 +38,16 @@ This nuget package doesn't bundle database client libraries. LINQPad downloads t
 
 The LINQPad 5 `.lpx` plugin is unaffected by any of this — it ships every client in the bundle.
 
+## Licensing
+
+The MIT license this package declares covers LINQ to DB's own code. The nuget package itself bundles no
+third-party binary — the database clients above arrive as ordinary NuGet dependencies under their own
+licenses.
+
+The LINQPad 5 `.lpx` plugin is different: it bundles every client, so it redistributes third-party
+software directly. Its `THIRD-PARTY-NOTICES.txt`, inside the plugin archive, lists every bundled
+component and reproduces its terms.
+
 ## macOS
 
 Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. Everything else uses the macOS build of its client, including IBM DB2 and Informix. SQL Server spatial values (`geometry`, `geography`, `hierarchyid`) are handled by the managed [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) implementation, as Microsoft's package ships its native spatial library for Windows only.

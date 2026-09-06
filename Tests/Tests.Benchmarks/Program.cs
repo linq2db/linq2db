@@ -29,6 +29,17 @@ namespace LinqToDB.Benchmarks
 				return;
 			}
 
+			// Same fallback for the parameter-reuse benchmarks.
+			//
+			// Usage: manual-paramreuse [iterations] [warmups]
+			if (args.Length > 0 && args[0] == "manual-paramreuse")
+			{
+				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 2000;
+				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 200;
+				ParameterReuseBenchmark.RunManually(warmups, iters);
+				return;
+			}
+
 			// Manual render-pipeline benchmark runner (branch-vs-master). Tag the run via the
 			// RENDER_BENCH_TAG env var. Usage: manual-render [iterations] [warmups]
 			if (args.Length > 0 && args[0] == "manual-render")

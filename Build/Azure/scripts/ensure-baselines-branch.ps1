@@ -13,8 +13,8 @@ been deleting the empty branch and which cost a fresh agent acquisition - 78 min
 build 23009 - for 0.3 min of work.
 
 What is left here is the one case the legs cannot handle: a branch left by an earlier
-run of the same PR that has fallen behind baselines master. The legs clone master and
-would rebase their commit onto that stale base, so it is rebased onto master here,
+run of the same PR that has fallen behind baselines master. Every leg then bases its
+clone on that stale branch (checkout-baselines.ps1), so it is rebased onto master here,
 once, before any leg starts.
 
 Reads the auth token from the GITHUB_TOKEN environment variable (= BASELINES_GH_PAT).
@@ -36,7 +36,12 @@ param(
 
 $orgName       = "linq2db"
 $baselinesRepo = "linq2db.baselines"
-$baselinesRepoUrl = "https://${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
+# The reads below pass -c http.proactiveAuth=basic because git sends credentials only after a 401
+# challenge, and github never challenges an anonymous read of a public repository - so without it the
+# token here is inert and the read is subject to github's unauthenticated-download throttle. The
+# credential also has to be complete - user:token, not token alone, or git asks for the password it is
+# missing.
+$baselinesRepoUrl = "https://x-access-token:${Env:GITHUB_TOKEN}@github.com/${orgName}/${baselinesRepo}.git"
 
 # Resolve the branch name from the PR id
 if ($PrId) {
@@ -50,7 +55,7 @@ function Get-RemoteHash([string]$ref) {
     # @(...) keeps a single-line answer an array. Without it PowerShell hands back a bare string for
     # one match and a string[] for several, so a length test means "characters" in the first case and
     # "lines" in the second — and a legitimate multi-ref answer reads as "not found".
-    $out = @(git ls-remote --heads $baselinesRepoUrl $ref)
+    $out = @(git -c http.proactiveAuth=basic ls-remote --heads $baselinesRepoUrl $ref)
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ls-remote for '${ref}' failed with code ${LASTEXITCODE}"
         exit 1
@@ -87,7 +92,7 @@ if (-not $branchHash) {
             Write-Host "Baselines branch already based on ${BaselinesMaster}, no rebase required"
         } else {
             Write-Host "Baselines head is ${branchHash} and the branch is '${status}', trying to rebase on current HEAD"
-            git clone $baselinesRepoUrl baselines
+            git clone -c http.proactiveAuth=basic $baselinesRepoUrl baselines
             if ($LASTEXITCODE -ne 0) {
                 Write-Host "Failed to clone baselines repository. Error code ${LASTEXITCODE}"
                 exit 1

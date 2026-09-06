@@ -1,6 +1,7 @@
 #!/bin/bash
 
-echo "##vso[task.setvariable variable=TZ]CET"
+. "$(dirname "$0")/ci-setvar.sh"
+ci_setvar TZ CET
 
 # Oracle 11g (host port 1521) and 12c (host port 1522) run as concurrent lanes in one job.
 # Each Oracle listens on 1521 inside its container; the host port differentiates them.

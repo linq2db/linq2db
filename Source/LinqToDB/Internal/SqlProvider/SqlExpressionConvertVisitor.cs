@@ -1060,7 +1060,158 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(Optimize(NotifyReplaced(newElement, element)));
 
+			// After the provider had its say, so a renamed function is normalized under the name it will be
+			// emitted with. Idempotent - a re-visit of the rewritten node finds nothing left to change.
+			newElement = NormalizeWindowOrderBy(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(newElement));
+
 			return element;
+		}
+
+		protected internal override IQueryElement VisitSqlFunctionArgument(SqlFunctionArgument element)
+		{
+			var newElement = (SqlFunctionArgument)base.VisitSqlFunctionArgument(element);
+
+			// Arguments are value positions, so a predicate passed as one (COUNT(x.Id == 2), LAG(x.Id == 2), ...)
+			// has to be folded into a value, like ORDER BY / PARTITION BY items are.
+			//
+			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false, forceConvert : !SqlProviderFlags.SupportsPredicateInFunctionValuePosition);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Modify(wrapped, newElement.Suffix);
+				}
+				else
+				{
+					newElement = new SqlFunctionArgument(wrapped, newElement.Modifier, newElement.Suffix);
+				}
+			}
+
+			return newElement;
+		}
+
+		/// <summary>
+		/// Brings a window's <c>ORDER BY</c> to a form every dialect accepts.
+		/// </summary>
+		/// <remarks>
+		/// A sort key that holds the same value for every row orders nothing - all rows tie - so it is dropped, the
+		/// same treatment <see cref="BasicSqlBuilder.BuildOrderByClause"/> gives a statement's <c>ORDER BY</c>. That
+		/// alone settles the dialects that refuse a constant there (SQL Server and SAP HANA reject any constant;
+		/// MySQL 8 reads an integer one as a legacy column position), because none of them ever sees one inside
+		/// <c>OVER</c>. Only that ordering is rewritten here: the same node's <c>WITHIN GROUP</c> and <c>KEEP</c>
+		/// order lists are built elsewhere and still carry a constant through verbatim.
+		/// <para>
+		/// Dropping can empty the clause, which is a problem of its own: on some providers a ranking function needs
+		/// an <c>ORDER BY</c>, and so does a frame. <see cref="IsWindowOrderByRequired"/> says
+		/// when that is the case, and the first key the caller wrote comes back wrapped by
+		/// <see cref="WrapWindowOrderByConstant"/> - keeping the value, the direction and the NULLS position it was
+		/// given - rather than being replaced by an invented one. Only a window that arrived with no <c>ORDER BY</c>
+		/// at all has nothing to carry over, and that one gets a plain <c>1</c>; <c>Sql.Window.DefineWindow</c> with
+		/// only a <c>PARTITION BY</c> reaches a ranking function that way.
+		/// </para>
+		/// </remarks>
+		protected ISqlExpression NormalizeWindowOrderBy(SqlExtendedFunction func)
+		{
+			if (!func.IsWindowFunction)
+				return func;
+
+			var orderBy = func.OrderBy;
+
+			var kept = orderBy == null || orderBy.TrueForAll(static i => !QueryHelper.IsConstantFast(i.Expression))
+				? orderBy
+				: orderBy.Where(static i => !QueryHelper.IsConstantFast(i.Expression)).ToList();
+
+			if (kept is not { Count: > 0 } && IsWindowOrderByRequired(func))
+			{
+				// Where the stand-in cannot be parsed, the caller's key is what keeps the clause alive, so the node
+				// is left exactly as it came - which is also what keeps this rewrite a fixed point, since a constant
+				// handed back unwrapped would be dropped again on the next pass.
+				if (orderBy is { Count: > 0 } && !CanWrapWindowOrderByConstant)
+					return func;
+
+				// Every row ties on a constant, so the first key decides the whole clause - the ones behind it never
+				// get to break a tie, and are the only part actually dropped here.
+				var original = orderBy is { Count: > 0 } ? orderBy[0] : null;
+
+				kept =
+				[
+					new SqlWindowOrderItem(
+						WrapWindowOrderByConstant(original?.Expression ?? new SqlValue(1)),
+						original?.IsDescending  ?? false,
+						original?.NullsPosition ?? Sql.NullsPosition.None),
+				];
+			}
+
+			if (ReferenceEquals(kept, orderBy))
+				return func;
+
+			return func.WithOrderBy(kept is { Count: > 0 } ? kept : null);
+		}
+
+		/// <summary>
+		/// Whether the provider insists on an <c>ORDER BY</c> inside this function's <c>OVER</c> clause. The default
+		/// is <see langword="false"/>: standard SQL leaves the ordering optional, and most providers follow it.
+		/// </summary>
+		/// <remarks>
+		/// Two things are answered here. <c>ROW_NUMBER</c>, from the flag that already states this very thing for the
+		/// row-number paging emulation. And a frame whose boundaries are read off the sort key - a <c>GROUPS</c> frame,
+		/// or a <c>RANGE</c> frame with a value offset - which the standard defines in terms of that key, so every
+		/// dialect enforces it and no provider may opt out. Which <em>functions</em> carry the requirement is another
+		/// matter entirely: providers disagree, so that part is left to the overrides, and PostgreSQL, SQLite, DuckDB,
+		/// Firebird, YDB and MySQL 8 add nothing at all. YDB in particular must stay that way, since it cannot parse a
+		/// scalar subquery as a sort key - it is safe here only because it rejects <c>RANGE</c> and <c>GROUPS</c> frames
+		/// at translation, so the frame arm below can never fire for it.
+		/// </remarks>
+		protected virtual bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> (!SqlProviderFlags.IsRowNumberWithoutOrderBySupported && func.FunctionName is "ROW_NUMBER")
+				|| func.FrameClause is { FrameType: SqlFrameClause.FrameTypeKind.Groups }
+					or { FrameType: SqlFrameClause.FrameTypeKind.Range, Start.BoundaryType: SqlFrameBoundary.FrameBoundaryType.Offset }
+					or { FrameType: SqlFrameClause.FrameTypeKind.Range, End.BoundaryType  : SqlFrameBoundary.FrameBoundaryType.Offset };
+
+		/// <summary>
+		/// The window functions no provider will order implicitly: a rank has to know what it is ranking, and
+		/// <c>LAG</c>/<c>LEAD</c> have to know which row counts as the neighbour. Every provider that enforces an
+		/// <c>ORDER BY</c> requirement at all covers at least these.
+		/// </summary>
+		/// <remarks>
+		/// <c>NTILE</c> and <c>FIRST_VALUE</c>/<c>LAST_VALUE</c> are deliberately left out, because providers genuinely
+		/// disagree on them: SQL Server and SAP HANA demand an ordering for all three, Oracle, DB2 and Informix for
+		/// <c>NTILE</c> alone, ClickHouse for <c>NTILE</c> and nothing else, MariaDB for none of them. So is
+		/// <c>ROW_NUMBER</c>, which <see cref="IsWindowOrderByRequired"/> answers from a provider flag. Each override
+		/// adds the ones its own dialect needs.
+		/// </remarks>
+		protected static bool IsOrderDependentWindowFunction(string functionName)
+			=> functionName is "RANK" or "DENSE_RANK" or "PERCENT_RANK" or "CUME_DIST" or "LAG" or "LEAD";
+
+		/// <summary>
+		/// Whether the scalar subquery <see cref="WrapWindowOrderByConstant"/> builds is parseable as a window sort
+		/// key here. DuckDB is the exception: it takes one in a plain window but not inside a <c>RANGE</c> frame,
+		/// and it accepts the bare constant there instead, so it keeps the caller's key rather than the stand-in.
+		/// </summary>
+		protected virtual bool CanWrapWindowOrderByConstant => true;
+
+		/// <summary>
+		/// Restates a constant window sort key as a scalar subquery, for a provider that demands an <c>ORDER BY</c>
+		/// but refuses a constant one.
+		/// </summary>
+		/// <remarks>
+		/// <c>(SELECT 1)</c> is constant in value but is not a constant <em>expression</em>, and that is the
+		/// distinction the strict dialects draw: it is the documented T-SQL spelling of "no meaningful ordering",
+		/// and Oracle and SAP HANA take it too, once their builders supply the dummy <c>FROM</c> a table-less query
+		/// needs there. Wrapping rather than substituting keeps whatever the caller passed - <c>OrderBy(5)</c> stays
+		/// a 5, and a captured local stays the parameter it became instead of vanishing from the command.
+		/// <see cref="SelectQuery.DoNotRemove"/> stops query optimization from folding the subquery away.
+		/// </remarks>
+		protected virtual ISqlExpression WrapWindowOrderByConstant(ISqlExpression expression)
+		{
+			var query = new SelectQuery { DoNotRemove = true };
+
+			query.Select.AddNewColumn(expression);
+
+			return query;
 		}
 
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
@@ -1260,6 +1411,27 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
+		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		{
+			var newElement = (SqlWindowOrderItem)base.VisitSqlWindowOrderItem(element);
+
+			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Modify(wrapped);
+				}
+				else
+				{
+					newElement = new SqlWindowOrderItem(wrapped, newElement.IsDescending, newElement.NullsPosition);
+				}
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
@@ -1306,11 +1478,19 @@ namespace LinqToDB.Internal.SqlProvider
 			return WrapBooleanExpression(newItem, includeFields: false);
 		}
 
+		protected override ISqlExpression VisitSqlExtendedFunctionPartition(SqlExtendedFunction function, ISqlExpression partition)
+		{
+			var newItem = base.VisitSqlExtendedFunctionPartition(function, partition);
+
+			return WrapBooleanExpression(newItem, includeFields: false, forceConvert: !SqlProviderFlags.SupportsPredicateInFunctionValuePosition);
+		}
+
 		/// <summary>
 		/// A cast is re-derived on each visit rather than replayed from the transformation map: its conversion is
 		/// frequently lowered and then reduced further, so a replayed intermediate would resurface in its un-reduced form.
 		/// </summary>
 		protected override bool IsReplaceable(IQueryElement element) => element is not SqlCastExpression;
+
 		/// <remarks>
 		/// Over integral storage an interval is its stored amount, so the node simply disappears here. The read path
 		/// turns the amount back into a <see cref="TimeSpan"/> through the operand's column descriptor, which
@@ -2001,37 +2181,9 @@ namespace LinqToDB.Internal.SqlProvider
 			};
 		}
 
-		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
-		{
-			return element;
-		}
+		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element) => element;
 
-		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func)
-		{
-			switch (func.FunctionName)
-			{
-				case "MAX":
-				case "MIN":
-				{
-					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
-					{
-						if (func.Arguments[0].Expression is not ISqlPredicate predicate)
-						{
-							predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
-						}
-
-						var argument = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
-						var newFunc  = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
-						newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
-						return newFunc;
-					}
-
-					break;
-				}
-			}
-
-			return func;
-		}
+		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func) => func;
 
 		public virtual ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{

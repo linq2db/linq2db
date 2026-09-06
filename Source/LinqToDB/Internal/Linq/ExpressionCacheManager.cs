@@ -168,9 +168,16 @@ namespace LinqToDB.Internal.Linq
 		/// <summary>
 		/// Registers parameter entry in cache. Searches for duplicates and registers them.
 		/// </summary>
-		/// <param name="paramExpr"></param>
-		/// <param name="paramEntry"></param>
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, out int finalParameterId)
+		/// <param name="paramExpr">Expression the parameter value is read from.</param>
+		/// <param name="paramEntry">Cache entry being registered.</param>
+		/// <param name="evaluator">Evaluates an occurrence to its current value, used to confirm that two
+		/// occurrences agree before they share a parameter. <see langword="null"/> when no evaluator is
+		/// available, in which case structurally equal occurrences are shared unchecked.</param>
+		/// <param name="allowNameLookup">Whether the by-parameter-path-name lookup may run. It compares
+		/// occurrences that are <i>not</i> structurally equal, which only makes sense for scalar values.</param>
+		/// <param name="finalParameterId">Id of the parameter to use - an existing one when a duplicate was
+		/// found, otherwise <paramref name="paramEntry"/>'s own.</param>
+		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry paramEntry, Func<Expression, object?>? evaluator, bool allowNameLookup, out int finalParameterId)
 		{
 			void EnsureEvaluated(ParameterCacheEntry localEntry, Expression expr)
 			{
@@ -178,6 +185,29 @@ namespace LinqToDB.Internal.Linq
 					return;
 
 				localEntry.SetEvaluatedValue(evaluator(expr));
+			}
+
+			// Confirming that two occurrences agree means running the user's own code at build time. When
+			// that throws, the pair simply is not proven equal: each occurrence keeps its own parameter and
+			// the original exception still surfaces later, from the accessor that actually needs the value.
+			// Letting the throw escape instead would be read by the caller as "this is not a parameter" and
+			// resurface as "the LINQ expression could not be converted to SQL", hiding the real cause.
+			bool TryProveEqual(ParameterCacheEntry firstEntry, Expression firstExpr, ParameterCacheEntry secondEntry, Expression secondExpr)
+			{
+				if (evaluator == null)
+					return false;
+
+				try
+				{
+					EnsureEvaluated(firstEntry,  firstExpr);
+					EnsureEvaluated(secondEntry, secondExpr);
+				}
+				catch (Exception ex) when (ex is not (OperationCanceledException or OutOfMemoryException))
+				{
+					return false;
+				}
+
+				return Equals(firstEntry.EvaluatedValue, secondEntry.EvaluatedValue);
 			}
 
 			_parameterEntries ??= new();
@@ -191,6 +221,17 @@ namespace LinqToDB.Internal.Linq
 				    && ExpressionEqualityComparer.Instance.Equals(entry.ItemAccessor, paramEntry.ItemAccessor)
 				    && ExpressionEqualityComparer.Instance.Equals(entry.DbDataTypeAccessor, paramEntry.DbDataTypeAccessor))
 				{
+					// Structural equality alone does not mean both occurrences produce the same value: a
+					// method call or an impure getter can return something different each time. Sharing a
+					// parameter in that case leaves the duplicate check below permanently unsatisfied, so
+					// the cached query is rejected on every execution while the plan still carries a single
+					// parameter - the second occurrence silently reuses the first value and the accessors
+					// are re-evaluated more times on each rebuild. Confirm the values agree first, exactly
+					// as the by-name-and-value lookup below already does. Without an evaluator there is nothing
+					// to compare with, so structurally equal occurrences are still shared unchecked.
+					if (evaluator != null && !ReferenceEquals(param, paramExpr) && !TryProveEqual(entry, param, paramEntry, paramExpr))
+						continue;
+
 					// found duplicate, we have to register value comparison
 
 					finalParameterId = entry.ParameterId;
@@ -206,27 +247,22 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			// find duplicates by name and value
-			if (evaluator != null)
+			if (allowNameLookup && evaluator != null)
 			{
 				var paramName = BuildParameterPath(paramExpr);
 				if (paramName != null)
 				{
 					foreach (var (param, entry) in _parameterEntries.Values)
 					{
-						if (CanBeDuplicate(paramEntry, paramExpr, paramName, param, entry, BuildParameterPath(param)))
+						if (CanBeDuplicate(paramEntry, paramExpr, paramName, param, entry, BuildParameterPath(param))
+							&& TryProveEqual(entry, param, paramEntry, paramExpr))
 						{
-							EnsureEvaluated(entry, param);
-							EnsureEvaluated(paramEntry, paramExpr);
+							// found duplicate, we have to register value comparison
 
-							if (Equals(entry.EvaluatedValue, paramEntry.EvaluatedValue))
-							{
-								// found duplicate, we have to register value comparison
+							finalParameterId = entry.ParameterId;
+							RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
 
-								finalParameterId = entry.ParameterId;
-								RegisterDuplicateCheck(entry.ParameterId, entry.ClientValueGetter, paramEntry.ClientValueGetter);
-
-								return;
-							}
+							return;
 						}
 					}
 				}

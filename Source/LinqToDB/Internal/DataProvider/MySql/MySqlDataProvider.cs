@@ -82,7 +82,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// MySQL/MariaDB sort NULL as the smallest value (ascending => NULLS FIRST, descending => NULLS LAST).
 			SqlProviderFlags.DefaultNullsOrdering = NullsDefaultOrdering.Smallest;
 
-			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = version == MySqlVersion.MariaDB10
+				? new MariaDBSqlOptimizer(SqlProviderFlags)
+				: new MySqlSqlOptimizer(SqlProviderFlags);
 
 			// configure provider-specific data readers
 			if (Adapter.GetMySqlDecimalMethodName != null)

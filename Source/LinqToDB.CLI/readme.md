@@ -14,6 +14,7 @@
   - [Usage Examples](#usage-examples)
     - [Generate SQLite database model in current folder](#generate-sqlite-database-model-in-current-folder)
     - [Generate SQLite database model using response file](#generate-sqlite-database-model-using-response-file)
+- [Licensing](#licensing)
 
 ## Installation
 
@@ -206,3 +207,18 @@ Scaffold configs (response files) are convenient in many ways:
 - you can store scaffolding options for your project in source control and share with other developers
 - with many options it is hard to work with command line
 - some options not available from CLI or hard to use due to CLI nature (e.g. various issues with escaping of parameters)
+
+## Licensing
+
+The MIT license this package declares covers LINQ to DB's own code.
+
+Unlike a library package, a .NET tool does not resolve its dependencies at install time — it carries
+them. `linq2db.cli` therefore ships the database clients for every provider it supports, plus the
+runtime libraries they need, as files inside the package. Those components are third-party software
+under their own licenses, not under the MIT license above.
+
+Every one of them is listed, with its license reproduced in full, in `THIRD-PARTY-NOTICES.txt`. It is
+included at the root of the package and installed alongside the tool, so after
+`dotnet tool install -g linq2db.cli` you will find it next to `dotnet-linq2db` in the tool's store
+directory (`~/.dotnet/tools/.store/linq2db.cli.<rid>/<version>/linq2db.cli.<rid>/<version>/tools/<tfm>/<rid>/`
+on a default install).
