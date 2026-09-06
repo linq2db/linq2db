@@ -25,6 +25,7 @@ namespace Tests.Analyzers
 
 			class Row
 			{
+				[Column, Duration(DurationUnit.Day)]         public TimeSpan  InDays     { get; set; }
 				[Column, Duration(DurationUnit.Minute)]      public TimeSpan  InMinutes  { get; set; }
 				[Column, Duration(DurationUnit.Second)]      public TimeSpan  InSeconds  { get; set; }
 				[Column, Duration(DurationUnit.Millisecond)] public TimeSpan  InMillis   { get; set; }
@@ -222,6 +223,18 @@ namespace Tests.Analyzers
 				""");
 
 			return Verify.VerifyAsync(source, Expected("InMicros", "microseconds", "00:00:00.0000015", "can never match"));
+		}
+
+		[Test]
+		public Task ReportsHalfDayOnDayColumn()
+		{
+			// The last unit table row with no assertion anywhere, and the one the dogfood cannot reach: the only
+			// DurationUnit.Day in Tests/Linq is declared fluently, which no analyzer sees.
+			var source = Source("""
+						q.Where(r => {|#0:r.InDays == TimeSpan.FromHours(36)|});
+				""");
+
+			return Verify.VerifyAsync(source, Expected("InDays", "days", "1.12:00:00", "can never match"));
 		}
 
 		[Test]
@@ -568,6 +581,15 @@ namespace Tests.Analyzers
 			// side or the other - 1 would silence the positive, 100 would redden this.
 			return Verify.VerifyAsync(Source("""
 						q.Where(r => r.InMicros == TimeSpan.FromTicks(20));
+				"""));
+		}
+
+		[Test]
+		public Task DoesNotReportWholeDaysOnDayColumn()
+		{
+			// Paired with ReportsHalfDayOnDayColumn: 48 hours against 36, so only the day ratio separates them.
+			return Verify.VerifyAsync(Source("""
+						q.Where(r => r.InDays == TimeSpan.FromHours(48));
 				"""));
 		}
 
