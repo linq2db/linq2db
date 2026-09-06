@@ -21,6 +21,15 @@ type FSharpMemberTranslator private () =
 
     let isOption (t: Type) = FSharpOptionSupport.IsOption t
 
+    // The FSharp.Core module functions are static one-argument calls on these two types:
+    // Option.isSome/isNone/get -> OptionModule.IsSome/IsNone/GetValue, and the ValueOption equivalents.
+    // Checking the declaring type keeps a user-defined static of the same name from being claimed.
+    let isOptionModuleCall (mc: MethodCallExpression) =
+        mc.Arguments.Count = 1 && isOption mc.Arguments.[0].Type &&
+        (match mc.Method.DeclaringType with
+         | null -> false
+         | t    -> t.Namespace = "Microsoft.FSharp.Core" && (t.Name = "OptionModule" || t.Name = "ValueOption"))
+
     // IS [NOT] NULL on the operand's column placeholder; declines (null) when the operand isn't a column.
     let translateIsNull (isNot: bool) (ctx: ITranslationContext) (operand: Expression) (basedOn: Expression) : Expression | null =
         match ctx.Translate(operand, TranslationFlags.Sql) with
@@ -48,15 +57,20 @@ type FSharpMemberTranslator private () =
         // property form: x.Opt.IsSome / .IsNone / .Value
         | :? MemberExpression as m when not (isNull m.Expression) && isOption (nonNull m.Expression).Type ->
             match m.Member.Name with
-            | "IsSome" -> translateIsNull true  ctx (nonNull m.Expression) expr
-            | "IsNone" -> translateIsNull false ctx (nonNull m.Expression) expr
-            | "Value"  -> translateValue ctx (nonNull m.Expression) m.Type
-            | _        -> null
+            // voption also exposes the generated case testers IsValueSome / IsValueNone
+            | "IsSome" | "IsValueSome" -> translateIsNull true  ctx (nonNull m.Expression) expr
+            | "IsNone" | "IsValueNone" -> translateIsNull false ctx (nonNull m.Expression) expr
+            | "Value"                  -> translateValue ctx (nonNull m.Expression) m.Type
+            | _                        -> null
         // getter-method form: FSharpOption.get_IsSome(x.Opt) (static) / x.Opt.get_Value() (instance)
         | :? MethodCallExpression as mc ->
             match mc.Method.Name with
             | "get_IsSome" when mc.Arguments.Count = 1 && isOption mc.Arguments.[0].Type -> translateIsNull true  ctx mc.Arguments.[0] expr
             | "get_IsNone" when mc.Arguments.Count = 1 && isOption mc.Arguments.[0].Type -> translateIsNull false ctx mc.Arguments.[0] expr
             | "get_Value"  when not (isNull mc.Object) && isOption (nonNull mc.Object).Type -> translateValue ctx (nonNull mc.Object) mc.Type
+            // module-function form: Option.isSome x / ValueOption.get x / ...
+            | "IsSome"   when isOptionModuleCall mc -> translateIsNull true  ctx mc.Arguments.[0] expr
+            | "IsNone"   when isOptionModuleCall mc -> translateIsNull false ctx mc.Arguments.[0] expr
+            | "GetValue" when isOptionModuleCall mc -> translateValue ctx mc.Arguments.[0] mc.Type
             | _ -> null
         | _ -> null
