@@ -190,6 +190,7 @@ jobs:
 # All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
 # databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
         - name: b_ClickHouse
+          gh_linux: 'true'
           title: ClickHouse (all providers)
           config_linux: clickhouse
           script_linux_global: clickhouse.sh

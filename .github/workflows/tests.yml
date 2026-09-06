@@ -124,8 +124,8 @@ jobs:
                   continue
               matched += 1
               # The other half of the split in test-jobs.yml: Azure skips entries marked gh_linux, so
-              # only those run here. An entry without it stays on Azure - today the three Oracle legs
-              # and ClickHouse, which still fail in this environment.
+              # only those run here. An entry without it stays on Azure - today the three Oracle legs,
+              # which Azure passes and this environment fails.
               if e.get('gh_linux') != 'true':
                   continue
               legs.append({
