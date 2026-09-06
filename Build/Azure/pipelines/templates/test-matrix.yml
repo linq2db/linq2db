@@ -4,7 +4,6 @@ parameters:
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
   linux_max_parallel: 0 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
   db_filter: '[all]' # fallback for a definition absent from `surfaces` below, e.g. default.yml
-  dispatch_github: false # when true, also hand the surface to GitHub Actions. See test-jobs.yml.
 
   # Which surface each Azure pipeline definition tests, keyed by definition name. Data rather than
   # the if-chain this replaced in testing.yml, for the reason #5848 moved entry selection here: an
@@ -121,7 +120,6 @@ jobs:
       # Required by test-jobs.yml, which does the per-entry filter test. Forgetting it is a compile
       # error there by design - see the note on its parameters block.
       db_filter: ${{ coalesce(parameters.surfaces[variables['Build.DefinitionName']], parameters.db_filter) }}
-      dispatch_github: ${{ parameters.dispatch_github }}
       test_matrix:
 # Two things decide the order legs run in, and which one you see depends on whether the job caps its
 # parallelism. Both were measured on build 23050, the first run to carry a cap.

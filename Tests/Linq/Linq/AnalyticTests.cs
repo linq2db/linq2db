@@ -1702,7 +1702,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle21Minus, TestProvName.AllSapHana])]
 		[Test]
 		public void Issue2842Test1([DataSources(
 			TestProvName.AllAccess,
@@ -1720,8 +1719,74 @@ namespace Tests.Linq
 						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2).ToValue()
 					};
 
-			query
+			var result = query.ToList();
+
+			// RANK() over the folded flag: false sorts first, so every non-matching row ties at rank 1 and only
+			// the single ID == 2 row ranks above it. An inverted fold puts that row at 1 and every other row at 2,
+			// and a constant fold flattens them all to 1 - so the count below is 1 only when the fold is correct.
+			result.Count(r => r.rank > 1).ShouldBe(1);
+		}
+
+		[Table]
+		sealed class Issue5123Left
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Group { get; set; }
+		}
+
+		[Table]
+		sealed class Issue5123Right
+		{
+			[PrimaryKey] public int     Id      { get; set; }
+			[Column]     public string? Payload { get; set; }
+		}
+
+		// #5123: a null check on the right side of a LEFT JOIN, used as an OVER (ORDER BY) key through the legacy
+		// Sql.Ext API. The predicate is a value position, so it has to be folded before it reaches ORDER BY.
+		//
+		// The issue's own repro null-checks a non-nullable int column, which relies on CS0472 being a warning in
+		// the reporter's project - it is an error here - so the same join-driven nullability is expressed through
+		// a nullable payload column: it is non-null in every seeded right row, so the check is false exactly for
+		// the rows the LEFT JOIN did not match.
+		[Test]
+		public void Issue5123Test([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.Firebird25,
+			TestProvName.AllMySql57,
+			ProviderName.SqlCe,
+			TestProvName.AllSybase)] string context)
+		{
+			var left = new[]
+			{
+				new Issue5123Left { Id = 1, Group = 1 },
+				new Issue5123Left { Id = 2, Group = 1 },
+				new Issue5123Left { Id = 3, Group = 1 },
+			};
+
+			// Only Id 1 has a match. The matched row therefore has the *lowest* Id, so the predicate ordering and
+			// the Id ordering disagree - which is what makes the assertion below able to detect a constant fold.
+			var right = new[] { new Issue5123Right { Id = 1, Payload = "matched" } };
+
+			using var db      = GetDataContext(context);
+			using var tLeft   = db.CreateLocalTable(left);
+			using var tRight  = db.CreateLocalTable(right);
+
+			var result = tLeft
+				.LeftJoin(tRight, (l, r) => l.Id == r.Id, (l, r) => new { Left = l, Right = r })
+				.Select(q => new
+				{
+					q.Left.Id,
+					RowNum = Sql.Ext.RowNumber().Over().PartitionBy(q.Left.Group).OrderBy(q.Right.Payload != null).ThenBy(q.Left.Id).ToValue()
+				})
+				.OrderBy(r => r.Id)
 				.ToList();
+
+			// false sorts before true, so the two unmatched rows (Ids 2 and 3) are numbered first and the matched
+			// row (Id 1) last. Both failure modes collapse the ordering to the ThenBy key and yield 1/2/3 by Id
+			// instead: an inverted fold puts Id 1 first, and a constant one drops the key entirely.
+			result.Single(r => r.Id == 2).RowNum.ShouldBe(1);
+			result.Single(r => r.Id == 3).RowNum.ShouldBe(2);
+			result.Single(r => r.Id == 1).RowNum.ShouldBe(3);
 		}
 
 		[Test]
