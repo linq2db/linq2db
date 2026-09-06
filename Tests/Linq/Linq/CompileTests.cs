@@ -929,6 +929,37 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void WrapperWithLiteralArgumentTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent.Where(p => p.ParentID >= id).TakeWrapper(2));
+
+			using var db = GetDataContext(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(query(db, 1).ToList(), Has.Count.EqualTo(2));
+				Assert.That(query(db, 1).ToList(), Has.Count.EqualTo(2));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void WrapperWithCapturedValueArgumentIsNotSupportedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var take  = 1;
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>((db, id) =>
+				db.Parent.Where(p => p.ParentID >= id).TakeWrapper(take));
+
+			using var db = GetDataContext(context);
+
+			// Expanding the wrapper invokes it, so a value argument is folded to a literal and baked into the
+			// cached tree, where nothing reads it again - every later invocation would take the frozen value.
+			// Declined instead, which leaves the call for the builder to report. Supporting it needs the folded
+			// values in the compiled table's cache key, the way materialised dependent arguments already are.
+			Assert.That(() => query(db, 1).ToList(), Throws.InstanceOf<LinqToDBException>());
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
 		public void ClosureValueSurvivesRebalancedPredicateTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1051,6 +1082,15 @@ namespace Tests.Linq
 		// A user-defined pass-through is not on IsQueryable's declaring-type allowlist, but its IQueryable<T>
 		// return type is enough for CompileQuery to fold it into the compiled table anyway. Expose then
 		// expands it over its own source, so the argument-array reads inside it survive into the built tree.
+		// Takes a value rather than a lambda. The expansion invokes the wrapper, so such an argument is folded
+		// to a literal - safe when it already is one, and the reason a closure-backed one is declined.
+		public static IQueryable<TEntity> TakeWrapper<TEntity>(
+			this IQueryable<TEntity> source,
+			int                      count)
+		{
+			return source.Take(count);
+		}
+
 		public static IQueryable<TEntity> LoadWithWrapper<TEntity,TProperty>(
 			this IQueryable<TEntity>             source,
 			Expression<Func<TEntity,TProperty?>> selector)

@@ -565,7 +565,12 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			{
 				// A quote is left as it is: it evaluates to its own operand, so whatever the lambda closes over -
 				// the argument array included - stays inside it instead of being folded to a value.
-				if (args[i] is not UnaryExpression { NodeType: ExpressionType.Quote } && !IsCompilable(args[i]))
+				if (args[i] is UnaryExpression { NodeType: ExpressionType.Quote })
+					continue;
+
+				// Anything else is folded to a value by the invocation below and baked into the cached tree,
+				// where nothing reads it again - so only an already-literal argument can take part.
+				if (args[i] is not ConstantExpression)
 					return null;
 			}
 
