@@ -42,6 +42,19 @@ namespace Tests.Analyzers
 			fixedSource.Replace("\r\n", "\n", StringComparison.Ordinal),
 			TabIndent);
 
+		static Task RunMultiFile((string name, string content)[] sources, (string name, string content)[] fixedSources) =>
+			Verify.VerifyAsync(NormaliseNewlines(sources), NormaliseNewlines(fixedSources), TabIndent);
+
+		static (string name, string content)[] NormaliseNewlines((string name, string content)[] files)
+		{
+			var normalised = new (string name, string content)[files.Length];
+
+			for (var i = 0; i < files.Length; i++)
+				normalised[i] = (files[i].name, files[i].content.Replace("\r\n", "\n", StringComparison.Ordinal));
+
+			return normalised;
+		}
+
 		// A property's diagnostic is reported on the property while the analyzed block is the getter, which the
 		// SDK classifies as non-local and refuses to fix. `dotnet format` over the same code applies the fix, so
 		// the check is the harness being stricter than the product, not a defect - skip it for property cases.
@@ -200,6 +213,86 @@ namespace Tests.Analyzers
 				interface I
 				{
 					[Sql.Function("F", ServerSideOnly = true)]
+					int M();
+				}
+
+				class C : I
+				{
+					public int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Run(source, fixedSource);
+		}
+
+		// The same shape across TWO files, which is where the lightbulb and Fix-All can disagree: no single-tree
+		// rewrite reaches the interface, so the lightbulb offers a solution-level action while a document-scoped
+		// Fix-All has nothing to do and returns success. `dotnet format --diagnostics` goes through Fix-All, so
+		// that gap leaves sites silently unfixed. The SDK verifies both arms, which is what makes this one test
+		// cover them.
+		[Test]
+		public Task SetsNamedArgumentWhenTheInterfaceIsInAnotherFile()
+		{
+			var sources = new[]
+			{
+				("Interface.cs", Usings + """
+					interface I
+					{
+						[Sql.Function("F")]
+						int M();
+					}
+					"""),
+				("Implementation.cs", Usings + """
+					class C : I
+					{
+						public int {|L2DB1003:M|}() => throw new ServerSideOnlyException(nameof(M));
+					}
+					"""),
+			};
+
+			var fixedSources = new[]
+			{
+				("Interface.cs", Usings + """
+					interface I
+					{
+						[Sql.Function("F", ServerSideOnly = true)]
+						int M();
+					}
+					"""),
+				("Implementation.cs", Usings + """
+					class C : I
+					{
+						public int M() => throw new ServerSideOnlyException(nameof(M));
+					}
+					"""),
+			};
+
+			return RunMultiFile(sources, fixedSources);
+		}
+
+		// Same reason as the fixture above, one case further out: nothing is marked anywhere, so the remedy is
+		// add-attribute rather than set-named-argument. The marker still has to land on the interface member -
+		// a call bound to I reads I.M, and the attribute walk goes up and not back down, so marking C.M
+		// silences the rule while leaving that call client-evaluable.
+		[Test]
+		public Task AddsTheMarkerToTheInterfaceMemberWhenNothingIsMarked()
+		{
+			var source = Usings + """
+				interface I
+				{
+					int M();
+				}
+
+				class C : I
+				{
+					public int {|L2DB1003:M|}() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			var fixedSource = Usings + """
+				interface I
+				{
+					[ServerSideOnly]
 					int M();
 				}
 

@@ -301,12 +301,37 @@ namespace LinqToDB.Analyzers
 			return false;
 		}
 
+		/// <summary>
+		/// Where a NEW marker has to be written when nothing declares the member. A stub implementing an
+		/// interface member must be marked on the INTERFACE: the call binds the interface method, and the
+		/// attribute walk goes up and never back down, so marking the implementation silences the rule while
+		/// leaving that call client-evaluable - the shape <c>Sql.GroupBy</c> is. Returns <c>null</c> when the
+		/// member implements nothing, which is the ordinary case and where the reported member is itself the
+		/// right target.
+		/// <para>
+		/// Scoped to implemented interface members even though <see cref="DeclaresServerSideOnly"/> also walks
+		/// base classes: a call bound to a derived type reads the derived member's own attributes first, so
+		/// marking an <c>override</c> in place is already correct.
+		/// </para>
+		/// </summary>
+		public static ISymbol? FindInterfaceMarkerTarget(ISymbol member)
+		{
+			foreach (var implemented in EnumerateImplementedInterfaceMembers(member))
+				return implemented;
+
+			return null;
+		}
+
+		// Only Sql.ExpressionAttribute declares ServerSideOnly, so only it can take the set-named-argument
+		// remedy - narrower than DeclaredOn's marker set on purpose. A TableFunction-derived attribute is a
+		// marker in its own right and unconditionally, so a member carrying one is already declared and never
+		// reaches arm A; admitting it here would only offer a fix that emits ServerSideOnly = true on an
+		// attribute that has no such property.
 		static bool TryFindMarkerCapableAttributeOn(ISymbol member, Symbols symbols, out AttributeData? attribute)
 		{
 			foreach (var candidate in member.GetAttributes())
 			{
-				if (DerivesFrom(candidate.AttributeClass, symbols.ExpressionAttribute)
-					|| DerivesFrom(candidate.AttributeClass, symbols.TableFunctionAttribute))
+				if (DerivesFrom(candidate.AttributeClass, symbols.ExpressionAttribute))
 				{
 					attribute = candidate;
 					return true;

@@ -113,13 +113,19 @@ namespace LinqToDB.Analyzers
 							? RemedySetNamedArgument
 							: RemedyAddAttribute;
 
-						// The attribute to update can be declared on an implemented interface member, in another
-						// file. Pass its location through so the fix does not have to redo the interface walk.
-						var attributeReference = attribute?.ApplicationSyntaxReference;
+						// Where the fix has to write, which is neither always the reported member nor always in
+						// this file. Updating an existing argument targets the marker-capable attribute; adding a
+						// marker targets the implemented interface member's own declaration, because the call
+						// binds the interface method and the attribute walk goes up and not back down. Both can
+						// sit in another file, so the location travels with the diagnostic rather than making the
+						// fixer redo the interface walk.
+						var reference = hasAttribute
+							? attribute?.ApplicationSyntaxReference
+							: DeclaringReference(ServerSideOnlyContract.FindInterfaceMarkerTarget(member));
 
-						var additionalLocations = attributeReference is null
+						var additionalLocations = reference is null
 							? Array.Empty<Location>()
-							: new[] { Location.Create(attributeReference.SyntaxTree, attributeReference.Span) };
+							: new[] { Location.Create(reference.SyntaxTree, reference.Span) };
 
 						blockContext.ReportDiagnostic(Diagnostic.Create(
 							MissingMarkerRule,
@@ -140,6 +146,13 @@ namespace LinqToDB.Analyzers
 				});
 			});
 		}
+
+		// An interface member declared in metadata rather than in source has nowhere to write a marker, so no
+		// location travels and the fix declines rather than writing one where the runtime will not read it.
+		static SyntaxReference? DeclaringReference(ISymbol? symbol)
+			=> symbol is not null && symbol.DeclaringSyntaxReferences.Length > 0
+				? symbol.DeclaringSyntaxReferences[0]
+				: null;
 
 		static ServerSideOnlyContract.Options ReadOptions(
 			OperationBlockAnalysisContext    blockContext,

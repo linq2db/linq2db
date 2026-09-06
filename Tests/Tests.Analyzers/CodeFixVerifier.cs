@@ -45,5 +45,39 @@ namespace Tests.Analyzers
 
 			return test.RunAsync(CancellationToken.None);
 		}
+
+		// Multi-document form. A fix whose target is in a different file from the diagnostic - a marker-capable
+		// attribute or an interface member declared elsewhere - can only be exercised with more than one source,
+		// and it is the arm where the single-document Fix-All provider and the lightbulb can silently disagree.
+		public static Task VerifyAsync(
+			(string name, string content)[] sources,
+			(string name, string content)[] fixedSources,
+			string?                         editorConfig = null,
+			CodeFixTestBehaviors            behaviors    = CodeFixTestBehaviors.None)
+		{
+			var test = new CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
+			{
+				ReferenceAssemblies  = ReferenceAssemblies.Net.Net80,
+				CodeFixTestBehaviors = behaviors,
+			};
+
+			foreach (var (name, content) in sources)
+				test.TestState.Sources.Add((name, content));
+
+			foreach (var (name, content) in fixedSources)
+				test.FixedState.Sources.Add((name, content));
+
+			var reference = MetadataReference.CreateFromFile(typeof(Sql).Assembly.Location);
+			test.TestState.AdditionalReferences.Add(reference);
+			test.FixedState.AdditionalReferences.Add(reference);
+
+			if (editorConfig is not null)
+			{
+				test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+				test.FixedState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
+			}
+
+			return test.RunAsync(CancellationToken.None);
+		}
 	}
 }

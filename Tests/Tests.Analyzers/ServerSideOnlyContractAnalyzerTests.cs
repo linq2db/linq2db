@@ -26,10 +26,12 @@ namespace Tests.Analyzers
 				.WithLocation(0)
 				.WithArguments(member);
 
-		// Arm A carries the marker-capable attribute's location as an additional location, so the code fix can
-		// reach it when it is declared on an implemented interface member rather than on the reported one. That
-		// makes it part of the diagnostic's observable shape, which an explicit DiagnosticResult must declare.
-		static DiagnosticResult MissingMarkerOnAttributed(string member) =>
+		// The missing-marker diagnostic carries the node the fix has to write as an additional location - the
+		// marker-capable attribute when one exists, otherwise the implemented interface member's declaration -
+		// so the fix can reach it when it is not on the reported member, and possibly not in the same file.
+		// That makes it part of the diagnostic's observable shape, which an explicit DiagnosticResult must
+		// declare.
+		static DiagnosticResult MissingMarkerWithFixTarget(string member) =>
 			new DiagnosticResult(ServerSideOnlyContractAnalyzer.MissingMarkerDiagnosticId, DiagnosticSeverity.Info)
 				.WithLocation(0)
 				.WithLocation(1)
@@ -125,7 +127,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, MissingMarkerOnAttributed("M"));
+			return Verify.VerifyAsync(source, MissingMarkerWithFixTarget("M"));
 		}
 
 		[Test]
@@ -139,7 +141,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, MissingMarkerOnAttributed("M"));
+			return Verify.VerifyAsync(source, MissingMarkerWithFixTarget("M"));
 		}
 
 		#endregion
@@ -181,6 +183,26 @@ namespace Tests.Analyzers
 			return Verify.VerifyAsync(source);
 		}
 
+		// Form 3 is unconditional, so a TableFunction-derived attribute is a MARKER and never arm A's
+		// "attribute that could carry the marker but does not". The discriminator is the exception type: a
+		// wrong one has to report the exception rule, because reporting the missing-marker rule here would
+		// mean the member had been routed through arm A instead.
+		[Test]
+		public Task ReportsWrongExceptionRatherThanMissingMarkerForTableExpression()
+		{
+			var source = Usings + """
+				using System.Collections.Generic;
+
+				static class C
+				{
+					[Sql.TableExpression("F")]
+					public static IEnumerable<int> {|#0:M|}() => throw new NotImplementedException();
+				}
+				""";
+
+			return Verify.VerifyAsync(source, WrongException("M", "NotImplementedException"));
+		}
+
 		[Test]
 		public Task DoesNotReportServerSideOnlyAttributeStub()
 		{
@@ -188,6 +210,24 @@ namespace Tests.Analyzers
 				static class C
 				{
 					[ServerSideOnly]
+					public static int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		// Form 2 through the named argument, and the mirror of the `= false` case above so both values are
+		// pinned. Sql.FunctionAttribute derives from Sql.ExpressionAttribute but NOT from
+		// Sql.ExtensionAttribute, so the ctor-default fallback is false here and this read is the only
+		// evidence the member is marked - if it regressed, correct code would be reported.
+		[Test]
+		public Task DoesNotReportStubWithServerSideOnlyExplicitlyTrue()
+		{
+			var source = Usings + """
+				static class C
+				{
+					[Sql.Function("F", ServerSideOnly = true)]
 					public static int M() => throw new ServerSideOnlyException(nameof(M));
 				}
 				""";
@@ -288,13 +328,15 @@ namespace Tests.Analyzers
 			return Verify.VerifyAsync(source);
 		}
 
+		// The fix target is the INTERFACE member, not the reported one: a call binds I.M and the attribute walk
+		// goes up and not back down, so it travels as the additional location.
 		[Test]
 		public Task ReportsImplementationWhenInterfaceUnmarked()
 		{
 			var source = Usings + """
 				interface I
 				{
-					int M();
+					{|#1:int M();|}
 				}
 
 				class C : I
@@ -303,7 +345,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, MissingMarker("M"));
+			return Verify.VerifyAsync(source, MissingMarkerWithFixTarget("M"));
 		}
 
 		// The runtime reads mapping attributes up the BASE-CLASS chain as well as the interface chain
@@ -356,7 +398,7 @@ namespace Tests.Analyzers
 			var source = Usings + """
 				interface I
 				{
-					int M();
+					{|#1:int M();|}
 				}
 
 				class C : I
@@ -365,7 +407,7 @@ namespace Tests.Analyzers
 				}
 				""";
 
-			return Verify.VerifyAsync(source, MissingMarker("I.M"));
+			return Verify.VerifyAsync(source, MissingMarkerWithFixTarget("I.M"));
 		}
 
 		#endregion
