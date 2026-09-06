@@ -280,23 +280,17 @@ jobs:
         run: chmod +x scripts/*.sh
 
       # Cloned to <leg root>/baselines because AzureConnectionStrings sets
-      # BaselinesPath: ./../../../baselines, resolved from the test assembly. Sparse and shallow: the
-      # leg only ever appends whole files, and the full tree is 343541 files. Master, not the run
-      # branch - the push is what creates that.
+      # BaselinesPath: ./../../../baselines, resolved from the test assembly. The script picks the
+      # base - the run branch when it exists, master otherwise - and says why it matters.
       - name: Checkout test baselines
         if: inputs.baselines_branch != ''
+        shell: pwsh
         env:
-          TOKEN: ${{ secrets.BASELINES_GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.BASELINES_GH_PAT }}
+          BRANCH: ${{ inputs.baselines_branch }}
         run: |
-          # Named, because an empty token clones as x-access-token:@... and git then fails on the
-          # password it is missing rather than on the thing that is actually wrong.
-          if [ -z "$TOKEN" ]; then
-            echo "::error::BASELINES_GH_PAT is not set, but baselines_branch was supplied - nothing could be pushed"
-            exit 1
-          fi
-          git clone --depth 1 --single-branch --sparse -c http.proactiveAuth=basic \
-            --branch "$BASELINES_MASTER" \
-            "https://x-access-token:$TOKEN@github.com/linq2db/linq2db.baselines.git" baselines
+          ./scripts/checkout-baselines.ps1 -Branch "$Env:BRANCH" -BaselinesMaster "$Env:BASELINES_MASTER"
+          exit $LASTEXITCODE
 
       - name: Free disk space
         run: scripts/free-disk-space.sh
