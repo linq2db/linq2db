@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 using LinqToDB.Analyzers;
@@ -250,8 +251,10 @@ namespace Tests.Analyzers
 		[Test]
 		public Task ReportsSubMillisecondDoubleFactory()
 		{
-			// Diagnosed because the snippet targets .NET 8. On a target that could be .NET Framework the product
-			// rounds to a whole millisecond and this stays silent, which no fixture leg can express - see below.
+			// Diagnosed because the snippet targets .NET 8. The same value against the same column is silent on a
+			// target that could be .NET Framework, where the product rounds to a whole millisecond - pinned by
+			// DoesNotReportSubMillisecondDoubleFactoryOnNetStandard20, whose only differing factor is the
+			// reference set.
 			var source = Source("""
 						q.Where(r => {|#0:r.InMillis == TimeSpan.FromMilliseconds(0.5)|});
 				""");
@@ -876,6 +879,73 @@ namespace Tests.Analyzers
 				""";
 
 			return Verify.VerifyWithoutLinqToDBAsync(source);
+		}
+
+		// The whole-millisecond rounding reading is decided from symbol presence, so the only thing that can vary it
+		// is the target framework. The snippet declares its own LinqToDB.Mapping types because the real assembly is
+		// the net8.0 build and cannot be referenced from a lower reference set; the analyzer resolves them through
+		// GetTypeByMetadataName either way.
+		const string SubMillisecondModel = """
+			using System;
+			using System.Linq;
+
+			using LinqToDB.Mapping;
+
+			namespace LinqToDB.Mapping
+			{
+				internal enum DurationUnit { Nanosecond, Tick, Microsecond, Millisecond, Second, Minute, Hour, Day }
+
+				internal sealed class DurationAttribute : Attribute
+				{
+					public DurationAttribute(DurationUnit unit) { Unit = unit; }
+
+					public DurationUnit Unit { get; set; }
+				}
+			}
+
+			class Row
+			{
+				[Duration(DurationUnit.Millisecond)] public TimeSpan InMillis { get; set; }
+			}
+
+			class C
+			{
+				void M(IQueryable<Row> q)
+				{
+					q.Where(r => r.InMillis == TimeSpan.FromMilliseconds(0.5));
+				}
+			}
+			""";
+
+		const string SubMillisecondComparison = "r.InMillis == TimeSpan.FromMilliseconds(0.5)";
+
+		[Test]
+		public Task ReportsSubMillisecondDoubleFactoryOnNet60()
+		{
+			// .NET 6 truncates the double tick product exactly as .NET 7 does - Interval(double, double) ->
+			// IntervalFromDoubleTicks - so the rounding reading must not be carried here either. TimeSpan
+			// .FromMicroseconds is absent on this target, so System.Half is what rules .NET Framework out;
+			// dropping that half of the test reddens this and nothing else.
+			var source = SubMillisecondModel.Replace(
+				SubMillisecondComparison,
+				"{|#0:" + SubMillisecondComparison + "|}",
+				StringComparison.Ordinal);
+
+			return Verify.VerifyWithoutLinqToDBAsync(
+				source,
+				ReferenceAssemblies.Net.Net60,
+				Expected("InMillis", "milliseconds", "00:00:00.0005000", "can never match"));
+		}
+
+		[Test]
+		public Task DoesNotReportSubMillisecondDoubleFactoryOnNetStandard20()
+		{
+			// Paired with the two above: same value, same column, only the reference set varies. netstandard2.0 can
+			// run on .NET Framework, where 0.5ms really is one whole millisecond, so the value is representable
+			// under a reading this target can produce and the rule must stay silent.
+			return Verify.VerifyWithoutLinqToDBAsync(
+				SubMillisecondModel,
+				ReferenceAssemblies.NetStandard.NetStandard20);
 		}
 
 		#endregion
