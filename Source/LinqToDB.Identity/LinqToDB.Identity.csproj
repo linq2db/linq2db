@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Identity</AssemblyName>
+		<RootNamespace>LinqToDB.Identity</RootNamespace>
+
+		<!-- The IdentityBuilder DI integration resolves store/entity types via reflection (MakeGenericType), so the assembly is not trimming/AOT safe. -->
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB ASP.NET Core Identity provider</Title>
+		<Description>ASP.NET Core Identity stores implemented over LINQ to DB.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageTags>$(PackageTags);identity;aspnetcore;authentication</PackageTags>
+
+		<!--
+			First monorepo release of linq2db.Identity supersedes the standalone package (6.0.0) with a
+			deliberately breaking API (Microsoft.Extensions.Identity base types, IConnectionFactory removed),
+			so there is no compatible package-validation baseline yet. Clear it; a baseline is set next release.
+		-->
+		<PackageValidationBaselineVersion></PackageValidationBaselineVersion>
+		<EnablePackageValidation>false</EnablePackageValidation>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="Microsoft.Extensions.Identity.Stores" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Shared surface (all TFMs) + per-TFM overlay (net10.0 carries the passkey API, which only exists on .NET 10). -->
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.*.txt" />
+	</ItemGroup>
+</Project>
