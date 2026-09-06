@@ -25,8 +25,11 @@
 	<ItemGroup>
 		<Compile Include="FSharpEntityBindingInterceptor.fs" />
 		<Compile Include="FSharpQueryExpressionInterceptor.fs" />
-		<Compile Include="FSharpOptionSupport.fs" />
+		<Compile Include="FSharpMemberInfo.fs" />
+		<!-- SingleCaseUnion first: FSharpOptionSupport consults it so that an option over a
+		     single-case scalar union ('UserId option') maps to the union's wrapped scalar. -->
 		<Compile Include="FSharpSingleCaseUnionSupport.fs" />
+		<Compile Include="FSharpOptionSupport.fs" />
 		<Compile Include="FSharpMemberTranslator.fs" />
 		<Compile Include="DataOptionsExtensions.fs" />
 	</ItemGroup>

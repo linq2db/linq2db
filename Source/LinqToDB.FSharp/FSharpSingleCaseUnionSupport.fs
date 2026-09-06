@@ -7,6 +7,7 @@ open System.Reflection
 
 open Microsoft.FSharp.Reflection
 
+open LinqToDB.Internal.Common
 open LinqToDB.Mapping
 open LinqToDB.Metadata
 
@@ -34,9 +35,7 @@ type internal FSharpSingleCaseUnionSupport =
         let fromProvider = Expression.Lambda(Expression.Call(ctor, pParam), pParam)
 
         let converterType = typedefof<ValueConverter<_, _>>.MakeGenericType(unionType, providerType)
-        match Activator.CreateInstance(converterType, [| box toProvider; box fromProvider; box false |]) with
-        | :? IValueConverter as c -> c
-        | _ -> raise (InvalidOperationException $"Failed to create F# single-case union value converter for '{unionType}'")
+        ActivatorExt.CreateInstance<IValueConverter>(converterType, [| box toProvider; box fromProvider; box false |])
 
     /// <c>true</c> when <paramref name="t"/> is a single-case union with exactly one field (excludes
     /// option/voption, list, and multi-case unions, which have more than one case).
@@ -49,18 +48,22 @@ type internal FSharpSingleCaseUnionSupport =
         FSharpSingleCaseUnionSupport.IsSingleCaseUnion t &&
         MappingSchema.Default.IsScalarType(((FSharpType.GetUnionCases(t, true)).[0].GetFields()).[0].PropertyType)
 
+    /// The single wrapped field of a single-case union. Caller must have checked
+    /// <see cref="IsSingleCaseUnion"/>.
+    static member WrappedField(t: Type) : PropertyInfo =
+        ((FSharpType.GetUnionCases(t, true)).[0].GetFields()).[0]
+
+    /// The static case-constructor of a single-case union. Caller must have checked
+    /// <see cref="IsSingleCaseUnion"/>.
+    static member CaseConstructor(t: Type) : MethodInfo =
+        FSharpValue.PreComputeUnionConstructorInfo((FSharpType.GetUnionCases(t, true)).[0], true)
+
     static member GetConverter(unionType: Type) : IValueConverter =
         cache.GetOrAdd(unionType, build)
 
 /// Supplies a <see cref="ValueConverterAttribute"/> for every scalar single-case-union member, so those
 /// columns are recognised and converted during entity-descriptor construction.
 type internal FSharpSingleCaseUnionMetadataReader() =
-
-    static let memberType (mi: MemberInfo) : Type =
-        match mi with
-        | :? PropertyInfo as p -> p.PropertyType
-        | :? FieldInfo    as f -> f.FieldType
-        | _                    -> typeof<obj>
 
     interface IMetadataReader with
         member _.GetAttributes(_type: Type) =
@@ -70,7 +73,7 @@ type internal FSharpSingleCaseUnionMetadataReader() =
                 Array.empty<MappingAttribute>
 
         member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
-            let mt = memberType memberInfo
+            let mt = FSharpMemberInfo.memberType memberInfo
             if FSharpSingleCaseUnionSupport.IsScalarSingleCaseUnion mt then
                 // DB type left unset: ColumnDescriptor resolves it from the converter's provider type against
                 // the active provider-inclusive schema (preserving facets), as for F# option columns.
