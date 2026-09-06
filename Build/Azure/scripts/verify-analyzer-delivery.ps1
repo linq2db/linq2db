@@ -138,9 +138,14 @@ function Get-ShippedRuleIds {
         if (-not (Test-Path $path)) { return $null }
 
         # Release-tracking table rows are `<id> | <category> | <severity> | <notes>`; the header and the
-        # `;`-prefixed preamble never match, so no row filtering beyond the id shape is needed.
+        # `;`-prefixed preamble never match. A Removed Rules id does match and must not be collected: a
+        # retired rule belongs in neither readme, so requiring one there would fail a correct removal.
+        $section = ''
+
         foreach ($line in Get-Content -LiteralPath $path) {
-            if ($line -match '^\s*(L2DB\d+)\s*\|') { $ids += $Matches[1] }
+            if ($line -match '^\s*###\s*(.+?)\s*$') { $section = $Matches[1]; continue }
+            if ($section -eq 'Removed Rules')       { continue }
+            if ($line -match '^\s*(L2DB\d+)\s*\|')  { $ids += $Matches[1] }
         }
     }
 
