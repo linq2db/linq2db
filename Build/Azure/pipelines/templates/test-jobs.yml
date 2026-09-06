@@ -99,7 +99,11 @@ jobs:
     timeoutInMinutes: 300
   ${{ if not(eq(parameters.full_run, true)) }}:
     timeoutInMinutes: 180
-  condition: ${{ parameters.enabled }}
+  # A surface can select no leg for this OS at all - a linux-only provider here, every offloaded leg
+  # on linux - and an empty matrix otherwise runs the job once with $(title) unexpanded, skipping
+  # every step and reporting success: build 23319's green `Win`, the shape 23192 first showed. title
+  # exists only when the matrix expanded, so it is what tells the two apart.
+  condition: and(${{ parameters.enabled }}, ne(variables['title'], ''))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
@@ -161,7 +165,9 @@ jobs:
     timeoutInMinutes: 180
   displayName: 'Lin'
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  # Empty matrix, same as the windows job above - and this is the side the gh_linux split makes
+  # common, since every surface but [all] and [oracle.all] now has all its linux legs on GitHub.
+  condition: and(${{ parameters.enabled }}, ne(variables['title'], ''))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
