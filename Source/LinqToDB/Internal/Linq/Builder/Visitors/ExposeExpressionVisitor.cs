@@ -518,8 +518,14 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							}
 						}
 
-						converted = mc;
-						return false;
+						// A user method carrying the IsQueryable marker reaches here: the branches above did not
+						// apply, and the builder has no builder for it either, so on the compiled path it still
+						// needs the expansion below. Everything else exits as before.
+						if (mc.IsBuiltInQueryable || _parameterValues == null)
+						{
+							converted = mc;
+							return false;
+						}
 					}
 				}
 
@@ -534,7 +540,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				// Expanding it over that source leaves those reads in the tree. Confined to the compiled path:
 				// an ordinary query reaches the same shapes through association and ExpressionMethod expansion,
 				// where the call is left in the tree for the builder to report as it is on master.
-				if (_parameterValues != null && node is MethodCallExpression call && !call.IsQueryable && ExpandOverSource(call) is { } expanded)
+				if (_parameterValues != null && node is MethodCallExpression call && !call.IsBuiltInQueryable && ExpandOverSource(call) is { } expanded)
 				{
 					converted = expanded;
 

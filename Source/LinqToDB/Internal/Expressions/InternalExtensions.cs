@@ -232,7 +232,12 @@ namespace LinqToDB.Internal.Expressions
 
 		extension(MethodCallExpression method)
 		{
-			public bool IsQueryable
+			public bool IsQueryable => method.IsBuiltInQueryable || MemberCache.GetMemberInfo(method.Method).IsQueryable;
+
+			// The declaring types the builder has a sequence builder for. IsQueryable's other half - the
+			// IsQueryableAttribute marker - says a user method composes like a queryable operator, not that
+			// the builder can build it, so asking "does the builder know this call?" wants this, not the union.
+			public bool IsBuiltInQueryable
 			{
 				get
 				{
@@ -244,8 +249,7 @@ namespace LinqToDB.Internal.Expressions
 						type == typeof(LinqExtensions) ||
 						type == typeof(LinqInternalExtensions) ||
 						type == typeof(DataExtensions) ||
-						type == typeof(TableExtensions) ||
-						MemberCache.GetMemberInfo(method.Method).IsQueryable;
+						type == typeof(TableExtensions);
 				}
 			}
 

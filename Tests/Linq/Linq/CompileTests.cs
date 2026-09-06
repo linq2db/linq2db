@@ -934,6 +934,28 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void MarkedWrappedLoadWithTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent
+					.Where(p => p.ParentID == id)
+					.LoadWithMarkedWrapper(p => p.Children));
+
+			using var db = GetDataContext(context);
+
+			var parent = query(db, 1).First();
+			var other  = query(db, 2).First();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID, Is.EqualTo(1));
+				Assert.That(parent.Children, Has.Count.EqualTo(1));
+				Assert.That(other.ParentID,  Is.EqualTo(2));
+				Assert.That(other.Children,  Has.Count.EqualTo(2));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
 		public void WrapperWithLiteralArgumentTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
@@ -1086,6 +1108,18 @@ namespace Tests.Linq
 		// A user-defined pass-through is not on IsQueryable's declaring-type allowlist, but its IQueryable<T>
 		// return type is enough for CompileQuery to fold it into the compiled table anyway. Expose then
 		// expands it over its own source, so the argument-array reads inside it survive into the built tree.
+		// Same body as LoadWithWrapper, marked the way #5854's notes suggested as a workaround. The marker says
+		// the method composes like a queryable operator, which is not the same as the builder having a builder
+		// for it - so it must reach the expansion exactly as the un-marked form does.
+		[LinqToDB.Mapping.IsQueryable]
+		public static IQueryable<TEntity> LoadWithMarkedWrapper<TEntity,TProperty>(
+			this IQueryable<TEntity>             source,
+			Expression<Func<TEntity,TProperty?>> selector)
+			where TEntity : class
+		{
+			return source.LoadWith(selector);
+		}
+
 		// Takes a value rather than a lambda. The expansion invokes the wrapper, so such an argument is folded
 		// to a literal - safe when it already is one, and the reason a closure-backed one is declined.
 		public static IQueryable<TEntity> TakeWrapper<TEntity>(
