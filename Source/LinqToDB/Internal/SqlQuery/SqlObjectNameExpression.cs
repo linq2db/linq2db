@@ -20,11 +20,12 @@ namespace LinqToDB.Internal.SqlQuery
 	public sealed class SqlObjectNameExpression : SqlExpressionBase
 	{
 		/// <summary>Creates an object-name expression for <paramref name="name"/> rendered with <paramref name="convertType"/>.</summary>
-		public SqlObjectNameExpression(SqlObjectName name, ConvertType convertType, TableOptions tableOptions = TableOptions.NotSet)
+		public SqlObjectNameExpression(SqlObjectName name, ConvertType convertType, TableOptions tableOptions = TableOptions.NotSet, bool insideStringLiteral = false)
 		{
-			Name         = name;
-			ConvertType  = convertType;
-			TableOptions = tableOptions;
+			Name                = name;
+			ConvertType         = convertType;
+			TableOptions        = tableOptions;
+			InsideStringLiteral = insideStringLiteral;
 		}
 
 		/// <summary>The database object name to render.</summary>
@@ -33,6 +34,15 @@ namespace LinqToDB.Internal.SqlQuery
 		public ConvertType   ConvertType  { get; }
 		/// <summary>Table options influencing the rendered name (e.g. temporary-table qualification).</summary>
 		public TableOptions  TableOptions { get; }
+
+		/// <summary>
+		/// Whether the fragment holding this placeholder puts it inside a SQL string literal, as Oracle's
+		/// <c>EXECUTE IMMEDIATE '…'</c> blocks do. Identifier quoting alone does not survive that position: an
+		/// apostrophe in the name would close the enclosing literal and the rest would be parsed as code, so the
+		/// builder additionally escapes the rendered name for literal-body position. The literal's own delimiters
+		/// stay in the fragment's format string - only the body is escaped.
+		/// </summary>
+		public bool          InsideStringLiteral { get; }
 
 		public override QueryElementType ElementType => QueryElementType.SqlObjectNameExpression;
 
@@ -50,6 +60,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(Name);
 			hash.Add(ConvertType);
 			hash.Add(TableOptions);
+			hash.Add(InsideStringLiteral);
 			return hash.ToHashCode();
 		}
 
@@ -62,6 +73,7 @@ namespace LinqToDB.Internal.SqlQuery
 				&& Name.Equals(expr.Name)
 				&& ConvertType == expr.ConvertType
 				&& TableOptions == expr.TableOptions
+				&& InsideStringLiteral == expr.InsideStringLiteral
 				&& comparer(this, expr);
 		}
 

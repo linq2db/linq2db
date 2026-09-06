@@ -3391,7 +3391,24 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlObjectNameExpression:
 				{
 					var e = (SqlObjectNameExpression)expr;
-					BuildObjectName(StringBuilder, e.Name, e.ConvertType, escape: true, e.TableOptions);
+
+					if (e.InsideStringLiteral)
+					{
+						// The placeholder sits inside a SQL string literal whose delimiters come from the fragment's own
+						// format string, so identifier quoting is not enough on its own: an apostrophe inside the quoted
+						// identifier would close that literal early and the remainder would be parsed as code. Escape the
+						// rendered name the way a literal body is escaped - the delimiters are not ours to add here.
+						using var buffer = Pools.StringBuilder.Allocate();
+
+						BuildObjectName(buffer.Value, e.Name, e.ConvertType, escape: true, e.TableOptions);
+
+						StringBuilder.Append(buffer.Value.ToString().Replace("'", "''", StringComparison.Ordinal));
+					}
+					else
+					{
+						BuildObjectName(StringBuilder, e.Name, e.ConvertType, escape: true, e.TableOptions);
+					}
+
 					break;
 				}
 

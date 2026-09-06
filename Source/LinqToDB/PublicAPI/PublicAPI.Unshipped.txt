@@ -211,8 +211,9 @@ LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Year = 11 -> LinqToDB.Internal.SqlQue
 LinqToDB.Internal.SqlQuery.SqlIntervalUnits
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.ConvertType.get -> LinqToDB.Internal.SqlProvider.ConvertType
+LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.InsideStringLiteral.get -> bool
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.Name.get -> LinqToDB.SqlQuery.SqlObjectName
-LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.SqlObjectNameExpression(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.Internal.SqlProvider.ConvertType convertType, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet) -> void
+LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.SqlObjectNameExpression(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.Internal.SqlProvider.ConvertType convertType, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet, bool insideStringLiteral = false) -> void
 LinqToDB.Internal.SqlQuery.SqlObjectNameExpression.TableOptions.get -> LinqToDB.TableOptions
 LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression
 LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Interval.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!

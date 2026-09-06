@@ -31,8 +31,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				case SqlTruncateTableStatement { ResetIdentity: true } truncate when truncate.Table!.IdentityFields.Count > 0:
 				{
-					// No schema on the reset sequence reference (matches the previous BuildCommand behavior).
-					var seq   = new SqlObjectNameExpression(new SqlObjectName(SequenceName(truncate.Table.TableName.Name)), ConvertType.SequenceName);
+					// No schema on the reset sequence reference (matches the previous BuildCommand behavior). Every use
+					// below is inside an EXECUTE IMMEDIATE string literal, so the name is flagged as such: the quoted
+					// identifier is escaped for literal-body position, which is what the BuildValue(null, <string>) call
+					// in the BuildCommand this replaced did. Without it a table name carrying an apostrophe (from mapping
+					// or from .TableName(...) at runtime) closes the literal and the rest is parsed as PL/SQL.
+					var seq   = new SqlObjectNameExpression(new SqlObjectName(SequenceName(truncate.Table.TableName.Name)), ConvertType.SequenceName, insideStringLiteral: true);
 					var reset = new SqlFragmentStatement(factory.Fragment(
 						  "DECLARE\n\tl_value number;\nBEGIN\n"
 						+ "\tEXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;\n"
