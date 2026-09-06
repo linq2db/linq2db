@@ -989,7 +989,13 @@ namespace Tests.Analyzers
 		[Test]
 		public Task DoesNotReportWithoutLinqToDBReference()
 		{
-			// The capability gate: with no linq2db in the compilation the rule must be silent and must not throw.
+			// The compilation-start action must resolve its four metadata names against a linq2db-free compilation
+			// without throwing, and report nothing. This is a characterization, not a control: the snippet has no
+			// member reference, so it reports nothing with linq2db either, and a reporting shape cannot be written
+			// here at all - one that compiles without the reference has to declare the anchor types itself, and
+			// then they resolve and the gate does not fire. That the resolution is by symbol presence rather than
+			// by an assembly reference is asserted instead by ReportsSubMillisecondDoubleFactoryOnNet60, which
+			// reports over source-declared LinqToDB.Mapping types with no linq2db reference at all.
 			const string source = """
 				using System;
 
