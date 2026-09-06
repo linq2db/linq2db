@@ -25,7 +25,7 @@ than the runtime it runs against degrades to silence rather than to a broken fix
 | Id | Severity | Description |
 |----|----------|-------------|
 | [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
-| [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An equality against a `[Duration]` column compares a duration the declared unit cannot represent, so it can never match. Reported only; no code fix. |
+| [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
 
 ### L2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
 
@@ -52,14 +52,18 @@ error. To apply it anyway and resolve the type change yourself, opt in (see belo
 
 // L2DB1002: InSeconds stores whole seconds, so this can never match
 q.Where(r => r.InSeconds == TimeSpan.FromSeconds(1.5));
+
+// L2DB1002: the same comparison negated always matches, which is no more useful
+q.Where(r => r.InSeconds != TimeSpan.FromSeconds(1.5));
 ```
 
 A column declared with `[Duration(DurationUnit.Second)]` holds a whole number of seconds, so asking whether
 it equals one and a half of them asks for a value it cannot hold. The query is translated correctly — the
 comparison becomes a range whose ends cross over, which is what equality means for an unrepresentable value —
-and it returns nothing, with nothing in the log to say why. The rule reports the cases that are decidable
-without running the query: where the compared duration is a constant, or reaches the comparison through a
-local or a loop over constants.
+and it returns nothing, with nothing in the log to say why. `!=` is reported for the same reason with the
+outcome reversed: it excludes nothing, so it matches every row (every row that has a value, on a nullable
+column). The rule reports the cases that are decidable without running the query: where the compared
+duration is a constant, or reaches the comparison through a local or a loop over constants.
 
 Ordering operators are not reported. `> 1.5s` is exactly `> 1s` for a column of whole seconds, which is
 already the right question.
