@@ -72,6 +72,10 @@ synthesising a body is not a mechanical rewrite. Where the member carries no mar
 the rule only treats it as a stub when it throws `ServerSideOnlyException`, so ordinary
 `throw new NotImplementedException()` placeholders are left alone.
 
+On a member carrying several configuration-scoped `Sql.*` attributes, the code fix sets `ServerSideOnly = true`
+on one of them, which is enough to satisfy the rule — but the runtime resolves the attribute per
+configuration, so add it to the rest by hand if the member should be server-side-only on every provider.
+
 ## Configuration
 
 Adjust severity in `.editorconfig`:
