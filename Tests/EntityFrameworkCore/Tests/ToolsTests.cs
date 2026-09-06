@@ -299,11 +299,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 #if EF10
-		// These four are EF10-only, and EFProviders drops MySqlConnector under #if !NET10_0 ("provider need update
-		// for v10"), so the gate is inert today - no MySQL case exists to apply it to. It is kept rather than
-		// removed because that exclusion is temporary: when MySQL returns to net10.0 these start running on it, and
-		// #4669 has never been observed there. No expected error is declared for the same reason.
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql)]
+		// These four are EF10-only and EFProviders drops MySqlConnector under #if !NET10_0, so the gate is inert
+		// until MySQL is restored for EF Core 10+. The declared type is #4669's failure as observed on
+		// CustomContextIssueTests; anything else surfaces rather than being absorbed as the known issue.
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
 		{
@@ -318,7 +317,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
 		}
 
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql)]
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_ByKey([EFDataSources] string provider)
 		{
@@ -335,7 +334,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldContain(p => p.Discontinued);
 		}
 
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql)]
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_All_StillWorks([EFDataSources] string provider)
 		{
@@ -350,7 +349,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
 		}
 
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql)]
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_Empty_IsNoOp([EFDataSources] string provider)
 		{
