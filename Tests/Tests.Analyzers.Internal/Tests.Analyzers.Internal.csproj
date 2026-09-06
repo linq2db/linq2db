@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- Repo-internal analyzer tests: DB-free, provider-independent, single TFM (overrides Tests multi-TFM).
+		     Unlike Tests.Analyzers this project references no linq2db assembly - every snippet declares its own
+		     ProjectFlags model - so no reference pack has to be matched and net10.0 is free to use. -->
+		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks></TargetFrameworks>
+
+		<OutputType>Exe</OutputType>
+		<EnableNUnitRunner>true</EnableNUnitRunner>
+		<RootNamespace>Tests.Analyzers.Internal</RootNamespace>
+		<AssemblyName>linq2db.Tests.Analyzers.Internal</AssemblyName>
+
+		<IsPackable>false</IsPackable>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+		<!-- CodeGenerators compiles against Microsoft.CodeAnalysis.CSharp 5.6.0, so its analyzers cannot load in
+		     the 4.8 host Tests.Analyzers runs. That 4.8 pin is the shipped package's consumer floor and must stay,
+		     hence a VersionOverride here rather than a change to Directory.Packages.props. -->
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" VersionOverride="5.6.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Analyzer under test. Deliberately NO OutputItemType="Analyzer": the rules must not run against this
+		     project's own source, only against the snippets the harness compiles. -->
+		<ProjectReference Include="..\..\Source\CodeGenerators\CodeGenerators.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Not an NUnit/baseline provider test; drop the Tests-wide banned-symbols list. -->
+		<AdditionalFiles Remove="..\BannedSymbols.txt" />
+	</ItemGroup>
+
+</Project>

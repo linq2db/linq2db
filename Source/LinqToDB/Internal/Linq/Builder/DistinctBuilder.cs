@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var corrected = SequenceHelper.CorrectExpression(path, this, Context);
 
-				if (flags.IsTable() || flags.IsTraverse() || flags.IsSubquery())
+				if (flags.IsTable() || flags.IsSubquery())
 					return corrected;
 
 				Expression result;
