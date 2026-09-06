@@ -1,9 +1,9 @@
 ﻿using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
-using LinqToDB.EntityFrameworkCore.Tests.Pomelo.Models.Northwind.Mapping;
+using LinqToDB.EntityFrameworkCore.Tests.MySql.Models.Northwind.Mapping;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.Pomelo.Models.Northwind
+namespace LinqToDB.EntityFrameworkCore.Tests.MySql.Models.Northwind
 {
 	public class NorthwindContext : NorthwindContextBase
 	{

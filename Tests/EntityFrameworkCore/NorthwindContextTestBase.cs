@@ -22,7 +22,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return provider switch
 			{
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => new PostgreSQL.Models.Northwind.NorthwindContext(options),
-				_ when provider.IsAnyOf(TestProvName.AllMySql) => new Pomelo.Models.Northwind.NorthwindContext(options),
+				_ when provider.IsAnyOf(TestProvName.AllMySql) => new MySql.Models.Northwind.NorthwindContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSQLite) => new SQLite.Models.Northwind.NorthwindContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => new SqlServer.Models.Northwind.NorthwindContext(options),
 				_ => throw new InvalidOperationException($"{nameof(CreateProviderContext)} is not implemented for provider {provider}")
