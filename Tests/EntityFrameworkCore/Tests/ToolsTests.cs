@@ -267,9 +267,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-#if NET8_0_OR_GREATER
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
-#endif
 		[Test]
 		public void TestGlobalQueryFilters([EFDataSources] string provider, [Values] bool enableFilter)
 		{
@@ -302,7 +299,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 #if EF10
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		// These four are EF10-only and EFProviders drops MySqlConnector under #if !NET10_0, so the gate is inert
+		// until MySQL is restored for EF Core 10+. The declared type is #4669's failure as observed on
+		// CustomContextIssueTests; anything else surfaces rather than being absorbed as the known issue.
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
 		{
@@ -317,7 +317,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_ByKey([EFDataSources] string provider)
 		{
@@ -334,7 +334,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldContain(p => p.Discontinued);
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_All_StillWorks([EFDataSources] string provider)
 		{
@@ -349,7 +349,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_Empty_IsNoOp([EFDataSources] string provider)
 		{
@@ -699,7 +699,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
 		}
 
-		[ActiveIssue("Delete with limit translation not yet implemented", Configurations = [TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL])]
+		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllSQLite,
+			ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "syntax error")]
+		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllPostgreSQL,
+			ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42601: syntax error at or near")]
+		// No ErrorTypeName for the MySQL family: the same failure surfaces as MySqlConnector.MySqlException on
+		// net8.0+ and MySql.Data.MySqlClient.MySqlException on net462, so the message is the stable part.
+		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllMySqlServer,
+			ErrorMessage = "Every derived table must have its own alias")]
+		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllMariaDB,
+			ErrorMessage = "You have an error in your SQL syntax")]
 		[Test]
 		public async Task TestDeleteFrom([EFDataSources] string provider)
 		{

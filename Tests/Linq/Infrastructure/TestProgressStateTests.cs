@@ -223,7 +223,7 @@ namespace Tests.Infrastructure
 			state.Started  .ShouldBe(units);
 			state.Completed.ShouldBe(units);
 			state.Pending  .ShouldBe(0);
-			(state.Passed + state.Failed + state.Skipped).ShouldBe(units);
+			(state.Passed + state.Failed + state.Skipped + state.Inconclusive).ShouldBe(units);
 
 			state.Failed.ShouldBe(failed);
 			state.RecentFailures.Count.ShouldBe(TestProgressState.MaxRecentFailures);
@@ -258,6 +258,43 @@ namespace Tests.Infrastructure
 			Complete(state, Unit, TestStatus.Failed, new string('x', 900));
 
 			state.RecentFailures[0].Message.Length.ShouldBe(500);
+		}
+
+		[Test]
+		public void InconclusiveIsBookedInItsOwnBucket()
+		{
+			var rec = Recorder.Create();
+
+			// What ActiveIssueNewAttribute does to a known issue that is still failing: the reporter samples the
+			// inner failure, the wrapper commits Inconclusive. The platform summary folds that into `skipped`, so
+			// this bucket is the only place a local sweep can count known-issue cases.
+			rec.State.BeginDeferred (Unit);
+			rec.State.StartTest     (Unit);
+			rec.State.CompleteTest  (Unit, TestStatus.Failed, RawMessage);
+			rec.State.CommitDeferred(Unit, TestStatus.Inconclusive, "[ActiveIssue] Known issue");
+
+			rec.State.Completed   .ShouldBe(1);
+			rec.State.Inconclusive.ShouldBe(1);
+			rec.State.Passed      .ShouldBe(0);
+			rec.State.Failed      .ShouldBe(0);
+			rec.State.Skipped     .ShouldBe(0);
+			rec.State.RecentFailures.ShouldBeEmpty();
+		}
+
+		[Test]
+		public void InconclusiveIsUnbookedOnRepeat()
+		{
+			var state = new TestProgressState();
+
+			// The symmetry guard on Unbook: booking Inconclusive without withdrawing it leaves the count behind when
+			// a [Repeat]/[Retry] iteration re-books the same case, so the bucket drifts up by one per iteration.
+			Complete(state, Unit, TestStatus.Inconclusive, null);
+			Complete(state, Unit, TestStatus.Inconclusive, null);
+			Complete(state, Unit, TestStatus.Passed,       null);
+
+			state.Completed   .ShouldBe(1);
+			state.Inconclusive.ShouldBe(0);
+			state.Passed      .ShouldBe(1);
 		}
 
 		static void Complete(TestProgressState state, string test, TestStatus status, string? message)
