@@ -127,24 +127,16 @@ steps:
   condition: and(variables.title, succeeded())
   displayName: Extract test scripts
 
-- task: CmdLine@2
+- task: PowerShell@2
   inputs:
-    # The leg needs the index, not the tree: BaselinesWriter creates its own directories and always
-    # writes whole files, so nothing here is ever read back from the repository. --sparse lays out the
-    # two root files instead of 343541, and --depth 1 --single-branch skips ~420 Mb of history for a
-    # tree the leg only appends to. Master is cloned rather than the run branch, which may not
-    # exist yet - see the push below. The commit step pairs this with git add --sparse.
-    #
-    # http.proactiveAuth is what makes the token in the url count: git sends credentials only after a
-    # 401 challenge, and github never challenges an anonymous read of a public repository - so without
-    # it this clone is unauthenticated and github's unauthenticated-download throttle kills the leg
-    # (three legs on build 23238). The credential also has to be complete - user:token, not token
-    # alone, or git asks for the password it is missing. -c is written to the clone's config, so the
-    # fetch in the push retry below authenticates too.
-    script: 'git clone --depth 1 --single-branch --sparse -c http.proactiveAuth=basic --branch $(baselines_master) https://x-access-token:$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines'
+    pwsh: true
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/checkout-baselines.ps1'
+    arguments: -Branch "$(baselines_branch)" -BaselinesMaster "$(baselines_master)"
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
   condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
+  env:
+    GITHUB_TOKEN: $(BASELINES_GH_PAT)
 
 - task: DownloadPipelineArtifact@2
   inputs:
