@@ -18,9 +18,7 @@ namespace Tests.Linq
 		// walk follows the value's own spine - unary operators, the array or container of an element read,
 		// the target of a parameterless GetValueOrDefault - and takes the first member access it reaches.
 		// A method call that computes a new value is named exactly as it was before, which may be the
-		// column name or the generic fallback depending on what the call site carries. An element read
-		// carries its constant index, so two reads from one container name themselves rather than relying
-		// on the uniquifier's collision suffix.
+		// column name or the generic fallback depending on what the call site carries.
 		//
 		// Assertions go against DataParameter.Name rather than the SQL text: the name carries no provider
 		// prefix there, and a substring check over the SQL would match "@p" inside "@price".
@@ -36,7 +34,7 @@ namespace Tests.Linq
 				.Where(t => t.String2 == values[0] || t.String3 == values[1])
 				.ToSqlQuery();
 
-			sql.Parameters.Select(p => p.Name).ShouldBe(["values_0", "values_1"]);
+			sql.Parameters.Select(p => p.Name).ShouldBe(["values", "values_1"]);
 		}
 
 		[Test]
@@ -84,7 +82,7 @@ namespace Tests.Linq
 				.Where(t => t.String2 == names[0])
 				.ToSqlQuery();
 
-			sql.Parameters.Select(p => p.Name).ShouldBe(["names_0"]);
+			sql.Parameters.Select(p => p.Name).ShouldBe(["names"]);
 		}
 
 		[Test]
@@ -105,22 +103,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ParameterName_ElementSuffixIsTheIndexNotEncounterOrder([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var values = new[] { "str0", "str1" };
-
-			// Written in descending order: a suffix assigned by the normaliser on collision would number
-			// these the other way round, so this fails if the index stops driving the name.
-			var sql = db.GetTable<ParameterDeduplication>()
-				.Where(t => t.String3 == values[1] || t.String2 == values[0])
-				.ToSqlQuery();
-
-			sql.Parameters.Select(p => $"{p.Name}={p.Value}").ShouldBe(["values_1=str1", "values_0=str0"]);
-		}
-
-		[Test]
 		public void ParameterName_FromRenamedIndexerTarget([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -133,7 +115,7 @@ namespace Tests.Linq
 				.Where(t => t.Int1 == text[0])
 				.ToSqlQuery();
 
-			sql.Parameters.Select(p => p.Name).ShouldBe(["text_0"]);
+			sql.Parameters.Select(p => p.Name).ShouldBe(["text"]);
 		}
 
 		[Test]

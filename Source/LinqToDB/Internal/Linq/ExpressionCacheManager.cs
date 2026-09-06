@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -289,9 +288,9 @@ namespace LinqToDB.Internal.Linq
 		/// itself a member access, the walk follows the value's own spine and returns the first member access
 		/// it reaches: through unary operators, into the array or container of an element read, and into the
 		/// target of a parameterless <c>GetValueOrDefault</c>.
-		/// Arguments and binary operands are not walked for a name - <c>dict[key]</c> is named after
-		/// <c>dict</c> - though a constant integer index is appended to it, so two reads from one container
-		/// carry the index that produced each value rather than a suffix in collision order.
+		/// Arguments and binary operands are not walked for a name, so <c>dict[key]</c> is named after
+		/// <c>dict</c>. The index itself must not reach the name: it is substituted out of the query-cache
+		/// key, so a cached query would carry the index of whichever call site built it first.
 		/// A method call that <i>computes</i> a new value would give a name that describes the wrong thing -
 		/// the parameter behind <c>today.AddDays(-7)</c> is not <c>today</c> - so those keep returning
 		/// <see langword="null"/> and are named the way they were before source-based naming existed.
@@ -309,15 +308,15 @@ namespace LinqToDB.Internal.Linq
 					SuggestParameterDisplayName(operand),
 
 				// values[0] over an array - name after the array, not the target column
-				BinaryExpression { NodeType: ExpressionType.ArrayIndex, Left: var array, Right: var index } =>
-					WithElementIndex(SuggestParameterDisplayName(array), index),
+				BinaryExpression { NodeType: ExpressionType.ArrayIndex, Left: var array } =>
+					SuggestParameterDisplayName(array),
 
 				// list[0], dict[key], value.GetValueOrDefault() - the call returns what the target holds
 				MethodCallExpression { Object: { } target } call when IsValuePreservingCall(call) =>
-					WithElementIndex(SuggestParameterDisplayName(target), call.Arguments.Count == 1 ? call.Arguments[0] : null),
+					SuggestParameterDisplayName(target),
 
-				IndexExpression { Object: { } target } indexer =>
-					WithElementIndex(SuggestParameterDisplayName(target), indexer.Arguments.Count == 1 ? indexer.Arguments[0] : null),
+				IndexExpression { Object: { } target } =>
+					SuggestParameterDisplayName(target),
 
 				_ => null,
 			};
@@ -338,16 +337,6 @@ namespace LinqToDB.Internal.Linq
 					&& call.Arguments.Count == 0
 					&& method.DeclaringType is { IsGenericType: true } declaringType
 					&& declaringType.GetGenericTypeDefinition() == typeof(Nullable<>);
-			}
-
-			// Two element reads from one container both suggest the container's name, and the _N the
-			// normaliser then appends is collision order rather than the index - so values_1 could carry
-			// values[0]. Fold a constant integer index into the name so the suffix says what it means.
-			static string? WithElementIndex(string? name, Expression? index)
-			{
-				return name != null && index is ConstantExpression { Value: int elementIndex }
-					? name + "_" + elementIndex.ToString(CultureInfo.InvariantCulture)
-					: name;
 			}
 		}
 
