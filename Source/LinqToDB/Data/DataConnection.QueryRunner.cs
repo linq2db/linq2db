@@ -647,6 +647,23 @@ namespace LinqToDB.Data
 			// result-producing step (a pure non-query step yields no result set, so no advance). A caller that streams the
 			// group's last step itself (the eager main) passes a count one short of the group instead of slicing the list.
 			// DML harvests scalar / rows-affected into the execution context; eager loading plugs its own materializer in.
+			//
+			// "A pure non-query step yields no result set" is a DRIVER behaviour, not a SQL one, and no capability flag says
+			// it: SqlClient reports a batched INSERT as a DONE token, which is what makes the identity group INSERT; SELECT
+			// <id> harvest correctly, while Npgsql surfaces one result per statement in a multi-statement command and would
+			// need an extra advance. The premise holds for everything reachable today - PostgreSQL registers no IDmlService
+			// override, so an identity insert renders RETURNING and becomes a single DefaultScenario step, and the eager path
+			// is all Reader steps, so no NonQuery-then-Scalar group forms on a per-statement-result-set provider. It becomes
+			// live the moment such a provider gains a multi-step DML scenario, and the failure would be quiet: the Scalar step
+			// would read the INSERT's empty result set and its value would come back null. The shortfall check below does not
+			// catch it - that fires on too FEW result sets, this trap is one too many.
+			//
+			// Left as a premise rather than a check on purpose. A SqlProviderFlags capability is the honest fix but adds
+			// public, wire-serialized surface for a path nothing reaches and no provider can be validated against yet;
+			// advancing unconditionally instead would break SqlClient, where it would skip the very result set the next step
+			// reads; and throwing when a Scalar step finds no row would break the InsertOrUpdate emulation, whose EXISTS
+			// probe is a Scalar step for which an empty result set is the legitimate "no row" answer. Whoever adds that first
+			// multi-step scenario has to decide here.
 			internal static void WalkCombinedResultSets(DbDataReader dr, IReadOnlyList<int> stepIndexes, int harvestCount, IReadOnlyList<ExecutionStep> steps, Action<int, DbDataReader> harvest)
 			{
 				for (var k = 0; k < harvestCount; k++)
