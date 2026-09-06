@@ -49,6 +49,7 @@ namespace Tests
 		long    _passed;
 		long    _failed;
 		long    _skipped;
+		long    _inconclusive;
 		string? _current;
 		bool    _done;
 
@@ -74,6 +75,12 @@ namespace Tests
 		public long Failed    { get { lock (_sync) return _failed;    } }
 		/// <summary>Tests booked as skipped.</summary>
 		public long Skipped   { get { lock (_sync) return _skipped;   } }
+		/// <summary>
+		/// Tests booked as inconclusive — the bucket <see cref="ActiveIssueNewAttribute"/> rewrites a still-failing
+		/// known issue into. Tracked separately because the platform summary folds it into <c>skipped</c>, which
+		/// makes a known-issue case indistinguishable from a genuinely skipped one.
+		/// </summary>
+		public long Inconclusive { get { lock (_sync) return _inconclusive; } }
 		/// <summary>Most recently started test, or <see langword="null"/> once the run is done.</summary>
 		public string? Current { get { lock (_sync) return _current;  } }
 		/// <summary>Whether the run has finished.</summary>
@@ -221,15 +228,16 @@ namespace Tests
 
 			switch (status)
 			{
-				case TestStatus.Passed : _passed++;  break;
-				case TestStatus.Skipped: _skipped++; break;
+				case TestStatus.Passed      : _passed++;       break;
+				case TestStatus.Skipped     : _skipped++;      break;
+				case TestStatus.Inconclusive: _inconclusive++; break;
 				case TestStatus.Failed :
 					_failed++;
 					force = true;
 					if (_failures.Count < MaxRecentFailures)
 						_failures.Add((fullName, Trim(message)));
 					break;
-				// Inconclusive / Warning — count as completed but neither pass nor fail bucket.
+				// Warning — count as completed but in no verdict bucket.
 				default: break;
 			}
 
@@ -250,8 +258,9 @@ namespace Tests
 		{
 			switch (booked)
 			{
-				case TestStatus.Passed : _passed--;  break;
-				case TestStatus.Skipped: _skipped--; break;
+				case TestStatus.Passed      : _passed--;       break;
+				case TestStatus.Skipped     : _skipped--;      break;
+				case TestStatus.Inconclusive: _inconclusive--; break;
 				case TestStatus.Failed :
 					_failed--;
 

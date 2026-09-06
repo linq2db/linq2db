@@ -267,6 +267,7 @@ namespace Tests
 			sb.Append("\"passed\":")     .Append(Long(_state.Passed))                   .Append(',');
 			sb.Append("\"failed\":")     .Append(Long(_state.Failed))                   .Append(',');
 			sb.Append("\"skipped\":")    .Append(Long(_state.Skipped))                  .Append(',');
+			sb.Append("\"inconclusive\":").Append(Long(_state.Inconclusive))            .Append(',');
 			sb.Append("\"currentTest\":").Append(JsonString(_state.Current))            .Append(',');
 			sb.Append("\"elapsedSec\":") .Append(Num(elapsedSec))                       .Append(',');
 			sb.Append("\"testsPerSec\":").Append(Num(rate))                             .Append(',');
