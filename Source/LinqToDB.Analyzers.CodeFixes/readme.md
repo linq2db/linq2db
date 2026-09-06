@@ -63,7 +63,8 @@ comparison becomes a range whose ends cross over, which is what equality means f
 and it returns nothing, with nothing in the log to say why. `!=` is reported for the same reason with the
 outcome reversed: it excludes nothing, so it matches every row (every row that has a value, on a nullable
 column). The rule reports the cases that are decidable without running the query: where the compared
-duration is a constant, or reaches the comparison through a local or a loop over constants.
+duration is a constant, or reaches the comparison through a local, a loop over constants, or a LINQ
+variable ranging over them.
 
 Ordering operators are not reported. `> 1.5s` is exactly `> 1s` for a column of whole seconds, which is
 already the right question.
