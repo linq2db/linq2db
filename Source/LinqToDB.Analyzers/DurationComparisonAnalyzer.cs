@@ -290,20 +290,20 @@ namespace LinqToDB.Analyzers
 
 			ImmutableArray<AttributeData> GetDurationAttributes(ISymbol member)
 			{
-				// [Duration] is Inherited, so a base declaration counts - and it may live in another assembly.
-				for (var current = member; current is not null; current = GetOverriddenMember(current))
-				{
-					var builder = ImmutableArray.CreateBuilder<AttributeData>();
+				// [Duration] is Inherited, so a base declaration counts - and it may live in another assembly. Every
+				// level is collected rather than the nearest one carrying an attribute: linq2db concatenates a
+				// member's own attributes with its base's and then picks one per configuration
+				// (MappingAttributesCache.GetMappingAttributesTreeInternal), so an inherited declaration can be the
+				// one that applies, and a report is only sound when no declaration in the whole set represents the
+				// value.
+				var builder = ImmutableArray.CreateBuilder<AttributeData>();
 
+				for (var current = member; current is not null; current = GetOverriddenMember(current))
 					foreach (var attribute in current.GetAttributes())
 						if (IsDurationAttribute(attribute.AttributeClass))
 							builder.Add(attribute);
 
-					if (builder.Count > 0)
-						return builder.ToImmutable();
-				}
-
-				return ImmutableArray<AttributeData>.Empty;
+				return builder.ToImmutable();
 			}
 
 			// DurationAttribute is public and unsealed, and MappingSchema.GetAttribute<DurationAttribute> resolves by

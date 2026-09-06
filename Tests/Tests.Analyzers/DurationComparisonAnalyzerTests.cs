@@ -762,6 +762,46 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotReportWhenDeclaredUnitsDisagreeAcrossAnOverride()
+		{
+			// The same disagreement as the test above, split across an override. [Duration] is Inherited and
+			// linq2db concatenates a member's own attributes with its base's before picking one per configuration
+			// (MappingAttributesCache.GetMappingAttributesTreeInternal), so the millisecond declaration is live
+			// under SqlServer and holds 1.5 seconds exactly. Stopping at the first level carrying an attribute
+			// sees only the second declaration and reports.
+			const string source = """
+				using System;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.Mapping;
+
+				class BaseRow
+				{
+					[Column]
+					[Duration(DurationUnit.Millisecond, Configuration = "SqlServer")]
+					public virtual TimeSpan Elapsed { get; set; }
+				}
+
+				class DerivedRow : BaseRow
+				{
+					[Duration(DurationUnit.Second)]
+					public override TimeSpan Elapsed { get; set; }
+				}
+
+				class C
+				{
+					void M(IQueryable<DerivedRow> q)
+					{
+						q.Where(r => r.Elapsed == TimeSpan.FromSeconds(1.5));
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		[Test]
 		public Task ReportsThroughDerivedDurationAttribute()
 		{
 			// DurationAttribute is public and unsealed, and the mapping resolves it by assignability
