@@ -255,8 +255,11 @@ foreach ($pkg in @($linq2db, $analyzerPkg)) {
     }
 
     foreach ($ruleId in $ruleIds) {
-        if ($pkg.readme -notmatch [regex]::Escape($ruleId)) {
-            $violations += ('{0}: {1} is missing from the packed {2} — the rule ships undocumented for this package''s consumers' -f $pkg.id, $ruleId, $pkg.readmePath)
+        # Anchored to a diagnostics-table row rather than to the id anywhere in the text. Both readmes also
+        # name their ids in the .editorconfig samples, so a bare substring test passes over a deleted row -
+        # which is the state this check exists to reject.
+        if ($pkg.readme -notmatch ('(?m)^\s*\|\s*\[?' + [regex]::Escape($ruleId) + '\]?')) {
+            $violations += ('{0}: {1} has no diagnostics-table row in the packed {2} — the rule ships undocumented for this package''s consumers' -f $pkg.id, $ruleId, $pkg.readmePath)
         }
     }
 }
