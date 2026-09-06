@@ -6,6 +6,7 @@ open System.Linq.Expressions
 open System.Reflection
 
 open LinqToDB.Internal.Common
+open LinqToDB.Internal.Extensions
 open LinqToDB.Mapping
 open LinqToDB.Metadata
 
@@ -93,6 +94,8 @@ type internal FSharpOptionSupport =
     /// column.
     static member IsScalarOption(t: Type) =
         FSharpOptionSupport.IsOption t &&
+        // TODO: switch to the callsite's MappingSchema once metadata readers are schema-aware (#5675);
+        // Default misses scalar types registered on the context's own schema.
         (let e = t.GetGenericArguments().[0] in
          MappingSchema.Default.IsScalarType e || FSharpSingleCaseUnionSupport.IsScalarSingleCaseUnion e)
 
@@ -115,7 +118,7 @@ type internal FSharpOptionMetadataReader() =
                 Array.empty<MappingAttribute>
 
         member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
-            let mt = FSharpMemberInfo.memberType memberInfo
+            let mt = memberInfo.GetMemberType()
             if FSharpOptionSupport.IsScalarOption mt then
                 // An option column is always nullable (the "none" case maps to NULL). A reference option is
                 // nullable by virtue of its type, but a struct value-option ('T voption) is a non-nullable

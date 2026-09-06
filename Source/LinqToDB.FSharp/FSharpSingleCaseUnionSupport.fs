@@ -8,6 +8,7 @@ open System.Reflection
 open Microsoft.FSharp.Reflection
 
 open LinqToDB.Internal.Common
+open LinqToDB.Internal.Extensions
 open LinqToDB.Mapping
 open LinqToDB.Metadata
 
@@ -46,6 +47,8 @@ type internal FSharpSingleCaseUnionSupport =
     /// <c>true</c> when <paramref name="t"/> is a single-case union whose wrapped field is a scalar (column) type.
     static member IsScalarSingleCaseUnion(t: Type) =
         FSharpSingleCaseUnionSupport.IsSingleCaseUnion t &&
+        // TODO: switch to the callsite's MappingSchema once metadata readers are schema-aware (#5675);
+        // Default misses scalar types registered on the context's own schema.
         MappingSchema.Default.IsScalarType(((FSharpType.GetUnionCases(t, true)).[0].GetFields()).[0].PropertyType)
 
     /// The single wrapped field of a single-case union. Caller must have checked
@@ -73,7 +76,7 @@ type internal FSharpSingleCaseUnionMetadataReader() =
                 Array.empty<MappingAttribute>
 
         member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
-            let mt = FSharpMemberInfo.memberType memberInfo
+            let mt = memberInfo.GetMemberType()
             if FSharpSingleCaseUnionSupport.IsScalarSingleCaseUnion mt then
                 // DB type left unset: ColumnDescriptor resolves it from the converter's provider type against
                 // the active provider-inclusive schema (preserving facets), as for F# option columns.
