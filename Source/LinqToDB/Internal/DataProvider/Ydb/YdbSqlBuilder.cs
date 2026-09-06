@@ -331,26 +331,25 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override bool IsCteColumnListSupported => false;
 
 		protected override void BuildSql(
-			int                 commandNumber,
-			SqlStatement        statement,
-			StringBuilder       sb,
-			OptimizationContext optimizationContext,
-			int                 indent,
-			ColumnAliasMode     aliasMode,
-			NullabilityContext? nullabilityContext)
+			SqlStatement             statement,
+			StringBuilder            sb,
+			ISqlBuilderRenderContext renderContext,
+			int                      indent,
+			ColumnAliasMode          aliasMode,
+			NullabilityContext?      nullabilityContext)
 		{
 			// YDB CTEs are named query variables ($name) that share the parameter-name bucket;
 			// reserve all CTE names up front (by registering them with the parameter normalizer) so
 			// parameter names generated during the build can't collide with a CTE variable name
 			// (resolves the conflict noted in BasicSqlOptimizer.FinalizeCte).
-			if (commandNumber == 0 && statement is SqlStatementWithQueryBase { With.Clauses.Count: > 0 } withQuery)
+			if (statement is SqlStatementWithQueryBase { With.Clauses.Count: > 0 } withQuery)
 			{
 				foreach (var cte in withQuery.With.Clauses)
 					if (!string.IsNullOrEmpty(cte.Name))
-						optimizationContext.NormalizeParameterName(cte.Name);
+						renderContext.NormalizeParameterName(cte.Name);
 			}
 
-			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
+			base.BuildSql(statement, sb, renderContext, indent, aliasMode, nullabilityContext);
 		}
 
 		protected override void BuildWithClause(SqlWithClause? with)
@@ -412,12 +411,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override void BuildInListPredicate(SqlPredicate.InList predicate)
 		{
 			static List<object?>? TryMaterializeItems(
-				OptimizationContext           opt,
+				ISqlBuilderRenderContext      renderContext,
 				IReadOnlyList<ISqlExpression> values)
 			{
 				if (values is [SqlParameter pr])
 				{
-					var pv = pr.GetParameterValue(opt.EvaluationContext.ParameterValues).ProviderValue;
+					var pv = pr.GetParameterValue(renderContext.EvaluationContext.ParameterValues).ProviderValue;
 					switch (pv)
 					{
 						case string:
@@ -438,7 +437,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 							tmp.Add(sv.Value);
 							break;
 						case SqlParameter sp:
-							tmp.Add(sp.GetParameterValue(opt.EvaluationContext.ParameterValues).ProviderValue);
+							tmp.Add(sp.GetParameterValue(renderContext.EvaluationContext.ParameterValues).ProviderValue);
 							break;
 						default:
 							return null;
@@ -448,7 +447,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				return tmp;
 			}
 
-			var items = TryMaterializeItems(OptimizationContext, predicate.Values);
+			var items = TryMaterializeItems(RenderContext, predicate.Values);
 			if (items == null)
 			{
 				base.BuildInListPredicate(predicate);
@@ -604,7 +603,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (selectQuery.OrderBy.Items.Count == 0)
 				return;
 
-			var orderBy = ConvertElement(selectQuery.OrderBy);
+			var orderBy = selectQuery.OrderBy;
 
 			var nonConstant =
 				orderBy.Items.TrueForAll(i => !QueryHelper.IsConstantFast(i.Expression))

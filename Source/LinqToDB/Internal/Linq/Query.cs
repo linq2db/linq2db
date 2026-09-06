@@ -19,14 +19,25 @@ namespace LinqToDB.Internal.Linq
 {
 	public abstract class Query
 	{
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,object?>                         GetElement      = null!;
-		internal Func<IDataContext,IQueryExpressions,object?[]?,object?[]?,CancellationToken,Task<object?>> GetElementAsync = null!;
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,object?>                         GetElement      = null!;
+		internal Func<IDataContext,IQueryExpressions,SqlCommandExecutionContext?,CancellationToken,Task<object?>> GetElementAsync = null!;
+
+		// Eager-aware element selection (First/Single/…), set only by FirstSingleBuilder. Unlike GetElement, these route
+		// through the combined eager engine (Query<T>.GetEagerEnumerable — one multi-result-set command when eligible,
+		// else the sequential harvesters + base enumerable) and take the single element, so First/Single batch their
+		// eager children the same way ToList()/foreach do. When set, the element execution paths use these INSTEAD of
+		// GetElement and skip the InitHarvesters pre-init (GetEagerEnumerable runs the harvesters itself). Null for
+		// scalar / ExecuteElement / non-query queries, which keep the pre-inited-harvesters GetElement path.
+		internal Func<IDataContext,IQueryExpressions,object?[]?,object?>?                         GetEagerElement;
+		internal Func<IDataContext,IQueryExpressions,object?[]?,CancellationToken,Task<object?>>? GetEagerElementAsync;
 
 		#region Init
 
-		internal readonly List<QueryInfo> Queries = new (1);
+		// One logical query per Query. Multi-statement expansion is modelled by SqlCommandScenario at render time
+		// (DataConnection.QueryRunner.GetCommand), not by a list here. Set in Init.
+		internal QueryInfo QueryInfo = null!;
 
-		public IReadOnlyCollection<QueryInfo> GetQueries()    => Queries;
+		public IReadOnlyCollection<QueryInfo> GetQueries()    => new[] { QueryInfo };
 		public bool                           IsFinalized     { get; internal set; }
 		public SqlErrorExpression?            ErrorExpression { get; internal set; }
 
@@ -145,53 +156,59 @@ namespace LinqToDB.Internal.Linq
 
 		#region Eager Loading
 
-		Preamble[]? _preambles;
+		Harvester[]? _harvesters;
 
-		internal void SetPreambles(List<Preamble>? preambles)
+		internal void SetHarvesters(List<Harvester>? harvesters)
 		{
-			_preambles = preambles?.ToArray();
+			_harvesters = harvesters?.ToArray();
 		}
 
-		internal bool IsAnyPreambles()
+		internal bool IsAnyHarvesters()
 		{
-			if (_preambles == null || _preambles.Length == 0)
+			if (_harvesters == null || _harvesters.Length == 0)
 				return false;
 
-			for (var i = 0; i < _preambles.Length; i++)
+			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				if (!_preambles[i].IsInlined)
+				if (!_harvesters[i].IsInlined)
 					return true;
 			}
 
 			return false;
 		}
 
-		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
-		{
-			if (_preambles == null)
-				return null;
+		// Exposes the harvester array to QueryRunner.TryGetCombinedEagerEnumerable so the main query and its combinable
+		// eager-load children can be assembled into one multi-result-set command.
+		internal Harvester[]? HarvestersArray => _harvesters;
 
-			var preambles = new object[_preambles.Length];
-			for (var i = 0; i < preambles.Length; i++)
+		internal SqlCommandExecutionContext? InitHarvesters(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
+		{
+			// A query with no harvesters still needs a context when it carries compiled-query parameters (ps != null), so the
+			// mapper/parameter accessors can read them from the context. Regular queries pass ps == null here and stay context-free.
+			if (_harvesters == null)
+				return ps is null ? null : new SqlCommandExecutionContext(0, ps);
+
+			var context = new SqlCommandExecutionContext(_harvesters.Length, ps);
+			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				preambles[i] = _preambles[i].Execute(dc, expressions, ps, preambles);
+				context.SetResult(i, _harvesters[i].Execute(dc, expressions, context));
 			}
 
-			return preambles;
+			return context;
 		}
 
-		internal async Task<object?[]?> InitPreamblesAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
+		internal async Task<SqlCommandExecutionContext?> InitHarvestersAsync(IDataContext dc, IQueryExpressions expressions, object?[]? ps, CancellationToken cancellationToken)
 		{
-			if (_preambles == null)
-				return null;
+			if (_harvesters == null)
+				return ps is null ? null : new SqlCommandExecutionContext(0, ps);
 
-			var preambles = new object[_preambles.Length];
-			for (var i = 0; i < preambles.Length; i++)
+			var context = new SqlCommandExecutionContext(_harvesters.Length, ps);
+			for (var i = 0; i < _harvesters.Length; i++)
 			{
-				preambles[i] = await _preambles[i].ExecuteAsync(dc, expressions, ps, preambles, cancellationToken).ConfigureAwait(false);
+				context.SetResult(i, await _harvesters[i].ExecuteAsync(dc, expressions, context, cancellationToken).ConfigureAwait(false));
 			}
 
-			return preambles;
+			return context;
 		}
 
 		#endregion

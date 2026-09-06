@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,6 +13,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Metrics;
 
@@ -21,27 +21,27 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		/// <summary>Marker interface for KeyedQueryKeysPreamble, used during buffer setup.</summary>
-		interface IKeyedQueryKeysPreamble
+		/// <summary>Marker interface for KeyedQueryKeysHarvester, used during buffer setup.</summary>
+		interface IKeyedQueryKeysHarvester
 		{
-			/// <summary>Extract distinct keys from the buffer into the per-execution holder, keyed by the given execution's results array.</summary>
-			void SetKeysFromBuffer(object execution, IList buffer);
+			/// <summary>Extract distinct keys from the buffer and write them into the child harvester's execution-context slot.</summary>
+			void SetKeysFromBuffer(SqlCommandExecutionContext context, IList buffer);
 
-			/// <summary>Index of the corresponding KeyedQueryChildPreamble in the preambles list.</summary>
-			int ChildPreambleIndex { get; set; }
+			/// <summary>Index of the corresponding KeyedQueryChildHarvester in the harvesters list; also the context slot the keys are written to.</summary>
+			int ChildHarvesterIndex { get; set; }
 		}
 
 		/// <summary>
 		/// KeyedQuery strategy: joins child records to a local key collection (VALUES table)
-		/// instead of re-querying the parent table. Keys are provided at runtime through
-		/// a <see cref="KeyedQueryKeysHolder{TKey}"/> populated by a key-extraction preamble.
+		/// instead of re-querying the parent table. Keys are provided at runtime through the shared
+		/// execution context, written by a key-extraction harvester and read by the child's VALUES parameter.
 		/// Inner eager loads within the child query fall back to Default strategy.
 		/// </summary>
 		Expression? ProcessEagerLoadingKeyedQuery(
 			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
 			ParameterExpression    queryParameter,
-			List<Preamble>         preambles,
+			List<Harvester>         harvesters,
 			Expression[]           previousKeys,
 			EagerLoadState         state)
 		{
@@ -105,9 +105,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				// No dependencies — identical to Default for the detached case
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, correctedSequence, new SelectQuery()));
 
-				var parameters = new object[] { detailSequence, queryParameter, preambles };
+				var parameters = new object[] { detailSequence, queryParameter, harvesters };
 
-				resultExpression = _buildPreambleQueryDetachedMethodInfo
+				resultExpression = _buildHarvesterQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
 					.InvokeExt<Expression>(this, parameters);
 			}
@@ -176,10 +176,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				var keyParameter     = Expression.Parameter(keyType, "k");
 				var detailParameter  = Expression.Parameter(detailType, "d");
 
-				// Source: local key collection from KeyedQueryKeysHolder
-				var (holder, sourceExpr) = _buildKeyedQueryKeysSourceMethodInfo
+				// Reserve a dedicated execution-context slot for this keyed load's parent keys. The slot index is
+				// baked as a scalar int constant into the keys accessor (below), which keeps sibling keyed children
+				// as distinct cached queries — a reference-typed box would be parameterized out of the query-cache
+				// key and collapse them. The slot is separate from the keys/child harvester slots, so buffer mode
+				// (which repurposes the keys harvester slot) cannot clobber the keys.
+				var keysDataIndex = harvesters.Count;
+				harvesters.Add(new KeysDataSlotHarvester(keysDataIndex));
+
+				// Source: local key collection read from that dedicated slot (written by the keys step).
+				var sourceExpr = _buildKeyedQueryKeysSourceMethodInfo
 					.MakeGenericMethod(keyType)
-					.InvokeExt<(object holder, Expression sourceExpr)>(null, Array.Empty<object>());
+					.InvokeExt<Expression>(null, new object[] { keysDataIndex });
 
 				Expression childQueryCall = null!;
 
@@ -350,9 +358,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, childQueryCall,
 					new SelectQuery()));
 
-				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys, holder, keyExtractionSequence, state };
+				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, harvesters, orderByToApply, detailKeys, keysDataIndex, keyExtractionSequence, state };
 
-				resultExpression = _buildKeyedQueryPreambleAttachedMethodInfo
+				resultExpression = _buildKeyedQueryHarvesterAttachedMethodInfo
 					.MakeGenericMethod(keyType, detailType)
 					.InvokeExt<Expression>(this, parameters);
 			}
@@ -670,68 +678,47 @@ namespace LinqToDB.Internal.Linq.Builder
 			})!;
 		}
 
-		/// <summary>
-		/// Per-execution store for KeyedQuery local key collections, keyed by the
-		/// <see cref="IQueryExpressions"/> container created fresh for each top-level query execution
-		/// and threaded uniformly through every nested preamble / child / buffer query. This isolates
-		/// concurrent executions of the same cached query — each writes and reads its own key set under
-		/// its own container — so callers sharing the cached query cannot clobber each other's keys.
-		/// </summary>
-		sealed class KeyedQueryKeysHolder<TKey>
+		// Canonicalize key order so the inlined VALUES table is identical regardless of which extraction
+		// path produced the keys (client-side buffer vs SQL key query) or what order the database returned
+		// rows in. Without this, direct and remote (LinqService) execution can emit divergent SQL for the
+		// same query (#5664). Keys whose type is not orderable (e.g. a composite with a byte[] component)
+		// keep their source order — eager load compares keys structurally for equality only, so no orderable
+		// contract is otherwise required.
+		static TKey[] SortKeysDeterministically<TKey>(TKey[] keys)
 		{
-			readonly ConditionalWeakTable<object, TKey[]> _perExecution = new();
-
-			public void SetKeys(object? execution, TKey[] keys)
-			{
-				if (execution == null)
-					return;
-
-				// Canonicalize key order so the inlined VALUES table is identical regardless of which
-				// extraction path produced the keys (client-side buffer vs SQL key query) or what order
-				// the database returned rows in. Without this, direct and remote (LinqService) execution
-				// can emit divergent SQL for the same query (#5664). Keys whose type is not orderable
-				// (e.g. a composite with a byte[] component) keep their source order — eager load compares
-				// keys structurally for equality only, so no orderable contract is otherwise required.
-				keys = SortKeysDeterministically(keys);
-
-				_perExecution.Remove(execution);
-				_perExecution.Add(execution, keys);
-			}
-
-			static TKey[] SortKeysDeterministically(TKey[] keys)
-			{
-				if (keys.Length < 2)
-					return keys;
-
-				try
-				{
-					// Sort in place — every caller passes a freshly-allocated array (.ToArray()) that
-					// nothing else holds, so mutating it is safe.
-					Array.Sort(keys, _keyComparer);
-				}
-				catch (InvalidOperationException)
-				{
-					// TKey (or one of its composite components) does not implement IComparable.
-					// Such keys are not deterministically orderable, so they keep source order — eager
-					// load compares keys structurally for equality only, no ordering contract is required.
-					// A partial Array.Sort here is harmless: it only reorders (never drops) elements, and
-					// the order of a non-orderable key class is non-deterministic between paths regardless.
-				}
-
+			if (keys.Length < 2)
 				return keys;
+
+			try
+			{
+				// Sort in place — every caller passes a freshly-allocated array (.ToArray()) that
+				// nothing else holds, so mutating it is safe.
+				Array.Sort(keys, DeterministicKeyComparer<TKey>.Instance);
+			}
+			catch (InvalidOperationException)
+			{
+				// TKey (or one of its composite components) does not implement IComparable.
+				// Such keys are not deterministically orderable, so they keep source order — eager
+				// load compares keys structurally for equality only, no ordering contract is required.
+				// A partial Array.Sort here is harmless: it only reorders (never drops) elements, and
+				// the order of a non-orderable key class is non-deterministic between paths regardless.
 			}
 
-			// Ordinal, culture-invariant key comparer. Comparer<TKey>.Default orders string keys (and
-			// string components of composite ValueTuple keys) with string.CompareTo, i.e. a culture-sensitive
-			// linguistic comparison. That is unsuitable for canonicalizing SQL text: it is not a stable total
-			// order over distinct strings (canonically-equal but distinct values — e.g. "å" vs "å"
-			// — tie, and Array.Sort is not stable, so the two extraction paths could still order them
-			// differently), and it is machine-culture-dependent (baselines would reorder across cultures).
-			// Both defeat the deterministic ordering this canonicalization exists to provide (#5664), so
-			// strings are compared ordinally.
-			static readonly IComparer<TKey> _keyComparer = CreateKeyComparer();
+			return keys;
+		}
 
-			static IComparer<TKey> CreateKeyComparer()
+		// Ordinal, culture-invariant key comparer. Comparer<TKey>.Default orders string keys (and string
+		// components of composite ValueTuple keys) with string.CompareTo, i.e. a culture-sensitive linguistic
+		// comparison. That is unsuitable for canonicalizing SQL text: it is not a stable total order over
+		// distinct strings (canonically-equal but distinct values can tie, and Array.Sort is not stable, so
+		// the two extraction paths could still order them differently), and it is machine-culture-dependent
+		// (baselines would reorder across cultures). Both defeat the deterministic ordering this
+		// canonicalization exists to provide (#5664), so strings are compared ordinally.
+		static class DeterministicKeyComparer<TKey>
+		{
+			public static readonly IComparer<TKey> Instance = Create();
+
+			static IComparer<TKey> Create()
 			{
 				if (typeof(TKey) == typeof(string))
 					return (IComparer<TKey>)(object)StringComparer.Ordinal;
@@ -774,89 +761,86 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Comparer<object>.Default.Compare(a, b);
 				}
 			}
-
-			// execution is null only if the keys accessor is evaluated without a live IQueryExpressions
-			// (e.g. during SQL-text generation); the value is unused there, so return null — exactly as
-			// the previous nullable field did.
-			public TKey[]? GetKeys(object? execution)
-				=> execution != null && _perExecution.TryGetValue(execution, out var keys) ? keys : null;
-
-			public void ClearKeys(object? execution)
-			{
-				if (execution != null)
-					_perExecution.Remove(execution);
-			}
 		}
+
+		static readonly MethodInfo _getKeysAtMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(GetKeysAt), BindingFlags.Static | BindingFlags.NonPublic)
+			?? throw new InvalidOperationException();
+
+		// Reads a keyed child's parent keys from its dedicated execution-context slot (written by the keys step).
+		// context is null only when the accessor is evaluated without a live execution (e.g. SQL-text generation);
+		// the value is unused there, so return null.
+		static TKey[]? GetKeysAt<TKey>(SqlCommandExecutionContext? context, int index)
+			=> context != null ? (TKey[]?)context.GetResult(index) : null;
 
 		static readonly MethodInfo _buildKeyedQueryKeysSourceMethodInfo =
 			typeof(ExpressionBuilder).GetMethod(nameof(BuildKeyedQueryKeysSource), BindingFlags.Static | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException();
 
-		static (object holder, Expression sourceExpr) BuildKeyedQueryKeysSource<TKey>()
+		// Builds the keyed child's keys-source expression: read the parent keys from the dedicated execution-context
+		// slot (keysDataIndex). The index is baked as a scalar int constant, NOT a reference-typed box:
+		// ExpressionCacheHelpers.ShouldRemoveConstantFromCache keeps scalar constants in the query-cache key, so
+		// sibling keyed children stay distinct cached queries. A reference box is instead parameterized out of the
+		// key, collapsing siblings onto one compiled query that reads the wrong slot.
+		static Expression BuildKeyedQueryKeysSource<TKey>(int keysDataIndex)
 		{
-			var holder     = new KeyedQueryKeysHolder<TKey>();
-			var holderExpr = Expression.Constant(holder);
-			// Source the keys per-execution from the IQueryExpressions container (threaded uniformly to
-			// every nested / child / buffer query), NOT a build-time-shared field — see KeyedQueryKeysHolder.
-			var getKeys    = typeof(KeyedQueryKeysHolder<TKey>).GetMethod(nameof(KeyedQueryKeysHolder<>.GetKeys))!;
-			var keysExpr   = Expression.Call(holderExpr, getKeys, QueryExpressionContainerParam);
-
-			return (holder, keysExpr);
+			var getKeys = _getKeysAtMethodInfo.MakeGenericMethod(typeof(TKey));
+			return Expression.Call(getKeys, ExecutionContextParam, ExpressionInstances.Int32(keysDataIndex));
 		}
 
-		static readonly MethodInfo _buildKeyedQueryPreambleAttachedMethodInfo =
-			typeof(ExpressionBuilder).GetMethod(nameof(BuildKeyedQueryPreambleAttached), BindingFlags.Instance | BindingFlags.NonPublic)
+		static readonly MethodInfo _buildKeyedQueryHarvesterAttachedMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildKeyedQueryHarvesterAttached), BindingFlags.Instance | BindingFlags.NonPublic)
 			?? throw new InvalidOperationException();
 
-		Expression BuildKeyedQueryPreambleAttached<TKey, T>(
+		Expression BuildKeyedQueryHarvesterAttached<TKey, T>(
 			IBuildContext                   childSequence,
 			Expression                      keyExpression,
 			ParameterExpression             queryParameter,
-			List<Preamble>                  preambles,
+			List<Harvester>                  harvesters,
 			List<(LambdaExpression, bool)>? additionalOrderBy,
 			Expression[]                    previousKeys,
-			object                          keysHolder,
+			int                             keysDataIndex,
 			IBuildContext                   keyExtractionSequence,
 			EagerLoadState                  state)
 			where TKey : notnull
 		{
-			var holder = (KeyedQueryKeysHolder<TKey>)keysHolder;
-
-			// --- Step 1: Build key extraction preamble ---
+			// --- Step 1: Build key extraction harvester ---
 			var keyQuery = new Query<TKey>(DataContext);
 			keyQuery.Init(keyExtractionSequence);
 			keyQuery.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
-			if (!BuildQuery(keyQuery, keyExtractionSequence, queryParameter, ref preambles!, previousKeys))
+			if (!BuildQuery(keyQuery, keyExtractionSequence, queryParameter, ref harvesters!, previousKeys))
 				return keyQuery.ErrorExpression!;
 
-			var keyPreamble = new KeyedQueryKeysPreamble<TKey>(keyQuery, holder) { MainKeyExpression = keyExpression };
-			preambles.Add(keyPreamble);
+			var keyHarvester = new KeyedQueryKeysHarvester<TKey>(keyQuery) { MainKeyExpression = keyExpression, KeysDataIndex = keysDataIndex };
+			harvesters.Add(keyHarvester);
 
-			// --- Step 2: Build child query preamble ---
+			// --- Step 2: Build child query harvester ---
 			var childQuery = new Query<KeyDetailEnvelope<TKey, T>>(DataContext);
 			childQuery.Init(childSequence);
 			childQuery.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
-			if (!BuildQuery(childQuery, childSequence, queryParameter, ref preambles!, Array.Empty<Expression>()))
+			if (!BuildQuery(childQuery, childSequence, queryParameter, ref harvesters!, Array.Empty<Expression>()))
 				return childQuery.ErrorExpression!;
 
 			// Signal the CURRENT level's BuildQuery to set up buffer materialization
-			state.HasKeyedQueryPreambles = true;
+			state.HasKeyedQueryHarvesters = true;
 
-			var idx          = preambles.Count;
-			var childPreamble = new KeyedQueryChildPreamble<TKey, T>(childQuery, holder);
-			preambles.Add(childPreamble);
+			var idx            = harvesters.Count;
+			var childHarvester = new KeyedQueryChildHarvester<TKey, T>(childQuery, keysDataIndex);
+			harvesters.Add(childHarvester);
 
-			// Record child preamble index on the key preamble for buffer setup matching
-			keyPreamble.ChildPreambleIndex = idx;
+			// Record the child harvester index on the key harvester so buffer setup can match the two by index.
+			// The keys themselves live in the dedicated keysDataIndex slot (written by the keys step, read by the
+			// child) — the child's own slot holds its HarvesterResult for the projection.
+			keyHarvester.ChildHarvesterIndex = idx;
 
-			var getListMethod = MemberHelper.MethodOf((PreambleResult<TKey, T> c) => c.GetList(default!));
+			var getListMethod = MemberHelper.MethodOf((HarvesterResult<TKey, T> c) => c.GetList(default!));
 
 			Expression resultExpression =
 				Expression.Call(
-					Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
-						typeof(PreambleResult<TKey, T>)), getListMethod, keyExpression);
+					Expression.Convert(Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)),
+						typeof(HarvesterResult<TKey, T>)), getListMethod, keyExpression);
 
 			if (additionalOrderBy != null)
 			{
@@ -866,11 +850,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		sealed class KeyedQueryKeysPreamble<TKey> : Preamble, IKeyedQueryKeysPreamble
+		sealed class KeyedQueryKeysHarvester<TKey> : Harvester, IKeyedQueryKeysHarvester
 			where TKey : notnull
 		{
-			readonly Query<TKey>               _query;
-			readonly KeyedQueryKeysHolder<TKey>  _holder;
+			readonly Query<TKey> _query;
 
 			/// <summary>
 			/// Set during buffer setup: extracts TKey from a buffer row (ValueTuple cast to object).
@@ -884,34 +867,37 @@ namespace LinqToDB.Internal.Linq.Builder
 			public Expression? MainKeyExpression { get; set; }
 
 			/// <inheritdoc />
-			public int ChildPreambleIndex { get; set; }
+			public int ChildHarvesterIndex { get; set; }
 
-			public KeyedQueryKeysPreamble(Query<TKey> query, KeyedQueryKeysHolder<TKey> holder)
+			/// <summary>Dedicated execution-context slot this harvester writes the extracted keys into; the child reads them from there.</summary>
+			public int KeysDataIndex { get; set; }
+
+			public KeyedQueryKeysHarvester(Query<TKey> query)
 			{
-				_query  = query;
-				_holder = holder;
+				_query = query;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
-				var keys = _query.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToArray();
-				_holder.SetKeys(expressions, keys);
+				var keys = SortKeysDeterministically(_query.GetResultEnumerable(dataContext, expressions, context).ToArray());
+				// The child reads its parent keys from the dedicated KeysDataIndex slot. See BuildKeyedQueryHarvesterAttached.
+				context?.SetResult(KeysDataIndex, keys);
 				return keys;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
-				var keys = await _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
-					.ToArrayAsync(cancellationToken).ConfigureAwait(false);
-				_holder.SetKeys(expressions, keys);
+				var keys = SortKeysDeterministically(await _query.GetResultEnumerable(dataContext, expressions, context)
+					.ToArrayAsync(cancellationToken).ConfigureAwait(false));
+				context?.SetResult(KeysDataIndex, keys);
 				return keys;
 			}
 
-			public void SetKeysFromBuffer(object execution, IList buffer)
+			public void SetKeysFromBuffer(SqlCommandExecutionContext context, IList buffer)
 			{
 				if (BufferKeyExtractor == null)
 				{
-					// Extractor not set — buffer optimization not available for this preamble.
+					// Extractor not set — buffer optimization not available for this harvester.
 					// Fall back to SQL-based key extraction (Execute will be called normally).
 					return;
 				}
@@ -920,95 +906,81 @@ namespace LinqToDB.Internal.Linq.Builder
 				foreach (var row in buffer)
 					keySet.Add(BufferKeyExtractor(row));
 
-				_holder.SetKeys(execution, keySet.ToArray());
+				// Write the (canonicalized) keys into the dedicated slot, exactly where the SQL key extraction
+				// path would; the child reads them from there.
+				context.SetResult(KeysDataIndex, SortKeysDeterministically(keySet.ToArray()));
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var query in _query.Queries)
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
 			}
 		}
 
-		sealed class KeyedQueryChildPreamble<TKey, T> : Preamble
+		sealed class KeyedQueryChildHarvester<TKey, T> : Harvester
 			where TKey : notnull
 		{
 			readonly Query<KeyDetailEnvelope<TKey, T>> _query;
-			readonly KeyedQueryKeysHolder<TKey>         _holder;
+			readonly int                               _keysDataIndex;
 
-			public KeyedQueryChildPreamble(
+			public KeyedQueryChildHarvester(
 				Query<KeyDetailEnvelope<TKey, T>> query,
-				KeyedQueryKeysHolder<TKey>         holder)
+				int                               keysDataIndex)
 			{
-				_query  = query;
-				_holder = holder;
+				_query         = query;
+				_keysDataIndex = keysDataIndex;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
-				var keys = _holder.GetKeys(expressions);
-				try
-				{
-					var result = new PreambleResult<TKey, T>();
+				var keys   = context is null ? null : (TKey[]?)context.GetResult(_keysDataIndex);
+				var result = new HarvesterResult<TKey, T>();
 
-					// Skip child query when there are no parent keys — no rows to load.
-					if (keys is not { Length: > 0 })
-						return result;
-
-					foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles))
-					{
-						result.Add(e.Key, e.Detail);
-					}
-
+				// Skip child query when there are no parent keys — no rows to load.
+				if (keys is not { Length: > 0 })
 					return result;
-				}
-				finally
+
+				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, context))
 				{
-					_holder.ClearKeys(expressions);
+					result.Add(e.Key, e.Detail);
 				}
+
+				return result;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
-				var keys = _holder.GetKeys(expressions);
-				try
-				{
-					var result = new PreambleResult<TKey, T>();
+				var keys   = context is null ? null : (TKey[]?)context.GetResult(_keysDataIndex);
+				var result = new HarvesterResult<TKey, T>();
 
-					// Skip child query when there are no parent keys — no rows to load.
-					if (keys is not { Length: > 0 })
-						return result;
-
-					await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, parameters, preambles)
-						.WithCancellation(cancellationToken)
-						.ConfigureAwait(false))
-					{
-						result.Add(e.Key, e.Detail);
-					}
-
+				// Skip child query when there are no parent keys — no rows to load.
+				if (keys is not { Length: > 0 })
 					return result;
-				}
-				finally
+
+				await foreach (var e in _query.GetResultEnumerable(dataContext, expressions, context)
+					.WithCancellation(cancellationToken)
+					.ConfigureAwait(false))
 				{
-					_holder.ClearKeys(expressions);
+					result.Add(e.Key, e.Detail);
 				}
+
+				return result;
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var query in _query.Queries)
-					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
+				QueryHelper.CollectParametersAndValues(_query.QueryInfo.Statement, parameters, values);
 			}
 		}
 
 		#region KeyedQuery Buffer Materialization
 
 		/// <summary>
-		/// Sets up buffer materialization: the main SQL runs once as a preamble producing ValueTuple rows,
+		/// Sets up buffer materialization: the main SQL runs once as a harvester producing ValueTuple rows,
 		/// keys are extracted client-side, and the main query iterates the buffer to reconstruct T.
-		/// Called from BuildQuery when the committed <see cref="EagerLoadState.HasKeyedQueryPreambles"/> is true.
+		/// Called from BuildQuery when the committed <see cref="EagerLoadState.HasKeyedQueryHarvesters"/> is true.
 		/// </summary>
-		void SetRunQueryWithKeyedQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Preamble> preambles, int preambleStartIndex = 0)
+		void SetRunQueryWithKeyedQueryBuffer<T>(Query<T> query, IBuildContext sequence, Expression finalized, List<Harvester> harvesters, int harvesterStartIndex = 0)
 		{
 			var selectQuery = sequence.SelectQuery;
 
@@ -1040,7 +1012,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// 3-7: Dispatch to generic method (needs TBuffer type parameter)
 			_setupKeyedQueryBufferMethodInfo
 				.MakeGenericMethod(typeof(T), bufferType)
-				.InvokeExt(this, new object[] { query, sequence, finalized, preambles, selectQuery, placeholders.ToArray(), colTypes, preambleStartIndex });
+				.InvokeExt(this, new object[] { query, sequence, finalized, harvesters, selectQuery, placeholders.ToArray(), colTypes, harvesterStartIndex });
 		}
 
 		static readonly MethodInfo _setupKeyedQueryBufferMethodInfo =
@@ -1051,11 +1023,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			Query<T>                    query,
 			IBuildContext               sequence,
 			Expression                  finalized,
-			List<Preamble>              preambles,
+			List<Harvester>              harvesters,
 			SelectQuery                 selectQuery,
 			SqlPlaceholderExpression[]  placeholders,
 			Type[]                      colTypes,
-			int                         preambleStartIndex)
+			int                         harvesterStartIndex)
 		{
 			// 3. Build buffer mapper: new TBuffer(placeholder0, placeholder1, ...)
 			var bufferBody  = BuildValueTupleNew(typeof(TBuffer), placeholders.Cast<Expression>().ToArray());
@@ -1063,13 +1035,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// 4. Create Query<TBuffer> sharing the main SQL statement and parameter accessors.
 			// Mark as parameter-dependent and continuous-run because the statement may contain
-			// VALUES tables whose source is a SqlParameter (e.g., KeyedQueryKeysHolder.Keys).
+			// VALUES tables whose source is a SqlParameter (e.g., the keyed keys from the execution context).
 			// Without this, the optimizer passes null ParameterValues to EvaluationContext,
 			// making the SqlParameter unevaluable at SQL generation time.
 			var bufferQuery = new Query<TBuffer>(DataContext);
-			var bufferStatement = query.Queries[0].Statement;
+			var bufferStatement = query.QueryInfo.Statement;
 			bufferStatement.IsParameterDependent = true;
-			bufferQuery.Queries.Add(new QueryInfo { Statement = bufferStatement, IsContinuousRun = true });
+			bufferQuery.QueryInfo = new QueryInfo { Statement = bufferStatement, IsContinuousRun = true };
 			QueryRunner.SetRunQuery(bufferQuery, bufferMapper);
 
 			// 5. Build reconstruction using a visitor that handles all custom expression types.
@@ -1078,61 +1050,61 @@ namespace LinqToDB.Internal.Linq.Builder
 				placeholderMap[placeholders[i].Index!.Value] = i;
 
 			var bufferRowParam = Expression.Parameter(typeof(TBuffer), "bufRow");
-			var preambleParam  = Expression.Parameter(typeof(object?[]), "pr");
+			var harvesterParam  = Expression.Parameter(typeof(SqlCommandExecutionContext), "pr");
 
-			var visitor = new BufferReconstructionVisitor(placeholderMap, bufferRowParam, preambleParam);
+			var visitor = new BufferReconstructionVisitor(placeholderMap, bufferRowParam, harvesterParam);
 			var reconstructed = visitor.Visit(finalized)!;
 
 			if (reconstructed.Type != typeof(T))
 				reconstructed = Expression.Convert(reconstructed, typeof(T));
 
-			var reconstructionLambda = Expression.Lambda<Func<IQueryExpressions, object?[]?, TBuffer, object?[], T>>(
+			var reconstructionLambda = Expression.Lambda<Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T>>(
 				reconstructed,
 				QueryExpressionContainerParam,
 				ParametersParam,
-				bufferRowParam, preambleParam);
+				bufferRowParam, harvesterParam);
 			var reconstructionFunc = reconstructionLambda.CompileExpression();
 
-			// 6. Build key extractors for each KeyedQueryKeysPreamble and replace with buffer preamble
-			// Only process preambles at this BuildQuery level (from preambleStartIndex onward).
-			var keysPreambles = new List<IKeyedQueryKeysPreamble>();
+			// 6. Build key extractors for each KeyedQueryKeysHarvester and replace with buffer harvester
+			// Only process harvesters at this BuildQuery level (from harvesterStartIndex onward).
+			var keysHarvesters = new List<IKeyedQueryKeysHarvester>();
 			var firstKeyIdx   = -1;
 
-			for (var i = preambleStartIndex; i < preambles.Count; i++)
+			for (var i = harvesterStartIndex; i < harvesters.Count; i++)
 			{
-				if (preambles[i] is IKeyedQueryKeysPreamble kp)
+				if (harvesters[i] is IKeyedQueryKeysHarvester kp)
 				{
-					keysPreambles.Add(kp);
+					keysHarvesters.Add(kp);
 					if (firstKeyIdx == -1) firstKeyIdx = i;
 				}
 			}
 
 			// Build key extractors: extract key expressions from the finalized expression
-			// by finding PreambleResult.GetList(keyExpr) calls for each child preamble index.
+			// by finding HarvesterResult.GetList(keyExpr) calls for each child harvester index. The child-result
+			// lookup is context.GetResult(idx) (was harvesterArray[idx] before the SqlCommandExecutionContext
+			// threading), so match the GetResult call carrying the constant harvester index.
 			var keyExpressions = new Dictionary<int, Expression>();
 			finalized.Visit(keyExpressions, static (ctx, e) =>
 			{
-				if (e is MethodCallExpression { Method.Name: nameof(PreambleResult<,>.GetList) } call
+				if (e is MethodCallExpression { Method.Name: nameof(HarvesterResult<,>.GetList) } call
 					&& call.Arguments.Count == 1
-					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand })
+					&& call.Object is UnaryExpression { NodeType: ExpressionType.Convert, Operand: { } operand }
+					&& operand is MethodCallExpression { Arguments: [ConstantExpression { Value: int idx }] } getResultCall
+					&& getResultCall.Method == SqlCommandExecutionContext.GetResultMethodInfo)
 				{
-					var current = operand;
-					if (current is BinaryExpression { NodeType: ExpressionType.ArrayIndex, Right: ConstantExpression { Value: int idx } })
-					{
-						ctx[idx] = call.Arguments[0];
-					}
+					ctx[idx] = call.Arguments[0];
 				}
 
 				return true;
 			});
 
-			// Verify ALL key preambles at this level can get extractors. If not, skip buffer optimization.
-			// Use ChildPreambleIndex to find the corresponding GetList call (not pi + 1, since inner
-			// preambles may be inserted between the key preamble and its child preamble).
+			// Verify ALL key harvesters at this level can get extractors. If not, skip buffer optimization.
+			// Use ChildHarvesterIndex to find the corresponding GetList call (not pi + 1, since inner
+			// harvesters may be inserted between the key harvester and its child harvester).
 			var allExtractorsFound = true;
-			for (var ki = 0; ki < keysPreambles.Count && allExtractorsFound; ki++)
+			for (var ki = 0; ki < keysHarvesters.Count && allExtractorsFound; ki++)
 			{
-				if (!keyExpressions.ContainsKey(keysPreambles[ki].ChildPreambleIndex))
+				if (!keyExpressions.ContainsKey(keysHarvesters[ki].ChildHarvesterIndex))
 					allExtractorsFound = false;
 			}
 
@@ -1143,15 +1115,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				return;
 			}
 
-			for (var ki = 0; ki < keysPreambles.Count; ki++)
+			for (var ki = 0; ki < keysHarvesters.Count; ki++)
 			{
-				var kp     = keysPreambles[ki];
+				var kp     = keysHarvesters[ki];
 				var kpType = kp.GetType();
-				if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(KeyedQueryKeysPreamble<>))
+				if (kpType.IsGenericType && kpType.GetGenericTypeDefinition() == typeof(KeyedQueryKeysHarvester<>))
 				{
 					var tKey = kpType.GetGenericArguments()[0];
 
-					if (keyExpressions.TryGetValue(kp.ChildPreambleIndex, out var keyExpr))
+					if (keyExpressions.TryGetValue(kp.ChildHarvesterIndex, out var keyExpr))
 					{
 						_setKeyExtractorMethodInfo
 							.MakeGenericMethod(typeof(TBuffer), tKey)
@@ -1160,25 +1132,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			// Replace first key preamble with BufferMaterializePreamble, rest become no-ops
+			// Replace first key harvester with BufferMaterializeHarvester, rest become no-ops
 			if (firstKeyIdx >= 0)
 			{
-				preambles[firstKeyIdx] = new BufferMaterializePreamble<TBuffer>(bufferQuery, query, keysPreambles.ToArray());
-				for (var i = firstKeyIdx + 1; i < preambles.Count; i++)
+				harvesters[firstKeyIdx] = new BufferMaterializeHarvester<TBuffer>(bufferQuery, query, keysHarvesters.ToArray());
+				for (var i = firstKeyIdx + 1; i < harvesters.Count; i++)
 				{
-					if (preambles[i] is IKeyedQueryKeysPreamble)
-						preambles[i] = NoOpPreamble.Instance;
+					if (harvesters[i] is IKeyedQueryKeysHarvester)
+						harvesters[i] = NoOpHarvester.Instance;
 				}
 			}
 
 			// 7. Override GetResultEnumerable to iterate buffer
-			var bufferPreambleIdx = firstKeyIdx;
+			var bufferHarvesterIdx = firstKeyIdx;
 
-			query.GetResultEnumerable = (db, expr, ps, preambleResults) =>
+			query.GetResultEnumerable = (db, expr, harvesterResults) =>
 			{
 				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
-				var buffer = (List<TBuffer>)preambleResults![bufferPreambleIdx]!;
-				return new BufferResultEnumerable<TBuffer, T>(buffer, expr, ps, reconstructionFunc, preambleResults);
+				var buffer = (List<TBuffer>)harvesterResults!.GetResult(bufferHarvesterIdx)!;
+				return new BufferResultEnumerable<TBuffer, T>(buffer, expr, reconstructionFunc, harvesterResults);
 			};
 
 			// 8. Apply element-selection semantics from the calling sequence context.
@@ -1193,25 +1165,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			?? throw new InvalidOperationException();
 
 		/// <summary>
-		/// Builds and sets the BufferKeyExtractor on a KeyedQueryKeysPreamble.
+		/// Builds and sets the BufferKeyExtractor on a KeyedQueryKeysHarvester.
 		/// The extractor takes a buffer row (TBuffer as object) and returns TKey.
 		/// </summary>
-		static void SetKeyExtractorFromBuffer<TBuffer, TKey>(KeyedQueryKeysPreamble<TKey> keysPreamble, Expression mainKeyExpression, Dictionary<int, int> placeholderMap)
+		static void SetKeyExtractorFromBuffer<TBuffer, TKey>(KeyedQueryKeysHarvester<TKey> keysHarvester, Expression mainKeyExpression, Dictionary<int, int> placeholderMap)
 			where TKey : notnull
 		{
 			var bufferRowParam = Expression.Parameter(typeof(object), "row");
 			// Use a Convert expression as the "buffer row" so the visitor reads tuple fields from it
 			var typedRow       = Expression.Convert(bufferRowParam, typeof(TBuffer));
-			var dummyPreamble  = Expression.Parameter(typeof(object?[]), "unused");
+			var dummyHarvester  = Expression.Parameter(typeof(SqlCommandExecutionContext), "unused");
 
-			var visitor = new BufferReconstructionVisitor(placeholderMap, typedRow, dummyPreamble);
+			var visitor = new BufferReconstructionVisitor(placeholderMap, typedRow, dummyHarvester);
 			var keyFromBuffer = visitor.Visit(mainKeyExpression)!;
 
 			if (keyFromBuffer.Type != typeof(TKey))
 				keyFromBuffer = Expression.Convert(keyFromBuffer, typeof(TKey));
 
 			var lambda = Expression.Lambda<Func<object, TKey>>(keyFromBuffer, bufferRowParam);
-			keysPreamble.BufferKeyExtractor = lambda.CompileExpression();
+			keysHarvester.BufferKeyExtractor = lambda.CompileExpression();
 		}
 
 		/// <summary>
@@ -1223,23 +1195,23 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			readonly Dictionary<int, int>  _placeholderMap;
 			readonly Expression            _bufferRowExpr;
-			readonly Expression            _preambleExpr;
+			readonly Expression            _harvesterExpr;
 
 			public BufferReconstructionVisitor(
 				Dictionary<int, int> placeholderMap,
 				Expression           bufferRowExpr,
-				Expression           preambleExpr)
+				Expression           harvesterExpr)
 			{
 				_placeholderMap = placeholderMap;
 				_bufferRowExpr  = bufferRowExpr;
-				_preambleExpr   = preambleExpr;
+				_harvesterExpr  = harvesterExpr;
 			}
 
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
-				// Replace PreambleParam with our local preamble expression
-				if (ReferenceEquals(node, PreambleParam))
-					return _preambleExpr;
+				// Replace ExecutionContextParam with our local execution-context expression
+				if (ReferenceEquals(node, ExecutionContextParam))
+					return _harvesterExpr;
 				return base.VisitParameter(node);
 			}
 
@@ -1371,53 +1343,79 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		sealed class NoOpPreamble : Preamble
+		sealed class NoOpHarvester : Harvester
 		{
-			public static readonly NoOpPreamble Instance = new();
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles) => null!;
-			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
+			public static readonly NoOpHarvester Instance = new();
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context) => null!;
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult<object>(null!);
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
 		}
 
-		sealed class BufferMaterializePreamble<TBuffer> : Preamble
+		// Placeholder occupying a keyed load's dedicated keys slot. Its result preserves whatever the keys step
+		// wrote into that slot rather than clobbering it: in buffer mode the buffer materializer fills every keyed
+		// load's slot from one earlier harvester, so a slot belonging to a later load is already populated by the
+		// time the interpreter reaches this placeholder — returning the current slot value makes the interpreter's
+		// SetResult a no-op. In the non-buffer path this runs before the keys step and carries the still-empty slot
+		// forward until the keys step fills it.
+		sealed class KeysDataSlotHarvester : Harvester
+		{
+			readonly int _index;
+
+			public KeysDataSlotHarvester(int index) => _index = index;
+
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context) => context?.GetResult(_index)!;
+			public override Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken) => Task.FromResult(context?.GetResult(_index)!);
+			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values) { }
+		}
+
+		sealed class BufferMaterializeHarvester<TBuffer> : Harvester
 		{
 			readonly Query<TBuffer>           _bufferQuery;
 			readonly Query                    _sourceQuery;
-			readonly IKeyedQueryKeysPreamble[]  _keysPreambles;
+			readonly IKeyedQueryKeysHarvester[]  _keysHarvesters;
 
-			public BufferMaterializePreamble(Query<TBuffer> bufferQuery, Query sourceQuery, IKeyedQueryKeysPreamble[] keysPreambles)
+			public BufferMaterializeHarvester(Query<TBuffer> bufferQuery, Query sourceQuery, IKeyedQueryKeysHarvester[] keysHarvesters)
 			{
 				_bufferQuery   = bufferQuery;
 				_sourceQuery   = sourceQuery;
-				_keysPreambles = keysPreambles;
+				_keysHarvesters = keysHarvesters;
 			}
 
-			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context)
 			{
 				// Copy parameter accessors lazily — they may not be finalized at construction time.
 				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
-				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles).ToList();
+				var buffer = _bufferQuery.GetResultEnumerable(dataContext, expressions, context).ToList();
 				var ilist  = (IList)buffer;
-				foreach (var kp in _keysPreambles)
-					kp.SetKeysFromBuffer(expressions, ilist);
+				// Buffer mode always runs on the sequential path with a live context; guard defensively so a
+				// null context (e.g. SQL-text generation) can't NRE — keys simply aren't forwarded then.
+				if (context != null)
+				{
+					foreach (var kp in _keysHarvesters)
+						kp.SetKeysFromBuffer(context, ilist);
+				}
+
 				return buffer;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, CancellationToken cancellationToken)
 			{
 				_bufferQuery.SetParametersAccessors(_sourceQuery.ParameterAccessors);
-				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, parameters, preambles)
+				var buffer = await _bufferQuery.GetResultEnumerable(dataContext, expressions, context)
 					.ToListAsync(cancellationToken).ConfigureAwait(false);
 				var ilist = (IList)buffer;
-				foreach (var kp in _keysPreambles)
-					kp.SetKeysFromBuffer(expressions, ilist);
+				if (context != null)
+				{
+					foreach (var kp in _keysHarvesters)
+						kp.SetKeysFromBuffer(context, ilist);
+				}
+
 				return buffer;
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
-				foreach (var q in _bufferQuery.Queries)
-					QueryHelper.CollectParametersAndValues(q.Statement, parameters, values);
+				QueryHelper.CollectParametersAndValues(_bufferQuery.QueryInfo.Statement, parameters, values);
 			}
 		}
 
@@ -1425,29 +1423,28 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			readonly List<TBuffer>                                        _buffer;
 			readonly IQueryExpressions                                    _expr;
-			readonly object?[]?                                           _ps;
-			readonly Func<IQueryExpressions, object?[]?, TBuffer, object?[], T> _reconstruct;
-			readonly object?[]?                                           _preambles;
+			readonly Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T> _reconstruct;
+			readonly SqlCommandExecutionContext?                         _context;
 
 			public BufferResultEnumerable(
 				List<TBuffer>                                                buffer,
 				IQueryExpressions                                            expr,
-				object?[]?                                                   ps,
-				Func<IQueryExpressions, object?[]?, TBuffer, object?[], T>  reconstruct,
-				object?[]?                                                   preambles)
+				Func<IQueryExpressions, object?[]?, TBuffer, SqlCommandExecutionContext?, T>  reconstruct,
+				SqlCommandExecutionContext?                                  context)
 			{
 				_buffer      = buffer;
 				_expr        = expr;
-				_ps          = ps;
 				_reconstruct = reconstruct;
-				_preambles   = preambles;
+				_context     = context;
 			}
 
 			public IEnumerator<T> GetEnumerator()
 			{
-				var preambles = _preambles ?? Array.Empty<object>();
+				// Mirror the pre-threading `?? Array.Empty<object>()` guard: a reconstruction that references the
+				// execution context must never receive null, so substitute an empty context when none was supplied.
+				var context = _context ?? new SqlCommandExecutionContext(0);
 				foreach (var row in _buffer)
-					yield return _reconstruct(_expr, _ps, row, preambles!);
+					yield return _reconstruct(_expr, context.Parameters, row, context);
 			}
 
 			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
