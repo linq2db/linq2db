@@ -166,7 +166,12 @@ namespace LinqToDB.Internal.Linq
 
 			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
 			// pre-set Info makes ExpressionQuery skip the expose that would otherwise reconcile the two.
-			return new Table<T>(db, query.CompiledExpressions!.MainExpression) { Info = query, Parameters = parameters };
+			return new Table<T>(db, query.CompiledExpressions!.MainExpression)
+			{
+				Info                = query,
+				Parameters          = parameters,
+				CompiledExpressions = query.CompiledExpressions
+			};
 		}
 
 		public T Execute(object[] parameters)

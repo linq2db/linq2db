@@ -1053,6 +1053,32 @@ namespace Tests.Linq
 			             public bool Hidden { get; set; }
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844")]
+		public void QueryableFormWithValueClosingFilterTest([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var minId = 1;
+			var ms    = new MappingSchema();
+
+			// Closing over a value roots a parameter accessor at a dynamic expression. A filter comparing against
+			// a constant - as every other one in the corpus does - roots none, so it never reached this.
+			new FluentMappingBuilder(ms)
+				.Entity<FilteredRow>()
+					.HasQueryFilter((q, dc) => q.Where(r => r.Id > minId))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable(
+			[
+				new FilteredRow { Id = 1 },
+				new FilteredRow { Id = 2 },
+			]);
+
+			var query = CompiledQuery.Compile<IDataContext,IEnumerable<FilteredRow>>(
+				static dc => dc.GetTable<FilteredRow>());
+
+			Assert.That(query(db).Select(r => r.Id).ToList(), Is.EquivalentTo(new[] { 2 }));
+		}
+
 		// The IgnoreFilters call - and so the [SqlQueryDependent] position its argument occupies - exists only
 		// after this is expanded, which is after the compiled table has already collected its cache-key slots.
 		[ExpressionMethod(nameof(VisibleRowsImpl))]

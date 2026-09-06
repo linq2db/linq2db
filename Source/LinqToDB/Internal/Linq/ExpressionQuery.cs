@@ -38,6 +38,18 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Preambles;
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		internal IQueryExpressions? CompiledExpressions;
+
+		// A compiled table hands over the container its Info's accessors were built against. Rebuilding one from
+		// the main expression alone carries no dynamic entries, and an accessor rooted at one - which a query
+		// filter closing over a value produces - then has nothing to resolve. Only for enumerating this query as
+		// it is: a composed expression is a different tree and gets its own container.
+		IQueryExpressions GetOwnExpressions(Expression expression)
+		{
+			return CompiledExpressions ?? new RuntimeExpressionsContainer(expression);
+		}
+
 		#endregion
 
 		#region Public Members
@@ -50,7 +62,7 @@ namespace LinqToDB.Internal.Linq
 				DataContext.InlineParameters = options.InlineParameters.Value;
 
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (options?.MultiInsertMode != null && info.Queries[0].Statement is SqlMultiInsertStatement multiInsert)
@@ -143,7 +155,7 @@ namespace LinqToDB.Internal.Linq
 		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
@@ -168,7 +180,7 @@ namespace LinqToDB.Internal.Linq
 		public async Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
@@ -187,7 +199,7 @@ namespace LinqToDB.Internal.Linq
 		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 		{
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
@@ -295,7 +307,7 @@ namespace LinqToDB.Internal.Linq
 			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumeratorT);
 
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
@@ -314,7 +326,7 @@ namespace LinqToDB.Internal.Linq
 			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumerator);
 
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
