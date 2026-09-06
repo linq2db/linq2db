@@ -912,7 +912,10 @@ namespace Tests.Analyzers
 		public Task DoesNotReadAnUnrelatedDerivedArgumentAsAUnit()
 		{
 			// Recognizing derived attributes means the first constructor argument is no longer necessarily a
-			// DurationUnit. Matching this 2 against the enum's numeric values would name a unit nobody wrote.
+			// DurationUnit. Matching this 5 against the enum's numeric values would name a unit nobody wrote -
+			// minutes, which cannot hold the compared 1.5 seconds, so dropping the guard turns this into a report.
+			// The value matters: 2 is Microsecond, which holds 1.5 seconds exactly, so the test would pass with
+			// the guard and without it.
 			const string source = """
 				using System;
 				using System.Linq;
@@ -929,7 +932,7 @@ namespace Tests.Analyzers
 
 				class Derived
 				{
-					[Column, TaggedDuration(2)] public TimeSpan Elapsed { get; set; }
+					[Column, TaggedDuration(5)] public TimeSpan Elapsed { get; set; }
 				}
 
 				class C
