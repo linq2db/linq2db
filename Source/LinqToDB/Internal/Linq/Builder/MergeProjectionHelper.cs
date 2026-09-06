@@ -39,7 +39,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			[NotNullWhen(true)] out  Expression?                                                      projection,
 			[NotNullWhen(true)] out  List<(SqlPlaceholderExpression placeholder, Expression[] path)>? foundPlaceholders,
 			[NotNullWhen(true)] out  List<SqlEagerLoadExpression>?                                    foundEager,
-			[NotNullWhen(false)] out SqlErrorExpression?                                              error)
+			[NotNullWhen(false)] out SqlErrorExpression?                                              error,
+			Type?                                                                                     readAs = null)
 		{
 			var current = path;
 			do
@@ -73,7 +74,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				current = projected;
 			} while (true);
 
-			var pathBuilder = new ExpressionPathVisitor();
+			var pathBuilder = new ExpressionPathVisitor(readAs);
 			var withPath    = pathBuilder.ProcessExpression(current);
 
 			foundPlaceholders = pathBuilder.FoundPlaceholders;
@@ -279,17 +280,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool  _isStep2;
 			Type? _constructedAs;
 
+			// The type the whole projection is read as, when the caller knows it. A set operation does: both
+			// branches are read as its element type, whether or not the branch happens to carry a conversion
+			// saying so - C# lets `baseQuery.Concat(derivedQuery)` bind through IEnumerable<T> covariance with
+			// no conversion node anywhere. See issue #5683.
+			readonly Type? _readAs;
+
+			public ExpressionPathVisitor(Type? readAs = null)
+			{
+				_readAs = readAs;
+			}
+
 			public List<(SqlPlaceholderExpression placeholder, Expression[] path)> FoundPlaceholders { get; } = new();
 
 			public List<SqlEagerLoadExpression> FoundEager { get; } = new();
 
 			public Expression ProcessExpression(Expression expression)
 			{
-				_isStep2 = false;
+				_isStep2       = false;
+				_constructedAs = _readAs;
 
 				var result = Visit(expression);
 
-				_isStep2 = true;
+				_isStep2       = true;
+				_constructedAs = _readAs;
 
 				result = Visit(result);
 

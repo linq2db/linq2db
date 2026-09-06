@@ -608,12 +608,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var helper = new MergeProjectionHelper(Builder, MappingSchema);
 
-				if (!helper.BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
+				// Both branches are read as the element type, so that is what names the place a value occupies - a
+				// branch projecting a derived type pairs with one projecting the base whether or not it carries a
+				// conversion saying so. `baseQuery.Concat(derivedQuery)` binds through IEnumerable<T> covariance
+				// and produces no conversion node at all.
+				if (!helper.BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error, ElementType))
 					return false;
 
 				var ref2 = new ContextRefExpression(ElementType, _sequence2);
 
-				if (!helper.BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
+				if (!helper.BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error, ElementType))
 					return false;
 
 				_projection1 = projection1;
