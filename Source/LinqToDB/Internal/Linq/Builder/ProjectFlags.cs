@@ -14,8 +14,9 @@ namespace LinqToDB.Internal.Linq.Builder
 	/// <para>
 	/// Neither split is expressible in the type system, so both are enforced by the <c>LINQ2DB0004</c> /
 	/// <c>LINQ2DB0005</c> analyzer, which derives them from <c>ExpressionBuildVisitor.GetProjectFlags</c> -
-	/// the sole producer - rather than from this comment. Adding a member here, or changing which purpose
-	/// carries which modifier there, is a build error until that analyzer's reader agrees.
+	/// the sole producer - rather than from this comment. Adding a member here is a build error until
+	/// <c>GetProjectFlags</c> produces it; changing which purpose carries which modifier there is not, because
+	/// the reader re-derives the split from that method on every build.
 	/// </para>
 	/// <para>
 	/// That analyzer applies the model to every <c>ProjectFlags</c> local or parameter in the assembly, not only
