@@ -97,6 +97,9 @@ namespace LinqToDB.Analyzers
 
 			public static Candidate Exactly(long ticks) => new(ticks, ticks, ticks);
 
+			/// <summary>A target that cannot be .NET Framework, so its whole-millisecond rounding is not a reading.</summary>
+			public static Candidate Modern(long exact, long truncated) => new(exact, truncated, truncated);
+
 			/// <summary>
 			/// Whether the column can hold this duration. The analyzer cannot know which runtime the consumer
 			/// targets, so a value any reading can represent is left alone.
@@ -133,6 +136,11 @@ namespace LinqToDB.Analyzers
 			readonly INamedTypeSymbol? _enumerable;
 			readonly INamedTypeSymbol? _queryable;
 
+			// TimeSpan.FromMicroseconds and the switch away from whole-millisecond rounding both arrived in .NET 7,
+			// so its presence says the target cannot be .NET Framework and that reading does not apply. Its absence
+			// covers netstandard and .NET 6 and below, where the target may be .NET Framework and it still might.
+			readonly bool _netFxRoundingPossible;
+
 			public CompilationAnalyzer(
 				INamedTypeSymbol  durationAttribute,
 				INamedTypeSymbol  durationUnit,
@@ -147,6 +155,8 @@ namespace LinqToDB.Analyzers
 				_expressionOfT     = expressionOfT;
 				_enumerable        = enumerable;
 				_queryable         = queryable;
+
+				_netFxRoundingPossible = timeSpan.GetMembers("FromMicroseconds").IsEmpty;
 			}
 
 			// OperationKind.Binary fires on every binary operation in the compilation, so the gates run cheapest
@@ -172,6 +182,11 @@ namespace LinqToDB.Analyzers
 			bool TryReport(OperationAnalysisContext context, IBinaryOperation binary, IOperation member, IOperation value)
 			{
 				if (GetReferencedMember(member) is not { } symbol)
+					return false;
+
+				// Before the attribute lookup: a pure walk of the operation tree, and it keeps a member read off
+				// anything but the range variable from reaching the per-attribute allocation below.
+				if (!IsOnRangeVariable(member))
 					return false;
 
 				if (GetDeclaredUnits(symbol) is not { } units)
@@ -275,7 +290,7 @@ namespace LinqToDB.Analyzers
 					var builder = ImmutableArray.CreateBuilder<AttributeData>();
 
 					foreach (var attribute in current.GetAttributes())
-						if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, _durationAttribute))
+						if (IsDurationAttribute(attribute.AttributeClass))
 							builder.Add(attribute);
 
 					if (builder.Count > 0)
@@ -283,6 +298,17 @@ namespace LinqToDB.Analyzers
 				}
 
 				return ImmutableArray<AttributeData>.Empty;
+			}
+
+			// DurationAttribute is public and unsealed, and MappingSchema.GetAttribute<DurationAttribute> resolves by
+			// assignability - so a derived attribute declares the unit just as the base one does.
+			bool IsDurationAttribute(INamedTypeSymbol? attributeClass)
+			{
+				for (var current = attributeClass; current is not null; current = current.BaseType)
+					if (SymbolEqualityComparer.Default.Equals(current, _durationAttribute))
+						return true;
+
+				return false;
 			}
 
 			static ISymbol? GetOverriddenMember(ISymbol member)
@@ -296,10 +322,17 @@ namespace LinqToDB.Analyzers
 			{
 				foreach (var named in attribute.NamedArguments)
 					if (string.Equals(named.Key, "Unit", StringComparison.Ordinal))
-						return EnumMemberName(_durationUnit, named.Value.Value);
+						return UnitMemberName(named.Value);
 
-				return attribute.ConstructorArguments.Length > 0
-					? EnumMemberName(_durationUnit, attribute.ConstructorArguments[0].Value)
+				return attribute.ConstructorArguments.Length > 0 ? UnitMemberName(attribute.ConstructorArguments[0]) : null;
+			}
+
+			// The constant has to actually be a DurationUnit. A derived attribute may take something else in that
+			// position, and matching an unrelated integer against the enum's values would name a unit nobody wrote.
+			string? UnitMemberName(TypedConstant constant)
+			{
+				return SymbolEqualityComparer.Default.Equals(constant.Type, _durationUnit)
+					? EnumMemberName(_durationUnit, constant.Value)
 					: null;
 			}
 
@@ -476,11 +509,11 @@ namespace LinqToDB.Analyzers
 				}
 
 				if (string.Equals(method.Name, "FromTicks", StringComparison.Ordinal))
-					return FromScaledArgument(invocation, 1L, allowDouble: false);
+					return FromScaledArgument(invocation, 1L, allowDouble: false, netFxRounding: false);
 
 				var scale = FactoryScale(method.Name);
 
-				return scale == 0L ? null : FromScaledArgument(invocation, scale, allowDouble: true);
+				return scale == 0L ? null : FromScaledArgument(invocation, scale, allowDouble: true, _netFxRoundingPossible);
 			}
 
 			static long FactoryScale(string name)
@@ -499,7 +532,7 @@ namespace LinqToDB.Analyzers
 
 			// Only the single-argument overloads are folded; the component overloads added in later runtimes take
 			// integers and are left alone rather than half-supported.
-			static Candidate? FromScaledArgument(IInvocationOperation invocation, long scaleTicks, bool allowDouble)
+			static Candidate? FromScaledArgument(IInvocationOperation invocation, long scaleTicks, bool allowDouble, bool netFxRounding)
 			{
 				if (invocation.Arguments.Length != 1
 					|| invocation.Arguments[0].Value.ConstantValue is not { HasValue: true, Value: { } raw })
@@ -508,7 +541,7 @@ namespace LinqToDB.Analyzers
 				}
 
 				if (raw is double value)
-					return allowDouble ? FromDoubleFactory(value, scaleTicks) : null;
+					return allowDouble ? FromDoubleFactory(value, scaleTicks, netFxRounding) : null;
 
 				if (!TryToInt64(raw, out var units))
 					return null;
@@ -516,9 +549,9 @@ namespace LinqToDB.Analyzers
 				return TryTicksFromDecimal((decimal)units * scaleTicks, out var ticks) ? Candidate.Exactly(ticks) : null;
 			}
 
-			// The two runtimes disagree twice over, so the value is carried as all three readings and only reported
-			// when none of them lands on a whole unit.
-			static Candidate? FromDoubleFactory(double value, long scaleTicks)
+			// The two runtimes disagree twice over, so the value is carried as every reading the target could produce
+			// and only reported when none of them lands on a whole unit.
+			static Candidate? FromDoubleFactory(double value, long scaleTicks, bool netFxRounding)
 			{
 				if (double.IsNaN(value) || double.IsInfinity(value))
 					return null;
@@ -530,6 +563,9 @@ namespace LinqToDB.Analyzers
 
 				if (!TryTicksFromDecimal((decimal)value * scaleTicks, out var exact))
 					return null;
+
+				if (!netFxRounding)
+					return Candidate.Modern(exact, (long)product);
 
 				var millis = value * (scaleTicks / (double)TimeSpan.TicksPerMillisecond) + (value >= 0 ? 0.5 : -0.5);
 
@@ -551,7 +587,9 @@ namespace LinqToDB.Analyzers
 
 				if (string.Equals(name, "ParseExact", StringComparison.Ordinal))
 				{
-					if (invocation.Arguments.Length < 2
+					// Only the overloads without a TimeSpanStyles argument: this parse does not read it, and
+					// AssumeNegative flips the sign, so folding those would name a duration the source never writes.
+					if (invocation.Arguments.Length is < 2 or > 3
 						|| invocation.Arguments[1].Value.ConstantValue is not { HasValue: true, Value: string format }
 						|| !TimeSpan.TryParseExact(input, format, CultureInfo.InvariantCulture, out var matched))
 					{
@@ -782,6 +820,8 @@ namespace LinqToDB.Analyzers
 				return true;
 			}
 
+			// The positions a value can be read from, listed rather than the positions it can be written from: a
+			// write shape nobody enumerated then degrades to silence instead of to a fold of a stale value.
 			static bool IsPlainRead(IOperation reference)
 			{
 				var node = reference;
@@ -792,10 +832,26 @@ namespace LinqToDB.Analyzers
 
 				return node.Parent switch
 				{
-					IAssignmentOperation assignment                            => assignment.Target != node,
-					IIncrementOrDecrementOperation                             => false,
-					IArgumentOperation { Parameter.RefKind: not RefKind.None } => false,
-					_                                                          => true,
+					IAssignmentOperation assignment              => assignment.Target != node,
+					IArgumentOperation { Parameter.RefKind: RefKind.None } => true,
+					// 'ref var alias = ref bound' initializes a ref local, and a later write through the alias is a
+					// write to this local that no sweep of its own references can see.
+					IVariableInitializerOperation initializer    => initializer.Parent is IVariableDeclaratorOperation { Symbol.IsRef: false },
+					IBinaryOperation                            => true,
+					IUnaryOperation                             => true,
+					IConversionOperation                        => true,
+					ICoalesceOperation                          => true,
+					IConditionalOperation                       => true,
+					IParenthesizedOperation                     => true,
+					IArrayInitializerOperation                  => true,
+					IInterpolationOperation                     => true,
+					IReturnOperation                            => true,
+					IIsPatternOperation                         => true,
+					ISwitchExpressionOperation                  => true,
+					IPropertyReferenceOperation reference2       => ReferenceEquals(reference2.Instance, node),
+					IFieldReferenceOperation field              => ReferenceEquals(field.Instance, node),
+					IInvocationOperation invocation             => ReferenceEquals(invocation.Instance, node),
+					_                                           => false,
 				};
 			}
 
@@ -896,6 +952,33 @@ namespace LinqToDB.Analyzers
 					IFieldReferenceOperation    field    => field.Field,
 					_                                    => null,
 				};
+			}
+
+			// A [Duration] member is a translated column only when it is read off the query's own range variable.
+			// Read off anything else - a captured object, a static, a captured 'this' - linq2db evaluates that whole
+			// subtree while the parameter value is produced, so the comparison is ordinary CLR equality and a row
+			// holding the value does match. Saying "can never match" there would be false.
+			static bool IsOnRangeVariable(IOperation operation)
+			{
+				var current = operation;
+
+				while (true)
+				{
+					var instance = current switch
+					{
+						IPropertyReferenceOperation property => property.Instance,
+						IFieldReferenceOperation    field    => field.Instance,
+						_                                    => null,
+					};
+
+					if (instance is null)
+						return false;
+
+					current = Unwrap(instance);
+
+					if (current is IParameterReferenceOperation parameter)
+						return parameter.Parameter.ContainingSymbol is IMethodSymbol { MethodKind: MethodKind.AnonymousFunction };
+				}
 			}
 
 			#endregion
