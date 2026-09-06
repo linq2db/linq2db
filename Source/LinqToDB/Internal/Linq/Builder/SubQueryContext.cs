@@ -84,6 +84,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
+			// Expand hands a member's defining expression to the caller, and a value bound to this subquery's row set
+			// is then evaluated at the caller's level - a window function referenced from the parent lands inside
+			// whatever the parent computes. Materialize it as a column instead. What has no SQL value of its own, a
+			// window definition among them, keeps expanding below (#5867).
+			if (flags.IsExpand()
+				&& Builder.BuildSqlExpression(SubQuery, corrected) is SqlPlaceholderExpression sqlValue)
+			{
+				return Builder.UpdateNesting(this, sqlValue);
+			}
+
 			var result = Builder.BuildExpression(SubQuery, corrected);
 
 			if (flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot() || flags.IsSubquery())

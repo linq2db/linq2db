@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -421,6 +421,91 @@ namespace Tests.Linq
 				};
 
 			_ = query.ToList();
+		}
+
+		// A window function projected by one Select and then used inside another window's PARTITION BY. The inner
+		// value is computed over the inner query's row set, so it has to reach the outer window as a column of a
+		// subquery - inlined, it nests one window function inside another, which no provider accepts.
+		[Test]
+		public void WindowFunctionOverWindowFunctionColumn([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var numbered =
+				from t in table
+				select new
+				{
+					t.Id,
+					RowNum    = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+					CatRowNum = Sql.Window.RowNumber(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+			var query =
+				from t in numbered
+				select new
+				{
+					t.RowNum,
+					t.CatRowNum,
+					OverRowNum = Sql.Window.RowNumber(w => w.PartitionBy(t.RowNum).OrderBy(t.Id)),
+					OverCatNum = Sql.Window.RowNumber(w => w.PartitionBy(t.CatRowNum).OrderBy(t.Id)),
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(data.Length);
+
+			// RowNum is unique per row, so partitioning by it leaves single-row partitions.
+			result.Select(r => r.RowNum)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+
+			result.ShouldAllBe(r => r.OverRowNum == 1);
+
+			// CatRowNum repeats across categories, so each of its partitions must still number 1..size exactly once.
+			foreach (var partition in result.GroupBy(r => r.CatRowNum))
+			{
+				partition.Select(r => r.OverCatNum)
+					.OrderBy(n => n)
+					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
+
+		// Same shape, with the outer window supplied by DefineWindow/UseWindow rather than the fluent chain.
+		[Test]
+		public void WindowFunctionOverWindowFunctionColumnWithDefinedWindow([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var numbered =
+				from t in table
+				select new
+				{
+					t.Id,
+					RowNum = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+				};
+
+			var query =
+				from t in numbered
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.RowNum).OrderBy(t.Id))
+				select new
+				{
+					t.RowNum,
+					OverRowNum = Sql.Window.RowNumber(w => w.UseWindow(wnd)),
+				};
+
+			var result = query.ToList();
+
+			result.Select(r => r.RowNum)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+
+			result.ShouldAllBe(r => r.OverRowNum == 1);
 		}
 	}
 }
