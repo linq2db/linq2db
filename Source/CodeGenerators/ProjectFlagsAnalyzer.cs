@@ -19,7 +19,9 @@ namespace CodeGenerators
 	/// <list type="bullet">
 	/// <item><c>LINQ2DB0004</c> - a flag test that can never be true where it stands.</item>
 	/// <item><c>LINQ2DB0005</c> - a flag test that is always true where it stands.</item>
-	/// <item><c>LINQ2DB0006</c> - the model could not be read, so the two rules above are disabled.</item>
+	/// <item><c>LINQ2DB0006</c> - the model could not be read. An underivable value set disables the two rules
+	/// above for the whole compilation; an unreadable predicate leaves them running and only makes the tests
+	/// that use that predicate opaque.</item>
 	/// </list>
 	/// The model is not hardcoded here: it is derived from <c>ExpressionBuildVisitor.GetProjectFlags</c>, the
 	/// only producer of values reaching <c>IBuildContext.MakeExpression</c>. One unconditional
@@ -66,7 +68,7 @@ namespace CodeGenerators
 		static readonly DiagnosticDescriptor ModelUnreadable = new(
 			id:                 "LINQ2DB0006",
 			title:              "ProjectFlags model could not be read",
-			messageFormat:      "The ProjectFlags model could not be read: {0}. LINQ2DB0004 and LINQ2DB0005 are disabled until this analyzer's reader is updated.",
+			messageFormat:      "The ProjectFlags model could not be read: {0}. LINQ2DB0004 and LINQ2DB0005 are disabled for the whole compilation when the reachable value set cannot be derived, and otherwise skip only the tests whose predicate is unreadable.",
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
@@ -646,6 +648,35 @@ namespace CodeGenerators
 					return default;
 				}
 
+				// Accepting a statement without reading it is how a wrong domain gets derived silently, which is
+				// the one outcome LINQ2DB0006 exists to prevent. Bind the accumulator first - exactly one local,
+				// seeded to a zero mask - so the return and every |= below can be required to name it.
+				var accumulator = (string?)null;
+
+				foreach (var statement in methodBody.Statements)
+				{
+					if (statement is not LocalDeclarationStatementSyntax declaration)
+						continue;
+
+					if (accumulator != null
+						|| declaration.Declaration.Variables.Count != 1
+						|| declaration.Declaration.Variables[0].Initializer is not { Value: { } seed }
+						|| !TryReadMask(seed, members, out var seedMask)
+						|| seedMask != 0)
+					{
+						failures.Add((location, $"'{ModelMethodName}' no longer opens with a single '{flagsType.Name}' accumulator seeded to a zero mask"));
+						return default;
+					}
+
+					accumulator = declaration.Declaration.Variables[0].Identifier.ValueText;
+				}
+
+				if (accumulator == null)
+				{
+					failures.Add((location, $"'{ModelMethodName}' declares no '{flagsType.Name}' accumulator this reader can follow"));
+					return default;
+				}
+
 				var switchStatement = (SwitchStatementSyntax?)null;
 				var freeModifiers   = 0;
 
@@ -658,12 +689,15 @@ namespace CodeGenerators
 							break;
 
 						case IfStatementSyntax { Else: null } conditional
-							when TryReadFlagAdd(conditional.Statement, members, out var modifier):
+							when TryReadFlagAdd(conditional.Statement, accumulator, members, out var modifier):
 							freeModifiers |= modifier;
 							break;
 
 						case LocalDeclarationStatementSyntax:
-						case ReturnStatementSyntax:
+							break;
+
+						case ReturnStatementSyntax { Expression: IdentifierNameSyntax returned }
+							when returned.Identifier.ValueText == accumulator:
 							break;
 
 						default:
@@ -691,7 +725,7 @@ namespace CodeGenerators
 						switch (statement)
 						{
 							case IfStatementSyntax { Else: null } conditional
-								when TryReadFlagAdd(conditional.Statement, members, out var modifier):
+								when TryReadFlagAdd(conditional.Statement, accumulator, members, out var modifier):
 								optional |= modifier;
 								break;
 
@@ -701,7 +735,7 @@ namespace CodeGenerators
 
 							default:
 							{
-								if (TryReadFlagAdd(statement, members, out var added))
+								if (TryReadFlagAdd(statement, accumulator, members, out var added))
 								{
 									purpose |= added;
 									count++;
@@ -814,21 +848,25 @@ namespace CodeGenerators
 				return null;
 			}
 
-			static bool TryReadFlagAdd(SyntaxNode statement, Dictionary<string, int> members, out int mask)
+			static bool TryReadFlagAdd(SyntaxNode statement, string accumulator, Dictionary<string, int> members, out int mask)
 			{
 				mask = 0;
 
 				if (statement is BlockSyntax { Statements.Count: 1 } block)
 					statement = block.Statements[0];
 
+				// The target matters as much as the mask: a |= into some other local is not a modifier of the
+				// value GetProjectFlags returns, and reading it as one silently widens the domain.
 				return statement is ExpressionStatementSyntax
 					{
 						Expression: AssignmentExpressionSyntax
 						{
 							RawKind: (int)SyntaxKind.OrAssignmentExpression,
+							Left   : IdentifierNameSyntax target,
 							Right  : { } right,
 						},
 					}
+					&& target.Identifier.ValueText == accumulator
 					&& TryReadMask(right, members, out mask);
 			}
 

@@ -30,12 +30,13 @@ namespace Tests.Analyzers.Internal
 					Table             = 1 << 8,
 					Expand            = 1 << 11,
 					MemberRoot        = 1 << 12,
+					ForSetProjection  = 1 << 13,
 				}
 
 				enum BuildPurpose { None, Sql, Table, Expression, Expand, Root, Extract }
 
 				[System.Flags]
-				enum BuildFlags { None = 0, ForKeys = 1, ForMemberRoot = 2 }
+				enum BuildFlags { None = 0, ForKeys = 1, ForMemberRoot = 2, ForSetProjection = 4 }
 
 				static class ProjectFlagExtensions
 				{
@@ -53,6 +54,7 @@ namespace Tests.Analyzers.Internal
 					public static bool IsTable(this ProjectFlags flags)             => flags.HasFlag(ProjectFlags.Table);
 					public static bool IsExpand(this ProjectFlags flags)            => flags.HasFlag(ProjectFlags.Expand);
 					public static bool IsMemberRoot(this ProjectFlags flags)        => flags.HasFlag(ProjectFlags.MemberRoot);
+					public static bool IsForSetProjection(this ProjectFlags flags)  => flags.HasFlag(ProjectFlags.ForSetProjection);
 					public static bool IsSqlOrExpression(this ProjectFlags flags)   => (flags & (ProjectFlags.SQL | ProjectFlags.Expression)) != 0;
 				}
 
@@ -98,6 +100,12 @@ namespace Tests.Analyzers.Internal
 						if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot))
 							flags |= ProjectFlags.MemberRoot;
 
+						// Two free modifiers, as production has. One would be a smaller model that still passes
+						// every fixture: ReadDomain builds their powerset, and a single bit cannot tell a powerset
+						// from an implementation that merely appends each bare bit - {0, a} either way.
+						if (_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+							flags |= ProjectFlags.ForSetProjection;
+
 						return flags;
 					}
 				}
@@ -119,13 +127,16 @@ namespace Tests.Analyzers.Internal
 
 		static Task Verify(string body, params DiagnosticResult[] expected) => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(Consumer(body), expected);
 
-		// Most fixtures pin only the id and the span, via {|LINQ2DB0004:...|} markup. The two below also pin the
+		// Most fixtures pin only the id and the span, via {|LINQ2DB0004:...|} markup. The three below also pin the
 		// message's reason argument, because that argument is the rule's affordance - it tells a reader whether
 		// the clause is a modelling mistake or dead code behind an earlier return - and nothing else asserts it.
+		// Both reasons need coverage: a && or || gives each operand its own branch value, so every condition in
+		// Source/LinqToDB reports ExcludedEarlier and only a non-short-circuit & reaches UniformOverDomain.
 		static DiagnosticResult NeverTrue(string clause, string reason) =>
 			new DiagnosticResult("LINQ2DB0004", DiagnosticSeverity.Warning).WithLocation(0).WithArguments(clause, reason);
 
-		const string ExcludedEarlier = "every value that can still reach this point is already excluded by an earlier test on the same path";
+		const string ExcludedEarlier   = "every value that can still reach this point is already excluded by an earlier test on the same path";
+		const string UniformOverDomain = "no ProjectFlags value GetProjectFlags can produce gives a different answer";
 
 		// TO-1 - the #5727 shape. Keys accompanies only SQL / Expression / ExtractProjection, so under IsKeys()
 		// the Expand test can never be true and the 43 lines it guarded never ran.
@@ -147,6 +158,82 @@ namespace Tests.Analyzers.Internal
 					public static int M(ProjectFlags flags)
 					{
 						if (flags.IsSql() && flags.IsKeys())
+							return 1;
+
+						return 0;
+					}
+			""");
+
+		// TO-1, non-short-circuit form - the same impossible pair written with a single &, which evaluates both
+		// operands in one branch value. The report therefore lands on the conjunction rather than on an operand,
+		// and the conjunction is false for every value GetProjectFlags can produce, so this is the one shape that
+		// reaches Explain's UniformOverDomain reason - the modelling-mistake half of the affordance. It is also
+		// the suite's only coverage of Evaluate's BinaryOperatorKind.And / Or arms.
+		[Test]
+		public Task KeysWithExpandInOneBranchValueIsNeverTrue() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if ({|#0:flags.IsKeys() & flags.IsExpand()|})
+							return 1;
+
+						return 0;
+					}
+			""", NeverTrue("flags.IsKeys() & flags.IsExpand()", UniformOverDomain));
+
+		// Control for the arm above - a pair the model permits, still evaluated in one branch value. Without it
+		// the & handling could be reporting every non-short-circuit conjunction and still pass.
+		[Test]
+		public Task SqlWithKeysInOneBranchValueIsFine() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsSql() & flags.IsKeys())
+							return 1;
+
+						return 0;
+					}
+			""");
+
+		// The failable proof that ReadDomain builds a real powerset of the free modifiers rather than just adding
+		// each bare bit. Both are free, so a value carrying both exists and this pair is satisfiable; an
+		// implementation whose Subsets never produces MemberRoot|ForSetProjection would report a false
+		// LINQ2DB0004 here. Needs two free modifiers in the stub to discriminate - with one, {0, a} comes out of
+		// either implementation.
+		[Test]
+		public Task TwoFreeModifiersCanBeSetTogether() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsMemberRoot() && flags.IsForSetProjection())
+							return 1;
+
+						return 0;
+					}
+			""");
+
+		// P12's one carried residual risk: whether Roslyn's CFG lowers !(a && b) the way D-3 assumes. It does not
+		// hand the negation over whole - the && is De Morgan'd into two conditional blocks, so no !(a && b) node
+		// ever reaches a branch value and ClimbNegations, which climbs only parens and !, stops at the &&. The
+		// report therefore lands on the inner atom rather than on the negation. That is why LINQ2DB0004's message
+		// says "The clause is dead" and not "the code it guards is unreachable": here the guard is always taken,
+		// so only the narrower claim is true. Pinning it makes a future Roslyn lowering change a failing fixture
+		// instead of a silently moved diagnostic.
+		[Test]
+		public Task NegatedImpossibleConjunctionIsReportedOnTheInnerAtom() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (!(flags.IsExpand() && {|#0:flags.IsKeys()|}))
+							return 1;
+
+						return 0;
+					}
+			""", NeverTrue("flags.IsKeys()", ExcludedEarlier));
+
+		// Control - the same negated shape over a pair the model permits. Without it the arm above would pass an
+		// implementation that reports every atom inside a negated conjunction.
+		[Test]
+		public Task NegatedSatisfiableConjunctionIsNotReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (!(flags.IsSql() && flags.IsKeys()))
 							return 1;
 
 						return 0;
@@ -269,8 +356,9 @@ namespace Tests.Analyzers.Internal
 					}
 			""");
 
-		// Direct test of handler-block seeding: a handler left with an empty state is skipped as unreachable, so
-		// an impossible pair written inside a catch is not reported at all.
+		// Direct test of handler-block seeding. The flow graph models no branch into a handler, so a catch
+		// region's first block has no predecessor; an implementation that seeds only the graph entry would leave
+		// it empty, skip it as unreachable, and report nothing here - which is what this arm fails on.
 		[Test]
 		public Task ImpossiblePairInsideCatchIsReported() => Verify("""
 					public static int M(ProjectFlags flags)
@@ -364,7 +452,7 @@ namespace Tests.Analyzers.Internal
 		public Task UnclassifiableFlagSilencesTheConditionRules() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
 			Consumer(KnownViolation)
 				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
-				.Replace("MemberRoot        = 1 << 12,", "MemberRoot        = 1 << 12, ForSetProjection = 1 << 13,", System.StringComparison.Ordinal));
+				.Replace("MemberRoot        = 1 << 12,", "MemberRoot        = 1 << 12, Unclassified = 1 << 20,", System.StringComparison.Ordinal));
 
 		// TO-4c - an unreadable *predicate*. Unlike the two arms above the domain is intact, so the rules keep
 		// working and only the unreadable predicate becomes opaque: reporting the drift while still catching the
@@ -376,6 +464,34 @@ namespace Tests.Analyzers.Internal
 					"public static bool IsSqlOrExpression",
 					"public static bool {|LINQ2DB0006:IsWeird|}(this ProjectFlags flags) => flags.ToString().Length > 3;\n\t\tpublic static bool IsSqlOrExpression",
 					System.StringComparison.Ordinal));
+
+		// TO-4d - a non-None seed. SQL is a classified bit, so the completeness check cannot see this: the domain
+		// simply loses the bit on every other purpose, and flags.IsSql() would then be reported never-true where
+		// it is in fact always true. Reading the seed rather than accepting any local declaration is what turns
+		// that into drift.
+		[Test]
+		public Task DriftedSeedSilencesTheConditionRules() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation)
+				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
+				.Replace("var flags = ProjectFlags.None;", "var flags = ProjectFlags.SQL;", System.StringComparison.Ordinal));
+
+		// TO-4e - a composed return. The accumulator no longer carries the whole answer, so every derived value is
+		// missing the composed bit.
+		[Test]
+		public Task DriftedReturnSilencesTheConditionRules() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation)
+				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
+				.Replace("return flags;", "return flags | ProjectFlags.MemberRoot;", System.StringComparison.Ordinal));
+
+		// TO-4f - a |= into something other than the accumulator. This is the dangerous direction: read as a free
+		// modifier it would *widen* the domain, permitting Keys with every purpose and silently retiring the
+		// #5727 shape the rule exists for. Requires the reader to check the assignment's target, not just its mask.
+		[Test]
+		public Task DriftedAccumulatorTargetSilencesTheConditionRules() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation)
+				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
+				.Replace("BuildFlags   _buildFlags;", "BuildFlags   _buildFlags;\n\t\t\tProjectFlags _other;", System.StringComparison.Ordinal)
+				.Replace("flags |= ProjectFlags.MemberRoot;", "_other |= ProjectFlags.MemberRoot;", System.StringComparison.Ordinal));
 
 		// TO-5 - a different [Flags] enum with its own same-shaped predicates, in a method whose local is even
 		// called 'flags'. Every pair here would be reported were the type ProjectFlags. Fails unless the analyzer
