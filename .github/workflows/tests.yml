@@ -113,10 +113,20 @@ jobs:
           doc = yaml.safe_load(open('Build/Azure/pipelines/templates/test-matrix.yml', encoding='utf-8'))
           entries = doc['jobs'][0]['parameters']['test_matrix']
           legs = []
+          # Counted before the gh_linux filter, to tell "this surface selects nothing at all" - the
+          # silent-empty-matrix that took build 23192 green with zero tests - apart from "every leg
+          # for this surface stays on Azure", which is a normal outcome for e.g. [oracle.all].
+          matched = 0
           for e in entries:
               if surface not in e['filters']:
                   continue
               if e.get('enable_os_ubuntu') is not True:
+                  continue
+              matched += 1
+              # The other half of the split in test-jobs.yml: Azure skips entries marked gh_linux, so
+              # only those run here. An entry without it stays on Azure - today the three Oracle legs
+              # and ClickHouse, which still fail in this environment.
+              if e.get('gh_linux') != 'true':
                   continue
               legs.append({
                   'name':          e['name'],
@@ -132,17 +142,21 @@ jobs:
           legs.sort(key=lambda l: l['name'])          # the a_..y_ duration ordering from #5819
           print('linux=' + json.dumps({'include': legs}))
           print('any=' + ('true' if legs else 'false'))
+          print('matched=' + str(matched))
           for l in legs:
               print(f"::notice::selected {l['name']} ({l['title']})", file=__import__('sys').stderr)
+          if matched and not legs:
+              print(f"::notice::every leg for this surface runs on Azure - nothing to do here", file=__import__('sys').stderr)
           PY
         env:
           SURFACE: ${{ inputs.surface }}
 
-      # An empty selection is the failure that looks like success - build 23192 on the Azure side went
-      # green having run nothing. Fail here instead.
-      - if: steps.select.outputs.any != 'true'
+      # A surface that matches no entry at all is the failure that looks like success - build 23192 on
+      # the Azure side went green having run nothing. A surface whose legs all stay on Azure is a
+      # normal outcome, so it is reported and skipped rather than failed.
+      - if: steps.select.outputs.any != 'true' && steps.select.outputs.matched == '0'
         run: |
-          echo "::error::no Linux legs match surface '${{ inputs.surface }}' - nothing would run"
+          echo "::error::no Linux leg matches surface '${{ inputs.surface }}' - nothing would run"
           exit 1
 
   # Windows because Tests.csproj targets net462 and restore covers every TFM, so a Linux host cannot
