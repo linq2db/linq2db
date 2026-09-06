@@ -50,7 +50,7 @@ namespace CodeGenerators
 		static readonly DiagnosticDescriptor NeverTrue = new(
 			id:                 "LINQ2DB0004",
 			title:              "ProjectFlags test can never be true here",
-			messageFormat:      "'{0}' can never be true here: {1}. The clause is dead.",
+			messageFormat:      "'{0}' can never be true here: {1}. Simplify the enclosing condition with '{0}' folded to false.",
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
@@ -59,7 +59,7 @@ namespace CodeGenerators
 		static readonly DiagnosticDescriptor AlwaysTrue = new(
 			id:                 "LINQ2DB0005",
 			title:              "ProjectFlags test is always true here",
-			messageFormat:      "'{0}' is always true here: {1}. The clause is redundant.",
+			messageFormat:      "'{0}' is always true here: {1}. Simplify the enclosing condition with '{0}' folded to true.",
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
@@ -335,12 +335,20 @@ namespace CodeGenerators
 			foreach (var block in graph.Blocks)
 			{
 				foreach (var operation in block.Operations)
+					AnalyzeLambdas(operation);
+
+				// A lambda in a returned expression - or in an expression-bodied member - lives in BranchValue,
+				// not Operations, for the same reason the reporting loop above has to cover both.
+				if (block.BranchValue != null)
+					AnalyzeLambdas(block.BranchValue);
+			}
+
+			void AnalyzeLambdas(IOperation root)
+			{
+				foreach (var descendant in root.DescendantsAndSelf())
 				{
-					foreach (var descendant in operation.DescendantsAndSelf())
-					{
-						if (descendant is IFlowAnonymousFunctionOperation lambda)
-							AnalyzeGraph(graph.GetAnonymousFunctionControlFlowGraph(lambda, cancellationToken), tracked, model, report, cancellationToken);
-					}
+					if (descendant is IFlowAnonymousFunctionOperation lambda)
+						AnalyzeGraph(graph.GetAnonymousFunctionControlFlowGraph(lambda, cancellationToken), tracked, model, report, cancellationToken);
 				}
 			}
 		}
@@ -720,7 +728,14 @@ namespace CodeGenerators
 					var optional = 0;
 					var count    = 0;
 
-					foreach (var statement in section.Statements)
+					// A braced case body arrives as one BlockSyntax; flatten it so that adding braces - a cosmetic
+					// edit - does not read as a section shape this reader cannot parse.
+					var statements = section.Statements;
+
+					if (statements.Count == 1 && statements[0] is BlockSyntax braced)
+						statements = braced.Statements;
+
+					foreach (var statement in statements)
 					{
 						switch (statement)
 						{
@@ -751,9 +766,25 @@ namespace CodeGenerators
 						}
 					}
 
-					// The default section throws and adds nothing.
+					// A section that adds nothing can only be the default arm, which throws and so produces no value.
+					// One that merely breaks is a purpose producing ProjectFlags.None, and skipping it would drop
+					// that value from the domain silently rather than failing loudly.
 					if (count == 0 && optional == 0)
-						continue;
+					{
+						var throws = false;
+
+						foreach (var sectionStatement in statements)
+						{
+							if (sectionStatement is ThrowStatementSyntax)
+								throws = true;
+						}
+
+						if (throws)
+							continue;
+
+						failures.Add((location, $"a '{ModelMethodName}' switch section adds no flags and does not throw, so this reader cannot tell what value it produces"));
+						return default;
+					}
 
 					if (count != 1)
 					{
@@ -1083,7 +1114,7 @@ namespace CodeGenerators
 
 				return uniformOverWholeDomain
 					? "no ProjectFlags value GetProjectFlags can produce gives a different answer"
-					: "every value that can still reach this point is already excluded by an earlier test on the same path";
+					: "an earlier test on the same path has already excluded every value that would answer differently";
 			}
 		}
 

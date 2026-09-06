@@ -127,15 +127,16 @@ namespace Tests.Analyzers.Internal
 
 		static Task Verify(string body, params DiagnosticResult[] expected) => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(Consumer(body), expected);
 
-		// Most fixtures pin only the id and the span, via {|LINQ2DB0004:...|} markup. The three below also pin the
-		// message's reason argument, because that argument is the rule's affordance - it tells a reader whether
-		// the clause is a modelling mistake or dead code behind an earlier return - and nothing else asserts it.
+		// Most fixtures pin only the id and the span, via {|LINQ2DB0004:...|} markup. Those built on the helper
+		// below also pin the message's reason argument, because that argument is the rule's affordance - it tells
+		// a reader whether the clause is a modelling mistake or dead code behind an earlier return - and nothing
+		// else asserts it. Deliberately not a count: every fixture added since has moved one.
 		// Both reasons need coverage: a && or || gives each operand its own branch value, so every condition in
 		// Source/LinqToDB reports ExcludedEarlier and only a non-short-circuit & reaches UniformOverDomain.
 		static DiagnosticResult NeverTrue(string clause, string reason) =>
 			new DiagnosticResult("LINQ2DB0004", DiagnosticSeverity.Warning).WithLocation(0).WithArguments(clause, reason);
 
-		const string ExcludedEarlier   = "every value that can still reach this point is already excluded by an earlier test on the same path";
+		const string ExcludedEarlier   = "an earlier test on the same path has already excluded every value that would answer differently";
 		const string UniformOverDomain = "no ProjectFlags value GetProjectFlags can produce gives a different answer";
 
 		// TO-1 - the #5727 shape. Keys accompanies only SQL / Expression / ExtractProjection, so under IsKeys()
@@ -168,7 +169,7 @@ namespace Tests.Analyzers.Internal
 		// operands in one branch value. The report therefore lands on the conjunction rather than on an operand,
 		// and the conjunction is false for every value GetProjectFlags can produce, so this is the one shape that
 		// reaches Explain's UniformOverDomain reason - the modelling-mistake half of the affordance. It is also
-		// the suite's only coverage of Evaluate's BinaryOperatorKind.And / Or arms.
+		// the suite's coverage of Evaluate's BinaryOperatorKind.And arm; the Or arm is covered by the pair below.
 		[Test]
 		public Task KeysWithExpandInOneBranchValueIsNeverTrue() => Verify("""
 					public static int M(ProjectFlags flags)
@@ -187,6 +188,37 @@ namespace Tests.Analyzers.Internal
 					public static int M(ProjectFlags flags)
 					{
 						if (flags.IsSql() & flags.IsKeys())
+							return 1;
+
+						return 0;
+					}
+			""");
+
+		// Evaluate's Or arm. Reaching it needs a non-short-circuit | - Roslyn lowers || into separate branch
+		// blocks, so each operand gets its own branch value and the disjunction node never reaches Evaluate. The
+		// short-circuit || above excludes both purposes on the path below it, which is what makes the | constant.
+		// No production site has this shape; without this pair the arm is exercised by nothing.
+		[Test]
+		public Task ExcludedDisjunctionInOneBranchValueIsNeverTrue() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsSql() || flags.IsExpression())
+							return 1;
+
+						if ({|#0:flags.IsSql() | flags.IsExpression()|})
+							return 2;
+
+						return 0;
+					}
+			""", NeverTrue("flags.IsSql() | flags.IsExpression()", ExcludedEarlier));
+
+		// Control for the arm above - the same | with nothing excluding it, so both operands stay reachable.
+		// Without it the arm above would pass an implementation that reports every non-short-circuit disjunction.
+		[Test]
+		public Task SatisfiableDisjunctionInOneBranchValueIsFine() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsSql() | flags.IsExpression())
 							return 1;
 
 						return 0;
@@ -213,9 +245,9 @@ namespace Tests.Analyzers.Internal
 		// hand the negation over whole - the && is De Morgan'd into two conditional blocks, so no !(a && b) node
 		// ever reaches a branch value and ClimbNegations, which climbs only parens and !, stops at the &&. The
 		// report therefore lands on the inner atom rather than on the negation. That is why LINQ2DB0004's message
-		// says "The clause is dead" and not "the code it guards is unreachable": here the guard is always taken,
-		// so only the narrower claim is true. Pinning it makes a future Roslyn lowering change a failing fixture
-		// instead of a silently moved diagnostic.
+		// claims nothing about the guarded code and only names the constant: here the guard is always taken, so
+		// "the code it guards is unreachable" would be false. Pinning it makes a future Roslyn lowering change a
+		// failing fixture instead of a silently moved diagnostic.
 		[Test]
 		public Task NegatedImpossibleConjunctionIsReportedOnTheInnerAtom() => Verify("""
 					public static int M(ProjectFlags flags)
@@ -277,6 +309,38 @@ namespace Tests.Analyzers.Internal
 						return 0;
 					}
 			""");
+
+		// The AnyOf atom class. IsSqlOrExpression is the one predicate written as a bitmask rather than a HasFlag,
+		// so it is the only source of an Atom with AllOf false, and Holds' two branches are as separate as Is*()
+		// and HasFlag are above. This arm is the failable one: SQL and Expression are two of the ten purposes, so
+		// under (value & Mask) != 0 the test is true for some reachable values and false for others, and nothing
+		// is reported. Read the same mask as (value & Mask) == Mask and it is false for all 52 - no value carries
+		// two purpose bits - a false LINQ2DB0004 here and at all 18 call sites in Source/LinqToDB.
+		[Test]
+		public Task SqlOrExpressionIsSatisfiable() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsSqlOrExpression())
+							return 1;
+
+						return 0;
+					}
+			""");
+
+		// Companion to the arm above: proves the bitmask predicate is read as an atom at all rather than left
+		// opaque. Under Table both bits are clear, so the clause is constant either way and the diagnostic itself
+		// cannot discriminate - the pinned reason does. Only the AnyOf reading leaves the clause satisfiable
+		// elsewhere in the domain, so AllOf moves Explain from ExcludedEarlier to UniformOverDomain. Measured.
+		[Test]
+		public Task SqlOrExpressionUnderTableIsNeverTrue() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsTable() && {|#0:flags.IsSqlOrExpression()|})
+							return 1;
+
+						return 0;
+					}
+			""", NeverTrue("flags.IsSqlOrExpression()", ExcludedEarlier));
 
 		// TO-3 - an unconditional early return excludes the value on every path to the later test.
 		[Test]
@@ -425,6 +489,84 @@ namespace Tests.Analyzers.Internal
 					}
 			""");
 
+		// The dataflow assumes a tracked value is fixed once produced, so CollectTrackedSymbols drops any candidate
+		// the body writes to. The pair below would otherwise be reported exactly as TO-1's is; the reassignment is
+		// what makes the analysis unsound, and dropping the symbol is the bail-out. Nothing else in the suite
+		// writes to flags, so without this arm removing that guard leaves every fixture green.
+		[Test]
+		public Task ReassignedFlagsIsNotTracked() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsKeys() && flags.IsExpand())
+							return 1;
+
+						flags |= ProjectFlags.Keys;
+
+						return (int)flags;
+					}
+			""");
+
+		// A lambda body is its own control-flow graph, reached by descending the enclosing one. Returning the
+		// lambda puts it in the block's BranchValue rather than in Operations - the same split the reporting loop
+		// covers deliberately - so a descent that walks only Operations never hands this body over and the pair
+		// inside it goes unreported. The captured parameter is the same symbol, and the nested graph is seeded
+		// all-possible, so the pair is judged exactly as it would be inline.
+		[Test]
+		public Task ImpossiblePairInsideReturnedLambdaIsReported() => Verify("""
+					public static System.Func<bool> M(ProjectFlags flags)
+					{
+						return () => flags.IsKeys() && {|#0:flags.IsExpand()|};
+					}
+			""", NeverTrue("flags.IsExpand()", ExcludedEarlier));
+
+		// Control - the same returned-lambda shape over a pair the model permits. Without it the arm above would
+		// pass an implementation that reports every flag test it finds inside a lambda.
+		[Test]
+		public Task SatisfiablePairInsideReturnedLambdaIsNotReported() => Verify("""
+					public static System.Func<bool> M(ProjectFlags flags)
+					{
+						return () => flags.IsSql() && flags.IsKeys();
+					}
+			""");
+
+		// The sibling of the lambda pair above: a local function is its own graph too, reached through
+		// graph.LocalFunctions rather than by descending operations. DefaultIfEmptyBuilder's ProjectWithDefaultValue
+		// is a real local function already taking a ProjectFlags parameter, so a flag test inside one is a single
+		// edit away - and until this pair existed, deleting the LocalFunctions descent left the suite green.
+		[Test]
+		public Task ImpossiblePairInsideLocalFunctionIsReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						return Inner();
+
+						int Inner()
+						{
+							if (flags.IsKeys() && {|#0:flags.IsExpand()|})
+								return 1;
+
+							return 0;
+						}
+					}
+			""", NeverTrue("flags.IsExpand()", ExcludedEarlier));
+
+		// Control - the same local-function shape over a pair the model permits. Without it the arm above would
+		// pass an implementation that reports every flag test it finds inside a local function.
+		[Test]
+		public Task SatisfiablePairInsideLocalFunctionIsNotReported() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						return Inner();
+
+						int Inner()
+						{
+							if (flags.IsSql() && flags.IsKeys())
+								return 1;
+
+							return 0;
+						}
+					}
+			""");
+
 		// The violation every drift fixture below embeds, so each can show what the rule does once the model it
 		// depends on has changed underneath it.
 		const string KnownViolation = """
@@ -493,10 +635,33 @@ namespace Tests.Analyzers.Internal
 				.Replace("BuildFlags   _buildFlags;", "BuildFlags   _buildFlags;\n\t\t\tProjectFlags _other;", System.StringComparison.Ordinal)
 				.Replace("flags |= ProjectFlags.MemberRoot;", "_other |= ProjectFlags.MemberRoot;", System.StringComparison.Ordinal));
 
-		// TO-5 - a different [Flags] enum with its own same-shaped predicates, in a method whose local is even
+		// TO-4g - a purpose arm that adds nothing. It has to be a *new* arm rather than an emptied existing one:
+		// emptying one orphans its ProjectFlags member and TO-4b's completeness check fires instead, so the arm
+		// would go LINQ2DB0006 either way and prove nothing. BuildPurpose.None orphans no member, so the model
+		// still reads as usable and the section produces ProjectFlags.None - a value the domain loses unless the
+		// reader distinguishes a section that breaks from the default that throws.
+		[Test]
+		public Task DriftedEmptyPurposeArmSilencesTheConditionRules() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation)
+				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
+				.Replace("case BuildPurpose.Sql:", "case BuildPurpose.None:\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase BuildPurpose.Sql:", System.StringComparison.Ordinal));
+
+		// The counterpart to the drift arms above: a shape the reader must *tolerate*. Bracing a case body is a
+		// cosmetic edit, and D-1's failure mode warns that a reader matching form rather than structure taxes those
+		// too. It asserts the violation is still reported rather than merely that no drift fired - which is what
+		// shows the model was read through the braces instead of coming back empty.
+		[Test]
+		public Task BracedSwitchSectionIsRead() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation.Replace("flags.IsExpand()", "{|LINQ2DB0004:flags.IsExpand()|}", System.StringComparison.Ordinal))
+				.Replace("case BuildPurpose.Table:", "case BuildPurpose.Table:\n\t\t\t\t\t{", System.StringComparison.Ordinal)
+				.Replace("case BuildPurpose.Expand:", "\t\t\t\t\t}\n\t\t\t\t\tcase BuildPurpose.Expand:", System.StringComparison.Ordinal));
+
+		// TO-5 - a different [Flags] enum with its own same-shaped predicates, in a method whose parameter is even
 		// called 'flags'. Every pair here would be reported were the type ProjectFlags. Fails unless the analyzer
-		// compares the receiver's type symbol instead of matching the identifier or the Is* naming shape - which
-		// is exactly what InsertOrUpdateBuilder.cs and ColumnDescriptor.cs do with SqlProviderFlags.
+		// compares the receiver's type symbol instead of matching the identifier or the Is* naming shape.
+		// Constructed rather than taken from the tree: the real 'flags'-named values of a foreign flags enum are
+		// read through a property (InsertOrUpdateBuilder.cs:145) or a raw bitmask over SkipModification
+		// (ColumnDescriptor.cs:397), and neither is an invocation the recogniser could be fooled by.
 		[Test]
 		public Task AnUnrelatedFlagsEnumWithTheSamePredicateShapeIsNotMatched() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(Model + """
 			namespace Other
