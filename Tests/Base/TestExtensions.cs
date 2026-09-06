@@ -52,6 +52,11 @@ namespace Tests
 				// onto the next query. Without this the helper reads true for a context that in fact loads sequentially.
 				&& db.QueryHints.Count == 0
 				&& db.NextQueryHints.Count == 0;
+
+			// One gate of that method is deliberately NOT mirrored: it also refuses to combine for a DataConnection
+			// subclass that overrides ProcessQuery, and the probe for that is internal with no InternalsVisibleTo to
+			// reach it from here. So this helper over-reports for such a context. Nothing in-tree overrides ProcessQuery
+			// on a context that eager-loads; a test that does has to count commands itself rather than ask this.
 		}
 	}
 }
