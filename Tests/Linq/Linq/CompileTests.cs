@@ -837,14 +837,18 @@ namespace Tests.Linq
 			var viaQueryable   = queryable(db, 1).First();
 			var afterQueryable = transactions;
 			var viaElement     = element(db, 1);
+			var afterElement   = transactions;
+			var viaElement2    = element(db, 2);
 
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(viaQueryable.Children, Has.Count.EqualTo(1));
 				Assert.That(viaElement.Children,   Has.Count.EqualTo(1));
+				Assert.That(viaElement2.Children,  Has.Count.EqualTo(2));
 
 				Assert.That(afterQueryable, Is.EqualTo(1), "queryable form must open the implicit eager-loading transaction");
-				Assert.That(transactions,   Is.EqualTo(2), "element form must open one as well");
+				Assert.That(afterElement,   Is.EqualTo(2), "element form must open one as well");
+				Assert.That(transactions,   Is.EqualTo(3), "and must dispose it - a leak leaves the connection inside it, so the next call opens none");
 			}
 		}
 

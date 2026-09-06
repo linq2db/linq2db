@@ -78,6 +78,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_isSingleConvert     = false;
 
 			_materializedArgumentSlots = null;
+			_parameterValues           = null;
 
 			_allowedParameters?.Clear();
 

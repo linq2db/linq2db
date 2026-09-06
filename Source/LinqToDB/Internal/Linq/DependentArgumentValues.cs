@@ -7,8 +7,10 @@ namespace LinqToDB.Internal.Linq
 	/// <summary>
 	/// Values a compiled table's query was built from, for the arguments its expression materialises.
 	/// The cache key is compared through the tuple's per-field default comparer, which would compare an
-	/// array by reference - hence a holder rather than the array itself. Values compare element-wise, the
-	/// way SqlQueryDependentAttribute.ObjectsEqual compares the same values everywhere else.
+	/// array by reference - hence a holder rather than the array itself. Values compare element-wise and
+	/// recursively; SqlQueryDependentAttribute.ObjectsEqual compares a sequence's elements with the
+	/// non-recursive object.Equals, so it is the looser of the two - the difference can only cost an extra
+	/// miss here, never a false match.
 	/// </summary>
 	sealed class DependentArgumentValues : IEquatable<DependentArgumentValues>
 	{
