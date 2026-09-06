@@ -60,14 +60,10 @@ namespace LinqToDB.Internal.Linq
 
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots)
 		{
-			var configurationID = dataContext.ConfigurationID;
-			var dataOptions     = dataContext.Options;
-			var reported        = new List<int[]>(1);
-
 			var cacheKey =
 				(
 					operation: "CT",
-					configurationID,
+					configurationID: dataContext.ConfigurationID,
 					// Identity of this fold site, not a structural comparison: the cache is global per T,
 					// and one compiled query can fold more than one table of the same type.
 					table      : this,
@@ -75,61 +71,70 @@ namespace LinqToDB.Internal.Linq
 					dependent  : GetDependentArgumentValues(indexes, parameterValues)
 				);
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				cacheKey,
-				(dataContext, dataOptions, parameterValues, reported),
-				static (o, key, ctx) =>
-				{
-					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
-
-					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var exposed = ExpressionBuilder.ExposeExpression(key.table._expression, ctx.dataContext,
-						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true,
-						out var materializedSlots);
-
-					ctx.reported.Add(materializedSlots);
-
-					var query             = new Query<T>(ctx.dataContext);
-					var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
-					var parametersContext = new ParametersContext(expressions, optimizationContext, ctx.dataContext);
-
-					var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(ctx.dataContext);
-					query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
-						.Build<T>(ref expressions);
-
-					if (query.ErrorExpression != null)
-					{
-						if (!validateSubqueries)
-						{
-							query = new Query<T>(ctx.dataContext);
-
-							query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
-								.Build<T>(ref expressions);
-						}
-
-						if (query.ErrorExpression != null)
-							throw query.ErrorExpression.CreateException();
-					}
-
-					query.CompiledExpressions = expressions;
-
-					return query;
-				})!;
-
-			if (reported.Count == 0 || IsCovered(reported[0], indexes))
+			if (QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var cached))
 			{
 				unseenSlots = null;
 
-				return result;
+				return cached;
 			}
 
-			// A slot the pre-expose scan could not see took part in this build, so the entry just made is keyed
-			// too weakly to tell two argument values apart. Drop it and report the slot so the caller can retry.
-			QueryRunner.Cache<T>.QueryCache.Remove(cacheKey);
+			// Built outside the cache on purpose. Routing this through GetOrCreate publishes the entry before
+			// its key can be checked against what the build materialised, and a thread hitting it in that window
+			// would run this query for its own argument values.
+			var query = BuildQuery(dataContext, parameterValues, out var materializedSlots);
 
-			unseenSlots = reported[0];
+			if (!IsCovered(materializedSlots, indexes))
+			{
+				// A slot the pre-expose scan could not see took part in the build, so this key cannot tell two
+				// argument values apart. Nothing is published - the caller widens the key and comes back.
+				unseenSlots = materializedSlots;
 
-			return result;
+				return query;
+			}
+
+			using (var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey))
+			{
+				entry.SlidingExpiration = dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+				entry.Value             = query;
+			}
+
+			unseenSlots = null;
+
+			return query;
+		}
+
+		Query<T> BuildQuery(IDataContext dataContext, object?[] parameterValues, out int[] materializedSlots)
+		{
+			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			var exposed = ExpressionBuilder.ExposeExpression(_expression, dataContext,
+				optimizationContext, parameterValues, optimizeConditions : false, compactBinary : true,
+				out materializedSlots);
+
+			var query             = new Query<T>(dataContext);
+			var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
+			var parametersContext = new ParametersContext(expressions, optimizationContext, dataContext);
+
+			var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(dataContext);
+			query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, dataContext, exposed, parameterValues)
+				.Build<T>(ref expressions);
+
+			if (query.ErrorExpression != null)
+			{
+				if (!validateSubqueries)
+				{
+					query = new Query<T>(dataContext);
+
+					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, exposed, parameterValues)
+						.Build<T>(ref expressions);
+				}
+
+				if (query.ErrorExpression != null)
+					throw query.ErrorExpression.CreateException();
+			}
+
+			query.CompiledExpressions = expressions;
+
+			return query;
 		}
 
 		static bool IsCovered(int[] materializedSlots, int[] indexes)
