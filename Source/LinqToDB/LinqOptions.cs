@@ -221,6 +221,11 @@ namespace LinqToDB
 	/// <see cref="LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsMultipleResultSetsSupported"/> stays sequential
 	/// regardless of this option, and <see cref="UseDbBatch"/> only selects the backend once this is enabled.
 	/// </para>
+	/// <para>
+	/// An eager load also stays sequential when the context carries pending query hints, or when its type overrides
+	/// <c>DataConnection.ProcessQuery</c>: both are applied by the per-command path the combined executor replaces, so
+	/// combining would drop them from part of the load rather than all of it.
+	/// </para>
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	public sealed record LinqOptions

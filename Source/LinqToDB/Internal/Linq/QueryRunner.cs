@@ -1056,6 +1056,14 @@ namespace LinqToDB.Internal.Linq
 			if (dataContext.QueryHints.Count > 0 || dataContext.NextQueryHints.Count > 0)
 				return null;
 
+			// Same reason, the other piece of GetCommand-only state: DataConnection.ProcessQuery is a shipped extension
+			// point that lets a subclass rewrite the statement before render, and GetCommand is its only caller. This path
+			// renders the main query's statement and each combinable child's directly, so a subclass's rewrite would keep
+			// applying to the non-combinable children and silently stop applying to everything else. Combining steps aside
+			// for such a subclass rather than apply the rewrite to part of the load.
+			if (dataConnection.IsProcessQueryOverridden)
+				return null;
+
 			if (!EagerResultEnumerable<T>.HasCombinable(harvesters))
 				return null;
 
