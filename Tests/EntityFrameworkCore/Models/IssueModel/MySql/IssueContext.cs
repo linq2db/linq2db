@@ -2,7 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.Pomelo.Models.IssueModel
+namespace LinqToDB.EntityFrameworkCore.Tests.MySql.Models.IssueModel
 {
 	public class IssueContext(DbContextOptions options) : IssueContextBase(options)
 	{

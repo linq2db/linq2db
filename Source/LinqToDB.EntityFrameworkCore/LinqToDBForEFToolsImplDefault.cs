@@ -243,6 +243,8 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				"Microsoft.EntityFrameworkCore.SqlServer"                                                   => new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer      },
 				"Pomelo.EntityFrameworkCore.MySql" or "Devart.Data.MySql.EFCore"                            => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
+				// Microting is a fork of Pomelo; it renames the assembly, which is what EF reports here
+				"Microting.EntityFrameworkCore.MySql"                                                       => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"MySql.Data.EntityFrameworkCore"                                                            => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"Npgsql.EntityFrameworkCore.PostgreSQL" or "Devart.Data.PostgreSql.EFCore"                  => new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL     },
 				"Microsoft.EntityFrameworkCore.Sqlite" or "Devart.Data.SQLite.EFCore"                       => new LinqToDBProviderInfo { ProviderName = ProviderName.SQLite         },
