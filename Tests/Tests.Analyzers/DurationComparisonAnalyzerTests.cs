@@ -457,6 +457,41 @@ namespace Tests.Analyzers
 			return Verify.VerifyAsync(source, Expected("Elapsed", "hours", "00:00:01.5000000", "can never match"));
 		}
 
+		[Test]
+		public Task ReportsInheritedDeclarationOnAnOverride()
+		{
+			// GetAttributes returns a symbol's own attributes only, so the base declaration is invisible on the
+			// override without the OverriddenProperty walk - and [Duration] is Inherited, so it applies. Stubbing
+			// that walk out leaves this the only test that reddens.
+			const string source = """
+				using System;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.Mapping;
+
+				class DeclaringRow
+				{
+					[Column, Duration(DurationUnit.Second)] public virtual TimeSpan InSeconds { get; set; }
+				}
+
+				class OverridingRow : DeclaringRow
+				{
+					public override TimeSpan InSeconds { get; set; }
+				}
+
+				class C
+				{
+					void M(IQueryable<OverridingRow> q)
+					{
+						q.Where(r => {|#0:r.InSeconds == TimeSpan.FromSeconds(1.5)|});
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source, Expected("InSeconds", "seconds", "00:00:01.5000000", "can never match"));
+		}
+
 		#endregion
 
 		#region Negatives
