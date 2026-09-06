@@ -67,7 +67,13 @@ namespace LinqToDB.Internal.Linq
 		/// Adds this harvester query's parameter values (keyed by their <see cref="SqlParameter"/> AST nodes) to the shared
 		/// <paramref name="values"/> used to bind the combined command.
 		/// </summary>
-		void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters);
+		/// <param name="context">
+		/// The live execution context of the enumeration this binding is for. Passed so an accessor that reads a result
+		/// slot - the keyed strategy feeds master keys into a detail query's IN-list that way - sees the same context the
+		/// sequential path gives it through <c>QueryRunnerBase.SetCommand</c>. A null here would mean "evaluated without a
+		/// live execution", which is not true of this call site.
+		/// </param>
+		void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context);
 
 		/// <summary>
 		/// Materializes this harvester's result from a reader already positioned at its result set; the caller advances the

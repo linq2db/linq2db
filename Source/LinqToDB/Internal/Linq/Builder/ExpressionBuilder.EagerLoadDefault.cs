@@ -172,9 +172,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			public SqlStatement? GetCombinableStatement()
 				=> query.QueryInfo.Statement;
 
-			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
 			{
-				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
+				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values, context);
 			}
 
 			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)
@@ -200,9 +200,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			public SqlStatement? GetCombinableStatement()
 				=> query.QueryInfo.Statement;
 
-			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters)
+			public void AddCombinableParameterValues(SqlParameterValues values, IQueryExpressions expressions, IDataContext dataContext, object?[]? parameters, SqlCommandExecutionContext context)
 			{
-				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values);
+				QueryRunner.SetParameters(query, expressions, dataContext, parameters, values, context);
 			}
 
 			public object MaterializeFromReader(IDataContext dataContext, IQueryExpressions expressions, SqlCommandExecutionContext? context, DbDataReader dataReader)

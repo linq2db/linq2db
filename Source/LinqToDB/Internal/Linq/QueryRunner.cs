@@ -823,14 +823,21 @@ namespace LinqToDB.Internal.Linq
 			// Merges every combinable child's and the main query's parameter values into one SqlParameterValues (keyed by
 			// SqlParameter node). Genuinely per-run - the values are this execution's - so it is the only part of the old
 			// PrepareScenario a warm execution still has to do.
-			SqlParameterValues CollectParameterValues()
+			// The enumeration's own context is threaded through both calls rather than left to default to null. The sequential
+			// path passes the real context here (QueryRunnerBase.SetCommand), and an accessor that reads a result slot -
+			// how the keyed strategy feeds master keys into a detail query's IN-list - null-guards on the documented premise
+			// that a null context means "no live execution". This call site is a live execution, so passing null would
+			// falsify that premise and hand such an accessor null parent keys instead of throwing. No route reaches it today
+			// (keyed harvesters are non-combinable, and the main query's accessors do not include a child's keys source),
+			// which is why this is symmetry rather than a fix - but it is symmetry the v7 default makes load-bearing.
+			SqlParameterValues CollectParameterValues(SqlCommandExecutionContext context)
 			{
 				var values = new SqlParameterValues();
 
 				foreach (var i in _combinableIndexes)
-					((IStepMaterializer)_harvesters[i]).AddCombinableParameterValues(values, _expressions, _dataContext, _parameters);
+					((IStepMaterializer)_harvesters[i]).AddCombinableParameterValues(values, _expressions, _dataContext, _parameters, context);
 
-				SetParameters(_query, _expressions, _dataContext, _parameters, values);
+				SetParameters(_query, _expressions, _dataContext, _parameters, values, context);
 
 				return values;
 			}
@@ -920,7 +927,7 @@ namespace LinqToDB.Internal.Linq
 			// its DbParameters and the per-group command array. A COLD execution builds the scenario once, renders, and stores
 			// all three. commandByGroup aligns with the groups: null for a self-executing singleton group, the bound command
 			// for a combined group.
-			(ExecutionStep[] Steps, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan()
+			(ExecutionStep[] Steps, SqlCommandGroup[] Groups, CombinedCommand?[] CommandByGroup) BuildPlan(SqlCommandExecutionContext context)
 			{
 				// Held on the same object DataConnection.QueryRunner.GetCommand locks, and for the same reason: that
 				// monitor is what licenses GetCommand's Modify-mode (in-place mutating) visitors over
@@ -933,7 +940,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var dataConnection = (DataConnection)_dataContext;
 					var useBatch       = dataConnection.CanUseDbBatch;   // false on frameworks without the DbBatch API
-					var values         = CollectParameterValues();
+					var values         = CollectParameterValues(context);
 
 					// A cache built for the OTHER backend is unusable (batch and concat shapes are not interchangeable).
 					var cache = _query.QueryInfo.EagerCommandCache is { } c && c.WasBatch == useBatch ? c : null;
@@ -966,7 +973,7 @@ namespace LinqToDB.Internal.Linq
 
 				var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
 				var dataConnection = (DataConnection)_dataContext;
-				var (steps, groups, commandByGroup) = BuildPlan();
+				var (steps, groups, commandByGroup) = BuildPlan(context);
 
 				// The combined command's single reader is walked across multiple harvest steps, and each step (plus the main
 				// stream below) materializes through a nested query runner. When CloseAfterUse is set - e.g. the EF Core bridge
@@ -1012,7 +1019,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var context        = new SqlCommandExecutionContext(_harvesters.Length, _parameters);
 					var dataConnection = (DataConnection)_dataContext;
-					var (steps, groups, commandByGroup) = BuildPlan();
+					var (steps, groups, commandByGroup) = BuildPlan(context);
 
 					// See the sync GetEnumerator: suppress CloseAfterUse while the shared combined reader is walked (each
 					// harvest / the main stream materializes through a nested runner whose dispose would otherwise Close() the
