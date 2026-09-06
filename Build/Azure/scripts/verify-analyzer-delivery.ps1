@@ -52,7 +52,7 @@ Exit codes:
 param(
     [Parameter(Mandatory = $true)]
     [string] $PackagesDir,
-    [string] $RepoRoot = (Join-Path $PSScriptRoot '..\..\..'),
+    [string] $RepoRoot = (Join-Path $PSScriptRoot '..' '..' '..'),
     [switch] $NoAzdoLogs
 )
 
