@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Linq.Builder;
@@ -192,6 +193,62 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			return preambles;
+		}
+
+		internal IDisposable? StartLoadTransaction(IDataContext dataContext)
+		{
+			var dc = GetTransactionOwner(dataContext);
+
+			if (dc == null)
+				return null;
+
+			if (dataContext is DataContext ctx)
+				return ctx.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+
+			return dc.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+		}
+
+		internal async Task<IAsyncDisposable?> StartLoadTransactionAsync(IDataContext dataContext, CancellationToken cancellationToken)
+		{
+			var dc = GetTransactionOwner(dataContext);
+
+			if (dc == null)
+				return null;
+
+			if (dataContext is DataContext ctx)
+				return await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+					.ConfigureAwait(false);
+
+			return await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)
+				.ConfigureAwait(false);
+		}
+
+		DataConnection? GetTransactionOwner(IDataContext dataContext)
+		{
+			// Do not start implicit transaction if there is no preambles
+			//
+			if (!IsAnyPreambles())
+				return null;
+
+			var dc = dataContext switch
+			{
+				DataConnection dataConnection => dataConnection,
+				DataContext    context        => context.GetDataConnection(),
+				_                             => null,
+			};
+
+			if (dc == null)
+				return null;
+
+			// transaction will be maintained by TransactionScope
+			//
+			if (TransactionScopeHelper.IsInsideTransactionScope)
+				return null;
+
+			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
+				return null;
+
+			return dc;
 		}
 
 		#endregion

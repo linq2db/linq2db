@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,197 +14,192 @@ namespace LinqToDB.Internal.Linq
 	sealed class CompiledTable<T>
 		where T : notnull
 	{
-		public CompiledTable(LambdaExpression lambda, Expression expression)
+		public CompiledTable(Expression expression, int[] dependentArgumentIndexes)
 		{
-			_lambda     = lambda;
-			_expression = expression;
+			_expression               = expression;
+			_dependentArgumentIndexes = dependentArgumentIndexes;
 		}
 
-		readonly LambdaExpression _lambda;
-		readonly Expression       _expression;
+		readonly Expression _expression;
 
-		static bool ReplaceAsyncWithSync(MethodCallExpression methodCall, out MethodCallExpression newMethodCall)
+		// Grows when a build reports a slot the pre-expose scan could not see - expansion is recursive, so a
+		// dependent position can appear only after several rewrites. Written under _learnLock, read unlocked.
+		volatile int[] _dependentArgumentIndexes;
+
+		readonly Lock _learnLock = new();
+
+		// Expose materialises a [SqlQueryDependent] argument read from the argument array, so the cached query
+		// belongs to those values and not just to this fold site.
+		static DependentArgumentValues GetDependentArgumentValues(int[] indexes, object?[] parameterValues)
 		{
-			newMethodCall = methodCall;
-			var returnType = methodCall.Method.ReturnType;
-			if (!typeof(Task).IsAssignableFrom(returnType))
-			{
-				return true;
-			}
+			if (indexes.Length == 0)
+				return DependentArgumentValues.None;
 
-			var methodName = methodCall.Method.Name;
-			if (!methodName.EndsWith("Async", StringComparison.Ordinal))
-			{
-				return true;
-			}
+			var values = new object?[indexes.Length];
 
-			var newMethodName = methodName.Substring(0, methodName.Length - "Async".Length);
-			var methods = GetSimilarMethods(methodCall.Type.DeclaringType)
-				.Concat(GetSimilarMethods(typeof(Queryable)))
-				.ToList();
+			for (var i = 0; i < values.Length; i++)
+				values[i] = parameterValues[indexes[i]];
 
-			if (methods.Count == 0)
-			{
-				return false;
-			}
-
-			var sourceParametersArray = methodCall.Method.GetParameters();
-
-			var destArguments         = methodCall.Arguments;
-
-			ICollection<ParameterInfo> sourceParameters = sourceParametersArray;
-
-			if (sourceParametersArray.Length > 0 && sourceParametersArray[^1].ParameterType == typeof(CancellationToken))
-			{
-				sourceParameters = sourceParametersArray.Take(sourceParametersArray.Length - 1).ToList();
-				destArguments = destArguments.Take(destArguments.Count - 1).ToList().AsReadOnly();
-			}
-
-			var         sourceGenericArguments = methodCall.Method.GetGenericArguments();
-			MethodInfo? targetMethod           = null;
-
-			foreach (var method in methods)
-			{
-				if (methodCall.Method.IsGenericMethod)
-				{
-					if (!method.IsGenericMethod)
-					{
-						continue;
-					}
-
-					var genericArgs = method.GetGenericArguments();
-					if (sourceGenericArguments.Length != genericArgs.Length)
-						continue;
-
-					var candidateMethod = method.MakeGenericMethod(sourceGenericArguments);
-
-					if (TypeHelper.IsEqualParameters(sourceParameters, candidateMethod.GetParameters()))
-					{
-						targetMethod = candidateMethod;
-						break;
-					}
-				}
-				else
-				{
-					if (method.IsGenericMethod)
-					{
-						continue;
-					}
-
-					if (TypeHelper.IsEqualParameters(sourceParameters, method.GetParameters()))
-					{
-						targetMethod = method;
-						break;
-					}
-				}
-			}
-
-			if (targetMethod == null)
-			{
-				return false;
-			}
-
-			newMethodCall = Expression.Call(targetMethod, destArguments);
-			return true;
-
-			List<MethodInfo> GetSimilarMethods(Type? methodsContainer)
-			{
-				if (methodsContainer == null)
-					return [];
-
-				var methodInfos = methodsContainer.GetMethods()
-					.Where(m => string.Equals(m.Name, newMethodName, StringComparison.Ordinal))
-					.ToList();
-				return methodInfos;
-			}
+			return new DependentArgumentValues(values);
 		}
 
 		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
-			var configurationID = dataContext.ConfigurationID;
-			var dataOptions     = dataContext.Options;
+			for (;;)
+			{
+				var indexes = _dependentArgumentIndexes;
+				var query   = GetInfo(dataContext, parameterValues, indexes, out var unseenSlots);
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+				if (unseenSlots == null)
+					return query;
+
+				lock (_learnLock)
+					_dependentArgumentIndexes = Union(_dependentArgumentIndexes, unseenSlots);
+			}
+		}
+
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues, int[] indexes, out int[]? unseenSlots)
+		{
+			var cacheKey =
 				(
 					operation: "CT",
-					configurationID,
-					expression : _expression,
-					queryFlags : dataContext.GetQueryFlags()
-				),
-				(dataContext, lambda: _lambda, dataOptions, parameterValues),
-				static (o, key, ctx) =>
+					configurationID: dataContext.ConfigurationID,
+					// Identity of this fold site, not a structural comparison: the cache is global per T,
+					// and one compiled query can fold more than one table of the same type.
+					table      : this,
+					queryFlags : dataContext.GetQueryFlags(),
+					dependent  : GetDependentArgumentValues(indexes, parameterValues)
+				);
+
+			if (QueryRunner.Cache<T>.QueryCache.TryGetValue(cacheKey, out var cached))
+			{
+				unseenSlots = null;
+
+				return cached;
+			}
+
+			// Built outside the cache on purpose. Routing this through GetOrCreate publishes the entry before
+			// its key can be checked against what the build materialised, and a thread hitting it in that window
+			// would run this query for its own argument values.
+			var query = BuildQuery(dataContext, parameterValues, out var materializedSlots);
+
+			if (!IsCovered(materializedSlots, indexes))
+			{
+				// A slot the pre-expose scan could not see took part in the build, so this key cannot tell two
+				// argument values apart. Nothing is published - the caller widens the key and comes back.
+				unseenSlots = materializedSlots;
+
+				return query;
+			}
+
+			using (var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey))
+			{
+				entry.SlidingExpiration = dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+				entry.Value             = query;
+			}
+
+			unseenSlots = null;
+
+			return query;
+		}
+
+		Query<T> BuildQuery(IDataContext dataContext, object?[] parameterValues, out int[] materializedSlots)
+		{
+			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			var exposed = ExpressionBuilder.ExposeExpression(_expression, dataContext,
+				optimizationContext, parameterValues, optimizeConditions : false, compactBinary : true,
+				out materializedSlots);
+
+			var query             = new Query<T>(dataContext);
+			var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
+			var parametersContext = new ParametersContext(expressions, optimizationContext, dataContext);
+
+			var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(dataContext);
+			query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, dataContext, exposed, parameterValues)
+				.Build<T>(ref expressions);
+
+			if (query.ErrorExpression != null)
+			{
+				if (!validateSubqueries)
 				{
-					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
+					query = new Query<T>(dataContext);
 
-					var correctedExpression = key.expression;
-
-					if (key.expression is MethodCallExpression methodCall)
-					{
-						if (!ReplaceAsyncWithSync(methodCall, out var newMethodCall))
-						{
-							throw new InvalidOperationException("Cannot convert async method call to sync.");
-						}
-
-						correctedExpression = newMethodCall;
-					}
-
-					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var exposed = ExpressionBuilder.ExposeExpression(correctedExpression, ctx.dataContext,
-						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
-
-					var query             = new Query<T>(ctx.dataContext);
-					var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
-					var parametersContext = new ParametersContext(expressions, optimizationContext, ctx.dataContext);
-
-					var validateSubqueries = !ExpressionBuilder.NeedsSubqueryValidation(ctx.dataContext);
-					query = new ExpressionBuilder(query, validateSubqueries, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
+					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, exposed, parameterValues)
 						.Build<T>(ref expressions);
+				}
 
-					if (query.ErrorExpression != null)
-					{
-						if (!validateSubqueries)
-						{
-							query = new Query<T>(ctx.dataContext);
+				if (query.ErrorExpression != null)
+					throw query.ErrorExpression.CreateException();
+			}
 
-							query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
-								.Build<T>(ref expressions);
-						}
+			query.CompiledExpressions = expressions;
 
-						if (query.ErrorExpression != null)
-							throw query.ErrorExpression.CreateException();
-					}
-
-					query.CompiledExpressions = expressions;
-
-					return query;
-				})!;
-
-			return result;
+			return query;
 		}
 
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Method used by two-parameter call in generated expression")]
-		public IQueryable<T> Create(object[] parameters, object[] preambles)
+		static bool IsCovered(int[] materializedSlots, int[] indexes)
+		{
+			foreach (var slot in materializedSlots)
+				if (Array.IndexOf(indexes, slot) < 0)
+					return false;
+
+			return true;
+		}
+
+		static int[] Union(int[] indexes, int[] materializedSlots)
+		{
+			var union = new List<int>(indexes);
+
+			foreach (var slot in materializedSlots)
+				if (!union.Contains(slot))
+					union.Add(slot);
+
+			union.Sort();
+
+			return union.ToArray();
+		}
+
+		public IQueryable<T> Create(object[] parameters)
 		{
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return new Table<T>(db, _expression) { Info = query, Parameters = parameters };
+			// The exposed tree, not _expression: Info carries parameter accessors built against it, and a
+			// pre-set Info makes ExpressionQuery skip the expose that would otherwise reconcile the two.
+			return new Table<T>(db, query.CompiledExpressions!.MainExpression)
+			{
+				Info                = query,
+				Parameters          = parameters,
+				CompiledExpressions = query.CompiledExpressions
+			};
 		}
 
-		public T Execute(object[] parameters, object[] preambles)
+		public T Execute(object[] parameters)
 		{
-			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db, parameters);
+			var db          = (IDataContext)parameters[0];
+			var query       = GetInfo(db, parameters);
+			var expressions = query.CompiledExpressions!;
 
-			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles)!;
+			using (query.StartLoadTransaction(db))
+			{
+				var preambles = query.InitPreambles(db, expressions, parameters);
+
+				return (T)query.GetElement(db, expressions, parameters, preambles)!;
+			}
 		}
 
-		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
+		public async Task<T> ExecuteAsync(object[] parameters, CancellationToken cancellationToken)
 		{
-			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db, parameters);
+			var db          = (IDataContext)parameters[0];
+			var query       = GetInfo(db, parameters);
+			var expressions = query.CompiledExpressions!;
 
-			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, default).ConfigureAwait(false))!;
+			var transaction = await query.StartLoadTransactionAsync(db, cancellationToken).ConfigureAwait(false);
+			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+
+			var preambles = await query.InitPreamblesAsync(db, expressions, parameters, cancellationToken).ConfigureAwait(false);
+
+			return (T)(await query.GetElementAsync(db, expressions, parameters, preambles, cancellationToken).ConfigureAwait(false))!;
 		}
 	}
 }
