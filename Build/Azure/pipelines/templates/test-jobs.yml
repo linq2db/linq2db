@@ -40,6 +40,11 @@ parameters:
 - name: linux_max_parallel
   type: number
   default: 0
+  # Off by default so default.yml - the release and master runs - keeps every leg on Azure. Only
+  # testing.yml turns it on, which is what stops the two CIs running the same legs on a PR.
+- name: offload_linux_to_github
+  type: boolean
+  default: false
 
 jobs:
 ##############################################################################################
@@ -94,7 +99,11 @@ jobs:
     timeoutInMinutes: 300
   ${{ if not(eq(parameters.full_run, true)) }}:
     timeoutInMinutes: 180
-  condition: ${{ parameters.enabled }}
+  # A surface can select no leg for this OS at all - a linux-only provider here, every offloaded leg
+  # on linux - and an empty matrix otherwise runs the job once with $(title) unexpanded, skipping
+  # every step and reporting success: build 23319's green `Win`, the shape 23192 first showed. title
+  # exists only when the matrix expanded, so it is what tells the two apart.
+  condition: and(${{ parameters.enabled }}, ne(variables['title'], ''))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
@@ -156,7 +165,9 @@ jobs:
     timeoutInMinutes: 180
   displayName: 'Lin'
   dependsOn: create_baselines_branch
-  condition: ${{ parameters.enabled }}
+  # Empty matrix, same as the windows job above - and this is the side the gh_linux split makes
+  # common, since every surface but [all] and [oracle.all] now has all its linux legs on GitHub.
+  condition: and(${{ parameters.enabled }}, ne(variables['title'], ''))
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
     source_pr_id: $[coalesce(variables['system.pullRequest.pullRequestNumber'], '')]
@@ -169,7 +180,11 @@ jobs:
       maxParallel: ${{ parameters.linux_max_parallel }}
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(contains(test_config.filters, parameters.db_filter), eq(test_config.enable_os_ubuntu, 'true')) }}:
+        # An entry marked gh_linux runs its linux leg on GitHub Actions instead, so Azure skips it -
+        # but only when the caller asks for the split. default.yml does not, which is what keeps the
+        # release run covering every leg on one CI: a flat per-entry flag would silently shrink
+        # release coverage the moment a leg moved.
+        ${{ if and(contains(test_config.filters, parameters.db_filter), eq(test_config.enable_os_ubuntu, 'true'), not(and(eq(parameters.offload_linux_to_github, true), eq(test_config.gh_linux, 'true')))) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}

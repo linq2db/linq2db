@@ -35,6 +35,9 @@ stages:
         enabled: succeeded()
         with_baselines: true
         full_run: false
+        # PR runs split the linux legs; default.yml deliberately does not, so the release run keeps
+        # every leg on one CI.
+        offload_linux_to_github: true
         # db_filter is resolved inside test-matrix.yml from its surfaces map, keyed by definition
         # name. It used to be a 34-line if-chain here, which only Azure could read - the GitHub side
         # needs the same mapping, and #5848 already moved entry selection into that file for exactly
