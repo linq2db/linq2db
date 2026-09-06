@@ -264,6 +264,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (expr is ContextRefExpression refExpression)
 						return refExpression.WithType(type);
+					if (expr is SqlErrorExpression errorExpression)
+						return errorExpression.WithType(type);
 					return Expression.Convert(expr, type);
 				}
 
@@ -1033,6 +1035,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				return UnwrapDefaultIfEmpty(defaultIfEmptyExpression.InnerExpression);
 
 			return expression;
+		}
+
+		/// <summary>
+		/// Whether the expression projects a constructed object, seen through a <c>Convert</c> / <c>ConvertChecked</c>
+		/// chain carrying no conversion operator, or a <c>SqlAdjustTypeExpression</c>. A set operation unifies branch
+		/// projections of differing but assignable types by converting one of them, so a branch is a constructor with
+		/// a conversion in front of it as often as a bare one. A <c>TypeAs</c> is <b>not</b> one of the node kinds
+		/// seen through here - it is rewritten into a conversion earlier, while the projection is built.
+		/// </summary>
+		public static bool IsConstructorBranch(Expression expression)
+		{
+			return IsConstructorBranch(expression, out _);
+		}
+
+		/// <inheritdoc cref="IsConstructorBranch(Expression)"/>
+		public static bool IsConstructorBranch(Expression expression, [NotNullWhen(true)] out SqlGenericConstructorExpression? constructor)
+		{
+			constructor = expression.UnwrapConvert() as SqlGenericConstructorExpression;
+
+			return constructor != null;
 		}
 
 		public static Expression UnwrapProxy(Expression expression)
