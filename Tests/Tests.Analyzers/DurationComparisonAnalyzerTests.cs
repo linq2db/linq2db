@@ -730,6 +730,45 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
+		public Task DoesNotReportDerivedAttributeThatScopesItselfToAConfiguration()
+		{
+			// Paired with the test above: same scoping, declared through a derived attribute that assigns
+			// Configuration from its own constructor rather than through a named argument. Reading only named
+			// arguments makes such an attribute look unscoped, which is what lets it stand as the
+			// all-configurations fallback and turns a scoped declaration into a report.
+			const string source = """
+				using System;
+				using System.Linq;
+
+				using LinqToDB;
+				using LinqToDB.Mapping;
+
+				sealed class ScopedDurationAttribute : DurationAttribute
+				{
+					public ScopedDurationAttribute(DurationUnit unit, string configuration) : base(unit)
+					{
+						Configuration = configuration;
+					}
+				}
+
+				class Scoped
+				{
+					[Column, ScopedDuration(DurationUnit.Second, "SqlServer")] public TimeSpan Elapsed { get; set; }
+				}
+
+				class C
+				{
+					void M(IQueryable<Scoped> q)
+					{
+						q.Where(r => r.Elapsed == TimeSpan.FromSeconds(1.5));
+					}
+				}
+				""";
+
+			return Verify.VerifyAsync(source);
+		}
+
+		[Test]
 		public Task DoesNotReportWhenDeclaredUnitsDisagree()
 		{
 			// A column of milliseconds holds 1.5 seconds exactly, so the comparison genuinely matches under that

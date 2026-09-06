@@ -342,8 +342,21 @@ namespace LinqToDB.Analyzers
 					: null;
 			}
 
-			static bool HasConfiguration(AttributeData attribute)
+			// Configuration is readable from the application only as a named argument, which is the sole way an
+			// application of DurationAttribute itself can set it - its one constructor takes the unit. A derived
+			// attribute can also assign it from a constructor argument, out of sight here, so one whose application
+			// passes more than the unit is taken as scoped rather than assumed unscoped: standing as the
+			// all-configurations fallback is what turns a scoped declaration into a report. An attribute that
+			// passes the unit through and nothing else keeps the fallback, which is the shape derived support
+			// exists for. Not closed: a derived attribute assigning Configuration in its constructor body cannot be
+			// told apart from one that leaves it alone without following the constructor, possibly into another
+			// assembly.
+			bool HasConfiguration(AttributeData attribute)
 			{
+				if (!SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, _durationAttribute)
+					&& attribute.ConstructorArguments.Length > 1)
+					return true;
+
 				foreach (var named in attribute.NamedArguments)
 					if (string.Equals(named.Key, "Configuration", StringComparison.Ordinal))
 						return named.Value.Value is string { Length: > 0 };
