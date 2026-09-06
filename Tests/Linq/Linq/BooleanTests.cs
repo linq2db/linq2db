@@ -724,7 +724,7 @@ namespace Tests.Linq
 		static T Coalesce<T>(T value, T defaultValue) => throw new ServerSideOnlyException(nameof(Coalesce));
 
 		[Sql.Function("CONTAINS", ServerSideOnly = true, CanBeNull = false, InlineParameters = false, PreferServerSide = true, IsPredicate = true)]
-		static bool FtxContains(string columnOrColumns, string search) => throw new InvalidOperationException();
+		static bool FtxContains(string columnOrColumns, string search) => throw new ServerSideOnlyException(nameof(FtxContains));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4933")]
 		public void IssueFunctionPredicate([IncludeDataSources(TestProvName.AllNorthwind)] string context)

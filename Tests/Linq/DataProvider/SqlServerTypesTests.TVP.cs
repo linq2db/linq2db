@@ -120,7 +120,7 @@ namespace Tests.DataProvider
 		[Sql.TableExpression("select * from {0}")]
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(DataParameter p)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TableValue));
 		}
 
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(IDataContext ctx, DataParameter p)

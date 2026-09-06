@@ -339,7 +339,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(FilterExpression))]
 		private static IQueryable<Parent> Filter(ITestDataContext db, int date)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(Filter));
 		}
 
 		static Expression<Func<ITestDataContext,int,IQueryable<Parent>>> FilterExpression()

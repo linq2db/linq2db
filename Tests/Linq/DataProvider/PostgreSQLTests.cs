@@ -2266,7 +2266,7 @@ $function$
 		[Sql.Function(ServerSideOnly = true)]
 		static short? test_parameter_typing(short? input1, int? input2, long? input3, decimal? input4, float? input5, double? input6)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(test_parameter_typing));
 		}
 
 		[Table]
@@ -2787,7 +2787,7 @@ $function$
 		#region issue 4250
 
 		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
-		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new NotImplementedException();
+		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new ServerSideOnlyException(nameof(Distance));
 
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
@@ -2803,7 +2803,7 @@ $function$
 		#region issue 4348
 
 		[Sql.Expression("{0} @> '[{1}]'", ServerSideOnly = true, IsPredicate = true, InlineParameters = true)]
-		static bool JsonContains(string? json, int value) => throw new NotImplementedException();
+		static bool JsonContains(string? json, int value) => throw new ServerSideOnlyException(nameof(JsonContains));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
 		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
@@ -3079,10 +3079,10 @@ $function$
 		}
 
 		[Sql.Extension("", BuilderType = typeof(Issue5549CoalesceBuilder), ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceBuilt));
 
 		[Sql.Expression("coalesce({0},{1})", ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceRaw));
 
 		// Npgsql NodaTime plugin handles Instant at the ADO layer; linq2db has no built-in DataType for it.
 		(NpgsqlDataSource DataSource, IDataProvider Provider) Issue5549Setup(string context)
@@ -3281,13 +3281,13 @@ $function$
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double>> value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(CustomAvg));
 		}
 
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double? CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(CustomAvg));
 		}
 	}
 
@@ -3304,7 +3304,7 @@ $function$
 		public static object AddIfNotExists(string value)
 		{
 			// this function has void return type in pg, but we use object in C# to make it usable
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AddIfNotExists));
 		}
 
 		[Sql.TableFunction("TestTableFunctionSchema")]
@@ -3319,7 +3319,7 @@ $function$
 		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestParameters));
 		}
 
 		[Sql.TableFunction("TestTableFunction")]
@@ -3341,19 +3341,19 @@ $function$
 		[Sql.Function("\"TestScalarFunction\"", ServerSideOnly = true)]
 		public static string TestScalarFunction(int? param)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestScalarFunction));
 		}
 
 		[Sql.Function("\"TestSingleOutParameterFunction\"", ServerSideOnly = true)]
 		public static int? TestSingleOutParameterFunction(int? param)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestSingleOutParameterFunction));
 		}
 
 		[Sql.Function("jsonb_to_record", ServerSideOnly = true)]
 		public static TRecord DynamicRecordFunction<TRecord>(string json)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(DynamicRecordFunction));
 		}
 
 		[Sql.TableFunction("jsonb_to_recordset")]
@@ -3368,7 +3368,7 @@ $function$
 		[Sql.Function("unnest", 0, IsAggregate = true, ServerSideOnly = true, Precedence = Precedence.Primary)]
 		public static T Unnest<T>(T[] array)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Unnest));
 		}
 
 		public class TestScalarTableFunctionResult

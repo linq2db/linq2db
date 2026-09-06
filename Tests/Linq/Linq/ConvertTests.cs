@@ -692,7 +692,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ServerConvertImp))]
 		private static TTo ServerConvert<TTo, TFrom>(TFrom obj)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(ServerConvert));
 		}
 
 		static Expression<Func<TFrom, TTo>> ServerConvertImp<TTo, TFrom>()
