@@ -9,6 +9,30 @@ namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
+		// MAX takes only numeric arguments, so a boolean can reach this function only through the window clause.
+		// ORDER BY / PARTITION BY are value positions: providers without a native boolean type reject a bare
+		// predicate there, so it has to be folded into a value.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void MaxWithBooleanWindow([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id           = t.Id,
+					ByOrder      = Sql.Window.Max(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.IntValue == 20).ThenBy(t.Id)),
+					ByPartition  = Sql.Window.Max(t.IntValue, w => w.PartitionBy(t.IntValue == 20).OrderBy(t.Id)),
+					ByNullCheck  = Sql.Window.Max(t.IntValue, w => w.PartitionBy(t.NullableIntValue != null).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
 		public void MaxOverloads([SupportsAnalyticFunctionsContext] string context)
