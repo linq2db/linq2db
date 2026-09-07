@@ -119,19 +119,22 @@ namespace LinqToDB.Analyzers
 						// binds the interface method and the attribute walk goes up and not back down. Both can
 						// sit in another file, so the location travels with the diagnostic rather than making the
 						// fixer redo the interface walk.
-						var reference = hasAttribute
-							? attribute?.ApplicationSyntaxReference
-							: DeclaringReference(ServerSideOnlyContract.FindInterfaceMarkerTarget(member));
+						var (additionalLocations, fixable) = hasAttribute
+							? (MarkerLocations(attribute?.ApplicationSyntaxReference), true)
+							: MarkerTargetLocations(member);
 
-						var additionalLocations = reference is null
-							? Array.Empty<Location>()
-							: new[] { Location.Create(reference.SyntaxTree, reference.Span) };
+						// An empty AdditionalLocations reads as "implements nothing, mark it in place" to the fixer,
+						// which is wrong for the other way it arises: a target the walk found but that cannot be
+						// written to. Withholding the remedy is what makes the fix decline rather than mark there.
+						var properties = fixable
+							? ImmutableDictionary<string, string?>.Empty.Add(RemedyPropertyKey, remedy)
+							: ImmutableDictionary<string, string?>.Empty;
 
 						blockContext.ReportDiagnostic(Diagnostic.Create(
 							MissingMarkerRule,
 							location,
 							additionalLocations,
-							ImmutableDictionary<string, string?>.Empty.Add(RemedyPropertyKey, remedy),
+							properties,
 							member.Name));
 					}
 					else
@@ -147,12 +150,33 @@ namespace LinqToDB.Analyzers
 			});
 		}
 
-		// An interface member declared in metadata rather than in source has nowhere to write a marker, so no
-		// location travels and the fix declines rather than writing one where the runtime will not read it.
-		static SyntaxReference? DeclaringReference(ISymbol? symbol)
-			=> symbol is not null && symbol.DeclaringSyntaxReferences.Length > 0
-				? symbol.DeclaringSyntaxReferences[0]
-				: null;
+		static Location[] MarkerLocations(SyntaxReference? reference)
+			=> reference is null
+				? Array.Empty<Location>()
+				: new[] { Location.Create(reference.SyntaxTree, reference.Span) };
+
+		// Every implemented interface member needs the marker, since one of them satisfies the walk and silences
+		// the rule while a call bound to any other still evaluates on the client. So the fix is offered only when
+		// all of them can be written to: an interface member declared in metadata has no syntax, and marking the
+		// rest around it would hide the route it leaves broken.
+		static (Location[] Locations, bool Fixable) MarkerTargetLocations(ISymbol member)
+		{
+			List<Location>? locations = null;
+
+			foreach (var target in ServerSideOnlyContract.FindInterfaceMarkerTargets(member))
+			{
+				var references = target.DeclaringSyntaxReferences;
+
+				if (references.Length == 0)
+					return (Array.Empty<Location>(), false);
+
+				(locations ??= new List<Location>()).Add(Location.Create(references[0].SyntaxTree, references[0].Span));
+			}
+
+			return locations is null
+				? (Array.Empty<Location>(), true)
+				: (locations.ToArray(), true);
+		}
 
 		static ServerSideOnlyContract.Options ReadOptions(
 			OperationBlockAnalysisContext    blockContext,

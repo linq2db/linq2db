@@ -154,10 +154,13 @@ namespace LinqToDB.Analyzers
 		}
 
 		/// <summary>
-		/// RegisterOperationBlockAction also fires for constructors, operators and indexer accessors, where
-		/// <c>[ServerSideOnly]</c> cannot be applied (<c>AttributeTargets.Property | Method</c>) and a code
-		/// fix would emit uncompilable code. A setter is excluded too: a <c>set =&gt; throw</c> beside a real
-		/// getter is not a stub member.
+		/// RegisterOperationBlockAction also fires for constructors, operators and indexer accessors. A
+		/// constructor cannot carry <c>[ServerSideOnly]</c> at all - the usage is
+		/// <c>AttributeTargets.Property | Method</c>, which excludes <c>AttributeTargets.Constructor</c> - so a
+		/// code fix there would emit uncompilable code. Operators and indexers could carry it (an operator
+		/// declaration takes method-targeted attributes, and an indexer is a property), and are excluded by
+		/// scope decision rather than by that constraint. A setter is excluded too: a <c>set =&gt; throw</c>
+		/// beside a real getter is not a stub member.
 		/// </summary>
 		public static bool TryGetAnalyzableMember(ISymbol owningSymbol, out ISymbol? member)
 		{
@@ -305,22 +308,24 @@ namespace LinqToDB.Analyzers
 		/// Where a NEW marker has to be written when nothing declares the member. A stub implementing an
 		/// interface member must be marked on the INTERFACE: the call binds the interface method, and the
 		/// attribute walk goes up and never back down, so marking the implementation silences the rule while
-		/// leaving that call client-evaluable - the shape <c>Sql.GroupBy</c> is. Returns <c>null</c> when the
-		/// member implements nothing, which is the ordinary case and where the reported member is itself the
-		/// right target.
+		/// leaving that call client-evaluable - the shape <c>Sql.GroupBy</c> is. Returns every implemented
+		/// interface member, not just the first: one marker satisfies <see cref="DeclaresServerSideOnly"/> and
+		/// silences the rule, so marking one of several would leave a call bound to any of the others
+		/// client-evaluating. Empty when the member implements nothing, which is the ordinary case and where the
+		/// reported member is itself the right target.
 		/// <para>
 		/// Scoped to implemented interface members even though <see cref="DeclaresServerSideOnly"/> also walks
 		/// base classes: a call bound to a derived type reads the derived member's own attributes first, so
 		/// marking an <c>override</c> in place is already correct.
 		/// </para>
 		/// </summary>
-		public static ISymbol? FindInterfaceMarkerTarget(ISymbol member)
-		{
-			foreach (var implemented in EnumerateImplementedInterfaceMembers(member))
-				return implemented;
-
-			return null;
-		}
+		/// <remarks>
+		/// Returns the sequence rather than an <see cref="ImmutableArray{T}"/> because this file compiles against
+		/// two Roslyn versions and neither spelling satisfies both: the newer host's IDE0303 requires a collection
+		/// expression, and the older host's <c>System.Collections.Immutable</c> rejects one with CS9210.
+		/// </remarks>
+		public static IEnumerable<ISymbol> FindInterfaceMarkerTargets(ISymbol member)
+			=> EnumerateImplementedInterfaceMembers(member);
 
 		// Only Sql.ExpressionAttribute declares ServerSideOnly, so only it can take the set-named-argument
 		// remedy - narrower than DeclaredOn's marker set on purpose. A TableFunction-derived attribute is a

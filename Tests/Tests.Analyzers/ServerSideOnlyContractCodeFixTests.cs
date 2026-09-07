@@ -43,16 +43,19 @@ namespace Tests.Analyzers
 			TabIndent);
 
 		static Task RunMultiFile((string name, string content)[] sources, (string name, string content)[] fixedSources) =>
-			Verify.VerifyAsync(NormaliseNewlines(sources), NormaliseNewlines(fixedSources), TabIndent);
+			Verify.VerifyAsync(PrepareSources(sources), PrepareSources(fixedSources), TabIndent);
 
-		static (string name, string content)[] NormaliseNewlines((string name, string content)[] files)
+		// The newline normalisation above, plus the folder the .editorconfig can actually see: it is injected at
+		// /.editorconfig and the SDK roots unnamed sources at /0/, so a bare name lands outside its scope and
+		// indent_style and end_of_line silently do not apply - invisible to a fixture that only edits within a line.
+		static (string name, string content)[] PrepareSources((string name, string content)[] files)
 		{
-			var normalised = new (string name, string content)[files.Length];
+			var prepared = new (string name, string content)[files.Length];
 
 			for (var i = 0; i < files.Length; i++)
-				normalised[i] = (files[i].name, files[i].content.Replace("\r\n", "\n", StringComparison.Ordinal));
+				prepared[i] = ("/0/" + files[i].name, files[i].content.Replace("\r\n", "\n", StringComparison.Ordinal));
 
-			return normalised;
+			return prepared;
 		}
 
 		// A property's diagnostic is reported on the property while the analyzed block is the getter, which the
@@ -303,6 +306,110 @@ namespace Tests.Analyzers
 				""";
 
 			return Run(source, fixedSource);
+		}
+
+		// The add-attribute twin of the fixture above, and the only one that reaches TryRewriteAt's add-attribute
+		// arm: the same-file case goes through TryRewrite instead, so without this the cross-document half of the
+		// remedy is exercised for set-named-argument only. Covers the lightbulb arm and all three Fix-All scopes.
+		[Test]
+		public Task AddsTheMarkerToTheInterfaceMemberWhenTheInterfaceIsInAnotherFile()
+		{
+			var sources = new[]
+			{
+				("Interface.cs", Usings + """
+					interface I
+					{
+						int M();
+					}
+					"""),
+				("Implementation.cs", Usings + """
+					class C : I
+					{
+						public int {|L2DB1003:M|}() => throw new ServerSideOnlyException(nameof(M));
+					}
+					"""),
+			};
+
+			var fixedSources = new[]
+			{
+				("Interface.cs", Usings + """
+					interface I
+					{
+						[ServerSideOnly]
+						int M();
+					}
+					"""),
+				("Implementation.cs", Usings + """
+					class C : I
+					{
+						public int M() => throw new ServerSideOnlyException(nameof(M));
+					}
+					"""),
+			};
+
+			return RunMultiFile(sources, fixedSources);
+		}
+
+		// One stub implementing the same member from two interfaces needs BOTH marked: one marker satisfies the
+		// walk and silences the rule, so marking IA alone leaves a call bound to IB evaluating on the client with
+		// nothing reported. Measured before the fix - the marker landed on IA only and re-analysis was clean.
+		[Test]
+		public Task AddsTheMarkerToEveryImplementedInterfaceMember()
+		{
+			var source = Usings + """
+				interface IA
+				{
+					int M();
+				}
+
+				interface IB
+				{
+					int M();
+				}
+
+				class C : IA, IB
+				{
+					public int {|L2DB1003:M|}() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			var fixedSource = Usings + """
+				interface IA
+				{
+					[ServerSideOnly]
+					int M();
+				}
+
+				interface IB
+				{
+					[ServerSideOnly]
+					int M();
+				}
+
+				class C : IA, IB
+				{
+					public int M() => throw new ServerSideOnlyException(nameof(M));
+				}
+				""";
+
+			return Run(source, fixedSource);
+		}
+
+		// The interface member is declared in METADATA - IComparable<int> comes from the reference assemblies -
+		// so there is nowhere to write the marker and the fix has to decline: marking C.CompareTo would silence
+		// the rule while a call bound to IComparable<int> still reads no attribute. Fixed source equals the
+		// input, diagnostic included. Without the withheld remedy the fix marks the implementation instead.
+		[Test]
+		public Task DeclinesWhenTheInterfaceMemberIsDeclaredInMetadata()
+		{
+			var source = Usings + """
+				class C : IComparable<int>
+				{
+					public int {|L2DB1003:CompareTo|}(int other) => throw new ServerSideOnlyException(nameof(CompareTo));
+				}
+				""";
+
+			return Run(source, source);
 		}
 
 		// An explicit interface implementation is admitted by the rule's symbol-kind set, and its name is not in

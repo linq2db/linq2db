@@ -65,6 +65,24 @@ namespace LinqToDB.Analyzers.CodeFixes
 				? ReplaceExceptionTitle
 				: AddMarkerTitle;
 
+			diagnostic.Properties.TryGetValue(ServerSideOnlyContractAnalyzer.RemedyPropertyKey, out var remedy);
+
+			// Adding a marker can take SEVERAL edits - one per implemented interface member - in as many
+			// documents, so it goes through the solution-level action whenever the analyzer supplied targets. A
+			// single-document rewrite could only ever satisfy one of them.
+			if (string.Equals(remedy, ServerSideOnlyContractAnalyzer.RemedyAddAttribute, System.StringComparison.Ordinal)
+				&& diagnostic.AdditionalLocations.Count > 0)
+			{
+				context.RegisterCodeFix(
+					CodeAction.Create(
+						title,
+						ct => ApplyMarkerToTargetsAsync(context.Document, diagnostic.AdditionalLocations, ct),
+						equivalenceKey: diagnostic.Id),
+					diagnostic);
+
+				return;
+			}
+
 			if (!TryRewrite(root, model, diagnostic, out var original, out var replacement) || original is null || replacement is null)
 			{
 				// What the fix has to write can be declared on an implemented interface member in ANOTHER file,
@@ -75,12 +93,10 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 				if (targetLocation?.SourceTree is not null && targetLocation.SourceTree != root.SyntaxTree)
 				{
-					diagnostic.Properties.TryGetValue(ServerSideOnlyContractAnalyzer.RemedyPropertyKey, out var crossFileRemedy);
-
 					context.RegisterCodeFix(
 						CodeAction.Create(
 							title,
-							ct => ApplyToDeclaringDocumentAsync(context.Document, targetLocation, crossFileRemedy, ct),
+							ct => ApplyToDeclaringDocumentAsync(context.Document, targetLocation, remedy, ct),
 							equivalenceKey: diagnostic.Id),
 						diagnostic);
 				}
@@ -97,9 +113,68 @@ namespace LinqToDB.Analyzers.CodeFixes
 		}
 
 		// Carries the marker-capable attribute for the set-named-argument remedy and the implemented interface
-		// member's declaration for add-attribute; the remedy in Diagnostic.Properties says which.
+		// members' declarations for add-attribute; the remedy in Diagnostic.Properties says which. Only
+		// add-attribute can carry more than one, which is why the single-location read stays for the other.
 		static Location? GetFixTargetLocation(Diagnostic diagnostic)
 			=> diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[0] : null;
+
+		// One marker per implemented interface member, grouped so each document is rewritten once against its
+		// own original tree - the same property that ruled out the batch fixer.
+		static async Task<Solution> ApplyMarkerToTargetsAsync(Document document, IReadOnlyList<Location> locations, CancellationToken cancellationToken)
+		{
+			var solution  = document.Project.Solution;
+			var byDocument = new Dictionary<DocumentId, List<Location>>();
+
+			foreach (var location in locations)
+			{
+				if (location.SourceTree is not { } tree || solution.GetDocument(tree) is not { } target)
+					continue;
+
+				if (!byDocument.TryGetValue(target.Id, out var grouped))
+				{
+					grouped = new List<Location>();
+					byDocument.Add(target.Id, grouped);
+				}
+
+				grouped.Add(location);
+			}
+
+			var updated = solution;
+
+			foreach (var entry in byDocument)
+			{
+				if (solution.GetDocument(entry.Key) is not { } target)
+					continue;
+
+				var root = await target.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
+				if (root is null)
+					continue;
+
+				var replacements = new Dictionary<SyntaxNode, SyntaxNode>();
+
+				foreach (var location in entry.Value)
+					if (TryRewriteAt(root, location, ServerSideOnlyContractAnalyzer.RemedyAddAttribute, out var original, out var replacement)
+						&& original is not null
+						&& replacement is not null
+						&& !replacements.ContainsKey(original))
+					{
+						replacements.Add(original, replacement);
+					}
+
+				if (replacements.Count == 0)
+					continue;
+
+				var rewritten     = target.WithSyntaxRoot(root.ReplaceNodes(replacements.Keys, (original, _) => replacements[original]));
+				var processed     = await PostProcessAsync(rewritten, cancellationToken).ConfigureAwait(false);
+				var processedRoot = await processed.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
+				if (processedRoot is not null)
+					updated = updated.WithDocumentSyntaxRoot(entry.Key, processedRoot);
+			}
+
+			return updated;
+		}
 
 		static async Task<Solution> ApplyToDeclaringDocumentAsync(Document document, Location location, string? remedy, CancellationToken cancellationToken)
 		{
@@ -185,26 +260,15 @@ namespace LinqToDB.Analyzers.CodeFixes
 			{
 				case ServerSideOnlyContractAnalyzer.RemedyAddAttribute:
 					{
-						// No location means the member implements nothing, so it is its own marker target. A
-						// location means the marker belongs on the implemented interface member instead:
-						// marking the implementation silences the rule while a call bound to the interface
-						// still client-evaluates, which is the failure the rule exists to catch. Same tree
-						// only here, so this stays a single-tree rewrite and Fix-All keeps working; another
-						// file is handled by the solution-level action in RegisterCodeFixesAsync.
-						var location = GetFixTargetLocation(diagnostic);
-
-						if (location is null)
-						{
-							original    = member;
-							replacement = AddMarkerAttribute(member);
-							return true;
-						}
-
-						if (location.SourceTree != root.SyntaxTree || FindMemberAt(root, location) is not { } target)
+						// Any supplied target is handled by the multi-target path, which is the only one that can
+						// mark every implemented interface member. Reaching here with one means this is not that
+						// path, so decline rather than marking the implementation - that silences the rule while a
+						// call bound to the interface still client-evaluates, the failure the rule exists to catch.
+						if (GetFixTargetLocation(diagnostic) is not null)
 							return false;
 
-						original    = target;
-						replacement = AddMarkerAttribute(target);
+						original    = member;
+						replacement = AddMarkerAttribute(member);
 						return true;
 					}
 
@@ -488,19 +552,17 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 				foreach (var diagnostic in diagnostics)
 				{
-					var (documentId, original, replacement) = await ResolveAsync(solution, diagnostic, cancellationToken).ConfigureAwait(false);
-
-					if (documentId is null || original is null || replacement is null)
-						continue;
-
-					if (!byDocument.TryGetValue(documentId, out var replacements))
+					foreach (var (documentId, original, replacement) in await ResolveAsync(solution, diagnostic, cancellationToken).ConfigureAwait(false))
 					{
-						replacements = new Dictionary<SyntaxNode, SyntaxNode>();
-						byDocument.Add(documentId, replacements);
-					}
+						if (!byDocument.TryGetValue(documentId, out var replacements))
+						{
+							replacements = new Dictionary<SyntaxNode, SyntaxNode>();
+							byDocument.Add(documentId, replacements);
+						}
 
-					if (!replacements.ContainsKey(original))
-						replacements.Add(original, replacement);
+						if (!replacements.ContainsKey(original))
+							replacements.Add(original, replacement);
+					}
 				}
 
 				var updatedSolution = solution;
@@ -529,40 +591,73 @@ namespace LinqToDB.Analyzers.CodeFixes
 				return updatedSolution;
 			}
 
-			// Which document the edit lands in, which is the diagnostic's own unless the analyzer pointed at a
-			// declaration in another file.
-			static async Task<(DocumentId? DocumentId, SyntaxNode? Original, SyntaxNode? Replacement)> ResolveAsync(
+			// Which documents the edits land in - the diagnostic's own unless the analyzer pointed elsewhere, and
+			// possibly several, since adding a marker has to reach every implemented interface member.
+			static async Task<ImmutableArray<(DocumentId DocumentId, SyntaxNode Original, SyntaxNode Replacement)>> ResolveAsync(
 				Solution          solution,
 				Diagnostic        diagnostic,
 				CancellationToken cancellationToken)
 			{
+				var none = ImmutableArray<(DocumentId, SyntaxNode, SyntaxNode)>.Empty;
+
 				var diagnosticTree = diagnostic.Location.SourceTree;
 
 				if (diagnosticTree is null || solution.GetDocument(diagnosticTree) is not { } document)
-					return default;
+					return none;
 
 				diagnostic.Properties.TryGetValue(ServerSideOnlyContractAnalyzer.RemedyPropertyKey, out var remedy);
+
+				if (string.Equals(remedy, ServerSideOnlyContractAnalyzer.RemedyAddAttribute, System.StringComparison.Ordinal)
+					&& diagnostic.AdditionalLocations.Count > 0)
+				{
+					var builder = ImmutableArray.CreateBuilder<(DocumentId, SyntaxNode, SyntaxNode)>();
+
+					foreach (var location in diagnostic.AdditionalLocations)
+					{
+						if (location.SourceTree is not { } tree || solution.GetDocument(tree) is not { } target)
+							continue;
+
+						var root = await target.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+
+						if (root is not null
+							&& TryRewriteAt(root, location, remedy, out var targetOriginal, out var targetReplacement)
+							&& targetOriginal is not null
+							&& targetReplacement is not null)
+						{
+							builder.Add((target.Id, targetOriginal, targetReplacement));
+						}
+					}
+
+					return builder.ToImmutable();
+				}
 
 				var targetLocation = GetFixTargetLocation(diagnostic);
 
 				if (targetLocation?.SourceTree is { } targetTree && targetTree != diagnosticTree)
 				{
 					if (solution.GetDocument(targetTree) is not { } targetDocument)
-						return default;
+						return none;
 
 					var targetRoot = await targetDocument.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
 
-					return targetRoot is not null && TryRewriteAt(targetRoot, targetLocation, remedy, out var crossOriginal, out var crossReplacement)
-						? (targetDocument.Id, crossOriginal, crossReplacement)
-						: default;
+					return targetRoot is not null
+						&& TryRewriteAt(targetRoot, targetLocation, remedy, out var crossOriginal, out var crossReplacement)
+						&& crossOriginal is not null
+						&& crossReplacement is not null
+							? ImmutableArray.Create((targetDocument.Id, crossOriginal, crossReplacement))
+							: none;
 				}
 
-				var root  = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-				var model = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+				var documentRoot  = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+				var documentModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
 
-				return root is not null && model is not null && TryRewrite(root, model, diagnostic, out var original, out var replacement)
-					? (document.Id, original, replacement)
-					: default;
+				return documentRoot is not null
+					&& documentModel is not null
+					&& TryRewrite(documentRoot, documentModel, diagnostic, out var original, out var replacement)
+					&& original is not null
+					&& replacement is not null
+						? ImmutableArray.Create((document.Id, original, replacement))
+						: none;
 			}
 		}
 	}
