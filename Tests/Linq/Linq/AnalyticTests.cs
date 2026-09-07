@@ -2410,6 +2410,8 @@ namespace Tests.Linq
 
 			var rows = query.ToList();
 
+			rows.ShouldNotBeEmpty();
+
 			// Ordered numbers every row uniquely, so partitioning by it leaves single-row partitions.
 			rows.Select(r => r.Ordered)
 				.OrderBy(n => n)
