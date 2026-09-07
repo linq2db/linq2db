@@ -756,6 +756,10 @@ namespace Tests.Linq
 			{
 				Assert.That(deleted,          Has.Length.EqualTo(1));
 				Assert.That(deleted[0].Value, Is.EqualTo(10));
+
+				// The OUTPUT rows alone do not tell DELETE ... RETURNING from a plain SELECT over the same
+				// predicate - both return exactly this row.
+				Assert.That(table.Select(t => t.Id).ToArray(), Is.EqualTo(new[] { 2 }));
 			}
 		}
 
