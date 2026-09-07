@@ -209,6 +209,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5683 - Except needs no discriminator, so pairing makes it correct")]
+		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void ExceptBranchProjectingDerivedType([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
