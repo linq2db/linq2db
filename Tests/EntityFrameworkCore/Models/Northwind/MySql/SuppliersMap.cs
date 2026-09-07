@@ -3,7 +3,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.Pomelo.Models.Northwind.Mapping
+namespace LinqToDB.EntityFrameworkCore.Tests.MySql.Models.Northwind.Mapping
 {
 	public class SuppliersMap : IEntityTypeConfiguration<Supplier>
 	{
