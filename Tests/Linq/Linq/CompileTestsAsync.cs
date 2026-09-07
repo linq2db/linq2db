@@ -788,7 +788,7 @@ namespace Tests.Linq
 		// preamble joins a derived table carrying TOP, which SybaseDataProvider already declares invalid
 		// through IsJoinDerivedTableWithTakeInvalid, but the preamble reaches the provider without that
 		// check running, so only the first detail row comes back.
-		public async Task ElementFormLoadWithTest([DataSources(TestProvName.AllSybase)] string context)
+		public async Task ElementFormLoadWithAsyncTest([DataSources(TestProvName.AllSybase)] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
 				db.Parent
@@ -811,7 +811,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public async Task ElementFormLoadWithOpensLoadTransaction([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public async Task ElementFormLoadWithOpensLoadTransactionAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			var queryable = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<List<Parent>>>(static (db, id, token) =>
 				db.Parent
@@ -852,7 +852,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		public void ElementFormLoadWithHonorsCancellation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		public void ElementFormLoadWithHonorsCancellationAsync([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			var eager = CompiledQuery.Compile<ITestDataContext,int,CancellationToken,Task<Parent>>(static (db, id, token) =>
 				db.Parent
