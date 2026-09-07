@@ -170,7 +170,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				Info                = query,
 				Parameters          = parameters,
-				CompiledExpressions = query.CompiledExpressions
+				CompiledExpressions = query.CompiledExpressions,
 			};
 		}
 
