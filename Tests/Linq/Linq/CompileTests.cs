@@ -1002,7 +1002,11 @@ namespace Tests.Linq
 			// cached tree, where nothing reads it again - every later invocation would take the frozen value.
 			// Declined instead, which leaves the call for the builder to report. Supporting it needs the folded
 			// values in the compiled table's cache key, the way materialised dependent arguments already are.
-			Assert.That(() => query(db, 1).ToList(), Throws.InstanceOf<LinqToDBException>());
+			// The type alone does not identify the decline - LinqToDBException is what a mapping, provider or
+			// unrelated build failure raises too, so the message is what pins it to the builder.
+			var ex = Assert.Throws<LinqToDBException>(() => query(db, 1).ToList());
+
+			Assert.That(ex!.Message, Contains.Substring("could not be converted to SQL."));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/5844#issuecomment-5538235961")]
