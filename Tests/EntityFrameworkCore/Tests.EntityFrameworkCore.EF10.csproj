@@ -9,7 +9,9 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF10.csproj" />
+		<!--Pomelo has no EF Core 10 release; the Microting fork of it does-->
 		<PackageReference Remove="Pomelo.EntityFrameworkCore.MySql" />
+		<PackageReference Include="Microting.EntityFrameworkCore.MySql" />
 	</ItemGroup>
 
 </Project>
