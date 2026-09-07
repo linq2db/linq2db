@@ -152,6 +152,24 @@ namespace Tests.Analyzers.Internal
 					}
 			""", NeverTrue("flags.IsExpand()", ExcludedEarlier));
 
+		// The same pair over a local rather than a parameter. CollectTrackedSymbols documents both as candidates
+		// and a local is what the sole producer's own call site yields (var flags = GetProjectFlags()), but every
+		// other fixture makes a parameter the receiver - so ReadSymbol's ILocalReferenceOperation arm deletes with
+		// the suite still green. A declarator initializer is not an IAssignmentOperation, so the local survives
+		// the write-drop, and source never becomes a candidate because no predicate reads it.
+		[Test]
+		public Task ImpossiblePairOverALocalIsReported() => Verify("""
+					public static int M(ProjectFlags source)
+					{
+						var flags = source;
+
+						if (flags.IsKeys() && {|#0:flags.IsExpand()|})
+							return 1;
+
+						return 0;
+					}
+			""", NeverTrue("flags.IsExpand()", ExcludedEarlier));
+
 		// TO-1 control - the same shape with a pair the model permits. Without this arm the rule could be
 		// flagging every conjunction and still pass the test above.
 		[Test]
@@ -284,6 +302,21 @@ namespace Tests.Analyzers.Internal
 					}
 			""");
 
+		// The same clause with its operand parenthesised, which is the only shape reaching ClimbNegations' paren
+		// arm - the fixtures that negate a compound stop at the && instead. Without that arm the climb halts at
+		// the paren and reports LINQ2DB0004 on flags.IsKeys(), inverting both the id and the polarity SC-2 asks
+		// for, so id and span both move.
+		[Test]
+		public Task ExpandWithNotParenthesisedKeysIsRedundant() => Verify("""
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsExpand() && {|LINQ2DB0005:!(flags.IsKeys())|})
+							return 1;
+
+						return 0;
+					}
+			""");
+
 		// TO-2 control - Keys IS permitted with SQL, so this one carries information. Mirrors GroupByBuilder.cs:596.
 		[Test]
 		public Task SqlWithNotKeysIsMeaningful() => Verify("""
@@ -312,10 +345,11 @@ namespace Tests.Analyzers.Internal
 
 		// The AnyOf atom class. IsSqlOrExpression is the one predicate written as a bitmask rather than a HasFlag,
 		// so it is the only source of an Atom with AllOf false, and Holds' two branches are as separate as Is*()
-		// and HasFlag are above. This arm is the failable one: SQL and Expression are two of the ten purposes, so
-		// under (value & Mask) != 0 the test is true for some reachable values and false for others, and nothing
-		// is reported. Read the same mask as (value & Mask) == Mask and it is false for all 52 - no value carries
-		// two purpose bits - a false LINQ2DB0004 here and at all 18 call sites in Source/LinqToDB.
+		// and HasFlag are above. This arm is the failable one: SQL and Expression are two of the stub's six
+		// purposes, so under (value & Mask) != 0 the test is true for some of its 36 reachable values and false
+		// for others, and nothing is reported. Read the same mask as (value & Mask) == Mask and it is false for
+		// all 36 - no value carries two purpose bits - a false LINQ2DB0004 here, and in Source/LinqToDB (ten
+		// purposes, 52 values) at all 18 IsSqlOrExpression call sites.
 		[Test]
 		public Task SqlOrExpressionIsSatisfiable() => Verify("""
 					public static int M(ProjectFlags flags)
@@ -472,6 +506,39 @@ namespace Tests.Analyzers.Internal
 					}
 			""");
 
+		// A test passed to a boolean-returning call the evaluator cannot model. It still stands where it stands,
+		// so the constant is just as certain - whatever the callee does with the value cannot change it - but the
+		// descent used to stop at the unmodelled node and never look at its operands.
+		[Test]
+		public Task TestInsideAnOpaqueCallIsReported() => Verify("""
+					static bool Wrap(bool value) => value;
+
+					public static int M(ProjectFlags flags)
+					{
+						if (flags.IsTable())
+							return 1;
+
+						if (Wrap({|LINQ2DB0004:flags.IsTable()|}))
+							return 2;
+
+						return 0;
+					}
+			""");
+
+		// The same position carrying a whole impossible pair rather than a single atom.
+		[Test]
+		public Task ImpossiblePairInsideAnOpaqueCallIsReported() => Verify("""
+					static bool Wrap(bool value) => value;
+
+					public static int M(ProjectFlags flags)
+					{
+						if (Wrap(flags.IsKeys() && {|LINQ2DB0004:flags.IsExpand()|}))
+							return 1;
+
+						return 0;
+					}
+			""");
+
 		// Control for the arm above - Keys is permitted with SQL, so the hoisted test is genuine and reporting
 		// it would be a false positive. Without this arm the wider walk could be flagging every hoisted test.
 		[Test]
@@ -607,6 +674,30 @@ namespace Tests.Analyzers.Internal
 					"public static bool {|LINQ2DB0006:IsWeird|}(this ProjectFlags flags) => flags.ToString().Length > 3;\n\t\tpublic static bool IsSqlOrExpression",
 					System.StringComparison.Ordinal));
 
+		// A predicate that reads some other flags-typed value instead of its own argument. It compiles and reads
+		// like a predicate, so without the receiver check the model records IsSneaky as testing SQL - a silently
+		// wrong answer rather than drift. The domain stays intact, so the violation is still reported.
+		[Test]
+		public Task PredicateTestingAnotherValueReportsDrift() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation.Replace("flags.IsExpand()", "{|LINQ2DB0004:flags.IsExpand()|}", System.StringComparison.Ordinal))
+				.Replace(
+					"public static bool IsSqlOrExpression",
+					"static ProjectFlags _elsewhere;\n\t\tpublic static bool {|LINQ2DB0006:IsSneaky|}(this ProjectFlags flags) => _elsewhere.HasFlag(ProjectFlags.SQL);\n\t\tpublic static bool IsSqlOrExpression",
+					System.StringComparison.Ordinal));
+
+		// A mask qualified by a different enum. Enum.HasFlag takes Enum, so this compiles, and ForSetProjection is
+		// declared by both enums - so a reader matching the member name alone records IsForeign as testing
+		// ProjectFlags.ForSetProjection when it tests BuildFlags' bit instead. A free modifier is chosen so the
+		// misread mask is not constant over the domain: mask 0 would draw a second, unrelated diagnostic on the
+		// predicate's own body, since HasFlag(0) really is always true.
+		[Test]
+		public Task PredicateWithAForeignMaskReportsDrift() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation.Replace("flags.IsExpand()", "{|LINQ2DB0004:flags.IsExpand()|}", System.StringComparison.Ordinal))
+				.Replace(
+					"public static bool IsSqlOrExpression",
+					"public static bool {|LINQ2DB0006:IsForeign|}(this ProjectFlags flags) => flags.HasFlag(BuildFlags.ForSetProjection);\n\t\tpublic static bool IsSqlOrExpression",
+					System.StringComparison.Ordinal));
+
 		// TO-4d - a non-None seed. SQL is a classified bit, so the completeness check cannot see this: the domain
 		// simply loses the bit on every other purpose, and flags.IsSql() would then be reported never-true where
 		// it is in fact always true. Reading the seed rather than accepting any local declaration is what turns
@@ -625,9 +716,12 @@ namespace Tests.Analyzers.Internal
 				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
 				.Replace("return flags;", "return flags | ProjectFlags.MemberRoot;", System.StringComparison.Ordinal));
 
-		// TO-4f - a |= into something other than the accumulator. This is the dangerous direction: read as a free
-		// modifier it would *widen* the domain, permitting Keys with every purpose and silently retiring the
-		// #5727 shape the rule exists for. Requires the reader to check the assignment's target, not just its mask.
+		// TO-4f - a |= into something other than the accumulator, which the reader must reject by target and not
+		// just by mask. MemberRoot is forced here: any other member would be orphaned and TO-4b's completeness
+		// check would fire instead. So a target-blind reader derives an identical domain, and what reddens is the
+		// missing LINQ2DB0006 plus the embedded violation being reported - not a widened domain. The widening this
+		// guard exists for needs a mask that is not already a free modifier, e.g. Keys, which a target-blind
+		// reader would then permit with every purpose.
 		[Test]
 		public Task DriftedAccumulatorTargetSilencesTheConditionRules() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
 			Consumer(KnownViolation)
@@ -646,6 +740,28 @@ namespace Tests.Analyzers.Internal
 				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
 				.Replace("case BuildPurpose.Sql:", "case BuildPurpose.None:\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase BuildPurpose.Sql:", System.StringComparison.Ordinal));
 
+		// TO-4h - a renamed model *type* rather than a renamed member. Every arm above mutates a body and so
+		// arrives with both companion types resolved; this one leaves ExpressionBuildVisitor unresolvable, which
+		// used to return before any diagnostic and retire both rules in silence. The consumer never names the
+		// visitor, so the snippet still compiles and the drift is the only difference. The report lands on the enum
+		// because GetProjectFlags is unreachable once the type declaring it does not resolve.
+		[Test]
+		public Task RenamedModelTypeSilencesTheConditionRulesLoudly() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation)
+				.Replace("enum ProjectFlags", "enum {|LINQ2DB0006:ProjectFlags|}", System.StringComparison.Ordinal)
+				.Replace("sealed class ExpressionBuildVisitor", "sealed class ExpressionBuildVisitorRenamed", System.StringComparison.Ordinal));
+
+		// TO-4i - a purpose arm with two unconditional adds, which D-1's one-purpose-per-section rule forbids.
+		// Root is chosen because it has its own arm, so both bits stay classified and TO-4b's completeness check
+		// cannot fire instead: the section's own count is the only thing left that can report. A reader that
+		// collected the adds rather than counting them would derive a Table|Root value, keep the model usable, and
+		// report the embedded violation - so this goes red on both halves.
+		[Test]
+		public Task DriftedTwoPurposeArmSilencesTheConditionRules() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation)
+				.Replace("ProjectFlags GetProjectFlags()", "ProjectFlags {|LINQ2DB0006:GetProjectFlags|}()", System.StringComparison.Ordinal)
+				.Replace("flags |= ProjectFlags.Table;", "flags |= ProjectFlags.Table;\n\t\t\t\t\t\tflags |= ProjectFlags.Root;", System.StringComparison.Ordinal));
+
 		// The counterpart to the drift arms above: a shape the reader must *tolerate*. Bracing a case body is a
 		// cosmetic edit, and D-1's failure mode warns that a reader matching form rather than structure taxes those
 		// too. It asserts the violation is still reported rather than merely that no drift fired - which is what
@@ -655,6 +771,20 @@ namespace Tests.Analyzers.Internal
 			Consumer(KnownViolation.Replace("flags.IsExpand()", "{|LINQ2DB0004:flags.IsExpand()|}", System.StringComparison.Ordinal))
 				.Replace("case BuildPurpose.Table:", "case BuildPurpose.Table:\n\t\t\t\t\t{", System.StringComparison.Ordinal)
 				.Replace("case BuildPurpose.Expand:", "\t\t\t\t\t}\n\t\t\t\t\tcase BuildPurpose.Expand:", System.StringComparison.Ordinal));
+
+		// The other legal spelling of the same cosmetic edit, with the break outside the braces. The section has to
+		// carry two statements: TryReadFlagAdd unwraps a single-statement block on its own, so bracing Table would
+		// read correctly even unflattened and prove nothing. A fresh arm rather than surgery on an existing one,
+		// so the replacement needs no assumption about the model's indentation. Asserts the violation is still
+		// reported, since an empty domain would also produce no drift.
+		[Test]
+		public Task BracedSwitchSectionWithTrailingBreakIsRead() => AnalyzerVerifier<ProjectFlagsAnalyzer>.VerifyAsync(
+			Consumer(KnownViolation.Replace("flags.IsExpand()", "{|LINQ2DB0004:flags.IsExpand()|}", System.StringComparison.Ordinal))
+				.Replace("MemberRoot        = 1 << 12,", "MemberRoot        = 1 << 12, Braced = 1 << 21,", System.StringComparison.Ordinal)
+				.Replace(
+					"case BuildPurpose.Sql:",
+					"case BuildPurpose.None:\n\t\t\t\t\t{\n\t\t\t\t\t\tflags |= ProjectFlags.Braced;\n\t\t\t\t\t\tif (_buildFlags.HasFlag(BuildFlags.ForKeys))\n\t\t\t\t\t\t\tflags |= ProjectFlags.Keys;\n\t\t\t\t\t}\n\t\t\t\t\t\tbreak;\n\t\t\t\t\tcase BuildPurpose.Sql:",
+					System.StringComparison.Ordinal));
 
 		// TO-5 - a different [Flags] enum with its own same-shaped predicates, in a method whose parameter is even
 		// called 'flags'. Every pair here would be reported were the type ProjectFlags. Fails unless the analyzer

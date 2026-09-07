@@ -54,7 +54,7 @@ namespace CodeGenerators
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
-			description:        "ProjectFlags carries a mutually-exclusive build purpose plus independent modifiers, and GetProjectFlags is the only producer of the values that reach MakeExpression. A test no reachable value satisfies - or one an earlier return has already excluded on every path - guards code that never runs.");
+			description:        "ProjectFlags carries a mutually-exclusive build purpose plus independent modifiers, and GetProjectFlags is the only producer of the values that reach MakeExpression. A test no reachable value satisfies - or one an earlier return has already excluded on every path - always folds to false, and the code around it becomes unreachable only where that clause is the whole condition or a conjunct of it.");
 
 		static readonly DiagnosticDescriptor AlwaysTrue = new(
 			id:                 "LINQ2DB0005",
@@ -63,7 +63,7 @@ namespace CodeGenerators
 			category:           "Usage",
 			defaultSeverity:    DiagnosticSeverity.Warning,
 			isEnabledByDefault: true,
-			description:        "A flag clause every reachable ProjectFlags value satisfies adds nothing to the condition, and leaving it in place makes the impossible pairing it appears to exclude look idiomatic.");
+			description:        "A flag clause that always folds to true - because every reachable ProjectFlags value satisfies it, or because an earlier test on the same path has already excluded the values that would not - adds nothing to the condition, and leaving it in place makes the impossible pairing it appears to exclude look idiomatic.");
 
 		static readonly DiagnosticDescriptor ModelUnreadable = new(
 			id:                 "LINQ2DB0006",
@@ -97,7 +97,22 @@ namespace CodeGenerators
 				var visitorType    = assembly.GetTypeByMetadataName(VisitorTypeName);
 
 				if (extensionsType == null || visitorType == null)
+				{
+					// ProjectFlags resolved in this very assembly, so a missing companion is drift rather than an
+					// unrelated consumer. Returning silently retires both condition rules with no signal, which is
+					// the one outcome LINQ2DB0006 exists to prevent.
+					var missing  = extensionsType == null ? ExtensionsTypeName : VisitorTypeName;
+					var location = flagsType.Locations.Length > 0 ? flagsType.Locations[0] : Location.None;
+
+					startContext.RegisterSymbolAction(symbolContext =>
+					{
+						if (SymbolEqualityComparer.Default.Equals(symbolContext.Symbol, flagsType))
+							symbolContext.ReportDiagnostic(Diagnostic.Create(ModelUnreadable, location,
+								$"'{missing}' was not found in the assembly that declares '{FlagsTypeName}'"));
+					}, SymbolKind.NamedType);
+
 					return;
+				}
 
 				var model = new Lazy<FlagModel>(() => FlagModel.Read(flagsType, extensionsType, visitorType), isThreadSafe: true);
 
@@ -132,17 +147,17 @@ namespace CodeGenerators
 
 					// Cheap gate: Roslyn already visits every operation, so this costs nothing extra, and it keeps
 					// the descendant walk and the control-flow graph off the thousands of bodies with no flag test.
-					var seen = new bool[1];
+					var seen = false;
 
 					blockStart.RegisterOperationAction(operationContext =>
 					{
 						if (model.Value.TryReadAtom((IInvocationOperation)operationContext.Operation, out _, out _))
-							seen[0] = true;
+							seen = true;
 					}, OperationKind.Invocation);
 
 					blockStart.RegisterOperationBlockEndAction(blockEnd =>
 					{
-						if (seen[0])
+						if (seen)
 							Analyze(blockEnd, model.Value);
 					});
 				});
@@ -177,7 +192,8 @@ namespace CodeGenerators
 				}
 				catch (NotSupportedException)
 				{
-					// A body shape the flow-graph builder declines (field initializers, some expression bodies).
+					// Defensive only: every root that can appear in OperationBlocks is a documented graph root, so
+					// this catches a future Roslyn shape rather than one that declines today.
 					continue;
 				}
 
@@ -478,6 +494,16 @@ namespace CodeGenerators
 					ReportConstants(binary.LeftOperand,  state, tracked, model, report);
 					ReportConstants(binary.RightOperand, state, tracked, model, report);
 					break;
+
+				default:
+					// A boolean node this evaluator does not model - a call, a pattern - can still carry a test in
+					// an operand, and the constant is no less certain there: nothing the callee does with the value
+					// changes what the value can be. ReportBooleans re-finds the boolean sub-expressions, so this
+					// cannot hand a non-boolean node back. A lambda is a leaf here, its body being its own graph.
+					foreach (var child in inner.ChildOperations)
+						ReportBooleans(child, state, tracked, model, report);
+
+					break;
 			}
 		}
 
@@ -485,9 +511,9 @@ namespace CodeGenerators
 		/// Recovers the text the author actually wrote. The flow graph folds a leading <c>!</c> into the branch's
 		/// <see cref="ControlFlowConditionKind"/>, so by the time a condition reaches this analyzer its operation
 		/// tree carries the bare operand: for <c>flags.IsExpand() &amp;&amp; !flags.IsKeys()</c> the branch value is
-		/// <c>flags.IsKeys()</c>. Reporting there would say "can never be true, the code it guards is unreachable"
-		/// about a guard whose body is perfectly reachable - the redundant thing is the negation. So climb back out
-		/// through the negations, flipping the answer at each one, and report on the outermost.
+		/// <c>flags.IsKeys()</c>. Reporting there would emit LINQ2DB0004 on the operand and advise folding it to
+		/// false, when the redundant text is the negation and the right report is LINQ2DB0005 on it. So climb back
+		/// out through the negations, flipping the answer at each one, and report on the outermost.
 		/// </summary>
 		static SyntaxNode ClimbNegations(SyntaxNode syntax, ref bool constant)
 		{
@@ -582,7 +608,7 @@ namespace CodeGenerators
 						members[field.Name] = value;
 				}
 
-				var predicates = ReadPredicates(extensionsType, members, failures);
+				var predicates = ReadPredicates(extensionsType, flagsType, members, failures);
 				var domain     = ReadDomain(visitorType, flagsType, members, failures);
 
 				return new FlagModel(domain, predicates, extensionsType, flagsType, failures.ToImmutable());
@@ -590,6 +616,7 @@ namespace CodeGenerators
 
 			static Dictionary<string, Atom> ReadPredicates(
 				INamedTypeSymbol                            extensionsType,
+				INamedTypeSymbol                            flagsType,
 				Dictionary<string, int>                     members,
 				ImmutableArray<(Location, string)>.Builder  failures)
 			{
@@ -605,7 +632,11 @@ namespace CodeGenerators
 
 					var body = SingleReturnExpression(method);
 
-					if (body == null || !TryReadPredicateBody(body, members, out var atom))
+					// The predicate must read its own argument: without this, a body testing some other flags-typed
+					// value would be recorded as testing this one, which is a silently wrong model rather than drift.
+					var subject = method.Parameters.Length == 1 ? method.Parameters[0].Name : null;
+
+					if (body == null || !TryReadPredicateBody(body, members, flagsType.Name, subject, out var atom))
 					{
 						failures.Add((
 							method.Locations.Length > 0 ? method.Locations[0] : Location.None,
@@ -669,7 +700,7 @@ namespace CodeGenerators
 					if (accumulator != null
 						|| declaration.Declaration.Variables.Count != 1
 						|| declaration.Declaration.Variables[0].Initializer is not { Value: { } seed }
-						|| !TryReadMask(seed, members, out var seedMask)
+						|| !TryReadMask(seed, members, flagsType.Name, out var seedMask)
 						|| seedMask != 0)
 					{
 						failures.Add((location, $"'{ModelMethodName}' no longer opens with a single '{flagsType.Name}' accumulator seeded to a zero mask"));
@@ -697,7 +728,7 @@ namespace CodeGenerators
 							break;
 
 						case IfStatementSyntax { Else: null } conditional
-							when TryReadFlagAdd(conditional.Statement, accumulator, members, out var modifier):
+							when TryReadFlagAdd(conditional.Statement, accumulator, members, flagsType.Name, out var modifier):
 							freeModifiers |= modifier;
 							break;
 
@@ -729,18 +760,22 @@ namespace CodeGenerators
 					var count    = 0;
 
 					// A braced case body arrives as one BlockSyntax; flatten it so that adding braces - a cosmetic
-					// edit - does not read as a section shape this reader cannot parse.
+					// edit - does not read as a section shape this reader cannot parse. C# allows the break either
+					// inside or outside the braces, so both spellings are flattened; anything else after the block
+					// is left alone rather than silently dropped.
 					var statements = section.Statements;
 
 					if (statements.Count == 1 && statements[0] is BlockSyntax braced)
 						statements = braced.Statements;
+					else if (statements.Count == 2 && statements[0] is BlockSyntax bracedBody && statements[1] is BreakStatementSyntax)
+						statements = bracedBody.Statements;
 
 					foreach (var statement in statements)
 					{
 						switch (statement)
 						{
 							case IfStatementSyntax { Else: null } conditional
-								when TryReadFlagAdd(conditional.Statement, accumulator, members, out var modifier):
+								when TryReadFlagAdd(conditional.Statement, accumulator, members, flagsType.Name, out var modifier):
 								optional |= modifier;
 								break;
 
@@ -750,7 +785,7 @@ namespace CodeGenerators
 
 							default:
 							{
-								if (TryReadFlagAdd(statement, accumulator, members, out var added))
+								if (TryReadFlagAdd(statement, accumulator, members, flagsType.Name, out var added))
 								{
 									purpose |= added;
 									count++;
@@ -879,7 +914,7 @@ namespace CodeGenerators
 				return null;
 			}
 
-			static bool TryReadFlagAdd(SyntaxNode statement, string accumulator, Dictionary<string, int> members, out int mask)
+			static bool TryReadFlagAdd(SyntaxNode statement, string accumulator, Dictionary<string, int> members, string flagsName, out int mask)
 			{
 				mask = 0;
 
@@ -898,10 +933,15 @@ namespace CodeGenerators
 						},
 					}
 					&& target.Identifier.ValueText == accumulator
-					&& TryReadMask(right, members, out mask);
+					&& TryReadMask(right, members, flagsName, out mask);
 			}
 
-			static bool TryReadPredicateBody(ExpressionSyntax body, Dictionary<string, int> members, out Atom atom)
+			static bool TryReadPredicateBody(
+				ExpressionSyntax        body,
+				Dictionary<string, int> members,
+				string                  flagsName,
+				string?                 subject,
+				out Atom                atom)
 			{
 				atom = default;
 
@@ -910,10 +950,11 @@ namespace CodeGenerators
 					// flags.HasFlag(ProjectFlags.X)
 					case InvocationExpressionSyntax
 					{
-						Expression: MemberAccessExpressionSyntax { Name.Identifier.ValueText: "HasFlag" },
+						Expression: MemberAccessExpressionSyntax { Expression: { } receiver, Name.Identifier.ValueText: "HasFlag" },
 						ArgumentList.Arguments.Count: 1,
 					} call
-						when TryReadMask(call.ArgumentList.Arguments[0].Expression, members, out var flag):
+						when IsNamed(receiver, subject)
+							&& TryReadMask(call.ArgumentList.Arguments[0].Expression, members, flagsName, out var flag):
 					{
 						atom = new Atom(flag, allOf: true);
 						return true;
@@ -927,8 +968,9 @@ namespace CodeGenerators
 						Right  : { } right,
 					}
 						when IsZero(right)
-							&& Unwrap(left) is BinaryExpressionSyntax { RawKind: (int)SyntaxKind.BitwiseAndExpression, Right: { } maskExpression }
-							&& TryReadMask(maskExpression, members, out var mask):
+							&& Unwrap(left) is BinaryExpressionSyntax { RawKind: (int)SyntaxKind.BitwiseAndExpression, Left: { } tested, Right: { } maskExpression }
+							&& IsNamed(tested, subject)
+							&& TryReadMask(maskExpression, members, flagsName, out var mask):
 					{
 						atom = new Atom(mask, allOf: false);
 						return true;
@@ -938,22 +980,28 @@ namespace CodeGenerators
 				return false;
 			}
 
+			static bool IsNamed(ExpressionSyntax expression, string? name)
+				=> name != null && Unwrap(expression) is IdentifierNameSyntax identifier && identifier.Identifier.ValueText == name;
+
 			static bool IsZero(ExpressionSyntax expression)
 				=> Unwrap(expression) is LiteralExpressionSyntax { Token.ValueText: "0" };
 
-			static bool TryReadMask(ExpressionSyntax expression, Dictionary<string, int> members, out int mask)
+			static bool TryReadMask(ExpressionSyntax expression, Dictionary<string, int> members, string flagsName, out int mask)
 			{
 				switch (Unwrap(expression))
 				{
-					case MemberAccessExpressionSyntax { Name.Identifier.ValueText: { } name }
-						when members.TryGetValue(name, out var value):
+					// The qualifier has to name the flag type. Matching the member name alone would read another
+					// enum's same-named member as this one's - unreachable while the accumulator is strongly typed,
+					// but the reader's job is to interpret what it accepts rather than to rely on that.
+					case MemberAccessExpressionSyntax { Expression: { } qualifier, Name.Identifier.ValueText: { } name }
+						when NamesType(qualifier, flagsName) && members.TryGetValue(name, out var value):
 					{
 						mask = value;
 						return true;
 					}
 
 					case BinaryExpressionSyntax { RawKind: (int)SyntaxKind.BitwiseOrExpression, Left: { } left, Right: { } right }
-						when TryReadMask(left, members, out var l) && TryReadMask(right, members, out var r):
+						when TryReadMask(left, members, flagsName, out var l) && TryReadMask(right, members, flagsName, out var r):
 					{
 						mask = l | r;
 						return true;
@@ -963,6 +1011,13 @@ namespace CodeGenerators
 				mask = 0;
 				return false;
 			}
+
+			static bool NamesType(ExpressionSyntax qualifier, string flagsName) => Unwrap(qualifier) switch
+			{
+				IdentifierNameSyntax         identifier => identifier.Identifier.ValueText     == flagsName,
+				MemberAccessExpressionSyntax qualified  => qualified.Name.Identifier.ValueText == flagsName,
+				_                                      => false,
+			};
 
 			static ExpressionSyntax Unwrap(ExpressionSyntax expression)
 			{
