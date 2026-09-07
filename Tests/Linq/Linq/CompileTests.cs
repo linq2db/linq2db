@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.EntityServices;
 
@@ -952,6 +953,24 @@ namespace Tests.Linq
 				Assert.That(parent.Children, Has.Count.EqualTo(1));
 				Assert.That(other.ParentID,  Is.EqualTo(2));
 				Assert.That(other.Children,  Has.Count.EqualTo(2));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void SelfReconstructingMarkedCallDoesNotRecurse([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// AsSQLite is [IsQueryable] and rebuilds Call(AsSQLite, source), so expanding it over its own source
+			// returns the node it was handed - accepting that re-enters the visitor on the same shape forever.
+			// Every As<Provider>() entry point has this shape, so the provider here is incidental.
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent.AsSQLite().Where(p => p.ParentID >= id));
+
+			using var db = GetDataContext(context);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(query(db, 6).Select(p => p.ParentID).ToList(), Is.EquivalentTo(new[] { 6, 7 }));
+				Assert.That(query(db, 7).Select(p => p.ParentID).ToList(), Is.EquivalentTo(new[] { 7 }));
 			}
 		}
 

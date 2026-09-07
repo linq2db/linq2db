@@ -540,7 +540,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				// Expanding it over that source leaves those reads in the tree. Confined to the compiled path:
 				// an ordinary query reaches the same shapes through association and ExpressionMethod expansion,
 				// where the call is left in the tree for the builder to report as it is on master.
-				if (_parameterValues != null && node is MethodCallExpression call && !call.IsBuiltInQueryable && ExpandOverSource(call) is { } expanded)
+				// A method whose body reconstructs its own call - every As<Provider>() entry point does - expands
+				// to a node equal to this one, and accepting it would re-enter Visit on the same shape forever.
+				if (_parameterValues != null && node is MethodCallExpression call && !call.IsBuiltInQueryable
+					&& ExpandOverSource(call) is { } expanded
+					&& !ExpressionEqualityComparer.Instance.Equals(expanded, node))
 				{
 					converted = expanded;
 
