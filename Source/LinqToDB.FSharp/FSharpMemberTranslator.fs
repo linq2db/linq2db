@@ -5,6 +5,7 @@ open System.Linq.Expressions
 
 open LinqToDB.Linq.Translation
 open LinqToDB.Internal.Expressions
+open LinqToDB.Internal.SqlQuery
 open LinqToDB.Internal.DataProvider.Translation
 
 /// Translates F# <c>option</c> / <c>voption</c> member access in a query to SQL - <c>opt.IsSome</c> ->
@@ -31,9 +32,11 @@ type FSharpMemberTranslator private () =
          | t    -> t.Namespace = "Microsoft.FSharp.Core" && (t.Name = "OptionModule" || t.Name = "ValueOption"))
 
     // IS [NOT] NULL on the operand's column placeholder; declines (null) when the operand isn't a column.
+    // A parameter-backed placeholder is not a column - matching MemberTranslatorBase's own
+    // TranslateNoRequiredExpression, whose skipIfParameter defaults to true.
     let translateIsNull (isNot: bool) (ctx: ITranslationContext) (operand: Expression) (basedOn: Expression) : Expression | null =
         match ctx.Translate(operand, TranslationFlags.Sql) with
-        | :? SqlPlaceholderExpression as ph ->
+        | :? SqlPlaceholderExpression as ph when not (ph.Sql :? SqlParameter) ->
             let f  = ctx.ExpressionFactory
             let sc = f.SearchCondition()
             sc.Add(f.IsNull(ph.Sql, isNot)) |> ignore
@@ -44,7 +47,7 @@ type FSharpMemberTranslator private () =
     // Nullable<T>.Value); declines when the operand isn't a column.
     let translateValue (ctx: ITranslationContext) (operand: Expression) (valueType: Type) : Expression | null =
         match ctx.Translate(operand, TranslationFlags.Sql) with
-        | :? SqlPlaceholderExpression as ph -> ph.WithType(valueType)
+        | :? SqlPlaceholderExpression as ph when not (ph.Sql :? SqlParameter) -> ph.WithType(valueType)
         | _ -> null
 
     /// Shared stateless instance, reused across every <c>UseFSharp()</c> call. Member translators are keyed

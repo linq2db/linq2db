@@ -44,6 +44,40 @@ let OptionRoundTrip (db: IDataContext) =
     db.GetTable<DuOptRow>().OrderBy(fun x -> x.Id).Select(fun x -> x.Key).ToArray()
     |> Array.map (function Some (UserId v) -> v | None -> -1)
 
+let private seedOpt (db: IDataContext) =
+    db.Insert({ DuOptRow.Id = 1; Key = Some (UserId 10) }) |> ignore
+    db.Insert({ DuOptRow.Id = 2; Key = None })             |> ignore
+
+// The two features composed: option-member translation over a single-case-union column. The column stores
+// the union's wrapped int, so each of these has to reach a comparison on that int - the option converter's
+// provider type is Nullable<int> while `.Value` re-types the placeholder to UserId, and the union<->int
+// conversion is supplied only as this member's own ValueConverterAttribute.
+let OptionIsSome (db: IDataContext) =
+    use _t = db.CreateLocalTable<DuOptRow>()
+    seedOpt db
+    (db.GetTable<DuOptRow>().Where(fun x -> x.Key.IsSome).ToArray()).Length
+
+let OptionIsNone (db: IDataContext) =
+    use _t = db.CreateLocalTable<DuOptRow>()
+    seedOpt db
+    (db.GetTable<DuOptRow>().Where(fun x -> x.Key.IsNone).ToArray()).Length
+
+let OptionValueEquals (db: IDataContext) =
+    use _t = db.CreateLocalTable<DuOptRow>()
+    seedOpt db
+    (db.GetTable<DuOptRow>().Where(fun x -> x.Key.Value = UserId 10).ToArray()).Length
+
+let OptionEqualsSome (db: IDataContext) =
+    use _t = db.CreateLocalTable<DuOptRow>()
+    seedOpt db
+    (db.GetTable<DuOptRow>().Where(fun x -> x.Key = Some (UserId 10)).ToArray()).Length
+
+let OptionValueProjection (db: IDataContext) =
+    use _t = db.CreateLocalTable<DuOptRow>()
+    seedOpt db
+    db.GetTable<DuOptRow>().Where(fun x -> x.Key.IsSome).OrderBy(fun x -> x.Id).Select(fun x -> x.Key.Value).ToArray()
+    |> Array.map (fun (UserId v) -> v)
+
 // A *struct* single-case union is auto-mapped the same way, but being a value type it cannot hold null:
 // a NULL read yields default(StructUserId) - the union wrapping 0 - exactly as a plain `int` member reads
 // NULL as 0. `StructUserId option` is the way to express a nullable column of this type.
@@ -83,6 +117,23 @@ let StructOptionRoundTrip (db: IDataContext) =
     db.Insert({ StructDuOptRow.Id = 2; Key = None })                   |> ignore
     db.GetTable<StructDuOptRow>().OrderBy(fun x -> x.Id).Select(fun x -> x.Key).ToArray()
     |> Array.map (function Some (StructUserId v) -> v | None -> -1)
+
+// The smart-constructor idiom - the representation is private, so the case constructor and the field are
+// non-public outside this module, and the converter's generated lambdas reach them by reflection.
+// IsSingleCaseUnion claims the type (it passes allowAccessToPrivateRepresentation), so either the mapping
+// works or the type should not be claimed at all.
+type PrivateId = private PrivateId of int
+
+[<Table(IsColumnAttributeRequired = false)>]
+type PrivateDuRow =
+    { [<PrimaryKey>] Id: int
+      Key:                PrivateId }
+
+let PrivateRepresentationRoundTrip (db: IDataContext) =
+    use _t = db.CreateLocalTable<PrivateDuRow>()
+    db.Insert({ PrivateDuRow.Id = 1; Key = PrivateId 7 }) |> ignore
+    db.GetTable<PrivateDuRow>().OrderBy(fun x -> x.Id).Select(fun x -> x.Key).ToArray()
+    |> Array.map (fun (PrivateId v) -> v)
 
 // Shapes the auto-mapping must leave alone: a multi-case DU, an F# list, and a single-case union whose
 // wrapped field is not a scalar. All three are unions or union-like, so they sit right next to the shapes
