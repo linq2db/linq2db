@@ -875,7 +875,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
-		public void WrappedLoadWithTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void WrappedLoadWithTest([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
 				db.Parent
@@ -897,7 +897,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
-		public void WrappedWhereUsesCurrentArgumentsTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void WrappedWhereUsesCurrentArgumentsTest([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
 				db.Parent
@@ -917,7 +917,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
-		public void WrappedLoadWithOnTableTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void WrappedLoadWithOnTableTest([DataSources] string context)
 		{
 			// The wrapper's source is ITestDataContext.Parent, declared ITable<Parent> rather than IQueryable<Parent>.
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
@@ -935,7 +935,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
-		public void MarkedWrappedLoadWithTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void MarkedWrappedLoadWithTest([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
 				db.Parent
