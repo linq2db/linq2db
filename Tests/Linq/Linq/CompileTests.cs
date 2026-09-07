@@ -939,6 +939,26 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
+		public void WrappedWhereOnTableUsesCurrentArgumentsTest([DataSources] string context)
+		{
+			// Same ITable<Parent>-typed source as WrappedLoadWithOnTableTest, so the expansion takes the same
+			// Table<> construction arm - but with a predicate reading ps[i], which that test's query does not.
+			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
+				db.Parent.WhereWrapper(p => p.ParentID == id));
+
+			using var db = GetDataContext(context);
+
+			var first  = query(db, 1).Select(p => p.ParentID).ToList();
+			var second = query(db, 2).Select(p => p.ParentID).ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(first,  Is.EqualTo(new[] { 1 }));
+				Assert.That(second, Is.EqualTo(new[] { 2 }));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5854")]
 		public void MarkedWrappedLoadWithTest([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,IEnumerable<Parent>>(static (db, id) =>
