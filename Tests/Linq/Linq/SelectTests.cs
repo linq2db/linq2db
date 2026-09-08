@@ -1694,13 +1694,17 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		private static T Wrap1<T>(T value) => throw new InvalidOperationException();
+		private static T Wrap1<T>(T value) => throw new ServerSideOnlyException(nameof(Wrap1));
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static T Wrap2<T>(T value) => value;
 
+		// SelectExpression4 asserts the query-time failure this combination causes, so the L2DB1003
+		// violation is the fixture. Suppressed rather than fixed, so a code-fix sweep cannot re-apply it.
+#pragma warning disable L2DB1003 // Declare a server-side-only stub, or implement it
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap3<T>(T value) => throw new InvalidOperationException();
+#pragma warning restore L2DB1003
 
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap4<T>(T value) => value;

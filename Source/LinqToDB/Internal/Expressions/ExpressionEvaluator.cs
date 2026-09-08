@@ -39,6 +39,11 @@ namespace LinqToDB.Internal.Expressions
 				MethodCallExpression { NodeType: ExpressionType.Call } mc =>
 					IsSimpleEvaluatable(mc.Object) && mc.Arguments.All(IsSimpleEvaluatable),
 
+				// A quote evaluates to its operand, so it needs no compiled lambda - which also cannot handle
+				// an operand referencing a free parameter, as a compiled-query tree does after CompileQuery
+				// rewrites its parameters to ArrayIndex(ps, i).
+				UnaryExpression { NodeType: ExpressionType.Quote } => true,
+
 				_ => false,
 			};
 		}
@@ -55,6 +60,9 @@ namespace LinqToDB.Internal.Expressions
 
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
+
+				case ExpressionType.Quote:
+					return ((UnaryExpression)expr).Operand;
 
 				// Reduce() is what produced this value before, via a compiled lambda - it honours a
 				// mapping schema's custom default, so reducing here keeps the result identical.

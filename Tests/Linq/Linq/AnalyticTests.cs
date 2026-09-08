@@ -2085,7 +2085,7 @@ namespace Tests.Linq
 			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFields));
 		}
 
 		[Sql.Expression("concat('{{',string_agg(concat('\"', {1}, '\"', ': {{', '\"DateCreated\":\"', cast({3} as datetime2), '\", \"Link\":\"', {4}, '\",\"fields\":',  {2}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
@@ -2096,7 +2096,7 @@ namespace Tests.Linq
 			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsNoIndeces));
 		}
 
 		[Sql.Extension("concat('{{',string_agg(concat('\"', {templateId}, '\"', ': {{', '\"DateCreated\":\"', cast({DateCreated} as datetime2), '\", \"Link\":\"', {Link}, '\",\"fields\":',  {fieldResultsJson}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
@@ -2107,7 +2107,7 @@ namespace Tests.Linq
 			[ExprParameter] Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			[ExprParameter] Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsExtension));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
@@ -2376,5 +2376,58 @@ namespace Tests.Linq
 			}
 		}
 
+
+		// A window function projected by one Select and then used inside another window's PARTITION BY. The inner
+		// value is computed over the inner query's row set, so it has to reach the outer window as a column of a
+		// subquery - inlined, it nests one window function inside another, which no provider accepts.
+		[Test]
+		public void LegacyAnalytic_WindowFunctionOverWindowFunctionColumn([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var numbered =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					// The reported spelling: an empty OVER (). Providers that refuse a ranking function without a sort
+					// key get ORDER BY (SELECT 1) from NormalizeWindowOrderBy, so this stays portable.
+					Unordered   = Sql.Ext.RowNumber().Over().ToValue(),
+					Ordered     = Sql.Ext.RowNumber().Over().OrderBy(p.ParentID).ToValue(),
+					Partitioned = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1).ToValue(),
+				};
+
+			var query =
+				from p in numbered
+				select new
+				{
+					p.Ordered,
+					p.Partitioned,
+					OverUnordered   = Sql.Ext.RowNumber().Over().PartitionBy(p.Unordered).OrderBy(p.ParentID).ToValue(),
+					OverOrdered     = Sql.Ext.RowNumber().Over().PartitionBy(p.Ordered).OrderBy(p.ParentID).ToValue(),
+					OverPartitioned = Sql.Ext.RowNumber().Over().PartitionBy(p.Partitioned).OrderBy(p.ParentID).ToValue(),
+				};
+
+			var rows = query.ToList();
+
+			rows.ShouldNotBeEmpty();
+
+			// Ordered numbers every row uniquely, so partitioning by it leaves single-row partitions.
+			rows.Select(r => r.Ordered)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, rows.Count).Select(n => (long)n));
+
+			// Unordered numbers the rows arbitrarily but still uniquely, so it too leaves single-row partitions.
+			rows.ShouldAllBe(r => r.OverUnordered == 1);
+			rows.ShouldAllBe(r => r.OverOrdered   == 1);
+
+			// Partitioned repeats across Value1 groups, so each of its partitions must number 1..size exactly once.
+			foreach (var partition in rows.GroupBy(r => r.Partitioned))
+			{
+				partition.Select(r => r.OverPartitioned)
+					.OrderBy(n => n)
+					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
 	}
 }

@@ -19,6 +19,11 @@ Checks:
   3. The linq2db.Analyzers package carries both analyzer assemblies under analyzers/**/cs.
   4. The linq2db.Analyzers package carries the EnableLinqToDBAnalyzers opt-out targets in build/ and
      buildTransitive/ — the readme documents the property, and only the packed file implements it.
+  5. Every shipped rule id appears in the packed readme of both linq2db and linq2db.Analyzers. The two
+     diagnostics tables are duplicates maintained by hand and nothing else compares them to anything, so
+     a new rule can ship fully green and undocumented. The id list comes from AnalyzerReleases.*.md,
+     which RS2000/RS2001 already tie to the DiagnosticDescriptors — so the chain is
+     descriptor -> release-tracking file -> both readmes, with a build gate on each hop.
 
 Check 2 skips the ids in $NoFlowRequired — packages nobody compiles against, so analyzer flow is
 meaningless for them: linq2db.cli (a dotnet tool) and linq2db.LINQPad (a LINQPad driver). Their
@@ -29,6 +34,9 @@ Usage:
   pwsh -NoProfile -File Build/Azure/scripts/verify-analyzer-delivery.ps1 -PackagesDir <dir>
 
   -PackagesDir   directory to scan recursively for *.nupkg (required)
+  -RepoRoot      repository root, used by check 5 to read the AnalyzerReleases.*.md rule ids. Defaults
+                 to this script's own location walked up three levels; pass it explicitly when running
+                 the script from a copy, or the default repoints and the run exits 2 rather than 1.
   -NoAzdoLogs    suppress the Azure DevOps `##vso[task.logissue]` lines, which are on by default
                  (the script's primary caller is the AzDO publish pipeline). Use it for local
                  invocation. A switch rather than a [bool], because `pwsh -File` passes every
@@ -37,12 +45,14 @@ Usage:
 Exit codes:
   0  every check passed
   1  a check failed — release-blocking; build should fail
-  2  invalid args, no nupkgs found, or linq2db / linq2db.Analyzers absent from the drop
+  2  invalid args, no nupkgs found, linq2db / linq2db.Analyzers absent from the drop, or the
+     AnalyzerReleases.*.md inputs for check 5 could not be read
 #>
 
 param(
     [Parameter(Mandatory = $true)]
     [string] $PackagesDir,
+    [string] $RepoRoot = (Join-Path $PSScriptRoot '..' '..' '..'),
     [switch] $NoAzdoLogs
 )
 
@@ -93,14 +103,53 @@ function Read-NupkgMetadata {
             }
         }
 
+        # The readme is what check 5 reads. Prefer the path the nuspec declares; fall back to a root-level
+        # readme.md so a package that ships one without declaring it is still checked rather than skipped.
+        $readme     = $null
+        $readmeNode = $xml.SelectSingleNode("/*[local-name()='package']/*[local-name()='metadata']/*[local-name()='readme']")
+        $readmePath = if ($readmeNode) { $readmeNode.InnerText.Replace('\', '/') } else { 'readme.md' }
+
+        $readmeEntry = $zip.Entries | Where-Object { $_.FullName -ieq $readmePath } | Select-Object -First 1
+        if ($readmeEntry) {
+            $readmeReader = New-Object System.IO.StreamReader($readmeEntry.Open())
+            try   { $readme = $readmeReader.ReadToEnd() }
+            finally { $readmeReader.Dispose() }
+        }
+
         return [pscustomobject]@{
-            id      = $idNode.InnerText
-            groups  = $groups
-            entries = $entries
-            file    = [System.IO.Path]::GetFileName($NupkgPath)
+            id         = $idNode.InnerText
+            groups     = $groups
+            entries    = $entries
+            readme     = $readme
+            readmePath = $readmePath
+            file       = [System.IO.Path]::GetFileName($NupkgPath)
         }
     }
     finally { $zip.Dispose() }
+}
+
+function Get-ShippedRuleIds {
+    param([string] $AnalyzerProjectDir)
+
+    $ids = @()
+
+    foreach ($name in @('AnalyzerReleases.Shipped.md', 'AnalyzerReleases.Unshipped.md')) {
+        $path = Join-Path $AnalyzerProjectDir $name
+        if (-not (Test-Path $path)) { return $null }
+
+        # Release-tracking table rows are `<id> | <category> | <severity> | <notes>`; the header and the
+        # `;`-prefixed preamble never match. A Removed Rules id does match and must not be collected: a
+        # retired rule belongs in neither readme, so requiring one there would fail a correct removal.
+        $section = ''
+
+        foreach ($line in Get-Content -LiteralPath $path) {
+            if ($line -match '^\s*###\s*(.+?)\s*$') { $section = $Matches[1]; continue }
+            if ($section -eq 'Removed Rules')       { continue }
+            if ($line -match '^\s*(L2DB\d+)\s*\|')  { $ids += $Matches[1] }
+        }
+    }
+
+    return @($ids | Sort-Object -Unique)
 }
 
 if (-not (Test-Path $PackagesDir)) {
@@ -188,7 +237,34 @@ foreach ($folder in @('build', 'buildTransitive')) {
     }
 }
 
-Write-Output ('Scanned {0} nupkg(s) for analyzer delivery. Violations: {1}' -f $pkgs.Count, $violations.Count)
+# 5. Both packages' readmes must document every shipped rule. Nothing else compares those two tables to
+#    anything, so an undocumented rule ships green; the ids come from the release-tracking files, which
+#    RS2000/RS2001 already hold against the descriptors.
+$analyzerProjectDir = Join-Path $RepoRoot 'Source/LinqToDB.Analyzers'
+$ruleIds            = Get-ShippedRuleIds -AnalyzerProjectDir $analyzerProjectDir
+
+if ($null -eq $ruleIds) {
+    [Console]::Error.WriteLine("AnalyzerReleases.*.md not found under $analyzerProjectDir — pass -RepoRoot explicitly when running from a copy of this script")
+    exit 2
+}
+
+foreach ($pkg in @($linq2db, $analyzerPkg)) {
+    if ($null -eq $pkg.readme) {
+        $violations += ('{0}: no {1} entry in the package — the diagnostics table ships with nothing in it' -f $pkg.id, $pkg.readmePath)
+        continue
+    }
+
+    foreach ($ruleId in $ruleIds) {
+        # Anchored to a diagnostics-table row rather than to the id anywhere in the text. Both readmes also
+        # name their ids in the .editorconfig samples, so a bare substring test passes over a deleted row -
+        # which is the state this check exists to reject.
+        if ($pkg.readme -notmatch ('(?m)^\s*\|\s*\[?' + [regex]::Escape($ruleId) + '\]?')) {
+            $violations += ('{0}: {1} has no diagnostics-table row in the packed {2} — the rule ships undocumented for this package''s consumers' -f $pkg.id, $ruleId, $pkg.readmePath)
+        }
+    }
+}
+
+Write-Output ('Scanned {0} nupkg(s) for analyzer delivery, against {1} shipped rule id(s): {2}. Violations: {3}' -f $pkgs.Count, $ruleIds.Count, ($ruleIds -join ', '), $violations.Count)
 Write-Output ''
 
 foreach ($v in $violations) {

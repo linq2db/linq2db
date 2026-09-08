@@ -147,7 +147,7 @@ namespace Tests.Samples
 		[Sql.Extension("JSON_VALUE({field}, {propPath})", Precedence = Precedence.Primary, BuilderType = typeof(JsonValueBuilder), ServerSideOnly = true, CanBeNull = false)]
 		public static string Value(object? path)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(Value));
 		}
 	}
 

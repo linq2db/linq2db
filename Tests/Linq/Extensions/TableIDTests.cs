@@ -13,7 +13,7 @@ namespace Tests.Extensions
 		[Sql.Expression("'*** {0} ***'", ServerSideOnly = true, CanBeNull = false)]
 		static string PrintSqlID(Sql.SqlID id)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(PrintSqlID));
 		}
 
 		[Test]
