@@ -103,11 +103,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			result = Builder.UpdateNesting(this, result);
 			result = SequenceHelper.CorrectSelectQuery(result, SelectQuery);
 
-			if (!flags.HasFlag(ProjectFlags.AssociationRoot))
-			{
-				// remap back, especially for Recursive CTE
-				result = SequenceHelper.ReplaceContext(result, SubQuery, this);
-			}
+			// remap back, especially for Recursive CTE. AssociationRoot already returned above, so the guard
+			// this used to carry could never be false.
+			result = SequenceHelper.ReplaceContext(result, SubQuery, this);
 
 			return result;
 		}
