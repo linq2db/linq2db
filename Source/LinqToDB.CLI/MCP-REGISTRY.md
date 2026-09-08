@@ -4,34 +4,41 @@ The registry identity is `io.github.linq2db/linq2db.cli`. Its metadata lives in
 [server.json](server.json); the ownership marker lives in [readme.md](readme.md),
 which `LinqToDB.CLI.csproj` includes in the NuGet package.
 
-## Release prerequisites
-
-1. Set both version fields in `server.json` to the CLI package version being released.
-2. Publish that version of `linq2db.cli` through the normal NuGet release process.
-3. Confirm that the published package README contains
-   `<!-- mcp-name: io.github.linq2db/linq2db.cli -->`.
-
 The registry checks the README of the published NuGet package, not the GitHub
 working tree. Version 6.4.0 does not contain the marker and cannot be registered
-under this identity. The initial manifest targets the upcoming 6.5.0 release.
+under this identity; 6.5.0 is the first registrable version.
 
-## Register the released package
+## Publication
 
-Install the official [mcp-publisher](https://github.com/modelcontextprotocol/registry/releases)
-for your operating system. From this directory, run:
+[publish-mcp.yml](../../.github/workflows/publish-mcp.yml) publishes on GitHub release
+publication. It derives both version fields from the release tag, waits for nuget.org to serve
+the package README, and authenticates with `mcp-publisher login github-oidc`, which grants the
+`io.github.linq2db/*` namespace from the workflow's `repository_owner` claim - no secret and no
+organization Owner required. The version fields committed in `server.json` are documentation;
+the workflow overwrites them at publish time.
+
+A `release`-triggered workflow is read from the tree its tag points at, so the workflow must be
+merged before the release branch is cut, or that release publishes manually (below).
+
+## Publishing manually
+
+Fallback for a release whose tag predates the workflow, or to re-publish out of band. Install the
+official [mcp-publisher](https://github.com/modelcontextprotocol/registry/releases) for your
+operating system, set both version fields in `server.json` to the released CLI version, then from
+this directory:
 
 ```text
+mcp-publisher validate server.json
 mcp-publisher login github
 mcp-publisher publish server.json
 ```
 
-Complete the GitHub device authorization using an account that is an **Owner**
-of the `linq2db` organization. See the registry's
+Interactive `login github` grants an organization namespace only to an **Owner** of the
+`linq2db` organization; ordinary membership is not sufficient. See the registry's
 [authentication requirements](https://github.com/modelcontextprotocol/registry/blob/main/docs/modelcontextprotocol-io/authentication.mdx).
 
 Verify the returned name and version through the
 [registry API](https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.linq2db/linq2db.cli).
-Repeat publication with updated version fields for subsequent releases.
 
 ## Client configuration
 
