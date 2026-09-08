@@ -337,6 +337,28 @@ namespace Tests.Linq
 			act.ShouldThrow<InvalidOperationException>();
 		}
 
+		// MaskingChild maps to a table that does not exist, so the eager-load preamble fails inside the
+		// enumerator's initializer while its inner enumerator is still null. A query without preambles
+		// runs nothing there that can fail, so it cannot reach this path.
+		[Test]
+		public async Task DisposeAsyncDoesNotMaskInitFailureTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Func<Task> act = async () =>
+			{
+				await using var enumerator = db.GetTable<MaskingParent>()
+					.LoadWith(p => p.Children)
+					.AsAsyncEnumerable()
+					.GetAsyncEnumerator();
+
+				await enumerator.MoveNextAsync();
+			};
+
+			var ex = await act.ShouldThrowAsync<Exception>();
+			ex.ShouldNotBeOfType<NullReferenceException>();
+		}
+
 		// ForEachUntilAsync stops when the callback returns false, per its own documentation and per
 		// the non-linq2db source path asserted here as the control.
 		[Test]
@@ -514,6 +536,21 @@ namespace Tests.Linq
 		sealed class AsyncMaterializationRecord
 		{
 			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table("Parent")]
+		sealed class MaskingParent
+		{
+			[PrimaryKey] public int ParentID { get; set; }
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+			public List<MaskingChild> Children { get; set; } = null!;
+		}
+
+		[Table("NoSuchTable5891")]
+		sealed class MaskingChild
+		{
+			[PrimaryKey] public int ParentID { get; set; }
 		}
 
 		sealed class DataReaderApiInterceptor : CommandInterceptor
