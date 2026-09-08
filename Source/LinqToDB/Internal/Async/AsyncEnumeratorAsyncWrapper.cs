@@ -48,6 +48,11 @@ namespace LinqToDB.Internal.Async
 
 		async ValueTask<bool> IAsyncEnumerator<T>.MoveNextAsync()
 		{
+			// without this the disposed instance re-runs _init, and the enumerator and load
+			// transaction it opens are unreachable from DisposeAsync, which returns at the flag
+			if (_disposed)
+				return false;
+
 			if (_enumerator == null)
 			{
 				var tuple   = await _init().ConfigureAwait(false);
