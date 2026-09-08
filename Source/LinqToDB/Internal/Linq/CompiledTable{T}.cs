@@ -95,6 +95,7 @@ namespace LinqToDB.Internal.Linq
 			using (var entry = QueryRunner.Cache<T>.QueryCache.CreateEntry(cacheKey))
 			{
 				entry.SlidingExpiration = dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+				entry.Size              = 1;
 				entry.Value             = query;
 			}
 
