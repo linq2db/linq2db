@@ -13,7 +13,7 @@ namespace Tests.UserTests
 		[Sql.Expression("COUNT(*) * 100E0 / SUM(COUNT(*)) OVER()", ServerSideOnly = true, IsAggregate = true)]
 		private static double CountPercents()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercents));
 		}
 
 		[Test]

@@ -39,7 +39,7 @@ namespace Tests.UserTests
 		[Sql.Expression(ProviderName.SqlServer, "ISNULL({0}, {1})", ServerSideOnly = true)]
 		private static T IsNull<T>(T value, T defaultValue)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(IsNull));
 		}
 
 		[Test]

@@ -19,6 +19,9 @@ namespace Tests.Analyzers
 		where TAnalyzer : DiagnosticAnalyzer, new()
 	{
 		public static Task VerifyAsync(string source, params DiagnosticResult[] expected)
+			=> VerifyAsync(source, null, expected);
+
+		public static Task VerifyAsync(string source, string? editorConfig, params DiagnosticResult[] expected)
 		{
 			return RunAsync(source, withLinqToDB: true, ReferenceAssemblies.Net.Net80, expected);
 		}
@@ -50,6 +53,10 @@ namespace Tests.Analyzers
 				test.TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(Sql).Assembly.Location));
 
 			test.ExpectedDiagnostics.AddRange(expected);
+
+			// Inject an .editorconfig to exercise a rule's own options, mirroring CodeFixVerifier.
+			if (editorConfig is not null)
+				test.TestState.AnalyzerConfigFiles.Add(("/.editorconfig", editorConfig));
 
 			return test.RunAsync(CancellationToken.None);
 		}

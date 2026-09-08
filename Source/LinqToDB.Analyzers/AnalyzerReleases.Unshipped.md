@@ -6,3 +6,5 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 L2DB1002 | LinqToDB | Info | DurationComparisonAnalyzer, [documentation](https://github.com/linq2db/linq2db/wiki/L2DB1002)
+L2DB1003 | LinqToDB | Info | ServerSideOnlyContractAnalyzer, [documentation](https://github.com/linq2db/linq2db/wiki/L2DB1003)
+L2DB1004 | LinqToDB | Info | ServerSideOnlyContractAnalyzer, [documentation](https://github.com/linq2db/linq2db/wiki/L2DB1004)
