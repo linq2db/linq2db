@@ -40,14 +40,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// microsecond is identically zero rather than merely imprecise, and is declined instead.
 		/// </summary>
 		/// <remarks>
-		/// <see cref="AsTimestamp"/> casts to <see cref="DataType.DateTime2"/> with no precision, which renders as a
-		/// bare <c>timestamp</c> - six digits - so the sub-microsecond tick cannot survive the subtraction whatever
-		/// the column holds. Declaring the floor makes the member fall back to .NET, which answers it from the two
-		/// dates, rather than depending on what the driver happens to round-trip.
+		/// <see cref="AsTimestamp"/> casts a <c>date</c> operand to <see cref="DataType.DateTime2"/> with no
+		/// precision, which renders as a bare <c>timestamp</c> - six digits. Declaring the floor makes the member
+		/// fall back to .NET, which answers it from the two dates, rather than depending on what the driver happens
+		/// to round-trip.
 		/// <para>
-		/// A zone-carrying operand is subtracted uncast and so could reach further, but this is one value for the
-		/// provider and cannot be told per operand. It stays at the floor the cast imposes, which only ever declines
-		/// a member that might have been answerable - never claims one that is not.
+		/// An operand left uncast is subtracted at its own precision and so could reach further, but this is one
+		/// value for the provider and cannot be told per operand. It stays at the floor the cast imposes, which only
+		/// ever declines a member that might have been answerable - never claims one that is not.
 		/// </para>
 		/// </remarks>
 		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Microsecond;
@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		}
 
 		/// <summary>
-		/// The operand in a form two of which subtract to an interval, leaving a zone-carrying one alone.
+		/// The operand in a form two of which subtract to an interval, widening only an Oracle <c>date</c>.
 		/// </summary>
 		/// <remarks>
 		/// <c>CAST(x AS timestamp)</c> over a <c>timestamp with time zone</c> keeps the local reading and drops the
@@ -109,13 +109,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// (<see cref="DateTimeOffset"/> compares <see cref="DateTimeOffset.UtcDateTime"/>), so the cast is simply
 		/// left off there.
 		/// <para>
-		/// It stays for everything else, which is what it was for: subtracting two Oracle <c>date</c> values yields a
-		/// number of days rather than an interval.
+		/// It is applied only to a <c>date</c> operand, which is what it was for: subtracting two Oracle <c>date</c>
+		/// values yields a number of days rather than an interval. Every other type already subtracts to one.
 		/// </para>
 		/// </remarks>
 		ISqlExpression AsTimestamp(ISqlExpression value)
 		{
-			if (QueryHelper.GetDbDataType(value, MappingSchema).SystemType.ToUnderlying() == typeof(DateTimeOffset))
+			if (QueryHelper.GetDbDataType(value, MappingSchema).DataType is not (DataType.Date or DataType.DateTime))
 				return value;
 
 			return Factory.Cast(value, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
