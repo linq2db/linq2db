@@ -4,6 +4,7 @@ parameters:
   full_run: false # when false, only netfx and latest netX tests executed (linq2db only, efcore tests executed for all TFMs always)
   linux_max_parallel: 0 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
   db_filter: '[all]' # fallback for a definition absent from `surfaces` below, e.g. default.yml
+  offload_linux_to_github: false # when true, linux legs marked gh_linux run on GitHub Actions instead
 
   # Which surface each Azure pipeline definition tests, keyed by definition name. Data rather than
   # the if-chain this replaced in testing.yml, for the reason #5848 moved entry selection here: an
@@ -120,6 +121,7 @@ jobs:
       # Required by test-jobs.yml, which does the per-entry filter test. Forgetting it is a compile
       # error there by design - see the note on its parameters block.
       db_filter: ${{ coalesce(parameters.surfaces[variables['Build.DefinitionName']], parameters.db_filter) }}
+      offload_linux_to_github: ${{ parameters.offload_linux_to_github }}
       test_matrix:
 # Two things decide the order legs run in, and which one you see depends on whether the job caps its
 # parallelism. Both were measured on build 23050, the first run to carry a cap.
@@ -188,6 +190,7 @@ jobs:
 # All three ClickHouse providers (Driver/MySql/Octonica) target one server on separate
 # databases (testdb1/2/3), so they run as concurrent lanes in a single job without contention.
         - name: b_ClickHouse
+          gh_linux: 'true'
           title: ClickHouse (all providers)
           config_linux: clickhouse
           script_linux_global: clickhouse.sh
@@ -200,6 +203,7 @@ jobs:
           filters: '[all][clickhouse.all]'
 
         - name: c_PostgreSQL2
+          gh_linux: 'true'
           title: PostgreSQL (13-19)
           config_linux: pgsql2
           script_linux_global: pgsql2.sh
@@ -260,6 +264,7 @@ jobs:
           filters: '[all][sqlce.all]'
 
         - name: h_SAPHANA2
+          gh_linux: 'true'
           title: SAP HANA 2
           config_linux: hana2
           script_linux_global: hana2.sh
@@ -273,6 +278,7 @@ jobs:
           filters: '[all][saphana.all]'
 
         - name: i_PostgreSQL1
+          gh_linux: 'true'
           title: PostgreSQL (9.2-12)
           config_linux: pgsql1
           script_linux_global: pgsql1.sh
@@ -298,6 +304,7 @@ jobs:
           filters: '[all][oracle.all]'
 
         - name: k_Firebird
+          gh_linux: 'true'
           title: Firebird (all versions)
           config_linux: firebird
           script_linux_global: firebird.sh
@@ -310,6 +317,7 @@ jobs:
           filters: '[all][firebird.all]'
 
         - name: l_SqlServer2017_2019
+          gh_linux: 'true'
           title: SQL Server 2017 + 2019
           config_win: sqlserver.2017_2019
           config_linux: sqlserver.fts.2017_2019
@@ -328,6 +336,7 @@ jobs:
           filters: '[all][sqlserver.all][sqlserver.2019]'
 
         - name: m_SqlServer2022_2025
+          gh_linux: 'true'
           title: SQL Server 2022 + 2025
           config_win: sqlserver.2022_2025
           config_linux: sqlserver.2022_2025
@@ -344,6 +353,7 @@ jobs:
 
 # additional test runner as SqlServer2019 already takes a lot of time
         - name: n_SqlServer2019Extras
+          gh_linux: 'true'
           title: SQL Server EXTRAS
           config_win: sqlserver.extras
           config_linux: sqlserver.extras
@@ -374,6 +384,7 @@ jobs:
           filters: '[all][sqlserver.all]'
 
         - name: p_MySQL
+          gh_linux: 'true'
           title: MySQL/MariaDB (all providers)
           config_linux: mysql
           script_linux_global: mysql.sh
@@ -411,6 +422,7 @@ jobs:
           filters: '[all][access.all]'
 
         - name: s_SQLite
+          gh_linux: 'true'
           title: SQLite (all providers)
           config_win: sqlite
           config_linux: sqlite
@@ -450,6 +462,7 @@ jobs:
 # DuckDB alone (DB2/Informix have no Windows containers) via config_win, and stays full-run-only:
 # DuckDB has no netfx-only tests, so PR runs are already covered by the Linux leg.
         - name: u_YdbSybase
+          gh_linux: 'true'
           title: YDB + Sybase
           config_linux: ydbsybase
           script_linux_global: ydbsybase.sh
@@ -485,6 +498,7 @@ jobs:
           filters: '[all][access.all]'
 
         - name: w_DB2InformixDuckDB
+          gh_linux: 'true'
           title: DB2 + Informix + DuckDB
           config_win: duckdb
           config_linux: db2informixduckdb
