@@ -41,6 +41,12 @@ namespace LinqToDB
 		}
 
 		/// <summary>Provides ORDER BY for the window function.</summary>
+		/// <remarks>
+		/// A key that holds the same value for every row - a literal, or a captured local that reaches SQL as a
+		/// parameter - orders nothing, so it is dropped. Where dropping would empty the clause and the provider
+		/// requires an ordering inside <c>OVER</c>, the key comes back as a scalar subquery keeping its value,
+		/// direction and NULLS position.
+		/// </remarks>
 		public interface IOrderByPart<out TThenPart>
 			where TThenPart : class
 		{
@@ -143,6 +149,10 @@ namespace LinqToDB
 		}
 
 		/// <summary>Provides additional ORDER BY columns via ThenBy/ThenByDesc.</summary>
+		/// <remarks>
+		/// As with <see cref="IOrderByPart{TThenPart}"/>, a key that is constant for every row is dropped rather
+		/// than emitted.
+		/// </remarks>
 		public interface IThenOrderPart<out TThenPart>
 			where TThenPart : class
 		{
@@ -442,6 +452,10 @@ namespace LinqToDB
 		{
 		}
 
+		// TODO: v7 - inheriting IOFrameFinal here exposes the frame methods before OrderBy has been called, so
+		// PartitionBy(x).RowsBetweenValues(1, 1) compiles. A frame is defined relative to the window ordering, so
+		// only the state after OrderBy should offer one. Until that is fixed the unordered shape reaches the server,
+		// where the strict providers are handed a stand-in ordering and the rest sort by nothing.
 		/// <summary>State providing OrderBy in frame-capable chains.</summary>
 		public interface IOrderOFrameFinal : IOrderByPart<IOThenPartOFrameFinal>, IOFrameFinal
 		{

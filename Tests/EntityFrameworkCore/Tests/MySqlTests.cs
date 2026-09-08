@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
-	public class PomeloMySqlTests : NorthwindContextTestBase
+	public class MySqlTests : NorthwindContextTestBase
 	{
 		[Test]
 		public void SimpleProviderTest([EFDataSources] string provider)

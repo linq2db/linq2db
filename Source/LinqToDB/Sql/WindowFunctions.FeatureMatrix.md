@@ -21,9 +21,9 @@ Legend: **✓** native · **~** emulated · **✗** rejected at translate time (
 
 Providers with **no window-function support at all** (`IsWindowFunctionsSupported => false`):
 **SQL Server 2005/2008**, **MySQL 5.7**, **Firebird 2.5**, **Sybase ASE**, **Access**, **SQL CE**.
-(SQL Server 2005/2008 supports the four ranking functions natively, but linq2db always emits an
-`ORDER BY` inside `OVER`, which 2005/2008 only allow for ranking functions — so aggregate windows
-are rejected and the whole feature is gated off conservatively.)
+(SQL Server 2005/2008 supports the four ranking functions natively, but only with an `ORDER BY`
+inside `OVER`, which those versions do not allow for aggregate windows — so aggregate windows are
+rejected and the whole feature is gated off conservatively.)
 
 Dialect splits that matter:
 
@@ -113,6 +113,40 @@ The grouped statistical rows hide per-function asymmetry, marked above:
 elsewhere. `NULLS FIRST/LAST` is native where the provider supports it and emulated via a
 `CASE WHEN expr IS NULL …` sort key elsewhere (skipped when the requested position already matches
 the provider's natural NULL ordering, and for non-nullable keys).
+
+### Where an `ORDER BY` inside `OVER` is mandatory
+
+Unlike §2–4, this axis is **not** driven by `WindowFunctionsMemberTranslator` — it lives on
+`SqlExpressionConvertVisitor.IsWindowOrderByRequired` and its per-provider overrides. It matters
+because a sort key that is constant for every row orders nothing and is dropped
+(`Sql.Window.RowNumber(w => w.OrderBy(1))`, or a captured local, which reaches SQL as a parameter).
+Where dropping empties the clause and the provider still demands an ordering, the caller's own key
+comes back wrapped as a scalar subquery — `ORDER BY (SELECT 5) DESC`, with the dummy `FROM` each
+dialect needs (`SYS.DUAL`, `DUMMY`, `SYSIBM.SYSDUMMY1`, `rdb$database`, `table(set{1})`).
+
+**✓** = the provider rejects this window without an `ORDER BY` · **—** = accepts it unordered.
+
+| Requires an ordering for | SqlSrv 2012+ | PG | Oracle | MySQL 8 | MariaDB | SQLite | ClickHouse | DuckDB | DB2 | SAP HANA | Informix | FB 3 | FB 4–6 | YDB |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `ROW_NUMBER` | ✓ | — | ✓ | — | — | — | — | — | — | — | — | — | — | — |
+| `RANK` / `DENSE_RANK` / `PERCENT_RANK` / `CUME_DIST`, `LAG` / `LEAD` | ✓ | — | ✓ | — | ✓ | — | — | — | ✓ | ✓ | ✓ | — | — | — |
+| `NTILE` | ✓ | — | ✓ | — | — | — | ✓ | — | ✓ | ✓ | ✓ | — | — | — |
+| `FIRST_VALUE` / `LAST_VALUE` | ✓ | — | — | — | — | — | — | — | — | ✓ | — | — | — | — |
+| `NTH_VALUE` | — | — | — | — | — | — | — | — | — | ✓ | — | — | — | — |
+| any frame (`ROWS` / `RANGE` / `GROUPS`) | ✓ | — | ✓ | — | — | — | — | — | ✓ | ✓ | ✓ | — | — | — |
+| `GROUPS` frame, or `RANGE` with a value offset | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+
+The last row is the SQL standard rather than a dialect quirk — such a frame is defined in terms of
+the sort key's value — so it sits in the base predicate and no provider opts out. It is moot on
+providers that reject both frame kinds outright (FB 3, SAP HANA, YDB — see §4).
+
+`ROW_NUMBER` is answered from `SqlProviderFlags.IsRowNumberWithoutOrderBySupported`, which is `false`
+for exactly SQL Server and Oracle. **DuckDB** takes the scalar-subquery stand-in in a plain window but
+not inside a `RANGE` frame (`Cannot copy BoundSubqueryExpression`), so it sets
+`CanWrapWindowOrderByConstant => false` and keeps the caller's bare constant there instead. **YDB**
+cannot parse a scalar subquery as a window sort key at all; it is safe only because it requires no
+ordering anywhere and rejects `RANGE`/`GROUPS` frames at translation, so the stand-in is never built
+for it — a hard constraint on ever adding a requirement there.
 
 ---
 

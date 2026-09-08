@@ -461,6 +461,19 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool SupportsBooleanType { get; set; } = true;
 
 		/// <summary>
+		/// Indicates that provider accepts a predicate directly as a value operand of an aggregate or window
+		/// function — as a function argument (<c>COUNT(x = 1)</c>) or as an <c>OVER (PARTITION BY ...)</c> key.
+		/// This is narrower than <see cref="SupportsBooleanType"/>: a provider may have a usable boolean type,
+		/// and accept a predicate as a value in the select list, <c>GROUP BY</c> and <c>ORDER BY</c>, yet still
+		/// reject it in these positions (Informix). When <see langword="false"/>, such a predicate is folded into
+		/// a <c>CASE</c> expression. It does not affect window <c>ORDER BY</c> / <c>WITHIN GROUP</c> / <c>KEEP</c>
+		/// keys, which follow <see cref="SupportsBooleanType"/> only.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 79), DefaultValue(true)]
+		public bool SupportsPredicateInFunctionValuePosition { get; set; } = true;
+
+		/// <summary>
 		/// Provider supports nested joins
 		/// <code>
 		/// A JOIN (B JOIN C ON ?) ON ?
@@ -810,6 +823,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsPredicatesComparison                         .GetHashCode()
 				^ SupportsBooleanType                                  .GetHashCode()
+				^ SupportsPredicateInFunctionValuePosition             .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
@@ -893,6 +907,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
 				&& SupportsBooleanType                                   == other.SupportsBooleanType
+				&& SupportsPredicateInFunctionValuePosition              == other.SupportsPredicateInFunctionValuePosition
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported

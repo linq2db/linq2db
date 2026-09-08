@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 using System.Threading;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Mapping;
 
@@ -631,43 +630,28 @@ namespace Tests.Linq
 		[Test]
 		public void CharTest11([DataSources] string context)
 		{
-			List<PersonCharTest> list;
-
-			using (var db = new DataConnection())
-				list = db.GetTable<PersonCharTest>().ToList();
-
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in list                          where p.Gender == 'M' select p.PersonID,
-					from p in db.GetTable<PersonCharTest>() where p.Gender == 'M' select p.PersonID);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person                        where p.Gender == Gender.Male select p.ID,
+				from p in db.GetTable<PersonCharTest>() where p.Gender == 'M'         select p.PersonID);
 		}
 
 		[Test]
 		public void CharTest12([DataSources] string context)
 		{
-			List<PersonCharTest> list;
-
-			using (var db = new DataConnection())
-				list = db.GetTable<PersonCharTest>().ToList();
-
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in list                          where p.Gender == 77 select p.PersonID,
-					from p in db.GetTable<PersonCharTest>() where p.Gender == 77 select p.PersonID);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person                        where p.Gender == Gender.Male select p.ID,
+				from p in db.GetTable<PersonCharTest>() where p.Gender == 77          select p.PersonID);
 		}
 
 		[Test]
 		public void CharTest2([DataSources] string context)
 		{
-			List<PersonCharTest> list;
-
-			using (var db = new DataConnection())
-				list = db.GetTable<PersonCharTest>().ToList();
-
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in list                          where 'M' == p.Gender select p.PersonID,
-					from p in db.GetTable<PersonCharTest>() where 'M' == p.Gender select p.PersonID);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person                        where p.Gender == Gender.Male select p.ID,
+				from p in db.GetTable<PersonCharTest>() where 'M' == p.Gender         select p.PersonID);
 		}
 
 		[Test]

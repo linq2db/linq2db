@@ -380,6 +380,9 @@ namespace Tests.Linq
 					CountAll   = Sql.Window.Count(w => w),
 					CountConst = Sql.Window.Count(1, w => w),
 					SumConst   = Sql.Window.Sum(1, w => w),
+					// Left out when this test was written because it emitted ORDER BY 1, which SQL Server rejects
+					// with error 5308. A constant sort key no longer reaches any dialect, so it needs no gate.
+					RowNumConst = Sql.Window.RowNumber(w => w.OrderBy(1)),
 					AllRows    = Sql.Window.Count(w => w) == rowCount     && Sql.Window.Sum(t.IntValue, w => w) > 0,
 					WrongCount = Sql.Window.Count(w => w) == rowCount + 1 && Sql.Window.Sum(t.IntValue, w => w) > 0,
 				};
@@ -392,6 +395,11 @@ namespace Tests.Linq
 			result.ShouldAllBe(r => r.SumConst   == data.Length);
 			result.ShouldAllBe(r => r.AllRows);
 			result.ShouldAllBe(r => !r.WrongCount);
+
+			// Every row ties on the constant key, so the numbering is arbitrary but still a complete 1..N.
+			result.Select(r => r.RowNumConst)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
 		}
 
 		[Test]

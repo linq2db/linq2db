@@ -73,13 +73,24 @@ jobs:
             'VERSION_ARGS=-p:VersionSuffix=-dev.${{ github.run_number }}' | Out-File -FilePath $env:GITHUB_ENV -Append
           }
 
-      # Avoids intermittent CS2012 on these projects (dotnet/roslyn#77538): single-TFM and reached
-      # from multi-TFM LinqToDB, so each builds twice concurrently - plain, and as a
-      # TargetFramework-pinned inner build - into one obj path. Pre-building makes both skip.
-      # The set is CodeGenerators plus everything pinned by Source/Analyzers.Common.props; add new
-      # Roslyn components here. Properties must match the solution build - a VERSION_ARGS mismatch
-      # recompiles these and the race is back.
-      - name: Build Roslyn components
+      # Avoids intermittent CS2012 (dotnet/roslyn#77538), where one project is compiled twice
+      # concurrently into the same obj path and the second write loses. Pre-building serialises the
+      # projects it happens to, so the solution build finds them current and skips compiling them.
+      # Properties must match the solution build - a VERSION_ARGS mismatch recompiles them and the
+      # race is back.
+      #
+      # The Roslyn components are the clearest case. Being single-TFM, their obj path carries no
+      # target-framework segment, so two builds write the same file: the plain one, and the
+      # TargetFramework-pinned inner build that a multi-TFM consumer negotiates. That set is
+      # CodeGenerators plus everything pinned by Source/Analyzers.Common.props; a new Roslyn
+      # component belongs here.
+      #
+      # LinqToDB is here for a different reason and was added after the first three did not stop it:
+      # it is the most-referenced project in the repo, so many consumers request the same
+      # TargetFramework=net8.0 instance at once, and two nodes can start it before either registers.
+      # Observed as CS2012 on .build/obj/LinqToDB/Release/net8.0/linq2db.dll, on a PR touching only
+      # Azure YAML.
+      - name: Build hot-spot projects
         shell: pwsh
         run: |
           $common = @(
@@ -92,6 +103,7 @@ jobs:
             'Source/CodeGenerators/CodeGenerators.csproj'
             'Source/LinqToDB.Analyzers/LinqToDB.Analyzers.csproj'
             'Source/LinqToDB.Analyzers.CodeFixes/LinqToDB.Analyzers.CodeFixes.csproj'
+            'Source/LinqToDB/LinqToDB.csproj'
           )) {
             dotnet build $project @common
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

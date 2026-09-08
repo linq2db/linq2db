@@ -273,5 +273,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			return base.WrapColumnExpression(expr);
 		}
+
+		/// <summary>
+		/// Every ranking function and every one that reads a neighbouring row - <c>The function 'ROW_NUMBER' must
+		/// have an OVER clause with ORDER BY</c> - and any frame at all, which is <c>Incorrect syntax near 'ROWS'</c>
+		/// without one. An unframed aggregate is exempt: <c>SUM(x) OVER ()</c> is valid.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> base.IsWindowOrderByRequired(func)
+				|| func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE" or "FIRST_VALUE" or "LAST_VALUE";
 	}
 }

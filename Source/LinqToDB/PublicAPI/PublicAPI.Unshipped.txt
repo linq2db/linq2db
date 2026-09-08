@@ -252,3 +252,5 @@ LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch.get -> int?
 LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch.init -> void
 static LinqToDB.DataOptionsExtensions.UseBulkCopyMaxSqlLengthForBatch(this LinqToDB.DataOptions! options, int? maxSqlLengthForBatch) -> LinqToDB.DataOptions!
 static LinqToDB.DataOptionsExtensions.WithMaxSqlLengthForBatch(this LinqToDB.Data.BulkCopyOptions! options, int? maxSqlLengthForBatch) -> LinqToDB.Data.BulkCopyOptions!
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition.set -> void

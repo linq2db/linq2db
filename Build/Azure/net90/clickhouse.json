@@ -2,7 +2,8 @@
 	"NET90.Azure": {
 		"Providers": [
 			"ClickHouse.Driver",
-			"ClickHouse.MySql"
+			"ClickHouse.MySql",
+			"ClickHouse.Octonica"
 		]
 	}
 }
