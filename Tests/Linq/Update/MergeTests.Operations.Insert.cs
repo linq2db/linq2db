@@ -1632,9 +1632,10 @@ namespace Tests.xUpdate
 		#endregion
 
 		// https://imgflip.com/i/2a6oc8
-		[ActiveIssue(
+		[ActiveIssueNew(5896,
 			Configuration = TestProvName.AllSybase,
-			Details       = "Cross-join doesn't work in Sybase. Also see SqlLinqCrossJoinSubQuery test")]
+			ErrorMessage  = "Assert.That(expected, Is.LessThanOrEqualTo(actual))",
+			Details       = "unvalidated: Sybase's Merge emulation reports 2 affected rows where 4 are due. Not the cross join, and not #5895: this shape carries no Take, and the same source run as a plain query answers correctly. Where the emulation loses the rows is not identified.")]
 		[Test]
 		public void CrossJoinedSourceWithSingleFieldSelection([MergeDataContextSource(false)] string context)
 		{

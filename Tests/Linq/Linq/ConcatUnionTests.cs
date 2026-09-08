@@ -960,7 +960,8 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
+		[ActiveIssueNew(Configuration = TestProvName.AllAccess, ErrorMessage = "This operation is not allowed in subqueries.",
+			Details = "no-issue: UNION in a subquery is not supported by Access; supporting it means transforming the shape, and nothing tracks that.")]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
 		{
@@ -1637,7 +1638,8 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		[ActiveIssueNew(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so a bool? column cannot be created or compared against null. Update BoolN handling for sybase.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_NullsInAnchor([DataSources] string context)
 		{
@@ -1682,7 +1684,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		// Only the direct transport fails: over LinqService the seed insert goes through and the query answers.
+		[ActiveIssueNew(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
 		[Test(Description = "double columns in first query")]
 		public void Issue3360_DoubleColumnSelection([DataSources] string context)
 		{
@@ -1723,7 +1728,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllSQLite])]
+		// SQLite was gated here too and now passes on all four of its cases, so only the Sybase half is left - and
+		// there, as in Issue3360_DoubleColumnSelection, only the direct transport fails.
+		[ActiveIssueNew(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{

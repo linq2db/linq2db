@@ -1405,9 +1405,10 @@ namespace Tests.Linq
 		}
 
 		// https://imgflip.com/i/2a6oc8
-		[ActiveIssue(
+		[ActiveIssueNew(5895,
 			Configuration = TestProvName.AllSybase,
-			Details       = "Cross-join doesn't work in Sybase")]
+			ErrorMessage  = "Assert.That(resultList, Has.Count.EqualTo(expectedList.Count))",
+			Details       = "Sybase applies a derived table's TOP to the outer result, so this returns 10 rows where 70 are due. Not the cross join: without Take the same query answers 7 x 17 = 119 correctly.")]
 		[Test]
 		public void SqlLinqCrossJoinSubQuery([DataSources] string context)
 		{
@@ -3355,7 +3356,8 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllAccess, TestProvName.AllClickHouse])] string context)
 		{
