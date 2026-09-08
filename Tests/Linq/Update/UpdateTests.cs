@@ -1325,7 +1325,11 @@ namespace Tests.xUpdate
 
 		// looks like managed provider handle null bit parameters as false, because it doesn't fail
 		// maybe we need to do the same for unmanaged
-		[ActiveIssue(Configurations = new[] { ProviderName.Sybase, TestProvName.AllYdb }, Details = "Sybase: AseException : Null value is not allowed in BIT TYPE. YDB: rejects arithmetic on operands with mismatched decimal facets (Decimal(6,2) vs Decimal(22,9)); fixable by aligning decimal precision/scale, postponed (YDB: linq2db #5591).")]
+		[ActiveIssueNew(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Cannot calculate with different decimals: Decimal(6,2) != Decimal(22,9)",
+			Details = "YDB rejects arithmetic on operands with mismatched decimal facets. Fixable by aligning precision and scale, postponed.")]
+		[ActiveIssueNew(Configuration = ProviderName.Sybase, ErrorMessage = "Null value is not allowed in BIT TYPE",
+			Details = "unvalidated: ProviderName.Sybase is the netfx-only native provider, so this case does not exist on net10.0 and the declared failure is carried over from the gate's own prose rather than harvested.")]
 		[Test]
 		public void UpdateIssue321Regression([DataSources(ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllFirebird)] string context)
 		{

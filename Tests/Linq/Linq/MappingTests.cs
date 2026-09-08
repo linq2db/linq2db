@@ -1491,7 +1491,9 @@ namespace Tests.Linq
 
 		record MappingTypingByConstant<T>(int Id, T Value);
 
-		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB and MySQL 5.7", Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true)]
+		[ActiveIssueNew(4955, Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
+			Details = "CAST to BIGINT doesn't work in MariaDB and MySQL 5.7, so 2147483648 comes back as an int and overflows on the way out.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
 		{
@@ -1515,7 +1517,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB", Configuration = TestProvName.AllMariaDB, SkipForLinqService = true)]
+		[ActiveIssueNew(4955, Configuration = TestProvName.AllMariaDB, SkipForLinqService = true,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
+			Details = "CAST to BIGINT doesn't work in MariaDB, so 2147483648 comes back as an int and overflows on the way out.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromQuery_Int64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1L)] long? first)
 		{
