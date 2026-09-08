@@ -402,6 +402,7 @@
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />
     <Project Path="Tests/Tests.Analyzers/Tests.Analyzers.csproj" />
+    <Project Path="Tests/Tests.Analyzers.Internal/Tests.Analyzers.Internal.csproj" />
     <Project Path="Tests/Tests.Benchmarks/linq2db.Benchmarks.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>

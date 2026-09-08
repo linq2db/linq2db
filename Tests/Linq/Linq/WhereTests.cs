@@ -1781,7 +1781,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(ComplexIsNullPredicateTestFuncExpr))]
-		private static string? ComplexIsNullPredicateTestFunc(string? value) => throw new NotImplementedException();
+		private static string? ComplexIsNullPredicateTestFunc(string? value) => throw new ServerSideOnlyException(nameof(ComplexIsNullPredicateTestFunc));
 
 		private static Expression<Func<string?, string?>> ComplexIsNullPredicateTestFuncExpr()
 		{

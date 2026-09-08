@@ -198,7 +198,7 @@ partial class Sql
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<<#= types #>>(this SqlRow<<#= types #>> thisRow, SqlRow<<#= types #>> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 <#
 	}
 #>

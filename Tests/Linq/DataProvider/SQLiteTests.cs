@@ -97,7 +97,7 @@ namespace Tests.DataProvider
 		[Sql.Expression("CAST({0} as {1})", ServerSideOnly = true)]
 		static TValue Cast<TValue>(TValue value, string type)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Cast));
 		}
 
 		static void TestNumeric<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
@@ -1054,7 +1054,7 @@ DROP TABLE SecondTable;
 		#endregion
 
 		[Sql.TableFunction("pragma_table_info")]
-		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new InvalidOperationException();
+		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new ServerSideOnlyException(nameof(PragmaTableInfo));
 
 		sealed class PragmaTableInfoTable
 		{

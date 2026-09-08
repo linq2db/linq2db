@@ -28,7 +28,7 @@ namespace Tests.DataProvider
 		}
 
 		[Sql.Expression("ListHas({1}, {0})", IsPredicate = true, ServerSideOnly = true)]
-		static bool InList(object? field, object? list) => throw new InvalidOperationException();
+		static bool InList(object? field, object? list) => throw new ServerSideOnlyException(nameof(InList));
 
 		protected override IQueryable<TypeTable<TType, TNullableType>> MakeListFilter<TType, TNullableType>(TempTable<TypeTable<TType, TNullableType>> table, object? columnValue, object? nullableColumnValue)
 		{

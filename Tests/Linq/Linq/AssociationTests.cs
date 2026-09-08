@@ -2142,7 +2142,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ChildPredicateMethodImpl))]
 		public static bool ChildPredicateMethod(this Child child)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(ChildPredicateMethod));
 		}
 
 		static Expression<Func<Child,bool>> ChildPredicateMethodImpl()
@@ -2191,7 +2191,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ChildrenExpression))]
 		public static IQueryable<AssociationTests.ComplexChild> Children(this AssociationTests.ComplexParent p)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Children));
 		}
 
 		private static Expression<Func<AssociationTests.ComplexParent, IQueryable<AssociationTests.ComplexChild>>> ChildrenExpression()
