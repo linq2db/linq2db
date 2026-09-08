@@ -483,7 +483,8 @@ namespace Tests.xUpdate
 			.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
 		}
 
-		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
+		[ActiveIssueNew(5595, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Can't set NULL or optional value to not null column",
+			Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		[Test]
 		public void Update14([DataSources] string context)
 		{
@@ -1398,7 +1399,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
+		[ActiveIssueNew(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Failed to convert type: Struct<'MoneyValue'",
+			Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
 		[Test]
 		public void UpdateWithTypeConversion([DataSources] string context)
 		{

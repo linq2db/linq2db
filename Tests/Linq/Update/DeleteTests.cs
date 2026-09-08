@@ -169,7 +169,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ActiveIssue(5597, Configuration = TestProvName.AllYdb)]
+		// Not the table name: the direct run trips on /local/GrandChild and the remote one on /local/Parent.
+		[ActiveIssueNew(5597, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Conflict with existing key.")]
 		[Test]
 		public void DeleteMany2([DataSources(TestProvName.AllClickHouse)] string context)
 		{

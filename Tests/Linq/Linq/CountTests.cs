@@ -537,7 +537,8 @@ namespace Tests.Linq
 				from p in db.Parent select db.Child.Count(c => c.Parent == p));
 		}
 
-		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
+		[ActiveIssueNew(5590, Configuration = TestProvName.AllYdb, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
 		[Test]
 		public void SubQueryMax1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -546,7 +547,8 @@ namespace Tests.Linq
 				db.Parent.Max(p => db.Child.Count(c => c.Parent!.ParentID == p.ParentID)), Is.EqualTo(Parent.Max(p => Child.Count(c => c.Parent!.ParentID == p.ParentID))));
 		}
 
-		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
+		[ActiveIssueNew(5590, Configuration = TestProvName.AllYdb, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
 		[Test]
 		public async Task SubQueryMax1Async([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -555,7 +557,8 @@ namespace Tests.Linq
 				await db.Parent.MaxAsync(p => db.Child.Count(c => c.Parent!.ParentID == p.ParentID)), Is.EqualTo(Parent.Max(p => Child.Count(c => c.Parent!.ParentID == p.ParentID))));
 		}
 
-		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
+		[ActiveIssueNew(5590, Configuration = TestProvName.AllYdb, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
 		[Test]
 		public void SubQueryMax2([DataSources(TestProvName.AllClickHouse)] string context)
 		{

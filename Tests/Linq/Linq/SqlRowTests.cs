@@ -540,7 +540,8 @@ namespace Tests.Linq
 				.ShouldBe(1);
 		}
 
-		[ActiveIssue(5590, Configuration = TestProvName.AllYdb, Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
+		[ActiveIssueNew(5590, Configuration = TestProvName.AllYdb, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "YDB does not support correlated subqueries (IsSupportedSimpleCorrelatedSubqueries=false); surfaces as a generic conversion error pending reason-propagation.")]
 		[Test]
 		public void MixedTypes([DataSources(TestProvName.AllClickHouse)] string context)
 		{

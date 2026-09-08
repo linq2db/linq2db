@@ -666,7 +666,9 @@ namespace Tests.Linq
 				select p);
 		}
 
-		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets (Decimal(35,2) vs default Decimal(22,9)).")]
+		[ActiveIssueNew(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "uncompatible coalesce types, first type: Optional<Decimal(35,2)>, second type: Decimal(22,9)",
+			Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets.")]
 		[Test]
 		public void Issue1601([DataSources(false)] string context)
 		{

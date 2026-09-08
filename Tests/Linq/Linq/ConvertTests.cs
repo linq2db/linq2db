@@ -262,7 +262,8 @@ namespace Tests.Linq
 
 		#region Floats
 
-		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssueNew(5592, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value does not fit into decimal",
+			Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDefaultDecimal([DataSources] string context)
 		{
@@ -272,7 +273,8 @@ namespace Tests.Linq
 				from t in db.Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000));
 		}
 
-		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssueNew(5592, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value does not fit into decimal",
+			Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDecimal1([DataSources] string context)
 		{

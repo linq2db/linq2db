@@ -2916,7 +2916,8 @@ namespace Tests.xUpdate
 			[Column              ] public int TestId { get; set; }
 		}
 
-		[ActiveIssue("YDB: cannot insert a row consisting only of an auto-generated key", Configuration = TestProvName.AllYdb)]
+		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "into_values_source: alternative is not implemented yet",
+			Details = "no-issue: YDB cannot insert a row consisting only of an auto-generated key")]
 		[Test]
 		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{

@@ -171,9 +171,12 @@ namespace Tests.Linq
 				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p });
 		}
 
-		[ActiveIssue(5597, Configuration = TestProvName.AllYdb, Details = "YDB-only [PrimaryKey] on Parent.ParentID (added for YDB's mandatory-PK DDL requirement) is seen by the optimizer as a unique key, so grouping by the Parent entity reduces it to the PK and drops the projected Value1 column. Needs DDL-only PK handling or an optimizer fix.")]
+		// YDB excluded rather than gated: this hangs there rather than failing, and a test that never returns has no
+		// outcome to declare - on CI the hang dump kills the whole leg. The underlying gap is #5597: the YDB-only
+		// [PrimaryKey] on Parent.ParentID (added for YDB's mandatory-PK DDL requirement) is seen by the optimizer as
+		// a unique key, so grouping by the Parent entity reduces it to the PK and drops the projected Value1 column.
 		[Test]
-		public void GroupBy1([DataSources] string context)
+		public void GroupBy1([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
