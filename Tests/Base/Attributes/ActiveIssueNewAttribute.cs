@@ -192,8 +192,16 @@ namespace Tests
 		/// The whole outcome policy, as a pure function of the inner result — which is what makes it testable without
 		/// standing up a nested NUnit run. Returns <see langword="null"/> when the result must be left alone.
 		/// </summary>
-		public static (ResultState State, string Message)? Decide(ActiveIssueNewAttribute attribute, ResultState innerState, string? innerMessage, bool isRemote)
+		public static (ResultState State, string Message)? Decide(ActiveIssueNewAttribute attribute, ResultState innerState, string? innerMessage, bool isRemote, bool throwsGoverns = false)
 		{
+			// A Throws* attribute on the same method makes a different, more specific claim: this provider is
+			// *expected* to reject this query, and it has already rewritten the result to say so. Both families
+			// rewrite outcomes and neither can recognise the other's message, so whichever nests innermost would
+			// otherwise decide - on a test the Throws* wrapper turned green, this one would report "passed but is
+			// marked". Deferring is order-independent, which is what makes NUnit's unspecified nesting harmless.
+			if (throwsGoverns)
+				return null;
+
 			switch (innerState.Status)
 			{
 				case TestStatus.Passed:
@@ -231,6 +239,19 @@ namespace Tests
 		static ActiveIssueNewAttribute[] GetAttributes(ITest test)
 		{
 			return test.Method?.GetCustomAttributes<ActiveIssueNewAttribute>(true) ?? [];
+		}
+
+		/// <summary>
+		/// Whether a <see cref="ThrowsWhenAttribute"/> (or a subclass) on the same method owns this case. See the
+		/// deference rule in <see cref="Decide"/>.
+		/// </summary>
+		static bool ThrowsFamilyGoverns(ITest test)
+		{
+			foreach (var throws in test.Method?.GetCustomAttributes<ThrowsWhenAttribute>(true) ?? [])
+				if (throws.GovernsCurrentCase(test))
+					return true;
+
+			return false;
 		}
 
 		/// <summary>
@@ -310,7 +331,27 @@ namespace Tests
 					return testResult;
 				}
 
-				var decision = Decide(governing, testResult.ResultState, testResult.Message, isLinqService);
+				// Sweep mode: report what the test actually did, as one parsable line, instead of deciding. The
+				// whole point of a triage sweep is to see the failure the gate is hiding, so this deliberately
+				// reddens every governed case.
+				if (TestEnvironment.ActiveIssueSweep)
+				{
+					var passed = testResult.ResultState.Status == TestStatus.Passed;
+
+					testResult.SetResult(
+						ResultState.Failure,
+						ActiveIssueSentinel.Format(
+							test.FullName,
+							provider,
+							isLinqService,
+							passed,
+							ActiveIssueSentinel.ExtractErrorType(testResult.Message),
+							testResult.Message));
+
+					return testResult;
+				}
+
+				var decision = Decide(governing, testResult.ResultState, testResult.Message, isLinqService, ThrowsFamilyGoverns(test));
 
 				if (decision != null)
 					testResult.SetResult(decision.Value.State, decision.Value.Message);

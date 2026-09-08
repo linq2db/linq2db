@@ -145,6 +145,62 @@ namespace Tests.Infrastructure
 
 		#endregion
 
+		#region Decide — deference to the Throws* family (SC-11)
+
+		[Test]
+		public void Decide_ThrowsAttributeGoverns_DefersEvenWhenTheTestPassed()
+		{
+			// The Throws* wrapper rewrites an expected throw to Success. Without deference this case is the one
+			// that breaks: the gate sees a passing test and reports "passed but is marked", reddening a test that
+			// behaved exactly as both attributes expect.
+			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: true)
+				.ShouldBeNull();
+
+			// Control: the same inputs without a governing Throws* are decided, so the arm above is doing the work
+			// rather than the Success case being unreachable.
+			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: false)
+				.ShouldNotBeNull();
+		}
+
+		[Test]
+		public void Decide_ThrowsAttributeGoverns_DefersOnAFailureItWouldHaveMatched()
+		{
+			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: true)
+				.ShouldBeNull();
+
+			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: false)!
+				.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+		}
+
+		[Test]
+		public void Decide_NoGoverningThrowsAttribute_IsTheDefault()
+		{
+			// Deference is opt-in per case: the parameter defaults to false, so a site with no Throws* sibling -
+			// which is all but 13 of them - keeps the ordinary policy without every caller opting out.
+			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, OtherError, isRemote: false)!
+				.Value.State.Status.ShouldBe(TestStatus.Failed);
+		}
+
+		#endregion
+
+		#region Sweep mode — off unless asked for (SC-12)
+
+		[Test]
+		public void SweepMode_IsOffUnlessTheEnvironmentVariableIsSet()
+		{
+			// Sweep mode reports every governed case as a failure carrying a sentinel record, so a build that
+			// defaulted it on would redden every known-issue test in the suite. The variable is named here so the
+			// test fails if it is renamed without the docs and the sweep procedure following.
+			TestEnvironment.ActiveIssueSweepVariable.ShouldBe("L2DB_ACTIVEISSUE_SWEEP");
+
+			if (Environment.GetEnvironmentVariable(TestEnvironment.ActiveIssueSweepVariable) == "1")
+				Assert.Ignore("Sweep mode is enabled for this run, so the default cannot be observed.");
+
+			TestEnvironment.ActiveIssueSweep.ShouldBeFalse();
+		}
+
+		#endregion
+
 		#region AppliesTo — SC-4
 
 		[Test]

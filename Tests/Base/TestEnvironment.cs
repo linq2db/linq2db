@@ -32,6 +32,17 @@ namespace Tests
 		/// </summary>
 		public static readonly bool ParallelDiagnostics = IsEnabled("L2DB_PARALLEL_DIAG");
 
+		/// <summary>Name of the switch behind <see cref="ActiveIssueSweep"/>, so a test can name it.</summary>
+		public const string ActiveIssueSweepVariable = "L2DB_ACTIVEISSUE_SWEEP";
+
+		/// <summary>
+		/// <c>L2DB_ACTIVEISSUE_SWEEP</c> - report every <see cref="ActiveIssueNewAttribute"/>-governed case as a
+		/// failure carrying an <see cref="ActiveIssueSentinel"/> record of what the test actually did, instead of
+		/// rewriting the outcome. Off by default: it deliberately reddens a run, and exists so a triage sweep can
+		/// harvest the real failures a gate is hiding.
+		/// </summary>
+		public static readonly bool ActiveIssueSweep = IsEnabled(ActiveIssueSweepVariable);
+
 		static bool IsEnabled(string name) => Environment.GetEnvironmentVariable(name) == "1";
 
 		static int? ReadInt(string name)
