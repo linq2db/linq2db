@@ -13,7 +13,7 @@ which `LinqToDB.CLI.csproj` includes in the NuGet package.
 
 The registry checks the README of the published NuGet package, not the GitHub
 working tree. Version 6.4.0 does not contain the marker and cannot be registered
-under this identity. The initial manifest targets the upcoming 6.4.1 release.
+under this identity. The initial manifest targets the upcoming 6.5.0 release.
 
 ## Register the released package
 
@@ -39,7 +39,7 @@ Clients use the NuGet `dnx` runtime (.NET 10 SDK or later), the fixed `mcp`
 subcommand, and a user-supplied absolute `--config` path. Equivalent invocation:
 
 ```text
-dnx linq2db.cli@6.4.1 --yes -- mcp --config /absolute/path/to/query.json
+dnx linq2db.cli@6.5.0 --yes -- mcp --config /absolute/path/to/query.json
 ```
 
 Create the local configuration using `config-init`, as described in the CLI

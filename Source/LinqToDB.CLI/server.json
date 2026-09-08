@@ -8,13 +8,13 @@
     "source": "github",
     "subfolder": "Source/LinqToDB.CLI"
   },
-  "version": "6.4.1",
+  "version": "6.5.0",
   "packages": [
     {
       "registryType": "nuget",
       "registryBaseUrl": "https://api.nuget.org/v3/index.json",
       "identifier": "linq2db.cli",
-      "version": "6.4.1",
+      "version": "6.5.0",
       "runtimeHint": "dnx",
       "transport": {
         "type": "stdio"
