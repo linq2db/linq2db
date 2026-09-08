@@ -45,6 +45,17 @@ parameters:
 - name: offload_linux_to_github
   type: boolean
   default: false
+  # Same split for the windows legs. Only the entries marked gh_windows move - the win-mssql ones stay
+  # here either way, so build_x86_job and the whole windows workflow below remain live even when this
+  # is on.
+  #
+  # No caller passes it yet, deliberately: tests-comment.yml runs the DEFAULT branch's tests.yml, so
+  # between turning this on and merging the windows job there is a window where Azure has been told to
+  # skip a leg that GitHub cannot yet run - the leg would run nowhere and nothing would say so. The
+  # flip in testing.yml is its own one-line PR, after the windows job is on master.
+- name: offload_windows_to_github
+  type: boolean
+  default: false
 
 jobs:
 ##############################################################################################
@@ -107,7 +118,10 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(contains(test_config.filters, parameters.db_filter), eq(test_config.enable_os_windows, 'true')) }}:
+        # An entry marked gh_windows runs its windows leg on GitHub Actions instead, so Azure skips it -
+        # but only when the caller asks for the split, exactly as the linux job below does. default.yml
+        # does not ask, which is what keeps the release run covering every leg on one CI.
+        ${{ if and(contains(test_config.filters, parameters.db_filter), eq(test_config.enable_os_windows, 'true'), not(and(eq(parameters.offload_windows_to_github, true), eq(test_config.gh_windows, 'true')))) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
