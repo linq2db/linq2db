@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Internal.Async
 {
 	internal sealed class AsyncEnumeratorAsyncWrapper<T> : IAsyncEnumerator<T>
@@ -21,7 +23,7 @@ namespace LinqToDB.Internal.Async
 			get
 			{
 				if (_enumerator == null)
-					throw new InvalidOperationException("Enumeration not started.");
+					throw new InvalidOperationException(ErrorHelper.Error_EnumerationNotStarted);
 
 				return _enumerator.Current;
 			}
