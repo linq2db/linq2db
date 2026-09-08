@@ -14,8 +14,13 @@ under this identity; 6.5.0 is the first registrable version.
 publication. It derives both version fields from the release tag, waits for nuget.org to serve
 the package README, and authenticates with `mcp-publisher login github-oidc`, which grants the
 `io.github.linq2db/*` namespace from the workflow's `repository_owner` claim - no secret and no
-organization Owner required. The version fields committed in `server.json` are documentation;
-the workflow overwrites them at publish time.
+organization Owner required.
+
+Both version fields are committed as `0.0.0` and populated by the workflow from the release tag,
+so there is nothing to keep in step with a release. The placeholder is deliberate rather than
+cosmetic: publishing the committed file unedited fails at the registry's package-existence check,
+whereas a real-looking version would silently re-register a stale one. Read the live version from
+the registry API linked below, not from this file.
 
 A `release`-triggered workflow is read from the tree its tag points at, so the workflow must be
 merged before the release branch is cut, or that release publishes manually (below).
