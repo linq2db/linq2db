@@ -35,7 +35,7 @@ namespace Tests.Linq
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static long ToTicks(TimeSpan _)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(ToTicks));
 		}
 
 		[Test]

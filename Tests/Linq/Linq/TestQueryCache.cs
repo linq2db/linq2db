@@ -49,7 +49,7 @@ namespace Tests.Linq
 			[ExpressionMethod(nameof(GetFieldImpl))]
 			public static int? GetField(ManyFields entity, [SqlQueryDependent] int i)
 			{
-				throw new InvalidOperationException();
+				throw new ServerSideOnlyException(nameof(GetField));
 			}
 
 			private static Expression<Func<ManyFields, int, int?>> GetFieldImpl()

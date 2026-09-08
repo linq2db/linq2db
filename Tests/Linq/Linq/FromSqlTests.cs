@@ -446,7 +446,7 @@ namespace Tests.Linq
 		[Sql.Expression("{0}", ServerSideOnly = true, Precedence = Precedence.Primary)]
 		static T AsTyped<T>(string str)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(AsTyped));
 		}
 
 		[Test]

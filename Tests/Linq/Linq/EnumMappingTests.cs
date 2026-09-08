@@ -1798,7 +1798,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
-		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new InvalidOperationException();
+		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new ServerSideOnlyException(nameof(SomeComparison));
 
 		[Test]
 		public void Issue1622Test([DataSources] string context)

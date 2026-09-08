@@ -21,6 +21,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Detection core shared with the shipped analyzer, so LINQ2DB0002/0003 and L2DB1003/1004 decide
+		     identical cases. The two Roslyn components cannot reference each other, so it is linked rather
+		     than duplicated - the same per-file Include+Link idiom LinqToDB.Compat uses. -->
+		<Compile Include="$(MSBuildThisFileDirectory)..\LinqToDB.Analyzers\ServerSideOnlyContract.cs" Link="ServerSideOnlyContract.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
 		<AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
 	</ItemGroup>

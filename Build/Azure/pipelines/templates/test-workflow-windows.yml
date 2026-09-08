@@ -21,6 +21,17 @@ parameters:
 steps:
 - checkout: none
 
+# Same guard as the linux workflow: a linux-only provider selects no windows leg, the job is created
+# regardless, and without this it is a green job that explains nothing - build 23319 is exactly that,
+# a job named `Win` with every test step skipped.
+- task: PowerShell@2
+  inputs:
+    targetType: inline
+    pwsh: true
+    script: Write-Host ">>> No windows leg for this surface - it is a linux-only provider."
+  displayName: 'Nothing to run for this surface'
+  condition: and(eq(variables.title, ''), succeeded())
+
 # .NET 8, 9 and 10 SDKs already ship with the image https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
 # so only the x86 ones need installing, and only on an x86 leg.
 - ${{ each tfm in parameters.tfms }}:
