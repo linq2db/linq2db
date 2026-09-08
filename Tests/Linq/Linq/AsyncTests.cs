@@ -340,6 +340,65 @@ namespace Tests.Linq
 			act.ShouldThrow<InvalidOperationException>();
 		}
 
+		// ForEachUntilAsync stops when the callback returns false, per its own documentation and per
+		// the non-linq2db source path asserted here as the control.
+		[Test]
+		public async Task ForEachUntilAsyncStopsOnFalseTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = new List<int>();
+			await Parent.OrderBy(p => p.ParentID).AsQueryable().ForEachUntilAsync(p =>
+			{
+				expected.Add(p.ParentID);
+				return expected.Count < 2;
+			});
+
+			var all = new List<int>();
+			await db.Parent.OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				all.Add(p.ParentID);
+				return true;
+			});
+
+			var stopped = new List<int>();
+			await db.Parent.OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				stopped.Add(p.ParentID);
+				return stopped.Count < 2;
+			});
+
+			// an implementation that always stopped on the first row would satisfy `stopped` by
+			// accident, so pin that the two arms can differ at all
+			expected.Count.ShouldBe(2);
+			all.Count.ShouldBeGreaterThan(expected.Count);
+
+			stopped.ShouldBe(expected);
+		}
+
+		[Test]
+		public async Task ForEachUntilAsyncEagerLoadTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// each arm must build its own query: sharing one lets the second arm read the preamble
+			// results the first one cached, hiding whether it initializes them itself
+			var expected = await db.Parent.LoadWith(p => p.Children).OrderBy(p => p.ParentID).ToListAsync();
+
+			var actual = new List<Parent>();
+			await db.Parent.LoadWith(p => p.Children).OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				actual.Add(p);
+				return true;
+			});
+
+			// without eager-loaded children the child-count comparison below could not fail
+			expected.Sum(p => p.Children.Count).ShouldBeGreaterThan(0);
+
+			actual.Select(p => p.ParentID).ShouldBe(expected.Select(p => p.ParentID));
+			actual.Select(p => p.Children.Count).ShouldBe(expected.Select(p => p.Children.Count));
+		}
+
 		[Test]
 		public async Task ToLookupAsyncTest([DataSources] string context)
 		{

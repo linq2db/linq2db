@@ -186,13 +186,22 @@ namespace LinqToDB.Internal.Linq
 			if (!dependsOnParameters)
 				Expression = expressions.MainExpression;
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
-			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
+			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
+				.ConfigureAwait(false);
+
+			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
+
+			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+			await using (enumerator.ConfigureAwait(false))
 			{
-				if (func(enumerator.Current))
-					break;
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+				{
+					if (!func(enumerator.Current))
+						break;
+				}
 			}
 		}
 
