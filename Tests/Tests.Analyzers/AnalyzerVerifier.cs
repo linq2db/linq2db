@@ -23,14 +23,14 @@ namespace Tests.Analyzers
 
 		public static Task VerifyAsync(string source, string? editorConfig, params DiagnosticResult[] expected)
 		{
-			return RunAsync(source, withLinqToDB: true, ReferenceAssemblies.Net.Net80, expected);
+			return RunAsync(source, withLinqToDB: true, ReferenceAssemblies.Net.Net80, editorConfig, expected);
 		}
 
 		// Without the linq2db reference, so a rule's capability gate can be exercised: an analyzer that resolves its
 		// anchor types out of the compilation has to stay silent - and not throw - when they are absent.
 		public static Task VerifyWithoutLinqToDBAsync(string source, params DiagnosticResult[] expected)
 		{
-			return RunAsync(source, withLinqToDB: false, ReferenceAssemblies.Net.Net80, expected);
+			return RunAsync(source, withLinqToDB: false, ReferenceAssemblies.Net.Net80, editorConfig: null, expected);
 		}
 
 		// As above but against a caller-chosen reference set, for a rule that reads its behaviour off symbol presence
@@ -38,10 +38,10 @@ namespace Tests.Analyzers
 		// GetTypeByMetadataName resolves a source-declared type, so dropping the reference costs nothing here.
 		public static Task VerifyWithoutLinqToDBAsync(string source, ReferenceAssemblies referenceAssemblies, params DiagnosticResult[] expected)
 		{
-			return RunAsync(source, withLinqToDB: false, referenceAssemblies, expected);
+			return RunAsync(source, withLinqToDB: false, referenceAssemblies, editorConfig: null, expected);
 		}
 
-		static Task RunAsync(string source, bool withLinqToDB, ReferenceAssemblies referenceAssemblies, DiagnosticResult[] expected)
+		static Task RunAsync(string source, bool withLinqToDB, ReferenceAssemblies referenceAssemblies, string? editorConfig, DiagnosticResult[] expected)
 		{
 			var test = new CSharpAnalyzerTest<TAnalyzer, DefaultVerifier>
 			{
