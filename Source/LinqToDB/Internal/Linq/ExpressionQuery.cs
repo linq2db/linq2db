@@ -152,32 +152,17 @@ namespace LinqToDB.Internal.Linq
 				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 		}
 
-		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
-			var expression  = Expression;
-			var expressions = GetOwnExpressions(expression);
-			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
-
-			if (!dependsOnParameters)
-				Expression = expressions.MainExpression;
-
-			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
-			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
-
-			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
-				.ConfigureAwait(false);
-
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
-
-			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(false))
-			{
-				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-					action(enumerator.Current);
-			}
+			return GetForEachCoreAsync(x => { action(x); return true; }, cancellationToken);
 		}
 
-		public async Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
+		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
+		{
+			return GetForEachCoreAsync(func, cancellationToken);
+		}
+
+		async Task GetForEachCoreAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression  = Expression;
 			var expressions = GetOwnExpressions(expression);
