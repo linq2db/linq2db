@@ -55,7 +55,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// No declared expectation: this whole file is behind #if EF8, and EF8 is defined only in
 		// Source/LinqToDB.EntityFrameworkCore.EF8.csproj - DefineConstants do not cross a ProjectReference, so it
 		// compiles into no test assembly and has never been observed running. Any failure counts until it can be.
-		[ActiveIssueNew(4646)]
+		[ActiveIssueNew(4646, Details = "no-declaration: dead behind #if EF8, never observed running")]
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/260")]
 		public void Issue4646TestLinqToDB([EFDataSources] string provider)
 		{

@@ -1127,7 +1127,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		// PostgreSQL identity-column temp tables are a separate known limitation (#4333), same as Issue4333Test above.
-		[ActiveIssueNew("PostgreSQL identity-column temp tables", Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
+		[ActiveIssueNew(4333, Details = "PostgreSQL identity-column temp tables", Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
 		public void TempTableSurvivesAcrossCommands([EFDataSources] string provider)
 		{

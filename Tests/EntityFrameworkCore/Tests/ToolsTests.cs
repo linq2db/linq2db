@@ -699,15 +699,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
 		}
 
-		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllSQLite,
+		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllSQLite,
 			ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "syntax error")]
-		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllPostgreSQL,
+		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllPostgreSQL,
 			ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42601: syntax error at or near")]
 		// No ErrorTypeName for the MySQL family: the same failure surfaces as MySqlConnector.MySqlException on
 		// net8.0+ and MySql.Data.MySqlClient.MySqlException on net462, so the message is the stable part.
-		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllMySqlServer,
+		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMySqlServer,
 			ErrorMessage = "Every derived table must have its own alias")]
-		[ActiveIssueNew("Delete with limit translation not yet implemented", Configuration = TestProvName.AllMariaDB,
+		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMariaDB,
 			ErrorMessage = "You have an error in your SQL syntax")]
 		[Test]
 		public async Task TestDeleteFrom([EFDataSources] string provider)
