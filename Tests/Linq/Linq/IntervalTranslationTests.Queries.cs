@@ -169,8 +169,10 @@ namespace Tests.Linq
 		/// Access has no 64-bit integer parameter, so its provider maps one to a 32-bit parameter and narrows the
 		/// value with a checked cast. Anything above <see cref="int.MaxValue"/> throws while the parameter is being
 		/// bound - before the statement executes, and before it reaches the trace, so the log says nothing about
-		/// which query failed. A comparison is reconciled in ticks, and 2147483647 ticks is three minutes and
-		/// thirty-four seconds, so every bound in these tests is far over the line.
+		/// which query failed. A comparison against a column declared in ticks is reconciled in ticks, and
+		/// 2147483647 ticks is three minutes and thirty-four seconds, so any longer bound reaching one as a
+		/// parameter is over the line. A seconds-unit column lowers the same bound to seconds and stays well
+		/// under it, and a bound written into the statement is never bound at all.
 		/// <para>
 		/// Not an interval defect, and gated rather than declared for that reason: a plain captured <c>long</c>
 		/// compared against an ordinary integer column throws exactly the same way, with no duration anywhere. It
@@ -181,8 +183,9 @@ namespace Tests.Linq
 		/// </remarks>
 		const string AccessLongParameterOverflow =
 			"The ODBC provider maps a 64-bit integer parameter to a 32-bit one and narrows it with a checked cast, so "
-			+ "any value above int.MaxValue throws OverflowException as the parameter is bound. A duration comparison "
-			+ "travels in ticks, where int.MaxValue is three and a half minutes, so any longer bound fails. The OleDb "
+			+ "any value above int.MaxValue throws OverflowException as the parameter is bound. A comparison against a "
+			+ "column declared in ticks travels in ticks, where int.MaxValue is three and a half minutes, so any longer "
+			+ "bound reaching one as a parameter fails. The OleDb "
 			+ "branch does not narrow, so it is not gated. Not an interval defect - a plain long compared against an "
 			+ "int column throws identically. See issue 5748.";
 
@@ -622,7 +625,8 @@ namespace Tests.Linq
 		/// converted correctly but rendered with the wrong operator is still caught.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
+		[ActiveIssueNew(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -676,7 +680,8 @@ namespace Tests.Linq
 		/// CLR agree that nothing is greater than an absent bound - that is the answer being pinned.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
+		[ActiveIssueNew(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparisonAgainstAnOptionalValueUsesTheDeclaredUnit([DataSources] string context)
 		{
@@ -803,7 +808,8 @@ namespace Tests.Linq
 		/// second place the same question about the column has to be answered the same way.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
+		[ActiveIssueNew(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparingAnAbsentDurationMatchesClr([DataSources] string context)
 		{
@@ -881,7 +887,6 @@ namespace Tests.Linq
 		/// column lifted to ticks, or the value lowered to seconds - is the provider's business.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void DeclaredDurationFollowsTheRequestForHowItTravels([DataSources(false)] string context)
 		{
@@ -1278,7 +1283,6 @@ namespace Tests.Linq
 		/// to survive the round trip into the statement and back into a <see cref="TimeSpan"/>.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow)]
 		[Test]
 		public void LocalCollectionDrivingAQueryPerValueKeepsEachValue([DataSources] string context)
 		{
