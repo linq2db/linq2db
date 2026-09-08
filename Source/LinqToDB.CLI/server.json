@@ -6,6 +6,7 @@
   "repository": {
     "url": "https://github.com/linq2db/linq2db",
     "source": "github",
+    "id": "1916228",
     "subfolder": "Source/LinqToDB.CLI"
   },
   "version": "6.5.0",
