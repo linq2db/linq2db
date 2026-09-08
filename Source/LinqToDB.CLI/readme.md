@@ -1,6 +1,8 @@
 <!-- omit in toc -->
 # LINQ to DB CLI tools
 
+<!-- mcp-name: io.github.linq2db/linq2db.cli -->
+
 ***
 > **NOTE**: This is not a library you could reference from your project, but command line utility, installed using `dotnet tool` command (see [installation notes](#installation)).
 ***
