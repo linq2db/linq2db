@@ -754,7 +754,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						get
 						{
 							if (_grouped == null)
-								throw new InvalidOperationException("Enumeration not started.");
+								throw new InvalidOperationException(ErrorHelper.Error_EnumerationNotStarted);
 
 							if (_current == null)
 								throw new InvalidOperationException("Enumeration returned no result.");

@@ -152,7 +152,17 @@ namespace LinqToDB.Internal.Linq
 				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 		}
 
-		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		{
+			return GetForEachCoreAsync(x => { action(x); return true; }, cancellationToken);
+		}
+
+		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
+		{
+			return GetForEachCoreAsync(func, cancellationToken);
+		}
+
+		async Task GetForEachCoreAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression  = Expression;
 			var expressions = GetOwnExpressions(expression);
@@ -173,26 +183,10 @@ namespace LinqToDB.Internal.Linq
 			await using (enumerator.ConfigureAwait(false))
 			{
 				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-					action(enumerator.Current);
-			}
-		}
-
-		public async Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
-		{
-			var expression  = Expression;
-			var expressions = GetOwnExpressions(expression);
-			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
-
-			if (!dependsOnParameters)
-				Expression = expressions.MainExpression;
-
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
-			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
-
-			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-			{
-				if (func(enumerator.Current))
-					break;
+				{
+					if (!func(enumerator.Current))
+						break;
+				}
 			}
 		}
 
