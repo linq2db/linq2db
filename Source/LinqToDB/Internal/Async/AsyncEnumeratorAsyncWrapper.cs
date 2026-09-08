@@ -9,19 +9,41 @@ namespace LinqToDB.Internal.Async
 		private IAsyncEnumerator<T>? _enumerator;
 		private readonly Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> _init;
 		private IAsyncDisposable? _disposable;
+		private bool _disposed;
 
 		public AsyncEnumeratorAsyncWrapper(Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> init)
 		{
 			_init = init;
 		}
 
-		T IAsyncEnumerator<T>.Current => _enumerator!.Current;
+		T IAsyncEnumerator<T>.Current
+		{
+			get
+			{
+				if (_enumerator == null)
+					throw new InvalidOperationException("Enumeration not started.");
+
+				return _enumerator.Current;
+			}
+		}
 
 		async ValueTask IAsyncDisposable.DisposeAsync()
 		{
-			await _enumerator!.DisposeAsync().ConfigureAwait(false);
-			if (_disposable != null)
-				await _disposable.DisposeAsync().ConfigureAwait(false);
+			if (_disposed)
+				return;
+
+			_disposed = true;
+
+			try
+			{
+				if (_enumerator != null)
+					await _enumerator.DisposeAsync().ConfigureAwait(false);
+			}
+			finally
+			{
+				if (_disposable != null)
+					await _disposable.DisposeAsync().ConfigureAwait(false);
+			}
 		}
 
 		async ValueTask<bool> IAsyncEnumerator<T>.MoveNextAsync()

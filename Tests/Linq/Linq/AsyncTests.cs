@@ -286,6 +286,60 @@ namespace Tests.Linq
 			});
 		}
 
+		// The enumerator for a linq2db query creates its underlying enumerator lazily, on the first
+		// MoveNextAsync, so disposing before that must be a no-op.
+		// https://github.com/linq2db/linq2db/discussions/5891
+		[Test]
+		public async Task DisposeAsyncWithoutMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			Func<Task> dispose = async () => await enumerator.DisposeAsync();
+			await dispose.ShouldNotThrowAsync();
+		}
+
+		[Test]
+		public async Task DisposeAsyncTwiceWithoutMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			await using var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			Func<Task> dispose = async () => await enumerator.DisposeAsync();
+			await dispose.ShouldNotThrowAsync();
+		}
+
+		[Test]
+		public async Task DisposeAsyncTwiceAfterEnumerationTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			var count = 0;
+			while (await enumerator.MoveNextAsync())
+				count++;
+
+			count.ShouldBe(Parent.Count());
+
+			Func<Task> dispose = async () => await enumerator.DisposeAsync();
+			await dispose.ShouldNotThrowAsync();
+			await dispose.ShouldNotThrowAsync();
+		}
+
+		[Test]
+		public async Task CurrentBeforeMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			await using var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			Action act = () => { _ = enumerator.Current; };
+			act.ShouldThrow<InvalidOperationException>();
+		}
+
 		[Test]
 		public async Task ToLookupAsyncTest([DataSources] string context)
 		{
