@@ -1525,7 +1525,8 @@ namespace Tests.Linq
 				.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).ShouldBe(1);
 		}
 
-		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
+		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
+		[ActiveIssueNew(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void ExplicitOrdinal_Contains([DataSources] string context)
 		{
@@ -1543,7 +1544,8 @@ namespace Tests.Linq
 				.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.Ordinal)).ShouldBe(0);
 		}
 
-		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
+		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
+		[ActiveIssueNew(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void Explicit_Contains([DataSources] string context)
 		{

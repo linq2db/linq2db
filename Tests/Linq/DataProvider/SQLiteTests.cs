@@ -796,9 +796,23 @@ namespace Tests.DataProvider
 			db.InsertOrReplace(record);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
-		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void Issue3766Test2Inlined([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue3766Test2(context, inline: true);
+		}
+
+		// Split from the inlined case: only the parameterized path fails, and the gate can target a provider but
+		// not one value of a [Values] axis - marking the whole method would report its passing half as "test
+		// passed but is marked".
+		[ActiveIssueNew(3766, Configuration = TestProvName.AllSQLiteClassic, ErrorMessage = "Assert.That(cnt, Is.EqualTo(1))")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
+		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue3766Test2(context, inline: false);
+		}
+
+		void Issue3766Test2(string context, bool inline)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3766Table>();
