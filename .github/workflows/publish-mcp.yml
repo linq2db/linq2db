@@ -16,6 +16,15 @@ name: publish-mcp
 on:
   release:
     types: [published]
+  # Recovery path. If the automatic run fails - nuget.org lag beyond the poll budget, a transient
+  # registry error - re-run it here rather than falling back to the interactive Owner device flow.
+  # The tag supplies the version; nothing else is read from the tag's tree, so dispatching from
+  # the default branch is correct.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, e.g. v6.5.0.
+        required: true
 
 permissions:
   contents: read
@@ -25,8 +34,8 @@ jobs:
   publish:
     name: Publish to MCP Registry
     runs-on: ubuntu-24.04
-    # A prerelease must not claim the registry version.
-    if: ${{ !github.event.release.prerelease }}
+    # A prerelease must not claim the registry version. A manual dispatch is always deliberate.
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
     timeout-minutes: 40
 
     env:
@@ -39,12 +48,17 @@ jobs:
 
       - name: Resolve release version
         env:
-          TAG: ${{ github.event.release.tag_name }}
-        run: echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          if [ -z "$TAG" ]; then
+            echo "No release tag resolved from either the release event or the dispatch input."
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
 
-      # server.json pins the version literally - the schema rejects "latest" - and carries it in two
-      # places. Both are derived from the tag here, so the committed values cannot drift into being
-      # wrong: they are documentation, not the value that gets published.
+      # The schema rejects a floating version, so both fields have to carry a literal one. They are
+      # committed as 0.0.0 and populated here from the tag, so nothing has to remember to bump them
+      # and an unedited manual publish fails loudly instead of re-registering a stale version.
       - name: Set version in server.json
         run: |
           jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' \
