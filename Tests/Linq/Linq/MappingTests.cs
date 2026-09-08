@@ -1911,7 +1911,7 @@ namespace Tests.Linq
 
 		[Sql.TableFunction("json_each", argIndices: [0])]
 		static IQueryable<Issue5540JsonEachRow<T>> Issue5540JsonEach<T>(IEnumerable<T> _)
-			=> throw new InvalidOperationException("Server-side only.");
+			=> throw new ServerSideOnlyException(nameof(Issue5540JsonEach));
 
 		static Expression<Func<Issue5540Entity, IQueryable<Issue5540SubItem>>> Issue5540ItemsExpr()
 			=> e => Issue5540JsonEach(Sql.Property<IList<Issue5540SubItem>>(e, nameof(Issue5540Entity.Items))).Select(r => r.Value);

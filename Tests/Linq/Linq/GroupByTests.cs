@@ -2369,7 +2369,7 @@ namespace Tests.Linq
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static int Noop(int value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Noop));
 		}
 
 		[Test]
@@ -3229,19 +3229,19 @@ namespace Tests.Linq
 		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true, IsAggregate = true)]
 		private static double CountPercentsAggregate()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercentsAggregate));
 		}
 
 		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true, IsWindowFunction = true)]
 		private static double CountPercentsWindow()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercentsWindow));
 		}
 
 		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true)]
 		private static double CountPercentsNoAggregate()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercentsNoAggregate));
 		}
 
 		[Test]
@@ -3592,7 +3592,7 @@ namespace Tests.Linq
 		[Sql.Expression("COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER()", ServerSideOnly = true, Precedence = Precedence.Multiplicative, IsWindowFunction = true)]
 		static double CountPercents()
 		{
-			throw new InvalidOperationException("This function should be used only in database code");
+			throw new ServerSideOnlyException(nameof(CountPercents));
 		}
 
 		[Sql.Expression("DATEPART(minute, {0} AT TIME ZONE {1})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]

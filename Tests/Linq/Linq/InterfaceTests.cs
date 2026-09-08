@@ -539,10 +539,10 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[ExpressionMethod(nameof(UserIdExpression))]
-			public int UserId => throw new InvalidOperationException();
+			public int UserId => throw new ServerSideOnlyException(nameof(UserId));
 
 			[ExpressionMethod(nameof(UserIdExpression))]
-			public int UserIdMethod() => throw new InvalidOperationException();
+			public int UserIdMethod() => throw new ServerSideOnlyException(nameof(UserIdMethod));
 
 			private static Expression<Func<TransactionLine, int>> UserIdExpression()
 				=> x => x.Id;

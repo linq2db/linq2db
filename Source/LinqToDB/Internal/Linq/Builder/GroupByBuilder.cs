@@ -485,13 +485,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (isSameContext)
 				{
-					if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsExtractProjection())
+					if (flags.IsRoot() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsExtractProjection())
 						return path;
 				}
 
 				if (isSameContext)
 				{
-					if (flags.IsExpand() && !flags.IsSql())
+					if (flags.IsExpand())
 					{
 						if (flags.IsMemberRoot())
 							return path;
