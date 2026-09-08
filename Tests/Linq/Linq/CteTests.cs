@@ -108,7 +108,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(5596, Configuration = TestProvName.AllYdb, Details = "YDB does not preserve a CTE's inner ORDER BY in the outer SELECT (the ORDER BY there only bounds LIMIT). Proper fix is to propagate the CTE's ORDER BY into the referencing query.")]
+		[ActiveIssueNew(5596, Configuration = TestProvName.AllYdb, ErrorMessage = "Assert.That(b, Is.True)",
+			Details = "YDB does not preserve a CTE's inner ORDER BY in the outer SELECT (the ORDER BY there only bounds LIMIT). Proper fix is to propagate the CTE's ORDER BY into the referencing query.")]
 		[Test]
 		public void WithLimitedOrderBy([CteContextSource] string context)
 		{
@@ -2347,7 +2348,9 @@ namespace Tests.Linq
 		#endregion
 
 		// CH: probably this https://github.com/ClickHouse/ClickHouse/issues/64794
-		[ActiveIssue(Details = "Investigate expected SQL", Configuration = TestProvName.AllClickHouse)]
+		// No ErrorTypeName, and no "Code: 60." either: each ClickHouse client wraps the server error in its own
+		// exception type, and Octonica drops the code prefix the other two keep.
+		[ActiveIssueNew(4012, Configuration = TestProvName.AllClickHouse, ErrorMessage = "DB::Exception: Unknown table expression identifier")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
 		public void Issue4012Test([RecursiveCteContextSource] string context)
 		{

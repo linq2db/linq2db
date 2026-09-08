@@ -186,14 +186,25 @@ namespace Tests.Linq
 			count.ShouldBe(2);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
+		// Excluded Access from tests because it seems to have non compliant behavior.
+		// It is the only DB that returns 1 for `WHERE Int NOT IN (null, null)`
+		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNulls(
-			// Excluded Access from tests because it seems to have non compliant behavior.
-			// It is the only DB that returns 1 for `WHERE Int NOT IN (null, null)`
-			// Nope, Access is not alone anymore
-			[DataSources(TestProvName.AllAccess)] string context,
-			[Values]                              bool   withNullCompares)
+		public void AllNullsLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		{
+			AllNulls(context, withNullCompares: true);
+		}
+
+		// Split from the LikeClr case: only LikeSql fails on ClickHouse, and a gate targets a provider rather
+		// than one value of a [Values] axis. Placeholders because Shouldly breaks the expectation over lines.
+		[ActiveIssueNew("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[Test]
+		public void AllNullsLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		{
+			AllNulls(context, withNullCompares: false);
+		}
+
+		void AllNulls(string context, bool withNullCompares)
 		{
 			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
@@ -207,14 +218,23 @@ namespace Tests.Linq
 			count.ShouldBe(withNullCompares ? 1 : 0);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
+		// Excluded Access from tests because it seems to have non compliant behavior.
+		// It is the only DB that returns 1 for `WHERE Enum NOT IN (null, null)`
+		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsEnum(
-			// Excluded Access from tests because it seems to have non compliant behavior.
-			// It is the only DB that returns 1 for `WHERE Enum NOT IN (null, null)`
-			// Nope, Access is not alone anymore
-			[DataSources(TestProvName.AllAccess)] string context,
-			[Values]                              bool   withNullCompares)
+		public void AllNullsEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		{
+			AllNullsEnum(context, withNullCompares: true);
+		}
+
+		[ActiveIssueNew("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[Test]
+		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		{
+			AllNullsEnum(context, withNullCompares: false);
+		}
+
+		void AllNullsEnum(string context, bool withNullCompares)
 		{
 			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
@@ -228,14 +248,23 @@ namespace Tests.Linq
 			count.ShouldBe(withNullCompares ? 1 : 0);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse)]
+		// Excluded Access from tests because it seems to have non compliant behavior.
+		// It is the only DB that returns 1 for `WHERE CEnum NOT IN (null, null)`
+		// Nope, Access is not alone anymore
 		[Test]
-		public void AllNullsCEnum(
-			// Excluded Access from tests because it seems to have non compliant behavior.
-			// It is the only DB that returns 1 for `WHERE CEnum NOT IN (null, null)`
-			// Nope, Access is not alone anymore
-			[DataSources(TestProvName.AllAccess)] string context,
-			[Values]                              bool   withNullCompares)
+		public void AllNullsCEnumLikeClr([DataSources(TestProvName.AllAccess)] string context)
+		{
+			AllNullsCEnum(context, withNullCompares: true);
+		}
+
+		[ActiveIssueNew("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[Test]
+		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
+		{
+			AllNullsCEnum(context, withNullCompares: false);
+		}
+
+		void AllNullsCEnum(string context, bool withNullCompares)
 		{
 			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);

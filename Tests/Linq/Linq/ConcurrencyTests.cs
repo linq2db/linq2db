@@ -460,7 +460,8 @@ namespace Tests.Linq
 		}
 
 		// https://github.com/ClickHouse/ClickHouse/issues/38790
-		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseMySql })]
+		[ActiveIssueNew(Configurations = new[] { ProviderName.ClickHouseMySql }, ErrorMessage = "Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp))",
+			Details = "no-issue: see the ClickHouse/ClickHouse#38790 link above; the gate itself has never named an issue")]
 		[Test]
 		public void TestGuidBinary([DataSources(TestProvName.AllInformix)] string context)
 		{
