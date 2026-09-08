@@ -296,8 +296,7 @@ namespace Tests.Linq
 
 			var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
 
-			Func<Task> dispose = async () => await enumerator.DisposeAsync();
-			await dispose.ShouldNotThrowAsync();
+			await enumerator.DisposeAsync();
 		}
 
 		[Test]
@@ -307,8 +306,7 @@ namespace Tests.Linq
 
 			await using var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
 
-			Func<Task> dispose = async () => await enumerator.DisposeAsync();
-			await dispose.ShouldNotThrowAsync();
+			await enumerator.DisposeAsync();
 		}
 
 		[Test]
@@ -324,9 +322,8 @@ namespace Tests.Linq
 
 			count.ShouldBe(Parent.Count());
 
-			Func<Task> dispose = async () => await enumerator.DisposeAsync();
-			await dispose.ShouldNotThrowAsync();
-			await dispose.ShouldNotThrowAsync();
+			await enumerator.DisposeAsync();
+			await enumerator.DisposeAsync();
 		}
 
 		[Test]
