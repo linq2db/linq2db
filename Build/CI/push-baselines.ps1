@@ -7,9 +7,10 @@ which were 124 lines each and differed on exactly one: the commit message's plat
 now -Platform. The GitHub Actions legs need the same logic, and a third copy of a 124-line script whose
 every branch encodes a reproduced CI failure was not worth having.
 
-Run it with the baselines clone as the working directory. The clone is made shallow and sparse
-(--depth 1 --single-branch --sparse) off baselines master, not off the run branch - which may not exist
-yet, because this script is what creates it.
+Run it with the baselines clone as the working directory. checkout-baselines.ps1 makes that clone
+shallow and sparse (--depth 1 --single-branch --sparse), off the run branch when it already exists and
+off baselines master when it does not - which is the case this script's push resolves, by creating the
+branch.
 
 Auth comes from GITHUB_TOKEN (= BASELINES_GH_PAT), used both for the push URL and by gh. Git identity
 comes from EMAIL / GIT_AUTHOR_NAME / GIT_COMMITTER_NAME, as the callers already set.
@@ -69,8 +70,8 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# The leg cloned baselines master, so this push is what creates the run branch, and only a leg
-# that actually has baselines to push ever creates it. A run that changes none leaves nothing
+# When the run branch did not exist the leg cloned master, so this push is what creates it, and only
+# a leg that actually has baselines to push ever creates it. A run that changes none leaves nothing
 # behind, which is what retired create_baselines_pr - a job that cost a fresh agent acquisition
 # at the very end of the run (78 min on build 23009) for 0.3 min of work. Whichever leg commits
 # first wins the ref; the rest are rejected and rebase onto it.
@@ -94,11 +95,12 @@ while ($attempts -gt 0) {
         exit 1
     }
     # -X theirs, which during a rebase means the commit being replayed - this leg's freshly captured
-    # baseline - and not the branch it is going onto. Without it the second run of a PR whose SQL
-    # moved fails every baseline-carrying leg: the leg clones baselines master, so its commit rewrites
-    # the same files the previous run already changed on the branch, and the replay conflicts.
-    # Reproduced on a scratch repository with this exact sequence; the fresh capture is always the one
-    # that should win, so resolving that way is the answer rather than a papered-over conflict.
+    # baseline - and not the branch it is going onto. Without it a leg whose clone is based on master
+    # fails whenever its commit rewrites a file the branch already carries, which is every leg on the
+    # second run of a PR whose SQL moved: the replay conflicts. Reproduced on a scratch repository
+    # with this exact sequence; the fresh capture is always the one that should win, so resolving that
+    # way is the answer rather than a papered-over conflict. A leg based on the run branch pushes a
+    # fast-forward instead and only reaches this loop when a concurrent leg got there first.
     # --onto FETCH_HEAD HEAD~1 keeps that to this leg's own commit. A bare FETCH_HEAD replays
     # everything back to the merge base, and the clone is --depth 1: when baselines master advanced
     # after create_baselines_branch rebased the branch, the shallow root is unreachable from the

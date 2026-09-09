@@ -550,9 +550,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, object?[]? parameterValues, bool optimizeConditions, bool compactBinary)
 		{
+			return ExposeExpression(expression, dataContext, optimizationContext, parameterValues, optimizeConditions, compactBinary, out _);
+		}
+
+		/// <summary>
+		/// Same as the overload without <paramref name="materializedArgumentSlots"/>, additionally reporting which
+		/// <paramref name="parameterValues"/> slots this pass baked into the returned tree. A caller that caches
+		/// the result needs them in its key, and cannot derive them beforehand: expansion runs recursively, so a
+		/// dependent position can appear only after several rewrites.
+		/// </summary>
+		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, object?[]? parameterValues, bool optimizeConditions, bool compactBinary, out int[] materializedArgumentSlots)
+		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
 			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, optimizeConditions, compactBinary, isSingleConvert: false);
+
+			materializedArgumentSlots = visitor.Value.MaterializedArgumentSlots;
 
 			return result;
 		}

@@ -204,7 +204,7 @@ There are many reasons. Some of them:
 Below is a list of providers, that should work right now:
 
 * SQL Server
-* MySQL (including Devart and Pomelo providers)
+* MySQL (including Devart, Pomelo and Microting providers)
 * PostgreSQL (Both npgsql and Devart providers)
 * SQLite (including Devart provider)
 * Firebird

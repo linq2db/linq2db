@@ -133,7 +133,7 @@ namespace Tests.Linq
 
 		[Sql.Extension("{value1} = {value2}", ServerSideOnly = true, IsPredicate = true, Precedence = Precedence.Comparison)]
 		static bool AnyEquality<T>([ExprParameter] T value1, [ExprParameter] T value2)
-			=> throw new NotImplementedException();
+			=> throw new ServerSideOnlyException(nameof(AnyEquality));
 
 		private static MappingSchema CreateMappingSchema()
 		{
@@ -1138,7 +1138,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("({0} > 0)", ServerSideOnly = true, IsPredicate = true)]
-		static bool Issue5505IsPositive(int x) => throw new InvalidOperationException();
+		static bool Issue5505IsPositive(int x) => throw new ServerSideOnlyException(nameof(Issue5505IsPositive));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]
 		public void UpdateValuesWithUnrelatedFunctionConversion([DataSources] string context, [Values] bool inline)

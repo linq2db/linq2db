@@ -485,13 +485,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (isSameContext)
 				{
-					if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsExtractProjection())
+					if (flags.IsRoot() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsExtractProjection())
 						return path;
 				}
 
 				if (isSameContext)
 				{
-					if (flags.IsExpand() && !flags.IsSql())
+					if (flags.IsExpand())
 					{
 						if (flags.IsMemberRoot())
 							return path;
@@ -754,7 +754,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						get
 						{
 							if (_grouped == null)
-								throw new InvalidOperationException("Enumeration not started.");
+								throw new InvalidOperationException(ErrorHelper.Error_EnumerationNotStarted);
 
 							if (_current == null)
 								throw new InvalidOperationException("Enumeration returned no result.");

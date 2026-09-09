@@ -1385,7 +1385,7 @@ namespace Tests.DataProvider
 		[Sql.Expression("@n:=@n+1", ServerSideOnly = true)]
 		static int IncrementIndex()
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(IncrementIndex));
 		}
 
 		[Description("https://stackoverflow.com/questions/50858172/linq2db-mysql-set-row-index/50958483")]
@@ -2454,19 +2454,19 @@ END");
 		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
 		public static int TestFunction(int param)
 		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			throw new ServerSideOnlyException(nameof(TestFunction));
 		}
 
 		[Sql.Function("TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
 		public static int TestFunctionP1(int param)
 		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			throw new ServerSideOnlyException(nameof(TestFunctionP1));
 		}
 
 		[Sql.Function("TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
 		public static int TestFunctionP2(int param)
 		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+			throw new ServerSideOnlyException(nameof(TestFunctionP2));
 		}
 
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]

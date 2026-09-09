@@ -167,8 +167,8 @@ namespace Tests.Linq
 		#endregion
 
 		#region Test Implementation
-		[Sql.Expression("{0} = {1}", IsPredicate = true)]
-		private static bool Equality(object? x, object? y) => throw new NotImplementedException();
+		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true)]
+		private static bool Equality(object? x, object? y) => throw new ServerSideOnlyException(nameof(Equality));
 
 		private void TestType<TTable, TType>(DataConnection db, TTable[] data, string context, bool supportLiterals = true)
 			where TTable: TypeTable<TType>

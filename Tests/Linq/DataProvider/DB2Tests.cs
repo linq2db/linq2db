@@ -961,7 +961,7 @@ namespace Tests.DataProvider
 		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, PreferServerSide = true)]
 		private static bool Compare(DB2TimeStamp left, DB2TimeStamp right)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Compare));
 		}
 
 		[Table]
@@ -1047,19 +1047,19 @@ namespace Tests.DataProvider
 			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunction(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunction));
 			}
 
 			[Sql.Function("TEST_MODULE1.TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP1(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP1));
 			}
 
 			[Sql.Function("TEST_MODULE2.TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP2(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP2));
 			}
 
 			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]

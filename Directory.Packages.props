@@ -88,7 +88,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces"              Version="4.8.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.6.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.6.0"                        />
-		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="10.0.301"                     />
+		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="10.0.303"                     />
 	</ItemGroup>
 
 	<ItemGroup Label="Polyfills">
@@ -201,7 +201,10 @@
 		<PackageVersion Include="NUnit"                                                 Version="4.6.1"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.14.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.2.0"                        />
-		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers.-->
+		<!--Roslyn analyzer/code-fix unit-test harness for Tests/Tests.Analyzers and Tests/Tests.Analyzers.Internal.
+		    The latter overrides Microsoft.CodeAnalysis.CSharp.Workspaces to 5.6.0, matching the Roslyn CodeGenerators
+		    builds against; the 4.8.0 pin on that package in "Build: Analyzers and Tools" above is the shipped
+		    analyzer package's consumer floor and must stay put.-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing"        Version="1.1.4"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing"         Version="1.1.4"                        />
 
@@ -224,7 +227,9 @@
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="8.0.3"                        Condition="'$(TargetFramework)'=='net8.0'"  />
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0"                        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0"                        Condition="'$(TargetFramework)'=='net10.0'" />
+		<!--Pomelo's newest line is EF Core 9; Microting is a maintained fork of it that ships an EF Core 10 line.
+		    Its versions track EF Core patch numbers 1:1, so keep this in step with $(Net10Latest)-->
+		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.10"                      Condition="'$(TargetFramework)'=='net10.0'" />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="8.0.11"                       Condition="'$(TargetFramework)'=='net8.0'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="9.0.4"                        Condition="'$(TargetFramework)'=='net9.0'"  />

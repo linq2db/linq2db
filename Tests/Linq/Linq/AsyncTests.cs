@@ -286,6 +286,138 @@ namespace Tests.Linq
 			});
 		}
 
+		// The enumerator for a linq2db query creates its underlying enumerator lazily, on the first
+		// MoveNextAsync, so disposing before that must be a no-op.
+		// https://github.com/linq2db/linq2db/discussions/5891
+		[Test]
+		public async Task DisposeAsyncWithoutMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			await enumerator.DisposeAsync();
+		}
+
+		[Test]
+		public async Task DisposeAsyncTwiceWithoutMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			await using var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			await enumerator.DisposeAsync();
+		}
+
+		[Test]
+		public async Task DisposeAsyncTwiceAfterEnumerationTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			var count = 0;
+			while (await enumerator.MoveNextAsync())
+				count++;
+
+			count.ShouldBe(Parent.Count());
+
+			await enumerator.DisposeAsync();
+			await enumerator.DisposeAsync();
+		}
+
+		[Test]
+		public async Task CurrentBeforeMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			await using var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			Action act = () => { _ = enumerator.Current; };
+			act.ShouldThrow<InvalidOperationException>();
+		}
+
+		// MaskingChild maps to a table that does not exist, so the eager-load preamble fails inside the
+		// enumerator's initializer while its inner enumerator is still null. A query without preambles
+		// runs nothing there that can fail, so it cannot reach this path.
+		[Test]
+		public async Task DisposeAsyncDoesNotMaskInitFailureTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Func<Task> act = async () =>
+			{
+				await using var enumerator = db.GetTable<MaskingParent>()
+					.LoadWith(p => p.Children)
+					.AsAsyncEnumerable()
+					.GetAsyncEnumerator();
+
+				await enumerator.MoveNextAsync();
+			};
+
+			var ex = await act.ShouldThrowAsync<Exception>();
+			ex.ShouldNotBeOfType<NullReferenceException>();
+		}
+
+		// ForEachUntilAsync stops when the callback returns false, per its own documentation and per
+		// the non-linq2db source path asserted here as the control.
+		[Test]
+		public async Task ForEachUntilAsyncStopsOnFalseTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = new List<int>();
+			await Parent.OrderBy(p => p.ParentID).AsQueryable().ForEachUntilAsync(p =>
+			{
+				expected.Add(p.ParentID);
+				return expected.Count < 2;
+			});
+
+			var all = new List<int>();
+			await db.Parent.OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				all.Add(p.ParentID);
+				return true;
+			});
+
+			var stopped = new List<int>();
+			await db.Parent.OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				stopped.Add(p.ParentID);
+				return stopped.Count < 2;
+			});
+
+			// an implementation that always stopped on the first row would satisfy `stopped` by
+			// accident, so pin that the two arms can differ at all
+			expected.Count.ShouldBe(2);
+			all.Count.ShouldBeGreaterThan(expected.Count);
+
+			stopped.ShouldBe(expected);
+		}
+
+		[Test]
+		public async Task ForEachUntilAsyncEagerLoadTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// each arm must build its own query: sharing one lets the second arm read the preamble
+			// results the first one cached, hiding whether it initializes them itself
+			var expected = await db.Parent.LoadWith(p => p.Children).OrderBy(p => p.ParentID).ToListAsync();
+
+			var actual = new List<Parent>();
+			await db.Parent.LoadWith(p => p.Children).OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				actual.Add(p);
+				return true;
+			});
+
+			// without eager-loaded children the child-count comparison below could not fail
+			expected.Sum(p => p.Children.Count).ShouldBeGreaterThan(0);
+
+			actual.Select(p => p.ParentID).ShouldBe(expected.Select(p => p.ParentID));
+			actual.Select(p => p.Children.Count).ShouldBe(expected.Select(p => p.Children.Count));
+		}
+
 		[Test]
 		public async Task ToLookupAsyncTest([DataSources] string context)
 		{
@@ -404,6 +536,21 @@ namespace Tests.Linq
 		sealed class AsyncMaterializationRecord
 		{
 			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table("Parent")]
+		sealed class MaskingParent
+		{
+			[PrimaryKey] public int ParentID { get; set; }
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+			public List<MaskingChild> Children { get; set; } = null!;
+		}
+
+		[Table("NoSuchTable5891")]
+		sealed class MaskingChild
+		{
+			[PrimaryKey] public int ParentID { get; set; }
 		}
 
 		sealed class DataReaderApiInterceptor : CommandInterceptor
