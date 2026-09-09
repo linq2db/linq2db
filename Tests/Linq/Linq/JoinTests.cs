@@ -3286,9 +3286,23 @@ namespace Tests.Linq
 			Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2));
 		}
 
-		[ActiveIssue]
+		// Only the LikeClr mode is broken here, so the two SQL modes stay in this test and LikeClr moves to its own
+		// gated one below - a gate over the whole [Values] set would mark two working cases as failing.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test4([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		public void Issue3560Test4([DataSources(false, TestProvName.AllClickHouse)] string context, [Values(CompareNulls.LikeSql, CompareNulls.LikeSqlExceptParameters)] CompareNulls compareNulls)
+		{
+			Issue3560Test4Core(context, compareNulls);
+		}
+
+		[ActiveIssueNew(3560, ErrorMessage = "Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Fails on every provider: the join key is an arithmetic expression and the compare-nulls rewrite does not reach through it.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test4LikeClr([DataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			Issue3560Test4Core(context, CompareNulls.LikeClr);
+		}
+
+		void Issue3560Test4Core(string context, CompareNulls compareNulls)
 		{
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
