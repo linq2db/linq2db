@@ -166,7 +166,14 @@ namespace Tests.UserTests
 
 		// server and client should run with DB_LOCALE=en_us.utf8;CLIENT_LOCALE=en_us.utf8 options
 		// and database should be created with same locale
-		[ActiveIssue("Used docker image needs locale configuration")]
+		const string InformixLocale =
+			"no-issue: the Informix image needs locale configuration - these four write CJK text, which the server "
+			+ "cannot convert. Confirmed on CI, where it reports the same IX000 code-set conversion failure, so it is "
+			+ "not local to one machine. Not issue 1307, which is only what the fixture is named after.";
+
+		const string InformixLocaleError = "Code-set conversion function failed due to illegal sequence or invalid value.";
+
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_Insert([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -180,7 +187,7 @@ namespace Tests.UserTests
 			db.Insert(test);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_Update([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -194,7 +201,7 @@ namespace Tests.UserTests
 			db.Update(test);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_InsertOrUpdate([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -208,7 +215,7 @@ namespace Tests.UserTests
 			db.InsertOrReplace(test);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_Inline([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{

@@ -448,7 +448,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
+			Details = "no-issue: the Informix image needs locale configuration. Confirmed on CI, where the server reports the same IX000 code-set conversion failure, so this is not local to one machine.")]
 		[Test]
 		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -462,7 +463,8 @@ namespace Tests.DataProvider
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
+			Details = "no-issue: the Informix image needs locale configuration. Confirmed on CI, where the server reports the same IX000 code-set conversion failure, so this is not local to one machine.")]
 		[Test]
 		public async Task BulkCopyAllTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
