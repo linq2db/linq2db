@@ -79,7 +79,9 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsDerivedTableTakeSupported { get; set; }
 
 		/// <summary>
-		/// Indicates that provider has issue with any JOIN to subquery which has TOP statement.
+		/// Indicates that provider has issue with any JOIN to subquery which has TOP statement. Applies to a
+		/// derived table on either side of the join, and to a multi-table <c>FROM</c> clause, because the
+		/// provider applies such a subquery's TOP to the whole joined result instead of to the subquery.
 		/// Default <see langword="false"/>.
 		/// </summary>
 		/// <remarks>Currently use as workaround over Sybase bug.</remarks>

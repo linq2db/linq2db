@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -2062,6 +2063,9 @@ namespace Tests.Linq
 			}
 		}
 
+		// The First() subquery lands beside another source in the FROM clause, and Sybase applies its TOP
+		// to the whole joined result. Harmless under EXISTS, but the rule cannot see that from the shape.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test]
 		public void Issue_SubQueryFilter1([DataSources] string context)
 		{
@@ -2087,6 +2091,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test]
 		public void Issue_SubQueryFilter2([DataSources] string context)
 		{
