@@ -5,6 +5,7 @@ parameters:
   linux_max_parallel: 0 # linux legs allowed to run at once, 0 for uncapped. See test-jobs.yml.
   db_filter: '[all]' # fallback for a definition absent from `surfaces` below, e.g. default.yml
   offload_linux_to_github: false # when true, linux legs marked gh_linux run on GitHub Actions instead
+  offload_windows_to_github: false # when true, windows legs marked gh_windows run on GitHub Actions instead
 
   # Which surface each Azure pipeline definition tests, keyed by definition name. Data rather than
   # the if-chain this replaced in testing.yml, for the reason #5848 moved entry selection here: an
@@ -110,6 +111,14 @@ parameters:
 # - win_efcore_only (true/false string, optional) : windows-only, run just the EF.Core suite on non-release
 #   runs and leave the main suite to the linux legs. Since netfx runs only on windows, that also makes the
 #   entry's netfx main suite release-run only. Release runs (full_run) run the main suite for every TFM.
+# - gh_linux   (true/false string, optional) : the entry's linux leg runs on GitHub Actions instead of
+#   Azure. It takes effect only when the caller passes offload_linux_to_github - test-jobs.yml then skips
+#   the entry and .github/workflows/tests.yml selects exactly the entries carrying the flag. Without the
+#   caller's opt-in the entry runs on Azure as before, which is what keeps the release run (default.yml)
+#   whole on one CI rather than silently shrinking it when a leg moves.
+# - gh_windows (true/false string, optional) : the same split for the windows leg, driven by
+#   offload_windows_to_github. Set only on legs that need no docker container - a windows container image
+#   is multiple GB per leg, so the win-mssql entries stay on Azure (see D-2 in the migration plan).
 
 jobs:
   - template: test-jobs.yml
@@ -122,6 +131,7 @@ jobs:
       # error there by design - see the note on its parameters block.
       db_filter: ${{ coalesce(parameters.surfaces[variables['Build.DefinitionName']], parameters.db_filter) }}
       offload_linux_to_github: ${{ parameters.offload_linux_to_github }}
+      offload_windows_to_github: ${{ parameters.offload_windows_to_github }}
       test_matrix:
 # Two things decide the order legs run in, and which one you see depends on whether the job caps its
 # parallelism. Both were measured on build 23050, the first run to carry a cap.
@@ -252,6 +262,7 @@ jobs:
           filters: '[all][sqlserver.all]'
 
         - name: g_SqlCE
+          gh_windows: 'true'
           title: SQL CE
           config_win: sqlce
           psscript_win_global: sqlce.ps1
@@ -410,6 +421,7 @@ jobs:
           filters: '[all][oracle.all]'
 
         - name: r_Access_MDB
+          gh_windows: 'true'
           title: Access MDB (Jet/ODBC)
           config_win: access.mdb
           enable_os_windows: true
@@ -423,6 +435,7 @@ jobs:
 
         - name: s_SQLite
           gh_linux: 'true'
+          gh_windows: 'true'
           title: SQLite (all providers)
           config_win: sqlite
           config_linux: sqlite
@@ -484,6 +497,7 @@ jobs:
 # also takes away the ODBC anchor that used to keep the shared ACE engine warm for both, and without an OLE DB
 # anchor of its own that half alone takes 1866s.
         - name: v_Access_ACE_Odbc
+          gh_windows: 'true'
           title: Access ACE (ODBC) x86
           config_win: access.ace.odbc
           psscript_win_global: access.ace.ps1
@@ -521,6 +535,7 @@ jobs:
           filters: '[all][db2.all][informix.all][duckdb.all]'
 
         - name: x_Access_ACE_OleDb
+          gh_windows: 'true'
           title: Access ACE (OLEDB) x86
           config_win: access.ace.oledb
           psscript_win_global: access.ace.ps1
