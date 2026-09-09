@@ -411,7 +411,8 @@ namespace Tests.xUpdate
 		}
 
 		#region Issue 3223
-		[ActiveIssue]
+		[ActiveIssueNew(3223, ErrorMessage = "Assert.That(res[0].Value, Is.EqualTo(\"Value1\"))",
+			Details = "CreateTable maps the enum to a single character rather than varchar, so the value comes back truncated to one char - #3223's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3223")]
 		public void Issue3223Test([DataSources] string context)
 		{

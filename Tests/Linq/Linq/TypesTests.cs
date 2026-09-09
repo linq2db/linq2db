@@ -941,7 +941,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[ActiveIssueNew(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Math.Round(result.Integer, 5)",
+			Details = "the division loses its scale, so the result rounds to 3 where 3.0303 is due - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
 		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
 		{

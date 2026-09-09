@@ -1172,7 +1172,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(4799, ErrorMessage = "Sql.AsSql(\"test\".PadRight(0, '.'))",
+			Details = "padding to a width below the input's own length returns an empty string instead of the input - the trimming #4799 reports, in the PadRight direction. That issue is closed; this shape is the residue.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
 		public void String_PadRight_Translation([DataSources] string context)
 		{

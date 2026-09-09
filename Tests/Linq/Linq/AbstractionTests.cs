@@ -221,7 +221,8 @@ namespace Tests.Linq
 			public DetailsBase Details { get; set; } = null!;
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(1473, ErrorMessage = "Assert.That(result[0].Details.ID, Is.EqualTo(2))",
+			Details = "the abstract property is not materialised, so the detail's ID comes back as 0.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1473")]
 		public void TransientAbstractMapping([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
