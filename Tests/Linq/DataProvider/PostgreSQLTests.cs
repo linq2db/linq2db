@@ -2846,7 +2846,8 @@ $function$
 		// - from Pg* attributes
 		// - schema tables
 		// - using npgsql-specific naming conventions
-		[ActiveIssue]
+		[ActiveIssueNew("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\". Needs the pg-specific metadata provider described above. The 4780 in these names is npgsql's issue, not linq2db's - linq2db 4780 is an unrelated merged PR.")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2886,7 +2887,8 @@ $function$
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "as Issue4780Test1 - the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\".")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
