@@ -131,7 +131,9 @@ namespace Tests
 			}
 
 			// apply attribute
-			test.RunState = RunState.Explicit;
+			// SWEEP REF ONLY - this branch exists to harvest what these gates hide, and is never merged.
+			// Dropping the Explicit write makes every gated case run and report its real failure.
+			// test.RunState = RunState.Explicit;
 			test.Properties.Add(PropertyNames.Category, "ActiveIssue");
 			test.Properties.Set(PropertyNames.SkipReason, reason);
 		}
