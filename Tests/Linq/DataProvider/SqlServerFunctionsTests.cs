@@ -199,7 +199,9 @@ namespace Tests.DataProvider
 			db.LastQuery!.ShouldContain("CONVERT(decimal,");
 		}
 
-		[ActiveIssue(5810)]
+		// Declared on the wrong CONVERT that gets emitted: that is a whole line of the message, whereas the first
+		// line is only the opening quote of the rendered SQL and matches nothing useful.
+		[ActiveIssueNew(5810, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "CONVERT(varchar(4), 123)")]
 		[Test]
 		public void ConvertTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -210,7 +212,7 @@ namespace Tests.DataProvider
 			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
-		[ActiveIssue(5810)]
+		[ActiveIssueNew(5810, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "CONVERT(varchar(4), 123)")]
 		[Test]
 		public void ConvertTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -279,7 +281,7 @@ namespace Tests.DataProvider
 			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
-		[ActiveIssue(5810)]
+		[ActiveIssueNew(5810, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "CONVERT(varchar(4), 123, 1)")]
 		[Test]
 		public void ConvertWithStyleTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

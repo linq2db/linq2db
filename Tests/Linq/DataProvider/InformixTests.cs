@@ -456,7 +456,10 @@ namespace Tests.DataProvider
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		// Provider-specific bulk copy fails one step earlier than the MultipleRows pair above: the client refuses the
+		// conversion itself rather than the server refusing the code set.
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
+			Details = "no-issue: the Informix image needs locale configuration. Locally this presented as silent row loss, which was briefly read as a product defect and withdrawn; CI shows the client reporting an invalid conversion, which is the same root and not a defect of ours.")]
 		[Test]
 		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -471,7 +474,8 @@ namespace Tests.DataProvider
 			await BulkCopyAllTypesAsync(context, BulkCopyType.MultipleRows);
 		}
 
-		[ActiveIssue("Used docker image needs locale configuration")]
+		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
+			Details = "no-issue: as BulkCopyAllTypesProviderSpecific - the client refuses the conversion rather than the server refusing the code set.")]
 		[Test]
 		public async Task BulkCopyAllTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
