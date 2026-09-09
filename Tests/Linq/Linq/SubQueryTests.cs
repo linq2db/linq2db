@@ -1168,7 +1168,8 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917")]
+		[ActiveIssueNew(Configurations = [TestProvName.AllOracle], ErrorMessage = "ORA-12704",
+			Details = "no-issue: Oracle rejects the CASE expression with a character set mismatch - https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917. Not 3295, which the fixture is named after: that one is a closed PostgreSQL issue about a let-var FirstOrDefault filter. No exception type is declared because it differs per Oracle client, while ORA-12704 does not.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
 		public void Issue3295Test1([DataSources(TestProvName.AllSybase)] string context)
 		{

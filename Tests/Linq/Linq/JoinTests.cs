@@ -3039,7 +3039,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllOracle12)]
+		[ActiveIssueNew(4160, Configuration = TestProvName.AllOracle12, ErrorMessage = "Assert.That(data, Has.Count.EqualTo(2))",
+			Details = "Oracle 12 returns one row where two are due - the invalid sub-query SQL #4160 describes, still wrong on that version.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue4160Test1([DataSources] string context)
