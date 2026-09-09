@@ -154,8 +154,10 @@ namespace Tests.Linq
 		/// interval's own fields into a tick count rather than dividing an epoch.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5797, Configurations = [TestProvName.AllOracle], Details = "Every Oracle version measures the difference on the local reading although the storage kept the instant - the zone is lost in the CAST(x AS timestamp) that the elapsed lowering uses.")]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
+		// Oracle joins SQLite here rather than carrying a gate: it measures to the microsecond, so the nanosecond
+		// member is refused by design and never reaches #5797's zone question at all. The message's placeholders
+		// absorb the two providers' differing resolutions.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceSubMillisecondMembersMatchClr(
