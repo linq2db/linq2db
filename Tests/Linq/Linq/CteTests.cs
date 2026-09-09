@@ -1674,7 +1674,8 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(3360, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type",
+			Details = "a typed null enum in the anchor cannot be typed from the other branch - #3360's subject. The fragment stops before the system type, which renders as an assembly-qualified name carrying the assembly version.")]
 		[Test]
 		public void Issue3360_TypedNullEnumInAnchor2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{

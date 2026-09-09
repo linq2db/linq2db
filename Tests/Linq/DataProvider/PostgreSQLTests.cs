@@ -1384,7 +1384,10 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo(124));
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		// Fragment stops before the system type: that renders as an assembly-qualified name carrying the assembly
+		// version, which would stop matching at the next version bump.
+		[ActiveIssueNew(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type",
+			Details = "no-issue: functionality not implemented yet - a dynamic record function's column types cannot be inferred.")]
 		[Test]
 		public void TestDynamicRecordFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{

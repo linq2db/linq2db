@@ -10,7 +10,8 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		[ActiveIssue(2363)]
+		[ActiveIssueNew(2363, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'LinqToDB.Internal.Linq.Builder.SubQueryContext' to type 'LinqToDB.Internal.Linq.Builder.ITableContext'.",
+			Details = "an IQueryable merge target reaches the builder as a SubQueryContext, which it cannot treat as a table. #2363 is the PR that introduced the capability.")]
 		public void MergeIntoIQueryable([MergeDataContextSource] string context)
 		{
 			using var db = GetDataContext(context);
@@ -83,7 +84,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(2363)]
+		[ActiveIssueNew(2363, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'LinqToDB.Internal.Linq.Builder.SubQueryContext' to type 'LinqToDB.Internal.Linq.Builder.ITableContext'.",
+			Details = "as MergeIntoIQueryable, from the source side.")]
 		public void MergeFromIQueryable([MergeDataContextSource] string context)
 		{
 			using var db = GetDataContext(context);

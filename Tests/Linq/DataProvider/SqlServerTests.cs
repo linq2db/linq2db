@@ -1781,7 +1781,8 @@ namespace Tests.DataProvider
 			}
 
 		[Test]
-		[ActiveIssue(449)]
+		[ActiveIssueNew(449, ErrorMessage = "Assert.That(proc.ResultException, Is.Null)",
+			Details = "the schema provider cannot describe the table function's result, so the procedure comes back carrying a ResultException.")]
 		public void Issue449Test([IncludeDataSources(false, TestProvName.AllNorthwind)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1995,7 +1996,8 @@ END
 		#endregion
 
 		[Test]
-		[ActiveIssue(1468)]
+		[ActiveIssueNew(1468, ErrorMessage = "Assert.That(proc.ResultException, Is.Null)",
+			Details = "a procedure building a temporary table cannot be described, so it comes back carrying a ResultException. #1468 is closed; this shape is the residue.")]
 		public void Issue1468Test([IncludeDataSources(false, TestProvName.AllSqlServer)] string context, [Values] bool useFmtOnly)
 		{
 			using var db = GetDataConnection(context);
