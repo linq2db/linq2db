@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -30,10 +31,8 @@ namespace Tests.Linq
 		/// is the trade, and the message names both ways out - declare the column, or combine the two in .NET.
 		/// </para>
 		/// <para>
-		/// Only the mixed pairing is refused. Two converted columns are left exactly as they have always been -
-		/// neither declares a unit, so there is no disagreement to detect and nothing here changes for them. That
-		/// they add their stored numbers even where the two converters disagree is issue 5798, which predates this
-		/// and is not addressed by it.
+		/// The pairing where <em>neither</em> side declares a unit is refused too, one layer down and by its own
+		/// message - see <see cref="TwoDisagreeingConvertersRefuseToCombine"/>.
 		/// </para>
 		/// </remarks>
 		[Test]
@@ -112,6 +111,86 @@ namespace Tests.Linq
 
 			compared.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
 			combined.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_UndeclaredOperand);
+		}
+
+		/// <summary>
+		/// The pairing the one above left alone: two durations stored through hand-written converters that do not
+		/// agree about what their numbers count.
+		/// </summary>
+		/// <remarks>
+		/// Neither column declares a unit, so nothing in the model says that <c>Undeclared</c> holds 54000000000 and
+		/// <c>UndeclaredSeconds</c> holds 5400 for the same ninety minutes. Combined as they stand the sum is read
+		/// back through whichever descriptor the walk reaches first, which answered 01:30:00.0005400 for three hours
+		/// - the seconds column's 5400 taken as ticks. Compared as they stand, 54000000000 against 5400 answered no
+		/// rows where the CLR answers one.
+		/// <para>
+		/// Both operands are named in the message, because the query text shows two durations being added and gives
+		/// no hint that the two columns are stored differently: the mistake is in the model.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void TwoDisagreeingConvertersRefuseToCombine([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, TimeSpan.FromMinutes(90));
+
+			var expected = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				nameof(DurationRow.Undeclared),
+				nameof(DurationRow.UndeclaredSeconds));
+
+			var combined = () => t
+				.Select(r => Sql.AsSql(r.Undeclared + r.UndeclaredSeconds))
+				.ToArray();
+
+			var compared = () => t
+				.Where(r => r.Undeclared == r.UndeclaredSeconds)
+				.ToArray();
+
+			combined.ShouldThrow<LinqToDBException>().Message.ShouldContain(expected);
+			compared.ShouldThrow<LinqToDBException>().Message.ShouldContain(expected);
+		}
+
+		/// <summary>
+		/// The same two columns where the combination need not be expressed in SQL, and the three pairings that are
+		/// not refused at all.
+		/// </summary>
+		/// <remarks>
+		/// A projection is the one position with somewhere else to do the work: each column is read on its own terms
+		/// and the two durations are added by the reader, which is exact. So the refusal is scoped to where SQL is
+		/// genuinely required rather than raised at the operator - which is where this differs from the
+		/// declared/undeclared pairing above, refused in both positions because its error is raised by the translator,
+		/// ahead of the client-side fallback.
+		/// <para>
+		/// The three controls are the shapes the check must not touch: one column paired with itself, where the two
+		/// descriptors are the same object; two columns declaring the same unit, whose converters are derived rather
+		/// than written; and a plain value, which is written through the column's own converter and therefore arrives
+		/// in that column's terms.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void TwoDisagreeingConvertersStillCombineInDotNet([DataSources] string context)
+		{
+			using var db = GetDataContext(context, BuildSchema());
+			using var t  = db.CreateLocalTable<DurationRow>();
+			Seed(db, TimeSpan.FromMinutes(90));
+
+			var row = t
+				.Select(r => new
+				{
+					Divergent  = r.Undeclared + r.UndeclaredSeconds,
+					SameColumn = Sql.AsSql(r.Undeclared + r.Undeclared),
+					SameUnit   = Sql.AsSql(r.InSeconds  + r.InSeconds),
+					PlainValue = Sql.AsSql(r.UndeclaredSeconds + TimeSpan.FromMinutes(30)),
+				})
+				.Single();
+
+			row.Divergent.ShouldBe(TimeSpan.FromHours(3));
+			row.SameColumn.ShouldBe(TimeSpan.FromHours(3));
+			row.SameUnit.ShouldBe(TimeSpan.FromHours(3));
+			row.PlainValue.ShouldBe(TimeSpan.FromHours(2));
 		}
 
 		// TimeSpan / TimeSpan arrived in .NET Core 3.0; on net462 the operator does not exist to be translated.

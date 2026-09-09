@@ -11,6 +11,7 @@ const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Operation = "This Time
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Shift = "Adding a TimeSpan to a date/time value is not supported by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_UndeclaredOperand = "Cannot combine a duration whose unit is declared with one stored through a value converter, which does not say what its number counts. Declare that column with DurationAttribute, or combine the two in .NET." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_LinqToDBQueryExpected = "Linq To DB query expected" -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
 LinqToDB.Internal.SqlProvider.IntervalLowering
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.get -> bool
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.set -> void
