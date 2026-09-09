@@ -1384,7 +1384,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(3360, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByOtherQuery_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
 		{
@@ -1553,7 +1553,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(3360, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByProjectionProperty_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
 		{

@@ -1556,7 +1556,7 @@ namespace Tests.Linq
 				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[ActiveIssueNew(3360, Configurations = [TestProvName.AllDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByOtherQuery_AllProviders([DataSources] string context)
 		{
@@ -1588,7 +1588,7 @@ namespace Tests.Linq
 				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[ActiveIssueNew(3360, Configurations = [TestProvName.AllDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that non-sqlserver providers work too")]
 		public void Issue3360_TypeByProjectionProperty_AllProviders([DataSources] string context)
 		{
