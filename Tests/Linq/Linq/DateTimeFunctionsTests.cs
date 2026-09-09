@@ -1979,7 +1979,8 @@ namespace Tests.Linq
 			];
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(2950, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'x.Time.Value.Hours' could not be converted to SQL.",
+			Details = "the Hours component of a TimeSpan is not translated on PostgreSQL - #2950's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2950")]
 		public void Issue2950Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{

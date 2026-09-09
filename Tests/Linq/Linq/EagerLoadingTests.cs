@@ -1782,7 +1782,8 @@ namespace Tests.Linq
 			[Column    ] public int AssociationKey { get; set; }
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(3806, ErrorMessage = "Assert.That(queries.Queries, Has.Count.EqualTo(1))",
+			Details = "the association is fetched as a second query instead of an inner join - #3806's subject.")]
 		[Test]
 		public void Issue3806Test([DataSources(false)] string context)
 		{

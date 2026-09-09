@@ -173,7 +173,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(848, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "There are no fields to update in the type 'EntityBase'.",
+			Details = "the update uses the declared type rather than the runtime one, so it finds no fields - #848's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/848")]
 		public void UpdateUsingRuntimeType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

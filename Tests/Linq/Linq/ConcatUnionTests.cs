@@ -2505,7 +2505,8 @@ namespace Tests.Linq
 				=> (b, cl) => b.Contract.IdClient == cl.Id;
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(4620, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Interface not found.",
+			Details = "a union over associations of several classes implementing one interface cannot resolve it - #4620's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
 		public void Issue4620Test1([DataSources] string context)
 		{

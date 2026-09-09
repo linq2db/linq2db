@@ -2324,7 +2324,8 @@ END");
 		#endregion
 
 		#region issue 4354
-		[ActiveIssue]
+		[ActiveIssueNew(4354, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "Data too long for column 'Value' at row 1",
+			Details = "BulkCopy ignores the configured GuidFormat, so the value arrives in the wrong width - #4354's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
 		public void Issue4354Test(
 			// MySql.Data has enum, but it is not configurable

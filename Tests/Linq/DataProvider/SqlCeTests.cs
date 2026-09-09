@@ -627,7 +627,8 @@ namespace Tests.DataProvider
 		#endregion
 
 		#region 4436
-		[ActiveIssue]
+		[ActiveIssueNew(4436, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "The conversion is not supported.",
+			Details = "a null ntext field cannot be converted - #4436's subject. The fragment stops before the bracketed type detail the provider appends.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4436")]
 		public void Issue4436Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
@@ -651,7 +652,8 @@ namespace Tests.DataProvider
 		#endregion
 
 		#region 4438
-		[ActiveIssue]
+		[ActiveIssueNew(4438, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "Expression evaluation caused an overflow.",
+			Details = "BulkCopy overflows during expression evaluation - #4438's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4438")]
 		public void Issue4438Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
