@@ -915,7 +915,8 @@ namespace Tests.Linq
 		}
 
 		#region Issue 4469
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[ActiveIssueNew(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
 		public void Issue4469Test1([DataSources] string context, [Values] bool inline)
 		{

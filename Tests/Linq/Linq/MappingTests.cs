@@ -764,7 +764,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(279, ErrorMessage = "Assert.That(record.TestAccess, Is.EqualTo(5))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The get-only Field property has no writable storage, so the value never reaches the backing field on materialization - #279's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/279")]
 		public void StorageFieldTest([DataSources] string context)
 		{

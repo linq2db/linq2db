@@ -551,7 +551,7 @@ namespace Tests.Linq
 			Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 		}
 
-		[ActiveIssue(2452, Details = "Enable when new hints design will be ready.")]
+		[ActiveIssueNew(2452, ErrorMessage = "Assert.That(query.GetTableSource().Joins, Is.Empty)", Details = "Enable when new hints design will be ready.")]
 		[Test]
 		public void SelfJoinWithHint([NorthwindDataContext] string context)
 		{

@@ -450,7 +450,10 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue1813Test11(db);
 		}
 
-		[ActiveIssue(5794)]
+		// Declared on the expected row set: NUnit renders this assertion's own text as an empty "Assert.That(, )",
+		// so the first line of the message carries nothing to match on.
+		[ActiveIssueNew(5794, ErrorMessage = "Expected: \"1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3\"",
+			Details = "the trailing join after chained groupJoins silently drops the unmatched rows, leaving two of the four.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5794")]
 		public void Issue5794Test([DataSources] string context)
 		{
@@ -458,7 +461,8 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue5794Test(db);
 		}
 
-		[ActiveIssue(5790)]
+		[ActiveIssueNew(5790, ErrorTypeName = "LinqToDB.FSharp.FlattenInvariantException", ErrorMessage = "F# chained group join could not be flattened",
+			Details = "the chained groupJoin's correlated inner sequence defeats the flattener - #5790's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5790")]
 		public void Issue5790Test([DataSources] string context)
 		{
