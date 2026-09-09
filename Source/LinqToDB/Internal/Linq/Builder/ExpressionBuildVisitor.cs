@@ -2775,9 +2775,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			IBuildContext? ctx;
 			bool           isSequence;
 			string?        errorMessage;
+			Expression?    errorExpression;
 			using (Builder.IsolateOrderBy())
 			{
-				ctx = GetSubQuery(node, onContext, out isSequence, out errorMessage);
+				ctx = GetSubQuery(node, onContext, out isSequence, out errorMessage, out errorExpression);
 			}
 
 			_disableSubqueries.Pop();
@@ -2805,6 +2806,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							return true;
 						}
 
+						if (IsUnbuildableAggregateExecute(node, errorExpression, errorMessage, out subqueryExpression))
+							return true;
+
 						return false;
 					}
 
@@ -2815,6 +2819,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							subqueryExpression = new SqlErrorExpression(node, errorMessage, node.Type);
 							return true;
 						}
+
+						if (IsUnbuildableAggregateExecute(node, errorExpression, errorMessage, out subqueryExpression))
+							return true;
 					}
 				}
 
@@ -2846,6 +2853,29 @@ namespace LinqToDB.Internal.Linq.Builder
 				_translationCache[cacheKey] = subqueryExpression;
 
 			return true;
+		}
+
+		/// <summary>
+		/// <see cref="LinqExtensions.AggregateExecute{TSource,TResult}"/> re-dispatches to
+		/// <see cref="IQueryProvider.Execute{TResult}"/>, so the client-evaluation fallback cannot run it — leaving it
+		/// in the materialization lambda ends in <c>There is no method 'AggregateExecute'</c> from
+		/// <c>EnumerableRewriter</c> instead of the translation error. Surface that error here.
+		/// </summary>
+		static bool IsUnbuildableAggregateExecute(Expression node, Expression? errorExpression, string? errorMessage, [NotNullWhen(true)] out Expression? subqueryExpression)
+		{
+			if (node is MethodCallExpression mc && mc.IsSameGenericMethod(Methods.LinqToDB.AggregateExecute))
+			{
+				// Same shape as ExpressionBuilder.BuildSequence, so the message matches the one the aggregate
+				// produces outside a projection.
+				subqueryExpression = errorExpression is SqlErrorExpression error
+					? error.WithType(node.Type)
+					: new SqlErrorExpression(errorExpression ?? node, errorMessage, node.Type);
+
+				return true;
+			}
+
+			subqueryExpression = null;
+			return false;
 		}
 
 		public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
@@ -5245,8 +5275,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		int _gettingSubquery;
 
-		public IBuildContext? GetSubQuery(Expression expr, IBuildContext onContext, out bool isSequence, out string? errorMessage)
+		public IBuildContext? GetSubQuery(Expression expr, IBuildContext onContext, out bool isSequence, out string? errorMessage, out Expression? errorExpression)
 		{
+			errorExpression = null;
+
 			var info = new BuildInfo(onContext, expr, new SelectQuery())
 			{
 				CreateSubQuery       = true,
@@ -5295,7 +5327,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			snapshot?.Accept();
 
-			errorMessage = buildResult.AdditionalDetails;
+			errorMessage    = buildResult.AdditionalDetails;
+			errorExpression = buildResult.ErrorExpression;
+
 			return buildResult.BuildContext;
 		}
 
