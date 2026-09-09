@@ -1,6 +1,8 @@
 <!-- omit in toc -->
 # LINQ to DB CLI tools
 
+<!-- mcp-name: io.github.linq2db/linq2db.cli -->
+
 ***
 > **NOTE**: This is not a library you could reference from your project, but command line utility, installed using `dotnet tool` command (see [installation notes](#installation)).
 ***
@@ -122,7 +124,7 @@ Prefer `--connection-string-env` when the connection string contains credentials
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
-On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password without echo and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
+On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
 
 ```powershell
 dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"

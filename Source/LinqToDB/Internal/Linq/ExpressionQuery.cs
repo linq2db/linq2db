@@ -39,6 +39,18 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal SqlCommandExecutionContext? Preambles;
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		internal IQueryExpressions? CompiledExpressions;
+
+		// A compiled table hands over the container its Info's accessors were built against. Rebuilding one from
+		// the main expression alone carries no dynamic entries, and an accessor rooted at one - which a query
+		// filter closing over a value produces - then has nothing to resolve. Only for enumerating this query as
+		// it is: a composed expression is a different tree and gets its own container.
+		IQueryExpressions GetOwnExpressions(Expression expression)
+		{
+			return CompiledExpressions ?? new RuntimeExpressionsContainer(expression);
+		}
+
 		#endregion
 
 		#region Public Members
@@ -51,7 +63,7 @@ namespace LinqToDB.Internal.Linq
 				DataContext.InlineParameters = options.InlineParameters.Value;
 
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (options?.MultiInsertMode != null && info.QueryInfo.Statement is SqlMultiInsertStatement multiInsert)
@@ -126,66 +138,12 @@ namespace LinqToDB.Internal.Linq
 
 		IDisposable? StartLoadTransaction(Query query)
 		{
-			// Do not start implicit transaction if there is no harvesters
-			//
-			if (!query.IsAnyHarvesters())
-				return null;
-
-			var dc = DataContext switch
-			{
-				DataConnection dataConnection => dataConnection,
-				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null,
-			};
-
-			if (dc == null)
-				return null;
-
-			// transaction will be maintained by TransactionScope
-			//
-			if (TransactionScopeHelper.IsInsideTransactionScope)
-				return null;
-
-			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
-				return null;
-
-			if (DataContext is DataContext ctx)
-				return ctx!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
-
-			return dc!.BeginTransaction(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel);
+			return query.StartLoadTransaction(DataContext);
 		}
 
-		async Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
+		Task<IAsyncDisposable?> StartLoadTransactionAsync(Query query, CancellationToken cancellationToken)
 		{
-			// Do not start implicit transaction if there is no harvesters
-			//
-			if (!query.IsAnyHarvesters())
-				return null;
-
-			var dc = DataContext switch
-			{
-				DataConnection dataConnection => dataConnection,
-				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null,
-			};
-
-			if (dc == null)
-				return null;
-
-			// transaction will be maintained by TransactionScope
-			//
-			if (TransactionScopeHelper.IsInsideTransactionScope)
-				return null;
-
-			if (dc.TransactionAsync != null || dc.CurrentCommand?.Transaction != null)
-				return null;
-
-			if (DataContext is DataContext ctx)
-				return await ctx.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
-					.ConfigureAwait(false);
-
-			return await dc.BeginTransactionAsync(dc.DataProvider.SqlProviderFlags.DefaultMultiQueryIsolationLevel, cancellationToken)!
-				.ConfigureAwait(false);
+			return query.StartLoadTransactionAsync(DataContext, cancellationToken);
 		}
 
 		async Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
@@ -220,10 +178,20 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		public Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
+		{
+			return GetForEachCoreAsync(x => { action(x); return true; }, cancellationToken);
+		}
+
+		public Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
+		{
+			return GetForEachCoreAsync(func, cancellationToken);
+		}
+
+		async Task GetForEachCoreAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
@@ -241,35 +209,8 @@ namespace LinqToDB.Internal.Linq
 			await using (enumerator.ConfigureAwait(false))
 			{
 				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
-					action(enumerator.Current);
-			}
-		}
-
-		public async Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
-		{
-			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
-			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
-
-			if (!dependsOnParameters)
-				Expression = expressions.MainExpression;
-
-			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
-			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
-
-			var (result, harvesters, combined) = await query.GetEagerEnumerableAsync(DataContext, expressions, Parameters, cancellationToken).ConfigureAwait(false);
-
-			if (!combined)
-				Preambles = harvesters;
-
-			var enumerable = (IAsyncEnumerable<T>)result;
-			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
-
-			await using (enumerator.ConfigureAwait(false))
-			{
-				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 				{
-					if (func(enumerator.Current))
+					if (!func(enumerator.Current))
 						break;
 				}
 			}
@@ -278,7 +219,7 @@ namespace LinqToDB.Internal.Linq
 		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 		{
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
@@ -393,7 +334,7 @@ namespace LinqToDB.Internal.Linq
 			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumeratorT);
 
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
@@ -425,7 +366,7 @@ namespace LinqToDB.Internal.Linq
 			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumerator);
 
 			var expression  = Expression;
-			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var expressions = GetOwnExpressions(expression);
 			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)

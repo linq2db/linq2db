@@ -2,8 +2,11 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.FSharp;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -481,6 +484,254 @@ namespace Tests.Linq
 		public void ExpressionFunctionInCteTranslationTest2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			FSharp.Issue5428.TestWindow(GetConnectionString(context));
+		}
+
+		[Test(Description = "F# option member access over a parameter (not a column) is refused rather than translated against the parameter's own nullness")]
+		public void OptionQuery_ParameterOperandIsRefused([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			var act = () => { FSharp.OptionQueryTests.ParameterOperandIsRefused(db); };
+			act.ShouldThrow<LinqToDBException>();
+		}
+
+		[Test(Description = "F# option .IsSome in a query predicate translates to IS NOT NULL")]
+		public void OptionQuery_IsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.IsSome(db).ShouldBe(2);
+		}
+
+		[Test(Description = "F# option .IsNone in a query predicate translates to IS NULL")]
+		public void OptionQuery_IsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.IsNone(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .Value in a query predicate translates to the underlying value")]
+		public void OptionQuery_Value([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.Value(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .Value in a projection translates to the underlying column")]
+		public void OptionQuery_ValueProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.ValueProjection(db).ShouldBe(new[] { "a", "b" });
+		}
+
+		[Test(Description = "F# Option.isSome module function translates to IS NOT NULL")]
+		public void OptionQuery_ModuleIsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.ModuleIsSome(db).ShouldBe(2);
+		}
+
+		[Test(Description = "F# Option.isNone module function translates to IS NULL")]
+		public void OptionQuery_ModuleIsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.ModuleIsNone(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# Option.get module function translates to the underlying value")]
+		public void OptionQuery_ModuleGet([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.ModuleGet(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# ValueOption.isSome module function translates to IS NOT NULL")]
+		public void OptionQuery_VOptionModuleIsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionModuleIsSome(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# ValueOption.isNone module function translates to IS NULL")]
+		public void OptionQuery_VOptionModuleIsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionModuleIsNone(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# ValueOption.get module function translates to the underlying value")]
+		public void OptionQuery_VOptionModuleGet([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionModuleGet(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .IsSome in a projection materializes as a boolean value")]
+		public void OptionQuery_IsSomeProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var (values, sql) = FSharp.OptionQueryTests.IsSomeProjection(db);
+
+			values.ShouldBe(new[] { true, false, true });
+
+			// The values alone cannot fail: a declined translation selects the bare column and evaluates
+			// .IsSome client-side, returning the same array. Only the null test in the SELECT list shows
+			// the projection was translated.
+			if (sql is not null)
+				sql.ShouldContain("IS NOT NULL");
+		}
+
+		[Test(Description = "F# option .Value over a row whose column is NULL materializes the element's default, as Nullable<T>.Value does - it does not raise the way Option.get does")]
+		public void OptionQuery_ValueOverNoneRow([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.ValueOverNoneRow(db).ShouldBe(new[] { 5, 0, 7 });
+		}
+
+		[Test(Description = "F# int option .Value translates through the Nullable<int> provider type")]
+		public void OptionQuery_IntValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.IntValue(db).ShouldBe(new[] { 5, 7 });
+		}
+
+		[Test(Description = "F# voption .IsSome in a query predicate translates to IS NOT NULL")]
+		public void OptionQuery_VOptionIsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionIsSome(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# voption .IsNone in a query predicate translates to IS NULL")]
+		public void OptionQuery_VOptionIsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionIsNone(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# voption .IsValueSome (generated case-tester spelling) translates to IS NOT NULL")]
+		public void OptionQuery_VOptionIsValueSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionIsValueSome(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# voption .IsValueNone (generated case-tester spelling) translates to IS NULL")]
+		public void OptionQuery_VOptionIsValueNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionIsValueNone(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# voption .Value in a query predicate translates to the underlying value")]
+		public void OptionQuery_VOptionValue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.OptionQueryTests.VOptionValue(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# struct single-case DU cannot hold null, so a NULL read materializes the union wrapping the default (declared behaviour - use 'option' for a nullable column)")]
+		public void DuQuery_StructNullRead([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.StructNullRead(db).ShouldBe(new[] { 10, 0 });
+		}
+
+		[Test(Description = "F# struct single-case DU wrapped in option round-trips, including None")]
+		public void DuQuery_StructOptionRoundTrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.StructOptionRoundTrip(db).ShouldBe(new[] { 10, -1 });
+		}
+
+		[Test(Description = "F# auto-mapping claims single-case scalar unions (and options over them) and leaves multi-case DUs, lists and non-scalar wrappers alone")]
+		public void DuQuery_MappingBoundary([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.MappingBoundary(db).ShouldBe("Id,Key:conv,OptKey:conv");
+		}
+
+		[Test(Description = "F# 'UserId option' column maps to the union's wrapped scalar and round-trips, including None")]
+		public void DuQuery_OptionRoundTrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.OptionRoundTrip(db).ShouldBe(new[] { 10, -1 });
+		}
+
+		[Test(Description = "F# option .IsSome over a single-case-union column translates to IS NOT NULL")]
+		public void DuQuery_OptionIsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.OptionIsSome(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .IsNone over a single-case-union column translates to IS NULL")]
+		public void DuQuery_OptionIsNone([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.OptionIsNone(db).ShouldBe(1);
+		}
+
+		// The option converter's source type is FSharpOption<UserId> while the constant beside the column is
+		// a bare UserId, and ColumnDescriptor.ApplyConversions only bridges that gap for Nullable<>.
+		[ActiveIssue(5886)]
+		[Test(Description = "F# option .Value over a single-case-union column compares on the union's wrapped scalar")]
+		public void DuQuery_OptionValueEquals([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.OptionValueEquals(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# equality against 'Some (UserId 10)' over a single-case-union column")]
+		public void DuQuery_OptionEqualsSome([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.OptionEqualsSome(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# option .Value over a single-case-union column projects the reconstructed union")]
+		public void DuQuery_OptionValueProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.OptionValueProjection(db).ShouldBe(new[] { 10 });
+		}
+
+		[Test(Description = "F# single-case DU column round-trips and equality translates to SQL")]
+		public void DuQuery_EqualsLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.EqualsLiteral(db).ShouldBe(1);
+		}
+
+		[Test(Description = "F# single-case union with a private representation (the smart-constructor idiom) round-trips, so the converter's lambdas can reach the non-public case constructor and field")]
+		public void DuQuery_PrivateRepresentationRoundTrip([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.PrivateRepresentationRoundTrip(db).ShouldBe(new[] { 7 });
+		}
+
+		[Test(Description = "F# single-case DU column reads back as the reconstructed union (from-provider converter)")]
+		public void DuQuery_ReadBack([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.ReadBack(db).ShouldBe(new[] { 10, 20 });
+		}
+
+		[Test(Description = "F# single-case DU column read as NULL (LEFT JOIN unmatched row) must materialize as null, not a fabricated default")]
+		public void DuQuery_NullReadKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.DuQueryTests.NullReadKey(db).ShouldBe(1);
+		}
+
+		[Test(Description = "UseFSharp must yield a stable ConfigurationID - the harness applies it to every context, so an unstable id defeats the query cache for all providers (#5704)")]
+		public void UseFSharp_StableConfigurationID()
+		{
+			// Member translators are keyed by instance identity in DataContextOptions' ConfigurationID
+			// (the query-cache key). UseFSharp must reuse one translator instance; a fresh instance per
+			// call gives every context a distinct id, so the query cache never hits.
+			var a = new DataOptions().UseFSharp();
+			var b = new DataOptions().UseFSharp();
+
+			a.ShouldBe(b);
 		}
 	}
 }
