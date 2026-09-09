@@ -49,10 +49,10 @@ parameters:
   # here either way, so build_x86_job and the whole windows workflow below remain live even when this
   # is on.
   #
-  # No caller passes it yet, deliberately: tests-comment.yml runs the DEFAULT branch's tests.yml, so
-  # between turning this on and merging the windows job there is a window where Azure has been told to
-  # skip a leg that GitHub cannot yet run - the leg would run nowhere and nothing would say so. The
-  # flip in testing.yml is its own one-line PR, after the windows job is on master.
+  # It was landed off and flipped on in a second PR, because tests-comment.yml runs the DEFAULT
+  # branch's tests.yml: turning it on before the windows job reached master would have left those legs
+  # running on neither CI, with nothing red to say so. Any future leg moves the same way - add
+  # gh_windows first, flip nothing, and let the workflow reach master before it is relied on.
 - name: offload_windows_to_github
   type: boolean
   default: false
