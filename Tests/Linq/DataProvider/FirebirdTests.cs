@@ -1135,7 +1135,8 @@ namespace Tests.DataProvider
 			Assert.That(record.BinaryAccessor, Is.EqualTo(mac2));
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(755, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'System.String' to type 'System.Byte[]'.",
+			Details = "CHAR(x) CHARACTER SET OCTETS comes back as a string rather than bytes - #755's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
 		public void TestBinaryMapping_String([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
@@ -1164,7 +1165,8 @@ namespace Tests.DataProvider
 			Assert.That(record.StringAccessor, Is.EqualTo(mac2));
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(755, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Unknown type: System.Char[].",
+			Details = "as TestBinaryMapping_String, through the char[] mapping - #755's CHARACTER SET OCTETS gap.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
 		public void TestBinaryMapping_Char([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{

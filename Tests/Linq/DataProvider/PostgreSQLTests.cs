@@ -2226,7 +2226,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(3352, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42883: function test_parameter_typing",
+			Details = "the overload cannot be resolved because the parameters are not typed - #3352's subject. The fragment stops before the argument list, which the server spells out in full.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3352")]
 		public void FunctionParameterTyping([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2792,7 +2793,8 @@ $function$
 		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
 		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new ServerSideOnlyException(nameof(Distance));
 
-		[ActiveIssue]
+		[ActiveIssueNew(4250, ErrorTypeName = "System.FormatException", ErrorMessage = "The input string 'point1' was not in a correct format.",
+			Details = "a named parameter inside Sql.Expression is read as a format placeholder - #4250's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
 		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2952,7 +2954,8 @@ $function$
 
 		#region Issue 2796
 
-		[ActiveIssue(SkipForNonLinqService = true)]
+		[ActiveIssueNew(2796, SkipForNonLinqService = true, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Cannot write DateTime with",
+			Details = "the tstzrange's DateTime kind does not survive the remote transport - #2796's mapping gap, remote only.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
