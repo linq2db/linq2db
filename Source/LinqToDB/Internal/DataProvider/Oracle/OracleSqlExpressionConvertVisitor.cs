@@ -40,10 +40,15 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// microsecond is identically zero rather than merely imprecise, and is declined instead.
 		/// </summary>
 		/// <remarks>
-		/// <see cref="AsTimestamp"/> casts to <see cref="DataType.DateTime2"/> with no precision, which renders as a
-		/// bare <c>timestamp</c> - six digits - so the sub-microsecond tick cannot survive the subtraction whatever
-		/// the column holds. Declaring the floor makes the member fall back to .NET, which answers it from the two
-		/// dates, rather than depending on what the driver happens to round-trip.
+		/// <see cref="AsTimestamp"/> casts a <c>date</c> operand to <see cref="DataType.DateTime2"/> with no
+		/// precision, which renders as a bare <c>timestamp</c> - six digits. Declaring the floor makes the member
+		/// fall back to .NET, which answers it from the two dates, rather than depending on what the driver happens
+		/// to round-trip.
+		/// <para>
+		/// An operand left uncast is subtracted at its own precision and so could reach further, but this is one
+		/// value for the provider and cannot be told per operand. It stays at the floor the cast imposes, which only
+		/// ever declines a member that might have been answerable - never claims one that is not.
+		/// </para>
 		/// </remarks>
 		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Microsecond;
 
@@ -51,9 +56,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// Elapsed ticks summed field by field out of the interval two timestamps subtract to.
 		/// </summary>
 		/// <remarks>
-		/// Both operands are cast to <c>timestamp</c> first: subtracting Oracle <c>date</c> values yields a number
-		/// of days instead, and a date carries no fraction of a second to lose. Field by field rather than through
-		/// the day count, because that count is a floating number of days and cannot carry a tick over a long
+		/// Both operands go through <see cref="AsTimestamp"/> first: subtracting Oracle <c>date</c> values yields a
+		/// number of days instead, and a date carries no fraction of a second to lose. Field by field rather than
+		/// through the day count, because that count is a floating number of days and cannot carry a tick over a long
 		/// range - the same reason the existing <c>DateDiff</c> lowering decomposes its millisecond form.
 		/// <para>
 		/// Fields of a negative interval are all negative, so the sum needs no sign handling.
@@ -93,8 +98,26 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return Factory.Function(resultType, "Extract", Factory.Expression(resultType, $"{part} From {{0}}", value));
 		}
 
+		/// <summary>
+		/// The operand in a form two of which subtract to an interval, widening only an Oracle <c>date</c>.
+		/// </summary>
+		/// <remarks>
+		/// <c>CAST(x AS timestamp)</c> over a <c>timestamp with time zone</c> keeps the local reading and drops the
+		/// zone, so two marks denoting the same moment in different zones would subtract to a non-zero interval - a
+		/// plausible number rather than a refusal, and every member taken from it inherits the error. Oracle
+		/// normalises two zoned operands to UTC before subtracting them, which is what CLR subtraction does
+		/// (<see cref="DateTimeOffset"/> compares <see cref="DateTimeOffset.UtcDateTime"/>), so the cast is simply
+		/// left off there.
+		/// <para>
+		/// It is applied only to a <c>date</c> operand, which is what it was for: subtracting two Oracle <c>date</c>
+		/// values yields a number of days rather than an interval. Every other type already subtracts to one.
+		/// </para>
+		/// </remarks>
 		ISqlExpression AsTimestamp(ISqlExpression value)
 		{
+			if (QueryHelper.GetDbDataType(value, MappingSchema).DataType is not (DataType.Date or DataType.DateTime))
+				return value;
+
 			return Factory.Cast(value, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
 		}
 

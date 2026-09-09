@@ -796,7 +796,6 @@ namespace Tests.DataProvider
 			db.InsertOrReplace(record);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
 		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
 		{

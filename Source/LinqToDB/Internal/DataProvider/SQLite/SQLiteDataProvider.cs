@@ -293,6 +293,20 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
+			// System.Data.SQLite knows nothing about DateTimeOffset and falls back to the value's own ToString(),
+			// which is neither invariant nor a SQLite time string: "1/1/2026 12:00:00 PM +00:00" on this machine and
+			// something else on the next one. Every date function returns null over it, ordering compares it as the
+			// text it is, and it does not even match the literal the mapping schema writes for the same value - so a
+			// stored offset is unusable server-side although it round-trips through the reader. Written in that
+			// literal's own shape instead, which SQLite parses and which carries the offset.
+			//
+			// Microsoft.Data.Sqlite already writes an equivalent ISO form of its own, so it is left alone.
+			if (value is DateTimeOffset dto && string.Equals(Name, ProviderName.SQLiteClassic, StringComparison.Ordinal))
+			{
+				value    = dto.ToString(SQLiteMappingSchema.DATETIMEOFFSET_FORMAT_RAW, DateTimeFormatInfo.InvariantInfo);
+				dataType = dataType.WithDataType(DataType.VarChar);
+			}
+
 #if SUPPORTS_DATEONLY
 			if (!Adapter.SupportsDateOnly && value is DateOnly d)
 			{
