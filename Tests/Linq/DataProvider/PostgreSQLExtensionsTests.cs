@@ -291,7 +291,8 @@ namespace Tests.DataProvider
 
 		#region 4562
 
-		[ActiveIssue]
+		[ActiveIssueNew(4562, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Sql.Ext.PostgreSQL().Overlaps is not translated, as #4562 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4562")]
 		public void Issue4562Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{

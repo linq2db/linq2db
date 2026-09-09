@@ -713,7 +713,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssueNew(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?) - the overridden column property #2429 describes. That issue is closed; this shape is the residue.")]
 		[Test]
 		public void Issue2429PropertiesTest2([DataSources] string context)
 		{
@@ -734,7 +735,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssueNew(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "as Issue2429PropertiesTest2, through the method form.")]
 		[Test]
 		public void Issue2429MethodsTest2([DataSources] string context)
 		{

@@ -1081,7 +1081,10 @@ DROP TABLE SecondTable;
 			[Column] public string Name { get; set; } = null!;
 		}
 
-		[ActiveIssue]
+		// Stays a gate rather than joining a ThrowsForProvider: the refusal is a capability gap the discussion asks
+		// us to close, not a limitation that is correct to declare.
+		[ActiveIssueNew("https://github.com/linq2db/linq2db/discussions/4985", ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.",
+			Details = "no-issue: joining a table-valued function needs APPLY semantics, which SQLite's provider flags refuse.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4985")]
 		public void CrossApplyJoin([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
