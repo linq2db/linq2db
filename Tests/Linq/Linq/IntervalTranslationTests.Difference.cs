@@ -24,7 +24,12 @@ namespace Tests.Linq
 		/// rows are chosen so that reading the offset and ignoring it give different answers in both directions -
 		/// one is zero only if offsets are honoured, the other is non-zero only if they are.
 		/// </remarks>
-		[ActiveIssue(5797, Configurations = [TestProvName.AllSQLiteClassic, TestProvName.AllOracle], Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix, and every Oracle version loses the zone in the CAST(x AS timestamp) that the elapsed lowering uses. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
+		// The two providers fail on different rows, so they carry different declarations: SQLite reads row 1 as zero,
+		// Oracle reads row 0 as two hours.
+		[ActiveIssueNew(5797, Configuration = TestProvName.AllSQLiteClassic, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2d{1}but was",
+			Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
+		[ActiveIssueNew(5797, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0d{1}but was",
+			Details = "Every Oracle version loses the zone in the CAST(x AS timestamp) the elapsed lowering uses, so the same instant written in two zones reads two hours apart.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceMeasuresInstantsNotLocalTime(
@@ -85,7 +90,12 @@ namespace Tests.Linq
 		/// <c>timestamptz</c> can hold, so the expectation needs no per-provider tolerance.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5797, Configurations = [TestProvName.AllSQLiteClassic, TestProvName.AllOracle], Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix, and every Oracle version loses the zone in the CAST(x AS timestamp) that the elapsed lowering uses. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
+		// The zone loss shows up on a different member per provider - SQLite drops the whole two days, Oracle keeps
+		// them and is two hours out - so each half declares the member that fails first.
+		[ActiveIssueNew(5797, Configuration = TestProvName.AllSQLiteClassic, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2{1}but was",
+			Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix, so Days is zero. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
+		[ActiveIssueNew(5797, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}3{1}but was",
+			Details = "Every Oracle version loses the zone in the CAST(x AS timestamp) the elapsed lowering uses, so Hours is five where three is due - the offset added back on top of the difference.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceMembersMatchClr(
