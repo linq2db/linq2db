@@ -837,9 +837,25 @@ namespace Tests.DataProvider
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue]
+		// Only the parameterised form fails; with inline parameters the same mapping works, so the inline arm
+		// stays ungated. Message-only, and it collapses what looked like three causes into one: the MS driver says
+		// "SQLite Error 20: 'datatype mismatch'", the Classic driver says "datatype mismatch", and the remote
+		// transport wraps the Classic text - all three contain the same phrase.
+		[ActiveIssueNew(2432, ErrorMessage = "datatype mismatch",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Mapping DateTime to Int64 produces a column the parameterised insert cannot write.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void Issue2432Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test1Core(context, inline: false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
+		public void Issue2432Test1Inline([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test1Core(context, inline: true);
+		}
+
+		void Issue2432Test1Core(string context, bool inline)
 		{
 			var ms = new MappingSchema();
 
@@ -871,9 +887,21 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(2432, ErrorMessage = "datatype mismatch",
+			Details = "as Issue2432Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
-		public void Issue2432Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		public void Issue2432Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test2Core(context, inline: false);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
+		public void Issue2432Test2Inline([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			Issue2432Test2Core(context, inline: true);
+		}
+
+		void Issue2432Test2Core(string context, bool inline)
 		{
 			var ms = new MappingSchema();
 
