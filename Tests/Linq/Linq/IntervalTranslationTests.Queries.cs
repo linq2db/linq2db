@@ -480,7 +480,17 @@ namespace Tests.Linq
 		/// values. Making them equal would let a branch that took another branch's conversion pass unnoticed.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5796, Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
+		// One attribute per provider family: the four reject the mixed set operation in four different places -
+		// DuckDB and YDB while typing the column, DB2 while matching the branches, MySQL only after the value comes
+		// back and fails to parse as a TimeSpan.
+		[ActiveIssueNew(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+			ErrorMessage = "Conversion Error: Unimplemented type for cast (BIGINT -> INTERVAL)", Details = MixedStorageInASetOperation)]
+		[ActiveIssueNew(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Uncompatible member Duration_1 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
+		[ActiveIssueNew(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
+		[ActiveIssueNew(5796, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.OverflowException",
+			ErrorMessage = "The TimeSpan string '36000000000' could not be parsed", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatSurroundsADifferenceWithColumns([DataSources(false)] string context)
 		{
@@ -519,7 +529,15 @@ namespace Tests.Linq
 		/// same would make a column mix-up look identical to a correct answer.
 		/// </para>
 		/// </remarks>
-		[ActiveIssue(5796, Configurations = new[] { TestProvName.AllDB2, TestProvName.AllYdb, TestProvName.AllDuckDB, TestProvName.AllMySql }, Details = MixedStorageInASetOperation)]
+		// AllMySql dropped, unlike the sibling above: MySQL only trips when a difference sits beside ordinary
+		// columns, and this shape - two durations, no plain column - it answers correctly. Measured, all five
+		// MySQL configurations pass.
+		[ActiveIssueNew(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+			ErrorMessage = "Conversion Error: Unimplemented type for cast (BIGINT -> INTERVAL)", Details = MixedStorageInASetOperation)]
+		[ActiveIssueNew(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Uncompatible member First_2 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
+		[ActiveIssueNew(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatMixesTwoDurationsPerRow([DataSources(false)] string context)
 		{
