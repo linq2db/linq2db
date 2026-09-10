@@ -1089,8 +1089,18 @@ namespace Tests.xUpdate
 			];
 		}
 
-		// Current Sybase version cannot handle such queries and crash with generic error
-		[ActiveIssue(TestProvName.AllSybase, Details = "ASE is terminating this process")]
+		// Current Sybase version cannot handle such queries and crash with generic error.
+		// The provider name used to sit in the positional argument, which binds the (string issue) constructor, so
+		// the gate applied to every provider rather than to Sybase. Measured: everything else passes.
+		// Two attributes because the crash surfaces differently per transport - the client reports a broken
+		// connection directly, while over the remote transport the server side dies mid-token and only the Grpc
+		// wrapper is stable; the socket error inside it is not.
+		[ActiveIssueNew(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "Connection entered broken state",
+			Details = "no-issue: ASE is terminating this process")]
+		[ActiveIssueNew(Configuration = TestProvName.AllSybase, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException",
+			Details = "no-issue: ASE is terminating this process")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5181")]
 		public void UnusedSource_Query([MergeDataContextSource] string context)
 		{
