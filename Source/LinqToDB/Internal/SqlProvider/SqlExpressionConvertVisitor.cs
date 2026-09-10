@@ -1510,6 +1510,32 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool RequiresConstantTimeZone => false;
 
 		/// <summary>
+		/// The <c>±HH:mm</c> spelling of a zone operand that names a fixed offset rather than a zone, for the
+		/// dialects that take the two in different syntax.
+		/// </summary>
+		/// <remarks>
+		/// Only a value or a parameter already demoted to a constant is read. A bound one is refused rather than
+		/// spelled out, because its offset would be baked into SQL the query cache then serves for a different one.
+		/// </remarks>
+		protected bool TryGetZoneOffset(ISqlExpression zone, [NotNullWhen(true)] out string? text)
+		{
+			text = null;
+
+			var unwrapped = QueryHelper.UnwrapNullablity(zone);
+
+			if (unwrapped is not (SqlValue or SqlParameter { IsQueryParameter: false }))
+				return false;
+
+			if (!unwrapped.TryEvaluateExpression(EvaluationContext, out var evaluated) || evaluated is not TimeSpan offset)
+				return false;
+
+			text = FormattableString.Invariant(
+				$"{(offset < TimeSpan.Zero ? '-' : '+')}{Math.Abs(offset.Hours):00}:{Math.Abs(offset.Minutes):00}");
+
+			return true;
+		}
+
+		/// <summary>
 		/// Lowers a time zone conversion into this provider's spelling of it - an infix <c>AT TIME ZONE</c>, a
 		/// function such as <c>CONVERT_TZ</c> or <c>toTimeZone</c>, or a cast around either.
 		/// </summary>

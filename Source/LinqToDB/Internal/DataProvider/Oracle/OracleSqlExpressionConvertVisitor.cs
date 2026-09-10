@@ -126,6 +126,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			var zonedType = Factory.GetDbDataType(typeof(DateTimeOffset));
 
+			// Oracle takes a fixed offset in the same position as a zone name, so only the spelling differs.
+			if (element.Kind == SqlTimeZoneConversionKind.ConvertZone && TryGetZoneOffset(element.Zone, out var offset))
+				return Factory.Expression(zonedType, Precedence.Primary, "{0} AT TIME ZONE {1}", element.Value, Factory.Value(offset));
+
 			return element.Kind switch
 			{
 				// FROM_TZ builds an offset-carrying value out of a plain TIMESTAMP and a zone.

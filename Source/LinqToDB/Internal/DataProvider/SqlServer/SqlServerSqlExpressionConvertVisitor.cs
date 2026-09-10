@@ -38,6 +38,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (_sqlServerVersion < SqlServerVersion.v2016)
 				return null;
 
+			// AT TIME ZONE resolves its argument against the registry's zone names and rejects a fixed offset with
+			// error 9820, so an offset goes through SwitchOffset instead. Only ConvertZone can carry one - the other
+			// two kinds are always spelled with a zone name.
+			if (element.Kind == SqlTimeZoneConversionKind.ConvertZone && TryGetZoneOffset(element.Zone, out var offset))
+			{
+				return Factory.Function(
+					Factory.GetDbDataType(typeof(DateTimeOffset)),
+					"SwitchOffset",
+					element.Value,
+					Factory.Value(offset));
+			}
+
 			// SQL Server spells the two directions with one operator: applied to a zone-less value it attaches the
 			// zone, applied to a datetimeoffset it converts to it. The zone-less reading needs an explicit cast back,
 			// and that cast is mandatory - dropping it would leave a datetimeoffset, silently turning ToWallTime into

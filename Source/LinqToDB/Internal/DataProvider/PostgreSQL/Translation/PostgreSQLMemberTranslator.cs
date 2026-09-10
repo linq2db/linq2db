@@ -147,6 +147,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			/// <c>timestamptz</c> stores the instant and discards the offset. Reading in UTC is therefore not an
 			/// approximation of the original - it is exactly what the CLR answers for the value this provider returns.
 			/// </remarks>
+			/// <inheritdoc />
+			protected override bool RoundTripsInUtc => true;
+
 			protected override ISqlExpression? ToDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value)
 			{
 				var factory = translationContext.ExpressionFactory;

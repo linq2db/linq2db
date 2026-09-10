@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -88,6 +89,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMember((DateTimeOffset dt) => dt.DayOfYear, (tc,   me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.DayOfYear));
 			Registration.RegisterMember((DateTimeOffset dt) => dt.DayOfWeek, (tc,   me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.WeekDay));
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Date, TranslateDateTimeOffsetTruncationToDate);
+
+			Registration.RegisterMember((DateTimeOffset dt) => dt.DateTime,    TranslateDateTimeOffsetDateTime);
+			Registration.RegisterMember((DateTimeOffset dt) => dt.UtcDateTime, TranslateDateTimeOffsetUtcDateTime);
+
+			Registration.RegisterMethod((DateTimeOffset dt) => dt.ToUniversalTime(),          TranslateDateTimeOffsetToUniversalTime);
+			Registration.RegisterMethod((DateTimeOffset dt) => dt.ToOffset(default), TranslateDateTimeOffsetToOffset);
 
 			Registration.RegisterMember((DateTimeOffset dt) => dt.TimeOfDay, TranslateDateTimeOffsetTruncationToTime);
 
@@ -1463,20 +1470,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
-		/// The expression a <see cref="DateTimeOffset"/> member must be read from, so that the answer agrees with
-		/// what the CLR computes on the value as this provider round-trips it.
-		/// </summary>
-		/// <remarks>
-		/// Decided from the <em>translated</em> operand rather than from the shape the user wrote, so it holds
-		/// however the expression was spelled - directly, through a projection, or via a <c>TimeZoneInfo</c> call
-		/// that was replaced on the way in. A conversion already in hand names the frame explicitly and replaces the
-		/// provider default; anything else takes the default.
-		/// <para>
-		/// Reading through a conversion produces one operator, not two: <c>ToWallTime</c> over the conversion's own
-		/// operand rather than a frame applied on top of an already-converted value.
-		/// </para>
-		/// </remarks>
-		/// <summary>
 		/// Demotes a bound zone to a constant where the provider's grammar demands one, the way <c>Sql.Constant</c>
 		/// does it - the value is then rendered inline and becomes part of the query cache key, so two zones cannot
 		/// share one cached statement.
@@ -1504,9 +1497,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// here is what lets a component be read in a named zone on a provider that has no type able to carry that
 		/// zone's offset, which is most of them.
 		/// </remarks>
-		ISqlExpression? FrameFromZonedOperand(ITranslationContext translationContext, Expression? operand, out ISqlExpression? zone)
+		/// <summary>
+		/// Matches any spelling of the conversion in an operand that has not been translated yet.
+		/// </summary>
+		/// <remarks>
+		/// Every spelling has to be recognised, or the BCL one becomes a second-class citizen: it would be
+		/// translated as a standalone value, refused on a provider that cannot carry an offset, and take the whole
+		/// member down with it.
+		/// </remarks>
+		static bool TryMatchZoneConversion(Expression? operand, [NotNullWhen(true)] out MethodCallExpression? call)
 		{
-			zone = null;
+			call = null;
 
 			var expr = operand?.UnwrapConvert();
 
@@ -1518,13 +1519,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				expr = member.Expression?.UnwrapConvert();
 			}
 
-			if (expr is not MethodCallExpression call)
-				return null;
+			if (expr is not MethodCallExpression matched)
+				return false;
 
-			// Every spelling of the conversion has to be recognised here, or the BCL one becomes a second-class
-			// citizen: it would be translated as a standalone value, refused on a provider that cannot carry an
-			// offset, and take the whole member down with it.
-			if (call.Method != _atTimeZoneFromOffset && call.Method != _atTimeZoneFromDateTime && call.Method != _convertTimeByZoneId)
+			if (matched.Method != _atTimeZoneFromOffset && matched.Method != _atTimeZoneFromDateTime && matched.Method != _convertTimeByZoneId)
+				return false;
+
+			call = matched;
+
+			return true;
+		}
+
+		ISqlExpression? FrameFromZonedOperand(ITranslationContext translationContext, Expression? operand, out ISqlExpression? zone)
+		{
+			zone = null;
+
+			if (!TryMatchZoneConversion(operand, out var call))
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(call.Arguments[0].UnwrapConvert(), out var value, out _))
@@ -1554,6 +1564,96 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
+		/// The instant an operand denotes, with any offset relabelling dropped.
+		/// </summary>
+		/// <remarks>
+		/// <c>ConvertZone</c> is instant-preserving, so a member that reads the instant can take the conversion's
+		/// own operand and never ask the provider to lower a conversion it may not have. Attaching a zone to a wall
+		/// clock is the opposite - it is what defines the instant - so that one is kept.
+		/// </remarks>
+		ISqlExpression? InstantFromZonedOperand(ITranslationContext translationContext, Expression? operand)
+		{
+			if (!TryMatchZoneConversion(operand, out var call))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(call.Arguments[0].UnwrapConvert(), out var value, out _))
+				return null;
+
+			if (call.Method != _atTimeZoneFromDateTime)
+				return value;
+
+			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.AttachZone))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(call.Arguments[1], out var zoneExpression, out _))
+				return null;
+
+			var factory = translationContext.ExpressionFactory;
+
+			return new SqlTimeZoneConversionExpression(
+				value,
+				ZoneOperand(translationContext, zoneExpression),
+				SqlTimeZoneConversionKind.AttachZone,
+				factory.GetDbDataType(typeof(DateTimeOffset)));
+		}
+
+		/// <summary>
+		/// Brings an operand into the reading frame, whichever way the zone was named - by a conversion in the
+		/// expression, by one already in the translated AST, or by the provider default.
+		/// </summary>
+		ISqlExpression? FramedOperand(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
+		{
+			// Expression level first: a conversion the provider cannot materialise would be refused during the
+			// operand's own translation, taking the whole member down with it.
+			var framed = FrameFromZonedOperand(translationContext, operand, out _);
+			if (framed != null)
+				return framed;
+
+			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			return DateTimeOffsetFrame(translationContext, placeholder.Sql, out _);
+		}
+
+		/// <summary>
+		/// The instant an operand denotes, for a member whose answer does not depend on the offset the value carries.
+		/// </summary>
+		ISqlExpression? InstantFromOperand(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
+		{
+			var instant = InstantFromZonedOperand(translationContext, operand);
+			if (instant != null)
+				return instant;
+
+			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			return QueryHelper.UnwrapNullablity(placeholder.Sql) is SqlTimeZoneConversionExpression { Kind: SqlTimeZoneConversionKind.ConvertZone } conversion
+				? conversion.Value
+				: placeholder.Sql;
+		}
+
+		/// <summary>
+		/// Types a framed value as the zone-less reading it denotes.
+		/// </summary>
+		/// <remarks>
+		/// Where the frame is the identity the value still carries an offset in SQL, so this is a real cast rather
+		/// than a relabel: a reader asked for a <see cref="DateTime"/> cannot take an offset-carrying column. The
+		/// cast is mandatory because dropping it would hand back the offset-carrying value the member exists to
+		/// remove.
+		/// </remarks>
+		static ISqlExpression AsWallClock(ITranslationContext translationContext, ISqlExpression framed)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			if (QueryHelper.GetDbDataType(framed, translationContext.MappingSchema).DataType != DataType.DateTimeOffset)
+				return framed;
+
+			return factory.Cast(framed, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2), isMandatory: true);
+		}
+
+		/// <summary>
 		/// Puts a value produced inside a reading frame back into the frame the caller expects, so that an operation
 		/// answering a <see cref="DateTimeOffset"/> keeps the offset its .NET counterpart would.
 		/// </summary>
@@ -1576,6 +1676,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlTimeZoneConversionExpression(framed, zone, SqlTimeZoneConversionKind.AttachZone, zonedType);
 		}
 
+		/// <summary>
+		/// The expression a <see cref="DateTimeOffset"/> member must be read from, so that the answer agrees with
+		/// what the CLR computes on the value as this provider round-trips it.
+		/// </summary>
+		/// <remarks>
+		/// Decided from the <em>translated</em> operand rather than from the shape the user wrote, so it holds
+		/// however the expression was spelled - directly, through a projection, or via a <c>TimeZoneInfo</c> call
+		/// that was replaced on the way in. A conversion already in hand names the frame explicitly and replaces the
+		/// provider default; anything else takes the default.
+		/// <para>
+		/// Reading through a conversion produces one operator, not two: <c>ToWallTime</c> over the conversion's own
+		/// operand rather than a frame applied on top of an already-converted value.
+		/// </para>
+		/// </remarks>
 		ISqlExpression? DateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value, out ISqlExpression? zone)
 		{
 			zone = null;
@@ -1625,20 +1739,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateDateTimeOffsetMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, Sql.DateParts datepart)
 		{
-			// Expression level first: an AtTimeZone the provider cannot materialise would be refused during the
-			// operand's own translation, taking the whole member down with it.
-			var framed = FrameFromZonedOperand(translationContext, memberExpression.Expression, out _);
-
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
 			if (framed == null)
-			{
-				var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
-				if (placeholder == null)
-					return null;
-
-				framed = DateTimeOffsetFrame(translationContext, placeholder.Sql, out _);
-				if (framed == null)
-					return null;
-			}
+				return null;
 
 			var converted = TranslateDateTimeOffsetDatePart(translationContext, translationFlags, framed, datepart);
 			if (converted == null)
@@ -1666,22 +1769,136 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
-			var framed = FrameFromZonedOperand(translationContext, memberExpression.Expression, out _);
-
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
 			if (framed == null)
-			{
-				var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
-				if (placeholder == null)
-					return null;
-
-				framed = DateTimeOffsetFrame(translationContext, placeholder.Sql, out _);
-				if (framed == null)
-					return null;
-			}
+				return null;
 
 			var converted = TranslateDateTimeOffsetTruncationToDate(translationContext, framed, translationFlags);
 			if (converted == null)
 				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, memberExpression);
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.DateTime"/> - the wall-clock reading the value shows in the frame it is read in.
+		/// </summary>
+		/// <remarks>
+		/// Asked of the provider first, because on an offset-preserving one the frame is the identity and the value
+		/// has to be cast down instead. Where the provider cannot express reading a wall clock out of an instant,
+		/// that cast does not fail - it quietly answers the UTC reading instead of the value's own, which on SQLite
+		/// turns 12:00+00:40 into 11:20. Declining leaves the member to .NET, which is right by construction.
+		/// </remarks>
+		Expression? TranslateDateTimeOffsetDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
+				return null;
+
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
+			if (framed == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, AsWallClock(translationContext, framed), memberExpression);
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.ToUniversalTime()"/> - the same instant, carrying a zero offset.
+		/// </summary>
+		Expression? TranslateDateTimeOffsetToUniversalTime(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var instant = InstantFromOperand(translationContext, methodCall.Object, translationFlags);
+			if (instant == null)
+				return null;
+
+			// A provider that hands every DateTimeOffset back at +00:00 has already done this, so asking it to
+			// convert would emit an operator with nothing to do - and on most such providers there is no operator.
+			if (RoundTripsInUtc)
+				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, instant, methodCall);
+
+			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ConvertZone))
+				return null;
+
+			var factory = translationContext.ExpressionFactory;
+
+			var converted = new SqlTimeZoneConversionExpression(
+				instant,
+				factory.Value("UTC"),
+				SqlTimeZoneConversionKind.ConvertZone,
+				factory.GetDbDataType(typeof(DateTimeOffset)));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.ToOffset(TimeSpan)"/> - the same instant, carrying the offset asked for.
+		/// </summary>
+		/// <remarks>
+		/// The offset has to be settled here rather than left as a bind: no dialect takes a fixed offset the way it
+		/// takes a zone name, so the lowering spells it out, and spelling out a bound value would bake one offset
+		/// into SQL the query cache then serves for another. Demoting the parameter is what puts its value in the
+		/// cache key, so the two cannot be confused.
+		/// </remarks>
+		Expression? TranslateDateTimeOffsetToOffset(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ConvertZone))
+				return null;
+
+			var instant = InstantFromOperand(translationContext, methodCall.Object, translationFlags);
+			if (instant == null)
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var offset, out _))
+				return null;
+
+			switch (offset)
+			{
+				case SqlValue { Value: TimeSpan }:
+					break;
+
+				case SqlParameter parameter:
+					parameter.IsQueryParameter = false;
+					break;
+
+				// Anything the offset cannot be read off - a column, an expression - leaves nothing to spell.
+				default:
+					return null;
+			}
+
+			var factory = translationContext.ExpressionFactory;
+
+			var converted = new SqlTimeZoneConversionExpression(
+				instant,
+				offset,
+				SqlTimeZoneConversionKind.ConvertZone,
+				factory.GetDbDataType(typeof(DateTimeOffset)));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, methodCall);
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.UtcDateTime"/> - the wall-clock reading the value shows in UTC.
+		/// </summary>
+		/// <remarks>
+		/// The zone is named by the member itself, so the provider's default reading frame never applies here and
+		/// the answer is the same on every provider - which is the point: unlike a component, this member means one
+		/// thing regardless of how the value round-trips.
+		/// </remarks>
+		Expression? TranslateDateTimeOffsetUtcDateTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
+				return null;
+
+			var instant = InstantFromOperand(translationContext, memberExpression.Expression, translationFlags);
+			if (instant == null)
+				return null;
+
+			var factory = translationContext.ExpressionFactory;
+
+			var converted = new SqlTimeZoneConversionExpression(
+				instant,
+				factory.Value("UTC"),
+				SqlTimeZoneConversionKind.ToWallTime,
+				factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, memberExpression);
 		}
@@ -2129,6 +2346,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			return cast;
 		}
+
+		/// <summary>
+		/// Whether every <see cref="DateTimeOffset"/> this provider hands back carries a zero offset, because it
+		/// discards the original one on write.
+		/// </summary>
+		/// <remarks>
+		/// Distinct from being able to lower a conversion, and not derivable from it. A provider can preserve the
+		/// stored offset while having no way to convert one - SQLite's shape - and on such a provider a conversion
+		/// to UTC is a real operation that has to be refused rather than dropped. Where this is
+		/// <see langword="true"/>, converting to UTC is instead the identity, because the value is already there.
+		/// </remarks>
+		protected virtual bool RoundTripsInUtc => false;
 
 		/// <summary>
 		/// Rewrites a <see cref="DateTimeOffset"/> expression into the frame this provider's own date functions have
