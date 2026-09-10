@@ -2421,9 +2421,24 @@ namespace Tests.xUpdate
 			[Column] public string? Text { get; set; }
 		}
 
-		[ActiveIssue(
-			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllDuckDB])]
+		// Every named provider does fail, in two groups. Access, Firebird and HANA never reach the database -
+		// linq2db refuses the KeepIdentity + RowByRow combination up front. The rest do reach it and the identity
+		// value collides, each server saying so in its own words.
+		[ActiveIssueNew(4702, Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllSapHana],
+			ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode",
+			Details = "no-issue: Update test to test different RetrieveIdentity modes for all providers with sequences")]
+		[ActiveIssueNew(4702, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+			ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4702Table\"",
+			Details = "no-issue: as above; the identity value is written rather than generated, so the key collides.")]
+		[ActiveIssueNew(4702, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+			ErrorMessage = "Constraint Error: Duplicate key", Details = "no-issue: as the PostgreSQL half.")]
+		[ActiveIssueNew(4702, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0798N{0}A value cannot be specified for column", Details = "no-issue: as the PostgreSQL half; DB2 rejects the explicit value outright.")]
+		[ActiveIssueNew(4702, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+			ErrorMessage = "A duplicate value cannot be inserted into a unique index.", Details = "no-issue: as the PostgreSQL half.")]
+		[ActiveIssueNew(4702, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Status: PreconditionFailed", Details = "no-issue: as the PostgreSQL half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{

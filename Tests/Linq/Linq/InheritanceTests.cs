@@ -1395,7 +1395,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// One cause, about twenty wordings: the discriminator column is never written, and every server rejects
+		// the NULL in its own phrasing - twelve distinct texts across the drivers, plus their remote wrappers.
+		// Declaring them individually would be a catalogue of vendor prose, so the blanket half declares nothing
+		// and only ClickHouse, which fails differently in kind, is declared.
+		[ActiveIssueNew(
+			Details = "no-declaration: the Code discriminator column is never written, so every server rejects the NULL - in about twenty different wordings, none of them shared. ClickHouse is the exception and has its own attribute.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '0'",
+			Details = "no-issue: ClickHouse fails a stage earlier and in kind - linq2db refuses the mapping rather than the server refusing the row.")]
 		[Test]
 		public void TestInsertIssue1([DataSources] string context)
 		{
@@ -1417,7 +1425,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// 104 of the cases share one assertion; four providers never reach it because their server rejects the
+		// NULL first, each in its own words, so that half declares nothing.
+		[ActiveIssueNew(ErrorMessage = "Assert.That(result, Has.Length.EqualTo(3))",
+			Details = "no-issue: the rows inserted through the base table are not read back through the derived one.")]
+		[ActiveIssueNew(Configurations = [TestProvName.AllMariaDB, TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllYdb],
+			Details = "no-declaration: these four reject the NULL discriminator at the server before the assertion is reached, and each words it differently.")]
 		[Test]
 		public void TestInsertIssue2([DataSources] string context)
 		{
