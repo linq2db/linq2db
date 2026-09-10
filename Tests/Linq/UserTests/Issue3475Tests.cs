@@ -35,7 +35,12 @@ namespace Tests.UserTests
 			public NumberLikeTestTable? Obj { get; set; }
 		}
 
-		[ActiveIssue("Broken in 1.6.0")]
+		// The defect is in System.Linq.Dynamic.Core, not in linq2db: this fixture's own #3475 is closed and was about
+		// nullable numeric conversion, while the parse error below arrived with that library's 1.6.0.
+		[ActiveIssueNew("https://github.com/zzzprojects/System.Linq.Dynamic.Core/issues/934",
+			ErrorTypeName = "System.Linq.Dynamic.Core.Exceptions.ParseException",
+			ErrorMessage = "Method 'ToString' on type 'Object' is not accessible.",
+			Details = "Broken in 1.6.0")]
 		[Test]
 		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
