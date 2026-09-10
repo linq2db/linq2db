@@ -1723,6 +1723,13 @@ namespace Tests.Linq
 			};
 		}
 
+		// The same values without the null, for DateTimeAddTimeSpan: Access, MySQL and SQLite pass the null case
+		// and fail the rest, so the two are gated separately.
+		static TimeSpan?[] TimespansForTestNonNull()
+		{
+			return TimespansForTest().Where(_ => _ != null).ToArray();
+		}
+
 		class DateTypes
 		{
 			[Column(CanBeNull = false, IsPrimaryKey = true)]
@@ -1798,9 +1805,71 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllSQLiteClassic])]
+		// Split on the null value, measured rather than assumed: with a null interval Access, MySQL and SQLite all
+		// pass, so gating them there marked working cases as failing. The two arms also differ in kind on SQL
+		// Server - the null one produces only the server's type-mismatch, while the non-null one adds a
+		// client-side out-of-bounds TIME, which is why only the non-null arm declares nothing for it.
+		[ActiveIssueNew(Configuration = TestProvName.AllSqlServer,
+			Details = "no-declaration: two unrelated failures over the same providers - the server's \"data types datetime and time are incompatible\" and the client's \"TIME value is out-of-bounds\" - and no Configuration separates them.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllAccessOleDb,
+			Details = "no-declaration: two unrelated failures - a column-mapping error and the provider failing to determine an Int16 - over the same two providers.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value", Details = "no-issue: Access ODBC returns the sum as a Double the mapper will not take as a DateTime.")]
+		[ActiveIssueNew(Configurations = [TestProvName.AllMySqlConnector, TestProvName.AllMySqlData], ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value", Details = "no-issue: MySQL returns the sum as a numeric the mapper will not take as a DateTime.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTime", Details = "no-issue: no parameter type for the interval, so nothing is sent.")]
+		// SkipForLinqService because the test body returns early for remote SQLite, so those cases pass trivially.
+		[ActiveIssueNew(Configuration = TestProvName.AllSQLiteClassic, SkipForLinqService = true, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Unable to cast object of type 'System.TimeSpan'", Details = "no-issue: the Classic driver cannot bind the interval at all.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+			ErrorMessage = "Invalid operator for datatype op: ADD", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0402N{0}The data type of an operand of an arithmetic function or operation", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Intervals or datetimes are incompatible for the operation.", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+			Details = "no-issue: the server rejects the addition. Type-less because the ODBC and native drivers raise their own.")]
+		[ActiveIssueNew(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: SqlCe has no Time parameter type.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracle,
+			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
-		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTestNonNull))] TimeSpan? ts)
+		{
+			DateTimeAddTimeSpanCore(context, ts);
+		}
+
+		// The null arm: Access, MySQL and SQLite are absent because they pass it, and SQL Server declares its one
+		// failure because the client-side TIME check never fires without an interval.
+		[ActiveIssueNew(Configuration = TestProvName.AllSqlServer,
+			ErrorMessage = "The data types datetime and time are incompatible in the add operator.",
+			Details = "no-issue: message-only, the two SqlClient packages raising their own.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTime", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+			ErrorMessage = "Invalid operator for datatype op: ADD", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0402N{0}The data type of an operand of an arithmetic function or operation", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "no-issue: Informix words the null case differently from the non-null one.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+			Details = "no-issue: as the non-null arm.")]
+		[ActiveIssueNew(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracle,
+			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
+		public void DateTimeAddTimeSpanNull([DataSources(ProviderName.SQLiteMS)] string context)
+		{
+			DateTimeAddTimeSpanCore(context, null);
+		}
+
+		void DateTimeAddTimeSpanCore(string context, TimeSpan? ts)
 		{
 			// something wrong with retrieving DateTime values for SQLite
 			if (context.IsAnyOf(TestProvName.AllSQLite) && context.IsRemote())
