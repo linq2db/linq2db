@@ -1997,7 +1997,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		// The two providers name the same defect differently: PostgreSQL reports the width mismatch, SQL Server
+		// only that the types differ. The SQL Server half is message-only because its two client packages raise
+		// their own SqlException.
+		[ActiveIssueNew(2451, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+			ErrorMessage = "42804: recursive query \"cte\" column 1 has type character varying(50) in non-recursive term but type character varying overall",
+			Details = "Issue number taken from the test's own name. The anchor's column keeps its declared width where the recursive term has none.")]
+		[ActiveIssueNew(2451, Configuration = TestProvName.AllSqlServer,
+			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"FirstName\" of recursive query \"cte\".",
+			Details = "as the PostgreSQL half.")]
 		[Test(Description = "Test that other providers work")]
 		public void Issue2451_ComplexColumn_All([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{

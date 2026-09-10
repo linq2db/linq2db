@@ -1041,13 +1041,16 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 where Sql.AsSql(t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200))                  select t.TransactionId);
 		}
 
-		[ActiveIssue(Configurations =
-		[
-			// caused by difference in how DTO parameter stored into database by provider
-			TestProvName.AllSQLiteClassic,
-			// for FB we need to map DTO parameters to FbzonedDateTime : https://github.com/FirebirdSQL/NETProvider/issues/1189
-			TestProvName.AllFirebird
-		])]
+		// caused by difference in how DTO parameter stored into database by provider
+		[ActiveIssueNew(1855, Configuration = TestProvName.AllSQLiteClassic,
+			ErrorMessage = "Assert.That(result, Has.Length.EqualTo(testCase == 1? 1 : 2))",
+			Details = "Issue number taken from the test's own Description. SQLite Classic keeps the offset in a form the filter no longer matches, so the row count is wrong rather than the query being refused.")]
+		// for FB we need to map DTO parameters to FbzonedDateTime : https://github.com/FirebirdSQL/NETProvider/issues/1189
+		// One attribute for both transports - the Grpc wrapper carries the inner type name, which is what Matches
+		// looks for on a remote case. Only Firebird 4+ reaches this: the data source excludes the older ones.
+		[ActiveIssueNew("https://github.com/FirebirdSQL/NETProvider/issues/1189", Configuration = TestProvName.AllFirebird,
+			ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Incorrect time zone value.",
+			Details = "the client rejects the DateTimeOffset parameter outright rather than answering wrongly.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1855")]
 		public void Issue1855Test(
 			// DateTimeOffset not mapped
