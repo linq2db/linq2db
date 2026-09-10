@@ -1051,7 +1051,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("type !=/== type parsing is not supported currently")]
+		[ActiveIssueNew(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Type.op_Equality",
+			Details = "no-issue: type !=/== type parsing is not supported currently. The fragment is the operator the translator names when it gives up, which is stable across the two providers this gate covers.")]
 		[Test]
 		public void TestConcatInheritance2([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{

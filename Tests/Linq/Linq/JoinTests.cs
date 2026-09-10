@@ -1074,7 +1074,8 @@ namespace Tests.Linq
 
 		// MySQL doesn't support user-defined table functions
 		// system-defined JSON_TABLE function could be used with LATERAL, but it is not an easy task to define it...
-		[ActiveIssue("Implement JSON_TABLE-like functions support")]
+		[ActiveIssueNew(ErrorTypeName = "System.FormatException", ErrorMessage = "Input string was not in a correct format.",
+			Details = "no-issue: Implement JSON_TABLE-like functions support. Without it the apply source is emitted as something MySQL parses as a number and rejects. A tracker search for JSON_TABLE found nothing.")]
 		[Test]
 		public void ApplyJoin_MySql([IncludeDataSources(TestProvName.AllMySqlWithApply)] string context)
 		{

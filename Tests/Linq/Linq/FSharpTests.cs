@@ -167,7 +167,8 @@ namespace Tests.Linq
 			FSharp.OptionTypes.VerifyComplexElementOptionNotScalarized(db);
 		}
 
-		[ActiveIssue("F# option auto-mapping gate (IsScalarOption) consults MappingSchema.Default, so an option over a type that is scalar only in the user/provider schema is not auto-mapped")]
+		[ActiveIssueNew(ErrorMessage = "MyId option column was not mapped - auto-option-mapping did not recognise the user-registered scalar type",
+			Details = "no-issue: F# option auto-mapping gate (IsScalarOption) consults MappingSchema.Default, so an option over a type that is scalar only in the user/provider schema is not auto-mapped. #195, which the Description cites, is the closed umbrella issue for F# option support and does not cover this gap.")]
 		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195)")]
 		public void Option_CustomScalarElementMapped([DataSources] string context)
 		{

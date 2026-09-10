@@ -1407,7 +1407,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		[ActiveIssueNew(ErrorTypeName = "System.ArgumentException", ErrorMessage = "is a generic method definition",
+			Details = "no-issue: Functionality not implemented yet - the builder is handed the open generic method definition and never closes it. Nothing on the tracker covers it.")]
 		[Test]
 		public void TestDynamicTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
