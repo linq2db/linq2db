@@ -7,5 +7,5 @@ namespace LinqToDB.Remote.Grpc
 	/// Compile-time serialization model for the types exchanged by <see cref="IGrpcLinqService"/>.
 	/// </summary>
 	[ProtoModel]
-	public partial class GrpcLinqServiceTypeModel : TypeModel;
+	internal sealed partial class GrpcLinqServiceTypeModel : TypeModel;
 }
