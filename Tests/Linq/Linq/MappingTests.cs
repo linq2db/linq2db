@@ -1389,9 +1389,26 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 2362
-		[ActiveIssue]
+		// Split by the [Values] argument, because the two arms are not equally broken: filtering on false fails
+		// everywhere, filtering on true fails only on ClickHouse. One gate over both marked ~50 working cases as
+		// failing.
+		[ActiveIssueNew(2362, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The empty string the converter writes for false is not matched back - #2362's 'Query skips rows with empty string'.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test([DataSources] string context, [Values] bool value)
+		public void Issue2362Test([DataSources] string context)
+		{
+			Issue2362Core(context, false);
+		}
+
+		[ActiveIssueNew(2362, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Assert.That(res[0].Value, Is.True)",
+			Details = "The true arm of #2362, which only ClickHouse gets wrong; every other provider passes it.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
+		public void Issue2362TestMatchingValue([DataSources] string context)
+		{
+			Issue2362Core(context, true);
+		}
+
+		void Issue2362Core(string context, bool value)
 		{
 			var fb = new FluentMappingBuilder()
 				.Entity<Issue2362Table>()
