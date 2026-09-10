@@ -44,6 +44,12 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class OracleTests : TestBase
 	{
+		// Shared by every Devart-scoped gate in this file. The provider cannot be reached from anywhere we run:
+		// it needs a licence key this workstation does not have, and Oracle has no GitHub-CI leg at all - so no
+		// failure has ever been harvested for these gates, and the attributes they replace carried no explanation
+		// to fall back on either.
+		const string DevartUnreachable = "no-declaration: unvalidated: the Devart provider cannot be reached - it needs a licence key this workstation does not have, and Oracle has no GitHub-CI leg - so no failure was ever harvested for this gate, and the original attribute carried no explanation.";
+
 		// Each raw-SQL call below reuses one statement text with a different parameter or return type, so
 		// every call needs its own text or the type mapping cached for an earlier one is reused. Markers
 		// are fixed per call site - or derived from what the call varies, inside helpers that run many
@@ -114,7 +120,7 @@ namespace Tests.DataProvider
 			(of course only if it is Windows machine)
 
 		*/
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -308,7 +314,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDateTimeOffset([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -1683,7 +1689,7 @@ namespace Tests.DataProvider
 		}
 
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI)]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracleDevartOCI, Details = DevartUnreachable)]
 		[Test]
 		public void BulkCopy21ProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -1693,7 +1699,7 @@ namespace Tests.DataProvider
 		}
 
 		// ORA-38910: BATCH ERROR mode is not supported for this operation
-		[ActiveIssue(Configuration = TestProvName.AllOracleDevartOCI)]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracleDevartOCI, Details = DevartUnreachable)]
 		[Test]
 		public async Task BulkCopy21ProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
@@ -2455,7 +2461,7 @@ namespace Tests.DataProvider
 			public DateTimeOffset DateTimeOffsetValue;
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void Issue515Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2473,7 +2479,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void Issue612Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -2498,7 +2504,7 @@ namespace Tests.DataProvider
 
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void Issue612TestDefaultTSTZPrecisonCanDiffersOfUpTo9Ticks([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -3008,7 +3014,7 @@ namespace Tests.DataProvider
 		}
 
 		// this is a sad test which shows that we need better support for parameter value bindings
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void ProcedureOutParameters([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
@@ -3403,7 +3409,7 @@ namespace Tests.DataProvider
 		}
 
 		// ActiveIssue: provider reads TimeStampTZ incorrectly (offset applied twice)
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDateTimeRoundtrip([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inlineParameters)
 		{
@@ -3452,7 +3458,7 @@ namespace Tests.DataProvider
 		}
 
 		// ActiveIssue: provider reads TimeStampTZ incorrectly (offset applied twice)
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect, Details = DevartUnreachable)]
 		[Test]
 		public void TestDateTimeSQL([IncludeDataSources(false, TestProvName.AllOracle)] string context, [Values] bool inlineParameters)
 		{
@@ -4458,7 +4464,8 @@ END convert_bool;");
 		}
 		#endregion
 
-		[ActiveIssue]
+		[ActiveIssueNew(2365, ErrorMessage = "Assert.That(column.Length, Is.Null)",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The CLOB column comes back with a length of 22 where none is due - #2365's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2365")]
 		public void Issue2365Test([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
@@ -4489,7 +4496,8 @@ END convert_bool;");
 			}
 		}
 
-		[ActiveIssue(Details = "https://github.com/linq2db/linq2db/issues/1645")]
+		[ActiveIssueNew(1645, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Reference moved out of Details and into the attribute. The IsIn extension has no translation, so the table-valued IN parameter #1645 asks for never reaches SQL.")]
 		[Test]
 		public void TestInParameter([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{

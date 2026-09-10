@@ -1615,7 +1615,10 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		// Text inlined rather than shared with OracleTests.DevartUnreachable: the census resolves a Details const
+		// only within its own file, so a cross-file reference reads as "no explanation at all".
+		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect,
+			Details = "no-declaration: unvalidated: the Devart provider cannot be reached - it needs a licence key this workstation does not have, and Oracle has no GitHub-CI leg - so no failure was ever harvested for this gate, and the original attribute carried no explanation.")]
 		[Test]
 		public void TestOracleDevart([IncludeDataSources(TestProvName.AllOracleDevart)] string context, [Values] ConnectionType type)
 		{

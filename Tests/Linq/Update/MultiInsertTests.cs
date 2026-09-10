@@ -589,7 +589,9 @@ namespace Tests.xUpdate
 			public int Int   { get; set; }
 		}
 
-		[ActiveIssue]
+		// The fragment stops before the schema-qualified table name, which differs per provider configuration.
+		[ActiveIssueNew(2988, ErrorMessage = "ORA-01400: cannot insert NULL into{0}MULTI_INSERT_INHERIT",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The discriminator column is never written, so Oracle rejects the row - #2988's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2988")]
 		public void InheritanceMapping([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
