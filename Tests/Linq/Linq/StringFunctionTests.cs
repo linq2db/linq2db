@@ -869,19 +869,24 @@ namespace Tests.Linq
 			Assert.That(q.ToList().First().ID, Is.EqualTo(2));
 		}
 
-		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)",
+		// Seven families answer an empty result set; SQLite has no CharIndex function at all and refuses outright.
+		// Oracle keeps no declaration - it has no CI leg, so nothing was harvested for it.
+		[ActiveIssueNew(ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no elements",
 			Configurations =
 			[
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllMySql,
-				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
-				TestProvName.AllSQLite,
 				TestProvName.AllDuckDB,
-			])]
+			],
+			Details = "no-issue: Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
+		[ActiveIssueNew(Configuration = TestProvName.AllSQLite, ErrorMessage = "no such function: CharIndex",
+			Details = "no-issue: as above; SQLite has no such function, so it refuses instead of answering nothing. Message-only because the two SQLite drivers put the detail on different lines.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracle,
+			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
