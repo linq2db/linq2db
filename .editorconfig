@@ -434,7 +434,6 @@ dotnet_diagnostic.MA0209.severity = none # MA0209: Use in keyword for in paramet
 dotnet_diagnostic.MA0210.severity = none # MA0210: Use in keyword to call the in overload — also in NoWarn, shares MA0209's analyzer
 dotnet_diagnostic.MA0212.severity = error # MA0212: Use MemoryMarshal.GetReference instead of indexing at 0
 
-# Catch-up: Meziantou.Analyzer 3.0.231 catalog (MA0213-MA0225)
 dotnet_diagnostic.MA0213.severity = error # MA0213: Simplify negated boolean expression
 dotnet_diagnostic.MA0214.severity = none # MA0214: Use 'await' instead of returning the task — inverse of MA0215, which we enable; linq2db returns the task directly wherever it can
 dotnet_diagnostic.MA0215.severity = error # MA0215: Return the task instead of awaiting it
