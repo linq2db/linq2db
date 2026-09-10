@@ -3176,7 +3176,10 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4585
-		[ActiveIssue]
+		// As ComplexTests.Issue4139Test: the fragment starts after the per-run TableContext id.
+		[ActiveIssueNew(4585, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Issue4585Table).Nested' is not an association.",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The fluently-mapped nested association is not recognised as one.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4585")]
 		public void Issue4585Test([DataSources] string context)
 		{
