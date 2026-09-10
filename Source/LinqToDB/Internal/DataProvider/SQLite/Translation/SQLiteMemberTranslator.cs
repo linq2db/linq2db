@@ -88,11 +88,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
 			ISqlExpression StrFTime(ISqlExpressionFactory factory, DbDataType resultDbType, string format, ISqlExpression date)
 			{
 				return factory.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);

@@ -136,11 +136,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
 			/// <summary>
 			/// PostgreSQL normalises a DateTimeOffset to UTC on write and the reader hands it back at <c>+00:00</c>,
 			/// so the value a caller holds after a round-trip is a UTC one - and its components are the UTC ones.
@@ -161,6 +156,26 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 					factory.Value("UTC"),
 					SqlTimeZoneConversionKind.ToWallTime,
 					factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
+			}
+
+			/// <summary>
+			/// The inverse of the UTC reading frame: a value computed as a bare <c>timestamp</c> is read back as
+			/// being in UTC, giving a <c>timestamptz</c> again.
+			/// </summary>
+			/// <remarks>
+			/// Without this an operation answering a <see cref="DateTimeOffset"/> - <c>DateAdd</c> and the
+			/// <c>AddX</c> family - would leave the frame and never come back, handing the caller a zone-less value
+			/// where the CLR promises an offset-carrying one.
+			/// </remarks>
+			protected override ISqlExpression? FromDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression original, ISqlExpression framed, DbDataType resultType)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return new SqlTimeZoneConversionExpression(
+					framed,
+					factory.Value("UTC"),
+					SqlTimeZoneConversionKind.AttachZone,
+					resultType);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)

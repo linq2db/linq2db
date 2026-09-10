@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// ConvertZone.
 			var atTimeZone = Factory.Expression(
 				Factory.GetDbDataType(typeof(DateTimeOffset)),
-				LinqToDB.SqlQuery.Precedence.Unknown,
+				LinqToDB.SqlQuery.Precedence.Primary,
 				"{0} AT TIME ZONE {1}",
 				element.Value,
 				element.Zone);

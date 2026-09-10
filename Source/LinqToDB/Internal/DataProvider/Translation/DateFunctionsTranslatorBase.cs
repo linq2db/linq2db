@@ -2025,9 +2025,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return null;
 		}
 
+		/// <summary>
+		/// Translates a date part of a <see cref="DateTimeOffset"/>. The operand arrives already brought into the
+		/// reading frame, so this is the plain date-part translation over a value that is now in the right frame.
+		/// </summary>
+		/// <remarks>
+		/// Delegating by default is what let fifteen providers drop an override that did exactly this and nothing
+		/// else. A provider whose offset-carrying type needs different SQL from its plain one still overrides.
+		/// </remarks>
 		protected virtual ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 		{
-			return null;
+			return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 		}
 
 		protected virtual ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)

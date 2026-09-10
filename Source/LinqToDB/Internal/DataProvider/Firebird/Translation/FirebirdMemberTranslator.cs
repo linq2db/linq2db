@@ -131,11 +131,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts                                                       datepart)
 			{

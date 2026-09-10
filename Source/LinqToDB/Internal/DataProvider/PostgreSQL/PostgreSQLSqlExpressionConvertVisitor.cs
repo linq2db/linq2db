@@ -147,7 +147,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 
 			ISqlExpression AtTimeZone(SqlTimeZoneConversionExpression conversion, DbDataType resultType)
-				=> Factory.Expression(resultType, Precedence.Unknown, "{0} AT TIME ZONE {1}", conversion.Value, conversion.Zone);
+				=> Factory.Expression(resultType, Precedence.Primary, "{0} AT TIME ZONE {1}", conversion.Value, conversion.Zone);
 		}
 
 		/// <summary>

@@ -118,11 +118,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
 			/// <summary>
 			/// Oracle keeps the offset a value was written with, so the components a caller sees after a round-trip
 			/// are the ones in that stored offset - but <c>EXTRACT</c> over a <c>TIMESTAMP WITH TIME ZONE</c> answers

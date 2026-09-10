@@ -99,11 +99,6 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
 			public static string? DatePartToStr(Sql.DateParts part, bool forDateAdd)
 			{
 				return part switch
