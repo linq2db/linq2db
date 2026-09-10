@@ -447,8 +447,8 @@ namespace Tests.xUpdate
 			results.Count.ShouldBe(16);
 		}
 
-		// Probably wrong test
-		[ActiveIssue]
+		[ActiveIssueNew(ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}6{1}but was",
+			Details = "no-issue: the expected column count is inherited from the ...Workaround sibling above, which omits Fake and so projects six members. This one projects seven, and the query yields ten columns - so both the expectation and the ten are wrong, and nothing on the tracker covers either.")]
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
@@ -1703,7 +1703,9 @@ namespace Tests.xUpdate
 
 		// same as CrossJoinedSourceWithSingleFieldSelection test but with server-side sort
 		// it returns incorrectly ordered data for DB2, PostgreSQL and Oracle for some reason
-		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllPostgreSQL15Plus, TestProvName.AllDuckDB })]
+		[ActiveIssueNew(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllPostgreSQL15Plus, TestProvName.AllDuckDB },
+			ErrorMessage = "Assert.That(result[0].Id, Is.Zero)",
+			Details = "no-issue: the server-side sort does not survive the merge on these providers, so the rows come back in another order. Nothing on the tracker covers it.")]
 		[Test]
 		public void SortedMergeResultsIssue([MergeDataContextSource(false)] string context)
 		{
