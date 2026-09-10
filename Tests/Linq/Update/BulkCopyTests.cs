@@ -1303,9 +1303,29 @@ namespace Tests.xUpdate
 			[Column(SkipOnInsert = true)] public int? Id { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb])]
+		// No per-provider split is possible here, and the reason is worth recording. The generated statement has
+		// an empty column list, so almost every provider reports a syntax error at the closing parenthesis - in
+		// its own words - while SQL Server, ClickHouse and MySqlConnector ALSO produce a second, unrelated
+		// failure over the same providers ("Sequence contains no elements", "SourceOrdinal is an invalid value").
+		// The two axes overlap, so no Configuration separates them.
+		[ActiveIssueNew(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Twenty-two wordings over two overlapping failure modes; see the comment above.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
-		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		public void BulkCopyAutoOnly(
+			[DataSources(false)] string context,
+			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType copyType)
+		{
+			BulkCopyAutoOnlyCore(context, copyType);
+		}
+
+		// RowByRow inserts a row at a time and never builds the empty column list, so it passes everywhere.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnlyRowByRow([DataSources(false)] string context)
+		{
+			BulkCopyAutoOnlyCore(context, BulkCopyType.RowByRow);
+		}
+
+		void BulkCopyAutoOnlyCore(string context, BulkCopyType copyType)
 		{
 			var data = new IdentityOnlyField[]
 			{
@@ -1323,9 +1343,23 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
+		[ActiveIssueNew(4615, Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB],
+			Details = "no-declaration: as BulkCopyAutoOnly - the same empty column list, the same overlapping pair of failure modes.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
-		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		public void BulkCopySkipOnly(
+			[DataSources(false)] string context,
+			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType copyType)
+		{
+			BulkCopySkipOnlyCore(context, copyType);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopySkipOnlyRowByRow([DataSources(false)] string context)
+		{
+			BulkCopySkipOnlyCore(context, BulkCopyType.RowByRow);
+		}
+
+		void BulkCopySkipOnlyCore(string context, BulkCopyType copyType)
 		{
 			var data = new SkipOnlyField[]
 			{
