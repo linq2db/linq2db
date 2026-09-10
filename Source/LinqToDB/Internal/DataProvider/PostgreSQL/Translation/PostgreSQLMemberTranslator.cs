@@ -141,6 +141,28 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 
+			/// <summary>
+			/// PostgreSQL normalises a DateTimeOffset to UTC on write and the reader hands it back at <c>+00:00</c>,
+			/// so the value a caller holds after a round-trip is a UTC one - and its components are the UTC ones.
+			/// <c>EXTRACT</c> over a bare <c>timestamptz</c> renders in the session's zone instead, which is the
+			/// disagreement recorded as issue #5751.
+			/// </summary>
+			/// <remarks>
+			/// The offset the value was written with is not recoverable here and no SQL can bring it back:
+			/// <c>timestamptz</c> stores the instant and discards the offset. Reading in UTC is therefore not an
+			/// approximation of the original - it is exactly what the CLR answers for the value this provider returns.
+			/// </remarks>
+			protected override ISqlExpression? ToDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return new SqlTimeZoneConversionExpression(
+					value,
+					factory.Value("UTC"),
+					SqlTimeZoneConversionKind.ToWallTime,
+					factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				// date_trunc('day', dateExpression)

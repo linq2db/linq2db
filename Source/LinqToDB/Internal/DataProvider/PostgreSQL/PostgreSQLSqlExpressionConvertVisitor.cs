@@ -126,6 +126,31 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		DbDataType IntervalType => Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
 
 		/// <summary>
+		/// PostgreSQL has no type that carries an arbitrary offset - <c>timestamptz</c> keeps the instant and nothing
+		/// else - so it cannot produce a value bearing a target zone's offset. It can do the other two directions,
+		/// which is what reading a component or a wall-clock value in a named zone needs.
+		/// </summary>
+		public override bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind)
+			=> kind != SqlTimeZoneConversionKind.ConvertZone;
+
+		protected override ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
+		{
+			// One operator, two directions, told apart by the operand's type: applied to a timestamp it yields a
+			// timestamptz, applied to a timestamptz it yields a timestamp. The node's own Type is what says which,
+			// and it must be the RESULT type - typing this fragment with the operand's type is the mistake that lets
+			// a later pass elide a cast that carries the difference.
+			return element.Kind switch
+			{
+				SqlTimeZoneConversionKind.AttachZone => AtTimeZone(element, Factory.GetDbDataType(typeof(DateTimeOffset))),
+				SqlTimeZoneConversionKind.ToWallTime => AtTimeZone(element, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2)),
+				_                                    => null,
+			};
+
+			ISqlExpression AtTimeZone(SqlTimeZoneConversionExpression conversion, DbDataType resultType)
+				=> Factory.Expression(resultType, Precedence.Unknown, "{0} AT TIME ZONE {1}", conversion.Value, conversion.Zone);
+		}
+
+		/// <summary>
 		/// Widens a <c>date</c> operand to a <c>timestamp</c>.
 		/// </summary>
 		/// <remarks>
