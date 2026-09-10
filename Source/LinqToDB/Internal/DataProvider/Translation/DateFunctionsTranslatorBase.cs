@@ -1574,6 +1574,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						zone = conversion.Zone;
 						return conversion.Value;
 
+					// Already a wall clock. The node is what says so - the declared DbDataType cannot be trusted
+					// here, because a provider that builds its zoned "now" from a raw format string can label a
+					// wall-clock reading as offset-carrying, and framing it a second time shifts it by the zone.
+					case SqlTimeZoneConversionKind.ToWallTime:
+						zone = conversion.Zone;
+						return conversion;
+
 					case SqlTimeZoneConversionKind.ConvertZone:
 					{
 						if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
@@ -1591,6 +1598,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					}
 				}
 			}
+
+			// Only a value that actually carries an offset has a frame to be brought out of. A provider whose
+			// ZonedUtcNow already answers a zone-less wall clock - DuckDB emits now() AT TIME ZONE 'UTC' - would
+			// otherwise have that reading converted a second time, shifting it by the zone.
+			if (QueryHelper.GetDbDataType(value, translationContext.MappingSchema).DataType != DataType.DateTimeOffset)
+				return value;
 
 			return ToDateTimeOffsetFrame(translationContext, value);
 		}

@@ -92,8 +92,7 @@ namespace Tests.Linq
 							TestProvName.AllDB2,
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
-							TestProvName.AllDuckDB,
-							TestProvName.AllFirebirdLess4,
+									TestProvName.AllFirebirdLess4,
 							TestProvName.AllYdb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
@@ -123,8 +122,7 @@ namespace Tests.Linq
 							TestProvName.AllDB2,
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
-							TestProvName.AllDuckDB,
-							TestProvName.AllFirebirdLess4)
+									TestProvName.AllFirebirdLess4)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
 
@@ -153,8 +151,7 @@ namespace Tests.Linq
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
 							TestProvName.AllFirebirdLess4,
-							TestProvName.AllDuckDB,
-							TestProvName.AllYdb)
+									TestProvName.AllYdb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
 
