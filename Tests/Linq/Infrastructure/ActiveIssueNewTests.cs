@@ -267,6 +267,49 @@ namespace Tests.Infrastructure
 				.AppliesTo(null, isLinqService: false).ShouldBeTrue();
 		}
 
+		static TestPlatform Current =>
+			OperatingSystem.IsWindows() ? TestPlatform.Windows :
+			OperatingSystem.IsLinux()   ? TestPlatform.Linux   :
+			TestPlatform.MacOS;
+
+		static TestPlatform Other => Current == TestPlatform.Windows ? TestPlatform.Linux : TestPlatform.Windows;
+
+		[Test]
+		public void AppliesTo_PlatformsDefault_GovernsEverywhere()
+		{
+			new ActiveIssueNewAttribute().AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+		}
+
+		[Test]
+		public void AppliesTo_MatchingPlatform_Governs()
+		{
+			new ActiveIssueNewAttribute { Platforms = Current }
+				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+		}
+
+		[Test]
+		public void AppliesTo_OtherPlatform_DoesNotGovern()
+		{
+			new ActiveIssueNewAttribute { Platforms = Other }
+				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_PlatformIsCheckedBeforeTheNoProviderShortcut()
+		{
+			// The shortcut returns true for a test with no data-source parameter, so a platform bound that ran after
+			// it would be silently inert on exactly the tests that have no other targeting.
+			new ActiveIssueNewAttribute { Platforms = Other }
+				.AppliesTo(null, isLinqService: false).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_PlatformFlagsCombine()
+		{
+			new ActiveIssueNewAttribute { Platforms = Current | Other }
+				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+		}
+
 		#endregion
 
 		#region SelectGoverning — precedence and overlap
@@ -298,6 +341,36 @@ namespace Tests.Infrastructure
 
 			ActiveIssueNewAttribute.SelectGoverning([blanket, oracle], "SQLite.MS", false, out ambiguous).ShouldBeSameAs(blanket);
 			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_PlatformScopedBeatsBlanket()
+		{
+			var blanket  = new ActiveIssueNewAttribute(1);
+			var platform = new ActiveIssueNewAttribute(2) { Platforms = Current };
+
+			ActiveIssueNewAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(platform);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_PlatformScopedOnAnotherPlatform_FallsBackToBlanket()
+		{
+			var blanket  = new ActiveIssueNewAttribute(1);
+			var platform = new ActiveIssueNewAttribute(2) { Platforms = Other };
+
+			ActiveIssueNewAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(blanket);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_OnlyAttributeIsForAnotherPlatform_NothingGoverns()
+		{
+			// The case TestDoubleRoundTrip needs: on the platform where the test passes, no attribute applies, so
+			// the result is left alone rather than rewritten to "passed but is marked".
+			var platform = new ActiveIssueNewAttribute(1) { Platforms = Other };
+
+			ActiveIssueNewAttribute.SelectGoverning([platform], "SQLite.MS", false, out _).ShouldBeNull();
 		}
 
 		[Test]

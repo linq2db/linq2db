@@ -10,6 +10,20 @@ using NUnit.Framework.Internal.Commands;
 
 namespace Tests
 {
+	/// <summary>Operating systems an <see cref="ActiveIssueNewAttribute"/> governs.</summary>
+	[Flags]
+	public enum TestPlatform
+	{
+		/// <summary>Every platform.</summary>
+		Any     = 0,
+		/// <summary>Windows.</summary>
+		Windows = 1,
+		/// <summary>Linux.</summary>
+		Linux   = 2,
+		/// <summary>macOS.</summary>
+		MacOS   = 4,
+	}
+
 	/// <summary>
 	/// Marks a test as failing because of a known issue, and <b>asserts that it still does</b>. Unlike
 	/// <see cref="ActiveIssueAttribute"/>, which hides the test from discovery, the test runs and its outcome is
@@ -82,6 +96,17 @@ namespace Tests
 			set => _configurations = value.Split(',').Select(_ => _.Trim()).ToArray();
 		}
 
+		/// <summary>
+		/// Gets or sets the operating systems this attribute governs. Default <see cref="TestPlatform.Any"/> governs
+		/// everywhere.
+		/// <para>
+		/// Needed because a failure can be platform-dependent rather than provider-dependent — a provider's native
+		/// binary differs per RID, so the same provider answers differently on Linux and on Windows. Without this,
+		/// such a gate reddens every run on the platform where the test passes.
+		/// </para>
+		/// </summary>
+		public TestPlatform Platforms { get; set; } = TestPlatform.Any;
+
 		/// <summary>Gets or sets a flag if this attribute should be skipped for a LinqOverWcf test. Default value: <see langword="false"/>.</summary>
 		public bool SkipForLinqService { get; set; }
 
@@ -110,7 +135,13 @@ namespace Tests
 
 		string ExpectedTypeName => ErrorType?.FullName ?? ErrorTypeName ?? string.Empty;
 
-		bool HasExplicitTargeting => (_configurations != null && _configurations.Length > 0) || SkipForLinqService || SkipForNonLinqService;
+		bool HasExplicitTargeting => (_configurations != null && _configurations.Length > 0) || SkipForLinqService || SkipForNonLinqService || Platforms != TestPlatform.Any;
+
+		static TestPlatform CurrentPlatform =>
+			OperatingSystem.IsWindows() ? TestPlatform.Windows :
+			OperatingSystem.IsLinux()   ? TestPlatform.Linux   :
+			OperatingSystem.IsMacOS()   ? TestPlatform.MacOS   :
+			TestPlatform.Any;
 
 		string Reference
 		{
@@ -145,6 +176,11 @@ namespace Tests
 		/// </summary>
 		public bool AppliesTo(string? provider, bool isLinqService)
 		{
+			// Before the provider == null shortcut: the platform is ambient, so it bounds a gate on a test with no
+			// data-source parameter too.
+			if (Platforms != TestPlatform.Any && (Platforms & CurrentPlatform) == 0)
+				return false;
+
 			if (provider == null)
 				return true;
 

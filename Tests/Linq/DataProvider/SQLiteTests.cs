@@ -210,7 +210,12 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b")]
+		// Platform-scoped, not provider-scoped: the same four SQLite providers fail on Linux and pass on Windows,
+		// because the bundled native binary differs per RID and only the Linux one loses the last two digits.
+		[ActiveIssueNew("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b",
+			Platforms = TestPlatform.Linux,
+			ErrorMessage = "Expected: -1.7900000000000002E+308d{0}But was:  -1.79E+308d",
+			Details = "SQLite's own ticket: the CAST to real loses the last two digits, so the value comes back as -1.79E+308.")]
 		[Test]
 		public void TestDoubleRoundTrip([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
