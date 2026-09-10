@@ -1773,7 +1773,10 @@ namespace Tests.Linq
 
 		private record InvalidColumnIndexMappingRecord(Guid Id, Guid? ChildId, InvalidColumnIndexMappingEnum1? Enum1, InvalidColumnIndexMappingEnum2? Enum2);
 
-		[ActiveIssue]
+		// Message-only: the two SqlClient packages raise their own SqlException, and the remote wrapper carries
+		// whichever of them the server leg used.
+		[ActiveIssueNew(3360, ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Enum1\" of recursive query \"cte\".",
+			Details = "Issue number taken from the test's own name. The Description records an older symptom - a convert exception - which the sweep did not reproduce; what happens now is the server refusing the recursive query outright.")]
 		[Test(Description = "LinqToDBConvertException : Cannot convert value 'ENUM1_VALUE: System.String' to type 'Tests.Linq.CteTests+InvalidColumnIndexMappingEnum2'")]
 		public void Issue3360_InvalidColumnIndexMapping([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1832,7 +1835,14 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer])]
+		// ClickHouse and MySQL dropped: both ran in the sweep and both pass. What is left fails two ways - SQL
+		// Server refuses the recursive query, Firebird overflows while widening the anchor's literal.
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllSqlServer,
+			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Byte\" of recursive query \"cte\".",
+			Details = "Message-only: the two SqlClient packages raise their own SqlException.")]
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "arithmetic exception, numeric overflow, or string truncation",
+			Details = "Firebird types the anchor's null literal too narrowly and overflows instead of refusing.")]
 		[Test(Description = "null literals in anchor query (for known problematic types)")]
 		public void Issue3360_NullsInAnchor([RecursiveCteContextSource] string context)
 		{
@@ -1878,7 +1888,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer])]
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllSqlServer,
+			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Enum\" of recursive query \"cte\".",
+			Details = "as Issue3360_NullsInAnchor, on the enum column.")]
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "arithmetic exception, numeric overflow, or string truncation",
+			Details = "as Issue3360_NullsInAnchor. ClickHouse and MySQL dropped here too - both ran and both pass.")]
 		[Test(Description = "double columns in anchor query")]
 		public void Issue3360_DoubleColumnSelection([RecursiveCteContextSource] string context)
 		{
@@ -1972,7 +1987,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue]
+		[ActiveIssueNew(2451, ErrorMessage = "Types don't match between the anchor and the recursive part in column \"FirstName\" of recursive query \"cte\".",
+			Details = "Issue number taken from the test's own name. Message-only, as Issue3360_InvalidColumnIndexMapping.")]
 		[Test(Description = "Test that we type non-field union column properly")]
 		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
