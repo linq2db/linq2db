@@ -21,7 +21,9 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssueNew(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Non-numeric character in datetime or interval.",
+			Details = "no-issue: Informix interval cannot be created from non-literal value")]
 		[Test]
 		public void UnionTest([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -47,7 +49,9 @@ namespace Tests.Linq
 			var result2 = query.Select(v => v.Value2).ToArray();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
+		[ActiveIssueNew(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Non-numeric character in datetime or interval.",
+			Details = "no-issue: Informix interval cannot be created from non-literal value")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)] string context)

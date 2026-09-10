@@ -585,7 +585,8 @@ namespace Tests.DataProvider
 		}
 
 		#region issue 4581
-		[ActiveIssue]
+		[ActiveIssueNew(4581, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "String truncation: max=4000, len=5000",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The 5000-character value is bound as nvarchar rather than ntext - #4581's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4581")]
 		public void Issue4581Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
 		{

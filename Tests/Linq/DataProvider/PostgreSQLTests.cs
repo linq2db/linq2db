@@ -2975,7 +2975,8 @@ $function$
 			Assert.That(res.RangeMappedAsDateTime, Is.EqualTo(record.RangeMappedAsDateTime));
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(2796, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Cannot convert value{0}NpgsqlTypes.NpgsqlRange",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. One attribute covers both transports: the remote message carries the inner type name, which is what Matches looks for there.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{

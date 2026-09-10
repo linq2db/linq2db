@@ -139,7 +139,10 @@ namespace Tests.UserTests
 			public virtual int DepthCoordinate { get; set; }
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer)]
+		// No ErrorTypeName: the two SqlClient packages raise their own SqlException and share only the message.
+		[ActiveIssueNew(3305, Configuration = TestProvName.AllSqlServer,
+			ErrorMessage = "Invalid object name 'InventoryResourceDTO'.",
+			Details = "Issue number taken from the fixture, whose own repro this is. The table the query names is never resolved on SQL Server.")]
 		[Test]
 		public void TestComplexQueryWms([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{

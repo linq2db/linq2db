@@ -203,7 +203,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("DataParameter not supported by TableExpressionAttribute")]
+		// No ErrorTypeName: the two SqlClient packages raise their own SqlException and share only the message.
+		[ActiveIssueNew(ErrorMessage = "Incorrect syntax near the keyword 'select'.",
+			Details = "no-issue: DataParameter not supported by TableExpressionAttribute, so the table-valued parameter is emitted inline and the server rejects the statement. Nothing on the tracker covers it.")]
 		[Test]
 		public void TableValuedParameterInQueryUsingTableMethodTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,

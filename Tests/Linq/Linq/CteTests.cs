@@ -1602,7 +1602,10 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum?  Enum1 { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
+		// No ErrorTypeName: the two SqlClient packages raise their own SqlException and share only the message.
+		[ActiveIssueNew(3360, Configurations = [TestProvName.AllSqlServer],
+			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Guid\" of recursive query \"cte\".",
+			Details = "Issue number taken from the test's own name. The untyped NULL in the anchor settles the column on a type the recursive part cannot match - the same defect #3360 reports for unions.")]
 		[Test(Description = "Test CTE columns typing")]
 		public void Issue3360_NullGuidInAnchor([RecursiveCteContextSource(TestProvName.AllFirebird, ProviderName.DB2)] string context)
 		{
@@ -1622,7 +1625,9 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
+		[ActiveIssueNew(3360, Configurations = [TestProvName.AllSqlServer],
+			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Enum1\" of recursive query \"cte\".",
+			Details = "as Issue3360_NullGuidInAnchor, on the enum column.")]
 		[Test(Description = "Test CTE columns typing")]
 		public void Issue3360_NullEnumInAnchor([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{

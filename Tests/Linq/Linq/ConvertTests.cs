@@ -647,7 +647,9 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configuration = ProviderName.DB2)]
+		[ActiveIssueNew(Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0245N{0}The invocation of routine \"DECIMAL\" is ambiguous",
+			Details = "no-issue: CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit. Nothing on the tracker covers it. The placeholder spans the two spaces DB2 pads after the code.")]
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
