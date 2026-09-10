@@ -38,7 +38,14 @@ namespace Tests.Linq
 			[Column] public T[]? Value { get; set; }
 		}
 
-		[ActiveIssue]
+		// PostgreSQL gets its own attribute: it maps the int array natively and stops at the enum one instead, so
+		// the type named in the refusal differs there.
+		[ActiveIssueNew(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
+			Details = "no-issue: an array column has no automatic database type. Nothing on the tracker covers it.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "no-issue: as above, but PostgreSQL only reaches the enum array.")]
 		[Test]
 		public void CreateTable([DataSources(false)] string context)
 		{

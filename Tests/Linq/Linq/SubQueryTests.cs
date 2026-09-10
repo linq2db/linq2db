@@ -1186,7 +1186,12 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue]
+		// Sybase splits off: everywhere else the query runs and answers wrongly, there it is refused outright.
+		[ActiveIssueNew(3295, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. #3295 is closed and its own repro is the Test1 sibling, which passes; this variant still answers wrongly on every provider that can run it.")]
+		[ActiveIssueNew(3295, Configuration = TestProvName.AllSybase, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Sybase refuses the shape rather than answering wrongly.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
 		public void Issue3295Test2([DataSources] string context)
 		{

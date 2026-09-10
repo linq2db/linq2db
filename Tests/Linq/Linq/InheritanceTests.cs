@@ -1354,7 +1354,13 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Partial mapping is not supported for now")]
+		// YDB splits off: it never reaches the mapping error because the connection is already gone by then.
+		[ActiveIssueNew(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '2'",
+			Details = "no-issue: Partial mapping is not supported for now")]
+		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "Connection is closed",
+			Details = "no-issue: Partial mapping is not supported for now - on YDB the failure arrives as a closed connection instead, which is consistent with its one-statement-per-connection behaviour rather than with the mapping error the other providers report.")]
 		[Test]
 		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)
 		{
