@@ -2,55 +2,35 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
 	<!--
-	System.Data.Sqlite runtimes deployment script.
-	
-	Why:
-	- S.D.S v2 introduced new separate package for sqlite runtime for many architectures and those runtimes
-	  now partially conflict by path with runtimes from Microsoft.Data.SQLite
-	  and which is more important: confuse DllImport with which runtime module to use
-	- MSBUILD scripts from nuget doesn't work nice with non-platform specific projects
-	
-	When:
-	- with .NET 11 Microsoft provider will migrate to same runtimes package and we will be able to remove this script and workarounds
-	
-	What:
-	To workaround those issues we do following:
-	
-	- to disable bad build scripts we override bad CheckForAnyCPU target from package
-	- to solve path conflicts we:
-	  1. copy S.D.S runtimes to custom folder instead of runtimes
-	  2. in startup code (for tests and linqpad) we override runtimes folder, configured by PreLoadSQLite_BaseDirectory env variable
-	  so MDS will use default load logic and SDS will load runtimes by custom path
+	Native SQLite deployment for .NET Framework.
+
+	Both SQLite clients are SQLitePCLRaw-based - System.Data.SQLite 2.x DllImports e_sqlite3 and honours
+	PreLoadSQLite_BaseDirectory just as Microsoft.Data.Sqlite does - so they share one native package,
+	SQLitePCLRaw.lib.e_sqlite3, and one deployment path. (Until 6.5.0 System.Data.SQLite was fed a second
+	native package, SourceGear.sqlite3, and this file relocated one of the two because both place
+	e_sqlite3 at the same relative path.)
+
+	What is left here is a .NET Framework gap, not a conflict: the package's lowest netfx asset group is
+	net471, so a net462 project gets no natives from it at all and they have to be copied by hand. Its
+	netfx targets are also Platform-conditioned (x86/x64/arm64) and error out on AnyCPU, which the
+	CheckForAnyCPU override below disables for the LINQPad 5 driver.
 	-->
 
-	<!--override (disable) build scripts from SourceGear.sqlite3-->
+	<!--override (disable) the package's AnyCPU guard-->
 	<Target Name="CheckForAnyCPU" BeforeTargets="BeforeBuild" Condition="$(TargetFramework) == 'net472'" />
 
-	<PropertyGroup>
-		<SystemDataSqliteRuntimeFolder>sds/runtimes</SystemDataSqliteRuntimeFolder>
-	</PropertyGroup>
-
-	<Target Name="CopySQLiteRuntimes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net462' AND '$(TargetFramework)' != 'net472'">
-		<ItemGroup>
-			<SQLiteRuntimes Include="$(PkgSourceGear_sqlite3)\runtimes\**\*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(SQLiteRuntimes)" DestinationFolder="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\%(RecursiveDir)" />
-	</Target>
-
-	<!--for netfx copy only supported runtimes-->
-	<Target Name="CopySQLiteRuntimes2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net462'">
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x86\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x64\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-arm64\native\e_sqlite3.dll" />
+	<!--net462 has no asset group in the package, so copy the supported Windows natives by hand-->
+	<Target Name="CopySQLiteRuntimes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net462'">
+		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\runtimes\win-x86\native\e_sqlite3.dll" />
+		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
+		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-arm64\native\e_sqlite3.dll" />
 	</Target>
 
 	<!--
-	net472 is excluded from the generic target above because it is the LINQPad 5 driver, which runs
-	x86/x64 only: the full SourceGear.sqlite3 runtimes tree (iOS, Android, Linux ppc64le/mips64,
-	macOS, maccatalyst) is ~52 MB the driver can never load, and it ends up inside the packed .lpx.
-	Note the net462 guard above does NOT cover it — LinqToDB.LINQPad targets net472, not net462.
-	The two Windows natives it does need are copied by LinqToDB.LINQPad.csproj's PostBuild2 target,
-	which also owns Pack.cmd and so can guarantee they exist before the archive is written.
+	net472 is the LINQPad 5 driver. Its two Windows natives are copied by LinqToDB.LINQPad.csproj's
+	PostBuild2 target instead, which also owns Pack.cmd and so can guarantee they exist before the
+	archive is written - a target hooked on AfterTargets="PostBuildEvent" here has no guaranteed order
+	relative to that one.
 	-->
 
 </Project>

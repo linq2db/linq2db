@@ -39,8 +39,9 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-		// temporary, see SQLite.Runtime.props notes
-		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sds"));
+		// both SQLite clients are SQLitePCLRaw-based and share one native package, so both resolve
+		// e_sqlite3 under runtimes/ here; see SQLite.Runtime.props for the netfx deployment gap
+		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", AppDomain.CurrentDomain.BaseDirectory);
 
 #if NET8_0_OR_GREATER
 		// this API is not available in NETFX, but for some reason it works if SDS test run first (which is true now)

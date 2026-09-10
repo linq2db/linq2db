@@ -1,1 +1,5 @@
-﻿#nullable enable
+#nullable enable
+LinqToDB.Remote.Grpc.GrpcLinqServiceProxies
+LinqToDB.Remote.Grpc.GrpcLinqServiceProxies.GrpcLinqServiceProxies() -> void
+LinqToDB.Remote.Grpc.GrpcLinqServiceTypeModel
+LinqToDB.Remote.Grpc.GrpcLinqServiceTypeModel.GrpcLinqServiceTypeModel() -> void

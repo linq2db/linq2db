@@ -62,8 +62,11 @@ namespace LinqToDB.Remote.SignalR
 		// HubConnection offers no synchronous disposal, and Task.Run keeps the wait off the caller's
 		// synchronization context. A method rather than a lambda because DisposeAsync returns Task on
 		// net462/netstandard2.0 and ValueTask from net8.0 on, so a lambda is reducible on the former only
-		// (IDE0200) while being required on the latter.
+		// (IDE0200) while being required on the latter. That same split makes MA0215 fire on the former
+		// only: returning the task directly compiles there and does not on net8.0+.
+#pragma warning disable MA0215 // Return the task instead of awaiting it
 		async Task DisposeOwnedHubConnectionAsync() => await _ownedHubConnection!.DisposeAsync().ConfigureAwait(false);
+#pragma warning restore MA0215
 
 		public override async ValueTask DisposeAsync()
 		{

@@ -434,6 +434,21 @@ dotnet_diagnostic.MA0209.severity = none # MA0209: Use in keyword for in paramet
 dotnet_diagnostic.MA0210.severity = none # MA0210: Use in keyword to call the in overload — also in NoWarn, shares MA0209's analyzer
 dotnet_diagnostic.MA0212.severity = error # MA0212: Use MemoryMarshal.GetReference instead of indexing at 0
 
+# Catch-up: Meziantou.Analyzer 3.0.231 catalog (MA0213-MA0225)
+dotnet_diagnostic.MA0213.severity = error # MA0213: Simplify negated boolean expression
+dotnet_diagnostic.MA0214.severity = none # MA0214: Use 'await' instead of returning the task — inverse of MA0215, which we enable; linq2db returns the task directly wherever it can
+dotnet_diagnostic.MA0215.severity = error # MA0215: Return the task instead of awaiting it
+dotnet_diagnostic.MA0216.severity = error # MA0216: Remove unnecessary closed modifier
+dotnet_diagnostic.MA0217.severity = none # MA0217: Use a static lambda — 2918 sites in Source/LinqToDB alone; adopting it is a mechanical but whole-codebase change that belongs on its own PR, not in a release-prep commit. The rule ships a code fix, so the migration is scriptable when someone takes it on
+dotnet_diagnostic.MA0218.severity = error # MA0218: The language attribute is empty
+dotnet_diagnostic.MA0219.severity = none # MA0219: Set the language attribute in XML comment — hidden by default and would report on 200+ <code> blocks, same reasoning as MA0211
+dotnet_diagnostic.MA0220.severity = error # MA0220: The configured regular expression is not valid
+dotnet_diagnostic.MA0221.severity = error # MA0221: TryGetValue method should use [MaybeNullWhen(false)] on the value parameter
+dotnet_diagnostic.MA0222.severity = error # MA0222: JsonSourceGenerationOptions should set RespectNullableAnnotations
+dotnet_diagnostic.MA0223.severity = error # MA0223: JsonSourceGenerationOptions should set RespectRequiredConstructorParameters
+dotnet_diagnostic.MA0224.severity = none # MA0224: JsonSerializerOptions should set RespectNullableAnnotations — would change how the CLI and LINQPad driver deserialize user config JSON, which is a behaviour change rather than a lint fix
+dotnet_diagnostic.MA0225.severity = none # MA0225: JsonSerializerOptions should set RespectRequiredConstructorParameters — same reason as MA0224
+
 MA0002.report_collection_expressions = true
 MA0011.consider_nullable_types = true
 MA0075.consider_nullable_types = true
@@ -675,6 +690,14 @@ dotnet_diagnostic.AsyncFixer04.severity = error # Unawaited async call in using 
 dotnet_diagnostic.AsyncFixer05.severity = error # Nested Task from TaskFactory.StartNew
 dotnet_diagnostic.AsyncFixer06.severity = error # Task<T> to Task implicit conversion
 
+################################################################################################
+# protobuf-net.BuildTools: https://protobuf-net.dev/
+# Ships inside protobuf-net.core since 3.4.0; before that it was the opt-in protobuf-net.BuildTools
+# package (last standalone release 3.3.8), which we never referenced. So the whole PBN family
+# arrived with the protobuf-net 3.2.56 -> 3.4.21 bump and had no severity decisions before it.
+################################################################################################
+dotnet_diagnostic.PBN2008.severity = none # PBN2008: gRPC input/output type could not be verified. Our contracts use [DataContract]/[DataMember(Order = n)], which protobuf-net supports but the analyzer cannot confirm statically; its own wording ("may be usable") is a hedge, so it must not be a hard error under TreatWarningsAsErrors
+
 # ReSharper properties
 resharper_csharp_allow_far_alignment = true
 resharper_int_align_switch_sections = true
@@ -780,6 +803,8 @@ dotnet_diagnostic.MA0172.severity = none # MA0172: Both sides identical — inte
 dotnet_diagnostic.MA0175.severity = none # MA0175: Record class explicit keyword — paired with whole-repo MA0174 disable
 dotnet_diagnostic.MA0176.severity = none # MA0176: Optimize guid creation
 dotnet_diagnostic.MA0186.severity = none # MA0186: Missing NotNullWhen Attribute On Equals — test-model equality nullability not enforced
+dotnet_diagnostic.MA0215.severity = none # MA0215: Return the task instead of awaiting it — the elided async state machine is the whole benefit and it does not matter in a fixture body
+dotnet_diagnostic.MA0217.severity = none # MA0217: Use a static lambda — allocation hygiene matters in the product, not in test bodies
 
 dotnet_diagnostic.SYSLIB1045.severity = none # SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
 

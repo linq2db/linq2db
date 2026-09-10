@@ -1489,12 +1489,16 @@ namespace Tests.Linq
 				AreEqualLocal(local, table, t => !(t.NullableBoolValue != null) && t.Id > 0);
 			}
 
+			// the un-simplified negations are the shapes under test - De Morgan here would feed the
+			// translator the simplified tree and stop covering the negated one
+#pragma warning disable MA0213 // Simplify negated boolean expression
 			AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
 			AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
 
 			AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue == false) && t.Id > 0);
 
 			AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue == false) && t.Id > 0);
+#pragma warning restore MA0213
 		}
 
 		[Test]

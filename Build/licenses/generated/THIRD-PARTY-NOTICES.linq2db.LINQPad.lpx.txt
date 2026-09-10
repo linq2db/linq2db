@@ -21,7 +21,7 @@ COMPONENTS
    https://github.com/DataAction/AdoNetCore.AseClient
    License: Apache-2.0  see [1]
 
-2. ClickHouse.Driver net10.0: 1.3.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.3.0, net8.0-windows7.0: 1.3.0, net9.0: 1.3.0
+2. ClickHouse.Driver net10.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.4.0, net8.0-windows7.0: 1.4.0, net9.0: 1.4.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [2]
 
@@ -66,12 +66,12 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-11. Microsoft.CodeAnalysis.Common net10.0: 5.6.0, net472: 5.6.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
+11. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net472: 5.9.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
    https://github.com/dotnet/roslyn
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-12. Microsoft.CodeAnalysis.CSharp net10.0: 5.6.0, net472: 5.6.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
+12. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net472: 5.9.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
    https://github.com/dotnet/roslyn
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -96,7 +96,7 @@ COMPONENTS
    License: Microsoft Software License Terms (Distributable Code)  see [9]
    © Microsoft Corporation. All rights reserved.
 
-17. Microsoft.Data.Sqlite.Core 10.0.10
+17. Microsoft.Data.Sqlite.Core 10.0.12
    https://docs.microsoft.com/dotnet/standard/data/sqlite/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -111,17 +111,17 @@ COMPONENTS
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-20. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+20. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-22. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+22. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -131,22 +131,22 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Extensions.Logging net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+24. Microsoft.Extensions.Logging net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-25. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+25. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-26. Microsoft.Extensions.Options net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+26. Microsoft.Extensions.Options net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-27. Microsoft.Extensions.Primitives net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+27. Microsoft.Extensions.Primitives net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -197,7 +197,7 @@ COMPONENTS
    Copyright (c) Microsoft Corporation.
    The bundled binary is version 170.1000.7, whose embedded license.md is the MICROSOFT SQL SERVER VNEXT COMMUNITY PREVIEW pre-release text: its term ended 09/30/2022, it grants installation "solely to internally evaluate it and provide feedback to Microsoft", and it contains no DISTRIBUTABLE CODE section or any distribution grant. That appears to be a packaging error on a stable release - 160.1000.6 of the same package carries ordinary MICROSOFT SOFTWARE LICENSE TERMS for MICROSOFT SYSTEM CLR TYPES FOR MICROSOFT SQL SERVER 2022, with an explicit DISTRIBUTABLE CODE grant covering third-party distribution. Reported to Microsoft. The terms reproduced here are the 160.1000.6 ones, which is what we understand to have been intended for this package; the text Microsoft actually attached to 170.1000.7 is the pre-release one described above.
 
-37. MySqlConnector 2.6.1
+37. MySqlConnector 2.6.2
    https://mysqlconnector.net/
    License: MIT  see [2]
    Copyright 2016–2026 Bradley Grainger
@@ -216,24 +216,24 @@ COMPONENTS
    License: PostgreSQL  see [12]
    Copyright 2025 © The Npgsql Development Team
 
-41. Oracle.ManagedDataAccess.Core 23.26.300
+41. Oracle.ManagedDataAccess.Core 23.26.301
    https://www.oracle.com/database/technologies/appdev/dotnet.html
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [13]
    Copyright © 2026, Oracle and/or its affiliates
 
-42. SQLitePCLRaw.bundle_e_sqlite3 2.1.11
+42. SQLitePCLRaw.bundle_e_sqlite3 2.1.12
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-43. SQLitePCLRaw.core 2.1.11
+43. SQLitePCLRaw.core 2.1.12
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-44. SQLitePCLRaw.lib.e_sqlite3 2.1.11
+44. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0: 2.1.12, net8.0-windows7.0: 3.53.3, net9.0: 2.1.12
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-45. SQLitePCLRaw.provider.dynamic_cdecl 2.1.11
+45. SQLitePCLRaw.provider.dynamic_cdecl 2.1.12
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
@@ -252,7 +252,7 @@ COMPONENTS
    License: MIT  see [14]
    © Microsoft Corporation. All rights reserved.
 
-49. System.Data.SQLite 2.0.3
+49. System.Data.SQLite 2.0.4
    License: Public Domain
    Public Domain
 
@@ -271,12 +271,12 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-53. System.IO.Hashing 10.0.10
+53. System.IO.Hashing 10.0.12
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-54. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.5, net9.0: 10.0.10
+54. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -311,12 +311,12 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-61. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.5, net9.0: 10.0.10
+61. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-62. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.5, net9.0: 10.0.10
+62. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.

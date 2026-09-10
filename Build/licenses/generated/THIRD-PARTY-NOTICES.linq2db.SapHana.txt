@@ -34,7 +34,7 @@ COMPONENTS
    Redistribution: unresolved
    Sap.Data.Hana.v4.5.dll is checked into Redist/SapHana and copied into the T4 tools folder; no licence accompanied that copy in this repository. The text reproduced here is the SAP Developer License Agreement 3.2, which SAP attaches to the HANA .NET providers it publishes on nuget.org (Sap.Data.Hana.Net.v6.0/v8.0/v10.0) - it is the best available statement of SAP terms for this provider, but it is not necessarily the agreement under which the .NET Framework copy here was obtained, which came from a HANA client installation. Read it before relying on this component: section 1 grants a non-transferable, non-sublicensable licence and section 2(a) states the software may not be provided or made available to any third party. Note also that only the managed assembly is packed, not the native libadonetHDB it calls into, so it cannot connect unless the SAP HANA client is already installed.
 
-4. System.Data.Odbc 10.0.10
+4. System.Data.Odbc 10.0.12
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
