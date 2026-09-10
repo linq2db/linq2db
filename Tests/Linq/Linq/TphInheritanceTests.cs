@@ -440,7 +440,8 @@ namespace Tests.Linq
 		class TphDupColSecond : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
 		class TphDupColThird  : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
 
-		[ActiveIssue("Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
+		[ActiveIssueNew(ErrorMessage = "Assert.That(((TphConvScaled)all[1]).Value, Is.EqualTo(7))",
+			Details = "no-issue: Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
 		[Test]
 		public void TPH_SiblingColumn_DifferentValueConverters([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -484,7 +485,8 @@ namespace Tests.Linq
 			[Column("Payload"), ValueConverter(ConverterType = typeof(TphConvTimesHundred))] public int Value { get; set; }
 		}
 
-		[ActiveIssue("Sibling subtypes mapping the same physical column through the same ValueConverter type are not collapsed on read: the projection dedup compares converter instances by reference, but GetValueConverter builds a fresh instance per column, so the shared column is projected more than once. Cosmetic (data is correct); a fix must compare converters safely, not by runtime type. Surfaced by Copilot review on #5661.")]
+		[ActiveIssueNew(ErrorMessage = "Assert.That(sql.Split([\"[Payload]\"], System.StringSplitOptions.None).Length - 1, Is.EqualTo(1))",
+			Details = "no-issue: Sibling subtypes mapping the same physical column through the same ValueConverter type are not collapsed on read: the projection dedup compares converter instances by reference, but GetValueConverter builds a fresh instance per column, so the shared column is projected more than once. Cosmetic (data is correct); a fix must compare converters safely, not by runtime type. Surfaced by Copilot review on #5661.")]
 		[Test]
 		public void TPH_SiblingColumn_SameValueConverterType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
