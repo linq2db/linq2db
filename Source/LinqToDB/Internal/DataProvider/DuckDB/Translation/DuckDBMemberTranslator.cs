@@ -215,8 +215,35 @@ namespace LinqToDB.Internal.DataProvider.DuckDB.Translation
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
+				// DuckDB does not store the original offset, so Now and UtcNow are the same instant. now() is a
+				// TIMESTAMPTZ; an AT TIME ZONE 'UTC' here would hand back a zone-less wall clock declared as
+				// DateTimeOffset, which the reading frame below would then convert a second time.
+				return translationContext.ExpressionFactory.Function(dbDataType, "now");
+			}
+
+			/// <inheritdoc />
+			protected override bool RoundTripsInUtc => true;
+
+			protected override ISqlExpression? ToDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value)
+			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.NotNullExpression(dbDataType, "{0} AT TIME ZONE 'UTC'", factory.Function(dbDataType, "now"));
+
+				return new SqlTimeZoneConversionExpression(
+					value,
+					factory.Value("UTC"),
+					SqlTimeZoneConversionKind.ToWallTime,
+					factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
+			}
+
+			protected override ISqlExpression? FromDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression original, ISqlExpression framed, DbDataType resultType)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return new SqlTimeZoneConversionExpression(
+					framed,
+					factory.Value("UTC"),
+					SqlTimeZoneConversionKind.AttachZone,
+					resultType);
 			}
 		}
 

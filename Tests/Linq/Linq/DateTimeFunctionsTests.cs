@@ -92,7 +92,8 @@ namespace Tests.Linq
 							TestProvName.AllDB2,
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
-									TestProvName.AllFirebirdLess4,
+							TestProvName.AllDuckDB,
+							TestProvName.AllFirebirdLess4,
 							TestProvName.AllYdb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
@@ -122,7 +123,8 @@ namespace Tests.Linq
 							TestProvName.AllDB2,
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
-									TestProvName.AllFirebirdLess4)
+							TestProvName.AllDuckDB,
+							TestProvName.AllFirebirdLess4)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
 
@@ -151,7 +153,8 @@ namespace Tests.Linq
 							TestProvName.AllMySql,
 							TestProvName.AllSybase,
 							TestProvName.AllFirebirdLess4,
-									TestProvName.AllYdb)
+							TestProvName.AllDuckDB,
+							TestProvName.AllYdb)
 					? DateTime.Now.ToUniversalTime()
 					: DateTime.Now;
 
@@ -237,7 +240,8 @@ namespace Tests.Linq
 					TestProvName.AllPostgreSQL,
 					TestProvName.AllClickHouse,
 					TestProvName.AllMySql,
-					TestProvName.AllYdb);
+					TestProvName.AllYdb,
+					TestProvName.AllDuckDB);
 				var kind       = returnsUtc
 					? DateTimeKind.Utc
 					: DateTimeKind.Local;
@@ -247,7 +251,7 @@ namespace Tests.Linq
 
 				// Component check — what the server actually generated, no ADO.NET TZ coercion.
 				// Most providers return local time + local offset → components match local wall-clock.
-				// Postgres / ClickHouse / Ydb normalize to UTC internally → components are UTC.
+				// Postgres / ClickHouse / Ydb / DuckDB normalize to UTC internally → components are UTC.
 				var expectedParts = returnsUtc ? DateTime.UtcNow : DateTime.Now;
 
 				Assert.That(
@@ -261,7 +265,7 @@ namespace Tests.Linq
 					$"{now}, {row.Full}");
 
 				// Offset preserved on TZ-aware-non-normalized providers
-				if (returnsUtc || context.IsAnyOf(TestProvName.AllDuckDB))
+				if (returnsUtc)
 					Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
 				else
 					Assert.That(row.Full.Offset, Is.EqualTo(now.Offset));
