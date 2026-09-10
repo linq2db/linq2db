@@ -2134,7 +2134,8 @@ namespace Tests.DataProvider
 			[Column(DbType = "tinyint(1) unsigned")] public sbyte SByte { get; set; }
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(86, ErrorMessage = "Assert.That(byteColumn!.SystemType, Is.EqualTo(typeof(byte)))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. MySQL's tinyint(1) is read as bool where byte is expected - #86's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/86")]
 		public void TinyInt1IsByte([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{

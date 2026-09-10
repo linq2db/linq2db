@@ -663,7 +663,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(Details = "Output parameter not set")]
+		[ActiveIssueNew(ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no elements",
+			Details = "no-issue: Output parameter not set - the procedure call returns no row at all, so the read of its result throws. Nothing on the tracker covers it.")]
 		[Test]
 		public void TestProcedureNonLatinParameters2([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
