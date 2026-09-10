@@ -760,7 +760,26 @@ namespace Tests.Linq
 					.ToList();
 		}
 
-		[ActiveIssue]
+		// Seven declarations, one per kind of failure rather than per wording. The blanket one is linq2db's own
+		// refusal; the rest are providers that get past it and then break in genuinely different places - a
+		// driver cast, a parameter-type refusal, a server operand error.
+		[ActiveIssueNew(3631, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. A row built from a local collection is not accepted where Sql.Row() is.")]
+		[ActiveIssueNew(3631, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Writing values of 'LinqToDB.Sql+SqlRow",
+			Details = "Npgsql has no writer for the row type.")]
+		[ActiveIssueNew(3631, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Parameters not supported for ClickHouse provider",
+			Details = "ClickHouse takes no parameters here at all, so it never reaches the row type.")]
+		[ActiveIssueNew(3631, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.NotSupportedException",
+			ErrorMessage = "Parameter type SqlRow", Details = "MySqlConnector refuses the parameter type by name.")]
+		[ActiveIssueNew(3631, Configuration = TestProvName.AllMySqlData, ErrorTypeName = "MySql.Data.MySqlClient.MySqlException",
+			ErrorMessage = "Operand should contain", Details = "MySql.Data sends it and the server rejects the operand arity - the one provider that gets as far as the server.")]
+		[ActiveIssueNew(3631, Configuration = ProviderName.InformixDB2, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Specified cast is not valid.", Details = "Informix fails inside the driver instead.")]
+		[ActiveIssueNew(3631, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "Writing value of 'LinqToDB.Sql+SqlRow", Details = "as the PostgreSQL half, in YDB's wording.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
 		public void Issue3631Test2([DataSources] string context)
 		{

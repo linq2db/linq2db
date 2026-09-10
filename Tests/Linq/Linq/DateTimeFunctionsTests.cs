@@ -1836,7 +1836,19 @@ namespace Tests.Linq
 				AssertQuery(concated);
 			}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		// Declared where the failure differs in kind, not merely in wording. SQL Server produces two unrelated
+		// ones over the same provider set - the server rejecting datetimeoffset arithmetic, and the client
+		// refusing an out-of-bounds TIME - and no Configuration separates them, so that half declares nothing.
+		[ActiveIssueNew(Configuration = TestProvName.AllSqlServer,
+			Details = "no-declaration: two unrelated failures over the same providers - \"Operand data type datetimeoffset is invalid for add operator\" from the server, and \"TIME value is out-of-bounds\" from the client - and the axis separating them is not one the attribute can target.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTimeOffset, DateTimeOffset)",
+			Details = "no-issue: ClickHouse has no parameter type for the offset, so the query is never sent.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllMySql, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Mapping of column",
+			Details = "no-issue: MySQL accepts the query and fails reading the result back.")]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracle,
+			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeOffsetAddTimeSpan(
 			[DataSources(
