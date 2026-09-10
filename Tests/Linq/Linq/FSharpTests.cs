@@ -27,10 +27,6 @@ namespace Tests.Linq
 			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
-#if NETFRAMEWORK
-		// needs FSharp.Core 10.1, but we use v9 for netfx builds now
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
-#endif
 		// informix still struggle with non-ascii data in 2026
 		[Test]
 		public void RecordProjectionColumnsOnly([DataSources(TestProvName.AllInformix)] string context)
@@ -44,10 +40,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETFRAMEWORK
-		// needs FSharp.Core 10.1, but we use v9 for netfx builds now
-		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
-#endif
 		[Test]
 		public void RecordComplexProjection([DataSources] string context)
 		{
