@@ -505,7 +505,13 @@ namespace Tests.Linq
 				Assert.That(str, Does.Contain("WITH"));
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
+		// The HANA half declares no type: the ODBC and native drivers raise their own, and only the server's own
+		// text is shared. Truncated before the line/col/pos, which differ per driver.
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"INSERT\"",
+			Details = "HANA will not take an INSERT whose source is a CTE.")]
+		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Cursor must be declared on an INSERT statement with a VALUES clause.",
+			Details = "Informix will not take an INSERT ... SELECT whose source is a CTE.")]
 		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -541,7 +547,11 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"DELETE\"",
+			Details = "HANA will not take a DELETE driven by a CTE join.")]
+		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "CURSOR not on SELECT statement.",
+			Details = "Informix will not take a DELETE driven by a CTE join.")]
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
@@ -564,7 +574,13 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
+		// AllOracle dropped from the gate: the data source below already excludes Oracle, so no Oracle case was ever
+		// built and the "needs special syntax for CTE + UPDATE" note described a provider this test never reaches.
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"UPDATE\"",
+			Details = "HANA will not take an UPDATE driven by a CTE join.")]
+		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "CURSOR not on SELECT statement.",
+			Details = "Informix will not take an UPDATE driven by a CTE join.")]
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void TestUpdate(
@@ -776,7 +792,9 @@ namespace Tests.Linq
 			Assert.That(hierarchy.Count(), Is.EqualTo(expected.Count()));
 		}
 
-		[ActiveIssue(3015, Configurations = [ProviderName.InformixDB2])]
+		[ActiveIssueNew(3015, Configurations = [ProviderName.InformixDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Cursor must be declared on an INSERT statement with a VALUES clause.",
+			Details = "Informix will not take an INSERT ... SELECT whose source is a recursive CTE.")]
 		[Test]
 		public void RecursiveInsertInto([RecursiveCteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -2068,7 +2086,11 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
+		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"INSERT\"",
+			Details = "as TestInsert - HANA will not take an INSERT whose source is a CTE.")]
+		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Cursor must be declared on an INSERT statement with a VALUES clause.",
+			Details = "as TestInsert - Informix will not take an INSERT ... SELECT whose source is a CTE.")]
 		[Test]
 		public void Issue3945([CteContextSource] string context)
 		{
