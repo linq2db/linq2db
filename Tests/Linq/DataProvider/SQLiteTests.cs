@@ -817,7 +817,8 @@ namespace Tests.DataProvider
 			TestDbVersion(context);
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(3899, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for a UInt64.",
+			Details = "One declaration covers both transports: direct throws the OverflowException bare, while LinqService wraps it in Grpc.Core.RpcException whose detail still spells out the same type and text.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3899")]
 		public void Issue3899Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{

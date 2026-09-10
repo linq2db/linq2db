@@ -18,6 +18,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
+		const string DevartRoundsDown = "no-declaration: unvalidated: Devart returns the whole-unit difference a hair under the integer (100 as 99.999..., 6000 as 5999.999...), so the (int) truncation loses one unit. The provider cannot be reached from this workstation - it needs a licence key - and Oracle has no GitHub-CI leg, so no failure text was ever harvested to declare against. No issue tracks it; the original attributes named the symptom but not the exception.";
+
 		//This custom comparers allows for an error of 1 millisecond.
 		public class CustomIntComparer : IEqualityComparer<int>
 		{
@@ -1481,7 +1483,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
 		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMinute(
@@ -1494,7 +1496,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
-		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
 		[Test]
 		public void DateDiffMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1506,7 +1508,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
 		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateSecond(
@@ -1519,7 +1521,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
-		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssueNew(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
 		[Test]
 		public void DateDiffSecond(
 			[DataSources(TestProvName.AllInformix)]

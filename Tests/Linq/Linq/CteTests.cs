@@ -1939,7 +1939,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test(Description = "literals in anchor query")]
 		public void Issue3360_LiteralsInAnchor([RecursiveCteContextSource(TestProvName.AllInformix)] string context)
 		{

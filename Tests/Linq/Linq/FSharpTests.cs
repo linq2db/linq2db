@@ -669,7 +669,13 @@ namespace Tests.Linq
 
 		// The option converter's source type is FSharpOption<UserId> while the constant beside the column is
 		// a bare UserId, and ColumnDescriptor.ApplyConversions only bridges that gap for Nullable<>.
-		[ActiveIssue(5886)]
+		[ActiveIssueNew(5886, Details = "no-declaration: the bare UserId reaches the driver unconverted and every provider rejects it in its own words - 'not supported for parameters having DataTypeName integer' on Npgsql, 'Failed to convert parameter value from a UserId to a Int32' on SqlClient, an IConvertible cast on System.Data.SQLite and SqlCe, and so on for eight measured providers.")]
+		[ActiveIssueNew(5886, Configuration = TestProvName.AllClickHouse, SkipForLinqService = true, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Parameters not supported for ClickHouse provider",
+			Details = "ClickHouse never gets as far as the conversion - it refuses parameters outright - so it is a different failure from the one this issue is about.")]
+		[ActiveIssueNew(5886, SkipForNonLinqService = true, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value 'UserId 10: System.String' to type",
+			Details = "Remote breaks earlier and identically on all eight, serializing the union for the wire before any provider sees it.")]
 		[Test(Description = "F# option .Value over a single-case-union column compares on the union's wrapped scalar")]
 		public void DuQuery_OptionValueEquals([DataSources] string context)
 		{

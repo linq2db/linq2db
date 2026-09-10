@@ -25,7 +25,8 @@ namespace Tests.xUpdate
 	public class InsertTests : TestBase
 	{
 #if AZURE
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
+		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
+			Details = "unvalidated: no-issue: declared from the failure the original gate quoted verbatim, not from a run - it compiles only under Configuration=Azure and the test passes locally on Firebird, so the cause is the CI database's encoding rather than the query. If the quote is stale the new attribute reports the real failure on the next Azure leg, which is the point of declaring it rather than waiving it.")]
 #endif
 		[Test]
 		public void DistinctInsert1(
@@ -67,7 +68,8 @@ namespace Tests.xUpdate
 		}
 
 #if AZURE
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
+		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
+			Details = "unvalidated: no-issue: see DistinctInsert1 - same quoted failure, same CI-only encoding cause, declared from the quote rather than from a run.")]
 #endif
 		[Test]
 		public void DistinctInsert2(

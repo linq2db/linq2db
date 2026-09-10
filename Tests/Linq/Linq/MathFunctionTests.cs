@@ -246,7 +246,7 @@ namespace Tests.Linq
 		}
 
 #if AZURE
-		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
+		[ActiveIssueNew(Configuration = ProviderName.DB2, Details = "no-declaration: unvalidated: no-issue: compiles only under Configuration=Azure, and the gate's own prose says the failure is a CI one, so nothing was harvested to declare against. Not DB2's inexact ROUND - the sibling Round4Sql fails locally on that while Round4 passes - so whatever CI hits is a different cause. ProviderName.DB2 left as written rather than widened to AllDB2, which would change what the gate covers on evidence nobody has.")]
 #endif
 		[Test]
 		public void Round4([DataSources] string context)
@@ -329,7 +329,7 @@ namespace Tests.Linq
 		}
 
 #if AZURE
-		[ActiveIssue("Fails on CI", Configuration = ProviderName.DB2)]
+		[ActiveIssueNew(Configuration = ProviderName.DB2, Details = "no-declaration: unvalidated: no-issue: same cohort as Round4 - compiles only under Configuration=Azure, prose says CI-only, nothing harvested. Round11 differs from Round4 only in passing MidpointRounding.ToEven explicitly, which is already the default, so the two are expected to stand or fall together.")]
 #endif
 		[Test]
 		public void Round11([DataSources] string context)
