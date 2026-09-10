@@ -66,6 +66,25 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The BCL spelling of the same conversion has to reach the same SQL, not fall back to .NET on the providers
+		/// where the explicit one works.
+		/// </summary>
+		[Test]
+		public void TimeZoneInfoConversionMatchesAtTimeZone([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+
+			var viaBcl = table.Select(r => Sql.AsSql(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, zone).Hour)).Single();
+			var viaSql = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.Hour)).Single();
+
+			viaBcl.ShouldBe(viaSql);
+			viaBcl.ShouldBe(13);
+		}
+
+		/// <summary>
 		/// The zone has to survive an intervening shift, or a component read after it silently falls back to the
 		/// provider's default frame.
 		/// </summary>

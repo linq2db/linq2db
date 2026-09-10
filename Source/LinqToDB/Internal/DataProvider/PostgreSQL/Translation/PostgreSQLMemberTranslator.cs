@@ -189,21 +189,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				return dateTruncExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				// date_trunc('day', dateExpression AT TIME ZONE 'UTC')::date
-
-				var factory = translationContext.ExpressionFactory;
-
-				var atTimeZone = factory.Expression(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
-
-				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), atTimeZone);
-
-				dateTruncExpression = factory.Cast(dateTruncExpression, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date));
-
-				return dateTruncExpression;
-			}
-
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;

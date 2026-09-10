@@ -105,6 +105,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod((DateTimeOffset dt, string tz) => Sql.AtTimeZone(dt, tz), TranslateAtTimeZone);
 			Registration.RegisterMethod((DateTime dt,       string tz) => Sql.AtTimeZone(dt, tz), TranslateAtTimeZone);
+
+			// The BCL spelling of the same conversion, and the one the Npgsql EF Core provider translates. Only the
+			// DateTimeOffset overload: its source zone is the offset the value carries, so nothing is inferred from
+			// DateTimeKind - which is what rules the DateTime overloads out.
+			Registration.RegisterMethod((DateTimeOffset dt, string tz) => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(dt, tz), TranslateAtTimeZone);
 		}
 
 		/// <summary>
@@ -114,7 +119,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </summary>
 		Expression? TranslateAtTimeZone(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var kind = methodCall.Method.GetParameters()[0].ParameterType == typeof(DateTimeOffset?)
+			// The operand's declared type picks the direction: an instant is re-expressed in the zone, a wall clock
+			// is read as being in it. Written against the underlying type so the nullable and non-nullable spellings
+			// - Sql.AtTimeZone takes DateTimeOffset?, TimeZoneInfo takes DateTimeOffset - share one handler.
+			var operandType = methodCall.Method.GetParameters()[0].ParameterType;
+			operandType = Nullable.GetUnderlyingType(operandType) ?? operandType;
+
+			var kind = operandType == typeof(DateTimeOffset)
 				? SqlTimeZoneConversionKind.ConvertZone
 				: SqlTimeZoneConversionKind.AttachZone;
 
@@ -1480,6 +1491,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		static readonly MethodInfo _atTimeZoneFromOffset   = MemberHelper.MethodOf(() => Sql.AtTimeZone((DateTimeOffset?)null, ""));
 		static readonly MethodInfo _atTimeZoneFromDateTime = MemberHelper.MethodOf(() => Sql.AtTimeZone((DateTime?)null,       ""));
+		static readonly MethodInfo _convertTimeByZoneId    = MemberHelper.MethodOf(() => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(default(DateTimeOffset), ""));
 
 		/// <summary>
 		/// Recognises <see cref="Sql.AtTimeZone(DateTimeOffset?, string)"/> in the operand <em>before</em> it is
@@ -1509,7 +1521,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (expr is not MethodCallExpression call)
 				return null;
 
-			if (call.Method != _atTimeZoneFromOffset && call.Method != _atTimeZoneFromDateTime)
+			// Every spelling of the conversion has to be recognised here, or the BCL one becomes a second-class
+			// citizen: it would be translated as a standalone value, refused on a provider that cannot carry an
+			// offset, and take the whole member down with it.
+			if (call.Method != _atTimeZoneFromOffset && call.Method != _atTimeZoneFromDateTime && call.Method != _convertTimeByZoneId)
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(call.Arguments[0].UnwrapConvert(), out var value, out _))
@@ -1651,11 +1666,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
-			var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
-			if (placeholder == null)
-				return null;
+			var framed = FrameFromZonedOperand(translationContext, memberExpression.Expression, out _);
 
-			var converted = TranslateDateTimeOffsetTruncationToDate(translationContext, placeholder.Sql, translationFlags);
+			if (framed == null)
+			{
+				var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
+				if (placeholder == null)
+					return null;
+
+				framed = DateTimeOffsetFrame(translationContext, placeholder.Sql, out _);
+				if (framed == null)
+					return null;
+			}
+
+			var converted = TranslateDateTimeOffsetTruncationToDate(translationContext, framed, translationFlags);
 			if (converted == null)
 				return null;
 
@@ -2076,9 +2100,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return null;
 		}
 
+		/// <summary>
+		/// Truncates a <see cref="DateTimeOffset"/> to its date. The operand arrives already brought into the reading
+		/// frame, so this is the plain truncation over a value that is now in the right frame.
+		/// </summary>
+		/// <remarks>
+		/// Delegating by default un-strands the member: it was registered but answered <see langword="null"/> on
+		/// every provider except three, so <c>dto.Date</c> fell back to .NET on the other twelve even where the
+		/// plain-<see cref="DateTime"/> truncation was implemented and correct.
+		/// </remarks>
 		protected virtual ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 		{
-			return null;
+			return TranslateDateTimeTruncationToDate(translationContext, dateExpression, translationFlags);
 		}
 
 		protected virtual ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)

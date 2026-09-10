@@ -183,12 +183,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				return cast;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
-			{
-				var cast = translationContext.ExpressionFactory.Cast(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), true);
-				return cast;
-			}
-
 			static ISqlExpression? CommonTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression)
 			{
 				//toInt64((toUnixTimestamp64Nano(toDateTime64(t.DateTimeValue, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32(t.DateTimeValue), 7))) / 100)
