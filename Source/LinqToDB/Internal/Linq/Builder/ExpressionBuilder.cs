@@ -217,7 +217,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				convertVisitor.CanLowerIntervalPart,
 				convertVisitor.CanLowerIntervalShift,
 				convertVisitor.IntervalResolution,
-				convertVisitor.CanMeasureDifferenceInTicks);
+				convertVisitor.CanMeasureDifferenceInTicks,
+				convertVisitor.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.AttachZone),
+				convertVisitor.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ConvertZone),
+				convertVisitor.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime));
 		}
 
 		#endregion

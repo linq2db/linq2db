@@ -101,6 +101,41 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((DateTimeOffset dt) => dt.AddMilliseconds(0), (tc, mc, tf) => TranslateDateTimeOffsetAddMember(tc, mc, tf, Sql.DateParts.Millisecond));
 
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeOffsetSqlDatepart);
+
+			Registration.RegisterMethod((DateTimeOffset dt, string tz) => Sql.AtTimeZone(dt, tz), TranslateAtTimeZone);
+			Registration.RegisterMethod((DateTime dt,       string tz) => Sql.AtTimeZone(dt, tz), TranslateAtTimeZone);
+		}
+
+		/// <summary>
+		/// Builds the node for <see cref="Sql.AtTimeZone(DateTimeOffset?, string)"/> and its <see cref="DateTime"/>
+		/// overload. The kind follows from the operand's declared type, which is what makes the two overloads one
+		/// handler.
+		/// </summary>
+		Expression? TranslateAtTimeZone(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var kind = methodCall.Method.GetParameters()[0].ParameterType == typeof(DateTimeOffset?)
+				? SqlTimeZoneConversionKind.ConvertZone
+				: SqlTimeZoneConversionKind.AttachZone;
+
+			// Asked before the node is built: a provider that cannot lower this kind refuses by name where SQL is
+			// required, and declines quietly otherwise so a projection still answers in .NET.
+			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(kind))
+			{
+				return translationFlags.HasFlag(TranslationFlags.Sql)
+					? translationContext.CreateErrorExpression(methodCall, ErrorHelper.Error_TimeZone_ZonedResult)
+					: null;
+			}
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var value, out var valueError))
+				return valueError;
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var zone, out var zoneError))
+				return zoneError;
+
+			var factory    = translationContext.ExpressionFactory;
+			var conversion = new SqlTimeZoneConversionExpression(value, zone, kind, factory.GetDbDataType(typeof(DateTimeOffset)));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, conversion, methodCall);
 		}
 
 #if SUPPORTS_DATEONLY

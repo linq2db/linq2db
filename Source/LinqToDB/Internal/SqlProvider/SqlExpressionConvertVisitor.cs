@@ -1477,6 +1477,37 @@ namespace LinqToDB.Internal.SqlProvider
 			return base.VisitSqlIntervalDifferenceExpression(element);
 		}
 
+		protected internal override IQueryElement VisitSqlTimeZoneConversionExpression(SqlTimeZoneConversionExpression element)
+		{
+			var lowered = LowerTimeZoneConversion(element);
+			if (lowered != null)
+				return Visit(lowered);
+
+			return base.VisitSqlTimeZoneConversionExpression(element);
+		}
+
+		/// <summary>
+		/// Whether this provider can render the given time zone conversion. Answered before the node is built, so a
+		/// provider that cannot express one is refused by name at translation time and a projection can still fall
+		/// back to .NET, rather than reaching the builder and throwing.
+		/// </summary>
+		/// <remarks>
+		/// The three kinds are separate capabilities. A provider with no column type that carries an offset can often
+		/// still produce a wall-clock reading in a named zone, so it answers <see langword="true"/> for
+		/// <see cref="SqlTimeZoneConversionKind.ToWallTime"/> and <see langword="false"/> for the other two.
+		/// </remarks>
+		public virtual bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => false;
+
+		/// <summary>
+		/// Lowers a time zone conversion into this provider's spelling of it - an infix <c>AT TIME ZONE</c>, a
+		/// function such as <c>CONVERT_TZ</c> or <c>toTimeZone</c>, or a cast around either.
+		/// </summary>
+		/// <returns><see langword="null"/> when the provider has no form for this kind.</returns>
+		protected virtual ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
+		{
+			return null;
+		}
+
 		/// <summary>
 		/// Lowers <c>End - Start</c> into the elapsed time as a value, in whatever form the read path turns back
 		/// into a <see cref="TimeSpan"/>.

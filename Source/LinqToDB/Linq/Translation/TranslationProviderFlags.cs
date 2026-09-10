@@ -25,6 +25,9 @@ namespace LinqToDB.Linq.Translation
 		/// <param name="canLowerIntervalShift">Whether a date shifted by an interval can be lowered.</param>
 		/// <param name="intervalResolution">The finest unit the provider can resolve when measuring elapsed time.</param>
 		/// <param name="canMeasureDifferenceInTicks">Whether an elapsed date difference can become a tick count.</param>
+		/// <param name="canAttachZone">Whether a wall-clock reading can be given a zone's offset.</param>
+		/// <param name="canConvertZone">Whether an instant can be re-expressed with another zone's offset.</param>
+		/// <param name="canReadWallTime">Whether the wall-clock reading an instant shows in a zone can be produced.</param>
 		public TranslationProviderFlags(
 			NullsDefaultOrdering defaultNullsOrdering,
 			bool                 isNullsOrderingSupported,
@@ -32,7 +35,10 @@ namespace LinqToDB.Linq.Translation
 			bool                 canLowerIntervalPart,
 			bool                 canLowerIntervalShift,
 			SqlIntervalUnit      intervalResolution          = SqlIntervalUnit.Tick,
-			bool                 canMeasureDifferenceInTicks = true)
+			bool                 canMeasureDifferenceInTicks = true,
+			bool                 canAttachZone               = false,
+			bool                 canConvertZone              = false,
+			bool                 canReadWallTime             = false)
 		{
 			DefaultNullsOrdering        = defaultNullsOrdering;
 			IsNullsOrderingSupported    = isNullsOrderingSupported;
@@ -41,7 +47,31 @@ namespace LinqToDB.Linq.Translation
 			CanLowerIntervalShift       = canLowerIntervalShift;
 			IntervalResolution          = intervalResolution;
 			CanMeasureDifferenceInTicks = canMeasureDifferenceInTicks;
+			_canAttachZone              = canAttachZone;
+			_canConvertZone             = canConvertZone;
+			_canReadWallTime            = canReadWallTime;
 		}
+
+		readonly bool _canAttachZone;
+		readonly bool _canConvertZone;
+		readonly bool _canReadWallTime;
+
+		/// <summary>
+		/// Whether the provider can render the given time zone conversion. Asked while the expression is still being
+		/// built, so a translator that cannot have one can decline and leave the member to .NET rather than letting
+		/// the SQL builder fail the whole query.
+		/// </summary>
+		/// <remarks>
+		/// The three kinds are separate capabilities rather than one flag: a provider with no column type that
+		/// carries an offset can still answer the wall-clock reading in a named zone, so it supports
+		/// <see cref="SqlTimeZoneConversionKind.ToWallTime"/> alone.
+		/// </remarks>
+		public bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => kind switch
+		{
+			SqlTimeZoneConversionKind.AttachZone  => _canAttachZone,
+			SqlTimeZoneConversionKind.ConvertZone => _canConvertZone,
+			_                                     => _canReadWallTime,
+		};
 
 		/// <summary>The provider's natural NULL placement when no <c>NULLS FIRST</c>/<c>NULLS LAST</c> is specified.</summary>
 		public NullsDefaultOrdering DefaultNullsOrdering { get; }
