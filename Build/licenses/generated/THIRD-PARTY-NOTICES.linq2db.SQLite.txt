@@ -27,11 +27,11 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-3. SQLitePCLRaw.lib.e_sqlite3 2.1.11
+3. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0: 2.1.12, net8.0-windows7.0: 3.53.3, net9.0: 2.1.12
    License: Apache-2.0  see [3]
    Copyright 2014-2024 SourceGear, LLC
 
-4. System.Data.SQLite 2.0.3
+4. System.Data.SQLite 2.0.4
    License: Public Domain
    Public Domain
 

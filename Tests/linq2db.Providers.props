@@ -12,7 +12,8 @@
 		<PackageReference Include="MySql.Data"     Aliases="MySqlData" />
 		<PackageReference Include="MySqlConnector" Aliases="MySqlConnector" />
 		<PackageReference Include="System.Data.SQLite" />
-		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
+		<!--the native both SQLite providers load; explicit because transitive pinning is off-->
+		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" GeneratePathProperty="true" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="AdoNetCore.AseClient" />

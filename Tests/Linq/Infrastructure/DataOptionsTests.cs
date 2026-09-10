@@ -308,7 +308,7 @@ namespace Tests.Infrastructure
 			public int Id { get; }
 		}
 
-		static readonly object _entityDescriptorCreatedSync = new();
+		static readonly System.Threading.Lock _entityDescriptorCreatedSync = new();
 
 		[Test]
 		public void OnEntityDescriptorCreatedTest([DataSources(false)] string context)

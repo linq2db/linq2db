@@ -728,7 +728,10 @@ namespace Tests.Linq
 
 			record.Value = "updated";
 
+			// awaited on the next line, inside db's scope, which CA2025 cannot see through the Func<Task>
+#pragma warning disable CA2025 // Ensure tasks using 'IDisposable' instances complete before the instances are disposed
 			Func<Task> act = () => db.UpdateOptimisticWithRefreshAsync(record);
+#pragma warning restore CA2025
 			(await act.ShouldThrowAsync<LinqToDBException>()).Message.ShouldBe(ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported);
 		}
 

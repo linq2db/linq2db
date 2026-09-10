@@ -33,9 +33,7 @@ namespace Tests.UserTests
 			public int     HierarchyLevel    { get; set; }
 		}
 
-		sealed class DerivedHierarchy : Hierarchy
-		{
-		}
+		sealed class DerivedHierarchy : Hierarchy;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5683 - recursive CTE drops columns when the recursive term projects a differing-but-assignable type")]
 		public void RecursiveCteWithDerivedRecursiveTerm([RecursiveCteContextSource] string context)
@@ -106,9 +104,7 @@ namespace Tests.UserTests
 			public int? Value { get; set; }
 		}
 
-		sealed class DerivedProjection : Projection
-		{
-		}
+		sealed class DerivedProjection : Projection;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5683 - branches projecting differing-but-assignable types must meet in the same columns")]
 		public void ConcatBranchProjectingDerivedType([DataSources] string context)

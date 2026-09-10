@@ -1,4 +1,4 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,15 +19,15 @@ namespace LinqToDB.Internal.Interceptors
 			});
 		}
 
-		public async Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+		public Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 		{
-			await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
 						await interceptor.ConnectionOpeningAsync(eventData, connection, cancellationToken)
 							.ConfigureAwait(false);
-			}).ConfigureAwait(false);
+			});
 		}
 
 		public void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
@@ -40,15 +40,15 @@ namespace LinqToDB.Internal.Interceptors
 			});
 		}
 
-		public async Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
+		public Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 		{
-			await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpenedAsync))
 						await interceptor.ConnectionOpenedAsync(eventData, connection, cancellationToken)
 							.ConfigureAwait(false);
-			}).ConfigureAwait(false);
+			});
 		}
 	}
 }
