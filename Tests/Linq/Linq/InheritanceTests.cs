@@ -1617,7 +1617,9 @@ namespace Tests.Linq
 		}
 
 		// Raw SQL below, so SQLite only.
-		[ActiveIssue(5852)]
+		// No ErrorTypeName: the two SQLite drivers raise their own exception types and only the message is shared.
+		[ActiveIssueNew(5852, ErrorMessage = "no such column: GrandchildValue",
+			Details = "the shadowing member is not mapped onto the base table at all, so the column the insert should have written is never created - #5852's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5852")]
 		public void InsertShadowedMemberThroughBaseTable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{

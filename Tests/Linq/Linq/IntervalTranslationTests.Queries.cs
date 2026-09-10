@@ -371,7 +371,9 @@ namespace Tests.Linq
 		/// <c>Min</c> and <c>Max</c> put the lowered arithmetic inside an aggregate, which is where a provider that
 		/// renders the difference as a multi-part expression is most likely to object.
 		/// </remarks>
-		[ActiveIssue(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders], Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access, on Informix and on SQL Server 2014-minus, all three giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
+		[ActiveIssueNew(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders],
+			ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "There is no method 'AggregateExecute' on type 'LinqToDB.LinqExtensions' that matches the specified arguments",
+			Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access, on Informix and on SQL Server 2014-minus, all three giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
 		[Test]
 		public void AggregatesOverADifference([DataSources(false)] string context)
 		{

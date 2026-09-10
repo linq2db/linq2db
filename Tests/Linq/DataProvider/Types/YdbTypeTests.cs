@@ -317,7 +317,9 @@ namespace Tests.DataProvider
 			await TestInteger<float>(context, DataType.Double, float.MinValue, float.MaxValue);
 		}
 
-		[ActiveIssue("https://github.com/ydb-platform/ydb-dotnet-sdk/issues/331")]
+		[ActiveIssueNew("https://github.com/ydb-platform/ydb-dotnet-sdk/issues/331",
+			ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Uncompatible types in compare: DyNumber '==' Decimal(22,9)",
+			Details = "the SDK sends the parameter as Decimal(22,9), so the server refuses to compare it with the DyNumber column - the driver-side gap the SDK issue tracks.")]
 		[Test]
 		public async ValueTask TestDyNumber([YdbDataSources] string context)
 		{

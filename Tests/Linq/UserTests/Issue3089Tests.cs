@@ -59,7 +59,9 @@ namespace Tests.UserTests
 			query.ToArray();
 		}
 
-		[ActiveIssue(3360, Configuration = TestProvName.AllPostgreSQL)]
+		[ActiveIssueNew(3360, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+			ErrorMessage = "42804: UNION types interval and timestamp without time zone cannot be matched",
+			Details = "the untyped NULL branches are emitted before the typed one, so PostgreSQL settles the union column on the wrong type - #3360's subject.")]
 		[Test]
 		public void TestUnion3([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -77,7 +79,9 @@ namespace Tests.UserTests
 			query.ToArray();
 		}
 
-		[ActiveIssue(3360, Configuration = TestProvName.AllPostgreSQL)]
+		[ActiveIssueNew(3360, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+			ErrorMessage = "42804: UNION types timestamp without time zone and interval cannot be matched",
+			Details = "as TestUnion3, with the operands the other way round because the typed branch is last here.")]
 		[Test]
 		public void TestUnion4([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
