@@ -626,13 +626,41 @@ namespace Tests.DataProvider
 			return ms;
 		}
 
-		[ActiveIssue]
+		// Split on two axes, both of them measured rather than assumed. columnType: the TEXT column round-trips
+		// where REAL and INTEGER do not. kind: even on TEXT, a Utc value comes back without the local conversion
+		// the test expects. What is left - TEXT with a local or unspecified kind - passes and is not gated.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_Insert(
+			[IncludeDataSources(TestProvName.AllSQLite)] string                              context,
+			[Values]                                     bool                                inline,
+			[Values(DateTimeKind.Local, DateTimeKind.Unspecified)] DateTimeKind               kind)
+		{
+			DateTimeRoundtrip_InsertCore(context, inline, kind, "TEXT");
+		}
+
+		[ActiveIssueNew(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
+			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back unconverted, so the expected local time is an hour out.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_InsertUtc(
+			[IncludeDataSources(TestProvName.AllSQLite)] string context,
+			[Values]                                     bool   inline)
+		{
+			DateTimeRoundtrip_InsertCore(context, inline, DateTimeKind.Utc, "TEXT");
+		}
+
+		[ActiveIssueNew(2107,
+			Details = "no-declaration: Issue number taken from the test's own Description. Which of four failures a case produces depends on inline and kind - a wrong Kind, a wrong value, a wrong local-time value, or a conversion refusal - and no fragment is common to all of them.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_InsertNumeric(
 			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
 			[Values]                                     bool         inline,
 			[Values]                                     DateTimeKind kind,
-			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+			[Values("REAL", "INTEGER")]                  string       columnType)
+		{
+			DateTimeRoundtrip_InsertCore(context, inline, kind, columnType);
+		}
+
+		void DateTimeRoundtrip_InsertCore(string context, bool inline, DateTimeKind kind, string columnType)
 		{
 			// TODO: retest in V3 with newer provider version
 			// in v108 it:
@@ -679,14 +707,41 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_BulkCopy(
+			[IncludeDataSources(TestProvName.AllSQLite)] string                                context,
+			[Values]                                     bool                                  inline,
+			[Values(DateTimeKind.Local, DateTimeKind.Unspecified)] DateTimeKind                 kind,
+			[Values]                                     BulkCopyType                          copyType)
+		{
+			DateTimeRoundtrip_BulkCopyCore(context, inline, kind, copyType, "TEXT");
+		}
+
+		[ActiveIssueNew(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
+			Details = "as DateTimeRoundtrip_InsertUtc.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_BulkCopyUtc(
+			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
+			[Values]                                     bool         inline,
+			[Values]                                     BulkCopyType copyType)
+		{
+			DateTimeRoundtrip_BulkCopyCore(context, inline, DateTimeKind.Utc, copyType, "TEXT");
+		}
+
+		[ActiveIssueNew(2107,
+			Details = "no-declaration: as DateTimeRoundtrip_InsertNumeric.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_BulkCopyNumeric(
 			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
 			[Values]                                     bool         inline,
 			[Values]                                     DateTimeKind kind,
 			[Values]                                     BulkCopyType copyType,
-			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+			[Values("REAL", "INTEGER")]                  string       columnType)
+		{
+			DateTimeRoundtrip_BulkCopyCore(context, inline, kind, copyType, columnType);
+		}
+
+		void DateTimeRoundtrip_BulkCopyCore(string context, bool inline, DateTimeKind kind, BulkCopyType copyType, string columnType)
 		{
 			if (context.Contains("Classic") && columnType != "TEXT")
 				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
