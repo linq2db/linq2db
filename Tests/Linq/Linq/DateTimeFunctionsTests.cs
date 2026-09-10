@@ -232,12 +232,14 @@ namespace Tests.Linq
 
 				// ClickHouse, PGSQL: session timezone used when set explicitly for connection
 				// MySql/MariaDB, YDB: returns UTC
-				// Oracle: Extract for TSTZ use UTC value
+				// Oracle used to belong here, because EXTRACT over a TIMESTAMP WITH TIME ZONE answers in UTC. Its
+				// components are now read through a cast to TIMESTAMP, which keeps the offset the value carries - so
+				// SYSTIMESTAMP's components are the server's local ones, the same shape every offset-preserving
+				// provider has.
 				var returnsUtc = context.IsAnyOf(
 					TestProvName.AllPostgreSQL,
 					TestProvName.AllClickHouse,
 					TestProvName.AllMySql,
-					TestProvName.AllOracle,
 					TestProvName.AllYdb);
 				var kind       = returnsUtc
 					? DateTimeKind.Utc
@@ -262,8 +264,7 @@ namespace Tests.Linq
 					$"{now}, {row.Full}");
 
 				// Offset preserved on TZ-aware-non-normalized providers
-				// Oracle: see above
-				if ((returnsUtc && !context.IsAnyOf(TestProvName.AllOracle)) || context.IsAnyOf(TestProvName.AllDuckDB))
+				if (returnsUtc || context.IsAnyOf(TestProvName.AllDuckDB))
 					Assert.That(row.Full.Offset, Is.EqualTo(TimeSpan.Zero));
 				else
 					Assert.That(row.Full.Offset, Is.EqualTo(now.Offset));
