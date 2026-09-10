@@ -23,7 +23,9 @@ namespace LinqToDB
 				DateParts.Month         => date.Value.Month,
 				DateParts.DayOfYear     => date.Value.DayOfYear,
 				DateParts.Day           => date.Value.Day,
-				DateParts.Week          => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value.LocalDateTime, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
+				// DateTime, not LocalDateTime: every other arm reads the value's own wall clock, and shifting to the
+				// client machine's zone first can answer a different week for the same value on a different machine.
+				DateParts.Week          => CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(date.Value.DateTime, CalendarWeekRule.FirstDay, DayOfWeek.Sunday),
 				DateParts.WeekDay       => ((int)date.Value.DayOfWeek + 1 + DateFirst + 6) % 7 + 1,
 				DateParts.Hour          => date.Value.Hour,
 				DateParts.Minute        => date.Value.Minute,
