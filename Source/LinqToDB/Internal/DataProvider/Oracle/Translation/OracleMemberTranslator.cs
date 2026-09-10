@@ -123,6 +123,47 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 
+			/// <summary>
+			/// Oracle keeps the offset a value was written with, so the components a caller sees after a round-trip
+			/// are the ones in that stored offset - but <c>EXTRACT</c> over a <c>TIMESTAMP WITH TIME ZONE</c> answers
+			/// in UTC, which the documentation states outright and a probe confirms: extracting the hour of
+			/// <c>12:15:32 +05:10</c> gives 7. Casting to <c>TIMESTAMP</c> first keeps the local reading.
+			/// </summary>
+			/// <remarks>
+			/// This also settles an inconsistency that predates the fix: Year/Month/Day/Hour/Minute/Second went
+			/// through <c>EXTRACT</c> while Quarter/DayOfYear/Week/Millisecond went through <c>TO_CHAR</c>, which
+			/// reads the stored offset - so <c>.Day</c> and <c>.DayOfYear</c> could disagree on one row.
+			/// </remarks>
+			protected override ISqlExpression? ToDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Cast(value, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2), true);
+			}
+
+			/// <summary>
+			/// Restores the offset the operand carried, after an operation was carried out on its local reading.
+			/// </summary>
+			/// <remarks>
+			/// Oracle performs <c>TIMESTAMP WITH TIME ZONE</c> arithmetic in UTC, so adding a month to
+			/// <c>2020-02-01 00:20 +00:40</c> - which is 31 January in UTC - lands on 31 February and raises
+			/// ORA-01839, where .NET answers <c>2020-03-01 00:20 +00:40</c>. Doing the shift on the local reading and
+			/// re-attaching the operand's own offset is what reproduces the .NET answer. The offset has to be read
+			/// back off the operand because nothing else in the expression carries it.
+			/// </remarks>
+			protected override ISqlExpression? FromDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression original, ISqlExpression framed, DbDataType resultType)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var storedOffset = factory.Function(
+					factory.GetDbDataType(typeof(string)),
+					"To_Char",
+					original,
+					factory.Value("TZH:TZM"));
+
+				return factory.Function(resultType, "From_Tz", framed, storedOffset);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
 				Sql.DateParts                                                       datepart)
 			{

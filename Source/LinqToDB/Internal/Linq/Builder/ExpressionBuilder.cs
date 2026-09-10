@@ -220,7 +220,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				convertVisitor.CanMeasureDifferenceInTicks,
 				convertVisitor.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.AttachZone),
 				convertVisitor.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ConvertZone),
-				convertVisitor.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime));
+				convertVisitor.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime),
+				convertVisitor.RequiresConstantTimeZone);
 		}
 
 		#endregion

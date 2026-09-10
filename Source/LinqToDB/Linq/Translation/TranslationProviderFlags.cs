@@ -28,6 +28,7 @@ namespace LinqToDB.Linq.Translation
 		/// <param name="canAttachZone">Whether a wall-clock reading can be given a zone's offset.</param>
 		/// <param name="canConvertZone">Whether an instant can be re-expressed with another zone's offset.</param>
 		/// <param name="canReadWallTime">Whether the wall-clock reading an instant shows in a zone can be produced.</param>
+		/// <param name="requiresConstantTimeZone">Whether the time zone must be a constant rather than a bind.</param>
 		public TranslationProviderFlags(
 			NullsDefaultOrdering defaultNullsOrdering,
 			bool                 isNullsOrderingSupported,
@@ -38,8 +39,10 @@ namespace LinqToDB.Linq.Translation
 			bool                 canMeasureDifferenceInTicks = true,
 			bool                 canAttachZone               = false,
 			bool                 canConvertZone              = false,
-			bool                 canReadWallTime             = false)
+			bool                 canReadWallTime             = false,
+			bool                 requiresConstantTimeZone    = false)
 		{
+			RequiresConstantTimeZone    = requiresConstantTimeZone;
 			DefaultNullsOrdering        = defaultNullsOrdering;
 			IsNullsOrderingSupported    = isNullsOrderingSupported;
 			CanLowerIntervalDifference  = canLowerIntervalDifference;
@@ -51,6 +54,12 @@ namespace LinqToDB.Linq.Translation
 			_canConvertZone             = canConvertZone;
 			_canReadWallTime            = canReadWallTime;
 		}
+
+		/// <summary>
+		/// Whether the provider's grammar demands a constant in the time zone position rather than a bind. Where it
+		/// does, the translator demotes the zone to a constant, which also puts its value in the query cache key.
+		/// </summary>
+		public bool RequiresConstantTimeZone { get; }
 
 		readonly bool _canAttachZone;
 		readonly bool _canConvertZone;

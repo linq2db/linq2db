@@ -1499,6 +1499,17 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => false;
 
 		/// <summary>
+		/// Whether the provider's grammar demands a constant in the time zone position rather than accepting a bind.
+		/// </summary>
+		/// <remarks>
+		/// Oracle rejects a bind there outright - <c>AT TIME ZONE :p</c> raises ORA-02000 while the same statement
+		/// with a literal answers - so the zone is demoted to a constant before rendering, the way
+		/// <c>Sql.Constant</c> does it. That puts the value in the query cache key, which is what keeps two different
+		/// zones from sharing one cached statement.
+		/// </remarks>
+		public virtual bool RequiresConstantTimeZone => false;
+
+		/// <summary>
 		/// Lowers a time zone conversion into this provider's spelling of it - an infix <c>AT TIME ZONE</c>, a
 		/// function such as <c>CONVERT_TZ</c> or <c>toTimeZone</c>, or a cast around either.
 		/// </summary>
