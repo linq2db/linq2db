@@ -1644,7 +1644,9 @@ namespace Tests.Linq
 		#endregion
 
 		#region TPH intermediate type (insert / DDL)
-		[ActiveIssue]
+		// Message-only for the two SQLite drivers, as AbstractionTests.InsertUsingRuntimeType.
+		[ActiveIssueNew(4364, ErrorMessage = "no such table: CreateTable1",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The intermediate child class is not mapped onto the base table - #4364's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_InsertConcreteTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1671,7 +1673,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssueNew(4364, ErrorMessage = "NOT NULL constraint failed: CreateTableBase.Field2",
+			Details = "as TPH_Intermediate_InsertConcreteTypes - the intermediate type's column is emitted NOT NULL on the base table.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_CreateTableNullableFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

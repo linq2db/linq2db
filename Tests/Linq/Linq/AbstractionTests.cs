@@ -150,7 +150,11 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue]
+		// Message-only: the two SQLite drivers put the detail in different places - Microsoft.Data.Sqlite inlines it
+		// in the first line, System.Data.SQLite puts "SQL logic error" there and the detail on the next - but both
+		// messages contain this text.
+		[ActiveIssueNew(848, ErrorMessage = "no such table: EntityBase",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The insert targets the declared base type instead of the runtime one - #848's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/848")]
 		public void InsertUsingRuntimeType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
