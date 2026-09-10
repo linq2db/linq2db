@@ -3551,8 +3551,10 @@ namespace Tests.DataProvider
 
 #endregion
 
-		[ActiveIssue(399)]
-		[Test]
+		// Asserts what #399 asked for - that packages and their members are described - rather than a count of the
+		// schema's rows. The count this test used to carry was 11 against a schema that now holds 31, so it had gone
+		// stale without the defect ever coming back; anything counting schema objects goes the same way.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/399")]
 		public void Issue399Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -3562,13 +3564,22 @@ namespace Tests.DataProvider
 				GetProcedures = true
 			});
 
-			Assert.That(schema.Procedures, Has.Count.EqualTo(11));
+			string[] packageMembers = ["TEST_FUNCTION", "TEST_PROCEDURE", "TEST_TABLE_FUNCTION"];
 
-			// This filter used by T4 generator
-			Assert.That(schema.Procedures.Where(
-				proc => proc.IsLoaded
-				|| (proc.IsFunction && !proc.IsTableFunction)
-				|| (proc.IsTableFunction && proc.ResultException != null)).Count(), Is.EqualTo(11));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(schema.Procedures.Where(p => p.PackageName == "TEST_PACKAGE1").Select(p => p.ProcedureName), Is.EquivalentTo(packageMembers));
+				Assert.That(schema.Procedures.Where(p => p.PackageName == "TEST_PACKAGE2").Select(p => p.ProcedureName), Is.EquivalentTo(packageMembers));
+			}
+
+			// This filter used by T4 generator. It keeps exactly the procedures whose result schema could be read:
+			// the ones it drops are those the provider refused to describe, which is what ResultException records.
+			Assert.That(
+				schema.Procedures.Where(
+					proc => proc.IsLoaded
+					|| (proc.IsFunction && !proc.IsTableFunction)
+					|| (proc.IsTableFunction && proc.ResultException != null)),
+				Is.EquivalentTo(schema.Procedures.Where(proc => proc.ResultException == null)));
 		}
 
 		[Table("TYPESTEST")]
