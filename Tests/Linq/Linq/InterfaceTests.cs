@@ -142,7 +142,8 @@ namespace Tests.Linq
 		// unsuported case:
 		// we prefer member declared with "new" over interface implementation member for backward compatibility
 		// (see https://github.com/linq2db/linq2db/issues/4113)
-		[Test, ActiveIssue]
+		[Test, ActiveIssueNew(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL",
+			Details = "no-issue: an accepted limitation rather than a tracked defect - the comment above records the trade-off and cites #4113 as its justification, which is background for the choice and not a bug to fix.")]
 		public void Issue4031_Case04([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			Issue4031_Execute_TwoFields<Issue4031Case04>(context);

@@ -1520,7 +1520,8 @@ namespace Tests.OrmBattle
 					Assert.That(companyName, Is.Not.Null);
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test, ActiveIssueNew(573, ErrorTypeName = "System.ArgumentException", ErrorMessage = "must be reducible node",
+			Details = "#573 is closed while this test still fails, so the reference is where the shape is documented rather than a live tracker.")]
 		public void ComplexTest4([NorthwindDataContext] string context)
 		{
 			//TODO: sdanyliv: This is a bug
