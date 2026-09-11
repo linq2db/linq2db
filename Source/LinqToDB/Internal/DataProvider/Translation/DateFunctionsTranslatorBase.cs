@@ -96,6 +96,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((DateTimeOffset dt) => dt.ToUniversalTime(),          TranslateDateTimeOffsetToUniversalTime);
 			Registration.RegisterMethod((DateTimeOffset dt) => dt.ToOffset(default), TranslateDateTimeOffsetToOffset);
 
+			Registration.RegisterConstructor((DateTime dateTime, TimeSpan offset)
+				=> new DateTimeOffset(dateTime, offset), TranslateDateTimeOffsetConstructor);
+
 			Registration.RegisterMember((DateTimeOffset dt) => dt.TimeOfDay, TranslateDateTimeOffsetTruncationToTime);
 
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DateAdd(Sql.DateParts.Year, 0, dt), TranslateDateTimeOffsetDateAdd);
@@ -1799,6 +1802,55 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, AsWallClock(translationContext, framed), memberExpression);
+		}
+
+		/// <summary>
+		/// <c>new DateTimeOffset(DateTime, TimeSpan)</c> - a wall clock understood as being at that offset.
+		/// </summary>
+		/// <remarks>
+		/// This is <see cref="SqlTimeZoneConversionKind.AttachZone"/> with an offset where a zone name usually goes,
+		/// so it carries the same constraint as <see cref="DateTimeOffset.ToOffset(TimeSpan)"/>: no dialect takes a
+		/// fixed offset as a bind, and spelling a bound one into the SQL would let the query cache serve one offset's
+		/// statement for another. Demoting the parameter is what puts its value in the key.
+		/// </remarks>
+		Expression? TranslateDateTimeOffsetConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
+		{
+			if (expression is not NewExpression { Arguments.Count: 2 } newExpression)
+				return null;
+
+			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.AttachZone))
+				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var dateTime))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var offset))
+				return null;
+
+			switch (offset)
+			{
+				case SqlValue { Value: TimeSpan }:
+					break;
+
+				case SqlParameter parameter:
+					parameter.IsQueryParameter = false;
+					break;
+
+				default:
+					return null;
+			}
+
+			var factory = translationContext.ExpressionFactory;
+
+			var converted = new SqlTimeZoneConversionExpression(
+				dateTime,
+				offset,
+				SqlTimeZoneConversionKind.AttachZone,
+				factory.GetDbDataType(typeof(DateTimeOffset)));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, expression);
 		}
 
 		/// <summary>

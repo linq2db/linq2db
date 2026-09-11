@@ -388,6 +388,29 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The constructor is the inverse of <see cref="DateTimeOffset.ToOffset(TimeSpan)"/>: that one re-expresses an
+		/// instant at a given offset, this one declares a zone-less reading to be at one, which is what decides the
+		/// instant.
+		/// </summary>
+		[Test]
+		public void ConstructorAttachesTheOffsetGiven([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			// Built from the stored value's own wall clock, so the answer does not depend on the round-trip: the same
+			// reading declared at the same offset is the same instant on any provider.
+			var stored = table.Select(r => r.Dto).Single();
+
+			var built = table
+				.Select(r => Sql.AsSql(new DateTimeOffset(r.Dto.DateTime, TimeSpan.FromMinutes(-90))))
+				.Single();
+
+			built.ShouldBe(new DateTimeOffset(stored.DateTime, TimeSpan.FromMinutes(-90)));
+			built.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
+		}
+
+		/// <summary>
 		/// The offset cannot be a bind, so it is spelled into the SQL - which makes it part of what the query cache
 		/// must key on. Two offsets over one query shape is exactly the case that would break if it were not.
 		/// </summary>
