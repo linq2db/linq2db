@@ -32,7 +32,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-4. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+4. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -57,7 +57,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-9. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.5, net9.0: 10.0.10
+9. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.

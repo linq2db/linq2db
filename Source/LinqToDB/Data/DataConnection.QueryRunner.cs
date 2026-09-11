@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -460,7 +460,7 @@ namespace LinqToDB.Data
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.
-			public static async Task<int> ExecuteNonQueryAsync(
+			public static Task<int> ExecuteNonQueryAsync(
 				DataConnection            dataConnection,
 				IQueryContext             context,
 				IReadOnlyParameterValues? parameterValues,
@@ -470,8 +470,7 @@ namespace LinqToDB.Data
 				var commandsParameters = GetParameters(dataConnection, preparedQuery, parameterValues);
 				var executionQuery     = new ExecutionPreparedQuery(preparedQuery, commandsParameters);
 
-				return await ExecuteNonQueryImplAsync(dataConnection, executionQuery, cancellationToken)
-					.ConfigureAwait(false);
+				return ExecuteNonQueryImplAsync(dataConnection, executionQuery, cancellationToken);
 			}
 
 			// In case of change the logic of this method, DO NOT FORGET to change the sibling method.

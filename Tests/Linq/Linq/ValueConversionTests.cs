@@ -1667,7 +1667,7 @@ namespace Tests.Linq
 		/// answers in a type of its own. The type guard meant to separate them compares the result type with the
 		/// column's <em>member</em> type, so it cannot tell the two apart once that type is already <see cref="int"/>.
 		/// <para>
-		/// The conversion is deliberately <c>int</c> to <c>int</c> and lossy in a visible way: one mapping to a
+		/// The conversion is deliberately <see langword="int"/> to <see langword="int"/> and lossy in a visible way: one mapping to a
 		/// different provider type would be stopped by that guard and hide the defect. Halving is what makes it
 		/// show - a running count of 1, 2, 3 came back as 0, 1, 1.
 		/// </para>

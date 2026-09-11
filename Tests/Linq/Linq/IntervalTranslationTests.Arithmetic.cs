@@ -488,6 +488,9 @@ namespace Tests.Linq
 			// one that arrives negated, one chosen by a condition, and both sides computed at once. The nested case
 			// additionally says that what this produces is usable as an operand again, and the lopsided subtraction
 			// that two sides of equal magnitude cannot cancel a wrong scaling into a right answer.
+			// Conditional's two arms are the same column on purpose: the shape under test is a conditional
+			// whose arms carry the same interval unit, so differing arms would be a different test
+#pragma warning disable MA0140 // Both if and else branch have identical code
 			var row = inSql
 				? t.Select(r => new Combination
 					{
@@ -517,6 +520,7 @@ namespace Tests.Linq
 						BothComputedSub = (r.InSeconds + r.InSeconds + r.InTicks) - (r.InTicks + r.InTicks),
 						NegatedSub      = -r.InSeconds - r.InTicks,
 					}).Single();
+#pragma warning restore MA0140
 
 			row.SameSeconds.ShouldBe(value + value);
 			row.SameTicks.ShouldBe(value + value);

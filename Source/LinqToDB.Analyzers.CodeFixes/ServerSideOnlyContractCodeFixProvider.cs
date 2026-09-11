@@ -233,8 +233,8 @@ namespace LinqToDB.Analyzers.CodeFixes
 		// LinqToDB nor LinqToDB.Mapping. Reducing the annotated nodes shortens them again wherever the using
 		// IS present; without this the fix is correct but writes LinqToDB.ServerSideOnlyException in a file
 		// that already has `using LinqToDB;`.
-		static async Task<Document> ApplyAsync(Document document, SyntaxNode root, SyntaxNode original, SyntaxNode replacement, CancellationToken cancellationToken)
-			=> await PostProcessAsync(document.WithSyntaxRoot(root.ReplaceNode(original, replacement)), cancellationToken).ConfigureAwait(false);
+		static Task<Document> ApplyAsync(Document document, SyntaxNode root, SyntaxNode original, SyntaxNode replacement, CancellationToken cancellationToken)
+			=> PostProcessAsync(document.WithSyntaxRoot(root.ReplaceNode(original, replacement)), cancellationToken);
 
 		static async Task<Document> PostProcessAsync(Document document, CancellationToken cancellationToken)
 		{
