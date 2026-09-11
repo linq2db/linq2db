@@ -1552,9 +1552,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			// Attaching a zone and then reading the wall clock back in that same zone is the identity, so the
-			// DateTime overload contributes no conversion at all.
+			// DateTime overload contributes no conversion at all. The zone is still reported: an operation whose own
+			// result is a DateTimeOffset re-attaches it afterwards, and the provider default names a different zone.
 			if (call.Method == _atTimeZoneFromDateTime)
+			{
+				if (!translationContext.TranslateToSqlExpression(call.Arguments[1], out var attachedZone, out _))
+					return null;
+
+				zone = ZoneOperand(translationContext, attachedZone);
+
 				return value;
+			}
 
 			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
 				return null;
@@ -1612,8 +1620,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// Brings an operand into the reading frame, whichever way the zone was named - by a conversion in the
 		/// expression, by one already in the translated AST, or by the provider default.
 		/// </summary>
-		ISqlExpression? FramedOperand(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
+		ISqlExpression? FramedOperand(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags, out SqlErrorExpression? error)
 		{
+			error = null;
+
 			// Expression level first: a conversion the provider cannot materialise would be refused during the
 			// operand's own translation, taking the whole member down with it.
 			var framed = FrameFromZonedOperand(translationContext, operand, out _);
@@ -1624,7 +1634,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (placeholder == null)
 				return null;
 
-			return DateTimeOffsetFrame(translationContext, placeholder.Sql, out _);
+			return DateTimeOffsetFrame(translationContext, placeholder.Sql, operand, translationFlags, out _, out error);
 		}
 
 		/// <summary>
@@ -1701,9 +1711,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// operand rather than a frame applied on top of an already-converted value.
 		/// </para>
 		/// </remarks>
-		ISqlExpression? DateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value, out ISqlExpression? zone)
+		ISqlExpression? DateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value, Expression? basedOn, TranslationFlags translationFlags, out ISqlExpression? zone, out SqlErrorExpression? error)
 		{
-			zone = null;
+			zone  = null;
+			error = null;
 
 			if (QueryHelper.UnwrapNullablity(value) is SqlTimeZoneConversionExpression conversion)
 			{
@@ -1725,6 +1736,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					{
 						if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
 							return null;
+
+						// A fixed offset goes where a zone name goes, and no dialect takes one there for this
+						// direction - so it is refused rather than spelled into SQL no server parses.
+						if (conversion.Zone.SystemType == typeof(TimeSpan) || conversion.Zone.SystemType == typeof(TimeSpan?))
+						{
+							if (basedOn != null && translationFlags.HasFlag(TranslationFlags.Sql))
+								error = translationContext.CreateErrorExpression(basedOn, ErrorHelper.Error_TimeZone_OffsetFrame);
+
+							return null;
+						}
 
 						var factory = translationContext.ExpressionFactory;
 
@@ -1750,9 +1771,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateDateTimeOffsetMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, Sql.DateParts datepart)
 		{
-			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags, out var frameError);
 			if (framed == null)
-				return null;
+				return frameError;
 
 			var converted = TranslateDateTimeOffsetDatePart(translationContext, translationFlags, framed, datepart);
 			if (converted == null)
@@ -1780,9 +1801,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
-			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags, out var frameError);
 			if (framed == null)
-				return null;
+				return frameError;
 
 			var converted = TranslateDateTimeOffsetTruncationToDate(translationContext, framed, translationFlags);
 			if (converted == null)
@@ -1805,9 +1826,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.ProviderFlags.CanLowerTimeZoneConversion(SqlTimeZoneConversionKind.ToWallTime))
 				return null;
 
-			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags, out var frameError);
 			if (framed == null)
-				return null;
+				return frameError;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, AsWallClock(translationContext, framed), memberExpression);
 		}
@@ -2037,9 +2058,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
-			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags, out var frameError);
 			if (framed == null)
-				return null;
+				return frameError;
 
 			var converted = TranslateDateTimeOffsetTruncationToTime(translationContext, framed, translationFlags);
 			if (converted == null)
@@ -2081,9 +2102,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
 					return null;
 
-				framed = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, out _);
+				framed = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Arguments[1], translationFlags, out _, out var frameError);
 				if (framed == null)
-					return null;
+					return frameError;
 			}
 
 			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
@@ -2136,10 +2157,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return null;
 
 				original = datePlaceholder.Sql;
-				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, out zone);
+				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Object, translationFlags, out zone, out var frameError);
 
 				if (framed == null)
-					return null;
+					return frameError;
 			}
 
 			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
@@ -2232,10 +2253,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					return null;
 
 				original = datePlaceholder.Sql;
-				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, out zone);
+				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, methodCall.Arguments[2], translationFlags, out zone, out var frameError);
 
 				if (framed == null)
-					return null;
+					return frameError;
 			}
 
 			using var descriptorScope = translationContext.UsingColumnDescriptor(null);

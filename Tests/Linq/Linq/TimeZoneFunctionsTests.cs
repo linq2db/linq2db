@@ -70,6 +70,28 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The other direction, and the only way a caller reaches the attach form with a zone <em>name</em>: every
+		/// other spelling in this fixture hands the conversion a fixed offset, which routes to a different function
+		/// and leaves <c>AT TIME ZONE '&lt;name&gt;'</c> over a zone-less value unexercised.
+		/// </summary>
+		[Test]
+		public void AtTimeZoneReadsAWallClockInTheNamedZone([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			var result = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto.DateTime, zone))).Single();
+
+			// Same reason as above - and the wall clock is taken from the round-trip because it is the provider's own.
+			result!.Value.Offset.ShouldBe(TimeSpan.FromHours(2));
+			result!.Value.UtcDateTime.ShouldBe(new DateTimeOffset(stored.DateTime, TimeSpan.FromHours(2)).UtcDateTime);
+		}
+
+		/// <summary>
 		/// Reading a component through the conversion, which is the case that works on a provider with no type able
 		/// to carry the target zone's offset - the value never has to be materialised there.
 		/// </summary>
@@ -248,6 +270,29 @@ namespace Tests.Linq
 			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddHours(1).Hour)).Single();
 
 			hour.ShouldBe(14);
+		}
+
+		/// <summary>
+		/// The same rule for the wall-clock overload. Reading a component straight back through it is the identity
+		/// and needs no zone, but an operation whose own result is a <see cref="DateTimeOffset"/> leaves the frame
+		/// and has to re-enter the zone the caller named rather than the provider's default.
+		/// </summary>
+		[Test]
+		public void WallClockZoneSurvivesArithmetic([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			var shifted = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto.DateTime, zone)!.Value.AddDays(1))).Single();
+
+			// The wall clock is taken from the round-trip because it is the provider's own - 12:00 where the offset
+			// survives, 11:20 where the value came back as UTC. Prague is +02:00 on both 15 and 16 June, so the
+			// shift cannot move the offset.
+			shifted.ShouldBe(new DateTimeOffset(stored.DateTime, TimeSpan.FromHours(2)).AddDays(1));
 		}
 
 		/// <summary>
@@ -431,6 +476,23 @@ namespace Tests.Linq
 
 			shifted.UtcDateTime.ShouldBe(Value.UtcDateTime);
 			shifted.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
+		}
+
+		/// <summary>
+		/// A component read <em>through</em> <c>ToOffset</c>. The frame is then a fixed offset rather than a named
+		/// zone, which no dialect accepts where a zone name goes, so the member is left to .NET and still answers.
+		/// </summary>
+		[Test]
+		public void ComponentThroughAFixedOffsetFallsBackToNet([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			var hour = table.Select(r => r.Dto.ToOffset(TimeSpan.FromMinutes(-90)).Hour).Single();
+
+			hour.ShouldBe(stored.ToOffset(TimeSpan.FromMinutes(-90)).Hour);
 		}
 
 		/// <summary>
@@ -627,6 +689,21 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(Rows(Value));
 
 			table.Count(r => r.Dto.ToOffset(TimeSpan.FromHours(2)) == Value).ShouldBe(1);
+		}
+
+		/// <summary>
+		/// Reading a component through a fixed offset is refused by name where SQL is required. The offset would have
+		/// to go where a zone name goes, and neither dialect that carries an offset accepts one there for this
+		/// direction - so the alternative is not a wrong number but SQL no server parses.
+		/// </summary>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ZonedProviders, ErrorMessage = ErrorHelper.Error_TimeZone_OffsetFrame)]
+		public void ComponentThroughAFixedOffsetRefusedWhereSqlIsRequired([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			table.Select(r => Sql.AsSql(r.Dto.ToOffset(TimeSpan.FromMinutes(-90)).Hour)).Single();
 		}
 
 		/// <summary>
