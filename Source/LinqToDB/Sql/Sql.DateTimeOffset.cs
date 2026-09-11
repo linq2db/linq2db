@@ -109,15 +109,17 @@ namespace LinqToDB
 		/// provider accepts - SQL Server rejects a bare UTC offset such as <c>"+02:00"</c>.
 		/// <para>
 		/// Where the expression is not translated and falls back to .NET, the identifier is resolved by
-		/// <see cref="TimeZoneInfo.FindSystemTimeZoneById(string)"/> against the <b>host</b> instead. On .NET 8 and
-		/// later that accepts both spellings on both operating systems; on <c>net462</c> and <c>netstandard2.0</c> a
-		/// Windows host takes only Windows identifiers, so an IANA one throws there.
+		/// <see cref="TimeZoneInfo.FindSystemTimeZoneById(string)"/> against the <b>host</b> instead, and what it
+		/// accepts follows the runtime rather than the target framework. .NET 6 and later take both spellings on both
+		/// operating systems - on Windows only where ICU is in use, so an IANA one still throws under
+		/// globalization-invariant or NLS mode. .NET Framework takes Windows identifiers only.
 		/// </para>
 		/// </param>
 		/// <returns>The same instant, carrying <paramref name="timeZone"/>'s offset.</returns>
 		/// <remarks>
-		/// Materialising the result needs a column type that carries an offset, so selecting it directly translates on
-		/// SQL Server 2016+ and Oracle and is refused by name elsewhere. Reading a component or
+		/// Materialising the result needs a column type that carries an offset, so it translates on SQL Server 2016+
+		/// and Oracle. Elsewhere a plain projection falls back to .NET, and only a position that requires SQL - inside
+		/// a <c>Where</c>, or under <c>Sql.AsSql</c> - is refused by name. Reading a component or
 		/// <see cref="DateTimeOffset.DateTime"/> from it works on every provider that can express a zone conversion at
 		/// all, because no offset has to survive into the result.
 		/// </remarks>

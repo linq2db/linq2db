@@ -142,7 +142,8 @@ namespace Tests.Linq
 		/// would test the storage instead of the translation.
 		/// </remarks>
 		[Test]
-		public void ComponentMatchesRoundTrippedValue([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		[ActiveIssue(1855, Configurations = [TestProvName.AllSQLiteClassic], Details = "The storage keeps the offset - the round-trip returns 12:00 +00:40 - but the component is read off the UTC reading, so the hour answers 11 where the CLR says 12. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
+		public void ComponentMatchesRoundTrippedValue([SupportsDateTimeOffsetContext] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
@@ -366,7 +367,10 @@ namespace Tests.Linq
 
 			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddMonths(1))).Single();
 
+			// Both halves, for the reason the first test in this file gives: equality compares instants, so the
+			// offset this test exists to check is the one half it would otherwise never look at.
 			shifted.ShouldBe(value.AddMonths(1));
+			shifted.Offset.ShouldBe(value.Offset);
 		}
 
 		/// <summary>

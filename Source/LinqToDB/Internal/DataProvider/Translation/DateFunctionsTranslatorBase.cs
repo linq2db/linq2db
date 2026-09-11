@@ -1484,11 +1484,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// does it. The value is then rendered inline, and a demoted parameter makes the statement
 		/// parameter-dependent, so its SQL is rebuilt for each execution instead of a cached command being reused -
 		/// which is what stops one zone's statement being served for another.
+		/// <para>
+		/// A copy rather than a flag flipped in place: <c>ParametersContext</c> hands out one instance per accessor
+		/// id, so mutating it would inline the same captured value everywhere else it appears in the query too.
+		/// </para>
 		/// </summary>
 		static ISqlExpression ZoneOperand(ITranslationContext translationContext, ISqlExpression zone)
 		{
 			if (translationContext.ProviderFlags.RequiresConstantTimeZone && zone is SqlParameter { IsQueryParameter: true } parameter)
-				parameter.IsQueryParameter = false;
+				return parameter.WithIsQueryParameter(false);
 
 			return zone;
 		}
@@ -1923,7 +1927,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					break;
 
 				case SqlParameter parameter:
-					parameter.IsQueryParameter = false;
+					offset = parameter.WithIsQueryParameter(false);
 					break;
 
 				default:
@@ -1996,7 +2000,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					break;
 
 				case SqlParameter parameter:
-					parameter.IsQueryParameter = false;
+					offset = parameter.WithIsQueryParameter(false);
 					break;
 
 				// Anything the offset cannot be read off - a column, an expression - leaves nothing to spell.
