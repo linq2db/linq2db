@@ -604,9 +604,6 @@ namespace Tests.DataProvider
 		#endregion
 
 		#region 4574
-#if NETFRAMEWORK
-		[ActiveIssue]
-#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4574")]
 		public void Issue4574Test([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] BulkCopyType copyType)
 		{
