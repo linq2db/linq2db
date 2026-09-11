@@ -63,7 +63,7 @@ namespace Tests.Linq
 			sql.Parameters[0].Value.ShouldNotBe(sql.Parameters[1].Value);
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void ParameterReuse_ImpureExpression_CostDoesNotGrowPerBuild([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
