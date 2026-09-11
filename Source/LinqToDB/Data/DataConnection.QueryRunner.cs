@@ -1293,13 +1293,13 @@ namespace LinqToDB.Data
 				return (await ExecuteScenarioAsync(_dataConnection, _executionQuery!, cancellationToken).ConfigureAwait(false)).RowsAffected;
 			}
 
-			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
+			public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				_isAsync = true;
 
 				SetCommand(false);
 
-				return await ExecuteScalarImplAsync(_dataConnection, _executionQuery!, cancellationToken).ConfigureAwait(false);
+				return ExecuteScalarImplAsync(_dataConnection, _executionQuery!, cancellationToken);
 			}
 		}
 	}
