@@ -2849,9 +2849,12 @@ namespace Tests.Linq
 			public DateTime Date    { get; set; }
 		}
 
-		[ActiveIssue("Wrong Date manipulations", Configurations = [TestProvName.AllOracle11])]
+		// inlineParams had no value source, so NUnit generated no cases and this test never ran anywhere - the
+		// gate below was dead with it. [Values] makes it runnable; only Oracle 11 fails.
+		[ActiveIssueNew(Configuration = TestProvName.AllOracle11, ErrorTypeName = "Oracle.ManagedDataAccess.Client.OracleException",
+			Details = "no-issue: declared by type rather than message because the two arms fail differently and no attribute can target a test-case argument: inlined gives ORA-01841 (bad year, matching the old gate's 'Wrong Date manipulations'), parameterised gives ORA-01790 (UNION operand type mismatch). Both are the same driver exception, and LinqService wraps it in RpcException whose detail still names the type.")]
 		[Test]
-		public void SelectQueryTest([RecursiveCteContextSource] string context, bool inlineParams)
+		public void SelectQueryTest([RecursiveCteContextSource] string context, [Values] bool inlineParams)
 		{
 			using var db = GetDataContext(context);
 

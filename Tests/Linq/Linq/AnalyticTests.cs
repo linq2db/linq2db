@@ -2041,7 +2041,8 @@ namespace Tests.Linq
 		// - all other unmapped methods should throw
 		// - empty resulting sequence should return default(T)
 		// This will require additional asserts for results and tests to ensure expected behavior
-		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase])]
+		[ActiveIssueNew(4626, Configurations = [TestProvName.AllSqlServer2016Minus, TestProvName.AllInformix],
+			Details = "no-declaration: unvalidated: SqlCe, Sybase and both Access ACE drivers were dropped from this gate - all pass, direct and remote. The two left cannot be reached here: no SQL Server 2016-or-older container, and Informix's IBM CLI driver replaces the server text with a codepage message. #4626 is closed, so they may pass too, but they keep the gate rather than being dropped on the strength of the others.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
 		public void EmptySequenceTest([DataSources] string context)
 		{

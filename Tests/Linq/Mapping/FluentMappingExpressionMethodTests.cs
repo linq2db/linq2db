@@ -44,19 +44,6 @@ namespace Tests.Mapping
 				.Select(i => new InstanceClass { Id = i, Value = 100 + i }).ToArray();
 		}
 
-		[ActiveIssue(
-			Details = "https://github.com/linq2db/linq2db/issues/4987",
-			SkipForLinqService = true,
-			Configurations = [
-				TestProvName.AllSQLite,
-				TestProvName.AllSapHana,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllOracle,
-				TestProvName.AllDB2,
-				TestProvName.AllInformix,
-				TestProvName.AllClickHouse,
-				TestProvName.AllAccess,
-				TestProvName.AllMySql])]
 		[Test]
 		public void ExpressionMethodOnProperty([DataSources] string context)
 		{

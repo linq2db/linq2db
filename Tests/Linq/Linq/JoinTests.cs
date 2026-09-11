@@ -2987,13 +2987,13 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssue(1224, Configurations = new[]
+		[ActiveIssueNew(1224, Configurations = new[]
 		{
 			TestProvName.AllAccess,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe
-		}, Details = "FULL OUTER JOIN support. Also check and enable other tests that do full join on fix")]
+		}, Details = "no-declaration: one mechanism - the server has no FULL OUTER JOIN and linq2db does not yet emulate it - reported five ways: SqlCe names the offending token ('Token in error = FULL'), Sybase says \"Incorrect syntax near 'FULL'\", MySQL gives its generic syntax-error paragraph, and the two Access ACE drivers give no usable text at all ('Reserved error (-1001)' on ODBC, 'Unspecified error: E_FAIL' on OleDb). Same text arrives wrapped in RpcException over LinqService.")]
 		[Test(Description = "Tests regression in v3.3 when for RightCount generated SQL started to use same field as for LeftCount")]
 		// InformixDB2 disabled due to serious bug in provider: while query returns 3, data reader returns 0 here
 		public void FullJoinCondition_Regression([DataSources(ProviderName.InformixDB2, TestProvName.AllClickHouse)] string context)

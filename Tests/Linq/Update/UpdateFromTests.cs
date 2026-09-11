@@ -707,7 +707,11 @@ namespace Tests.xUpdate
 
 		#region Issue 2815
 
-		[ActiveIssue(Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllDuckDB ])]
+		[ActiveIssueNew(2815, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Feature not supported by database: Correlated UPDATE",
+			Details = "ClickHouse is refused by linq2db before any SQL is sent, so it is the one provider here with a stable message. Does not collide with the co-sited ThrowsRequiresCorrelatedSubquery(simple: true), which covers YDB only.")]
+		[ActiveIssueNew(2815, Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllAccess ],
+			Details = "no-declaration: one mechanism - the generated UPDATE references a table that is not in scope for it - reported eight ways: 'The multi-part identifier \"u.Id\" could not be bound', 'no such column: Issue2815Table1.Id', 'Unknown column u.Id in on clause', ORA-00904 invalid identifier, 42P01 invalid reference to FROM-clause entry, a SqlCe parse error, a DuckDB binder error, and Access splitting between an ODBC 42000 and an OleDb 'Syntax error in JOIN operation'.")]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
