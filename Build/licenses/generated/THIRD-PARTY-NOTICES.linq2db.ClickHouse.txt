@@ -17,7 +17,7 @@ Components: 12
 COMPONENTS
 --------------------------------------------------------------------------------------------------
 
-1. ClickHouse.Driver net10.0: 1.3.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.3.0, net8.0-windows7.0: 1.3.0, net9.0: 1.3.0
+1. ClickHouse.Driver net10.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.4.0, net8.0-windows7.0: 1.4.0, net9.0: 1.4.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [1]
 
@@ -36,12 +36,12 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-5. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+5. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-6. MySqlConnector 2.6.1
+6. MySqlConnector 2.6.2
    https://mysqlconnector.net/
    License: MIT  see [1]
    Copyright 2016–2026 Bradley Grainger
@@ -65,7 +65,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-11. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.5, net9.0: 10.0.10
+11. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.

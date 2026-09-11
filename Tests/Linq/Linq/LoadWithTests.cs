@@ -1030,7 +1030,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		// Counterpart to the filter tests above: the same optional-filter idiom as a plain top-level
 		// Where. One compiled plan serves both closure states - the filter is re-rendered from the
 		// current closure on every execution rather than folded into the plan, which is exactly what a

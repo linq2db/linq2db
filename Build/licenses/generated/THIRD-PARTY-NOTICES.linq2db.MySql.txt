@@ -27,12 +27,12 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-3. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.10, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+3. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-4. MySqlConnector 2.6.1
+4. MySqlConnector 2.6.2
    https://mysqlconnector.net/
    License: MIT  see [1]
    Copyright 2016–2026 Bradley Grainger

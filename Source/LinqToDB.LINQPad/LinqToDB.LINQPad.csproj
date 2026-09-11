@@ -27,7 +27,7 @@
 		<PackageReference Include="MySqlConnector" />
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="System.Data.SQLite" />
-		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
+		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" GeneratePathProperty="true" />
 		<PackageReference Include="Microsoft.Data.Sqlite" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="Npgsql" />
@@ -140,20 +140,16 @@
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x64\IBM.Data.DB2.dll" />
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x86\IBM.Data.DB2.dll" />
 
-		<!-- LINQPad 5 runs x86/x64 only, so ship just those natives.
-		     Two folders on purpose: runtimes/ is Microsoft.Data.Sqlite's default probing path, while
-		     sds/runtimes/ is where System.Data.SQLite looks via PreLoadSQLite_BaseDirectory (set in
-		     SQLiteProvider's static ctor) — see SQLite.Runtime.props for why they must stay separate.
-		     These copies live here, before Pack.cmd, because targets hooked on AfterTargets=
-		     "PostBuildEvent" have no guaranteed order relative to this one: the sds copy in
-		     SQLite.Runtime.props could otherwise land after the archive was already written. -->
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x86\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x86\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x64\native\e_sqlite3.dll" />
+		<!-- LINQPad 5 runs x86/x64 only, so ship just those natives. One folder now: both SQLite providers
+		     load the same e_sqlite3 from runtimes/, which is Microsoft.Data.Sqlite's default probing path
+		     and, since System.Data.SQLite is SQLitePCLRaw-based, System.Data.SQLite's too. These copies live
+		     here, before Pack.cmd, because targets hooked on AfterTargets="PostBuildEvent" have no guaranteed
+		     order relative to this one and could otherwise land after the archive was written. -->
+		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x86\native\e_sqlite3.dll" />
+		<Copy SourceFiles="$(PkgSQLitePCLRaw_lib_e_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
 
 		<!-- Drop architectures LINQPad 5 can't run; the SDK copies the full win-* set automatically. -->
-		<RemoveDir Directories="$(TargetDir)\runtimes\win-arm;$(TargetDir)\runtimes\win-arm64" />
+		<RemoveDir Directories="$(TargetDir)\runtimes\win-arm64" />
 
 		<!-- The .lpx is the whole output directory (Pack.cmd globs %OUTDIR%*.*), so it redistributes every
 		     provider client and native asset in it - including linq2db4iSeries and IBM's clidriver - under
@@ -208,7 +204,6 @@ internal static class NuGetPackageVersions
 	public const string Npgsql                              = "@(PackageVersion->WithMetadataValue('Identity', 'Npgsql')->'%(Version)')"%3B
 	public const string Octonica_ClickHouseClient           = "@(PackageVersion->WithMetadataValue('Identity', 'Octonica.ClickHouseClient')->'%(Version)')"%3B
 	public const string Oracle_ManagedDataAccess_Core       = "@(PackageVersion->WithMetadataValue('Identity', 'Oracle.ManagedDataAccess.Core')->'%(Version)')"%3B
-	public const string SourceGear_sqlite3                  = "@(PackageVersion->WithMetadataValue('Identity', 'SourceGear.sqlite3')->'%(Version)')"%3B
 	public const string SQLitePCLRaw_lib_e_sqlite3          = "@(PackageVersion->WithMetadataValue('Identity', 'SQLitePCLRaw.lib.e_sqlite3')->'%(Version)')"%3B
 	public const string System_Data_Odbc                    = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.Odbc')->'%(Version)')"%3B
 	public const string System_Data_OleDb                   = "@(PackageVersion->WithMetadataValue('Identity', 'System.Data.OleDb')->'%(Version)')"%3B

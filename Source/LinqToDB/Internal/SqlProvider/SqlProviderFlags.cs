@@ -766,7 +766,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (TakeHintsSupported == null)
 				return false;
 
-			return (TakeHintsSupported.Value & hints) == hints;
+			return TakeHintsSupported.Value.HasFlag(hints);
 		}
 
 		#region Equality
