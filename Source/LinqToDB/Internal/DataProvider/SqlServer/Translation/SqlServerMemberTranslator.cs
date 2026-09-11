@@ -65,17 +65,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				};
 			}
 
-			/// <summary>
-			/// <c>tz</c> is a date part like any other here, and answers the offset in minutes directly.
-			/// </summary>
-			protected override ISqlExpression? TranslateDateTimeOffsetOffsetMinutes(ITranslationContext translationContext, ISqlExpression value)
-			{
-				var factory  = translationContext.ExpressionFactory;
-				var intDbType = factory.GetDbDataType(typeof(int));
-
-				return factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullExpression(intDbType, "tz"), value);
-			}
-
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var partStr = DatePartToStr(datepart, false);

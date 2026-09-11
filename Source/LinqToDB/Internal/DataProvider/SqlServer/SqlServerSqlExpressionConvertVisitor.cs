@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			var atTimeZone = Factory.Expression(
 				Factory.GetDbDataType(typeof(DateTimeOffset)),
 				LinqToDB.SqlQuery.Precedence.Primary,
-				"{0} AT TIME ZONE {1}",
+				"({0} AT TIME ZONE {1})",
 				element.Value,
 				element.Zone);
 

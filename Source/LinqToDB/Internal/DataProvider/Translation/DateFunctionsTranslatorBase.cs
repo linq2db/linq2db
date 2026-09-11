@@ -99,8 +99,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterConstructor((DateTime dateTime, TimeSpan offset)
 				=> new DateTimeOffset(dateTime, offset), TranslateDateTimeOffsetConstructor);
 
-			Registration.RegisterMember((DateTimeOffset dt) => dt.Offset,             TranslateDateTimeOffsetOffset);
+			Registration.RegisterMember((DateTimeOffset dt) => dt.Offset, TranslateDateTimeOffsetOffset);
+
+#if NET8_0_OR_GREATER
+			// TotalOffsetMinutes is not on the portable target frameworks, so there is nothing to translate there.
 			Registration.RegisterMember((DateTimeOffset dt) => dt.TotalOffsetMinutes, TranslateDateTimeOffsetTotalOffsetMinutes);
+#endif
 
 			Registration.RegisterMember((DateTimeOffset dt) => dt.TimeOfDay, TranslateDateTimeOffsetTruncationToTime);
 
@@ -1477,8 +1481,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		/// <summary>
 		/// Demotes a bound zone to a constant where the provider's grammar demands one, the way <c>Sql.Constant</c>
-		/// does it - the value is then rendered inline and becomes part of the query cache key, so two zones cannot
-		/// share one cached statement.
+		/// does it. The value is then rendered inline, and a demoted parameter makes the statement
+		/// parameter-dependent, so its SQL is rebuilt for each execution instead of a cached command being reused -
+		/// which is what stops one zone's statement being served for another.
 		/// </summary>
 		static ISqlExpression ZoneOperand(ITranslationContext translationContext, ISqlExpression zone)
 		{
@@ -1492,17 +1497,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		static readonly MethodInfo _atTimeZoneFromDateTime = MemberHelper.MethodOf(() => Sql.AtTimeZone((DateTime?)null,       ""));
 		static readonly MethodInfo _convertTimeByZoneId    = MemberHelper.MethodOf(() => TimeZoneInfo.ConvertTimeBySystemTimeZoneId(default(DateTimeOffset), ""));
 
-		/// <summary>
-		/// Recognises <see cref="Sql.AtTimeZone(DateTimeOffset?, string)"/> in the operand <em>before</em> it is
-		/// translated, and builds the reading frame straight from its arguments.
-		/// </summary>
-		/// <remarks>
-		/// Needed as well as the AST-level rule below, not instead of it. A conversion the provider cannot lower is
-		/// refused while the operand is being translated, so by the time a translated operand exists there is nothing
-		/// left to read a frame from - the whole expression has already fallen back to .NET. Stripping the conversion
-		/// here is what lets a component be read in a named zone on a provider that has no type able to carry that
-		/// zone's offset, which is most of them.
-		/// </remarks>
 		/// <summary>
 		/// Matches any spelling of the conversion in an operand that has not been translated yet.
 		/// </summary>
@@ -1536,6 +1530,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return true;
 		}
 
+		/// <summary>
+		/// Recognises <see cref="Sql.AtTimeZone(DateTimeOffset?, string)"/> in the operand <em>before</em> it is
+		/// translated, and builds the reading frame straight from its arguments.
+		/// </summary>
+		/// <remarks>
+		/// Needed as well as the AST-level rule below, not instead of it. A conversion the provider cannot lower is
+		/// refused while the operand is being translated, so by the time a translated operand exists there is nothing
+		/// left to read a frame from - the whole expression has already fallen back to .NET. Stripping the conversion
+		/// here is what lets a component be read in a named zone on a provider that has no type able to carry that
+		/// zone's offset, which is most of them.
+		/// </remarks>
 		ISqlExpression? FrameFromZonedOperand(ITranslationContext translationContext, Expression? operand, out ISqlExpression? zone)
 		{
 			zone = null;
@@ -1824,6 +1829,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return TranslateDateTimeOffsetOffsetMinutes(translationContext, placeholder.Sql);
 		}
 
+#if NET8_0_OR_GREATER
 		/// <summary>
 		/// <see cref="DateTimeOffset.TotalOffsetMinutes"/>.
 		/// </summary>
@@ -1835,6 +1841,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, minutes, memberExpression);
 		}
+#endif
 
 		/// <summary>
 		/// <see cref="DateTimeOffset.Offset"/>.
@@ -1871,7 +1878,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// This is <see cref="SqlTimeZoneConversionKind.AttachZone"/> with an offset where a zone name usually goes,
 		/// so it carries the same constraint as <see cref="DateTimeOffset.ToOffset(TimeSpan)"/>: no dialect takes a
 		/// fixed offset as a bind, and spelling a bound one into the SQL would let the query cache serve one offset's
-		/// statement for another. Demoting the parameter is what puts its value in the key.
+		/// statement for another. Demoting the parameter is what prevents that - see <see cref="ZoneOperand"/>.
 		/// </remarks>
 		Expression? TranslateDateTimeOffsetConstructor(ITranslationContext translationContext, Expression expression, TranslationFlags translationFlags)
 		{
@@ -1947,8 +1954,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// <remarks>
 		/// The offset has to be settled here rather than left as a bind: no dialect takes a fixed offset the way it
 		/// takes a zone name, so the lowering spells it out, and spelling out a bound value would bake one offset
-		/// into SQL the query cache then serves for another. Demoting the parameter is what puts its value in the
-		/// cache key, so the two cannot be confused.
+		/// into SQL the query cache then serves for another. Demoting the parameter is what prevents that - see
+		/// <see cref="ZoneOperand"/>.
 		/// </remarks>
 		Expression? TranslateDateTimeOffsetToOffset(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
@@ -2030,11 +2037,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
-			var placeholder = TranslateNoRequiredExpression(translationContext, memberExpression.Expression, translationFlags);
-			if (placeholder == null)
+			var framed = FramedOperand(translationContext, memberExpression.Expression, translationFlags);
+			if (framed == null)
 				return null;
 
-			var converted = TranslateDateTimeOffsetTruncationToTime(translationContext, placeholder.Sql, translationFlags);
+			var converted = TranslateDateTimeOffsetTruncationToTime(translationContext, framed, translationFlags);
 			if (converted == null)
 				return null;
 
@@ -2065,14 +2072,23 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.TryEvaluate<Sql.DateParts>(methodCall.Arguments[0], out var datePart))
 				return null;
 
-			var dateExpr = translationContext.Translate(methodCall.Arguments[1]);
+			var framed = FrameFromZonedOperand(translationContext, methodCall.Arguments[1], out _);
 
-			if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
-				return null;
+			if (framed == null)
+			{
+				var dateExpr = translationContext.Translate(methodCall.Arguments[1]);
+
+				if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
+					return null;
+
+				framed = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, out _);
+				if (framed == null)
+					return null;
+			}
 
 			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
-			var converted = TranslateDateTimeOffsetDatePart(translationContext, translationFlags, datePlaceholder.Sql, datePart);
+			var converted = TranslateDateTimeOffsetDatePart(translationContext, translationFlags, framed, datePart);
 			if (converted == null)
 				return null;
 
@@ -2206,9 +2222,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (!translationContext.TryEvaluate<Sql.DateParts>(methodCall.Arguments[0], out var datepart))
 				return null;
 
-			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[2].UnwrapConvert(), translationFlags, false);
-			if (datePlaceholder == null)
-				return null;
+			var framed   = FrameFromZonedOperand(translationContext, methodCall.Arguments[2], out var zone);
+			var original = framed;
+
+			if (framed == null)
+			{
+				var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[2].UnwrapConvert(), translationFlags, false);
+				if (datePlaceholder == null)
+					return null;
+
+				original = datePlaceholder.Sql;
+				framed   = DateTimeOffsetFrame(translationContext, datePlaceholder.Sql, out zone);
+
+				if (framed == null)
+					return null;
+			}
 
 			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
@@ -2217,10 +2245,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			// Can be evaluated on client side
-			if (datePlaceholder.Sql is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
+			if (original is SqlParameter && incrementPlaceholder.Sql is SqlParameter)
 				return null;
 
-			var converted = TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, datePlaceholder.Sql, incrementPlaceholder.Sql, datepart);
+			var converted = TranslateDateTimeOffsetDateAdd(translationContext, translationFlags, framed, incrementPlaceholder.Sql, datepart);
+			if (converted == null)
+				return null;
+
+			converted = UnframeDateTimeOffset(translationContext, original!, converted, zone);
 			if (converted == null)
 				return null;
 
@@ -2451,12 +2483,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return cast;
 		}
 
+		/// <summary>
+		/// Truncates a <see cref="DateTimeOffset"/> to its time of day. The operand arrives already brought into the
+		/// reading frame, so this is the plain truncation over a value that is now in the right frame.
+		/// </summary>
+		/// <remarks>
+		/// Delegating rather than repeating the base <see cref="DateTime"/> body is what makes the member work where
+		/// a bare cast to <c>time</c> does not: Oracle answers <c>ORA-50031 unsupported column datatype</c> for one,
+		/// and six providers implement the plain truncation without implementing this one.
+		/// </remarks>
 		protected virtual ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 		{
-			var factory = translationContext.ExpressionFactory;
-			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time), true);
-
-			return cast;
+			return TranslateDateTimeTruncationToTime(translationContext, dateExpression, translationFlags);
 		}
 
 		/// <summary>

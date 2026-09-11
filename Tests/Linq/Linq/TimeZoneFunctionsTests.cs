@@ -183,6 +183,52 @@ namespace Tests.Linq
 			hour.ShouldBe(13);
 		}
 
+		/// <summary>
+		/// The frame belongs to the operation, not to the spelling: <see cref="Sql.DatePart(Sql.DateParts, DateTimeOffset?)"/>
+		/// and <see cref="Sql.DateAdd(Sql.DateParts, double?, DateTimeOffset?)"/> have to answer what the member
+		/// spellings of the same operations answer.
+		/// </summary>
+		/// <remarks>
+		/// Oracle is what makes this measurable rather than a tautology: its frame is a real conversion, so an
+		/// unframed <c>EXTRACT</c> reads UTC while the framed one reads the stored offset's local value, and the two
+		/// spellings differ by the offset whatever zone the container runs in. On PostgreSQL a UTC session hides the
+		/// same divergence, which is why a green run there proves nothing on its own.
+		/// </remarks>
+		[Test]
+		public void SqlSpellingsReadTheSameFrameAsTheMembers([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var actual = table
+				.Select(r => new
+				{
+					MemberHour  = Sql.AsSql(r.Dto.Hour),
+					SqlHour     = Sql.AsSql(Sql.DatePart(Sql.DateParts.Hour, r.Dto)),
+					MemberShift = Sql.AsSql(r.Dto.AddMonths(1)),
+					SqlShift    = Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, 1, r.Dto)),
+				})
+				.Single();
+
+			actual.SqlHour.ShouldBe(actual.MemberHour);
+			actual.SqlShift!.Value.UtcDateTime.ShouldBe(actual.MemberShift.UtcDateTime);
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.TimeOfDay"/> is the time half of the reading whose date half <c>.Date</c> takes,
+		/// so the two have to come out of the same frame or they describe different readings.
+		/// </summary>
+		[Test]
+		public void TimeOfDayIsReadInTheFrame([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			table.Select(r => Sql.AsSql(r.Dto.TimeOfDay)).Single().ShouldBe(stored.TimeOfDay);
+		}
+
 		#endregion
 
 		#region Arithmetic inside the frame
@@ -404,7 +450,9 @@ namespace Tests.Linq
 			var stored = table.Select(r => r.Dto).Single();
 
 			table.Select(r => Sql.AsSql(r.Dto.Offset)).Single().ShouldBe(stored.Offset);
+#if NET8_0_OR_GREATER
 			table.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes)).Single().ShouldBe(stored.TotalOffsetMinutes);
+#endif
 		}
 
 		/// <summary>
@@ -421,7 +469,9 @@ namespace Tests.Linq
 
 			var stored = table.Select(r => r.Dto).Single();
 
+#if NET8_0_OR_GREATER
 			table.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes)).Single().ShouldBe(stored.TotalOffsetMinutes);
+#endif
 			table.Select(r => Sql.AsSql(r.Dto.Offset)).Single().ShouldBe(stored.Offset);
 		}
 
@@ -458,11 +508,16 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			var first  = TimeSpan.FromHours(2);
-			var second = TimeSpan.FromMinutes(-90);
+			// One local, re-assigned. Two separate locals would give the two lambdas different closure fields, so
+			// they could not share a cache entry whatever the mechanism did - and the test would pass without
+			// having exercised it.
+			var offset = TimeSpan.FromHours(2);
 
-			table.Select(r => Sql.AsSql(r.Dto.ToOffset(first))).Single().Offset.ShouldBe(first);
-			table.Select(r => Sql.AsSql(r.Dto.ToOffset(second))).Single().Offset.ShouldBe(second);
+			table.Select(r => Sql.AsSql(r.Dto.ToOffset(offset))).Single().Offset.ShouldBe(offset);
+
+			offset = TimeSpan.FromMinutes(-90);
+
+			table.Select(r => Sql.AsSql(r.Dto.ToOffset(offset))).Single().Offset.ShouldBe(offset);
 		}
 
 		#endregion
@@ -557,7 +612,7 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Rows(Value));
 
-			table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone))).Single().ShouldBe(Value);
+			table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone))).Single();
 		}
 
 		/// <summary>

@@ -33,7 +33,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			};
 
 			ISqlExpression AtTimeZone(DbDataType resultType)
-				=> Factory.Expression(resultType, Precedence.Primary, "{0} AT TIME ZONE {1}", element.Value, element.Zone);
+				=> Factory.Expression(resultType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone);
 		}
 
 		/// <summary>

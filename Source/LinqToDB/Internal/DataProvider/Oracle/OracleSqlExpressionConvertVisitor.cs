@@ -133,7 +133,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				var asText = Factory.Value(offset);
 
 				if (element.Kind == SqlTimeZoneConversionKind.ConvertZone)
-					return Factory.Expression(zonedType, Precedence.Primary, "{0} AT TIME ZONE {1}", element.Value, asText);
+					return Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, asText);
 
 				if (element.Kind == SqlTimeZoneConversionKind.AttachZone)
 					return Factory.Function(zonedType, "From_Tz", element.Value, asText);
@@ -146,12 +146,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					=> Factory.Function(zonedType, "From_Tz", element.Value, element.Zone),
 
 				SqlTimeZoneConversionKind.ConvertZone
-					=> Factory.Expression(zonedType, Precedence.Primary, "{0} AT TIME ZONE {1}", element.Value, element.Zone),
+					=> Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone),
 
 				// Mandatory: without the cast the result stays offset-carrying and ToWallTime would silently mean
 				// ConvertZone.
 				_ => Factory.Cast(
-					Factory.Expression(zonedType, Precedence.Primary, "{0} AT TIME ZONE {1}", element.Value, element.Zone),
+					Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone),
 					Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2),
 					true),
 			};

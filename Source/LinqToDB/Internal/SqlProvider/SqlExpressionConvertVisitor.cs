@@ -1541,6 +1541,13 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Lowers a time zone conversion into this provider's spelling of it - an infix <c>AT TIME ZONE</c>, a
 		/// function such as <c>CONVERT_TZ</c> or <c>toTimeZone</c>, or a cast around either.
 		/// </summary>
+		/// <remarks>
+		/// An infix form writes its own parentheses rather than asking for them through <c>Precedence</c>, because
+		/// that one number plays both roles: it decides whether the parent wraps this fragment <em>and</em> serves as
+		/// the parent precedence its own operands are rendered against. <c>Unknown</c> buys the outer parentheses -
+		/// which PostgreSQL's postfix <c>::</c> needs, since it binds tighter than <c>AT TIME ZONE</c> - at the cost
+		/// of the inner ones, so <c>ToWallTime(a - b, z)</c> comes out as <c>a - b AT TIME ZONE z</c>.
+		/// </remarks>
 		/// <returns><see langword="null"/> when the provider has no form for this kind.</returns>
 		protected virtual ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
 		{

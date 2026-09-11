@@ -28,6 +28,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected class SqlServer2008DateFunctionsTranslator : SqlServer2005DateFunctionsTranslator
 		{
+			/// <summary>
+			/// <c>tz</c> is a date part like any other here, and answers the offset in minutes directly. It arrived
+			/// with <c>datetimeoffset</c> itself in 2008, which is why it sits here rather than on the version-less
+			/// translator: 2005 stores the value as a plain <c>datetime</c> and has no offset to read.
+			/// </summary>
+			protected override ISqlExpression? TranslateDateTimeOffsetOffsetMinutes(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var intDbType = factory.GetDbDataType(typeof(int));
+
+				return factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullExpression(intDbType, "tz"), value);
+			}
+
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				var factory    = translationContext.ExpressionFactory;

@@ -105,13 +105,13 @@ namespace LinqToDB
 		/// <param name="timeZone">
 		/// A time zone identifier, interpreted by the <b>database</b> rather than by .NET, so the accepted set is the
 		/// server's: SQL Server takes Windows identifiers (<c>"Central European Standard Time"</c>), while PostgreSQL,
-		/// Oracle, DuckDB and MySQL take IANA identifiers (<c>"Europe/Prague"</c>). There is no spelling that every
+		/// Oracle and DuckDB take IANA identifiers (<c>"Europe/Prague"</c>). There is no spelling that every
 		/// provider accepts - SQL Server rejects a bare UTC offset such as <c>"+02:00"</c>.
 		/// </param>
 		/// <returns>The same instant, carrying <paramref name="timeZone"/>'s offset.</returns>
 		/// <remarks>
 		/// Materialising the result needs a column type that carries an offset, so selecting it directly translates on
-		/// SQL Server 2016+, Oracle and Firebird 4+ and is refused by name elsewhere. Reading a component or
+		/// SQL Server 2016+ and Oracle and is refused by name elsewhere. Reading a component or
 		/// <see cref="DateTimeOffset.DateTime"/> from it works on every provider that can express a zone conversion at
 		/// all, because no offset has to survive into the result.
 		/// </remarks>
