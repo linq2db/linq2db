@@ -238,24 +238,21 @@ namespace Tests
 			if (throwsGoverns)
 				return null;
 
-			switch (innerState.Status)
+			return innerState.Status switch
 			{
-				case TestStatus.Passed:
-					return (ResultState.Failure,
-						$"{Marker}Test passed but is marked with [ActiveIssue] ({attribute.Reference}). "
-						+ "If the issue is fixed, remove the attribute; if it only passes for some providers, narrow Configuration.");
+				TestStatus.Passed => (ResultState.Failure,
+					$"{Marker}Test passed but is marked with [ActiveIssue] ({attribute.Reference}). "
+					+ "If the issue is fixed, remove the attribute; if it only passes for some providers, narrow Configuration."),
 
-				case TestStatus.Failed:
-					return attribute.Matches(innerMessage, isRemote)
-						? (ResultState.Inconclusive, $"{Marker}Known issue ({attribute.Reference}), still failing as expected:\n\n{innerMessage}")
-						: (ResultState.Failure,
-							$"{Marker}Expected {attribute.Expectation} for {attribute.Reference}, but found:\n\n{innerMessage}");
+				TestStatus.Failed => attribute.Matches(innerMessage, isRemote)
+					? (ResultState.Inconclusive, $"{Marker}Known issue ({attribute.Reference}), still failing as expected:\n\n{innerMessage}")
+					: (ResultState.Failure,
+						$"{Marker}Expected {attribute.Expectation} for {attribute.Reference}, but found:\n\n{innerMessage}"),
 
 				// Skipped / Ignored / Inconclusive / Warning: the test opted out of running, so it never produced
 				// evidence about the issue either way. Leaving it alone is the only honest answer.
-				default:
-					return null;
-			}
+				_ => null
+			};
 		}
 
 		/// <inheritdoc/>

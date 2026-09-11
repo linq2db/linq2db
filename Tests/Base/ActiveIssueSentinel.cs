@@ -122,7 +122,7 @@ namespace Tests
 			if (message == null || message.Length <= MaxMessageLength)
 				return message;
 
-			return message.Substring(0, MaxMessageLength) + "...";
+			return string.Concat(message.AsSpan(0, MaxMessageLength), "...");
 		}
 
 		// '%' first: it is the escape character, so escaping it after the others would double-escape their output.
