@@ -536,7 +536,12 @@ namespace LinqToDB.Data
 
 					InitCommand(dataConnection, statement.Sql, statement.Parameters, command.QueryHints);
 
+					// On net462 / netstandard2.0 the DbBatch branch below is compiled out, leaving this the only await, so
+					// MA0215 asks for the task to be returned directly - which the method cannot do, since that branch awaits
+					// twice where it is compiled in.
+#pragma warning disable MA0215
 					return await dataConnection.ExecuteDataReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false);
+#pragma warning restore MA0215
 				}
 
 #if SUPPORTS_DBBATCH
