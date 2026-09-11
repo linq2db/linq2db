@@ -107,6 +107,12 @@ namespace LinqToDB
 		/// server's: SQL Server takes Windows identifiers (<c>"Central European Standard Time"</c>), while PostgreSQL,
 		/// Oracle and DuckDB take IANA identifiers (<c>"Europe/Prague"</c>). There is no spelling that every
 		/// provider accepts - SQL Server rejects a bare UTC offset such as <c>"+02:00"</c>.
+		/// <para>
+		/// Where the expression is not translated and falls back to .NET, the identifier is resolved by
+		/// <see cref="TimeZoneInfo.FindSystemTimeZoneById(string)"/> against the <b>host</b> instead. On .NET 8 and
+		/// later that accepts both spellings on both operating systems; on <c>net462</c> and <c>netstandard2.0</c> a
+		/// Windows host takes only Windows identifiers, so an IANA one throws there.
+		/// </para>
 		/// </param>
 		/// <returns>The same instant, carrying <paramref name="timeZone"/>'s offset.</returns>
 		/// <remarks>
