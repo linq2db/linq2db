@@ -13,6 +13,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TimeZoneFunctionsTests : TestBase
 	{
+		#region Fixture
+
 		[Table]
 		sealed class ZonedRow
 		{
@@ -24,6 +26,9 @@ namespace Tests.Linq
 		// no real zone uses it, so an answer that quietly reads in the server's zone cannot coincide with the right
 		// one. A row whose offset matches the container's would let every one of these tests pass while broken.
 		static readonly DateTimeOffset Value = new (2020, 6, 15, 12, 00, 00, TimeSpan.FromMinutes(40));
+
+		static ZonedRow[] Rows(params DateTimeOffset[] values)
+			=> values.Select((v, i) => new ZonedRow { Id = i + 1, Dto = v }).ToArray();
 
 		// SQL Server resolves zone names against its own registry-backed list; every other provider takes IANA.
 		// There is no spelling that works everywhere - SQL Server rejects a bare UTC offset - so the identifier is
@@ -37,11 +42,19 @@ namespace Tests.Linq
 		// Adds those that cannot carry an offset but can still answer a reading in a named zone.
 		const string ZoneReadingProviders = ZonedProviders + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllDuckDB;
 
+		#endregion
+
+		#region Sql.AtTimeZone
+
+		/// <summary>
+		/// The conversion as a value in its own right: same instant, the target zone's offset. It needs a result type
+		/// able to carry an offset, which is why it is scoped to the providers that have one.
+		/// </summary>
 		[Test]
 		public void AtTimeZoneKeepsInstantAndTakesTargetOffset([IncludeDataSources(false, ZonedProviders)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var result = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, PragueZone(context)))).Single();
 
@@ -51,13 +64,17 @@ namespace Tests.Linq
 			result!.Value.Offset.ShouldBe(TimeSpan.FromHours(2));
 		}
 
+		/// <summary>
+		/// Reading a component through the conversion, which is the case that works on a provider with no type able
+		/// to carry the target zone's offset - the value never has to be materialised there.
+		/// </summary>
 		[Test]
 		public void ComponentInNamedZone([IncludeDataSources(false, ZoneReadingProviders)] string context)
 		{
 			var zone = PragueZone(context);
 
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.Hour)).Single();
 
@@ -75,7 +92,7 @@ namespace Tests.Linq
 			var zone = PragueZone(context);
 
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var viaBcl = table.Select(r => Sql.AsSql(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(r.Dto, zone).Hour)).Single();
 			var viaSql = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.Hour)).Single();
@@ -84,22 +101,9 @@ namespace Tests.Linq
 			viaBcl.ShouldBe(13);
 		}
 
-		/// <summary>
-		/// The zone has to survive an intervening shift, or a component read after it silently falls back to the
-		/// provider's default frame.
-		/// </summary>
-		[Test]
-		public void ZoneSurvivesArithmetic([IncludeDataSources(false, ZoneReadingProviders)] string context)
-		{
-			var zone = PragueZone(context);
+		#endregion
 
-			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
-
-			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddHours(1).Hour)).Single();
-
-			hour.ShouldBe(14);
-		}
+		#region The reading frame
 
 		/// <summary>
 		/// The frame rule with no <c>AtTimeZone</c> in sight: a component of a stored value has to agree with what
@@ -114,13 +118,187 @@ namespace Tests.Linq
 		public void ComponentMatchesRoundTrippedValue([IncludeDataSources(false, ZoneReadingProviders)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var expected = table.Select(r => r.Dto).Single().Hour;
 			var actual   = table.Select(r => Sql.AsSql(r.Dto.Hour)).Single();
 
 			actual.ShouldBe(expected);
 		}
+
+		/// <summary>
+		/// The same rule where it decides a <em>date</em> rather than a time. Every other row in this fixture sits at
+		/// midday, so a frame that is wrong by the forty-minute offset shows up as a wrong hour; only a row whose UTC
+		/// date differs from its own can make the same error come out as a wrong day.
+		/// </summary>
+		[Test]
+		public void DatePartsAtADayBoundaryMatchTheRoundTrip([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			// 00:20 +00:40 is 23:40 UTC on the previous day - and the previous month, and in a leap year the
+			// previous day-of-year is 366.
+			var value = new DateTimeOffset(2021, 1, 1, 0, 20, 0, TimeSpan.FromMinutes(40));
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			var actual = table
+				.Select(r => new
+				{
+					Day       = Sql.AsSql(r.Dto.Day),
+					Month     = Sql.AsSql(r.Dto.Month),
+					Year      = Sql.AsSql(r.Dto.Year),
+					DayOfYear = Sql.AsSql(r.Dto.DayOfYear),
+				})
+				.Single();
+
+			actual.Day.ShouldBe(stored.Day);
+			actual.Month.ShouldBe(stored.Month);
+			actual.Year.ShouldBe(stored.Year);
+			actual.DayOfYear.ShouldBe(stored.DayOfYear);
+		}
+
+		/// <summary>
+		/// The shortest expression in which the frame could be applied twice: the zone is consumed by the
+		/// <see cref="DateTimeOffset"/> half, and the <see cref="DateTime"/> read off it must not be framed again.
+		/// </summary>
+		[Test]
+		public void DateTimeInNamedZoneIsFramedOnce([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.DateTime.Hour)).Single();
+
+			// 11:20 UTC is 13:20 in Prague in June - the same answer ComponentInNamedZone asserts, reached through
+			// an extra member that must contribute no second conversion.
+			hour.ShouldBe(13);
+		}
+
+		#endregion
+
+		#region Arithmetic inside the frame
+
+		/// <summary>
+		/// The zone has to survive an intervening shift, or a component read after it silently falls back to the
+		/// provider's default frame.
+		/// </summary>
+		[Test]
+		public void ZoneSurvivesArithmetic([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddHours(1).Hour)).Single();
+
+			hour.ShouldBe(14);
+		}
+
+		/// <summary>
+		/// The same rule over a chain rather than a single shift: every link has to carry the zone forward, and the
+		/// reading at the end has to happen in it.
+		/// </summary>
+		/// <remarks>
+		/// One link can pass while a chain does not. Each shift leaves the frame to answer a
+		/// <see cref="DateTimeOffset"/> and the next one enters it again, so a chain is where a zone gets dropped -
+		/// and a wrong offset here is a wrong hour, which is what this reads.
+		/// </remarks>
+		[Test]
+		public void ZoneSurvivesAChainOfShifts([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var hour = table
+				.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.AddDays(10).AddMonths(1).AddHours(1).Hour))
+				.Single();
+
+			// 11:20 UTC is 13:20 in Prague in June. Ten days on is 25 June, a month after that is 25 July - both
+			// still inside summer time, so the zone's offset never changes and only the added hour moves the clock.
+			hour.ShouldBe(14);
+		}
+
+		/// <summary>
+		/// Month arithmetic is the one shift that is not frame-invariant: adding to the local reading and adding to
+		/// the UTC one land on different days whenever the two disagree about the date, and the end-of-month clamp
+		/// then makes the difference permanent rather than an hour's drift.
+		/// </summary>
+		[Test]
+		public void MonthArithmeticStaysInTheFrame([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			// 2020-01-31 00:20 +00:40 is 2020-01-30 23:40 UTC. Adding a month to the local reading clamps to
+			// February 29; adding it to the UTC one gives February 29 as well but a day earlier in date terms, and
+			// the two answers differ. Taking the expectation from the round-trip is what makes that measurable.
+			//
+			// The 123 milliseconds are load-bearing, not decoration. A month shift that clamps has to go through a
+			// function whose result may carry whole seconds only - Oracle's ADD_MONTHS answers a DATE - so a value
+			// with nothing below the second would let that loss pass unnoticed.
+			var value = new DateTimeOffset(2020, 1, 31, 0, 20, 0, 123, TimeSpan.FromMinutes(40));
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddMonths(1))).Single();
+
+			shifted.UtcDateTime.ShouldBe(stored.AddMonths(1).UtcDateTime);
+		}
+
+		/// <summary>
+		/// The same shift where its result is materialised rather than read: the offset the value carries has to come
+		/// back with it, which only a provider with an offset-carrying type can do.
+		/// </summary>
+		/// <remarks>
+		/// The input deliberately does not clamp - 1 February plus a month is 1 March - so this isolates re-attaching
+		/// the offset from the end-of-month question <see cref="MonthArithmeticStaysInTheFrame"/> covers.
+		/// </remarks>
+		[Test]
+		public void AddMonthsAddsToTheLocalReading([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			var value = new DateTimeOffset(2020, 2, 1, 0, 20, 0, TimeSpan.FromMinutes(40));
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(value));
+
+			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddMonths(1))).Single();
+
+			shifted.ShouldBe(value.AddMonths(1));
+		}
+
+		/// <summary>
+		/// Two marks for the same instant written in different zones must subtract to zero, as the CLR does.
+		/// </summary>
+		[Test]
+		public void ZonedDifferenceMeasuresInstants([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			var start = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
+			var end   = new DateTimeOffset(2026, 1, 1, 14, 0, 0, TimeSpan.FromHours(2));
+
+			// The premise, so a failure below cannot be blamed on the fixture data.
+			(end - start).ShouldBe(TimeSpan.Zero);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(start, end));
+
+			var hours = table
+				.Where(r => r.Id == 1)
+				.Select(a => Sql.AsSql((table.Where(b => b.Id == 2).Select(b => b.Dto).Single() - a.Dto).TotalHours))
+				.Single();
+
+			hours.ShouldBe(0d);
+		}
+
+		#endregion
+
+		#region Members whose zone is their own
 
 		/// <summary>
 		/// <c>UtcDateTime</c> names its own zone, so unlike a component it must answer the same thing on every
@@ -130,7 +308,7 @@ namespace Tests.Linq
 		public void UtcDateTimeIsProviderIndependent([IncludeDataSources(false, ZoneReadingProviders)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var utc = table.Select(r => Sql.AsSql(r.Dto.UtcDateTime)).Single();
 
@@ -147,7 +325,7 @@ namespace Tests.Linq
 			var zone = PragueZone(context);
 
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var utc = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.UtcDateTime)).Single();
 
@@ -162,31 +340,12 @@ namespace Tests.Linq
 		public void DateTimeMatchesRoundTrippedValue([IncludeDataSources(false, ZoneReadingProviders)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var expected = table.Select(r => r.Dto).Single().DateTime;
 			var actual   = table.Select(r => Sql.AsSql(r.Dto.DateTime)).Single();
 
 			actual.ShouldBe(expected);
-		}
-
-		/// <summary>
-		/// The shortest expression in which the frame could be applied twice: the zone is consumed by the
-		/// <see cref="DateTimeOffset"/> half, and the <see cref="DateTime"/> read off it must not be framed again.
-		/// </summary>
-		[Test]
-		public void DateTimeInNamedZoneIsFramedOnce([IncludeDataSources(false, ZoneReadingProviders)] string context)
-		{
-			var zone = PragueZone(context);
-
-			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
-
-			var hour = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone)!.Value.DateTime.Hour)).Single();
-
-			// 11:20 UTC is 13:20 in Prague in June - the same answer ComponentInNamedZone asserts, reached through
-			// an extra member that must contribute no second conversion.
-			hour.ShouldBe(13);
 		}
 
 		/// <summary>
@@ -197,7 +356,7 @@ namespace Tests.Linq
 		public void ToUniversalTimeZeroesTheOffset([IncludeDataSources(false, ZoneReadingProviders)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var utc = table.Select(r => Sql.AsSql(r.Dto.ToUniversalTime())).Single();
 
@@ -213,7 +372,7 @@ namespace Tests.Linq
 		public void ToOffsetTakesTheOffsetAsked([IncludeDataSources(false, ZonedProviders)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			// Negative and not a whole hour: the sign and the minutes are both part of the spelling the provider is
 			// handed, and a whole positive hour would let either get lost.
@@ -231,7 +390,7 @@ namespace Tests.Linq
 		public void TwoOffsetsDoNotShareACachedQuery([IncludeDataSources(false, ZonedProviders)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var first  = TimeSpan.FromHours(2);
 			var second = TimeSpan.FromMinutes(-90);
@@ -239,6 +398,10 @@ namespace Tests.Linq
 			table.Select(r => Sql.AsSql(r.Dto.ToOffset(first))).Single().Offset.ShouldBe(first);
 			table.Select(r => Sql.AsSql(r.Dto.ToOffset(second))).Single().Offset.ShouldBe(second);
 		}
+
+		#endregion
+
+		#region The acceptance rule, on every provider that stores an offset
 
 		/// <summary>
 		/// The acceptance rule for the two instant-reading members on <em>every</em> provider, including those that
@@ -248,7 +411,7 @@ namespace Tests.Linq
 		public void InstantMembersAgreeWithTheRoundTrip([SupportsDateTimeOffsetContext] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var stored = table.Select(r => r.Dto).Single();
 
@@ -257,9 +420,8 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// The acceptance rule for the two new members on <em>every</em> provider, including those that decline to
-		/// translate them: the answer is either the server's or .NET's, and both must equal what the CLR computes on
-		/// the value as that provider hands it back.
+		/// The same rule for the two wall-clock members: the answer is either the server's or .NET's, and both must
+		/// equal what the CLR computes on the value as that provider hands it back.
 		/// </summary>
 		/// <remarks>
 		/// Without <see cref="Sql.AsSql{T}(T)"/> on purpose. The tests above force these server-side and so only
@@ -270,7 +432,7 @@ namespace Tests.Linq
 		public void WallClockMembersAgreeWithTheRoundTrip([SupportsDateTimeOffsetContext] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var stored = table.Select(r => r.Dto).Single();
 
@@ -292,7 +454,7 @@ namespace Tests.Linq
 		public void MachineZoneMembersStayClientSide([SupportsDateTimeOffsetContext] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = Value } });
+			using var table = db.CreateLocalTable(Rows(Value));
 
 			var stored = table.Select(r => r.Dto).Single();
 
@@ -300,44 +462,6 @@ namespace Tests.Linq
 			table.Select(r => r.Dto.ToLocalTime()).Single().ShouldBe(stored.ToLocalTime());
 		}
 
-		/// <summary>
-		/// Oracle computes <c>TIMESTAMP WITH TIME ZONE</c> arithmetic in UTC, where this input lands on 31 February
-		/// and raises ORA-01839. .NET adds to the local reading and keeps the offset.
-		/// </summary>
-		[Test]
-		public void AddMonthsAddsToTheLocalReading([IncludeDataSources(false, ZonedProviders)] string context)
-		{
-			var value = new DateTimeOffset(2020, 2, 1, 0, 20, 0, TimeSpan.FromMinutes(40));
-
-			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = value } });
-
-			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddMonths(1))).Single();
-
-			shifted.ShouldBe(value.AddMonths(1));
-		}
-
-		/// <summary>
-		/// Two marks for the same instant written in different zones must subtract to zero, as the CLR does.
-		/// </summary>
-		[Test]
-		public void ZonedDifferenceMeasuresInstants([IncludeDataSources(false, ZoneReadingProviders)] string context)
-		{
-			var start = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
-			var end   = new DateTimeOffset(2026, 1, 1, 14, 0, 0, TimeSpan.FromHours(2));
-
-			// The premise, so a failure below cannot be blamed on the fixture data.
-			(end - start).ShouldBe(TimeSpan.Zero);
-
-			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable(new[] { new ZonedRow { Id = 1, Dto = start }, new ZonedRow { Id = 2, Dto = end } });
-
-			var hours = table
-				.Where(r => r.Id == 1)
-				.Select(a => Sql.AsSql((table.Where(b => b.Id == 2).Select(b => b.Dto).Single() - a.Dto).TotalHours))
-				.Single();
-
-			hours.ShouldBe(0d);
-		}
+		#endregion
 	}
 }
