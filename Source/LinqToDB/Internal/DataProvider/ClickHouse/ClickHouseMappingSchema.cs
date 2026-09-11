@@ -561,7 +561,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.DateTime2     :
 				case DataType.DateTime64    :
 				case DataType.SmallDateTime :
-				case DataType.DateTimeOffset: BuildDateTime64Literal(sb, value.UtcDateTime, dt.Type.Precision ?? DEFAULT_DATETIME64_PRECISION); break;
+				// UtcDateTime is what goes in, so the literal names UTC rather than leaving the server to guess.
+				case DataType.DateTimeOffset: BuildDateTime64Literal(sb, value.UtcDateTime, dt.Type.Precision ?? DEFAULT_DATETIME64_PRECISION, utc: true); break;
 				default                     : throw new LinqToDBConvertException($"Unsupported DateTimeOffset type mapping: {dt.Type.DataType}");
 			}
 		}
@@ -713,7 +714,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			"toDateTime64('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 9)",
 		};
 
-		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value, int precision)
+		// The same calls with the zone named. A bare DateTime64 literal is a wall clock that the server reads in its
+		// own time zone, so a value that already means UTC has to say so: on a server that is not itself in UTC the
+		// two readings differ, and the instant stored is the one the server inferred rather than the one written.
+		private static readonly string[] DATETIME64_UTC_FORMATS =
+			DATETIME64_FORMATS.Select(f => f.Insert(f.Length - 1, ", 'UTC'")).ToArray();
+
+		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value, int precision, bool utc = false)
 		{
 			if (precision < 0)
 				throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Invalid DateTime64 precision: {precision}"));
@@ -721,7 +728,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (precision > 9)
 				precision = 9;
 
-			sb.AppendFormat(CultureInfo.InvariantCulture, DATETIME64_FORMATS[precision], value);
+			sb.AppendFormat(CultureInfo.InvariantCulture, (utc ? DATETIME64_UTC_FORMATS : DATETIME64_FORMATS)[precision], value);
 		}
 
 		private static void BuildByteLiteral(StringBuilder sb, byte value)
