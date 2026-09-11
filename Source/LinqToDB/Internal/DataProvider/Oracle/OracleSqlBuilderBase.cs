@@ -77,7 +77,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override bool ShouldBuildWhere(SelectQuery selectQuery, out SqlSearchCondition condition)
 		{
-			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			// TAKE/SKIP resolved during render-prep (see SqlExpressionConvertVisitor.ResolveSkipTakeValues).
+			var takeExpr = selectQuery.Select.TakeValue;
+			var skipEpr  = selectQuery.Select.SkipValue;
 
 			return
 				base.ShouldBuildWhere(selectQuery, out condition) ||
@@ -288,25 +290,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			StringBuilder.AppendLine();
 		}
 
-		SqlField? _identityField;
-
-		public override int CommandCount(SqlStatement statement)
-		{
-			switch (statement)
-			{
-				case SqlTruncateTableStatement truncateTable:
-					return truncateTable.ResetIdentity && truncateTable.Table!.IdentityFields.Count > 0 ? 2 : 1;
-
-				case SqlCreateTableStatement createTable:
-					_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
-					if (_identityField != null)
-						return 3;
-					break;
-			}
-
-			return base.CommandCount(statement);
-		}
-
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var nullability = NullabilityContext.NonQuery;
@@ -430,108 +413,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		protected static string MakeIdentitySequenceName(string tableName)
 		{
 			return "SIDENTITY_" + tableName;
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			switch (Statement)
-			{
-				case SqlTruncateTableStatement truncate:
-					var sequenceName = MakeIdentitySequenceName(truncate.Table!.TableName.Name);
-
-					var selectNextval = WithStringBuilder(static ctx =>
-					{
-						ctx.this_.StringBuilder.Append("SELECT ");
-						ctx.this_.Convert(ctx.this_.StringBuilder, ctx.seq, ConvertType.SequenceName);
-						ctx.this_.StringBuilder.Append(".NEXTVAL FROM dual");
-					}, (this_: this, seq: sequenceName));
-
-					var alterNegativeIncrementPrefix = WithStringBuilder(static ctx =>
-					{
-						ctx.this_.StringBuilder.Append("ALTER SEQUENCE ");
-						ctx.this_.Convert(ctx.this_.StringBuilder, ctx.seq, ConvertType.SequenceName);
-						ctx.this_.StringBuilder.Append(" INCREMENT BY -");
-					}, (this_: this, seq: sequenceName));
-
-					var alterResetIncrement = WithStringBuilder(static ctx =>
-					{
-						ctx.this_.StringBuilder.Append("ALTER SEQUENCE ");
-						ctx.this_.Convert(ctx.this_.StringBuilder, ctx.seq, ConvertType.SequenceName);
-						ctx.this_.StringBuilder.Append(" INCREMENT BY 1 MINVALUE 0");
-					}, (this_: this, seq: sequenceName));
-
-					StringBuilder
-						.AppendLine("DECLARE")
-						.AppendLine("\tl_value number;")
-						.AppendLine("BEGIN")
-						.AppendLine("\t-- Select the next value of the sequence")
-						.Append("\tEXECUTE IMMEDIATE ");
-					BuildValue(null, selectNextval);
-					StringBuilder
-						.AppendLine(" INTO l_value;")
-						.AppendLine()
-						.AppendLine("\t-- Set a negative increment for the sequence, with value = the current value of the sequence")
-						.Append("\tEXECUTE IMMEDIATE ");
-					BuildValue(null, alterNegativeIncrementPrefix);
-					StringBuilder
-						.AppendLine(" || l_value || ' MINVALUE 0';")
-						.AppendLine()
-						.AppendLine("\t-- Select once from the sequence, to take its current value back to 0")
-						.Append("\tEXECUTE IMMEDIATE ");
-					BuildValue(null, selectNextval);
-					StringBuilder
-						.AppendLine(" INTO l_value;")
-						.AppendLine()
-						.AppendLine("\t-- Set the increment back to 1")
-						.Append("\tEXECUTE IMMEDIATE ");
-					BuildValue(null, alterResetIncrement);
-					StringBuilder
-						.AppendLine(";")
-						.AppendLine("END;")
-						.AppendLine();
-
-					break;
-				case SqlCreateTableStatement createTable:
-				{
-					if (commandNumber == 1)
-					{
-						StringBuilder
-							.Append("CREATE SEQUENCE ");
-						AppendSchemaPrefix(StringBuilder, createTable.Table!.TableName.Schema);
-						Convert(StringBuilder, MakeIdentitySequenceName(createTable.Table!.TableName.Name), ConvertType.SequenceName);
-						StringBuilder
-							.AppendLine();
-					}
-					else
-					{
-						StringBuilder
-							.Append("CREATE OR REPLACE TRIGGER ");
-						AppendSchemaPrefix(StringBuilder, createTable.Table!.TableName.Schema);
-						Convert(StringBuilder, MakeIdentityTriggerName(createTable.Table!.TableName.Name), ConvertType.TriggerName);
-						StringBuilder
-							.AppendLine()
-							.Append("BEFORE INSERT ON ");
-
-						BuildPhysicalTable(createTable.Table, null);
-
-						StringBuilder
-							.AppendLine(" FOR EACH ROW")
-							.AppendLine("BEGIN")
-							.Append("\tSELECT ");
-						AppendSchemaPrefix(StringBuilder, createTable.Table!.TableName.Schema);
-						Convert(StringBuilder, MakeIdentitySequenceName(createTable.Table!.TableName.Name), ConvertType.SequenceName);
-						StringBuilder
-							.Append(".NEXTVAL INTO :NEW.");
-						Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
-						StringBuilder
-							.Append(" FROM dual;")
-							.AppendLine  ()
-							.AppendLine  ("END;");
-					}
-
-					break;
-				}
-			}
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)

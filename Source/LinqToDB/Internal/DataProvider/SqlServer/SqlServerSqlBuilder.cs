@@ -548,7 +548,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				dataType = CorrectDecimalFacets(dataType, val);
 			else if (value is SqlParameter param)
 			{
-				var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+				var paramValue = param.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 				if (paramValue.ProviderValue is decimal decValue)
 					dataType = CorrectDecimalFacets(dataType, decValue);

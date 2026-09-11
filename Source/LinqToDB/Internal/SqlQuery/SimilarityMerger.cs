@@ -8,6 +8,11 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public static readonly SimilarityMerger Instance = new SimilarityMerger();
 
+		// Similarity code shared by every NOT predicate, so De Morgan is offered each pair of them regardless of
+		// operand. The value is arbitrary: codes only select which predicates reach TryMerge, and a collision with a
+		// real hash code costs one merge attempt that returns false.
+		const int NotPredicateCode = 0x4E4F5421;
+
 		public IEnumerable<int> GetSimilarityCodes(ISqlPredicate predicate)
 		{
 			yield return predicate.GetElementHashCode();
@@ -24,6 +29,7 @@ namespace LinqToDB.Internal.SqlQuery
 			else if (predicate is SqlPredicate.Not notPredicate)
 			{
 				yield return notPredicate.Predicate.GetElementHashCode();
+				yield return NotPredicateCode;
 			}
 		}
 
@@ -143,6 +149,21 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				mergedPredicate = isLogicalOr ? SqlPredicate.True : SqlPredicate.False;
 				return true;
+			}
+
+			// De Morgan: !A AND !B => !(A OR B), !A OR !B => !(A AND B)
+			// Runs after A x !A so a pair that collapses to a constant is not merged into a NOT instead.
+			if (predicate1 is SqlPredicate.Not deMorgan1 && predicate2 is SqlPredicate.Not deMorgan2)
+			{
+				var inner = new SqlSearchCondition(!isLogicalOr, null, deMorgan1.Predicate, deMorgan2.Predicate);
+
+				// SqlSearchCondition.Invert is itself De Morgan, and VisitNotPredicate inverts a NOT whose operand can
+				// invert - merging an invertible operand would expand straight back and loop. Only merge when stable.
+				if (!inner.CanInvert(nullabilityContext))
+				{
+					mergedPredicate = new SqlPredicate.Not(inner);
+					return true;
+				}
 			}
 
 			mergedPredicate = null;

@@ -674,6 +674,38 @@ namespace LinqToDB
 			return options.WithOptions<LinqOptions>(o => o with { OptimizeForSequentialAccess = optimizeForSequentialAccess });
 		}
 
+		/// <summary>
+		/// Enables combined multi-statement execution: several statements of one logical operation are sent as a single
+		/// database round-trip and their result sets read in order. Drives both eager loading (a main query plus its child
+		/// collections collapse from N+1 round-trips to 1) and multi-step DML.
+		/// <para>
+		/// Enabling this is observable, not merely faster — see <see cref="LinqOptions.UseCombinedCommands"/> for what
+		/// changes. A provider that does not report the required capabilities stays sequential regardless.
+		/// </para>
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseCombinedCommands(this DataOptions options, bool useCombinedCommands)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { UseCombinedCommands = useCombinedCommands });
+		}
+
+		/// <summary>
+		/// Selects the backend used for combined multi-statement execution: the ADO.NET <c>DbBatch</c> API when the
+		/// provider supports it, or a single semicolon-concatenated command otherwise.
+		/// <para>
+		/// Has no effect unless <see cref="LinqOptions.UseCombinedCommands"/> is enabled. Disabling it forces the
+		/// concatenated command even on a batch-capable provider — see <see cref="LinqOptions.UseDbBatch"/> for the
+		/// conditions under which the fallback is taken anyway.
+		/// </para>
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseDbBatch(this DataOptions options, bool useDbBatch)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { UseDbBatch = useDbBatch });
+		}
+
 		#endregion
 
 		#region ConnectionOptions

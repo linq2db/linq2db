@@ -36,6 +36,9 @@ namespace LinqToDB.Internal.Async
 
 			_disposed = true;
 
+			// The second resource is the read-consistency transaction this wrapper exists to hold open for the whole
+			// enumeration, so its release must not be conditional on the inner enumerator disposing cleanly - that one
+			// owns a DbDataReader and a DbCommand, either of which can throw on a broken connection.
 			try
 			{
 				if (_enumerator != null)

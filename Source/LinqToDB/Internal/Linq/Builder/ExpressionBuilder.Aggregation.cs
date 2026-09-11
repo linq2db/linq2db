@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var optimizer         = new SqlExpressionOptimizerVisitor(true);
 					var evaluationContext = new EvaluationContext();
 					var nullability       = NullabilityContext.GetContext(SqlContext?.BuildContext.SelectQuery);
-					var optimized         = optimizer.Optimize(evaluationContext, nullability, null, builder.DataOptions, contextToUse.MappingSchema, sql, true, true);
+					var optimized         = optimizer.Optimize(evaluationContext, nullability, builder.DataOptions, contextToUse.MappingSchema, sql, true, true);
 					sql = (ISqlExpression)optimized;
 				}
 

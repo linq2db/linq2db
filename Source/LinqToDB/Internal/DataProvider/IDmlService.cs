@@ -1,10 +1,15 @@
 ﻿using System;
 
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq.Translation;
+
 namespace LinqToDB.Internal.DataProvider
 {
 	/// <summary>
-	/// Provider-specific DML mechanics that can't be expressed through SQL generation alone.
-	/// Resolved from the data context's service provider by query runners that execute DML.
+	/// Provider-specific DML mechanics that can't be expressed through SQL generation alone: command-scenario
+	/// construction (how one logical operation maps to ordered execution steps), physical grouping of those steps,
+	/// and "table not found" detection. Resolved from the data context's service provider by query runners that execute DML.
 	/// </summary>
 	public interface IDmlService
 	{
@@ -14,5 +19,19 @@ namespace LinqToDB.Internal.DataProvider
 		/// swallow a given error.
 		/// </summary>
 		bool IsTableNotFoundException(Exception exception);
+
+		/// <summary>
+		/// Builds the logical <see cref="SqlCommandScenario"/> (ordered steps + outcome) for <paramref name="statement"/>.
+		/// The base implementation always produces a scenario (a single-step one for a self-contained statement); the
+		/// runner treats a <see langword="null"/> result as a contract error. Use <paramref name="factory"/> to construct
+		/// any synthetic statements a step needs (e.g. an identity-retrieval <c>SELECT</c>).
+		/// </summary>
+		SqlCommandScenario? BuildCommandScenario(SqlStatement statement, SqlProviderFlags flags, ISqlExpressionFactory factory);
+
+		/// <summary>
+		/// Plans how a scenario's steps map to physical command groups (round-trips): contiguous non-gated steps may be
+		/// combined into one command when <see cref="SqlProviderFlags.IsMultiStatementBatchSupported"/> is set.
+		/// </summary>
+		SqlCommandGroupPlan PlanScenario(SqlCommandScenario scenario, SqlProviderFlags flags);
 	}
 }

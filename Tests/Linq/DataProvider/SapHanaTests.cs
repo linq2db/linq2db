@@ -844,5 +844,32 @@ namespace Tests.DataProvider
 				public int O { get; set; }
 			}
 		}
+
+		[Table]
+		sealed class NoIdentityTable
+		{
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+		}
+
+		// SAP HANA harvests an identity insert with SELECT CURRENT_IDENTITY_VALUE(), which is SESSION-scoped: without a
+		// guard, InsertWithIdentity against a table carrying no identity column returns a value left over from an
+		// unrelated earlier insert (or NULL on a fresh session) instead of failing. The guard lives in
+		// SapHanaDmlService.BuildCommandScenario, which runs on the default path — LinqOptions.UseCombinedCommands gates
+		// only how steps are grouped into commands, not whether the scenario is built.
+		//
+		// Every sibling provider carries the same check (Firebird, Oracle, PostgreSQL, YDB, DuckDB, BasicSqlBuilder) and
+		// nothing in the suite covered any of them, which is how SAP HANA's went missing unnoticed.
+		[Test]
+		public void InsertWithIdentity_NoIdentityColumn_Throws([IncludeDataSources(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<NoIdentityTable>();
+
+			var ex = Assert.Throws<LinqToDBException>(
+				() => tb.InsertWithIdentity(() => new NoIdentityTable { Id = 1, Value = "value" }));
+
+			Assert.That(ex!.Message, Does.Contain("Identity field must be defined"));
+		}
 	}
 }

@@ -131,25 +131,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				var flags = Builder.DataContext.SqlProviderFlags;
-
-				// Providers whose native single-statement upsert applies one VALUES list to both
-				// branches (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor divergent Insert/Update
-				// SET expressions — and the legacy InsertOrUpdate(insertSetter, updateSetter, ...)
-				// API allows the user to specify completely different SET shapes for the two branches.
-				// The same native form also matches on the table PRIMARY KEY only, so a caller-supplied
-				// non-PK key selector (the 3-arg InsertOrUpdate(…, keySelector)) would be silently
-				// ignored. In either case fall back to the UPDATE→INSERT emulation, which honors both
-				// the per-branch SET shapes and the requested match key.
-				var needsEmulation =
-					flags.IsInsertOrUpdateRequiresAlignedBranches
-					&& (UpsertBuilder.HasDivergentInsertOrUpdateBranches(InsertOrUpdateStatement)
-						|| UpsertBuilder.MatchKeysDivergeFromPrimaryKey(InsertOrUpdateStatement));
-
-				if (flags.IsInsertOrUpdateSupported && !needsEmulation)
-					QueryRunner.SetNonQueryQuery(query);
-				else
-					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);
+				// The native-vs-alternative choice and the UPDATE→INSERT reshape now happen at execution time in
+				// DmlServiceBase.BuildInsertOrUpdateScenario, derived from the (serialized) statement + provider
+				// flags, so remote data contexts rebuild the same scenario server-side. The legacy InsertOrUpdate
+				// API has no emulation-policy opt-out, so there is nothing to enforce here.
+				QueryRunner.SetNonQueryQuery(query);
 			}
 
 			public override SqlStatement GetResultStatement()

@@ -59,6 +59,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.MaxColumnCount                    = 1600;
 
+			// Npgsql runs a multi-statement (;-separated) command and returns each statement's result set in order,
+			// so the combined multi-result-set engine can execute eager loads (and other combinable groups) as one round-trip.
+			SqlProviderFlags.IsMultiStatementBatchSupported    = true;
+			SqlProviderFlags.IsMultipleResultSetsSupported     = true;
+
 			SqlProviderFlags.OutputDeleteUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputInsertUseSpecialTable  = version >= PostgreSQLVersion.v18;
 			SqlProviderFlags.OutputUpdateUseSpecialTables = version >= PostgreSQLVersion.v18;

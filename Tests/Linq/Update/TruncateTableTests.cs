@@ -1,9 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Data.Common;
+using System.Linq;
 
 using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -101,6 +104,41 @@ namespace Tests.xUpdate
 				Assert.That(r.ID, Is.GreaterThanOrEqualTo(id + 2));
 			else
 				Assert.That(r.ID, Is.EqualTo(id + 2));
+		}
+
+		sealed class SqliteSeqResetCapture : CommandInterceptor
+		{
+			public string? ResetSql;
+
+			public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
+			{
+				if (command.CommandText.Contains("SQLITE_SEQUENCE", StringComparison.OrdinalIgnoreCase))
+					ResetSql = command.CommandText;
+
+				return command;
+			}
+		}
+
+		[Test]
+		public void SQLiteTruncateReset_RendersTableNameInline([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// GetDataConnection rather than GetDataContext: [IncludeDataSources] already excludes the remote contexts
+			// (its params overload passes includeLinqService: false), so every case here is a DataConnection and the
+			// interceptor and assertions need no runtime guard.
+			using var db    = GetDataConnection(context);
+			using var table = db.CreateLocalTable<TestIdTrun>();
+
+			var capture = new SqliteSeqResetCapture();
+			db.AddInterceptor(capture);
+
+			table.Insert(() => new TestIdTrun { Field1 = 1m });
+			table.Truncate();
+
+			// The sqlite_sequence reset carries the table name as an inline SqlValue inside a SqlFragmentStatement
+			// (IsParameterDependent is false), so the whole-query parameterization pass leaves it inline. Guard that:
+			// the reset must render WHERE NAME='TestIdTrun', never a parameter.
+			Assert.That(capture.ResetSql, Is.Not.Null);
+			Assert.That(capture.ResetSql, Does.Contain("'TestIdTrun'"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]

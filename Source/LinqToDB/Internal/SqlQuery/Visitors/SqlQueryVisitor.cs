@@ -54,7 +54,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (element == null) return null;
 
-			if (GetReplacement(element, out var newElement))
+			// Skip the transformation map for non-replaceable elements (see IsReplaceable) and re-derive them instead.
+			if (IsReplaceable(element) && GetReplacement(element, out var newElement))
 				return newElement;
 
 			return base.Visit(element);
