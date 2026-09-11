@@ -108,7 +108,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssueNew(5596, Configuration = TestProvName.AllYdb, ErrorMessage = "Assert.That(b, Is.True)",
+		[ActiveIssue(5596, Configuration = TestProvName.AllYdb, ErrorMessage = "Assert.That(b, Is.True)",
 			Details = "YDB does not preserve a CTE's inner ORDER BY in the outer SELECT (the ORDER BY there only bounds LIMIT). Proper fix is to propagate the CTE's ORDER BY into the referencing query.")]
 		[Test]
 		public void WithLimitedOrderBy([CteContextSource] string context)
@@ -507,9 +507,9 @@ namespace Tests.Linq
 
 		// The HANA half declares no type: the ODBC and native drivers raise their own, and only the server's own
 		// text is shared. Truncated before the line/col/pos, which differ per driver.
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"INSERT\"",
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"INSERT\"",
 			Details = "HANA will not take an INSERT whose source is a CTE.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "Cursor must be declared on an INSERT statement with a VALUES clause.",
 			Details = "Informix will not take an INSERT ... SELECT whose source is a CTE.")]
 		[Test]
@@ -547,9 +547,9 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"DELETE\"",
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"DELETE\"",
 			Details = "HANA will not take a DELETE driven by a CTE join.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "CURSOR not on SELECT statement.",
 			Details = "Informix will not take a DELETE driven by a CTE join.")]
 		[Test]
@@ -576,9 +576,9 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		// AllOracle dropped from the gate: the data source below already excludes Oracle, so no Oracle case was ever
 		// built and the "needs special syntax for CTE + UPDATE" note described a provider this test never reaches.
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"UPDATE\"",
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"UPDATE\"",
 			Details = "HANA will not take an UPDATE driven by a CTE join.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "CURSOR not on SELECT statement.",
 			Details = "Informix will not take an UPDATE driven by a CTE join.")]
 		[Test]
@@ -792,7 +792,7 @@ namespace Tests.Linq
 			Assert.That(hierarchy.Count(), Is.EqualTo(expected.Count()));
 		}
 
-		[ActiveIssueNew(3015, Configurations = [ProviderName.InformixDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configurations = [ProviderName.InformixDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "Cursor must be declared on an INSERT statement with a VALUES clause.",
 			Details = "Informix will not take an INSERT ... SELECT whose source is a recursive CTE.")]
 		[Test]
@@ -1402,7 +1402,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssueNew(3360, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
+		[ActiveIssue(3360, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByOtherQuery_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
 		{
@@ -1571,7 +1571,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssueNew(3360, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
+		[ActiveIssue(3360, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByProjectionProperty_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
 		{
@@ -1603,7 +1603,7 @@ namespace Tests.Linq
 		}
 
 		// No ErrorTypeName: the two SqlClient packages raise their own SqlException and share only the message.
-		[ActiveIssueNew(3360, Configurations = [TestProvName.AllSqlServer],
+		[ActiveIssue(3360, Configurations = [TestProvName.AllSqlServer],
 			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Guid\" of recursive query \"cte\".",
 			Details = "Issue number taken from the test's own name. The untyped NULL in the anchor settles the column on a type the recursive part cannot match - the same defect #3360 reports for unions.")]
 		[Test(Description = "Test CTE columns typing")]
@@ -1625,7 +1625,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssueNew(3360, Configurations = [TestProvName.AllSqlServer],
+		[ActiveIssue(3360, Configurations = [TestProvName.AllSqlServer],
 			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Enum1\" of recursive query \"cte\".",
 			Details = "as Issue3360_NullGuidInAnchor, on the enum column.")]
 		[Test(Description = "Test CTE columns typing")]
@@ -1697,7 +1697,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssueNew(3360, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type",
+		[ActiveIssue(3360, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type",
 			Details = "a typed null enum in the anchor cannot be typed from the other branch - #3360's subject. The fragment stops before the system type, which renders as an assembly-qualified name carrying the assembly version.")]
 		[Test]
 		public void Issue3360_TypedNullEnumInAnchor2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
@@ -1775,7 +1775,7 @@ namespace Tests.Linq
 
 		// Message-only: the two SqlClient packages raise their own SqlException, and the remote wrapper carries
 		// whichever of them the server leg used.
-		[ActiveIssueNew(3360, ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Enum1\" of recursive query \"cte\".",
+		[ActiveIssue(3360, ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Enum1\" of recursive query \"cte\".",
 			Details = "Issue number taken from the test's own name. The Description records an older symptom - a convert exception - which the sweep did not reproduce; what happens now is the server refusing the recursive query outright.")]
 		[Test(Description = "LinqToDBConvertException : Cannot convert value 'ENUM1_VALUE: System.String' to type 'Tests.Linq.CteTests+InvalidColumnIndexMappingEnum2'")]
 		public void Issue3360_InvalidColumnIndexMapping([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
@@ -1837,10 +1837,10 @@ namespace Tests.Linq
 
 		// ClickHouse and MySQL dropped: both ran in the sweep and both pass. What is left fails two ways - SQL
 		// Server refuses the recursive query, Firebird overflows while widening the anchor's literal.
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSqlServer,
+		[ActiveIssue(3015, Configuration = TestProvName.AllSqlServer,
 			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Byte\" of recursive query \"cte\".",
 			Details = "Message-only: the two SqlClient packages raise their own SqlException.")]
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+		[ActiveIssue(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
 			ErrorMessage = "arithmetic exception, numeric overflow, or string truncation",
 			Details = "Firebird types the anchor's null literal too narrowly and overflows instead of refusing.")]
 		[Test(Description = "null literals in anchor query (for known problematic types)")]
@@ -1888,10 +1888,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSqlServer,
+		[ActiveIssue(3015, Configuration = TestProvName.AllSqlServer,
 			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"Enum\" of recursive query \"cte\".",
 			Details = "as Issue3360_NullsInAnchor, on the enum column.")]
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+		[ActiveIssue(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
 			ErrorMessage = "arithmetic exception, numeric overflow, or string truncation",
 			Details = "as Issue3360_NullsInAnchor. ClickHouse and MySQL dropped here too - both ran and both pass.")]
 		[Test(Description = "double columns in anchor query")]
@@ -1986,7 +1986,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssueNew(2451, ErrorMessage = "Types don't match between the anchor and the recursive part in column \"FirstName\" of recursive query \"cte\".",
+		[ActiveIssue(2451, ErrorMessage = "Types don't match between the anchor and the recursive part in column \"FirstName\" of recursive query \"cte\".",
 			Details = "Issue number taken from the test's own name. Message-only, as Issue3360_InvalidColumnIndexMapping.")]
 		[Test(Description = "Test that we type non-field union column properly")]
 		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
@@ -2015,10 +2015,10 @@ namespace Tests.Linq
 		// The two providers name the same defect differently: PostgreSQL reports the width mismatch, SQL Server
 		// only that the types differ. The SQL Server half is message-only because its two client packages raise
 		// their own SqlException.
-		[ActiveIssueNew(2451, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+		[ActiveIssue(2451, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
 			ErrorMessage = "42804: recursive query \"cte\" column 1 has type character varying(50) in non-recursive term but type character varying overall",
 			Details = "Issue number taken from the test's own name. The anchor's column keeps its declared width where the recursive term has none.")]
-		[ActiveIssueNew(2451, Configuration = TestProvName.AllSqlServer,
+		[ActiveIssue(2451, Configuration = TestProvName.AllSqlServer,
 			ErrorMessage = "Types don't match between the anchor and the recursive part in column \"FirstName\" of recursive query \"cte\".",
 			Details = "as the PostgreSQL half.")]
 		[Test(Description = "Test that other providers work")]
@@ -2114,9 +2114,9 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"INSERT\"",
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax near \"INSERT\"",
 			Details = "as TestInsert - HANA will not take an INSERT whose source is a CTE.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "Cursor must be declared on an INSERT statement with a VALUES clause.",
 			Details = "as TestInsert - Informix will not take an INSERT ... SELECT whose source is a CTE.")]
 		[Test]
@@ -2401,7 +2401,7 @@ namespace Tests.Linq
 		// CH: probably this https://github.com/ClickHouse/ClickHouse/issues/64794
 		// No ErrorTypeName, and no "Code: 60." either: each ClickHouse client wraps the server error in its own
 		// exception type, and Octonica drops the code prefix the other two keep.
-		[ActiveIssueNew(4012, Configuration = TestProvName.AllClickHouse, ErrorMessage = "DB::Exception: Unknown table expression identifier")]
+		[ActiveIssue(4012, Configuration = TestProvName.AllClickHouse, ErrorMessage = "DB::Exception: Unknown table expression identifier")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
 		public void Issue4012Test([RecursiveCteContextSource] string context)
 		{
@@ -2851,7 +2851,7 @@ namespace Tests.Linq
 
 		// inlineParams had no value source, so NUnit generated no cases and this test never ran anywhere - the
 		// gate below was dead with it. [Values] makes it runnable; only Oracle 11 fails.
-		[ActiveIssueNew(Configuration = TestProvName.AllOracle11, ErrorTypeName = "Oracle.ManagedDataAccess.Client.OracleException",
+		[ActiveIssue(Configuration = TestProvName.AllOracle11, ErrorTypeName = "Oracle.ManagedDataAccess.Client.OracleException",
 			Details = "no-issue: declared by type rather than message because the two arms fail differently and no attribute can target a test-case argument: inlined gives ORA-01841 (bad year, matching the old gate's 'Wrong Date manipulations'), parameterised gives ORA-01790 (UNION operand type mismatch). Both are the same driver exception, and LinqService wraps it in RpcException whose detail still names the type.")]
 		[Test]
 		public void SelectQueryTest([RecursiveCteContextSource] string context, [Values] bool inlineParams)
@@ -2890,10 +2890,10 @@ namespace Tests.Linq
 
 		// Split because the one gate covered two providers failing for unrelated reasons, and only one of them has
 		// a CI leg.
-		[ActiveIssueNew(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Conversion Error: invalid timestamp field format",
 			Details = "no-issue: DuckDB does not type a bare date parameter inside EXTRACT, so the value reaches the server as a locale-formatted string.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841",
+		[ActiveIssue(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841",
 			Details = "no-issue: unvalidated: Wrong Date manipulations on Oracle 11. Carried from the gate's own prose - Oracle has no CI leg and this was not re-measured.")]
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
@@ -2938,10 +2938,10 @@ namespace Tests.Linq
 
 		// AggressiveCteOptimization derives Year and Month from the same CTE column. This one reads two
 		// distinct ones, so folding the wrapper into the union has to substitute both per leg.
-		[ActiveIssueNew(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Conversion Error: invalid timestamp field format",
 			Details = "no-issue: as AggressiveCteOptimization.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841",
+		[ActiveIssue(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841",
 			Details = "no-issue: unvalidated: as AggressiveCteOptimization - carried from prose, Oracle has no CI leg.")]
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)

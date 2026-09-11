@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -2070,7 +2070,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		[ActiveIssueNew(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children != null' could not be converted to SQL.",
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children != null' could not be converted to SQL.",
 			Details = "YDB swallows the correlated-subquery rejection into a generic conversion error. ClickHouse was dropped from the scope: the sweep ran it with the gate open and it did not fail, so the claim that it returns wrong results is stale.")]
 		public void ManyAssociationEmptyCheck1([DataSources] string context)
 		{
@@ -2083,7 +2083,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssueNew(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children == null' could not be converted to SQL.",
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children == null' could not be converted to SQL.",
 			Details = "as ManyAssociationEmptyCheck1, with the equality direction. ClickHouse dropped from the scope for the same reason.")]
 		public void ManyAssociationEmptyCheck2([DataSources] string context)
 		{

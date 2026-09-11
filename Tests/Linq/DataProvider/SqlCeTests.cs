@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
@@ -585,7 +585,7 @@ namespace Tests.DataProvider
 		}
 
 		#region issue 4581
-		[ActiveIssueNew(4581, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "String truncation: max=4000, len=5000",
+		[ActiveIssue(4581, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "String truncation: max=4000, len=5000",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The 5000-character value is bound as nvarchar rather than ntext - #4581's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4581")]
 		public void Issue4581Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
@@ -625,7 +625,7 @@ namespace Tests.DataProvider
 		#endregion
 
 		#region 4436
-		[ActiveIssueNew(4436, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "The conversion is not supported.",
+		[ActiveIssue(4436, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "The conversion is not supported.",
 			Details = "a null ntext field cannot be converted - #4436's subject. The fragment stops before the bracketed type detail the provider appends.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4436")]
 		public void Issue4436Test([IncludeDataSources(ProviderName.SqlCe)] string context)
@@ -650,7 +650,7 @@ namespace Tests.DataProvider
 		#endregion
 
 		#region 4438
-		[ActiveIssueNew(4438, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "Expression evaluation caused an overflow.",
+		[ActiveIssue(4438, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException", ErrorMessage = "Expression evaluation caused an overflow.",
 			Details = "BulkCopy overflows during expression evaluation - #4438's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4438")]
 		public void Issue4438Test([IncludeDataSources(ProviderName.SqlCe)] string context)

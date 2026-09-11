@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -2009,7 +2009,7 @@ namespace Tests.Linq
 		// One kind of failure, twenty wordings. Every provider reports that UserAccount does not exist - the
 		// interface-typed table has no backing table - and each says so in its own phrasing, with no text shared
 		// even between the two SQLite drivers. Declaring them would pin vendor prose rather than a contract.
-		[ActiveIssueNew(4199,
+		[ActiveIssue(4199,
 			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Every provider fails identically in kind and differently in wording - twenty phrasings across the matrix, sharing no fragment.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test1([DataSources] string context)
@@ -2024,7 +2024,7 @@ namespace Tests.Linq
 			var r = q.Count();
 		}
 
-		[ActiveIssueNew(4199,
+		[ActiveIssue(4199,
 			Details = "no-declaration: as Issue4199Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test2([DataSources] string context)

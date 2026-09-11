@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -21,10 +21,10 @@ namespace Tests.UserTests
 		// Not attributed to #1363: that is what the fixture tests, not why this gate exists. #1363 is "Use of null
 		// value for parameter of subquery makes it ignore non-null values on next calls", which is unrelated to
 		// the INSERT syntax these providers reject.
-		[ActiveIssueNew(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
 			ErrorMessage = "The name 'required_field' is illegal in this context",
 			Details = "no-issue: Sybase rejects a column reference where it wants a constant. SqlCe was dropped from this gate - it passes, direct and remote.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllAccess, ErrorMessage = "Query input must contain at least one table or query",
+		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorMessage = "Query input must contain at least one table or query",
 			Details = "no-issue: both ACE drivers reject it with the same sentence, so one fragment covers OleDb and ODBC alike.")]
 		[Test]
 		public void TestInsert([DataSources(TestProvName.AllSqlServer2005, TestProvName.AllClickHouse)] string context)

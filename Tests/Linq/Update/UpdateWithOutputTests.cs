@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -2916,7 +2916,7 @@ namespace Tests.xUpdate
 			[Column              ] public int TestId { get; set; }
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "into_values_source: alternative is not implemented yet",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "into_values_source: alternative is not implemented yet",
 			Details = "no-issue: YDB cannot insert a row consisting only of an auto-generated key")]
 		[Test]
 		public void Issue3697Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)

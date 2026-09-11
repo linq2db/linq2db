@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
 
@@ -10,7 +10,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		[ActiveIssueNew(2363, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'LinqToDB.Internal.Linq.Builder.SubQueryContext' to type 'LinqToDB.Internal.Linq.Builder.ITableContext'.",
+		[ActiveIssue(2363, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'LinqToDB.Internal.Linq.Builder.SubQueryContext' to type 'LinqToDB.Internal.Linq.Builder.ITableContext'.",
 			Details = "an IQueryable merge target reaches the builder as a SubQueryContext, which it cannot treat as a table. #2363 is the PR that introduced the capability.")]
 		public void MergeIntoIQueryable([MergeDataContextSource] string context)
 		{
@@ -84,7 +84,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssueNew(2363, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'LinqToDB.Internal.Linq.Builder.SubQueryContext' to type 'LinqToDB.Internal.Linq.Builder.ITableContext'.",
+		[ActiveIssue(2363, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'LinqToDB.Internal.Linq.Builder.SubQueryContext' to type 'LinqToDB.Internal.Linq.Builder.ITableContext'.",
 			Details = "as MergeIntoIQueryable, from the source side.")]
 		public void MergeFromIQueryable([MergeDataContextSource] string context)
 		{
@@ -144,15 +144,15 @@ namespace Tests.xUpdate
 		[Test]
 		// One attribute per provider: all five reject the CTE-driven merge, each in its own words. Oracle has no
 		// CI leg, so it declares nothing.
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+		[ActiveIssue(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
 			ErrorMessage = "Dynamic SQL Error", Details = "CTE-driven MERGE is unsupported.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "A syntax error has occurred.", Details = "CTE-driven MERGE is unsupported.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "SQL0104N{0}An unexpected token", Details = "CTE-driven MERGE is unsupported - the WITH clause lands ahead of the MERGE.")]
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax",
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax",
 			Details = "CTE-driven MERGE is unsupported. Type-less because the ODBC and native HANA drivers raise their own.")]
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllOracle,
+		[ActiveIssue(3015, Configuration = TestProvName.AllOracle,
 			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		public void MergeUsingCteJoin([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
@@ -184,15 +184,15 @@ namespace Tests.xUpdate
 		[Test]
 		// One attribute per provider: all five reject the CTE-driven merge, each in its own words. Oracle has no
 		// CI leg, so it declares nothing.
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+		[ActiveIssue(3015, Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
 			ErrorMessage = "Dynamic SQL Error", Details = "CTE-driven MERGE is unsupported.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "A syntax error has occurred.", Details = "CTE-driven MERGE is unsupported.")]
-		[ActiveIssueNew(3015, Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(3015, Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "SQL0104N{0}An unexpected token", Details = "CTE-driven MERGE is unsupported - the WITH clause lands ahead of the MERGE.")]
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax",
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax",
 			Details = "CTE-driven MERGE is unsupported. Type-less because the ODBC and native HANA drivers raise their own.")]
-		[ActiveIssueNew(3015, Configuration = TestProvName.AllOracle,
+		[ActiveIssue(3015, Configuration = TestProvName.AllOracle,
 			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		public void MergeUsingCteWhere([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -801,7 +801,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		[ActiveIssueNew(3119, ErrorMessage = "Assert.That(attrs, Has.Length.EqualTo(1))",
+		[ActiveIssue(3119, ErrorMessage = "Assert.That(attrs, Has.Length.EqualTo(1))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Two HasAttribute calls on one property are expected to merge into a single ColumnAttribute; three are returned instead.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3119")]
 		public void Issue3119Test()
@@ -830,7 +830,7 @@ namespace Tests.Mapping
 			public int UserId { get; set; }
 		}
 
-		[ActiveIssueNew(3136, ErrorMessage = "Assert.That(attrs, Has.Length.EqualTo(2))",
+		[ActiveIssue(3136, ErrorMessage = "Assert.That(attrs, Has.Length.EqualTo(2))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The configuration-scoped Entity overload is expected to add a second ColumnAttribute; only one is returned.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3136")]
 		public void Issue3136Test()

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -153,7 +153,7 @@ namespace Tests.Linq
 		// Message-only: the two SQLite drivers put the detail in different places - Microsoft.Data.Sqlite inlines it
 		// in the first line, System.Data.SQLite puts "SQL logic error" there and the detail on the next - but both
 		// messages contain this text.
-		[ActiveIssueNew(848, ErrorMessage = "no such table: EntityBase",
+		[ActiveIssue(848, ErrorMessage = "no such table: EntityBase",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The insert targets the declared base type instead of the runtime one - #848's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/848")]
 		public void InsertUsingRuntimeType([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -177,7 +177,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssueNew(848, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "There are no fields to update in the type 'EntityBase'.",
+		[ActiveIssue(848, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "There are no fields to update in the type 'EntityBase'.",
 			Details = "the update uses the declared type rather than the runtime one, so it finds no fields - #848's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/848")]
 		public void UpdateUsingRuntimeType([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -226,7 +226,7 @@ namespace Tests.Linq
 			public DetailsBase Details { get; set; } = null!;
 		}
 
-		[ActiveIssueNew(1473, ErrorMessage = "Assert.That(result[0].Details.ID, Is.EqualTo(2))",
+		[ActiveIssue(1473, ErrorMessage = "Assert.That(result[0].Details.ID, Is.EqualTo(2))",
 			Details = "the abstract property is not materialised, so the detail's ID comes back as 0.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1473")]
 		public void TransientAbstractMapping([IncludeDataSources(true, TestProvName.AllSQLite)] string context)

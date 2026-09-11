@@ -871,7 +871,7 @@ namespace Tests.Linq
 
 		// Seven families answer an empty result set; SQLite has no CharIndex function at all and refuses outright.
 		// Oracle keeps no declaration - it has no CI leg, so nothing was harvested for it.
-		[ActiveIssueNew(ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no elements",
+		[ActiveIssue(ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no elements",
 			Configurations =
 			[
 				TestProvName.AllClickHouse,
@@ -883,9 +883,9 @@ namespace Tests.Linq
 				TestProvName.AllDuckDB,
 			],
 			Details = "no-issue: Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
-		[ActiveIssueNew(Configuration = TestProvName.AllSQLite, ErrorMessage = "no such function: CharIndex",
+		[ActiveIssue(Configuration = TestProvName.AllSQLite, ErrorMessage = "no such function: CharIndex",
 			Details = "no-issue: as above; SQLite has no such function, so it refuses instead of answering nothing. Message-only because the two SQLite drivers put the detail on different lines.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllOracle,
+		[ActiveIssue(Configuration = TestProvName.AllOracle,
 			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		[Test]
 		public void IndexOf3([DataSources(
@@ -1177,7 +1177,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssueNew(4799, ErrorMessage = "Sql.AsSql(\"test\".PadRight(0, '.'))",
+		[ActiveIssue(4799, ErrorMessage = "Sql.AsSql(\"test\".PadRight(0, '.'))",
 			Details = "padding to a width below the input's own length returns an empty string instead of the input - the trimming #4799 reports, in the PadRight direction. That issue is closed; this shape is the residue.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
 		public void String_PadRight_Translation([DataSources] string context)
@@ -1532,7 +1532,7 @@ namespace Tests.Linq
 		}
 
 		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
-		[ActiveIssueNew(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void ExplicitOrdinal_Contains([DataSources] string context)
 		{
@@ -1551,7 +1551,7 @@ namespace Tests.Linq
 		}
 
 		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
-		[ActiveIssueNew(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void Explicit_Contains([DataSources] string context)
 		{

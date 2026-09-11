@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -197,7 +197,7 @@ namespace Tests.Linq
 
 		// Split from the LikeClr case: only LikeSql fails on ClickHouse, and a gate targets a provider rather
 		// than one value of a [Values] axis. Placeholders because Shouldly breaks the expectation over lines.
-		[ActiveIssueNew("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void AllNullsLikeSql([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -227,7 +227,7 @@ namespace Tests.Linq
 			AllNullsEnum(context, withNullCompares: true);
 		}
 
-		[ActiveIssueNew("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -257,7 +257,7 @@ namespace Tests.Linq
 			AllNullsCEnum(context, withNullCompares: true);
 		}
 
-		[ActiveIssueNew("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
 		{

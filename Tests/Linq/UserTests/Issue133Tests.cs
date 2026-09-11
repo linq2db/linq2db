@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 		}
 
-		[Test, ActiveIssueNew(133, ErrorMessage = "Expected: 100.0d +/- 0.001d",
+		[Test, ActiveIssue(133, ErrorMessage = "Expected: 100.0d +/- 0.001d",
 			Details = "The percentages sum to 65 rather than 100 because the window runs over the filtered rows. Declared on the constraint's own text rather than the caller expression NUnit prints above it, which is not stable across environments. Same number on SQLite, SQL Server and PostgreSQL, direct and remote.")]
 		public void PositiveWindowFunctionsWhereTest([SupportsAnalyticFunctionsContext] string context)
 		{

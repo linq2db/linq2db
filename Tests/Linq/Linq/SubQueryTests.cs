@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -666,7 +666,7 @@ namespace Tests.Linq
 				select p);
 		}
 
-		[ActiveIssueNew(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "uncompatible coalesce types, first type: Optional<Decimal(35,2)>, second type: Decimal(22,9)",
 			Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets.")]
 		[Test]
@@ -1168,7 +1168,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssueNew(Configurations = [TestProvName.AllOracle], ErrorMessage = "ORA-12704",
+		[ActiveIssue(Configurations = [TestProvName.AllOracle], ErrorMessage = "ORA-12704",
 			Details = "no-issue: Oracle rejects the CASE expression with a character set mismatch - https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917. Not 3295, which the fixture is named after: that one is a closed PostgreSQL issue about a let-var FirstOrDefault filter. No exception type is declared because it differs per Oracle client, while ORA-12704 does not.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
 		public void Issue3295Test1([DataSources(TestProvName.AllSybase)] string context)
@@ -1187,9 +1187,9 @@ namespace Tests.Linq
 		}
 
 		// Sybase splits off: everywhere else the query runs and answers wrongly, there it is refused outright.
-		[ActiveIssueNew(3295, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))",
+		[ActiveIssue(3295, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. #3295 is closed and its own repro is the Test1 sibling, which passes; this variant still answers wrongly on every provider that can run it.")]
-		[ActiveIssueNew(3295, Configuration = TestProvName.AllSybase, ErrorTypeName = "LinqToDB.LinqToDBException",
+		[ActiveIssue(3295, Configuration = TestProvName.AllSybase, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "The LINQ expression could not be converted to SQL.",
 			Details = "Sybase refuses the shape rather than answering wrongly.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]

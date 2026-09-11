@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -764,7 +764,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssueNew(279, ErrorMessage = "Assert.That(record.TestAccess, Is.EqualTo(5))",
+		[ActiveIssue(279, ErrorMessage = "Assert.That(record.TestAccess, Is.EqualTo(5))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The get-only Field property has no writable storage, so the value never reaches the backing field on materialization - #279's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/279")]
 		public void StorageFieldTest([DataSources] string context)
@@ -859,22 +859,22 @@ namespace Tests.Linq
 
 		// AllSQLite narrowed to the MS provider: the Classic variants pass, only SQLite.MS refuses the type.
 		// AllOracle keeps no declaration - Oracle has no CI leg, so nothing was ever harvested for it.
-		[ActiveIssueNew(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
+		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Specified cast is not valid.",
 			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.InvalidCastException",
+		[ActiveIssue(3117, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Unable to cast object of type 'Id`1[Tests.Linq.MappingTests+User]' to type 'System.Int32'.",
 			Details = "as the DB2 half, with the client naming the types.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
+		[ActiveIssue(3117, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "is not supported for parameters having DataTypeName 'integer'.",
 			Details = "as the DB2 half; Npgsql reports the unsupported write instead.")]
-		[ActiveIssueNew(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
+		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
 			Details = "as the DB2 half. Only the MS provider refuses - the Classic variants pass, so AllSQLite would have been over-broad.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllOracle,
+		[ActiveIssue(3117, Configuration = TestProvName.AllOracle,
 			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider and the original attribute carried no explanation.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
@@ -897,22 +897,22 @@ namespace Tests.Linq
 
 		// AllSQLite narrowed to the MS provider: the Classic variants pass, only SQLite.MS refuses the type.
 		// AllOracle keeps no declaration - Oracle has no CI leg, so nothing was ever harvested for it.
-		[ActiveIssueNew(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
+		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Specified cast is not valid.",
 			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.InvalidCastException",
+		[ActiveIssue(3117, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Unable to cast object of type 'Id`1[Tests.Linq.MappingTests+User]' to type 'System.Int32'.",
 			Details = "as the DB2 half, with the client naming the types.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
+		[ActiveIssue(3117, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "is not supported for parameters having DataTypeName 'integer'.",
 			Details = "as the DB2 half; Npgsql reports the unsupported write instead.")]
-		[ActiveIssueNew(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
+		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
 			Details = "as the DB2 half. Only the MS provider refuses - the Classic variants pass, so AllSQLite would have been over-broad.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]
-		[ActiveIssueNew(3117, Configuration = TestProvName.AllOracle,
+		[ActiveIssue(3117, Configuration = TestProvName.AllOracle,
 			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider and the original attribute carried no explanation.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
@@ -1428,7 +1428,7 @@ namespace Tests.Linq
 		// Split by the [Values] argument, because the two arms are not equally broken: filtering on false fails
 		// everywhere, filtering on true fails only on ClickHouse. One gate over both marked ~50 working cases as
 		// failing.
-		[ActiveIssueNew(2362, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
+		[ActiveIssue(2362, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The empty string the converter writes for false is not matched back - #2362's 'Query skips rows with empty string'.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
 		public void Issue2362Test([DataSources] string context)
@@ -1436,7 +1436,7 @@ namespace Tests.Linq
 			Issue2362Core(context, false);
 		}
 
-		[ActiveIssueNew(2362, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Assert.That(res[0].Value, Is.True)",
+		[ActiveIssue(2362, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Assert.That(res[0].Value, Is.True)",
 			Details = "The true arm of #2362, which only ClickHouse gets wrong; every other provider passes it.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
 		public void Issue2362TestMatchingValue([DataSources] string context)
@@ -1545,7 +1545,7 @@ namespace Tests.Linq
 
 		record MappingTypingByConstant<T>(int Id, T Value);
 
-		[ActiveIssueNew(4955, Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true,
+		[ActiveIssue(4955, Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true,
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
 			Details = "CAST to BIGINT doesn't work in MariaDB and MySQL 5.7, so 2147483648 comes back as an int and overflows on the way out.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
@@ -1571,7 +1571,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssueNew(4955, Configuration = TestProvName.AllMariaDB, SkipForLinqService = true,
+		[ActiveIssue(4955, Configuration = TestProvName.AllMariaDB, SkipForLinqService = true,
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
 			Details = "CAST to BIGINT doesn't work in MariaDB, so 2147483648 comes back as an int and overflows on the way out.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]

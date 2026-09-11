@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -119,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssueNew(5879, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unhandled expression type: Index",
+		[ActiveIssue(5879, ErrorTypeName = "System.NotSupportedException", ErrorMessage = "Unhandled expression type: Index",
 			Details = "PathVisitor has no ExpressionType.Index case, so GetExpressionAccessors throws before the parameter name is ever suggested. Un-gate once a tree carrying an IndexExpression can be translated.")]
 		public void ParameterName_FromHandBuiltIndexExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{

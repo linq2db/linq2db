@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Text;
 
@@ -341,10 +341,10 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssueNew(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Failed to convert 'FieldDate': Optional<Timestamp> to Optional<Date>",
 			Details = "YDB strict-decimal facet mismatch plus Date/Time conversion gaps - Timestamp to Date and Interval to Int64. See also #5593.")]
-		[ActiveIssueNew(Configuration = TestProvName.Oracle21DevartDirect,
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect,
 			Details = "no-declaration: unvalidated: the Devart client needs a licence key this machine does not have, so even CreateDatabase cannot connect. The gate's original prose covered only YDB, so nothing on record says why this provider was gated.")]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)

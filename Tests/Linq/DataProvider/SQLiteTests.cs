@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Globalization;
 using System.IO;
@@ -212,7 +212,7 @@ namespace Tests.DataProvider
 
 		// Platform-scoped, not provider-scoped: the same four SQLite providers fail on Linux and pass on Windows,
 		// because the bundled native binary differs per RID and only the Linux one loses the last two digits.
-		[ActiveIssueNew("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b",
+		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b",
 			Platforms = TestPlatform.Linux,
 			ErrorMessage = "Expected: -1.7900000000000002E+308d{0}But was:  -1.79E+308d",
 			Details = "SQLite's own ticket: the CAST to real loses the last two digits, so the value comes back as -1.79E+308.")]
@@ -638,7 +638,7 @@ namespace Tests.DataProvider
 			DateTimeRoundtrip_InsertCore(context, inline, kind, "TEXT");
 		}
 
-		[ActiveIssueNew(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
+		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
 			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back unconverted, so the expected local time is an hour out.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_InsertUtc(
@@ -648,7 +648,7 @@ namespace Tests.DataProvider
 			DateTimeRoundtrip_InsertCore(context, inline, DateTimeKind.Utc, "TEXT");
 		}
 
-		[ActiveIssueNew(2107,
+		[ActiveIssue(2107,
 			Details = "no-declaration: Issue number taken from the test's own Description. Which of four failures a case produces depends on inline and kind - a wrong Kind, a wrong value, a wrong local-time value, or a conversion refusal - and no fragment is common to all of them.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_InsertNumeric(
@@ -717,7 +717,7 @@ namespace Tests.DataProvider
 			DateTimeRoundtrip_BulkCopyCore(context, inline, kind, copyType, "TEXT");
 		}
 
-		[ActiveIssueNew(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
+		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
 			Details = "as DateTimeRoundtrip_InsertUtc.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_BulkCopyUtc(
@@ -728,7 +728,7 @@ namespace Tests.DataProvider
 			DateTimeRoundtrip_BulkCopyCore(context, inline, DateTimeKind.Utc, copyType, "TEXT");
 		}
 
-		[ActiveIssueNew(2107,
+		[ActiveIssue(2107,
 			Details = "no-declaration: as DateTimeRoundtrip_InsertNumeric.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_BulkCopyNumeric(
@@ -817,7 +817,7 @@ namespace Tests.DataProvider
 			TestDbVersion(context);
 		}
 
-		[ActiveIssueNew(3899, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for a UInt64.",
+		[ActiveIssue(3899, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for a UInt64.",
 			Details = "One declaration covers both transports: direct throws the OverflowException bare, while LinqService wraps it in Grpc.Core.RpcException whose detail still spells out the same type and text.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3899")]
 		public void Issue3899Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
@@ -866,7 +866,7 @@ namespace Tests.DataProvider
 		// Split from the inlined case: only the parameterized path fails, and the gate can target a provider but
 		// not one value of a [Values] axis - marking the whole method would report its passing half as "test
 		// passed but is marked".
-		[ActiveIssueNew(3766, Configuration = TestProvName.AllSQLiteClassic, ErrorMessage = "Assert.That(cnt, Is.EqualTo(1))")]
+		[ActiveIssue(3766, Configuration = TestProvName.AllSQLiteClassic, ErrorMessage = "Assert.That(cnt, Is.EqualTo(1))")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
 		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
@@ -897,7 +897,7 @@ namespace Tests.DataProvider
 		// stays ungated. Message-only, and it collapses what looked like three causes into one: the MS driver says
 		// "SQLite Error 20: 'datatype mismatch'", the Classic driver says "datatype mismatch", and the remote
 		// transport wraps the Classic text - all three contain the same phrase.
-		[ActiveIssueNew(2432, ErrorMessage = "datatype mismatch",
+		[ActiveIssue(2432, ErrorMessage = "datatype mismatch",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Mapping DateTime to Int64 produces a column the parameterised insert cannot write.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
 		public void Issue2432Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
@@ -943,7 +943,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssueNew(2432, ErrorMessage = "datatype mismatch",
+		[ActiveIssue(2432, ErrorMessage = "datatype mismatch",
 			Details = "as Issue2432Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
 		public void Issue2432Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
@@ -1172,7 +1172,7 @@ DROP TABLE SecondTable;
 
 		// Stays a gate rather than joining a ThrowsForProvider: the refusal is a capability gap the discussion asks
 		// us to close, not a limitation that is correct to declare.
-		[ActiveIssueNew("https://github.com/linq2db/linq2db/discussions/4985", ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.",
+		[ActiveIssue("https://github.com/linq2db/linq2db/discussions/4985", ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.",
 			Details = "no-issue: joining a table-valued function needs APPLY semantics, which SQLite's provider flags refuse.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4985")]
 		public void CrossApplyJoin([IncludeDataSources(true, TestProvName.AllSQLite)] string context)

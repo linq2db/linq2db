@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -899,7 +899,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssueNew(3266, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+		[ActiveIssue(3266, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
 			Details = "a compiled query with an async update does not translate, as #3266 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3266")]
 		public async Task Issue3266Test([DataSources(false)] string context)

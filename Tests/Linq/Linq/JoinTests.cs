@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -1074,7 +1074,7 @@ namespace Tests.Linq
 
 		// MySQL doesn't support user-defined table functions
 		// system-defined JSON_TABLE function could be used with LATERAL, but it is not an easy task to define it...
-		[ActiveIssueNew(ErrorTypeName = "System.FormatException", ErrorMessage = "Input string was not in a correct format.",
+		[ActiveIssue(ErrorTypeName = "System.FormatException", ErrorMessage = "Input string was not in a correct format.",
 			Details = "no-issue: Implement JSON_TABLE-like functions support. Without it the apply source is emitted as something MySQL parses as a number and rejects. A tracker search for JSON_TABLE found nothing.")]
 		[Test]
 		public void ApplyJoin_MySql([IncludeDataSources(TestProvName.AllMySqlWithApply)] string context)
@@ -1406,7 +1406,7 @@ namespace Tests.Linq
 		}
 
 		// https://imgflip.com/i/2a6oc8
-		[ActiveIssueNew(5895,
+		[ActiveIssue(5895,
 			Configuration = TestProvName.AllSybase,
 			ErrorMessage  = "Assert.That(resultList, Has.Count.EqualTo(expectedList.Count))",
 			Details       = "Sybase applies a derived table's TOP to the outer result, so this returns 10 rows where 70 are due. Not the cross join: without Take the same query answers 7 x 17 = 119 correctly.")]
@@ -2987,7 +2987,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssueNew(1224, Configurations = new[]
+		[ActiveIssue(1224, Configurations = new[]
 		{
 			TestProvName.AllAccess,
 			TestProvName.AllMySql,
@@ -3040,7 +3040,7 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssueNew(4160, Configuration = TestProvName.AllOracle12, ErrorMessage = "Assert.That(data, Has.Count.EqualTo(2))",
+		[ActiveIssue(4160, Configuration = TestProvName.AllOracle12, ErrorMessage = "Assert.That(data, Has.Count.EqualTo(2))",
 			Details = "Oracle 12 returns one row where two are due - the invalid sub-query SQL #4160 describes, still wrong on that version.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
@@ -3295,7 +3295,7 @@ namespace Tests.Linq
 			Issue3560Test4Core(context, compareNulls);
 		}
 
-		[ActiveIssueNew(3560, ErrorMessage = "Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2))",
+		[ActiveIssue(3560, ErrorMessage = "Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Fails on every provider: the join key is an arithmetic expression and the compare-nulls rewrite does not reach through it.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
 		public void Issue3560Test4LikeClr([DataSources(false, TestProvName.AllClickHouse)] string context)
@@ -3372,7 +3372,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllAccess, TestProvName.AllClickHouse])] string context)

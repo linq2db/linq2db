@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 
@@ -253,20 +253,20 @@ namespace Tests.Linq
 		#region Issue 1918
 		// Stream columns are unimplemented everywhere, so each provider dies at whichever stage it first meets
 		// the unsupported type. Grouped by that stage rather than by wording.
-		[ActiveIssueNew(1918, Configurations = [TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllPostgreSQL],
+		[ActiveIssue(1918, Configurations = [TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllPostgreSQL],
 			Details = "no-declaration: the emitted DDL carries the literal type name Blob and each server rejects it in its own words - 'Cannot find data type Blob', 'The specified data type is not valid', '42704: type \"blob\" does not exist'.")]
-		[ActiveIssueNew(1918, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+		[ActiveIssue(1918, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Cannot infer type name from (System.IO.Stream, Blob). Specify DataType or DbType explicitly",
 			Details = "linq2db refuses to infer the column type before any DDL reaches the server, so all three ClickHouse drivers give one message.")]
-		[ActiveIssueNew(1918, Configurations = [TestProvName.AllSQLite, TestProvName.AllDuckDB], SkipForLinqService = true,
+		[ActiveIssue(1918, Configurations = [TestProvName.AllSQLite, TestProvName.AllDuckDB], SkipForLinqService = true,
 			Details = "no-declaration: the table is created, and the insert then cannot convert the Stream to the driver's native type - an InvalidCastException to Byte[] on SQLite.Classic/MPU/MPM and DuckDB, an InvalidOperationException about a missing mapping on SQLite.MS.")]
-		[ActiveIssueNew(1918, Configuration = TestProvName.AllYdb, SkipForLinqService = true, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+		[ActiveIssue(1918, Configuration = TestProvName.AllYdb, SkipForLinqService = true, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
 			ErrorMessage = "Cannot convert value 'System.Byte[]: System.Byte[]' to type 'System.IO.Stream'",
 			Details = "YDB gets furthest of any provider - it stores the value and only fails converting it back on select.")]
-		[ActiveIssueNew(1918, Configurations = [TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllYdb], SkipForNonLinqService = true,
+		[ActiveIssue(1918, Configurations = [TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllYdb], SkipForNonLinqService = true,
 			ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Cannot convert value 'System.IO.MemoryStream: System.String' to type 'System.IO.MemoryStream'",
 			Details = "Remote fails earlier than direct and identically across these three: serializing the Stream parameter for the wire is what breaks, before any provider-specific handling runs.")]
-		[ActiveIssueNew(1918, Configurations = [TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllOracle,
+		[ActiveIssue(1918, Configurations = [TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllOracle,
 			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllMySql, ProviderName.DB2],
 			Details = "no-declaration: unvalidated: not reachable from this workstation - no container for most, and Informix/DB2 evidence is inadmissible here because the IBM CLI driver replaces the server text with a codepage-conversion message.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1918")]

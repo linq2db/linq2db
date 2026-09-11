@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Globalization;
 using System.IO;
@@ -723,14 +723,14 @@ namespace Tests.DataProvider
 			Issue3893TestCore(context, columName);
 		}
 
-		[ActiveIssueNew(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'.")]
+		[ActiveIssue(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
 		public void Issue3893Test_Rejected([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejected))] string columName)
 		{
 			Issue3893TestCore(context, columName);
 		}
 
-		[ActiveIssueNew(3893, Configuration = ProviderName.AccessAceOdbc,
+		[ActiveIssue(3893, Configuration = ProviderName.AccessAceOdbc,
 			Details = "no-declaration: the two arms fail differently and neither can be targeted by argument: 'char ?' is rejected by name, while 'char {' is created and then read back under a different name, so it fails the assertion rather than throwing. OleDb accepts both, which is why this is scoped to the ODBC driver.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
 		public void Issue3893Test_RejectedByOdbc([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejectedByOdbc))] string columName)

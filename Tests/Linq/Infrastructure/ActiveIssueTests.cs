@@ -10,21 +10,21 @@ using Shouldly;
 namespace Tests.Infrastructure
 {
 	/// <summary>
-	/// The decision logic behind <see cref="ActiveIssueNewAttribute"/>, tested as the pure functions it is factored
+	/// The decision logic behind <see cref="ActiveIssueAttribute"/>, tested as the pure functions it is factored
 	/// into. Exercising it end-to-end is not possible from inside the suite: a gated test that passes is reported as
 	/// a failure <em>by construction</em>, so it could not sit here green, and a nested
 	/// <c>NUnitTestAssemblyRunner</c> would share the static <see cref="TestProgressTracker"/> and mark the outer run
-	/// done part-way through. <see cref="ActiveIssueNewAttribute.Decide"/> exists so the policy is checkable without
+	/// done part-way through. <see cref="ActiveIssueAttribute.Decide"/> exists so the policy is checkable without
 	/// either.
 	/// </summary>
 	[TestFixture]
-	public class ActiveIssueNewTests : TestBase
+	public class ActiveIssueTests : TestBase
 	{
 		const string SqlError    = "LinqToDB.LinqToDBException : The LINQ expression could not be converted to SQL.";
 		const string OtherError  = "System.InvalidOperationException : something else entirely";
 		const string AssertError = "  Expected: 3\r\n  But was:  7\r\n";
 
-		static ActiveIssueNewAttribute Expecting(string? type = null, string? message = null) => new(1234)
+		static ActiveIssueAttribute Expecting(string? type = null, string? message = null) => new(1234)
 		{
 			ErrorTypeName = type,
 			ErrorMessage  = message,
@@ -35,7 +35,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void Decide_PassingTest_IsFailure()
 		{
-			var decision = ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false);
+			var decision = ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false);
 
 			decision.ShouldNotBeNull();
 			decision!.Value.State.Status.ShouldBe(TestStatus.Failed);
@@ -46,7 +46,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void Decide_DeclaredError_IsInconclusive()
 		{
-			var decision = ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false);
+			var decision = ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false);
 
 			decision.ShouldNotBeNull();
 			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
@@ -57,7 +57,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void Decide_DeclaredErrorWithMessageFragment_IsInconclusive()
 		{
-			var decision = ActiveIssueNewAttribute.Decide(
+			var decision = ActiveIssueAttribute.Decide(
 				Expecting("LinqToDB.LinqToDBException", "could not be converted to SQL."),
 				ResultState.Failure,
 				SqlError,
@@ -69,7 +69,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void Decide_DifferentErrorType_IsFailure()
 		{
-			var decision = ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, OtherError, isRemote: false);
+			var decision = ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, OtherError, isRemote: false);
 
 			decision!.Value.State.Status.ShouldBe(TestStatus.Failed);
 
@@ -81,7 +81,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void Decide_DifferentErrorMessage_IsFailure()
 		{
-			var decision = ActiveIssueNewAttribute.Decide(
+			var decision = ActiveIssueAttribute.Decide(
 				Expecting("LinqToDB.LinqToDBException", "some other wording"),
 				ResultState.Failure,
 				SqlError,
@@ -96,7 +96,7 @@ namespace Tests.Infrastructure
 		{
 			// An assertion failure's message carries no type name, so leaving ErrorType unset is how a
 			// wrong-results issue is declared.
-			var decision = ActiveIssueNewAttribute.Decide(Expecting(message: "But was:  7"), ResultState.Failure, AssertError, isRemote: false);
+			var decision = ActiveIssueAttribute.Decide(Expecting(message: "But was:  7"), ResultState.Failure, AssertError, isRemote: false);
 
 			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
 		}
@@ -104,7 +104,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void Decide_NoExpectationDeclared_AnyFailureMatches()
 		{
-			var decision = ActiveIssueNewAttribute.Decide(Expecting(), ResultState.Failure, OtherError, isRemote: false);
+			var decision = ActiveIssueAttribute.Decide(Expecting(), ResultState.Failure, OtherError, isRemote: false);
 
 			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
 		}
@@ -125,7 +125,7 @@ namespace Tests.Infrastructure
 				_              => ResultState.Warning,
 			};
 
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), state, "provider not configured", isRemote: false)
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), state, "provider not configured", isRemote: false)
 				.ShouldBeNull();
 		}
 
@@ -135,11 +135,11 @@ namespace Tests.Infrastructure
 			// The remote transport wraps the original exception, so the type name is no longer at the start.
 			const string wrapped = "System.Exception : remote call failed ---> LinqToDB.LinqToDBException : nope";
 
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, wrapped, isRemote: true)!
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, wrapped, isRemote: true)!
 				.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
 
 			// ... and the same message under a direct context is a mismatch, which is what makes the distinction real.
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, wrapped, isRemote: false)!
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, wrapped, isRemote: false)!
 				.Value.State.Status.ShouldBe(TestStatus.Failed);
 		}
 
@@ -153,22 +153,22 @@ namespace Tests.Infrastructure
 			// The Throws* wrapper rewrites an expected throw to Success. Without deference this case is the one
 			// that breaks: the gate sees a passing test and reports "passed but is marked", reddening a test that
 			// behaved exactly as both attributes expect.
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: true)
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: true)
 				.ShouldBeNull();
 
 			// Control: the same inputs without a governing Throws* are decided, so the arm above is doing the work
 			// rather than the Success case being unreachable.
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: false)
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: false)
 				.ShouldNotBeNull();
 		}
 
 		[Test]
 		public void Decide_ThrowsAttributeGoverns_DefersOnAFailureItWouldHaveMatched()
 		{
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: true)
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: true)
 				.ShouldBeNull();
 
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: false)!
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: false)!
 				.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
 		}
 
@@ -177,7 +177,7 @@ namespace Tests.Infrastructure
 		{
 			// Deference is opt-in per case: the parameter defaults to false, so a site with no Throws* sibling -
 			// which is all but 13 of them - keeps the ordinary policy without every caller opting out.
-			ActiveIssueNewAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, OtherError, isRemote: false)!
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, OtherError, isRemote: false)!
 				.Value.State.Status.ShouldBe(TestStatus.Failed);
 		}
 
@@ -206,7 +206,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void AppliesTo_NoTargeting_GovernsEveryProvider()
 		{
-			var attr = new ActiveIssueNewAttribute();
+			var attr = new ActiveIssueAttribute();
 
 			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 			attr.AppliesTo("Oracle.23.Managed", isLinqService: true).ShouldBeTrue();
@@ -215,7 +215,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void AppliesTo_NamedConfiguration_GovernsOnlyThatProvider()
 		{
-			var attr = new ActiveIssueNewAttribute { Configuration = "SQLite.MS" };
+			var attr = new ActiveIssueAttribute { Configuration = "SQLite.MS" };
 
 			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 			attr.AppliesTo("SQLite.Classic", isLinqService: false).ShouldBeFalse();
@@ -224,7 +224,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void AppliesTo_CommaSeparatedConfiguration_IsSplit()
 		{
-			var attr = new ActiveIssueNewAttribute { Configuration = TestProvName.AllFirebird };
+			var attr = new ActiveIssueAttribute { Configuration = TestProvName.AllFirebird };
 
 			attr.AppliesTo(ProviderName.Firebird5, isLinqService: false).ShouldBeTrue();
 			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeFalse();
@@ -233,7 +233,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void AppliesTo_ConfigurationsArray_IsFlattened()
 		{
-			var attr = new ActiveIssueNewAttribute { Configurations = [TestProvName.AllFirebird, "SQLite.MS"] };
+			var attr = new ActiveIssueAttribute { Configurations = [TestProvName.AllFirebird, "SQLite.MS"] };
 
 			attr.AppliesTo(ProviderName.Firebird5, isLinqService: false).ShouldBeTrue();
 			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
@@ -243,7 +243,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void AppliesTo_SkipForLinqService_DropsTheRemoteCase()
 		{
-			var attr = new ActiveIssueNewAttribute { SkipForLinqService = true };
+			var attr = new ActiveIssueAttribute { SkipForLinqService = true };
 
 			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 			attr.AppliesTo("SQLite.MS", isLinqService: true).ShouldBeFalse();
@@ -252,7 +252,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void AppliesTo_SkipForNonLinqService_DropsTheDirectCase()
 		{
-			var attr = new ActiveIssueNewAttribute { SkipForNonLinqService = true };
+			var attr = new ActiveIssueAttribute { SkipForNonLinqService = true };
 
 			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeFalse();
 			attr.AppliesTo("SQLite.MS", isLinqService: true).ShouldBeTrue();
@@ -263,7 +263,7 @@ namespace Tests.Infrastructure
 		{
 			// Matches ActiveIssueAttribute: a test with no data-source parameter is gated whatever Configuration
 			// says. Recorded because it means a Configuration on such a test is silently inert.
-			new ActiveIssueNewAttribute { Configuration = "SQLite.MS" }
+			new ActiveIssueAttribute { Configuration = "SQLite.MS" }
 				.AppliesTo(null, isLinqService: false).ShouldBeTrue();
 		}
 
@@ -277,20 +277,20 @@ namespace Tests.Infrastructure
 		[Test]
 		public void AppliesTo_PlatformsDefault_GovernsEverywhere()
 		{
-			new ActiveIssueNewAttribute().AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+			new ActiveIssueAttribute().AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 		}
 
 		[Test]
 		public void AppliesTo_MatchingPlatform_Governs()
 		{
-			new ActiveIssueNewAttribute { Platforms = Current }
+			new ActiveIssueAttribute { Platforms = Current }
 				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 		}
 
 		[Test]
 		public void AppliesTo_OtherPlatform_DoesNotGovern()
 		{
-			new ActiveIssueNewAttribute { Platforms = Other }
+			new ActiveIssueAttribute { Platforms = Other }
 				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeFalse();
 		}
 
@@ -299,14 +299,14 @@ namespace Tests.Infrastructure
 		{
 			// The shortcut returns true for a test with no data-source parameter, so a platform bound that ran after
 			// it would be silently inert on exactly the tests that have no other targeting.
-			new ActiveIssueNewAttribute { Platforms = Other }
+			new ActiveIssueAttribute { Platforms = Other }
 				.AppliesTo(null, isLinqService: false).ShouldBeFalse();
 		}
 
 		[Test]
 		public void AppliesTo_PlatformFlagsCombine()
 		{
-			new ActiveIssueNewAttribute { Platforms = Current | Other }
+			new ActiveIssueAttribute { Platforms = Current | Other }
 				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
 		}
 
@@ -318,48 +318,48 @@ namespace Tests.Infrastructure
 		public void SelectGoverning_TwoProvidersTwoIssues_EachGovernsItsOwn()
 		{
 			// The capability AllowMultiple=false denies today.
-			var sqlite = new ActiveIssueNewAttribute(1) { Configuration = "SQLite.MS" };
-			var oracle = new ActiveIssueNewAttribute(2) { Configuration = "Oracle.23.Managed" };
+			var sqlite = new ActiveIssueAttribute(1) { Configuration = "SQLite.MS" };
+			var oracle = new ActiveIssueAttribute(2) { Configuration = "Oracle.23.Managed" };
 
-			ActiveIssueNewAttribute.SelectGoverning([sqlite, oracle], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(sqlite);
+			ActiveIssueAttribute.SelectGoverning([sqlite, oracle], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(sqlite);
 			ambiguous.ShouldBeFalse();
 
-			ActiveIssueNewAttribute.SelectGoverning([sqlite, oracle], "Oracle.23.Managed", false, out ambiguous).ShouldBeSameAs(oracle);
+			ActiveIssueAttribute.SelectGoverning([sqlite, oracle], "Oracle.23.Managed", false, out ambiguous).ShouldBeSameAs(oracle);
 			ambiguous.ShouldBeFalse();
 
-			ActiveIssueNewAttribute.SelectGoverning([sqlite, oracle], "SqlServer.2022.MS", false, out _).ShouldBeNull();
+			ActiveIssueAttribute.SelectGoverning([sqlite, oracle], "SqlServer.2022.MS", false, out _).ShouldBeNull();
 		}
 
 		[Test]
 		public void SelectGoverning_TargetedBeatsBlanket()
 		{
-			var blanket = new ActiveIssueNewAttribute(1);
-			var oracle  = new ActiveIssueNewAttribute(2) { Configuration = "Oracle.23.Managed" };
+			var blanket = new ActiveIssueAttribute(1);
+			var oracle  = new ActiveIssueAttribute(2) { Configuration = "Oracle.23.Managed" };
 
-			ActiveIssueNewAttribute.SelectGoverning([blanket, oracle], "Oracle.23.Managed", false, out var ambiguous).ShouldBeSameAs(oracle);
+			ActiveIssueAttribute.SelectGoverning([blanket, oracle], "Oracle.23.Managed", false, out var ambiguous).ShouldBeSameAs(oracle);
 			ambiguous.ShouldBeFalse();
 
-			ActiveIssueNewAttribute.SelectGoverning([blanket, oracle], "SQLite.MS", false, out ambiguous).ShouldBeSameAs(blanket);
+			ActiveIssueAttribute.SelectGoverning([blanket, oracle], "SQLite.MS", false, out ambiguous).ShouldBeSameAs(blanket);
 			ambiguous.ShouldBeFalse();
 		}
 
 		[Test]
 		public void SelectGoverning_PlatformScopedBeatsBlanket()
 		{
-			var blanket  = new ActiveIssueNewAttribute(1);
-			var platform = new ActiveIssueNewAttribute(2) { Platforms = Current };
+			var blanket  = new ActiveIssueAttribute(1);
+			var platform = new ActiveIssueAttribute(2) { Platforms = Current };
 
-			ActiveIssueNewAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(platform);
+			ActiveIssueAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(platform);
 			ambiguous.ShouldBeFalse();
 		}
 
 		[Test]
 		public void SelectGoverning_PlatformScopedOnAnotherPlatform_FallsBackToBlanket()
 		{
-			var blanket  = new ActiveIssueNewAttribute(1);
-			var platform = new ActiveIssueNewAttribute(2) { Platforms = Other };
+			var blanket  = new ActiveIssueAttribute(1);
+			var platform = new ActiveIssueAttribute(2) { Platforms = Other };
 
-			ActiveIssueNewAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(blanket);
+			ActiveIssueAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(blanket);
 			ambiguous.ShouldBeFalse();
 		}
 
@@ -368,18 +368,18 @@ namespace Tests.Infrastructure
 		{
 			// The case TestDoubleRoundTrip needs: on the platform where the test passes, no attribute applies, so
 			// the result is left alone rather than rewritten to "passed but is marked".
-			var platform = new ActiveIssueNewAttribute(1) { Platforms = Other };
+			var platform = new ActiveIssueAttribute(1) { Platforms = Other };
 
-			ActiveIssueNewAttribute.SelectGoverning([platform], "SQLite.MS", false, out _).ShouldBeNull();
+			ActiveIssueAttribute.SelectGoverning([platform], "SQLite.MS", false, out _).ShouldBeNull();
 		}
 
 		[Test]
 		public void SelectGoverning_TwoEquallySpecificMatches_IsAmbiguous()
 		{
-			var first  = new ActiveIssueNewAttribute(1) { Configuration = "SQLite.MS" };
-			var second = new ActiveIssueNewAttribute(2) { Configuration = "SQLite.MS" };
+			var first  = new ActiveIssueAttribute(1) { Configuration = "SQLite.MS" };
+			var second = new ActiveIssueAttribute(2) { Configuration = "SQLite.MS" };
 
-			ActiveIssueNewAttribute.SelectGoverning([first, second], "SQLite.MS", false, out var ambiguous).ShouldNotBeNull();
+			ActiveIssueAttribute.SelectGoverning([first, second], "SQLite.MS", false, out var ambiguous).ShouldNotBeNull();
 			ambiguous.ShouldBeTrue();
 		}
 

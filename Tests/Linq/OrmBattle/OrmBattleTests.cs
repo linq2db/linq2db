@@ -1,4 +1,4 @@
-﻿//------------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 //     Copyright (C) 2009-2010 ORMBattle.NET.
 //     All rights reserved.
 //     For conditions of distribution and use, see license.
@@ -1520,7 +1520,7 @@ namespace Tests.OrmBattle
 					Assert.That(companyName, Is.Not.Null);
 		}
 
-		[Test, ActiveIssueNew(573, ErrorTypeName = "System.ArgumentException", ErrorMessage = "must be reducible node",
+		[Test, ActiveIssue(573, ErrorTypeName = "System.ArgumentException", ErrorMessage = "must be reducible node",
 			Details = "#573 is closed while this test still fails, so the reference is where the shape is documented rather than a live tracker.")]
 		public void ComplexTest4([NorthwindDataContext] string context)
 		{

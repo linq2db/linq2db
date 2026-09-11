@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -522,7 +522,7 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssueNew(4811, ErrorMessage = "Assert.That(c2.ConnectionString, Is.EqualTo(cs2))",
+		[ActiveIssue(4811, ErrorMessage = "Assert.That(c2.ConnectionString, Is.EqualTo(cs2))",
 			Details = "the second registration comes back with the first one's connection string - #4811's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4811")]
 		public void Issue4811Test2()

@@ -418,7 +418,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssueNew("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(record.Column, Is.EqualTo(")]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(record.Column, Is.EqualTo(")]
 		[Test]
 		public async ValueTask TestDateTime64Type([ClickHouseDataSources(false)] string context)
 		{
@@ -668,7 +668,7 @@ namespace Tests.DataProvider
 
 		// The JSON refusal is what breaks the command; what surfaces is Octonica#58 - the *next* command on that
 		// connection reports it closed - so that is what this declares.
-		[ActiveIssueNew("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
 			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.",
 			Details = "the underlying refusal is that the type \"JSON\" is not supported")]
 		[Test]

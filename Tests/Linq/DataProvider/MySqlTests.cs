@@ -1,4 +1,4 @@
-﻿extern alias MySqlConnector;
+extern alias MySqlConnector;
 extern alias MySqlData;
 
 using System;
@@ -2134,7 +2134,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "tinyint(1) unsigned")] public sbyte SByte { get; set; }
 		}
 
-		[ActiveIssueNew(86, ErrorMessage = "Assert.That(byteColumn!.SystemType, Is.EqualTo(typeof(byte)))",
+		[ActiveIssue(86, ErrorMessage = "Assert.That(byteColumn!.SystemType, Is.EqualTo(typeof(byte)))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. MySQL's tinyint(1) is read as bool where byte is expected - #86's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/86")]
 		public void TinyInt1IsByte([IncludeDataSources(false, TestProvName.AllMySql)] string context)
@@ -2325,7 +2325,7 @@ END");
 		#endregion
 
 		#region issue 4354
-		[ActiveIssueNew(4354, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "Data too long for column 'Value' at row 1",
+		[ActiveIssue(4354, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "Data too long for column 'Value' at row 1",
 			Details = "BulkCopy ignores the configured GuidFormat, so the value arrives in the wrong width - #4354's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
 		public void Issue4354Test(

@@ -91,7 +91,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
-		[ActiveIssueNew(4603, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Unexpected expression type")]
+		[ActiveIssue(4603, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Unexpected expression type")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4603")]
 		public async ValueTask Issue4603Test([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
@@ -143,12 +143,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.ToArray();
 		}
 
-		[ActiveIssueNew(3174, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42703: column p.IsDeleted does not exist")]
-		[ActiveIssueNew(3174, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "no such column: p.IsDeleted")]
-		[ActiveIssueNew(3174, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "Microsoft.Data.SqlClient.SqlException", ErrorMessage = "Invalid column name 'IsDeleted'.")]
+		[ActiveIssue(3174, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42703: column p.IsDeleted does not exist")]
+		[ActiveIssue(3174, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "no such column: p.IsDeleted")]
+		[ActiveIssue(3174, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "Microsoft.Data.SqlClient.SqlException", ErrorMessage = "Invalid column name 'IsDeleted'.")]
 		// No ErrorTypeName for the MySQL family: MySqlConnector.MySqlException on net8.0+, MySql.Data.MySqlClient.MySqlException on net462.
-		[ActiveIssueNew(3174, Configuration = TestProvName.AllMySqlServer, ErrorMessage = "Can't reopen table: 'ShadowTable'")]
-		[ActiveIssueNew(3174, Configuration = TestProvName.AllMariaDB, ErrorMessage = "Unknown column 'p.IsDeleted' in 'WHERE'")]
+		[ActiveIssue(3174, Configuration = TestProvName.AllMySqlServer, ErrorMessage = "Can't reopen table: 'ShadowTable'")]
+		[ActiveIssue(3174, Configuration = TestProvName.AllMariaDB, ErrorMessage = "Unknown column 'p.IsDeleted' in 'WHERE'")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3174")]
 		public async ValueTask Issue3174Test([EFDataSources] string provider)
 		{
@@ -179,7 +179,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Update();
 		}
 
-		[ActiveIssueNew(4012, ErrorMessage = "Assert.That(p.Children, Is.Not.Null)")]
+		[ActiveIssue(4012, ErrorMessage = "Assert.That(p.Children, Is.Not.Null)")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
 		public void Issue4012Test([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
@@ -237,7 +237,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// Previously annotated with a positional TestProvName.AllPostgreSQL, which binds the (string issue) ctor
 		// rather than the Configuration property - so the gate applied to
 		// every provider. The sweep shows it fails on PostgreSQL only, which is what the annotation always meant.
-		[ActiveIssueNew(4333, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
+		[ActiveIssue(4333, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
 		public void Issue4333Test([EFDataSources] string provider)
 		{
@@ -419,7 +419,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					  .ToArray();
 		}
 
-		[ActiveIssueNew(4627, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Association key 'Issue4627ContainerId' not found for type")]
+		[ActiveIssue(4627, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Association key 'Issue4627ContainerId' not found for type")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4627")]
 		public void Issue4627Test([EFDataSources] string provider)
 		{
@@ -473,7 +473,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		[ActiveIssueNew(4628, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Inheritance Discriminator is not defined for the")]
+		[ActiveIssue(4628, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Inheritance Discriminator is not defined for the")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4628")]
 		public async ValueTask Issue4628Test([EFDataSources] string provider)
 		{
@@ -605,7 +605,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			_ = query.ToLinqToDB().ToList();
 		}
 
-		[ActiveIssueNew(4640, ErrorMessage = "Assert.That(record.Items[1].Name, Is.EqualTo(\"record 3\"))")]
+		[ActiveIssue(4640, ErrorMessage = "Assert.That(record.Items[1].Name, Is.EqualTo(\"record 3\"))")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4640")]
 		public void Issue4640Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus)] string provider)
 		{
@@ -687,7 +687,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		[ActiveIssueNew(4641, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4641Table\"")]
+		[ActiveIssue(4641, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4641Table\"")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4641")]
 		public void Issue4641Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
@@ -756,13 +756,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// EF Core 3.1 fails earlier, on the model rather than the query, so the expected failure differs by TFM
 		// rather than by provider - which the attribute targets. Hence the guard.
 #if NETFRAMEWORK
-		[ActiveIssueNew(4644, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Inheritance Discriminator is not defined for the")]
+		[ActiveIssue(4644, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Inheritance Discriminator is not defined for the")]
 #else
-		[ActiveIssueNew(4644, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42703: column t1.CreateDate does not exist")]
-		[ActiveIssueNew(4644, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "no such column: t1.CreateDate")]
-		[ActiveIssueNew(4644, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "Microsoft.Data.SqlClient.SqlException", ErrorMessage = "Invalid column name 'CreateDate'.")]
-		[ActiveIssueNew(4644, Configuration = TestProvName.AllMySqlServer, ErrorMessage = "Unknown column 't1.CreateDate' in 'field list'")]
-		[ActiveIssueNew(4644, Configuration = TestProvName.AllMariaDB, ErrorMessage = "Unknown column 't1.CreateDate' in 'SELECT'")]
+		[ActiveIssue(4644, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42703: column t1.CreateDate does not exist")]
+		[ActiveIssue(4644, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "no such column: t1.CreateDate")]
+		[ActiveIssue(4644, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "Microsoft.Data.SqlClient.SqlException", ErrorMessage = "Invalid column name 'CreateDate'.")]
+		[ActiveIssue(4644, Configuration = TestProvName.AllMySqlServer, ErrorMessage = "Unknown column 't1.CreateDate' in 'field list'")]
+		[ActiveIssue(4644, Configuration = TestProvName.AllMariaDB, ErrorMessage = "Unknown column 't1.CreateDate' in 'SELECT'")]
 #endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4644")]
 		public void Issue4644Test([EFDataSources] string provider)
@@ -772,7 +772,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.Issue4644Priced.ToLinqToDB().ToList();
 		}
 
-		[ActiveIssueNew(4649, ErrorMessage = "Assert.That(readByLinqToDB[0].Name, Is.EqualTo(\"new name\"))")]
+		[ActiveIssue(4649, ErrorMessage = "Assert.That(readByLinqToDB[0].Name, Is.EqualTo(\"new name\"))")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4649")]
 		public void Issue4649Test([EFDataSources] string provider)
 		{
@@ -806,8 +806,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(updated.Name, Is.EqualTo("new name"));
 		}
 
-		[ActiveIssueNew(4653, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "The transaction associated with this command is not the connection's active transaction")]
-		[ActiveIssueNew(4653, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "ExecuteReader requires the command to have a transaction")]
+		[ActiveIssue(4653, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "The transaction associated with this command is not the connection's active transaction")]
+		[ActiveIssue(4653, Configuration = TestProvName.AllSqlServer, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "ExecuteReader requires the command to have a transaction")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4653")]
 		public void Issue4653Test([EFDataSources] string provider)
 		{
@@ -834,10 +834,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 #if NET8_0_OR_GREATER
-		[ActiveIssueNew(4663, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42601: syntax error at or near \")\"")]
-		[ActiveIssueNew(4663, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "near \")\": syntax error")]
-		[ActiveIssueNew(4663, Configuration = TestProvName.AllMySqlServer, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "right syntax to use near ')")]
-		[ActiveIssueNew(4663, Configuration = TestProvName.AllMariaDB, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "right syntax to use near ')")]
+		[ActiveIssue(4663, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42601: syntax error at or near \")\"")]
+		[ActiveIssue(4663, Configuration = TestProvName.AllSQLite, ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "near \")\": syntax error")]
+		[ActiveIssue(4663, Configuration = TestProvName.AllMySqlServer, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "right syntax to use near ')")]
+		[ActiveIssue(4663, Configuration = TestProvName.AllMariaDB, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "right syntax to use near ')")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4663")]
 		public void Issue4663Test([EFDataSources] string provider)
 		{
@@ -853,7 +853,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
-		[ActiveIssueNew(4666, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Member 'System.String Type1EntityProp' not found in type")]
+		[ActiveIssue(4666, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Member 'System.String Type1EntityProp' not found in type")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
 		public void Issue4666Test([EFDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql)] string provider)
 		{
@@ -921,7 +921,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToListAsyncEF();
 		}
 
-		[ActiveIssueNew(4671, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Issue4671Entity1\" violates not-null constraint")]
+		[ActiveIssue(4671, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Issue4671Entity1\" violates not-null constraint")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test1([EFDataSources] string provider)
 		{
@@ -948,7 +948,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		[ActiveIssueNew(4671, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no matching")]
+		[ActiveIssue(4671, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no matching")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test2([EFDataSources] string provider)
 		{
@@ -1127,7 +1127,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		// PostgreSQL identity-column temp tables are a separate known limitation (#4333), same as Issue4333Test above.
-		[ActiveIssueNew(4333, Details = "PostgreSQL identity-column temp tables", Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
+		[ActiveIssue(4333, Details = "PostgreSQL identity-column temp tables", Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "23502: null value in column \"Id\" of relation \"Identities\" violates not-null constraint")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
 		public void TempTableSurvivesAcrossCommands([EFDataSources] string provider)
 		{

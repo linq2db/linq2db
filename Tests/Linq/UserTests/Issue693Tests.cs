@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -36,7 +36,7 @@ namespace Tests.UserTests
 			A
 		}
 
-		[ActiveIssueNew(5594, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Writing value of 'null' is not supported without explicit mapping to the YdbDbType",
+		[ActiveIssue(5594, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Writing value of 'null' is not supported without explicit mapping to the YdbDbType",
 			Details = "YDB: null parameter requires an explicit type (potential type-propagation bug, not investigated)")]
 		[Test]
 		public void Issue693Test([DataSources(false)] string context)

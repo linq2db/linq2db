@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -1308,7 +1308,7 @@ namespace Tests.xUpdate
 		// its own words - while SQL Server, ClickHouse and MySqlConnector ALSO produce a second, unrelated
 		// failure over the same providers ("Sequence contains no elements", "SourceOrdinal is an invalid value").
 		// The two axes overlap, so no Configuration separates them.
-		[ActiveIssueNew(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
 			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Twenty-two wordings over two overlapping failure modes; see the comment above.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopyAutoOnly(
@@ -1343,7 +1343,7 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssueNew(4615, Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB],
+		[ActiveIssue(4615, Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB],
 			Details = "no-declaration: as BulkCopyAutoOnly - the same empty column list, the same overlapping pair of failure modes.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnly(

@@ -38,7 +38,7 @@ namespace Tests.Linq
 		// the denominator in NULLIF), not a division-by-zero — without it this errors on PostgreSQL (x / 0).
 		// DB2's native RATIO_TO_REPORT yields a DECFLOAT infinity instead, so it never reaches that emulation.
 		[Test]
-		[ActiveIssueNew(5897, Configurations = [TestProvName.AllDB2], ErrorTypeName = "Shouldly.ShouldAssertException",
+		[ActiveIssue(5897, Configurations = [TestProvName.AllDB2], ErrorTypeName = "Shouldly.ShouldAssertException",
 			ErrorMessage = "should satisfy the condition")]
 		public void RatioToReportZeroPartitionSum([SupportsAnalyticFunctionsContext] string context)
 		{

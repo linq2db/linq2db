@@ -36,7 +36,7 @@ namespace Tests
 		public const string ActiveIssueSweepVariable = "L2DB_ACTIVEISSUE_SWEEP";
 
 		/// <summary>
-		/// <c>L2DB_ACTIVEISSUE_SWEEP</c> - report every <see cref="ActiveIssueNewAttribute"/>-governed case as a
+		/// <c>L2DB_ACTIVEISSUE_SWEEP</c> - report every <see cref="ActiveIssueAttribute"/>-governed case as a
 		/// failure carrying an <see cref="ActiveIssueSentinel"/> record of what the test actually did, instead of
 		/// rewriting the outcome. Off by default: it deliberately reddens a run, and exists so a triage sweep can
 		/// harvest the real failures a gate is hiding.

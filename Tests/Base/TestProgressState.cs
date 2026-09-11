@@ -76,7 +76,7 @@ namespace Tests
 		/// <summary>Tests booked as skipped.</summary>
 		public long Skipped   { get { lock (_sync) return _skipped;   } }
 		/// <summary>
-		/// Tests booked as inconclusive — the bucket <see cref="ActiveIssueNewAttribute"/> rewrites a still-failing
+		/// Tests booked as inconclusive — the bucket <see cref="ActiveIssueAttribute"/> rewrites a still-failing
 		/// known issue into. Tracked separately because the platform summary folds it into <c>skipped</c>, which
 		/// makes a known-issue case indistinguishable from a genuinely skipped one.
 		/// </summary>

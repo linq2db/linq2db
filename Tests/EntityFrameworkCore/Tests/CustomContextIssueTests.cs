@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -124,7 +124,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		// Named distinctly from IssueTests.Issue4669Test, which covers a different aspect of the same issue and
 		// is not gated - a FullyQualifiedName~ filter would otherwise select both.
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
+		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
 		public void Issue4669QueryFilterTest([EFDataSources] string provider)
 		{

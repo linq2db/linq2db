@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -159,7 +159,7 @@ namespace Tests.Linq
 			FSharp.OptionTypes.VerifyComplexElementOptionNotScalarized(db);
 		}
 
-		[ActiveIssueNew(ErrorMessage = "MyId option column was not mapped - auto-option-mapping did not recognise the user-registered scalar type",
+		[ActiveIssue(ErrorMessage = "MyId option column was not mapped - auto-option-mapping did not recognise the user-registered scalar type",
 			Details = "no-issue: F# option auto-mapping gate (IsScalarOption) consults MappingSchema.Default, so an option over a type that is scalar only in the user/provider schema is not auto-mapped. #195, which the Description cites, is the closed umbrella issue for F# option support and does not cover this gap.")]
 		[Test(Description = "An option over a type that is scalar only in the user/provider schema (not MappingSchema.Default) must still auto-map (#195)")]
 		public void Option_CustomScalarElementMapped([DataSources] string context)
@@ -445,7 +445,7 @@ namespace Tests.Linq
 
 		// Declared on the expected row set: NUnit renders this assertion's own text as an empty "Assert.That(, )",
 		// so the first line of the message carries nothing to match on.
-		[ActiveIssueNew(5794, ErrorMessage = "Expected: \"1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3\"",
+		[ActiveIssue(5794, ErrorMessage = "Expected: \"1-1-0-2,1-4-0-2,2-0-2-3,2-0-3-3\"",
 			Details = "the trailing join after chained groupJoins silently drops the unmatched rows, leaving two of the four.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5794")]
 		public void Issue5794Test([DataSources] string context)
@@ -454,7 +454,7 @@ namespace Tests.Linq
 			FSharp.Issue1813.Issue5794Test(db);
 		}
 
-		[ActiveIssueNew(5790, ErrorTypeName = "LinqToDB.FSharp.FlattenInvariantException", ErrorMessage = "F# chained group join could not be flattened",
+		[ActiveIssue(5790, ErrorTypeName = "LinqToDB.FSharp.FlattenInvariantException", ErrorMessage = "F# chained group join could not be flattened",
 			Details = "the chained groupJoin's correlated inner sequence defeats the flattener - #5790's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5790")]
 		public void Issue5790Test([DataSources] string context)
@@ -669,11 +669,11 @@ namespace Tests.Linq
 
 		// The option converter's source type is FSharpOption<UserId> while the constant beside the column is
 		// a bare UserId, and ColumnDescriptor.ApplyConversions only bridges that gap for Nullable<>.
-		[ActiveIssueNew(5886, Details = "no-declaration: the bare UserId reaches the driver unconverted and every provider rejects it in its own words - 'not supported for parameters having DataTypeName integer' on Npgsql, 'Failed to convert parameter value from a UserId to a Int32' on SqlClient, an IConvertible cast on System.Data.SQLite and SqlCe, and so on for eight measured providers.")]
-		[ActiveIssueNew(5886, Configuration = TestProvName.AllClickHouse, SkipForLinqService = true, ErrorTypeName = "LinqToDB.LinqToDBException",
+		[ActiveIssue(5886, Details = "no-declaration: the bare UserId reaches the driver unconverted and every provider rejects it in its own words - 'not supported for parameters having DataTypeName integer' on Npgsql, 'Failed to convert parameter value from a UserId to a Int32' on SqlClient, an IConvertible cast on System.Data.SQLite and SqlCe, and so on for eight measured providers.")]
+		[ActiveIssue(5886, Configuration = TestProvName.AllClickHouse, SkipForLinqService = true, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Parameters not supported for ClickHouse provider",
 			Details = "ClickHouse never gets as far as the conversion - it refuses parameters outright - so it is a different failure from the one this issue is about.")]
-		[ActiveIssueNew(5886, SkipForNonLinqService = true, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+		[ActiveIssue(5886, SkipForNonLinqService = true, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
 			ErrorMessage = "Cannot convert value 'UserId 10: System.String' to type",
 			Details = "Remote breaks earlier and identically on all eight, serializing the union for the wire before any provider sees it.")]
 		[Test(Description = "F# option .Value over a single-case-union column compares on the union's wrapped scalar")]

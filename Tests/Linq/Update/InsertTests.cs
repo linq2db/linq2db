@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -25,7 +25,7 @@ namespace Tests.xUpdate
 	public class InsertTests : TestBase
 	{
 #if AZURE
-		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
 			Details = "unvalidated: no-issue: declared from the failure the original gate quoted verbatim, not from a run - it compiles only under Configuration=Azure and the test passes locally on Firebird, so the cause is the CI database's encoding rather than the query. If the quote is stale the new attribute reports the real failure on the next Azure leg, which is the point of declaring it rather than waiving it.")]
 #endif
 		[Test]
@@ -68,7 +68,7 @@ namespace Tests.xUpdate
 		}
 
 #if AZURE
-		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
 			Details = "unvalidated: no-issue: see DistinctInsert1 - same quoted failure, same CI-only encoding cause, declared from the quote rather than from a run.")]
 #endif
 		[Test]
@@ -1513,7 +1513,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssueNew(5595, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Failed to convert type: Struct<'FirstName'",
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Failed to convert type: Struct<'FirstName'",
 			Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		public void Insert16([DataSources] string context)
 		{
@@ -2426,20 +2426,20 @@ namespace Tests.xUpdate
 		// Every named provider does fail, in two groups. Access, Firebird and HANA never reach the database -
 		// linq2db refuses the KeepIdentity + RowByRow combination up front. The rest do reach it and the identity
 		// value collides, each server saying so in its own words.
-		[ActiveIssueNew(4702, Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllSapHana],
+		[ActiveIssue(4702, Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllSapHana],
 			ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode",
 			Details = "no-issue: Update test to test different RetrieveIdentity modes for all providers with sequences")]
-		[ActiveIssueNew(4702, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+		[ActiveIssue(4702, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
 			ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4702Table\"",
 			Details = "no-issue: as above; the identity value is written rather than generated, so the key collides.")]
-		[ActiveIssueNew(4702, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+		[ActiveIssue(4702, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Constraint Error: Duplicate key", Details = "no-issue: as the PostgreSQL half.")]
-		[ActiveIssueNew(4702, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(4702, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "SQL0798N{0}A value cannot be specified for column", Details = "no-issue: as the PostgreSQL half; DB2 rejects the explicit value outright.")]
-		[ActiveIssueNew(4702, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+		[ActiveIssue(4702, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
 			ErrorMessage = "A duplicate value cannot be inserted into a unique index.", Details = "no-issue: as the PostgreSQL half.")]
-		[ActiveIssueNew(4702, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+		[ActiveIssue(4702, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Status: PreconditionFailed", Details = "no-issue: as the PostgreSQL half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
@@ -238,7 +238,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssueNew(Configuration = CurrentProvider, ErrorTypeName = "System.Data.Odbc.OdbcException", ErrorMessage = "cannot use parameter variable",
+		[ActiveIssue(Configuration = CurrentProvider, ErrorTypeName = "System.Data.Odbc.OdbcException", ErrorMessage = "cannot use parameter variable",
 			Details = "no-issue: binary literal regression - the value reaches HANA as a parameter in a position it refuses. The gate's own wording says \"literal\", and the server's complaint is about a parameter variable, so the two agree on the shape even though nothing tracks it.")]
 		public void TestBinaryParameterSelect([IncludeDataSources(CurrentProvider)] string context)
 		{
@@ -653,7 +653,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssueNew(Configuration = CurrentProvider, ErrorTypeName = "System.Data.Odbc.OdbcException", ErrorMessage = "invalid table name",
+		[ActiveIssue(Configuration = CurrentProvider, ErrorTypeName = "System.Data.Odbc.OdbcException", ErrorMessage = "invalid table name",
 			Details = "no-issue: the calculation view this queries is not provisioned in the test database - the server reports it cannot find FIT/CA_PARAM_TEST in schema _SYS_BIC. An environment gap, and the gate's prose says so.")]
 		[Test]
 		public void CalculationViewLinqQuery([IncludeDataSources(CurrentProvider)] string context)

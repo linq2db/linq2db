@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Data.Linq;
 using System.Threading.Tasks;
@@ -448,7 +448,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
 			Details = "no-issue: the Informix image needs locale configuration. Confirmed on CI, where the server reports the same IX000 code-set conversion failure, so this is not local to one machine.")]
 		[Test]
 		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
@@ -458,7 +458,7 @@ namespace Tests.DataProvider
 
 		// Provider-specific bulk copy fails one step earlier than the MultipleRows pair above: the client refuses the
 		// conversion itself rather than the server refusing the code set.
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
 			Details = "no-issue: the Informix image needs locale configuration. Locally this presented as silent row loss, which was briefly read as a product defect and withdrawn; CI shows the client reporting an invalid conversion, which is the same root and not a defect of ours.")]
 		[Test]
 		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
@@ -466,7 +466,7 @@ namespace Tests.DataProvider
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "Code-set conversion function failed due to illegal sequence or invalid value.",
 			Details = "no-issue: the Informix image needs locale configuration. Confirmed on CI, where the server reports the same IX000 code-set conversion failure, so this is not local to one machine.")]
 		[Test]
 		public async Task BulkCopyAllTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
@@ -474,7 +474,7 @@ namespace Tests.DataProvider
 			await BulkCopyAllTypesAsync(context, BulkCopyType.MultipleRows);
 		}
 
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "CLI0102E",
 			Details = "no-issue: as BulkCopyAllTypesProviderSpecific - the client refuses the conversion rather than the server refusing the code set.")]
 		[Test]
 		public async Task BulkCopyAllTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)

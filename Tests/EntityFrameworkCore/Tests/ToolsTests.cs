@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -302,7 +302,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		// These four are EF10-only and EFProviders drops MySqlConnector under #if !NET10_0, so the gate is inert
 		// until MySQL is restored for EF Core 10+. The declared type is #4669's failure as observed on
 		// CustomContextIssueTests; anything else surfaces rather than being absorbed as the known issue.
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
+		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
 		{
@@ -317,7 +317,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
 		}
 
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
+		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_ByKey([EFDataSources] string provider)
 		{
@@ -334,7 +334,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			linq2dbResult.ShouldContain(p => p.Discontinued);
 		}
 
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
+		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_All_StillWorks([EFDataSources] string provider)
 		{
@@ -349,7 +349,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
 		}
 
-		[ActiveIssueNew(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
+		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
 		[Test]
 		public void TestIgnoreQueryFilters_Empty_IsNoOp([EFDataSources] string provider)
 		{
@@ -699,15 +699,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
 		}
 
-		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllSQLite,
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllSQLite,
 			ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "syntax error")]
-		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllPostgreSQL,
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllPostgreSQL,
 			ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42601: syntax error at or near")]
 		// No ErrorTypeName for the MySQL family: the same failure surfaces as MySqlConnector.MySqlException on
 		// net8.0+ and MySql.Data.MySqlClient.MySqlException on net462, so the message is the stable part.
-		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMySqlServer,
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMySqlServer,
 			ErrorMessage = "Every derived table must have its own alias")]
-		[ActiveIssueNew(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMariaDB,
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMariaDB,
 			ErrorMessage = "You have an error in your SQL syntax")]
 		[Test]
 		public async Task TestDeleteFrom([EFDataSources] string provider)

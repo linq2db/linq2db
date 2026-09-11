@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -688,7 +688,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Mismatch type argument #1, type diff: String!=Optional<Utf8>",
 			Details = "no-issue: YDB Re2.PatternFromLike (LIKE UDF) requires a non-nullable String pattern; building it from a nullable column (the parent Name referenced in the child-filter method call) yields Optional<Utf8>. Needs nullable-pattern coercion in the YDB LIKE translation.")]
 		[Test]

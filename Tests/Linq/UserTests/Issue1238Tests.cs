@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -21,7 +21,7 @@ namespace Tests.UserTests
 
 		// PostgreSQL and SQLite disabled because they need real unique constrain on database side
 		// DB2 needs merge api + arraycontext features from 3.0
-		[ActiveIssueNew(1239, Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0418N{0}untyped parameter marker",
+		[ActiveIssue(1239, Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0418N{0}untyped parameter marker",
 			Details = "DB2 rejects the emulated INSERT OR UPDATE: the null key value reaches it as an untyped parameter marker.")]
 		[Test]
 		public void TestInsertOrUpdate([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllDuckDB)] string context)

@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
@@ -20,7 +20,7 @@ namespace Tests.Linq
 			public int ID;
 			public int Value;
 		}
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void IsTemporaryOptionTest(
@@ -44,7 +44,7 @@ namespace Tests.Linq
 			t2.Truncate();
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public async Task IsTemporaryOptionAsyncTest(
@@ -101,7 +101,7 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void IsTemporaryFlagTest([DataSources(false)] string context, [Values(true)] bool firstCall)
@@ -221,7 +221,7 @@ namespace Tests.Linq
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void IsTemporaryMethodTest([DataSources(false, TestProvName.AllMySql)] string context)
@@ -242,7 +242,7 @@ namespace Tests.Linq
 			.ToList();
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void IsTemporaryMethodTest2([DataSources(false, TestProvName.AllMySql)] string context)
@@ -264,7 +264,7 @@ namespace Tests.Linq
 			.ToList();
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void IsTemporaryMethodTest3([DataSources(false, TestProvName.AllMySql)] string context)
@@ -286,7 +286,7 @@ namespace Tests.Linq
 			.ToList();
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void TableOptionsMethodTest([DataSources(false, TestProvName.AllMySql)] string context)
@@ -308,7 +308,7 @@ namespace Tests.Linq
 			.ToList();
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
 			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void FluentMappingTest([DataSources(false, TestProvName.AllMySql)] string context)

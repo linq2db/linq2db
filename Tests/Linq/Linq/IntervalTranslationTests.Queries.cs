@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -371,7 +371,7 @@ namespace Tests.Linq
 		/// <c>Min</c> and <c>Max</c> put the lowered arithmetic inside an aggregate, which is where a provider that
 		/// renders the difference as a multi-part expression is most likely to object.
 		/// </remarks>
-		[ActiveIssueNew(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders],
+		[ActiveIssue(5787, Configurations = [NoTickTotalProviders, UnsupportedDifferenceProviders],
 			ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "There is no method 'AggregateExecute' on type 'LinqToDB.LinqExtensions' that matches the specified arguments",
 			Details = "Every provider that cannot translate the aggregate's body lands on that core defect, so none of them reaches the refusal it would otherwise report: verified on Access, on Informix and on SQL Server 2014-minus, all three giving the same 'no method AggregateExecute' failure in this shape. Asked outside a projection the same aggregates do refuse by name - LinqToDBException, 'could not be converted to SQL' - which is what this would assert once the fallback is fixed.")]
 		[Test]
@@ -437,9 +437,9 @@ namespace Tests.Linq
 		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
 		/// that matched everything or nothing.
 		/// </remarks>
-		[ActiveIssueNew(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer2016Plus, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
+		[ActiveIssue(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer2016Plus, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
 			Details = "no-declaration: " + ContainsSkipsIntervalTranslation + " Measured five ways: an IConvertible cast on SQLite, 'Operand type clash: time is incompatible with bigint' on SQL Server, a DuckDB INTERVAL-vs-BIGINT binder error, a Sybase VARCHAR-to-BIGINT conversion refusal, and 'No mapping exists from DbType Time' on SqlCe.")]
-		[ActiveIssueNew(5776, Configurations = [TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana],
+		[ActiveIssue(5776, Configurations = [TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana],
 			Details = "no-declaration: unvalidated: " + ContainsSkipsIntervalTranslation + " Not measured - these have no container running here.")]
 		[Test]
 		// Access refuses this one through the conversion rather than by member name: unlike its siblings it never
@@ -488,13 +488,13 @@ namespace Tests.Linq
 		// One attribute per provider family: the four reject the mixed set operation in four different places -
 		// DuckDB and YDB while typing the column, DB2 while matching the branches, MySQL only after the value comes
 		// back and fails to parse as a TimeSpan.
-		[ActiveIssueNew(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+		[ActiveIssue(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Conversion Error: Unimplemented type for cast (BIGINT -> INTERVAL)", Details = MixedStorageInASetOperation)]
-		[ActiveIssueNew(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+		[ActiveIssue(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Uncompatible member Duration_1 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
-		[ActiveIssueNew(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
-		[ActiveIssueNew(5796, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.OverflowException",
+		[ActiveIssue(5796, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.OverflowException",
 			ErrorMessage = "The TimeSpan string '36000000000' could not be parsed", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatSurroundsADifferenceWithColumns([DataSources(false)] string context)
@@ -537,11 +537,11 @@ namespace Tests.Linq
 		// AllMySql dropped, unlike the sibling above: MySQL only trips when a difference sits beside ordinary
 		// columns, and this shape - two durations, no plain column - it answers correctly. Measured, all five
 		// MySQL configurations pass.
-		[ActiveIssueNew(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+		[ActiveIssue(5796, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Conversion Error: Unimplemented type for cast (BIGINT -> INTERVAL)", Details = MixedStorageInASetOperation)]
-		[ActiveIssueNew(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+		[ActiveIssue(5796, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Uncompatible member First_2 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
-		[ActiveIssueNew(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+		[ActiveIssue(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatMixesTwoDurationsPerRow([DataSources(false)] string context)
@@ -650,7 +650,7 @@ namespace Tests.Linq
 		/// converted correctly but rendered with the wrong operator is still caught.
 		/// </para>
 		/// </remarks>
-		[ActiveIssueNew(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparisonAgainstAValueUsesTheDeclaredUnit([DataSources] string context)
@@ -705,7 +705,7 @@ namespace Tests.Linq
 		/// CLR agree that nothing is greater than an absent bound - that is the answer being pinned.
 		/// </para>
 		/// </remarks>
-		[ActiveIssueNew(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparisonAgainstAnOptionalValueUsesTheDeclaredUnit([DataSources] string context)
@@ -833,7 +833,7 @@ namespace Tests.Linq
 		/// second place the same question about the column has to be answered the same way.
 		/// </para>
 		/// </remarks>
-		[ActiveIssueNew(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
+		[ActiveIssue(5748, Configuration = TestProvName.AllAccessOdbc, Details = AccessLongParameterOverflow,
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.")]
 		[Test]
 		public void ComparingAnAbsentDurationMatchesClr([DataSources] string context)

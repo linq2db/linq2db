@@ -1,4 +1,4 @@
-﻿extern alias MySqlData;
+extern alias MySqlData;
 
 using System;
 using System.Collections.Generic;
@@ -181,7 +181,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssueNew(Configuration = ProviderName.Sybase, ErrorMessage = "db1.DataProvider.Name",
+		[ActiveIssue(Configuration = ProviderName.Sybase, ErrorMessage = "db1.DataProvider.Name",
 			Details = "no-issue: unvalidated: the provider detector picks the managed provider because there is no separate provider name for the native Sybase one. ProviderName.Sybase is netfx-only, so this case does not exist on net10.0 and the declared failure is read off the assertion rather than harvested.")]
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{

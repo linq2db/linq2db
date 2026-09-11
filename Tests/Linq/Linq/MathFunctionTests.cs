@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -246,7 +246,7 @@ namespace Tests.Linq
 		}
 
 #if AZURE
-		[ActiveIssueNew(Configuration = ProviderName.DB2, Details = "no-declaration: unvalidated: no-issue: compiles only under Configuration=Azure, and the gate's own prose says the failure is a CI one, so nothing was harvested to declare against. Not DB2's inexact ROUND - the sibling Round4Sql fails locally on that while Round4 passes - so whatever CI hits is a different cause. ProviderName.DB2 left as written rather than widened to AllDB2, which would change what the gate covers on evidence nobody has.")]
+		[ActiveIssue(Configuration = ProviderName.DB2, Details = "no-declaration: unvalidated: no-issue: compiles only under Configuration=Azure, and the gate's own prose says the failure is a CI one, so nothing was harvested to declare against. Not DB2's inexact ROUND - the sibling Round4Sql fails locally on that while Round4 passes - so whatever CI hits is a different cause. ProviderName.DB2 left as written rather than widened to AllDB2, which would change what the gate covers on evidence nobody has.")]
 #endif
 		[Test]
 		public void Round4([DataSources] string context)
@@ -257,7 +257,7 @@ namespace Tests.Linq
 				from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
 		}
 
-		[ActiveIssueNew(Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
+		[ActiveIssue(Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
 			Details = "no-issue: DB2's ROUND on a Float is not exact - ROUND(CAST(6.6 AS Float), 5) returns 6.6000000000000005, one ulp above .NET's. Two of the twelve rows differ that way. Not linq2db's banker's-rounding emulation: its midpoint branch is never taken for these values, so the emitted CASE reduces to a plain ROUND.")]
 		[Test]
 		public void Round4Sql([DataSources] string context)
@@ -329,7 +329,7 @@ namespace Tests.Linq
 		}
 
 #if AZURE
-		[ActiveIssueNew(Configuration = ProviderName.DB2, Details = "no-declaration: unvalidated: no-issue: same cohort as Round4 - compiles only under Configuration=Azure, prose says CI-only, nothing harvested. Round11 differs from Round4 only in passing MidpointRounding.ToEven explicitly, which is already the default, so the two are expected to stand or fall together.")]
+		[ActiveIssue(Configuration = ProviderName.DB2, Details = "no-declaration: unvalidated: no-issue: same cohort as Round4 - compiles only under Configuration=Azure, prose says CI-only, nothing harvested. Round11 differs from Round4 only in passing MidpointRounding.ToEven explicitly, which is already the default, so the two are expected to stand or fall together.")]
 #endif
 		[Test]
 		public void Round11([DataSources] string context)

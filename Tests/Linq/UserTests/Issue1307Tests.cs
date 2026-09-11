@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -173,7 +173,7 @@ namespace Tests.UserTests
 
 		const string InformixLocaleError = "Code-set conversion function failed due to illegal sequence or invalid value.";
 
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_Insert([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -187,7 +187,7 @@ namespace Tests.UserTests
 			db.Insert(test);
 		}
 
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_Update([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -201,7 +201,7 @@ namespace Tests.UserTests
 			db.Update(test);
 		}
 
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_InsertOrUpdate([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
@@ -215,7 +215,7 @@ namespace Tests.UserTests
 			db.InsertOrReplace(test);
 		}
 
-		[ActiveIssueNew(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
+		[ActiveIssue(ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = InformixLocaleError, Details = InformixLocale)]
 		[Test]
 		public void Test_Inline([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -124,10 +124,10 @@ namespace Tests.DataProvider
 		}
 
 		// 9.2 and 9.3 never reach the reader: they have no jsonb type at all, so they fail one step earlier.
-		[ActiveIssueNew(ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+		[ActiveIssue(ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
 			ErrorMessage = "Cannot convert value{0}to type 'Tests.DataProvider.PostgreSQLTypeTests+Poco'",
 			Details = "no-issue: Lack of reader support, see comment in TestJSONTypes")]
-		[ActiveIssueNew(Configuration = TestProvName.AllPostgreSQL93Minus, ErrorTypeName = "Npgsql.PostgresException",
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL93Minus, ErrorTypeName = "Npgsql.PostgresException",
 			ErrorMessage = "42704: type \"jsonb\" does not exist",
 			Details = "no-issue: the server has no jsonb type, so the value never reaches the reader the gate above is about.")]
 		[Test]

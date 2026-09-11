@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -170,7 +170,7 @@ namespace Tests.xUpdate
 		}
 
 		// Not the table name: the direct run trips on /local/GrandChild and the remote one on /local/Parent.
-		[ActiveIssueNew(5597, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Conflict with existing key.")]
+		[ActiveIssue(5597, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Conflict with existing key.")]
 		[Test]
 		public void DeleteMany2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -588,23 +588,23 @@ namespace Tests.xUpdate
 		}
 
 		// based on TestDeleteFrom test in EFCore tests project, it should be reenabled after fix
-		// Sybase is governed by the ThrowsForProvider below, which ActiveIssueNew defers to. The rest split by
+		// Sybase is governed by the ThrowsForProvider below, which ActiveIssue defers to. The rest split by
 		// where the delete dies: linq2db refuses the shape outright on the providers that cannot express a
 		// derived table at all, and the others emit SQL their server then rejects.
-		[ActiveIssueNew(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
 			ErrorMessage = "syntax error at or near \"(\"", Details = "no-issue: based on TestDeleteFrom in the EFCore tests; the derived table is emitted where the server will not take one.")]
-		[ActiveIssueNew(Configurations = [TestProvName.AllInformix, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllYdb],
+		[ActiveIssue(Configurations = [TestProvName.AllInformix, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllYdb],
 			ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "Unexpected table type SqlQuery", Details = "no-issue: linq2db refuses the shape itself on these rather than emitting SQL.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
 			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: as the PostgreSQL half.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Parser Error: syntax error at or near \"(\"", Details = "no-issue: as the PostgreSQL half.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
 			Details = "no-issue: as the PostgreSQL half. Type-less because the ODBC and native HANA drivers raise their own.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllClickHouse,
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse,
 			Details = "no-declaration: the three ClickHouse drivers fail two different ways - a server syntax error, and Octonica losing the connection - with no text in common.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllOracle,
+		[ActiveIssue(Configuration = TestProvName.AllOracle,
 			Details = "no-declaration: unvalidated: Oracle has no CI leg, so nothing was harvested for it. Kept rather than dropped - absence from the sweep is not evidence of passing.")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
@@ -635,22 +635,22 @@ namespace Tests.xUpdate
 		}
 
 		// As DeleteFromWithTake, with Sybase declared here because this one carries no ThrowsForProvider.
-		[ActiveIssueNew(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
 			ErrorMessage = "syntax error at or near \"(\"", Details = "no-issue: as DeleteFromWithTake.")]
-		[ActiveIssueNew(Configurations = [TestProvName.AllInformix, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllYdb],
+		[ActiveIssue(Configurations = [TestProvName.AllInformix, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllYdb],
 			ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "Unexpected table type SqlQuery", Details = "no-issue: as DeleteFromWithTake.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
 			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: as DeleteFromWithTake.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Parser Error: syntax error at or near \"(\"", Details = "no-issue: as DeleteFromWithTake.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
 			Details = "no-issue: as DeleteFromWithTake.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
 			ErrorMessage = "cannot use a derived table", Details = "no-issue: ASE rejects the derived table by name.")]
-		[ActiveIssueNew(Configuration = TestProvName.AllClickHouse,
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse,
 			Details = "no-declaration: as DeleteFromWithTake - two failure modes across the three drivers, no common text.")]
-		[ActiveIssueNew(Configurations = [TestProvName.AllOracle, TestProvName.AllYdb],
+		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllYdb],
 			Details = "no-declaration: unvalidated: as DeleteFromWithTake - no Oracle leg, and the YDB leg hung before this file.")]
 		[Test]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)

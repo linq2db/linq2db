@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -819,7 +819,7 @@ namespace Tests.Linq
 		#region Issue 4139
 		// The message opens with a TableContext id that changes every run, so the fragment starts after it. One
 		// cause across all 112 cases, direct and remote.
-		[ActiveIssueNew(4139, ErrorTypeName = "LinqToDB.LinqToDBException",
+		[ActiveIssue(4139, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Issue4139Table).Parent.Parent' is not an association.",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. A nested association reached through a complex column is not recognised as one.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4139")]

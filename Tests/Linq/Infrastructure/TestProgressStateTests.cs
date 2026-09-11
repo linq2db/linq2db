@@ -265,7 +265,7 @@ namespace Tests.Infrastructure
 		{
 			var rec = Recorder.Create();
 
-			// What ActiveIssueNewAttribute does to a known issue that is still failing: the reporter samples the
+			// What ActiveIssueAttribute does to a known issue that is still failing: the reporter samples the
 			// inner failure, the wrapper commits Inconclusive. The platform summary folds that into `skipped`, so
 			// this bucket is the only place a local sweep can count known-issue cases.
 			rec.State.BeginDeferred (Unit);
