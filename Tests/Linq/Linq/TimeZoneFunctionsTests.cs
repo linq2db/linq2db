@@ -388,6 +388,44 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The offset the value carries, read on the server. Unlike a component this is not a reading in some frame -
+		/// it is the frame - so its expectation comes from the round-trip, which is where the offset actually lives.
+		/// </summary>
+		/// <remarks>
+		/// The fixture's <c>+00:40</c> is what makes this worth asserting: a provider answering in whole hours, or
+		/// dropping the minutes half of the offset, would still look right against any offset that has none.
+		/// </remarks>
+		[Test]
+		public void OffsetMatchesTheRoundTrip([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			table.Select(r => Sql.AsSql(r.Dto.Offset)).Single().ShouldBe(stored.Offset);
+			table.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes)).Single().ShouldBe(stored.TotalOffsetMinutes);
+		}
+
+		/// <summary>
+		/// A negative offset, because the two halves are signed separately on at least one provider and adding them
+		/// wrongly is invisible while every offset in the fixture is positive.
+		/// </summary>
+		[Test]
+		public void NegativeOffsetIsReadWithItsSign([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			var value = new DateTimeOffset(2020, 6, 15, 12, 0, 0, TimeSpan.FromMinutes(-90));
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(value));
+
+			var stored = table.Select(r => r.Dto).Single();
+
+			table.Select(r => Sql.AsSql(r.Dto.TotalOffsetMinutes)).Single().ShouldBe(stored.TotalOffsetMinutes);
+			table.Select(r => Sql.AsSql(r.Dto.Offset)).Single().ShouldBe(stored.Offset);
+		}
+
+		/// <summary>
 		/// The constructor is the inverse of <see cref="DateTimeOffset.ToOffset(TimeSpan)"/>: that one re-expresses an
 		/// instant at a given offset, this one declares a zone-less reading to be at one, which is what decides the
 		/// instant.

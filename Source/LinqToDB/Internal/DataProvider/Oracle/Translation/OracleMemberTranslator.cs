@@ -57,6 +57,21 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Oracle gives the offset in two pieces and signs both, so a negative offset of an hour and a half
+			/// arrives as -1 and -30 and the two simply add.
+			/// </summary>
+			protected override ISqlExpression? TranslateDateTimeOffsetOffsetMinutes(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var intType = factory.GetDbDataType(typeof(int));
+
+				ISqlExpression Part(string name)
+					=> factory.Function(intType, "EXTRACT", factory.Expression(intType, name + " FROM {0}", value));
+
+				return factory.Add(intType, factory.Multiply(intType, Part("TIMEZONE_HOUR"), 60), Part("TIMEZONE_MINUTE"));
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;

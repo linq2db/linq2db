@@ -99,6 +99,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterConstructor((DateTime dateTime, TimeSpan offset)
 				=> new DateTimeOffset(dateTime, offset), TranslateDateTimeOffsetConstructor);
 
+			Registration.RegisterMember((DateTimeOffset dt) => dt.Offset,             TranslateDateTimeOffsetOffset);
+			Registration.RegisterMember((DateTimeOffset dt) => dt.TotalOffsetMinutes, TranslateDateTimeOffsetTotalOffsetMinutes);
+
 			Registration.RegisterMember((DateTimeOffset dt) => dt.TimeOfDay, TranslateDateTimeOffsetTruncationToTime);
 
 			Registration.RegisterMethod((DateTimeOffset dt) => Sql.DateAdd(Sql.DateParts.Year, 0, dt), TranslateDateTimeOffsetDateAdd);
@@ -1805,6 +1808,63 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		/// <summary>
+		/// The offset the value carries, in minutes - the shape both dialects that can answer it produce.
+		/// </summary>
+		/// <remarks>
+		/// Unlike a component, this reads the value rather than a wall clock in some frame, so the operand is
+		/// translated as it stands. Where the operand is itself a conversion the answer follows for free: the offset
+		/// of a value converted to a zone is that zone's, which is what the provider reads off the converted value.
+		/// </remarks>
+		ISqlExpression? OffsetInMinutes(ITranslationContext translationContext, Expression? operand, TranslationFlags translationFlags)
+		{
+			var placeholder = TranslateNoRequiredExpression(translationContext, operand, translationFlags);
+			if (placeholder == null)
+				return null;
+
+			return TranslateDateTimeOffsetOffsetMinutes(translationContext, placeholder.Sql);
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.TotalOffsetMinutes"/>.
+		/// </summary>
+		Expression? TranslateDateTimeOffsetTotalOffsetMinutes(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var minutes = OffsetInMinutes(translationContext, memberExpression.Expression, translationFlags);
+			if (minutes == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, minutes, memberExpression);
+		}
+
+		/// <summary>
+		/// <see cref="DateTimeOffset.Offset"/>.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="TimeSpan"/> is carried as a tick count rather than as a time-of-day, which is what lets the
+		/// answer be negative - half the offsets in use are.
+		/// </remarks>
+		Expression? TranslateDateTimeOffsetOffset(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
+		{
+			var minutes = OffsetInMinutes(translationContext, memberExpression.Expression, translationFlags);
+			if (minutes == null)
+				return null;
+
+			var factory  = translationContext.ExpressionFactory;
+			var longType = factory.GetDbDataType(typeof(long));
+			var spanType = factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Int64);
+
+			// The cast is what keeps the multiplication out of 32 bits. Minutes come back as an int, and a dialect
+			// with a fixed int width multiplies in that width whatever the expression is declared to be - SQL Server
+			// answers "arithmetic overflow converting expression to data type int" rather than a wrong number.
+			var ticks = factory.Multiply(
+				spanType,
+				factory.Cast(minutes, longType),
+				factory.Value(longType, TimeSpan.TicksPerMinute));
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, ticks, memberExpression);
+		}
+
+		/// <summary>
 		/// <c>new DateTimeOffset(DateTime, TimeSpan)</c> - a wall clock understood as being at that offset.
 		/// </summary>
 		/// <remarks>
@@ -2397,6 +2457,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var cast    = factory.Cast(dateExpression, factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Time), true);
 
 			return cast;
+		}
+
+		/// <summary>
+		/// The offset a <see cref="DateTimeOffset"/> expression carries, in minutes, signed.
+		/// </summary>
+		/// <remarks>
+		/// Declining is the right answer wherever the provider cannot read an offset off a value, including where it
+		/// discards the offset on write: there the value comes back at <c>+00:00</c> and .NET computes the zero from
+		/// it exactly, so falling back loses nothing and needs no provider to say so.
+		/// </remarks>
+		protected virtual ISqlExpression? TranslateDateTimeOffsetOffsetMinutes(ITranslationContext translationContext, ISqlExpression value)
+		{
+			return null;
 		}
 
 		/// <summary>
