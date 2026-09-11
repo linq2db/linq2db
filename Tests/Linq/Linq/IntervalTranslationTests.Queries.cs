@@ -437,7 +437,7 @@ namespace Tests.Linq
 		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
 		/// that matched everything or nothing.
 		/// </remarks>
-		[ActiveIssueNew(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
+		[ActiveIssueNew(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer2016Plus, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
 			Details = "no-declaration: " + ContainsSkipsIntervalTranslation + " Measured five ways: an IConvertible cast on SQLite, 'Operand type clash: time is incompatible with bigint' on SQL Server, a DuckDB INTERVAL-vs-BIGINT binder error, a Sybase VARCHAR-to-BIGINT conversion refusal, and 'No mapping exists from DbType Time' on SqlCe.")]
 		[ActiveIssueNew(5776, Configurations = [TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana],
 			Details = "no-declaration: unvalidated: " + ContainsSkipsIntervalTranslation + " Not measured - these have no container running here.")]
