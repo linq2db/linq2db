@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -41,6 +42,10 @@ namespace Tests.Linq
 
 		// Adds those that cannot carry an offset but can still answer a reading in a named zone.
 		const string ZoneReadingProviders = ZonedProviders + "," + TestProvName.AllPostgreSQL + "," + TestProvName.AllDuckDB;
+
+		// The complement of ZonedProviders within ZoneReadingProviders: they read in a named zone but have no type
+		// that can hand the converted value back, so anything materialising one is refused.
+		const string OffsetlessProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllDuckDB;
 
 		#endregion
 
@@ -460,6 +465,67 @@ namespace Tests.Linq
 
 			table.Select(r => r.Dto.LocalDateTime).Single().ShouldBe(stored.LocalDateTime);
 			table.Select(r => r.Dto.ToLocalTime()).Single().ShouldBe(stored.ToLocalTime());
+		}
+
+		#endregion
+
+		#region Refusals
+
+		/// <summary>
+		/// The third acceptance outcome: where the value cannot leave the server and the provider genuinely cannot
+		/// express the operation, the refusal is by name rather than a wrong number or a generic failure.
+		/// </summary>
+		/// <remarks>
+		/// A plain projection would be allowed to fall back to .NET - that is the second outcome, and
+		/// <see cref="WallClockMembersAgreeWithTheRoundTrip"/> covers it - so the refusal is only visible where
+		/// falling back is forbidden, which is what <see cref="Sql.AsSql{T}(T)"/> does here.
+		/// <para>
+		/// The same refusal inside a comparison - <c>Where(r =&gt; AtTimeZone(...) == value)</c> - reaches the caller
+		/// as the generic "could not be converted to SQL" with no reason attached. Measured by raising the named
+		/// error unconditionally and reading the whole message rather than its first line: the error is built and its
+		/// text is dropped somewhere on the comparison path, not withheld by the translator. Its own fix, and until
+		/// then this is the position that shows the name.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), OffsetlessProviders, ErrorMessage = ErrorHelper.Error_TimeZone_ZonedResult)]
+		public void AtTimeZoneRefusesToMaterialiseWhereNoTypeCarriesAnOffset([IncludeDataSources(false, OffsetlessProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto, zone))).Single().ShouldBe(Value);
+		}
+
+		/// <summary>
+		/// <c>ToOffset</c> is the same gap reached through a BCL member rather than through <c>Sql.AtTimeZone</c>: it
+		/// answers an offset-carrying value, which these providers have no type for.
+		/// </summary>
+		[Test]
+		[ThrowsCannotBeConverted(OffsetlessProviders)]
+		public void ToOffsetRefusesWhereNoTypeCarriesAnOffset([IncludeDataSources(false, OffsetlessProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			table.Count(r => r.Dto.ToOffset(TimeSpan.FromHours(2)) == Value).ShouldBe(1);
+		}
+
+		/// <summary>
+		/// A provider with no way to read a wall clock out of an instant declines <c>DateTime</c> rather than casting
+		/// to a type its dialect does not have - which on SQLite would answer the UTC reading instead of the value's
+		/// own, and pass for a right answer.
+		/// </summary>
+		[Test]
+		[ThrowsCannotBeConverted(TestProvName.AllSQLite)]
+		public void WallClockRefusedWhereNoZoneSupportExists([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			table.Count(r => r.Dto.DateTime == Value.DateTime).ShouldBe(1);
 		}
 
 		#endregion

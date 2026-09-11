@@ -12,7 +12,6 @@ const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Shift = "Adding a Time
 const LinqToDB.Internal.Common.ErrorHelper.Error_Interval_UndeclaredOperand = "Cannot combine a duration whose unit is declared with one stored through a value converter, which does not say what its number counts. Declare that column with DurationAttribute, or combine the two in .NET." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_LinqToDBQueryExpected = "Linq To DB query expected" -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_Conversion = "Time zone conversion is not supported by current provider." -> string!
-const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_DynamicZone = "Current provider requires a constant time zone; the value supplied is computed at run time." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_ZonedResult = "Producing an offset-carrying value from a time zone conversion is not supported by current provider. Read a component or .DateTime from it instead." -> string!
 LinqToDB.Internal.SqlProvider.IntervalLowering
 LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported.get -> bool

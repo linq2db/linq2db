@@ -86,7 +86,6 @@
 		/// wall-clock reading in a named zone, so the message points at that instead of refusing the whole idea.
 		/// </summary>
 		public const string Error_TimeZone_ZonedResult                            = "Producing an offset-carrying value from a time zone conversion is not supported by current provider. Read a component or .DateTime from it instead.";
-		public const string Error_TimeZone_DynamicZone                            = "Current provider requires a constant time zone; the value supplied is computed at run time.";
 
 		public const string Error_Upsert_MergeLowering_NotSupported =
 			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
