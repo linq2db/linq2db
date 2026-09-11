@@ -531,7 +531,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Resolves the effective <see cref="EagerLoadingStrategy"/> from the build context and global options.
 		/// <see cref="EagerLoadingStrategy.CteUnion"/> is transparently remapped to
-		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs or window functions.
+		/// <see cref="EagerLoadingStrategy.KeyedQuery"/> when the current provider does not support CTEs or window functions,
+		/// and <see cref="EagerLoadingStrategy.Default"/> is remapped the same way when the query is limited and the provider
+		/// declares <see cref="SqlProvider.SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid"/>.
 		/// </summary>
 		EagerLoadingStrategy ResolveStrategy(IBuildContext buildContext)
 		{
@@ -541,6 +543,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (strategy == EagerLoadingStrategy.CteUnion
 				&& (!DataContext.SqlProviderFlags.IsCommonTableExpressionsSupported
 					|| !DataContext.SqlProviderFlags.IsWindowFunctionsSupported))
+			{
+				strategy = EagerLoadingStrategy.KeyedQuery;
+			}
+
+			// The Default strategy joins the parent query into the detail preamble, and such a provider applies a
+			// limited parent's TOP to the whole joined result - so the detail rows come back silently short. The
+			// keyed strategy carries the parent keys instead of joining, which has no such shape.
+			if (strategy == EagerLoadingStrategy.Default
+				&& DataContext.SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid
+				&& buildContext.SelectQuery.IsLimited)
 			{
 				strategy = EagerLoadingStrategy.KeyedQuery;
 			}

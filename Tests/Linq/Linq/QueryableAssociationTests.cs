@@ -1246,6 +1246,10 @@ WHERE
 			public string? Name3 { get; set; }
 		}
 
+		// The child orders by a parent-dependent expression, so the keyed strategy declines
+		// (ComplexParentReference) and the chain falls back to the join-based one, which Sybase cannot
+		// express over a limited parent - https://github.com/linq2db/linq2db/issues/5865.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4596")]
 		public void Issue4596Test([DataSources] string context)
 		{

@@ -157,7 +157,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalKeyedQuery_InlineCollection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -209,7 +209,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalKeyedQuery_MultipleAssociations(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 			var rootDepts = departments.Where(d => d.CompanyId == 1).ToArray();
@@ -260,7 +260,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalKeyedQuery_NestedTwoLevel(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -322,7 +322,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_GlobalKeyedQuery_SingleLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -358,7 +358,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_GlobalKeyedQuery_FirstOrDefault(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -408,7 +408,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentFieldFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -461,7 +461,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_NestedChildProjectsGrandparentFieldFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -531,7 +531,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentFieldVerifyValuesFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -575,7 +575,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_MixedChildrenSomeWithParentFieldsFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -639,7 +639,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ChildProjectsParentExpressionFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -691,7 +691,7 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB Re2.PatternFromLike (LIKE UDF) requires a non-nullable String pattern; building it from a nullable column (the parent Name referenced in the child-filter method call) yields Optional<Utf8>, giving 'Mismatch type argument #1: String != Optional<Utf8>'. Needs nullable-pattern coercion in the YDB LIKE translation.")]
 		[Test]
 		public void Select_KeyedQuery_ChildFilterUsesParentInMethodCallFallback(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -737,7 +737,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Concat_KeyedQuery_EagerLoadDifferentDetails(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var (companies, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -813,7 +813,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_KeyedQuery_SingleLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -840,7 +840,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_InlineCollection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -883,7 +883,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_FilteredChildren(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -924,7 +924,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_MultipleAssociations(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -966,7 +966,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_NestedTwoLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1023,7 +1023,7 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void Select_KeyedQuery_ScalarAndCollection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1072,7 +1072,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_FirstOrDefault_SingleAssociation(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1104,7 +1104,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_EmptyMaster_OnlyOneQuery(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			using var db      = GetDataContext(context);
 			using var tCo     = db.CreateLocalTable<Company>();
@@ -1140,7 +1140,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_KeyedQuery_LoadWithSingleLevel(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1172,7 +1172,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Association_KeyedQuery_LoadWithThenLoad(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1212,7 +1212,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootWithKeyedLoadStrategy_SingleChild(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1253,7 +1253,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void RootWithKeyedLoadStrategy_MultipleChildren(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -1297,7 +1297,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_ToDictionaryInSelect(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1356,7 +1356,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_Single_OneParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1384,7 +1384,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_Single_MultipleParents_Throws(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1413,7 +1413,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_SingleOrDefault_MultipleParents_Throws(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1440,7 +1440,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_SingleAsync_MultipleParents_Throws(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1466,7 +1466,7 @@ namespace Tests.Linq
 
 		[Test]
 		public async Task Select_KeyedQuery_FirstAsync_OneParent(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1499,7 +1499,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void LoadWith_KeyedQuery_MixedOperatorDependency(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1536,7 +1536,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_WideProjection(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, _, _, _) = GenerateHierarchy();
 
@@ -1683,7 +1683,7 @@ namespace Tests.Linq
 		// This test ensures that a captured local variable (minId) reaches the detail query correctly.
 		[Test]
 		public void Select_DefaultStrategy_RuntimeParameterReachesDetailQuery(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (_, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1742,7 +1742,7 @@ namespace Tests.Linq
 		// MAJ001: root marker — global KeyedQuery overridden to Default.
 		[Test]
 		public void WithSeparateLoadStrategy_OverridesGlobalKeyedQuery(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var (companies, departments, employees, _, _) = GenerateHierarchy();
 
@@ -1809,7 +1809,7 @@ namespace Tests.Linq
 		// child collections into a single UNION ALL query (counter == 1 on CTE providers).
 		[Test]
 		public void WithUnionLoadStrategy_OverridesGlobalDefault_QueryCountDistinguishesStrategy(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllFirebirdLess3)] string context)
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllFirebirdLess3)] string context)
 		{
 			var (_, departments, employees, contractors, _) = GenerateHierarchy();
 
@@ -1999,7 +1999,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_CompositeKey_ChildrenAttachedCorrectly(
-			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(true, TestProvName.AllAccess)] string context)
 		{
 			var parents = new[]
 			{
@@ -2164,7 +2164,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Select_KeyedQuery_NullableFK_OrphanChildrenNotAttachedToAnyParent(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+			[DataSources(TestProvName.AllAccess)] string context)
 		{
 			var parents = new[]
 			{
