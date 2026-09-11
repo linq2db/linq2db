@@ -62,10 +62,13 @@ namespace LinqToDB
 			return newTable;
 		}
 
-		abstract class LoadWithQueryableBase<TEntity>(IQueryable<TEntity> query) : IExpressionQuery
+		abstract class LoadWithQueryableBase<TEntity>(IQueryable<TEntity> query) : IExpressionQuery, IQueryableWrapper<TEntity>
 		{
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 			public IQueryable<TEntity> Query { get; } = query;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			IQueryable<TEntity> IQueryableWrapper<TEntity>.WrappedQuery => Query;
 
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 			Expression IExpressionQuery.Expression => Query.Expression;

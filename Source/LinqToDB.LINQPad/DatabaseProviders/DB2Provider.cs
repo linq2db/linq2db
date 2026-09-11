@@ -40,6 +40,20 @@ internal sealed class DB2Provider : DatabaseProviderBase
 #endif
 	}
 
+#if !NETFRAMEWORK
+	/// <summary>
+	/// IBM ships the client as one package per operating system, all of them containing the same
+	/// <c>IBM.Data.Db2</c> assembly, so the right one can only be picked when a connection is used.
+	/// </summary>
+	internal static (string Id, string Version) ClientPackage => Platform.IsWindows
+		? ("Net.IBM.Data.Db2"        , NuGetPackageVersions.Net_IBM_Data_Db2    )
+		: Platform.IsMacOS
+			? ("Net.IBM.Data.Db2-osx", NuGetPackageVersions.Net_IBM_Data_Db2_osx)
+			: ("Net.IBM.Data.Db2-lnx", NuGetPackageVersions.Net_IBM_Data_Db2_lnx);
+
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [ClientPackage];
+#endif
+
 #if NETFRAMEWORK
 	internal static void LoadAssembly()
 	{

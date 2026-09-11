@@ -3,6 +3,8 @@
     "path": "linq2db.slnx",
     "projects": [
       "Source\\CodeGenerators\\CodeGenerators.csproj",
+      "Source\\LinqToDB.Analyzers\\LinqToDB.Analyzers.csproj",
+      "Source\\LinqToDB.Analyzers.CodeFixes\\LinqToDB.Analyzers.CodeFixes.csproj",
       "Source\\LinqToDB\\LinqToDB.csproj",
       "Tests\\Tests.Benchmarks\\linq2db.Benchmarks.csproj"
     ]

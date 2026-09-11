@@ -16,7 +16,8 @@ using NUnit.Framework;
 
 namespace Tests.Exceptions
 {
-	[TestFixture]
+	// mutates the global Configuration.TranslationThreadMaxHopCount (via ThreadHopsScope)
+	[TestFixture, NonParallelizable]
 	public class StackUseTests : TestBase
 	{
 		sealed class Issue5265Table

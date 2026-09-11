@@ -111,7 +111,9 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
 		public void FrameRangeValue([SupportsAnalyticFunctionsContext(
 			// SQL Server does not support RANGE with value offsets
-			TestProvName.AllSqlServer)] string context)
+			TestProvName.AllSqlServer,
+			// PostgreSQL < 11 supports RANGE frames only with UNBOUNDED (value offsets need PG 11+)
+			TestProvName.AllPostgreSQL10Minus)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -255,7 +257,9 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
 		public void FrameRangeValuesShortcut([SupportsAnalyticFunctionsContext(
 			// SQL Server does not support RANGE with value offsets
-			TestProvName.AllSqlServer)] string context)
+			TestProvName.AllSqlServer,
+			// PostgreSQL < 11 supports RANGE frames only with UNBOUNDED (value offsets need PG 11+)
+			TestProvName.AllPostgreSQL10Minus)] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 

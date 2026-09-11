@@ -326,6 +326,143 @@ namespace Tests.xUpdate
 			[PrimaryKey] public int Id { get; set; }
 		}
 
+		[Table]
+		public class WideBulkCopyTable
+		{
+			[PrimaryKey]           public int     Id    { get; set; }
+			[Column(Length = 200)] public string? Value { get; set; }
+		}
+
+		// MaxSqlLengthForBatch is honored in shared BasicBulkCopy code, so it does not need the whole provider
+		// matrix. These three cover every distinct statement shape the splitter has to survive:
+		//   SQLite     - MultipleRowsCopy1, plain INSERT INTO ... VALUES (row), (row) (same path as SqlServer/MySql/ClickHouse)
+		//   PostgreSQL - MultipleRowsCopy1 plus a GetMultipleRowsSuffix (ON CONFLICT DO NOTHING, which only
+		//                ConflictAction.Ignore turns on) that must be re-emitted on every batch.
+		//                9.5+ only: ON CONFLICT does not exist before that, and this test always asks for it
+		//   Firebird   - MultipleRowsCopy2 (SELECT ... UNION ALL) and the only provider with Cast*OnUnionAll,
+		//                where the first row of each batch renders differently from the rest
+		// Oracle has its own coverage in OracleTests.BulkCopyMultipleRowsCrossesSqlLengthLimit.
+		[Test]
+		public void MaxSqlLengthForBatchSplitsStatements(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL95Plus, TestProvName.AllFirebird)] string context,
+			[Values]                                                                                                 bool   useParameters,
+			[Values]                                                                                                 bool   viaDataOptions)
+		{
+			const int maxSqlLength = 4096;
+			const int rowCount     = 1000;
+			const int valueLength  = 200;
+
+			using var _ = new DisableBaseline("generated statement volume is the subject of the test");
+			var       queries = new SaveQueriesInterceptor();
+
+			// the limit is reachable both per-call and connection-wide; cover both entry points
+			using var db = viaDataOptions
+				? GetDataConnection(context, o => o
+					.UseBulkCopyType(BulkCopyType.MultipleRows)
+					.UseBulkCopyMaxSqlLengthForBatch(maxSqlLength)
+					.UseBulkCopyMaxBatchSize(rowCount * 10)
+					.UseBulkCopyUseParameters(useParameters)
+					.UseBulkCopyConflictAction(ConflictAction.Ignore))
+				: GetDataConnection(context);
+
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<WideBulkCopyTable>();
+
+			var rows = Enumerable.Range(1, rowCount)
+				.Select(i => new WideBulkCopyTable { Id = i, Value = new string((char)('a' + i % 26), valueLength) })
+				.ToList();
+
+			// MaxBatchSize is deliberately larger than rowCount, but it is not the only clamp: Firebird's
+			// MaxMultipleRows (254; 127 on 2.5) overrides it inside MultipleRowsCopy2, and with useParameters the
+			// batch is additionally capped at MaxParameters/columns (499 on SQLite).
+			BulkCopyRowsCopied copied;
+
+			if (viaDataOptions)
+			{
+				copied = table.BulkCopy(rows);
+			}
+			else
+			{
+				copied = db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType         = BulkCopyType.MultipleRows,
+						MaxBatchSize         = rowCount * 10,
+						MaxSqlLengthForBatch = maxSqlLength,
+						UseParameters        = useParameters,
+						ConflictAction       = ConflictAction.Ignore,
+					},
+					rows);
+			}
+
+			var loaded = table.OrderBy(r => r.Id).ToArray();
+
+			// the splitter rewinds the overflowing row out of the flushed batch and re-adds it to the next one;
+			// a rewind that leaves the row behind writes it twice, which ConflictAction.Ignore swallows and the
+			// round-trip assertions below cannot see. RowsCopied counts rows emitted into statements, so it can.
+			copied.RowsCopied.ShouldBe(rowCount);
+
+			loaded.Select(r => r.Id).   ShouldBe(rows.Select(r => r.Id));
+			loaded.Select(r => r.Value).ShouldBe(rows.Select(r => r.Value));
+
+			var inserts = queries.Queries
+				.Where(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				.ToList();
+
+			// the option must actually split. Decisive only on PostgreSQL and on SQLite in literal mode - see the
+			// clamps noted above, which already split the batch on the other legs.
+			inserts.Count.ShouldBeGreaterThan(1);
+			// the overflowing row is rewound out of the flushed batch, so a statement exceeds the cap only by the
+			// trailing separator plus any GetMultipleRowsSuffix (~25 chars). The unbounded case is the opposite
+			// one: a single row longer than the cap is emitted whole.
+			inserts.Max(q => q.Length).ShouldBeLessThan(maxSqlLength + 4 * valueLength);
+
+			// PostgreSQL is the only provider here with a GetMultipleRowsSuffix; the suffix is appended after the
+			// length check, so a batch could lose it without any of the assertions above noticing
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL))
+			{
+				inserts.Count(q => q.Contains("ON CONFLICT", StringComparison.OrdinalIgnoreCase)).ShouldBe(inserts.Count);
+			}
+		}
+
+		// MaxParametersForBatch is substituted into the per-row guard, not only into the initial batch-size
+		// estimate, so it overrides the provider limit in both directions. SQLiteBulkCopy.MaxParameters is 998:
+		// without the option 1000 rows x 2 columns close a batch every 499 rows, and raising it packs them into
+		// one statement of 2000 parameters.
+		[Test]
+		public void MaxParametersForBatchRaisesProviderLimit([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			const int rowCount = 1000;
+
+			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
+			using var db = GetDataConnection(context);
+
+			var queries = new SaveQueriesInterceptor();
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<WideBulkCopyTable>();
+
+			var rows = Enumerable.Range(1, rowCount)
+				.Select(i => new WideBulkCopyTable { Id = i, Value = "v" })
+				.ToList();
+
+			var copied = db.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType          = BulkCopyType.MultipleRows,
+					MaxBatchSize          = rowCount * 10,
+					UseParameters         = true,
+					MaxParametersForBatch = 4000,
+				},
+				rows);
+
+			copied.RowsCopied.ShouldBe(rowCount);
+			table.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(rows.Select(r => r.Id));
+
+			queries.Queries.Count(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase)).ShouldBe(1);
+		}
+
 #if SUPPORTS_DATEONLY
 		[Table]
 		public class DateOnlyTable

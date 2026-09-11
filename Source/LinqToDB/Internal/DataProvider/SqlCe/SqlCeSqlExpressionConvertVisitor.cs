@@ -16,6 +16,100 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		protected override bool SupportsNullIf => false;
 
+		/// <summary>
+		/// The divisor carries an explicit <c>BIGINT</c> cast.
+		/// </summary>
+		/// <remarks>
+		/// SQL CE types a literal past the <c>INT</c> range as <c>NUMERIC</c>, which would make the division
+		/// numeric as well - and its <c>%</c> rejects that type outright: "Modulo is not supported on real, float,
+		/// money, and numeric data types". Naming the type keeps the division integral.
+		/// </remarks>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			return Factory.Div(Factory.GetDbDataType(typeof(long)), value, TypedDivisor(divisor));
+		}
+
+		/// <summary>
+		/// The same explicit <c>BIGINT</c> the division needs - SQL CE refuses a remainder on a numeric outright.
+		/// </summary>
+		protected override ISqlExpression TruncateRemainder(ISqlExpression value, long divisor)
+		{
+			return Factory.Mod(Factory.GetDbDataType(typeof(long)), value, TypedDivisor(divisor));
+		}
+
+		ISqlExpression TypedDivisor(long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Cast(Factory.Value(longType, divisor), longType, true);
+		}
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// <c>DATEDIFF</c> counts milliseconds, which is what a SQL CE <c>datetime</c> stores, so the leftover of a
+		/// total is exact.
+		/// </summary>
+		protected override SqlIntervalUnit? FinestDateUnit => SqlIntervalUnit.Millisecond;
+
+		/// <summary>
+		/// The measurement stops at the millisecond as well, so a component asked for below one is identically zero
+		/// rather than merely imprecise - the count it is taken from was rounded to a coarser unit first.
+		/// </summary>
+		/// <remarks>
+		/// Declared for the reason SQLite declares the same limit: declining while the expression is still being
+		/// built leaves the member to .NET, which holds both dates and answers exactly. A stored difference does
+		/// carry a sub-millisecond part here - a <c>datetime</c> counts in three-and-a-third millisecond steps - so
+		/// answering zero would be a wrong number rather than a coarse one.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Millisecond;
+
+		static string? DatePartName(SqlIntervalUnit unit)
+		{
+			return unit switch
+			{
+				SqlIntervalUnit.Day         => "day",
+				SqlIntervalUnit.Hour        => "hour",
+				SqlIntervalUnit.Minute      => "minute",
+				SqlIntervalUnit.Second      => "second",
+				SqlIntervalUnit.Millisecond => "millisecond",
+				_                           => null,
+			};
+		}
+
+		protected override ISqlExpression? ShiftDate(SqlIntervalUnit unit, ISqlExpression amount, ISqlExpression date)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Function(Factory.GetDbDataType(date), "DateAdd",
+					Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), amount, date);
+		}
+
+		/// <summary>
+		/// Boundary counting through <c>DATEDIFF</c>, which the anchor correction turns into elapsed units.
+		/// </summary>
+		/// <remarks>
+		/// SQL CE has no wide form of <c>DATEDIFF</c>, so the count is a 32-bit integer and overflows about 24 days
+		/// apart in milliseconds. Counting whole units keeps the number small for every unit a member asks for, and
+		/// the fine count that fills in a fraction is only ever taken across a window shorter than one of those
+		/// units. Only a total asked for in milliseconds spans the whole range in the fine unit, and there SQL CE
+		/// raises an overflow rather than returning a wrapped value.
+		/// </remarks>
+		protected override ISqlExpression? CountDateBoundaries(SqlIntervalUnit unit, ISqlExpression start, ISqlExpression end)
+		{
+			var part = DatePartName(unit);
+
+			return part == null
+				? null
+				: Factory.Cast(
+					Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff",
+						Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end),
+					Factory.GetDbDataType(typeof(long)), true);
+		}
+
 		#region LIKE
 
 		private static readonly string[] LikeSqlCeCharactersToEscape = { "_", "%" };
@@ -32,7 +126,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				{
 					var exprType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 
-					if (!exprType.SystemType.IsIntegerType)
+					if (!IsRemainderable(exprType))
 					{
 						return new SqlBinaryExpression(
 							typeof(int),
@@ -47,6 +141,22 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		/// <summary>
+		/// Whether SQL CE will take a remainder of the value as it stands - "Modulo is not supported on real, float,
+		/// money, and numeric data types".
+		/// </summary>
+		/// <remarks>
+		/// A column carrying a value converter is read as something its storage does not say - a duration read from a
+		/// <c>BIGINT</c> - and the remainder is taken of what is stored, so the stored type answers here as well as the
+		/// read one. Reading only the latter casts such a column to <c>INT</c>, which a duration in ticks overflows
+		/// after a little over three minutes.
+		/// </remarks>
+		static bool IsRemainderable(DbDataType type)
+		{
+			return type.SystemType.IsIntegerType
+				|| (type.DataType != DataType.Undefined && SqlDataType.GetDataType(type.DataType).Type.SystemType.IsIntegerType);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

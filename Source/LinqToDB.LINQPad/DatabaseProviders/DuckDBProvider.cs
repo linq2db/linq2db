@@ -19,6 +19,8 @@ internal sealed class DuckDBProvider : DatabaseProviderBase
 	{
 	}
 
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("DuckDB.NET.Data.Full", NuGetPackageVersions.DuckDB_NET_Data_Full)];
+
 	public override void ClearAllPools(string providerName)
 	{
 	}

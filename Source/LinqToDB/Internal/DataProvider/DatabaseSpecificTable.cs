@@ -11,7 +11,7 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public abstract class DatabaseSpecificTable<TSource> : ITable<TSource>
+	public abstract class DatabaseSpecificTable<TSource> : ITable<TSource>, IQueryableWrapper<TSource>
 		where TSource : notnull
 	{
 		protected DatabaseSpecificTable(ITable<TSource> table)
@@ -20,6 +20,8 @@ namespace LinqToDB.Internal.DataProvider
 		}
 
 		readonly ITable<TSource> _table;
+
+		IQueryable<TSource> IQueryableWrapper<TSource>.WrappedQuery => _table;
 
 		public IEnumerator<TSource> GetEnumerator()
 		{

@@ -282,6 +282,20 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Declares that current column stores a duration, and in which unit.
+		/// </summary>
+		/// <param name="unit">Unit in which the duration is stored.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		/// <remarks>
+		/// The unit is what makes server-side translation possible: a <c>BIGINT</c> column alone does not say whether
+		/// it holds ticks or seconds. Without this, a <see cref="TimeSpan"/> column keeps its existing meaning.
+		/// </remarks>
+		public PropertyMappingBuilder<TEntity, TProperty> HasDuration(DurationUnit unit)
+		{
+			return HasAttribute(new DurationAttribute(unit));
+		}
+
+		/// <summary>
 		/// Sets custom column create SQL template.
 		/// </summary>
 		/// <param name="format">

@@ -236,5 +236,102 @@ namespace Tests.Linq
 			rows.ShouldBeEmpty();
 		}
 
+		// MIN/MAX over a boolean is folded to 1/0 and the function retyped, because MAX(bit) / max(boolean) is
+		// invalid on most providers. The argument may arrive as a bare predicate or already folded to a value
+		// (a ternary): both have to end up as a single CASE, and the result must still read back as a bool.
+		[Test]
+		public void MinMaxOverBooleanExpression([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var items = db.CreateLocalTable(Item.Data);
+
+			var max        = items.Max(i => i.Id == 2);
+			var min        = items.Min(i => i.Id == 2);
+			var maxTernary = items.Max(i => i.Id == 2 ? true : false);
+			var minTernary = items.Min(i => i.Id == 2 ? true : false);
+
+			max.ShouldBe(Item.Data.Max(i => i.Id == 2));
+			min.ShouldBe(Item.Data.Min(i => i.Id == 2));
+			maxTernary.ShouldBe(max);
+			minTernary.ShouldBe(min);
+
+			// A condition whose branches are themselves boolean is NOT a folded predicate — it still needs the
+			// 1/0 fold, or MAX(boolean) / MAX(bit) reaches the provider.
+			var maxCondition = items.Max(i => i.Id == 2 ? i.Name != null : i.Id > 1);
+			var minCondition = items.Min(i => i.Id == 2 ? i.Name != null : i.Id > 1);
+
+			maxCondition.ShouldBe(Item.Data.Max(i => i.Id == 2 ? i.Name != null : i.Id > 1));
+			minCondition.ShouldBe(Item.Data.Min(i => i.Id == 2 ? i.Name != null : i.Id > 1));
+		}
+
+		[Test]
+		public void MinMaxOverBooleanExpressionGrouped([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var values = db.CreateLocalTable(ItemValue.Data);
+
+			var actual = values
+				.GroupBy(v => v.ItemId)
+				.Select(g => new
+				{
+					ItemId = g.Key,
+					Max    = g.Max(v => v.Value == "10"),
+					Min    = g.Min(v => v.Value == "10"),
+				})
+				.OrderBy(r => r.ItemId)
+				.ToList();
+
+			var expected = ItemValue.Data
+				.GroupBy(v => v.ItemId)
+				.Select(g => new
+				{
+					ItemId = g.Key,
+					Max    = g.Max(v => v.Value == "10"),
+					Min    = g.Min(v => v.Value == "10"),
+				})
+				.OrderBy(r => r.ItemId)
+				.ToList();
+
+			actual.ShouldBe(expected);
+		}
+
+		/// <summary>
+		/// A value added to a sum keeps its own precision rather than the summand column's.
+		/// </summary>
+		/// <remarks>
+		/// The descriptor of the summed column describes how the sum is read back, and for a duration that is what
+		/// carries its unit - but it does not describe how wide the sum is, because a sum outgrows the column it is
+		/// taken from. A literal typed from that descriptor is narrowed to the column's own scale, and one finer than
+		/// the column holds rounds to zero, which makes the addition disappear with nothing raised to report it.
+		/// <para>
+		/// Asserted on ClickHouse because it writes the width into the literal itself - <c>toDecimal64(…, 4)</c>
+		/// against <c>toDecimal128(…, 10)</c> - so the narrowing is visible in the result rather than only in a plan.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ValueBesideASumKeepsItsOwnPrecision([IncludeDataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var sums = db.Types
+				.GroupBy(x => x.ID)
+				.Select(g => g.Sum(x => x.MoneyValue))
+				.ToArray();
+
+			var shifted = db.Types
+				.GroupBy(x => x.ID)
+				.Select(g => g.Sum(x => x.MoneyValue))
+				.Select(s => s + 0.00005m)
+				.ToArray();
+
+			// The addend is smaller than the column's declared scale, so an empty set would satisfy the comparison
+			// below without exercising anything.
+			sums.ShouldNotBeEmpty();
+
+			// Order-insensitive because nothing here is about order: the two queries are executed separately and
+			// grouped without one, and ClickHouse aggregates in parallel, so a positional match would hold by
+			// accident. What is asserted is that the addend keeps its own scale, which is per-value.
+			shifted.ShouldBe(sums.Select(s => s + 0.00005m), ignoreOrder: true);
+		}
 	}
 }

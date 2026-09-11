@@ -25,6 +25,10 @@ internal sealed class MySqlProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("MySqlConnector", NuGetPackageVersions.MySqlConnector)];
+#endif
+
 	public override void ClearAllPools(string providerName)
 	{
 		MySqlConnection.ClearAllPools();

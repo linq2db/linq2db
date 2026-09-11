@@ -13,6 +13,8 @@ using Npgsql;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
@@ -54,13 +56,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
 					_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
 						=> optionsBuilder.UseNpgsql(connectionString, o => o.UseNodaTime()).UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
-#if !NET10_0
 					_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
 #if !NETFRAMEWORK
 						.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
 #else
 						.UseMySql(connectionString),
-#endif
 #endif
 					_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
 					_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),
@@ -377,7 +377,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 
 			using var db  = ctx.CreateLinqToDBConnection(); //should not throw an exception
-			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB(); 
+
+			// the data source carries the connection string, so EF exposes none: the dialect still has to come
+			// from this server and not from whichever PostgreSQL instance the process resolved first
+			db.DataProvider.Name.ShouldBe(DataConnection.GetDataProvider(provider).Name);
+
+			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB();
 		}
 
 		public sealed class Issue4917Context(DbContextOptions options) : DbContext(options)

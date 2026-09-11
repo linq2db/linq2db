@@ -30,7 +30,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return provider switch
 			{
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => new PostgreSQL.Models.IssueModel.IssueContext(options),
-				_ when provider.IsAnyOf(TestProvName.AllMySql) => new Pomelo.Models.IssueModel.IssueContext(options),
+				_ when provider.IsAnyOf(TestProvName.AllMySql) => new MySql.Models.IssueModel.IssueContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSQLite) => new SQLite.Models.IssueModel.IssueContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => new SqlServer.Models.IssueModel.IssueContext(options),
 				_ => throw new InvalidOperationException($"{nameof(CreateProviderContext)} is not implemented for provider {provider}")
@@ -256,11 +256,28 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624")]
 		public void Issue4624Test([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
+
+			var item = new Issue4624Item
+			{
+				Name           = "Issue4624",
+				Entries        =
+				{
+					new Issue4624Entry { EntriesCount = 3 },
+					new Issue4624Entry { EntriesCount = 4 },
+				},
+				ItemTicketDates =
+				{
+					new Issue4624ItemTicketDate { EntryCount = 5 },
+					new Issue4624ItemTicketDate { EntryCount = 6 },
+				},
+			};
+
+			ctx.Issue4624Items.Add(item);
+			ctx.SaveChanges();
 
 			var query = ctx.Issue4624ItemTicketDates.ToLinqToDB()
 				.Where(p => p.Id < 1000)
@@ -277,6 +294,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				});
 
 			var result = query.ToList();
+
+			var row = result.Single(r => r.AclItemId == item.Id);
+
+			row.AclItemName.ShouldBe("Issue4624");
+			row.TotalEntryCount.ShouldBe(7);
+			row.TotalEntryAllowed.Select(x => x.EntryCount).OrderBy(x => x).ToArray().ShouldBe(new[] { 5, 6 });
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/66")]

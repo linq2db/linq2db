@@ -1,2 +1,7 @@
 /Source/**/*.cs  @igor-tkachev @sdanyliv @MaceWindu @viceroypenguin @jods4 @Shane32
 /Source/**/*.ttinclude  @igor-tkachev @sdanyliv @MaceWindu @viceroypenguin @jods4 @Shane32
+
+# CI definitions. A workflow file executes with repository credentials the moment it merges, so it
+# wants the same review bar as source. Neither path had an owner before.
+/Build/  @MaceWindu
+/.github/workflows/  @MaceWindu

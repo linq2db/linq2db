@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -2829,6 +2829,89 @@ namespace Tests.Linq
 				result.Select(_ => _.Counter)
 				);
 
+		}
+
+		[ActiveIssue("Wrong Date manipulations on Oracle 11 (ORA-01841), and DuckDB does not type a bare date parameter inside EXTRACT", Configurations = [TestProvName.AllOracle11, TestProvName.AllDuckDB])]
+		[Test]
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void AggressiveCteOptimization([RecursiveCteContextSource(TestProvName.AllPostgreSQL93Minus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var dateFrom = TestData.DateTime.Date;
+			var dateTo   = dateFrom.AddDays(10);
+
+			var cte = db.GetCte<DateRangeHelper>(
+				x =>
+				   db
+					   .SelectQuery(() => new DateRangeHelper { Counter = 1, Date = dateFrom.Date })
+					   .Concat
+					   (
+						   x
+							   .Select(r => new DateRangeHelper { Counter = r.Counter + 1, Date = r.Date.AddDays(1) })
+							   .Where(r => r.Date < dateTo)
+					   ));
+
+			var subQuery = cte.Select(r => new
+			{
+				Date  = r.Date,
+				Year  = Sql.MakeDateTime(r.Date.Year,            1, 1),
+				Month = Sql.MakeDateTime(r.Date.Year, r.Date.Month, 1)
+			});
+
+			AreEqual(
+				Enumerable.Range(0, 10)
+					.Select(i => dateFrom.AddDays(i))
+					.Select(d => new
+					{
+						Date  = d.Date,
+						Year  = Sql.MakeDateTime(d.Date.Year,            1, 1),
+						Month = Sql.MakeDateTime(d.Date.Year, d.Date.Month, 1)
+					}),
+				subQuery
+				);
+
+		}
+
+		// AggressiveCteOptimization derives Year and Month from the same CTE column. This one reads two
+		// distinct ones, so folding the wrapper into the union has to substitute both per leg.
+		[ActiveIssue("Wrong Date manipulations on Oracle 11 (ORA-01841), and DuckDB does not type a bare date parameter inside EXTRACT", Configurations = [TestProvName.AllOracle11, TestProvName.AllDuckDB])]
+		[Test]
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void AggressiveCteOptimizationTwoColumns([RecursiveCteContextSource(TestProvName.AllPostgreSQL93Minus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var dateFrom = TestData.DateTime.Date;
+			var dateTo   = dateFrom.AddDays(10);
+
+			var cte = db.GetCte<DateRangeHelper>(
+				x =>
+				   db
+					   .SelectQuery(() => new DateRangeHelper { Counter = 1, Date = dateFrom.Date })
+					   .Concat
+					   (
+						   x
+							   .Select(r => new DateRangeHelper { Counter = r.Counter + 1, Date = r.Date.AddDays(1) })
+							   .Where(r => r.Date < dateTo)
+					   ));
+
+			var subQuery = cte.Select(r => new
+			{
+				Date  = r.Date,
+				Mixed = Sql.MakeDateTime(r.Date.Year, r.Date.Month, r.Counter)
+			});
+
+			AreEqual(
+				Enumerable.Range(0, 10)
+					.Select(i => new { Date = dateFrom.AddDays(i), Counter = i + 1 })
+					.Select(d => new
+					{
+						Date  = d.Date,
+						Mixed = Sql.MakeDateTime(d.Date.Year, d.Date.Month, d.Counter)
+					}),
+				subQuery
+				);
 		}
 
 		[Test]

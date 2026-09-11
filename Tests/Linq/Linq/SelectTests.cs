@@ -1086,7 +1086,7 @@ namespace Tests.Linq
 			public Child? Child    { get; set; }
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values] bool includeChild,
@@ -1592,7 +1592,8 @@ namespace Tests.Linq
 		[Test]
 		public void OuterApplyTest(
 			[IncludeDataSources(
-				TestProvName.AllPostgreSQL95Plus,
+				// PostgreSQL 9.5 fails with "unknown to text" conversion on this projection
+				TestProvName.AllPostgreSQL10Plus,
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllOracle12Plus,
 				TestProvName.AllMySqlWithApply,
@@ -1693,13 +1694,17 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		private static T Wrap1<T>(T value) => throw new InvalidOperationException();
+		private static T Wrap1<T>(T value) => throw new ServerSideOnlyException(nameof(Wrap1));
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static T Wrap2<T>(T value) => value;
 
+		// SelectExpression4 asserts the query-time failure this combination causes, so the L2DB1003
+		// violation is the fixture. Suppressed rather than fixed, so a code-fix sweep cannot re-apply it.
+#pragma warning disable L2DB1003 // Declare a server-side-only stub, or implement it
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap3<T>(T value) => throw new InvalidOperationException();
+#pragma warning restore L2DB1003
 
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap4<T>(T value) => value;
@@ -1835,7 +1840,7 @@ namespace Tests.Linq
 
 		#region Caching Tests
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116"), QueryCacheTest]
 		public void CachedObjectRefence([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

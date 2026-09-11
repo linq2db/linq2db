@@ -1,0 +1,8 @@
+{
+	"NET90.Azure": {
+		// One ACE provider per run - see the Access_ACE_* entries in test-matrix.yml for why they are split.
+		"Providers": [
+			"Access.Ace.Odbc"
+		]
+	}
+}

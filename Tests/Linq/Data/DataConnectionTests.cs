@@ -1432,7 +1432,8 @@ namespace Tests.Data
 #endif
 		#endregion
 
-		[Test]
+		// NonParallelizable: asserts the process-global mapping-schema cache returns the same instance for equal inputs; concurrent cache pressure can evict between the two contexts.
+		[Test, NonParallelizable]
 		public void MappingSchemaReuse([DataSources] string context)
 		{
 			using var cn1 = GetDataContext(context);
@@ -1441,7 +1442,8 @@ namespace Tests.Data
 			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 
-		[Test]
+		// NonParallelizable: asserts the process-global mapping-schema cache returns the same instance for equal inputs; concurrent cache pressure can evict between the two contexts.
+		[Test, NonParallelizable]
 		public void CustomMappingSchemaCaching([DataSources] string context)
 		{
 			var ms = new MappingSchema();

@@ -97,7 +97,7 @@ namespace Tests.DataProvider
 		[Sql.Expression("CAST({0} as {1})", ServerSideOnly = true)]
 		static TValue Cast<TValue>(TValue value, string type)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Cast));
 		}
 
 		static void TestNumeric<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
@@ -495,27 +495,31 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateDatabase([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			// per-context database file so the two SQLite providers don't collide on a shared file under parallel execution
+			var dbName = $"TestDatabase_{context}";
+			var dbFile = $"{dbName}.sqlite";
+
 			try
 			{
-				SQLiteTools.DropDatabase("TestDatabase");
+				SQLiteTools.DropDatabase(dbName);
 			}
 			catch
 			{
 			}
 
-			SQLiteTools.CreateDatabase("TestDatabase");
-			Assert.That(File.Exists ("TestDatabase.sqlite"), Is.True);
+			SQLiteTools.CreateDatabase(dbName);
+			Assert.That(File.Exists (dbFile), Is.True);
 
 			var provider = context.IsAnyOf(TestProvName.AllSQLiteClassic) ? SQLiteProvider.System : SQLiteProvider.Microsoft;
-			using (var db = new DataConnection(new DataOptions().UseConnectionString(SQLiteTools.GetDataProvider(provider), "Data Source=TestDatabase.sqlite")))
+			using (var db = new DataConnection(new DataOptions().UseConnectionString(SQLiteTools.GetDataProvider(provider), $"Data Source={dbFile}")))
 			{
 				db.CreateTable<CreateTableTest>();
 				db.DropTable  <CreateTableTest>();
 			}
 
 			SQLiteTools.ClearAllPools(provider);
-			SQLiteTools.DropDatabase ("TestDatabase");
-			Assert.That(File.Exists  ("TestDatabase.sqlite"), Is.False);
+			SQLiteTools.DropDatabase (dbName);
+			Assert.That(File.Exists  (dbFile), Is.False);
 		}
 
 		[Test]
@@ -724,14 +728,13 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDbVersion([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			// Both arms currently resolve to the same engine version: TestsInitialization points the native
-			// runtimes folder (PreLoadSQLite_BaseDirectory) at SourceGear.sqlite3's e_sqlite3, so
-			// Microsoft.Data.Sqlite loads that binary instead of its own SQLitePCLRaw bundle. They separate
-			// again if MDS moves to its own runtimes nuget — see this test's [Explicit] reason.
+			// Both arms resolve to the same engine because both clients are SQLitePCLRaw-based and share one
+			// native package (SQLitePCLRaw.lib.e_sqlite3). They separate again if MDS moves to its own
+			// runtimes nuget — see this test's [Explicit] reason.
 			var expectedVersion = context switch
 			{
-				ProviderName.SQLiteClassic or TestProvName.SQLiteClassicMiniProfilerMapped or TestProvName.SQLiteClassicMiniProfilerUnmapped => "3.53.4",
-				ProviderName.SQLiteMS => "3.53.4",
+				ProviderName.SQLiteClassic or TestProvName.SQLiteClassicMiniProfilerMapped or TestProvName.SQLiteClassicMiniProfilerUnmapped => "3.53.3",
+				ProviderName.SQLiteMS => "3.53.3",
 
 				_ => throw new InvalidOperationException(),
 			};
@@ -1050,7 +1053,7 @@ DROP TABLE SecondTable;
 		#endregion
 
 		[Sql.TableFunction("pragma_table_info")]
-		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new InvalidOperationException();
+		static ITable<PragmaTableInfoTable> PragmaTableInfo(string tableName) => throw new ServerSideOnlyException(nameof(PragmaTableInfo));
 
 		sealed class PragmaTableInfoTable
 		{

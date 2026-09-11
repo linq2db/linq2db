@@ -1,0 +1,8 @@
+{
+	"NET90.Azure": {
+		"Providers": [
+			"YDB",
+			"Sybase.Managed"
+		]
+	}
+}

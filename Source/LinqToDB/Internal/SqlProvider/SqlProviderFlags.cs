@@ -461,6 +461,19 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool SupportsBooleanType { get; set; } = true;
 
 		/// <summary>
+		/// Indicates that provider accepts a predicate directly as a value operand of an aggregate or window
+		/// function — as a function argument (<c>COUNT(x = 1)</c>) or as an <c>OVER (PARTITION BY ...)</c> key.
+		/// This is narrower than <see cref="SupportsBooleanType"/>: a provider may have a usable boolean type,
+		/// and accept a predicate as a value in the select list, <c>GROUP BY</c> and <c>ORDER BY</c>, yet still
+		/// reject it in these positions (Informix). When <see langword="false"/>, such a predicate is folded into
+		/// a <c>CASE</c> expression. It does not affect window <c>ORDER BY</c> / <c>WITHIN GROUP</c> / <c>KEEP</c>
+		/// keys, which follow <see cref="SupportsBooleanType"/> only.
+		/// Default value: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 79), DefaultValue(true)]
+		public bool SupportsPredicateInFunctionValuePosition { get; set; } = true;
+
+		/// <summary>
 		/// Provider supports nested joins
 		/// <code>
 		/// A JOIN (B JOIN C ON ?) ON ?
@@ -552,7 +565,11 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsOrderBySubQuerySupported { get; set; } = true;
 
 		/// <summary>
-		/// When disabled, all conditions from INNER JOIN ON moved to WHERE except conjunction of equality predicates.
+		/// When disabled, an AND-joined ON clause has each predicate that is not a plain equality of two non-literal
+		/// expressions moved out of ON: for an INNER JOIN it goes to WHERE; for a LEFT JOIN one depending only on the
+		/// outer side goes to WHERE, one depending only on the joined subtree is pushed into a wrapped derived table,
+		/// and one referencing both join inputs has to stay in ON. An ON clause that is itself a disjunction is left
+		/// untouched.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
 		/// -- with flag:
@@ -701,6 +718,37 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 75)]
 		public bool IsDistinctOnSupported { get; set; }
 
+		/// <summary>
+		/// Provider's <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> returns the new (post-update) values as a result set of
+		/// the rows the statement actually updated — so an <c>UPDATE</c> matching no row returns no rows.
+		/// <para>
+		/// This is narrower than "the provider has some form of UPDATE output". A provider whose <c>RETURNING</c> is a
+		/// singleton, yielding one record whatever the statement matched, does <b>not</b> qualify: a zero-row update is
+		/// then indistinguishable from a one-row update. Firebird before v5 behaves that way and is therefore
+		/// <see langword="false"/> here even though it can return new values for a matched row.
+		/// </para>
+		/// <para>
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads to read the regenerated optimistic-lock value back in the same statement, and to take the number
+		/// of returned rows as the affected-row count. When <see langword="false"/> the value is read with a follow-up
+		/// <c>SELECT</c> instead, gated on <see cref="IsAffectedRowsCountSupported"/>.
+		/// </para>
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 77), DefaultValue(false)]
+		public bool IsUpdateOutputRowsSupported { get; set; }
+
+		/// <summary>
+		/// Provider reports the number of affected rows from <c>INSERT</c> / <c>UPDATE</c> / <c>DELETE</c> / <c>MERGE</c> execution.
+		/// Used by <see cref="LinqToDB.Concurrency.ConcurrencyExtensions"/>'s <c>UpdateOptimisticWithRefresh</c>
+		/// overloads: when <see langword="false"/> the affected-row count is unreliable, so — unless the provider
+		/// also supports UPDATE <c>OUTPUT</c> / <c>RETURNING</c> — the optimistic-concurrency result cannot be
+		/// reported and the operation throws.
+		/// Default: <see langword="true"/>.
+		/// </summary>
+		[DataMember(Order = 78), DefaultValue(true)]
+		public bool IsAffectedRowsCountSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -716,7 +764,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (TakeHintsSupported == null)
 				return false;
 
-			return (TakeHintsSupported.Value & hints) == hints;
+			return TakeHintsSupported.Value.HasFlag(hints);
 		}
 
 		#region Equality
@@ -775,6 +823,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsPredicatesComparison                         .GetHashCode()
 				^ SupportsBooleanType                                  .GetHashCode()
+				^ SupportsPredicateInFunctionValuePosition             .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
@@ -800,6 +849,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
+				^ IsUpdateOutputRowsSupported                          .GetHashCode()
+				^ IsAffectedRowsCountSupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -856,6 +907,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
 				&& SupportsBooleanType                                   == other.SupportsBooleanType
+				&& SupportsPredicateInFunctionValuePosition              == other.SupportsPredicateInFunctionValuePosition
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
@@ -881,6 +933,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
+				&& IsUpdateOutputRowsSupported                           == other.IsUpdateOutputRowsSupported
+				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

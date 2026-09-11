@@ -62,6 +62,47 @@ namespace Tests.Linq
 				_ = query.ToList();
 		}
 
+		// ORDER BY and PARTITION BY are value positions: a boolean expression has to be folded into a value, since
+		// providers without a native boolean type reject a bare predicate there.
+		[Test]
+		public void RankWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
+
+			var query = table
+				.Select(x => new
+				{
+					Entity = x,
+					rn1    = Sql.Window.Rank(f => f.OrderBy(x.IntValue == 20)),
+					rn2    = Sql.Window.Rank(f => f.PartitionBy(x.CategoryId).OrderBy(x.IntValue == 20).ThenBy(x.Id)),
+					rn3    = Sql.Window.Rank(f => f.PartitionBy(x.CategoryId).OrderByDesc(x.IntValue == 20).ThenBy(x.Id)),
+					rn4    = Sql.Window.Rank(f => f.OrderBy(x.NullableIntValue != null).ThenBy(x.Id))
+				})
+				.OrderBy(x => x.Entity.Id);
+
+				_ = query.ToList();
+		}
+
+		[Test]
+		public void RankWithBooleanPartition([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
+
+			var query = table
+				.Select(x => new
+				{
+					Entity = x,
+					rn1    = Sql.Window.Rank(f => f.PartitionBy(x.IntValue == 20).OrderBy(x.Id)),
+					rn2    = Sql.Window.Rank(f => f.PartitionBy(x.CategoryId, x.IntValue == 20).OrderBy(x.Id)),
+					rn3    = Sql.Window.Rank(f => f.PartitionBy(x.NullableIntValue != null).OrderBy(x.Id))
+				})
+				.OrderBy(x => x.Entity.Id);
+
+				_ = query.ToList();
+		}
+
 		[Test]
 		public void RankWithNulls([SupportsAnalyticFunctionsContext] string context)
 		{

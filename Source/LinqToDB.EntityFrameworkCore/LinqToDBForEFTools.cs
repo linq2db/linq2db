@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 using JetBrains.Annotations;
 
@@ -93,24 +94,29 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				ArgumentNullException.ThrowIfNull(value);
 				_implementation = value;
-				_metadataReaders.Clear();
+				_metadataReaders = new();
 				_mappingSchemas .Clear();
 				_defaultMetadataReader = new Lazy<IMetadataReader?>(() => Implementation.CreateMetadataReader(null, null));
 			}
 		}
 
-		static readonly ConcurrentDictionary<IModel, IMetadataReader?> _metadataReaders = new();
+		// Weak-keyed: a cached reader must not keep its model alive. A configuration that defeats EF's
+		// model caching — EnableServiceProviderCaching(false), or a freshly built model passed to
+		// UseModel per context — would otherwise add one never-evicted entry per DbContext instance.
+		// Reassigned rather than cleared because ConditionalWeakTable.Clear() is not available on the
+		// netstandard2.0 / net462 builds.
+		static ConditionalWeakTable<IModel, IMetadataReader> _metadataReaders = new();
 
 		static Lazy<IMetadataReader?> _defaultMetadataReader;
 
-		static readonly ConcurrentDictionary<(object ModelKey, DataOptions? DataOptions, bool Tracking), MappingSchema> _mappingSchemas = new();
+		static readonly ConcurrentDictionary<(object ModelKey, object ServiceKey, DataOptions? DataOptions, bool Tracking), MappingSchema> _mappingSchemas = new();
 
 		/// <summary>
 		/// Clears internal caches
 		/// </summary>
 		public static void ClearCaches()
 		{
-			_metadataReaders.Clear();
+			_metadataReaders = new();
 			_mappingSchemas .Clear();
 			Implementation.ClearCaches();
 			Query.ClearCaches();
@@ -136,7 +142,16 @@ namespace LinqToDB.EntityFrameworkCore
 			if (model == null)
 				return _defaultMetadataReader.Value;
 
-			return _metadataReaders.GetOrAdd(model, static (m, a) => Implementation.CreateMetadataReader(m, a), accessor);
+			var readers = _metadataReaders;
+
+			if (readers.TryGetValue(model, out var reader))
+				return reader;
+
+			// A null reader is not cached: ConditionalWeakTable cannot store one, and the shipped
+			// implementation never returns null.
+			var created = Implementation.CreateMetadataReader(model, accessor);
+
+			return created == null ? null : readers.GetValue(model, _ => created);
 		}
 
 		/// <summary>
@@ -230,9 +245,9 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			// Share one mapping schema — and therefore one ConfigurationID — across DbContext
 			// instances of the same model, keyed on EF's own model-cache key. A fresh IModel per
-			// context (pooled contexts, EnableServiceProviderCaching(false), multiple internal
-			// service providers) would otherwise yield a fresh schema identity and the linq2db
-			// query cache would miss on every context.
+			// context (EnableServiceProviderCaching(false), or any configuration that defeats EF's
+			// model caching) would otherwise yield a fresh schema identity and the linq2db query
+			// cache would miss on every context.
 			if (accessor is DbContext context)
 			{
 				var factory = context.GetService<IModelCacheKeyFactory>();
@@ -243,12 +258,52 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 
 				return _mappingSchemas.GetOrAdd(
-					(modelKey, dataOptions, EnableChangeTracker),
+					(modelKey, GetServiceKey(context), dataOptions, EnableChangeTracker),
 					static (_, state) => BuildMappingSchema(state.model, state.accessor, state.dataOptions),
 					(model, accessor, dataOptions));
 			}
 
 			return BuildMappingSchema(model, accessor, dataOptions);
+		}
+
+		/// <summary>
+		/// Identifies the set of EF services the model and its type mappings were built from. The
+		/// model-cache key alone is not enough: it is unique only within one EF internal service
+		/// provider (EF's default key is the context type), while our schema cache is process-wide.
+		/// Without this component one context type used with two providers — or with two
+		/// service-affecting configurations — would share a single schema, and the first model
+		/// discovered would win for all of them.
+		/// </summary>
+		static object GetServiceKey(DbContext context)
+		{
+			var options = GetContextOptions(context);
+
+			if (options == null)
+				return context.GetType();
+
+#if EF31
+			// EF 3.1 has no DbContextOptions equality, so reproduce the key its own
+			// ServiceProviderCache uses (extension types + per-extension service-provider hash).
+			// The ordered type-name list is added so different providers can never collide on the
+			// aggregated hash alone.
+			return (
+				string.Join(",", options.Extensions.Select(static e => e.GetType().FullName).OrderBy(static n => n, StringComparer.Ordinal)),
+				options.Extensions
+					.OrderBy(static e => e.GetType().Name, StringComparer.Ordinal)
+					.Aggregate(0L, static (hash, e) => (hash * 397) ^ ((long)e.GetType().GetHashCode() * 397) ^ e.Info.GetServiceProviderHashCode()));
+#else
+			// DbContextOptions implements Equals/GetHashCode over exactly those options that
+			// require a distinct EF internal service provider (DbContextOptionsExtensionInfo's
+			// ShouldUseSameServiceProvider / GetServiceProviderHashCode) — the same key EF's own
+			// ServiceProviderCache uses. Being content-based, equivalent-but-distinct options
+			// objects still map to one schema, which is what the sharing above relies on.
+			// The application service provider takes no part in that equality, and this key lives for
+			// the process lifetime, so drop it first — as EF's own ServiceProviderCache does.
+			return options.FindExtension<CoreOptionsExtension>() is { ApplicationServiceProvider: not null } coreExtension
+				&& options is DbContextOptions contextOptions
+					? contextOptions.WithExtension(coreExtension.WithApplicationServiceProvider(null))
+					: options;
+#endif
 		}
 
 		static MappingSchema BuildMappingSchema(IModel model, IInfrastructure<IServiceProvider>? accessor, DataOptions? dataOptions)

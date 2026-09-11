@@ -1838,7 +1838,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022")]
+		// mutates the global Configuration.Sql.AssociationAlias
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022"), NonParallelizable]
 		public void TestAssociationAliasEscaping([DataSources(false)] string context)
 		{
 			var old = LinqToDB.Common.Configuration.Sql.AssociationAlias;
@@ -2141,7 +2142,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ChildPredicateMethodImpl))]
 		public static bool ChildPredicateMethod(this Child child)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(ChildPredicateMethod));
 		}
 
 		static Expression<Func<Child,bool>> ChildPredicateMethodImpl()
@@ -2190,7 +2191,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ChildrenExpression))]
 		public static IQueryable<AssociationTests.ComplexChild> Children(this AssociationTests.ComplexParent p)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Children));
 		}
 
 		private static Expression<Func<AssociationTests.ComplexParent, IQueryable<AssociationTests.ComplexChild>>> ChildrenExpression()

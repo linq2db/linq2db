@@ -484,6 +484,11 @@ namespace Tests.DataProvider
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// AllTypes.ID is GENERATED ALWAYS, so the IDs set below are discarded and the server assigns
+			// its own - clean up by the high-water mark rather than by a value we think we inserted.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				conn.BulkCopy(
@@ -521,13 +526,17 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				conn.GetTable<ALLTYPE>().Delete(p => p.ID > maxId);
 			}
 		}
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// see BulkCopyTest: the supplied IDs are discarded, so clean up by the high-water mark.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				await conn.BulkCopyAsync(
@@ -564,7 +573,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.SMALLINTDATATYPE >= 5000);
+				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.ID > maxId);
 			}
 		}
 
@@ -952,7 +961,7 @@ namespace Tests.DataProvider
 		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, PreferServerSide = true)]
 		private static bool Compare(DB2TimeStamp left, DB2TimeStamp right)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Compare));
 		}
 
 		[Table]
@@ -1038,19 +1047,19 @@ namespace Tests.DataProvider
 			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunction(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunction));
 			}
 
 			[Sql.Function("TEST_MODULE1.TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP1(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP1));
 			}
 
 			[Sql.Function("TEST_MODULE2.TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP2(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP2));
 			}
 
 			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
