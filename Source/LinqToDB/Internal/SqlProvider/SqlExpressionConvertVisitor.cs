@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Common;
@@ -1529,7 +1530,8 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!unwrapped.TryEvaluateExpression(EvaluationContext, out var evaluated) || evaluated is not TimeSpan offset)
 				return false;
 
-			text = FormattableString.Invariant(
+			text = string.Create(
+				CultureInfo.InvariantCulture,
 				$"{(offset < TimeSpan.Zero ? '-' : '+')}{Math.Abs(offset.Hours):00}:{Math.Abs(offset.Minutes):00}");
 
 			return true;
