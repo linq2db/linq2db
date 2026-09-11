@@ -359,7 +359,7 @@ namespace LinqToDB.Linq.Translation
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
 						{
-							TryParseOrderByMethod(mc, ref orderByList, out var next);
+							_ = TryParseOrderByMethod(mc, ref orderByList, out var next);
 							buildBody = next!;
 							break;
 						}

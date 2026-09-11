@@ -2376,7 +2376,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		// A window function projected by one Select and then used inside another window's PARTITION BY. The inner
 		// value is computed over the inner query's row set, so it has to reach the outer window as a column of a
 		// subquery - inlined, it nests one window function inside another, which no provider accepts.

@@ -230,7 +230,7 @@ namespace LinqToDB.DataModel
 		/// <param name="methodType">Type of find method to generate.</param>
 		private static void BuildFindExtension(IDataModelGenerationContext context, EntityModel model, FindTypes methodType)
 		{
-			if ((model.FindExtensions & methodType) != methodType)
+			if (!model.FindExtensions.HasFlag(methodType))
 				return;
 
 			var async     = methodType.HasFlag(FindTypes.Async       );

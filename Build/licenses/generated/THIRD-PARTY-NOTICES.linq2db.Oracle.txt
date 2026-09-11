@@ -27,7 +27,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-3. Oracle.ManagedDataAccess.Core 23.26.300
+3. Oracle.ManagedDataAccess.Core 23.26.301
    https://www.oracle.com/database/technologies/appdev/dotnet.html
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [3]
    Copyright © 2026, Oracle and/or its affiliates
