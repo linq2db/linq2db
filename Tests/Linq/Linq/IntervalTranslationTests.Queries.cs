@@ -437,9 +437,14 @@ namespace Tests.Linq
 		/// wanted and the unwanted durations are both present, which is what tells a working conversion from one
 		/// that matched everything or nothing.
 		/// </remarks>
-		[ActiveIssue(5776, Details = ContainsSkipsIntervalTranslation)]
+		[ActiveIssueNew(5776, Configurations = [TestProvName.AllSQLite, TestProvName.AllSqlServer, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDuckDB],
+			Details = "no-declaration: " + ContainsSkipsIntervalTranslation + " Measured five ways: an IConvertible cast on SQLite, 'Operand type clash: time is incompatible with bigint' on SQL Server, a DuckDB INTERVAL-vs-BIGINT binder error, a Sybase VARCHAR-to-BIGINT conversion refusal, and 'No mapping exists from DbType Time' on SqlCe.")]
+		[ActiveIssueNew(5776, Configurations = [TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana],
+			Details = "no-declaration: unvalidated: " + ContainsSkipsIntervalTranslation + " Not measured - these have no container running here.")]
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		// Access refuses this one through the conversion rather than by member name: unlike its siblings it never
+		// gets as far as asking the difference for a tick total.
+		[ThrowsCannotBeConverted(NoTickTotalProviders)]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ContainsOverADifference([DataSources(false)] string context)
 		{
