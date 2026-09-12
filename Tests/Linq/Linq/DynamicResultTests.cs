@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 
@@ -77,7 +77,8 @@ namespace Tests
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3520, ErrorTypeName = "Microsoft.CSharp.RuntimeBinder.RuntimeBinderException", ErrorMessage = "does not contain a definition for 'AId'",
+			Details = "the dynamic result object is not populated with the projected members - #3520's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3520")]
 		public void Issue3520Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServerSequentialAccess)] string context, [Values(1, 10)] int param)
 		{

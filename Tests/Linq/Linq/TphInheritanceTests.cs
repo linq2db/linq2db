@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -440,7 +440,8 @@ namespace Tests.Linq
 		class TphDupColSecond : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
 		class TphDupColThird  : TphDupColBase { [Column("Payload")] public int  Payload { get; set; } }
 
-		[ActiveIssue("Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
+		[ActiveIssue(ErrorMessage = "Assert.That(((TphConvScaled)all[1]).Value, Is.EqualTo(7))",
+			Details = "no-issue: Sibling subtypes mapping the same physical column with different ValueConverters share one SqlField/ColumnDescriptor, so the second sibling's converter is not applied on read (pre-existing, independent of the duplicate-column projection fix).")]
 		[Test]
 		public void TPH_SiblingColumn_DifferentValueConverters([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -484,7 +485,8 @@ namespace Tests.Linq
 			[Column("Payload"), ValueConverter(ConverterType = typeof(TphConvTimesHundred))] public int Value { get; set; }
 		}
 
-		[ActiveIssue("Sibling subtypes mapping the same physical column through the same ValueConverter type are not collapsed on read: the projection dedup compares converter instances by reference, but GetValueConverter builds a fresh instance per column, so the shared column is projected more than once. Cosmetic (data is correct); a fix must compare converters safely, not by runtime type. Surfaced by Copilot review on #5661.")]
+		[ActiveIssue(ErrorMessage = "Assert.That(sql.Split([\"[Payload]\"], System.StringSplitOptions.None).Length - 1, Is.EqualTo(1))",
+			Details = "no-issue: Sibling subtypes mapping the same physical column through the same ValueConverter type are not collapsed on read: the projection dedup compares converter instances by reference, but GetValueConverter builds a fresh instance per column, so the shared column is projected more than once. Cosmetic (data is correct); a fix must compare converters safely, not by runtime type. Surfaced by Copilot review on #5661.")]
 		[Test]
 		public void TPH_SiblingColumn_SameValueConverterType([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1642,7 +1644,9 @@ namespace Tests.Linq
 		#endregion
 
 		#region TPH intermediate type (insert / DDL)
-		[ActiveIssue]
+		// Message-only for the two SQLite drivers, as AbstractionTests.InsertUsingRuntimeType.
+		[ActiveIssue(4364, ErrorMessage = "no such table: CreateTable1",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The intermediate child class is not mapped onto the base table - #4364's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_InsertConcreteTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -1669,7 +1673,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4364, ErrorMessage = "NOT NULL constraint failed: CreateTableBase.Field2",
+			Details = "as TPH_Intermediate_InsertConcreteTypes - the intermediate type's column is emitted NOT NULL on the base table.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void TPH_Intermediate_CreateTableNullableFields([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

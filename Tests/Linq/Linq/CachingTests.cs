@@ -233,7 +233,8 @@ namespace Tests.Linq
 				Assert.That(sql, Contains.Substring("WITH TIES"));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4266, ErrorMessage = "Assert.That(query.GetCacheMissCount(), Is.EqualTo(currentMiss + 1))",
+			Details = "the collection parameter does not take part in the cache key, so a query that should miss is reused - #4266's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -270,7 +271,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4266, ErrorMessage = "Expected and result lists are different",
+			Details = "the reused query answers with the previous collection's rows - the wrong-results half of #4266.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266"), QueryCacheTest]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{

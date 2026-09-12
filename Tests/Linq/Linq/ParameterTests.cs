@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -111,11 +111,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(
-			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
-			But here we test parameters.
-			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
-			Configuration = TestProvName.AllSybase)]
+		// Sybase answers these differently, and the four tests below say so rather than being skipped. Two things
+		// compose: the provider cuts a parameter's value at the first 0x00 - a literal is the only way to send one
+		// (https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677) - and Sybase then
+		// gives an empty string back as a single space. So what returns is whatever preceded the 0x00, or " ".
 		[Test]
 		public void CharAsSqlParameter1(
 			[DataSources(
@@ -133,14 +132,9 @@ namespace Tests.Linq
 			var s1 = "0 \x0 ' 0";
 			var s2 = db.Select(() => Sql.AsSql(s1));
 
-			Assert.That(s2, Is.EqualTo(s1));
+			Assert.That(s2, Is.EqualTo(context.IsAnyOf(TestProvName.AllSybase) ? "0 " : s1));
 		}
 
-		[ActiveIssue(
-			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
-			But here we test parameters.
-			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
-			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter2(
 			[DataSources(
@@ -158,14 +152,9 @@ namespace Tests.Linq
 			var s1 = "\x0 \x0 ' \x0";
 			var s2 = db.Select(() => Sql.AsSql(s1));
 
-			Assert.That(s2, Is.EqualTo(s1));
+			Assert.That(s2, Is.EqualTo(context.IsAnyOf(TestProvName.AllSybase) ? " " : s1));
 		}
 
-		[ActiveIssue(
-			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
-			But here we test parameters.
-			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
-			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter3(
 			[DataSources(
@@ -182,7 +171,7 @@ namespace Tests.Linq
 			var s1 = "\x0";
 			var s2 = db.Select(() => Sql.AsSql(s1));
 
-			Assert.That(s2, Is.EqualTo(s1));
+			Assert.That(s2, Is.EqualTo(context.IsAnyOf(TestProvName.AllSybase) ? " " : s1));
 		}
 
 		[Test]
@@ -195,11 +184,6 @@ namespace Tests.Linq
 			Assert.That(s2, Is.EqualTo(s1));
 		}
 
-		[ActiveIssue(
-			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
-			But here we test parameters.
-			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
-			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter5(
 			[DataSources(
@@ -211,7 +195,7 @@ namespace Tests.Linq
 			var s1 = '\x0';
 			var s2 = db.Select(() => Sql.AsSql(s1));
 
-			Assert.That(s2, Is.EqualTo(s1));
+			Assert.That(s2, Is.EqualTo(context.IsAnyOf(TestProvName.AllSybase) ? ' ' : s1));
 		}
 
 		sealed class AllTypes
@@ -1885,7 +1869,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(ErrorTypeName = "System.NullReferenceException", ErrorMessage = "Object reference not set to an instance of an object.",
+			Details = "no-issue: a null first argument to Sql.PadLeft throws while the accessor is built, before any SQL is produced. #4799 is the only PadLeft issue on the tracker and reports trimming, which is a different defect.")]
 		[Test]
 		public void Issue_NRE_InAccessor([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

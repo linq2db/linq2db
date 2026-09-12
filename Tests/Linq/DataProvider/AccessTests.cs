@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Globalization;
 using System.IO;
@@ -668,18 +668,10 @@ namespace Tests.DataProvider
 
 		#region Issue 3893
 		// use characters from https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
+		// Split three ways by what Access actually does with each identifier: a gate cannot target a ValueSource
+		// argument, and one gate over all 33 marked the 21 that work as failing.
 		private static readonly string[] _identifiers =
 		[
-			" leading_space",
-			"char `",
-			"char !",
-			"char .",
-			"char ]",
-			"char [",
-			"char \r",
-			"char \t",
-			"char \b",
-			"char \n",
 			"char >",
 			"char <",
 			"char *",
@@ -697,17 +689,56 @@ namespace Tests.DataProvider
 			"char %",
 			"char $",
 			"char ;",
-			"char ?",
-			"char {",
 			"char }",
 			"char -",
 			"char ~",
 			"char |",
 		];
 
-		[ActiveIssue]
+		private static readonly string[] _identifiersRejected =
+		[
+			" leading_space",
+			"char `",
+			"char !",
+			"char .",
+			"char ]",
+			"char [",
+			"char \r",
+			"char \t",
+			"char \b",
+			"char \n",
+		];
+
+		// These two divide the drivers: OleDb accepts both, ODBC rejects 'char ?' by name and reads 'char {'
+		// back as something else.
+		private static readonly string[] _identifiersRejectedByOdbc =
+		[
+			"char ?",
+			"char {",
+		];
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
 		public void Issue3893Test([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiers))] string columName)
+		{
+			Issue3893TestCore(context, columName);
+		}
+
+		[ActiveIssue(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
+		public void Issue3893Test_Rejected([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejected))] string columName)
+		{
+			Issue3893TestCore(context, columName);
+		}
+
+		[ActiveIssue(3893, Configuration = TestProvName.AllAccessOdbc,
+			Details = "no-declaration: the two arms fail differently and neither can be targeted by argument: 'char ?' is rejected by name, while 'char {' is created and then read back under a different name, so it fails the assertion rather than throwing. OleDb accepts both, which is why this is scoped to the ODBC driver - both of them, Jet as well as ACE.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
+		public void Issue3893Test_RejectedByOdbc([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejectedByOdbc))] string columName)
+		{
+			Issue3893TestCore(context, columName);
+		}
+
+		void Issue3893TestCore(string context, string columName)
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema())
 				.Entity<Issue3893Table>()

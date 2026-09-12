@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Linq;
@@ -663,7 +663,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(Details = "Output parameter not set")]
+		[ActiveIssue(ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no elements",
+			Details = "no-issue: Output parameter not set - the procedure call returns no row at all, so the read of its result throws. Nothing on the tracker covers it.")]
 		[Test]
 		public void TestProcedureNonLatinParameters2([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
@@ -690,6 +691,10 @@ namespace Tests.DataProvider
 			{
 				if (id != null)
 					db.Person.Delete(p => p.ID == id);
+				else
+					// The output parameter this test exercises is exactly what the gate says is not set, so the
+					// id-keyed cleanup above can never fire on the failing path - key it on the name instead.
+					db.Person.Delete(p => p.FirstName == "Имя" && p.LastName == "Фамилия");
 			}
 		}
 
@@ -1106,7 +1111,14 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
+		// Firebird 2.5 fails one layer earlier than 3+: it never builds the convert expression, so the cast throws
+		// directly instead of being wrapped by the mapper.
+		[ActiveIssue(755, Configuration = TestProvName.AllFirebird3Plus, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Mapping of column 'AsBinary' value failed",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. CHAR(x) CHARACTER SET OCTETS comes back as a string - #755's subject.")]
+		[ActiveIssue(755, Configuration = TestProvName.AllFirebirdLess3, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Unable to cast object of type 'System.String' to type 'System.Byte[]'.",
+			Details = "as above, unwrapped on 2.5.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
 		public void TestBinaryMapping_Binary([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
@@ -1135,7 +1147,8 @@ namespace Tests.DataProvider
 			Assert.That(record.BinaryAccessor, Is.EqualTo(mac2));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(755, ErrorTypeName = "System.InvalidCastException", ErrorMessage = "Unable to cast object of type 'System.String' to type 'System.Byte[]'.",
+			Details = "CHAR(x) CHARACTER SET OCTETS comes back as a string rather than bytes - #755's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
 		public void TestBinaryMapping_String([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
@@ -1164,7 +1177,8 @@ namespace Tests.DataProvider
 			Assert.That(record.StringAccessor, Is.EqualTo(mac2));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(755, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Unknown type: System.Char[].",
+			Details = "as TestBinaryMapping_String, through the char[] mapping - #755's CHARACTER SET OCTETS gap.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
 		public void TestBinaryMapping_Char([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{

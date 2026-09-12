@@ -1,4 +1,4 @@
-﻿#if SUPPORTS_DATEONLY
+#if SUPPORTS_DATEONLY
 using System;
 #endif
 using System.Linq;
@@ -38,7 +38,14 @@ namespace Tests.Linq
 			[Column] public T[]? Value { get; set; }
 		}
 
-		[ActiveIssue]
+		// PostgreSQL gets its own attribute: it maps the int array natively and stops at the enum one instead, so
+		// the type named in the refusal differs there.
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
+			Details = "no-issue: an array column has no automatic database type. Nothing on the tracker covers it.")]
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "no-issue: as above, but PostgreSQL only reaches the enum array.")]
 		[Test]
 		public void CreateTable([DataSources(false)] string context)
 		{
@@ -76,7 +83,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// One cause seen through three transports - direct, the Grpc wrapper and the WCF FaultException - all of
+		// which carry the inner type name, which is what Matches looks for on a remote case.
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
+			Details = "no-issue: an array column has no automatic database type, as in ArrayTests.CreateTable.")]
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "no-issue: as above, but PostgreSQL only reaches the enum array - the same split ArrayTests.CreateTable carries.")]
 		[Test]
 		public void InsertArray([DataSources] string context)
 		{
@@ -101,7 +115,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
+			Details = "no-issue: as InsertArray.")]
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "no-issue: as InsertArray's PostgreSQL half.")]
 		[Test]
 		public void UpdateArray([DataSources] string context)
 		{
@@ -132,7 +151,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(1660, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Same array-column gap as InsertArray.")]
+		[ActiveIssue(1660, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "as above, but PostgreSQL only reaches the enum array - as InsertArray's PostgreSQL half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1660")]
 		public void CollectionContainsMapping([DataSources] string context)
 		{
@@ -162,7 +186,13 @@ namespace Tests.Linq
 		}
 
 #if SUPPORTS_DATEONLY
-		[ActiveIssue]
+		// PostgreSQL maps the array itself and fails later, on the SQL it emits for it.
+		[ActiveIssue(3929, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.DateOnly[]",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Same array-column gap as InsertArray, on DateOnly.")]
+		[ActiveIssue(3929, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+			ErrorMessage = "42601: syntax error at or near \"Array\"",
+			Details = "PostgreSQL types the array and then emits SQL its own parser rejects.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3929")]
 		public void TestDateOnly([DataSources] string context)
 		{

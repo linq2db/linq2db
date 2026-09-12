@@ -350,13 +350,6 @@ namespace Tests.SchemaProvider
 			Assert.That(pkCountPerson, Is.EqualTo(1));
 		}
 
-		[ActiveIssue("Unstable, depends on metadata selection order")]
-		/*
-		 * Expected Was
-		 * ! FK_TestSchemaY_OtherID <> FK_TestSchemaY_TestSchemaX
-		 * ParentTestSchemaX == ParentTestSchemaX
-		 * TestSchemaX == TestSchemaX
-		 */
 		[Test]
 		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -367,7 +360,18 @@ namespace Tests.SchemaProvider
 			var table = s.Tables.Single(t => t.TableName == "TestSchemaY");
 			var fks   = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();
 
-			AreEqual(new[] { "TestSchemaX", "ParentTestSchemaX", "FK_TestSchemaY_OtherID" }, fks, _ => _.OrderBy(_ => _));
+			// TestSchemaXID carries two foreign keys - FK_TestSchemaY_TestSchemaX and FK_TestSchemaY_OtherID - so
+			// both derive the same member name from the column and one has to fall back to its own constraint name.
+			// Which one wins depends on the order the metadata query returns them, so this pins the rule rather than
+			// the winner: the unambiguous column keeps its derived name, one of the pair keeps TestSchemaX, and the
+			// other is named after whichever constraint lost.
+			Assert.That(fks, Has.Length.EqualTo(3));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(fks, Does.Contain("ParentTestSchemaX"));
+				Assert.That(fks, Does.Contain("TestSchemaX"));
+				Assert.That(fks.Count(n => n is "FK_TestSchemaY_TestSchemaX" or "FK_TestSchemaY_OtherID"), Is.EqualTo(1));
+			}
 
 			table = s.Tables.Single(t => t.TableName == "TestSchemaB");
 			fks = table.ForeignKeys.Select(fk => fk.MemberName).ToArray();

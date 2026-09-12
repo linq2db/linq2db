@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -319,7 +319,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		// Access: unsupported syntax for enumerable subquery
-		[ActiveIssue(Configuration = TestProvName.AllAccess)]
+		[ActiveIssue(4261, Configuration = TestProvName.AllAccess, ErrorMessage = "Query input must contain at least one table or query.")]
 		[Test]
 		public void TestIssue4261([DataSources] string context)
 		{

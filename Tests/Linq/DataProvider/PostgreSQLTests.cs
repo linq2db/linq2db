@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
@@ -1384,7 +1384,10 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo(124));
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		// Fragment stops before the system type: that renders as an assembly-qualified name carrying the assembly
+		// version, which would stop matching at the next version bump.
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type",
+			Details = "no-issue: functionality not implemented yet - a dynamic record function's column types cannot be inferred.")]
 		[Test]
 		public void TestDynamicRecordFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1404,7 +1407,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		[ActiveIssue(ErrorTypeName = "System.ArgumentException", ErrorMessage = "is a generic method definition",
+			Details = "no-issue: Functionality not implemented yet - the builder is handed the open generic method definition and never closes it. Nothing on the tracker covers it.")]
 		[Test]
 		public void TestDynamicTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2223,7 +2227,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3352, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42883: function test_parameter_typing",
+			Details = "the overload cannot be resolved because the parameters are not typed - #3352's subject. The fragment stops before the argument list, which the server spells out in full.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3352")]
 		public void FunctionParameterTyping([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2789,7 +2794,8 @@ $function$
 		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
 		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new ServerSideOnlyException(nameof(Distance));
 
-		[ActiveIssue]
+		[ActiveIssue(4250, ErrorTypeName = "System.FormatException", ErrorMessage = "The input string 'point1' was not in a correct format.",
+			Details = "a named parameter inside Sql.Expression is read as a format placeholder - #4250's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
 		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2846,7 +2852,8 @@ $function$
 		// - from Pg* attributes
 		// - schema tables
 		// - using npgsql-specific naming conventions
-		[ActiveIssue]
+		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\". Needs the pg-specific metadata provider described above. The 4780 in these names is npgsql's issue, not linq2db's - linq2db 4780 is an unrelated merged PR.")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2886,7 +2893,8 @@ $function$
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "as Issue4780Test1 - the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\".")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2947,7 +2955,8 @@ $function$
 
 		#region Issue 2796
 
-		[ActiveIssue(SkipForNonLinqService = true)]
+		[ActiveIssue(2796, SkipForNonLinqService = true, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Cannot write DateTime with",
+			Details = "the tstzrange's DateTime kind does not survive the remote transport - #2796's mapping gap, remote only.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2966,7 +2975,8 @@ $function$
 			Assert.That(res.RangeMappedAsDateTime, Is.EqualTo(record.RangeMappedAsDateTime));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(2796, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Cannot convert value{0}NpgsqlTypes.NpgsqlRange",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. One attribute covers both transports: the remote message carries the inner type name, which is what Matches looks for there.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{

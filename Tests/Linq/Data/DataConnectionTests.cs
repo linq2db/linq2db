@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -522,7 +522,8 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4811, ErrorMessage = "Assert.That(c2.ConnectionString, Is.EqualTo(cs2))",
+			Details = "the second registration comes back with the first one's connection string - #4811's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4811")]
 		public void Issue4811Test2()
 		{
@@ -936,7 +937,6 @@ namespace Tests.Data
 		// SQLCE : System.Data.SqlServerCe
 		// SQLITE: Microsoft.Data.Sqlite (prior to v2.1.0)
 		// SYBASE: AdoNetCore.AseClient
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_Supported(
 			[IncludeDataSources(false,
@@ -944,7 +944,8 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				// depends on connection pool size
 				//ProviderName.ClickHouseDriver,
-				ProviderName.ClickHouseOctonica,
+				// hangs: Octonica/ClickHouseClient#59
+				//ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -986,11 +987,12 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_NotSupported(
 			[DataSources(false,
 				ProviderName.ClickHouseDriver,
+				// hangs: Octonica/ClickHouseClient#59
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteMS,
@@ -1047,7 +1049,6 @@ namespace Tests.Data
 		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
 		// SYBASE   : Sybase.AdoNet45.AseClient
 		// SYBASE   : AdoNetCore.AseClient
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_Supported(
 			[IncludeDataSources(false,
@@ -1061,7 +1062,8 @@ namespace Tests.Data
 				// disabled - depends on connection pool size
 				// which is one for session-aware connection
 				//ProviderName.ClickHouseDriver,
-				ProviderName.ClickHouseOctonica,
+				// hangs: Octonica/ClickHouseClient#59
+				//ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
@@ -1108,12 +1110,13 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
 			ProviderName.ClickHouseDriver,
+				// hangs: Octonica/ClickHouseClient#59
+				ProviderName.ClickHouseOctonica,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -1177,7 +1180,6 @@ namespace Tests.Data
 		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
 		// SYBASE   : Sybase.AdoNet45.AseClient
 		// SYBASE   : AdoNetCore.AseClient
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_Supported(
 			[IncludeDataSources(false,
@@ -1191,7 +1193,8 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				// depends on connection pool size
 				//ProviderName.ClickHouseDriver,
-				ProviderName.ClickHouseOctonica,
+				// hangs: Octonica/ClickHouseClient#59
+				//ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1237,12 +1240,13 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_NotSupported(
 			[DataSources(false,
 				TestProvName.AllAccess,
 				ProviderName.ClickHouseDriver,
+				// hangs: Octonica/ClickHouseClient#59
+				ProviderName.ClickHouseOctonica,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -1289,7 +1293,6 @@ namespace Tests.Data
 			Assert.Fail("Failure expected");
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_Supported(
 			[DataSources(false,
@@ -1298,6 +1301,8 @@ namespace Tests.Data
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
+				// hangs: Octonica/ClickHouseClient#59
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1319,14 +1324,14 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_Unsupported(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
 				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
-				ProviderName.ClickHouseOctonica,
+				// hangs: Octonica/ClickHouseClient#59
+				//ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1374,7 +1379,6 @@ namespace Tests.Data
 		}
 
 #if !NETFRAMEWORK
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_SupportedAsync(
 			[DataSources(false,
@@ -1383,6 +1387,8 @@ namespace Tests.Data
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
+				// hangs: Octonica/ClickHouseClient#59
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1404,15 +1410,15 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_UnsupportedAsync(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
 				TestProvName.AllYdb,
 				TestProvName.AllPostgreSQL,
-				ProviderName.ClickHouseMySql,
-				ProviderName.ClickHouseOctonica)] string context)
+				// hangs: Octonica/ClickHouseClient#59
+				//ProviderName.ClickHouseOctonica,
+				ProviderName.ClickHouseMySql)] string context)
 		{
 			using var db = GetDataConnection(context);
 			if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))

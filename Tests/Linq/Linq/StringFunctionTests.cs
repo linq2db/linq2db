@@ -869,19 +869,24 @@ namespace Tests.Linq
 			Assert.That(q.ToList().First().ID, Is.EqualTo(2));
 		}
 
-		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)",
+		// Seven families answer an empty result set; SQLite has no CharIndex function at all and refuses outright.
+		// Oracle keeps no declaration - it has no CI leg, so nothing was harvested for it.
+		[ActiveIssue(ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Sequence contains no elements",
 			Configurations =
 			[
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllMySql,
-				TestProvName.AllOracle,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
-				TestProvName.AllSQLite,
 				TestProvName.AllDuckDB,
-			])]
+			],
+			Details = "no-issue: Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
+		[ActiveIssue(Configuration = TestProvName.AllSQLite, ErrorMessage = "no such function: CharIndex",
+			Details = "no-issue: as above; SQLite has no such function, so it refuses instead of answering nothing. Message-only because the two SQLite drivers put the detail on different lines.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle,
+			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
@@ -1172,7 +1177,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4799, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllYdb],
+			ErrorMessage = "Sql.AsSql(\"test\".PadRight(0, '.'))",
+			Details = "padding to a width below the input's own length returns an empty string instead of the input - the trimming #4799 reports, in the PadRight direction. That issue is closed; this shape is the residue. Narrowed from an unconditional gate: Access, DB2, SqlCe, SQLite, SQL Server and Sybase all pass, direct and remote.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4799")]
 		public void String_PadRight_Translation([DataSources] string context)
 		{
@@ -1525,7 +1532,8 @@ namespace Tests.Linq
 				.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).ShouldBe(1);
 		}
 
-		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
+		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void ExplicitOrdinal_Contains([DataSources] string context)
 		{
@@ -1543,7 +1551,8 @@ namespace Tests.Linq
 				.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.Ordinal)).ShouldBe(0);
 		}
 
-		[ActiveIssue(3444, Configuration = ProviderName.SqlCe)]
+		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
 		[Test]
 		public void Explicit_Contains([DataSources] string context)
 		{
