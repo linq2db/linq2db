@@ -19,7 +19,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class ZonedRow
 		{
-			[Column] public int            Id  { get; set; }
+			// YDB requires one on every table, and this fixture's gate does not exclude it.
+			[PrimaryKey] public int        Id  { get; set; }
 			[Column] public DateTimeOffset Dto { get; set; }
 		}
 
