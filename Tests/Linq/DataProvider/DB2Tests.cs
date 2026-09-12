@@ -991,10 +991,9 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataConnection(context);
 			// DB2 SYSCAT.COLUMNS.TABSCHEMA column is padded with spaces to max(schema.length) length despite it being of varchar type
-			var schemas = db.Query<string>("SELECT SCHEMANAME FROM SYSCAT.SCHEMATA").AsEnumerable().Select(_ => _.TrimEnd(' ')).ToArray();
-
-			if (schemas.Select(_ => _.Length).Distinct().Count() < 2)
-				Assert.Inconclusive("Test requires at least two schemas with different name length");
+			// Fixed rather than read from SYSCAT.SCHEMATA: the list reaches the captured SQL, so a live one makes the
+			// baseline depend on what ran before (SESSION appears for good once any test creates a global temporary table).
+			var schemas = new[] { "SYSCAT", "SYSSTAT" };
 
 			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { IncludedSchemas = schemas });
 
@@ -1011,6 +1010,7 @@ namespace Tests.DataProvider
 				usedSchemas.Add(table.SchemaName!);
 			}
 
+			Assert.That(usedSchemas, Is.EquivalentTo(schemas));
 			Assert.That(usedSchemas.Select(_ => _.Length).Distinct().Count(), Is.GreaterThan(1));
 		}
 
