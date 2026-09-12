@@ -1354,12 +1354,14 @@ namespace Tests.Linq
 			}
 		}
 
-		// YDB splits off: it never reaches the mapping error because the connection is already gone by then.
+		// YDB splits off on the direct path only: it never reaches the mapping error because the connection is
+		// already gone by then. Over a remote context the statement runs in the service process, so it reports the
+		// mapping error like everyone else and falls back to the blanket declaration.
 		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Inheritance mapping is not defined for discriminator value '2'",
 			Details = "no-issue: Partial mapping is not supported for now")]
 		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
-			ErrorMessage = "Connection is closed",
+			ErrorMessage = "Connection is closed", SkipForLinqService = true,
 			Details = "no-issue: Partial mapping is not supported for now - on YDB the failure arrives as a closed connection instead, which is consistent with its one-statement-per-connection behaviour rather than with the mapping error the other providers report.")]
 		[Test]
 		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)

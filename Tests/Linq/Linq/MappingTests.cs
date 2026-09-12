@@ -1428,8 +1428,9 @@ namespace Tests.Linq
 		// Split by the [Values] argument, because the two arms are not equally broken: filtering on false fails
 		// everywhere, filtering on true fails only on ClickHouse. One gate over both marked ~50 working cases as
 		// failing.
-		[ActiveIssue(2362, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
-			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The empty string the converter writes for false is not matched back - #2362's 'Query skips rows with empty string'.")]
+		[ActiveIssue(2362, Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllDuckDB, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllYdb],
+			ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The empty string the converter writes for false is not matched back - #2362's 'Query skips rows with empty string'. Spelled out rather than left unconditional because Oracle matches the empty string back and passes.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
 		public void Issue2362Test([DataSources] string context)
 		{
@@ -1437,7 +1438,9 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(2362, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Assert.That(res[0].Value, Is.True)",
-			Details = "The true arm of #2362, which only ClickHouse gets wrong; every other provider passes it.")]
+			Details = "The true arm of #2362, which ClickHouse gets wrong by reading the value back as false.")]
+		[ActiveIssue(2362, Configuration = TestProvName.AllOracle, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(1))",
+			Details = "Oracle gets the same arm wrong a step earlier: the row is not matched at all, so nothing comes back to read.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
 		public void Issue2362TestMatchingValue([DataSources] string context)
 		{
@@ -1545,9 +1548,12 @@ namespace Tests.Linq
 
 		record MappingTypingByConstant<T>(int Id, T Value);
 
-		[ActiveIssue(4955, Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true,
+		[ActiveIssue(4955, Configurations = [TestProvName.AllMariaDB, TestProvName.MySql57Connector], SkipForLinqService = true,
 			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
 			Details = "CAST to BIGINT doesn't work in MariaDB and MySQL 5.7, so 2147483648 comes back as an int and overflows on the way out.")]
+		[ActiveIssue(4955, Configuration = ProviderName.MySql57, SkipForLinqService = true,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for an Int32.",
+			Details = "as above; the MySql.Data driver names the target type where MySqlConnector words it generically.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
 		{

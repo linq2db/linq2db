@@ -175,18 +175,21 @@ namespace Tests.xUpdate
 		public void DeleteMany2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			db.Parent.Insert(() => new Parent { ParentID = 1001 });
-			db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
-			db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1 });
-			db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2 });
-			db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 3 });
-			db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 2 });
-			db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 1 });
-			db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 2 });
-			db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 3 });
 
+			// The seeding inserts belong inside the try: this test is gated on a failure that happens while
+			// seeding, and rows written before it would otherwise outlive the run and poison the next one.
 			try
 			{
+				db.Parent.Insert(() => new Parent { ParentID = 1001 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 3 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 3 });
+
 				var q =
 					from p in db.Parent
 					where p.ParentID >= 1000
@@ -650,8 +653,8 @@ namespace Tests.xUpdate
 			ErrorMessage = "cannot use a derived table", Details = "no-issue: ASE rejects the derived table by name.")]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse,
 			Details = "no-declaration: as DeleteFromWithTake - two failure modes across the three drivers, no common text.")]
-		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllYdb],
-			Details = "no-declaration: unvalidated: as DeleteFromWithTake - no Oracle leg, and the YDB leg hung before this file.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle,
+			Details = "no-declaration: unvalidated: as DeleteFromWithTake - no Oracle leg, so nothing was harvested for it.")]
 		[Test]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)
 		{

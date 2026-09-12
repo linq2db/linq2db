@@ -281,9 +281,9 @@ namespace Tests.Linq
 			Details = "All three drivers surface the same server text under three different exception types, so the message alone is the portable declaration.")]
 		[ActiveIssue(2779, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Column value is not in source column set")]
-		[ActiveIssue(2779, Configurations = [TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllOracle,
-			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllMySql, ProviderName.DB2],
-			Details = "no-declaration: unvalidated: not reachable from this workstation, so these keep the gate they already had rather than being dropped on reasoning.")]
+		[ActiveIssue(2779, Configurations = [TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllOracle,
+			TestProvName.AllFirebird, TestProvName.AllMySql57, ProviderName.DB2],
+			Details = "no-declaration: these still fail. Sybase, Informix and the 8.0/MariaDB MySQL servers were dropped once CI exercised them - only 5.7 is left of the MySQL family.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
 		public void Issue2779Test2([DataSources(false)] string context)
 		{

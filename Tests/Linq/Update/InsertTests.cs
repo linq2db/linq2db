@@ -24,10 +24,6 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
-#if AZURE
-		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
-			Details = "unvalidated: no-issue: declared from the failure the original gate quoted verbatim, not from a run - it compiles only under Configuration=Azure and the test passes locally on Firebird, so the cause is the CI database's encoding rather than the query. If the quote is stale the new attribute reports the real failure on the next Azure leg, which is the point of declaring it rather than waiving it.")]
-#endif
 		[Test]
 		public void DistinctInsert1(
 			[DataSources(
@@ -67,10 +63,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if AZURE
-		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException", ErrorMessage = "Malformed string",
-			Details = "unvalidated: no-issue: see DistinctInsert1 - same quoted failure, same CI-only encoding cause, declared from the quote rather than from a run.")]
-#endif
 		[Test]
 		public void DistinctInsert2(
 			[DataSources(
@@ -2424,12 +2416,15 @@ namespace Tests.xUpdate
 		}
 
 		// Every named provider does fail, in two groups. Access, Firebird and HANA never reach the database -
-		// linq2db refuses the KeepIdentity + RowByRow combination up front. The rest do reach it and the identity
-		// value collides, each server saying so in its own words.
-		[ActiveIssue(4702, Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllSapHana],
+		// linq2db refuses KeepIdentity up front, by mode for Access and HANA and by provider name for Firebird.
+		// The rest do reach it and the identity value collides, each server saying so in its own words.
+		[ActiveIssue(4702, Configurations = [TestProvName.AllAccess, TestProvName.AllSapHana],
 			ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode",
 			Details = "no-issue: Update test to test different RetrieveIdentity modes for all providers with sequences")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllFirebird, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider",
+			Details = "no-issue: as above, but Firebird is refused by name before the RowByRow check is reached.")]
 		[ActiveIssue(4702, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
 			ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4702Table\"",
 			Details = "no-issue: as above; the identity value is written rather than generated, so the key collides.")]

@@ -942,10 +942,26 @@ namespace Tests.Linq
 			}
 		}
 
+		// Split by the inline argument, because the two arms are not equally broken: inlined, the division loses
+		// its scale on every SQLite driver; as a parameter, only the Classic ones still get it wrong. A gate cannot
+		// target a [Values] argument, so one gate over both marked the working cases as failing.
 		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Math.Round(result.Integer, 5)",
 			Details = "the division loses its scale, so the result rounds to 3 where 3.0303 is due - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
+		public void Issue4469Test2Inlined([DataSources] string context)
+		{
+			Issue4469Test2Core(context, inline: true);
+		}
+
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLiteClassic], ErrorMessage = "Math.Round(result.Integer, 5)",
+			Details = "as Issue4469Test2Inlined, but Microsoft.Data.Sqlite keeps the scale when the divisor travels as a parameter.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
+		public void Issue4469Test2([DataSources] string context)
+		{
+			Issue4469Test2Core(context, inline: false);
+		}
+
+		void Issue4469Test2Core(string context, bool inline)
 		{
 			if (context.IsAnyOf(TestProvName.AllFirebirdLess4) && !inline)
 				Assert.Ignore("Hard-to-workaround overflow bug");

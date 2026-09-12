@@ -443,9 +443,9 @@ namespace Tests.Linq
 			Details = "no-declaration: unvalidated: " + ContainsSkipsIntervalTranslation + " Not measured - these have no container running here.")]
 		[Test]
 		// Access refuses this one through the conversion rather than by member name: unlike its siblings it never
-		// gets as far as asking the difference for a tick total.
-		[ThrowsCannotBeConverted(NoTickTotalProviders)]
-		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		// gets as far as asking the difference for a tick total. The difference-unsupported providers land in the
+		// same place on this shape - the candidates are never lowered far enough to reach the by-name refusal.
+		[ThrowsCannotBeConverted(NoTickTotalProviders + "," + UnsupportedDifferenceProviders)]
 		public void ContainsOverADifference([DataSources(false)] string context)
 		{
 			var wanted = new[] { TimeSpan.FromHours(1), TimeSpan.FromHours(3) };

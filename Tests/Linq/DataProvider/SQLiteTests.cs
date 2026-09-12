@@ -210,12 +210,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// Platform-scoped, not provider-scoped: the same four SQLite providers fail on Linux and pass on Windows,
-		// because the bundled native binary differs per RID and only the Linux one loses the last two digits.
-		[ActiveIssue("https://system.data.sqlite.org/index.html/tktview/fb9e4b30874d83042e09c2f791d6065fc5e73a4b",
-			Platforms = TestPlatform.Linux,
-			ErrorMessage = "Expected: -1.7900000000000002E+308d{0}But was:  -1.79E+308d",
-			Details = "SQLite's own ticket: the CAST to real loses the last two digits, so the value comes back as -1.79E+308.")]
 		[Test]
 		public void TestDoubleRoundTrip([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -638,8 +632,8 @@ namespace Tests.DataProvider
 			DateTimeRoundtrip_InsertCore(context, inline, kind, "TEXT");
 		}
 
-		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
-			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back unconverted, so the expected local time is an hour out.")]
+		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local))",
+			Details = "Issue number taken from the test's own Description. A Utc value stored in a TEXT column comes back with the wrong Kind; the value itself round-trips, so only that half of #2107 is left.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_InsertUtc(
 			[IncludeDataSources(TestProvName.AllSQLite)] string context,
@@ -717,7 +711,7 @@ namespace Tests.DataProvider
 			DateTimeRoundtrip_BulkCopyCore(context, inline, kind, copyType, "TEXT");
 		}
 
-		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()))",
+		[ActiveIssue(2107, ErrorMessage = "Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local))",
 			Details = "as DateTimeRoundtrip_InsertUtc.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
 		public void DateTimeRoundtrip_BulkCopyUtc(

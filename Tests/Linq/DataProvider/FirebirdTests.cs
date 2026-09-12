@@ -691,6 +691,10 @@ namespace Tests.DataProvider
 			{
 				if (id != null)
 					db.Person.Delete(p => p.ID == id);
+				else
+					// The output parameter this test exercises is exactly what the gate says is not set, so the
+					// id-keyed cleanup above can never fire on the failing path - key it on the name instead.
+					db.Person.Delete(p => p.FirstName == "Имя" && p.LastName == "Фамилия");
 			}
 		}
 

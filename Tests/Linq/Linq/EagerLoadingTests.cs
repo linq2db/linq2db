@@ -754,7 +754,6 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
-		[ActiveIssue(3619, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Expected Was")]
 		[Test]
 		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

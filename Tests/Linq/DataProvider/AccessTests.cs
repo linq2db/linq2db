@@ -730,8 +730,8 @@ namespace Tests.DataProvider
 			Issue3893TestCore(context, columName);
 		}
 
-		[ActiveIssue(3893, Configuration = ProviderName.AccessAceOdbc,
-			Details = "no-declaration: the two arms fail differently and neither can be targeted by argument: 'char ?' is rejected by name, while 'char {' is created and then read back under a different name, so it fails the assertion rather than throwing. OleDb accepts both, which is why this is scoped to the ODBC driver.")]
+		[ActiveIssue(3893, Configuration = TestProvName.AllAccessOdbc,
+			Details = "no-declaration: the two arms fail differently and neither can be targeted by argument: 'char ?' is rejected by name, while 'char {' is created and then read back under a different name, so it fails the assertion rather than throwing. OleDb accepts both, which is why this is scoped to the ODBC driver - both of them, Jet as well as ACE.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
 		public void Issue3893Test_RejectedByOdbc([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejectedByOdbc))] string columName)
 		{

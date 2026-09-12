@@ -88,6 +88,9 @@ namespace Tests.Linq
 		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
 			Details = "no-issue: an array column has no automatic database type, as in ArrayTests.CreateTable.")]
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "no-issue: as above, but PostgreSQL only reaches the enum array - the same split ArrayTests.CreateTable carries.")]
 		[Test]
 		public void InsertArray([DataSources] string context)
 		{
@@ -115,6 +118,9 @@ namespace Tests.Linq
 		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
 			Details = "no-issue: as InsertArray.")]
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "no-issue: as InsertArray's PostgreSQL half.")]
 		[Test]
 		public void UpdateArray([DataSources] string context)
 		{
@@ -148,6 +154,9 @@ namespace Tests.Linq
 		[ActiveIssue(1660, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type System.Int32[]",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Same array-column gap as InsertArray.")]
+		[ActiveIssue(1660, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type Tests.Model.Gender[]",
+			Details = "as above, but PostgreSQL only reaches the enum array - as InsertArray's PostgreSQL half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1660")]
 		public void CollectionContainsMapping([DataSources] string context)
 		{

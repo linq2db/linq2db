@@ -760,26 +760,34 @@ namespace Tests.Linq
 					.ToList();
 		}
 
-		// Seven declarations, one per kind of failure rather than per wording. The blanket one is linq2db's own
-		// refusal; the rest are providers that get past it and then break in genuinely different places - a
-		// driver cast, a parameter-type refusal, a server operand error.
+		// The blanket declaration is linq2db's own refusal; the rest are providers that get past it and then break
+		// in genuinely different places - a driver cast, a parameter-type refusal, a server operand error. Those
+		// per-provider ones describe the direct path only: over a remote context the row value fails to serialize
+		// before any provider is reached, so the same set shares one remote declaration at the end.
 		[ActiveIssue(3631, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. A row built from a local collection is not accepted where Sql.Row() is.")]
 		[ActiveIssue(3631, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
-			ErrorMessage = "Writing values of 'LinqToDB.Sql+SqlRow",
+			ErrorMessage = "Writing values of 'LinqToDB.Sql+SqlRow", SkipForLinqService = true,
 			Details = "Npgsql has no writer for the row type.")]
 		[ActiveIssue(3631, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
-			ErrorMessage = "Parameters not supported for ClickHouse provider",
+			ErrorMessage = "Parameters not supported for ClickHouse provider", SkipForLinqService = true,
 			Details = "ClickHouse takes no parameters here at all, so it never reaches the row type.")]
 		[ActiveIssue(3631, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.NotSupportedException",
-			ErrorMessage = "Parameter type SqlRow", Details = "MySqlConnector refuses the parameter type by name.")]
+			ErrorMessage = "Parameter type SqlRow", SkipForLinqService = true, Details = "MySqlConnector refuses the parameter type by name.")]
 		[ActiveIssue(3631, Configuration = TestProvName.AllMySqlData, ErrorTypeName = "MySql.Data.MySqlClient.MySqlException",
-			ErrorMessage = "Operand should contain", Details = "MySql.Data sends it and the server rejects the operand arity - the one provider that gets as far as the server.")]
+			ErrorMessage = "Operand should contain", SkipForLinqService = true, Details = "MySql.Data sends it and the server rejects the operand arity - the one provider that gets as far as the server.")]
 		[ActiveIssue(3631, Configuration = ProviderName.InformixDB2, ErrorTypeName = "System.InvalidCastException",
-			ErrorMessage = "Specified cast is not valid.", Details = "Informix fails inside the driver instead.")]
+			ErrorMessage = "Specified cast is not valid.", SkipForLinqService = true, Details = "Informix fails inside the driver instead.")]
 		[ActiveIssue(3631, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
-			ErrorMessage = "Writing value of 'LinqToDB.Sql+SqlRow", Details = "as the PostgreSQL half, in YDB's wording.")]
+			ErrorMessage = "Writing value of 'LinqToDB.Sql+SqlRow", SkipForLinqService = true, Details = "as the PostgreSQL half, in YDB's wording.")]
+		[ActiveIssue(3631, Configuration = TestProvName.AllOracle, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "ORA-50028", SkipForLinqService = true,
+			Details = "no-declaration: Oracle binds the row parameter and the driver rejects the binding - reached only on the direct path.")]
+		[ActiveIssue(3631, Configurations = [TestProvName.AllClickHouse, ProviderName.InformixDB2, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllYdb],
+			ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value 'LinqToDB.Sql+SqlRow", SkipForNonLinqService = true,
+			Details = "no-declaration: over a remote context the SqlRow value does not round-trip, so every provider that gets past linq2db's own refusal fails here instead of in its own driver.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
 		public void Issue3631Test2([DataSources] string context)
 		{

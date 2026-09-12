@@ -1308,17 +1308,47 @@ namespace Tests.xUpdate
 		// its own words - while SQL Server, ClickHouse and MySqlConnector ALSO produce a second, unrelated
 		// failure over the same providers ("Sequence contains no elements", "SourceOrdinal is an invalid value").
 		// The two axes overlap, so no Configuration separates them.
-		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
-			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Twenty-two wordings over two overlapping failure modes; see the comment above.")]
+		//
+		// The copy modes do separate them, and a gate cannot target a [Values] argument, so each mode gets its own
+		// method: DB2 answers its native path, and Informix answers everything except the batched one.
+		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Twenty-two wordings over two overlapping failure modes; see the comment above. Informix is absent: it inserts the row on the default path.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
-		public void BulkCopyAutoOnly(
-			[DataSources(false)] string context,
-			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType copyType)
+		public void BulkCopyAutoOnlyDefault([DataSources(false)] string context)
 		{
-			BulkCopyAutoOnlyCore(context, copyType);
+			BulkCopyAutoOnlyCore(context, BulkCopyType.Default);
 		}
 
-		// RowByRow inserts a row at a time and never builds the empty column list, so it passes everywhere.
+		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+			Details = "no-declaration: as BulkCopyAutoOnlyDefault - the batched mode is the one every named provider still gets wrong.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnlyMultipleRows([DataSources(false)] string context)
+		{
+			BulkCopyAutoOnlyCore(context, BulkCopyType.MultipleRows);
+		}
+
+		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+			Details = "no-declaration: as BulkCopyAutoOnlyDefault, minus DB2 and Informix - both answer their native bulk-copy path.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnlyProviderSpecific([DataSources(false)] string context)
+		{
+			BulkCopyAutoOnlyCore(context, BulkCopyType.ProviderSpecific);
+		}
+
+		// RowByRow inserts a row at a time, but with nothing to insert it still emits DEFAULT VALUES - the same
+		// gap as the batched modes, in a different spelling. The providers that take DEFAULT VALUES pass; these
+		// do not, and ClickHouse needs a declaration-free gate because its three drivers word it two ways.
+		[ActiveIssue(4615, Configuration = TestProvName.AllClickHouse,
+			Details = "no-declaration: a server syntax error on the MySql and Driver clients, a dropped connection on Octonica.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllSapHana,
+			ErrorMessage = "incorrect syntax near \"VALUES\"",
+			Details = "no-issue: HANA has no DEFAULT VALUES. Type-less because the ODBC and native drivers raise their own.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Status: GenericError", Details = "no-issue: as the HANA half.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "no-issue: as the HANA half.")]
+		[ActiveIssue(4615, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+			ErrorMessage = "There was an error parsing the query.", Details = "no-issue: as the HANA half; the token offset differs per test, so the message stops before it.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopyAutoOnlyRowByRow([DataSources(false)] string context)
 		{
@@ -1348,11 +1378,31 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnly(
 			[DataSources(false)] string context,
-			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType copyType)
+			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows)] BulkCopyType copyType)
 		{
 			BulkCopySkipOnlyCore(context, copyType);
 		}
 
+		// ProviderSpecific splits off for the same reason as its BulkCopyAutoOnly sibling: DB2's native path
+		// inserts the row rather than building the empty column list, and a gate cannot target a [Values] argument.
+		[ActiveIssue(4615, Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB],
+			Details = "no-declaration: as BulkCopySkipOnly, minus DB2.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopySkipOnlyProviderSpecific([DataSources(false)] string context)
+		{
+			BulkCopySkipOnlyCore(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[ActiveIssue(4615, Configuration = TestProvName.AllClickHouse,
+			Details = "no-declaration: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllSapHana,
+			ErrorMessage = "incorrect syntax near \"VALUES\"", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Status: GenericError", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+			ErrorMessage = "There was an error parsing the query.", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnlyRowByRow([DataSources(false)] string context)
 		{

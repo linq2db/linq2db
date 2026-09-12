@@ -1836,8 +1836,6 @@ namespace Tests.Linq
 			Details = "no-issue: the server rejects the addition. Type-less because the ODBC and native drivers raise their own.")]
 		[ActiveIssue(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
 			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: SqlCe has no Time parameter type.")]
-		[ActiveIssue(Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTestNonNull))] TimeSpan? ts)
 		{
@@ -1846,9 +1844,15 @@ namespace Tests.Linq
 
 		// The null arm: Access, MySQL and SQLite are absent because they pass it, and SQL Server declares its one
 		// failure because the client-side TIME check never fires without an interval.
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer,
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2012Plus,
 			ErrorMessage = "The data types datetime and time are incompatible in the add operator.",
 			Details = "no-issue: message-only, the two SqlClient packages raising their own.")]
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2005, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "The version of SQL Server in use does not support datatype 'time'.",
+			Details = "no-issue: 2005 has no TIME at all, so the client refuses the parameter before the server sees the add.")]
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2008,
+			ErrorMessage = "Operand data type datetime2 is invalid for add operator.",
+			Details = "no-issue: 2008 takes the parameter and the server names datetime2 rather than time.")]
 		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
 			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: as the non-null arm.")]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
@@ -1915,11 +1919,9 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Cannot infer type name from (System.DateTimeOffset, DateTimeOffset)",
 			Details = "no-issue: ClickHouse has no parameter type for the offset, so the query is never sent.")]
-		[ActiveIssue(Configuration = TestProvName.AllMySql, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+		[ActiveIssue(Configuration = TestProvName.AllMySqlData, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
 			ErrorMessage = "Mapping of column",
-			Details = "no-issue: MySQL accepts the query and fails reading the result back.")]
-		[ActiveIssue(Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
+			Details = "no-issue: MySQL accepts the query and fails reading the result back. MySqlConnector and MariaDB read it back fine, so only the MySql.Data driver keeps the gate.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeOffsetAddTimeSpan(
 			[DataSources(
