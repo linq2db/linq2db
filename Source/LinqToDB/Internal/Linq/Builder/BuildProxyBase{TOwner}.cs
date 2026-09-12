@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var translated = Builder.BuildExpression(BuildContext, currentExpression, buildFlags: buildFlags);
 
-			if (!(flags.IsExpression() && !flags.IsForSetProjection())) 
+			if (!flags.IsExpression() || flags.IsForSetProjection())
 			{
 				if (ExpressionEqualityComparer.Instance.Equals(translated, currentExpression))
 					return path;

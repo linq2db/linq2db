@@ -127,19 +127,19 @@ namespace Tests.LinqToDB.CLI
 				}
 			}
 
-			async Task SendNotification(string method, JsonObject parameters)
+			Task SendNotification(string method, JsonObject parameters)
 			{
-				await WriteMessage(new JsonObject
+				return WriteMessage(new JsonObject
 				{
 					["jsonrpc"] = "2.0",
 					["method"]  = method,
 					["params"]  = parameters,
-				}).ConfigureAwait(false);
+				});
 			}
 
-			async Task WriteMessage(JsonObject message)
+			Task WriteMessage(JsonObject message)
 			{
-				await _process.StandardInput.WriteLineAsync(message.ToJsonString()).ConfigureAwait(false);
+				return _process.StandardInput.WriteLineAsync(message.ToJsonString());
 			}
 
 			async Task<JsonObject> ReadMessage()
