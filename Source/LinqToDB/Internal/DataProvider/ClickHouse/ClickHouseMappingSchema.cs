@@ -556,12 +556,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				case DataType.Date          : BuildDateLiteral(sb, value.Date);                                                                 break;
 				case DataType.Date32        : BuildDate32Literal(sb, value.Date);                                                               break;
-				case DataType.DateTime      : BuildDateTimeLiteral(sb, value.UtcDateTime);                                                      break;
+				// UtcDateTime is what goes in, so these literals name UTC rather than leaving the server to guess.
+				case DataType.DateTime      : BuildDateTimeLiteral(sb, value.UtcDateTime, utc: true);                                           break;
 				case DataType.Undefined     :
 				case DataType.DateTime2     :
 				case DataType.DateTime64    :
 				case DataType.SmallDateTime :
-				case DataType.DateTimeOffset: BuildDateTime64Literal(sb, value.UtcDateTime, dt.Type.Precision ?? DEFAULT_DATETIME64_PRECISION); break;
+				case DataType.DateTimeOffset: BuildDateTime64Literal(sb, value.UtcDateTime, dt.Type.Precision ?? DEFAULT_DATETIME64_PRECISION, utc: true); break;
 				default                     : throw new LinqToDBConvertException($"Unsupported DateTimeOffset type mapping: {dt.Type.DataType}");
 			}
 		}
@@ -694,9 +695,15 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			sb.AppendFormat(CultureInfo.InvariantCulture, "toDate32('{0:yyyy-MM-dd}')", value);
 		}
 
-		private static void BuildDateTimeLiteral(StringBuilder sb, DateTime value)
+		private const string DATETIME_FORMAT = "toDateTime('{0:yyyy-MM-dd HH:mm:ss}')";
+
+		// The same call with the zone named, for the reason given at DATETIME64_UTC_FORMATS below. Derived from the
+		// plain format so that editing one cannot leave the other behind.
+		private static readonly string DATETIME_UTC_FORMAT = DATETIME_FORMAT.Insert(DATETIME_FORMAT.Length - 1, ", 'UTC'");
+
+		private static void BuildDateTimeLiteral(StringBuilder sb, DateTime value, bool utc = false)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, "toDateTime('{0:yyyy-MM-dd HH:mm:ss}')", value);
+			sb.AppendFormat(CultureInfo.InvariantCulture, utc ? DATETIME_UTC_FORMAT : DATETIME_FORMAT, value);
 		}
 
 		private static readonly string[] DATETIME64_FORMATS = new[]
@@ -713,7 +720,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			"toDateTime64('{0:yyyy-MM-dd HH:mm:ss.fffffff}', 9)",
 		};
 
-		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value, int precision)
+		// The same calls with the zone named. A bare DateTime64 literal is a wall clock that the server reads in its
+		// own time zone, so a value that already means UTC has to say so: on a server that is not itself in UTC the
+		// two readings differ, and the instant stored is the one the server inferred rather than the one written.
+		private static readonly string[] DATETIME64_UTC_FORMATS =
+			DATETIME64_FORMATS.Select(f => f.Insert(f.Length - 1, ", 'UTC'")).ToArray();
+
+		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value, int precision, bool utc = false)
 		{
 			if (precision < 0)
 				throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Invalid DateTime64 precision: {precision}"));
@@ -721,7 +734,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (precision > 9)
 				precision = 9;
 
-			sb.AppendFormat(CultureInfo.InvariantCulture, DATETIME64_FORMATS[precision], value);
+			sb.AppendFormat(CultureInfo.InvariantCulture, (utc ? DATETIME64_UTC_FORMATS : DATETIME64_FORMATS)[precision], value);
 		}
 
 		private static void BuildByteLiteral(StringBuilder sb, byte value)

@@ -3538,6 +3538,40 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
+		protected internal virtual IQueryElement VisitSqlTimeZoneConversionExpression(SqlTimeZoneConversionExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Value);
+					Visit(element.Zone);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Value), (ISqlExpression)Visit(element.Zone), element.Kind, element.Type);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var value = (ISqlExpression)Visit(element.Value);
+					var zone  = (ISqlExpression)Visit(element.Zone);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Value, value) || !ReferenceEquals(element.Zone, zone))
+					{
+						return NotifyReplaced(new SqlTimeZoneConversionExpression(value, zone, element.Kind, element.Type), element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
 			switch (GetVisitMode(element))

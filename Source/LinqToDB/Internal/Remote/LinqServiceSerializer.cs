@@ -1812,6 +1812,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlTimeZoneConversion:
+					{
+						var elem = (SqlTimeZoneConversionExpression)e;
+						Append(elem.Type);
+						Append(elem.Value);
+						Append(elem.Zone);
+						Append((int)elem.Kind);
+						break;
+					}
+
 					case QueryElementType.SqlIntervalPart:
 					{
 						var elem = (SqlIntervalPartExpression)e;
@@ -3115,6 +3125,19 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var isSigned   = ReadBool();
 
 						obj = new SqlIntervalDifferenceExpression(start!, end!, dataType, new SqlIntervalType(domain, resolution, isSigned));
+
+						break;
+					}
+
+					// Field order mirrors the writer's exactly - the stream carries no field names.
+					case QueryElementType.SqlTimeZoneConversion:
+					{
+						var dataType = ReadDbDataType();
+						var value    = Read<ISqlExpression>();
+						var zone     = Read<ISqlExpression>();
+						var kind     = (SqlTimeZoneConversionKind)ReadInt();
+
+						obj = new SqlTimeZoneConversionExpression(value!, zone!, kind, dataType);
 
 						break;
 					}

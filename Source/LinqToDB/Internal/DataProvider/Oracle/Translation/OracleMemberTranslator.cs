@@ -57,6 +57,21 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
+			/// <summary>
+			/// Oracle gives the offset in two pieces and signs both, so a negative offset of an hour and a half
+			/// arrives as -1 and -30 and the two simply add.
+			/// </summary>
+			protected override ISqlExpression? TranslateDateTimeOffsetOffsetMinutes(ITranslationContext translationContext, ISqlExpression value)
+			{
+				var factory = translationContext.ExpressionFactory;
+				var intType = factory.GetDbDataType(typeof(int));
+
+				ISqlExpression Part(string name)
+					=> factory.Function(intType, "EXTRACT", factory.Expression(intType, name + " FROM {0}", value));
+
+				return factory.Add(intType, factory.Multiply(intType, Part("TIMEZONE_HOUR"), 60), Part("TIMEZONE_MINUTE"));
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var factory      = translationContext.ExpressionFactory;
@@ -118,9 +133,45 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
+			/// <summary>
+			/// Oracle keeps the offset a value was written with, so the components a caller sees after a round-trip
+			/// are the ones in that stored offset - but <c>EXTRACT</c> over a <c>TIMESTAMP WITH TIME ZONE</c> answers
+			/// in UTC, which the documentation states outright and a probe confirms: extracting the hour of
+			/// <c>12:15:32 +05:10</c> gives 7. Casting to <c>TIMESTAMP</c> first keeps the local reading.
+			/// </summary>
+			/// <remarks>
+			/// This also settles an inconsistency that predates the fix: Year/Month/Day/Hour/Minute/Second went
+			/// through <c>EXTRACT</c> while Quarter/DayOfYear/Week/Millisecond went through <c>TO_CHAR</c>, which
+			/// reads the stored offset - so <c>.Day</c> and <c>.DayOfYear</c> could disagree on one row.
+			/// </remarks>
+			protected override ISqlExpression? ToDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression value)
 			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Cast(value, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2), true);
+			}
+
+			/// <summary>
+			/// Restores the offset the operand carried, after an operation was carried out on its local reading.
+			/// </summary>
+			/// <remarks>
+			/// Oracle performs <c>TIMESTAMP WITH TIME ZONE</c> arithmetic in UTC, so adding a month to
+			/// <c>2020-02-01 00:20 +00:40</c> - which is 31 January in UTC - lands on 31 February and raises
+			/// ORA-01839, where .NET answers <c>2020-03-01 00:20 +00:40</c>. Doing the shift on the local reading and
+			/// re-attaching the operand's own offset is what reproduces the .NET answer. The offset has to be read
+			/// back off the operand because nothing else in the expression carries it.
+			/// </remarks>
+			protected override ISqlExpression? FromDateTimeOffsetFrame(ITranslationContext translationContext, ISqlExpression original, ISqlExpression framed, DbDataType resultType)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var storedOffset = factory.Function(
+					factory.GetDbDataType(typeof(string)),
+					"To_Char",
+					original,
+					factory.Value("TZH:TZM"));
+
+				return factory.Function(resultType, "From_Tz", framed, storedOffset);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
@@ -130,12 +181,78 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				var dateType     = factory.GetDbDataType(dateTimeExpression);
 				var intervalType = factory.GetDbDataType(increment).WithDataType(DataType.Interval);
 
+				// A month-based shift cannot go through an interval here. Oracle's INTERVAL '1' MONTH raises
+				// ORA-01839 whenever the shift lands on a day the target month does not have - 31 January plus a
+				// month - while DateTime.AddMonths clamps to the last day of that month, which is what ADD_MONTHS
+				// does. ADD_MONTHS answers a DATE, so the result is cast back to the operand's own type and the
+				// sub-second remainder DATE cannot hold is added back.
+				var monthsPerUnit = datepart switch
+				{
+					Sql.DateParts.Year    => 12,
+					Sql.DateParts.Quarter => 3,
+					Sql.DateParts.Month   => 1,
+					_                     => 0,
+				};
+
+				if (monthsPerUnit != 0)
+				{
+					var shift = monthsPerUnit == 1
+						? increment
+						: factory.Multiply(factory.GetDbDataType(increment), increment, monthsPerUnit);
+
+					var intType    = factory.GetDbDataType(typeof(int));
+					var doubleType = factory.GetDbDataType(typeof(double));
+
+					var addMonths = factory.Function(dateType, "Add_Months", dateTimeExpression, shift);
+
+					var shiftedDay = TranslateDateTimeDatePart(translationContext, translationFlag, addMonths, Sql.DateParts.Day);
+					var sourceDay  = TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, Sql.DateParts.Day);
+
+					if (shiftedDay == null || sourceDay == null)
+						return null;
+
+					// ADD_MONTHS is not AddMonths. It clamps to the end of the target month in two cases where .NET
+					// clamps in only one: when the target month is too short - which is the case this exists to fix -
+					// and also when the *source* is the last day of its own month, where .NET keeps the day number.
+					// 29 February less two months is 29 December to .NET and 31 December to ADD_MONTHS. Since the
+					// function only ever moves the day forward to a month end, subtracting whatever it gained
+					// restores the .NET answer and leaves the genuine clamp alone. The correction needs both the
+					// shifted and the original value, so the operand is spelled more than once; accepted rather than
+					// hoisted, since removing the repetition would take a CTE or a lateral join.
+					var gained = factory.Function(
+						intType,
+						"GreatEst",
+						factory.Sub(intType, shiftedDay, sourceDay),
+						factory.Value(intType, 0));
+
+					// Mandatory: ADD_MONTHS answers a DATE whatever its argument was, and the declared type alone
+					// would let the cast be elided - leaving a DATE where the caller, FROM_TZ among them, expects a
+					// TIMESTAMP.
+					var shifted = factory.Cast(factory.Sub(dateType, addMonths, gained), dateType, isMandatory: true);
+
+					// DATE carries whole seconds, so ADD_MONTHS drops whatever was below one. The shift itself cannot
+					// change it, so it is read off the operand and put back. Built from EXTRACT rather than by
+					// subtracting the truncated value: Oracle reads a difference of two datetimes in an addition as
+					// adding two datetimes and raises ORA-30087. The cast makes a DATE operand answer a zero remainder
+					// instead of ORA-30076, and the seconds are typed as a real number because EXTRACT answers a
+					// fractional one here - declaring it an integer would let MOD be folded away to nothing.
+					var seconds = factory.Function(
+						doubleType,
+						"EXTRACT",
+						factory.Expression(doubleType, "SECOND FROM {0}", factory.Cast(dateTimeExpression, dateType.WithDataType(DataType.DateTime2), isMandatory: true)));
+
+					var remainder = factory.Function(
+						intervalType,
+						"NumToDsInterval",
+						factory.Mod(seconds, factory.Value(doubleType, 1)),
+						factory.Value("SECOND"));
+
+					return factory.Add(dateType, shifted, remainder);
+				}
+
 				string expStr;
 				switch (datepart)
 				{
-					case Sql.DateParts.Year:        expStr = "INTERVAL '1' YEAR"; break;
-					case Sql.DateParts.Quarter:     expStr = "INTERVAL '3' MONTH"; break;
-					case Sql.DateParts.Month:       expStr = "INTERVAL '1' MONTH"; break;
 					case Sql.DateParts.Day:         expStr = "INTERVAL '1' DAY"; break;
 					case Sql.DateParts.Week:        expStr = "INTERVAL '7' DAY"; break;
 					case Sql.DateParts.Hour:        expStr = "INTERVAL '1' HOUR"; break;
