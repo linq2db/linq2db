@@ -2427,6 +2427,14 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							var placeholder = placeholders[0];
 
+							// The column has to be the operand itself. A constructed object that happens to hold one
+							// column is not interchangeable with it: reading it as the column drops every other member,
+							// and every column a member evaluated client-side reads contributes no placeholder here.
+							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
+							{
+								return base.VisitUnary(node);
+							}
+
 							if (node.Type                         == typeof(object)
 							    || node.Type.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType()
 							    || node.Type.UnwrapNullableType() == placeholder.Sql.SystemType?.UnwrapNullableType()
@@ -2439,11 +2447,6 @@ namespace LinqToDB.Internal.Linq.Builder
 								}
 
 								return Visit(CreatePlaceholder(placeholder.Sql, node));
-							}
-
-							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
-							{
-								return base.VisitUnary(node);
 							}
 
 							if (TryCastTo(placeholder, node.Type, node.Type, out var casted))
