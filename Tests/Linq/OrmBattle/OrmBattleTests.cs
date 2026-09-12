@@ -39,7 +39,7 @@ namespace Tests.OrmBattle
 		// One fixture instance is shared by the fixture's concurrently-running contexts, so the cache
 		// must be built and published atomically: ComplexAllTest compares navigation properties by
 		// reference, which a torn init breaks (orders wired against a superseded Customers list).
-		readonly object _dataSync = new();
+		readonly System.Threading.Lock _dataSync = new();
 
 		[MemberNotNull(nameof(Customers), nameof(Employees), nameof(Order), nameof(Products))]
 		private NorthwindDB Setup(string context, bool guardGrouping = true)

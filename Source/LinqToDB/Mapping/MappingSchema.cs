@@ -1782,7 +1782,7 @@ namespace LinqToDB.Mapping
 						if (type.IsEnum)
 						{
 							return type.GetFields()
-								.Where(f => (f.Attributes & EnumField) == EnumField)
+								.Where(f => f.Attributes.HasFlag(EnumField))
 								.Select(f => new MapValue(f.GetValue(null)!, @this.GetAttributes<MapValueAttribute>(type, f)))
 								.ToArray();
 						}
