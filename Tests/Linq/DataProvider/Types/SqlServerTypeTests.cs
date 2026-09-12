@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 
 using Microsoft.Data.SqlTypes;
 
@@ -56,6 +57,24 @@ namespace Tests.DataProvider
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new("{ }"), SqlJson.Null, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.Value == expectedEmpty, isExpectedNullableValue: v => v?.IsNull == true);
 				await TestType<SqlJson, SqlJson?>(context, new(typeof(SqlJson)), new(json1), new(json2), filterByValue: false, filterByNullableValue: false, isExpectedValue: v => v.Value == expected1, isExpectedNullableValue: v => v?.Value == expected2);
 			}
+		}
+
+		[Test(Description = "Parameter type name must not vary with the target framework")]
+		public void TestJSONParameterTypeName([IncludeDataSources(TestProvName.AllSqlServer2025Plus)] string context)
+		{
+			// System.Data.SqlDbType gained Json (35) only in .NET 9, so the enum has no name for it on
+			// net462/net8 and would otherwise render as the bare number - a release-only netfx leg then
+			// captures different SQL from every other leg.
+			using var db = GetDataConnection(context);
+
+			const string json = /*lang=json,strict*/ "{ \"prop1\": 123 }";
+			db.Execute<string>("SELECT CAST(@p AS NVARCHAR(MAX))", new DataParameter("p", json, DataType.Json));
+
+			// without SqlJson the provider maps DataType.Json to NVarChar, which must keep its own name
+			var expected = context.IsAnyOf(TestProvName.AllSqlServerMS) ? "Json" : "NVarChar";
+
+			// the declaration is in the captured trace, not in LastQuery, which holds the command text alone
+			Assert.That(GetCurrentBaselines(), Does.Contain($"DECLARE @p {expected}"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5240")]
