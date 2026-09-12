@@ -341,8 +341,13 @@ namespace LinqToDB.Internal.SqlProvider
 			var saveAllowToOptimize = _allowOptimizeList;
 			_allowOptimizeList = element.Predicates;
 
+			// Null folding is deferred to a second traversal only so OptimizeSimilarFlat sees unfolded
+			// siblings; with a single predicate it is a no-op, so fold in the first traversal instead.
+			var singlePredicate = element.Predicates.Count <= 1;
+
 			var saveDoNotOptimizeNulls = _doNotOptimizeNulls;
-			_doNotOptimizeNulls = true;
+			if (!singlePredicate)
+				_doNotOptimizeNulls = true;
 
 			var newElement = base.VisitSqlSearchCondition(element);
 
@@ -355,7 +360,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (!_doNotOptimizeNulls && !_nullabilityContext.IsEmpty)
+			if (!singlePredicate && !_doNotOptimizeNulls && !_nullabilityContext.IsEmpty)
 			{
 				// run again to optimize possible new IS [NOT] NULL predicates with nullability context updated with previous optimizations
 				newElement = base.VisitSqlSearchCondition(element);
