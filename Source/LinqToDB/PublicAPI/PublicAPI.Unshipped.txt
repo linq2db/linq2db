@@ -1,1 +1,2 @@
 ﻿#nullable enable
+const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
