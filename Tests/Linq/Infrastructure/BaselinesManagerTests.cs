@@ -46,7 +46,8 @@ namespace Tests.Infrastructure
 			var baseline = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE);
 
 			baseline.ShouldNotBeNull();
-			baseline.ToString().Split('\n', StringSplitOptions.RemoveEmptyEntries).Length
+			// char[] overload rather than the char one: Split(char, StringSplitOptions) is not on net462
+			baseline.ToString().Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).Length
 				.ShouldBe(writers * linesPerWriter);
 		}
 	}
