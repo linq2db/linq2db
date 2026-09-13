@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.SchemaProvider;
@@ -25,7 +26,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var dt     = dataConnection.OpenDbConnection().GetSchema("Tables");
+			var dt     = GetSchemaWithRetry(dataConnection.OpenDbConnection(), "Tables");
 			var tables = new List<TableInfo>();
 
 			foreach (DataRow row in dt.Rows)
@@ -55,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var dt      = dataConnection.OpenDbConnection().GetSchema("Columns");
+			var dt      = GetSchemaWithRetry(dataConnection.OpenDbConnection(), "Columns");
 			var columns = new List<ColumnInfo>();
 
 			foreach (DataRow row in dt.Rows)
@@ -111,6 +112,44 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		// YDB has no foreign keys.
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options) => [];
+
+		// DescribeTable (behind GetSchema("Tables"/"Columns")) reads from the scheme service, which can lag
+		// a just-committed CREATE/DROP TABLE by up to roughly a second before every path it might be served
+		// from has caught up (confirmed against server logs: scheme-board replica/subscriber propagation
+		// continuing for that long after the DDL's own commit) - a schema read issued immediately after
+		// creating a table can race that propagation and see SchemeError for a table that, from every other
+		// connection's perspective, already exists. A handful of short retries absorbs that window. Nothing
+		// is swallowed: only SchemeError is retried, and once the attempts run out the exception propagates
+		// unchanged, so a genuine scheme failure is delayed by at most a few hundred milliseconds.
+		//
+		// TODO: this is really a driver-level bug, not something a consumer should have to work around -
+		// Ydb.Sdk.Ado.YdbSchema.GetColumns lists tables and then calls DescribeTable per name as two
+		// separate, non-atomic steps, so concurrent DDL between the two steps races regardless of any
+		// retry we add here (confirmed with a minimal Ydb.Sdk-only repro, no linq2db involved). Filed
+		// upstream as https://github.com/ydb-platform/ydb-dotnet-sdk/issues/687 - once fixed there and
+		// released, re-check whether this retry is still needed and remove it if not.
+		static DataTable GetSchemaWithRetry(DbConnection connection, string collectionName)
+		{
+			const int maxAttempts = 5;
+			const int delayMs     = 150;
+
+			for (var attempt = 1; ; attempt++)
+			{
+				try
+				{
+					return connection.GetSchema(collectionName);
+				}
+				catch (Exception ex) when (attempt < maxAttempts && IsSchemeError(ex))
+				{
+					Thread.Sleep(delayMs);
+				}
+			}
+		}
+
+		static bool IsSchemeError(Exception ex) =>
+			YdbTransientExceptionDetector.TryGetYdbException(ex, out var ydbEx) &&
+			YdbTransientExceptionDetector.TryGetCodeAndTransient(ydbEx, out var code, out _) &&
+			string.Equals(code, "SchemeError", StringComparison.Ordinal);
 
 		static bool IsSystemPath(string path) => path.StartsWith(".sys", StringComparison.Ordinal);
 
