@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -2116,6 +2117,48 @@ namespace LinqToDB.Internal.Linq.Builder
 			return QueryHelper.UnwrapNullablity(computed) is SqlValue or SqlParameter;
 		}
 
+		/// <summary>
+		/// Whether an operator was asked to combine two stored values that do not count the same thing, and the
+		/// message naming them if so.
+		/// </summary>
+		/// <remarks>
+		/// A conversion is not arithmetic on the SQL side, so an operator between two columns runs on the numbers
+		/// they happen to be stored as. Where the two converters disagree about what those numbers mean the answer
+		/// is neither operand's - ninety minutes held as 54000000000 ticks and as 5400 seconds add to a sum that is
+		/// no duration at all - and it is then read back through whichever descriptor the walk reaches first, which
+		/// is silent and wrong by whatever the two conversions differ by.
+		/// <para>
+		/// Only two stored values can disagree, so an operand without a descriptor is waved through: a literal or a
+		/// parameter is written through the descriptor in scope and therefore arrives on the other column's terms,
+		/// which is what makes <c>column + TimeSpan.FromMinutes(5)</c> right today. That is narrower than
+		/// <see cref="CanShareOneReading"/>, which also keeps a computed value apart from a converted column - there
+		/// the two are brought into one SQL value and only one conversion can read it, while here the operator
+		/// itself is what has to make sense.
+		/// </para>
+		/// </remarks>
+		static bool CombinesDivergentStorage(ISqlExpression expr1, ISqlExpression expr2, [NotNullWhen(true)] out string? message)
+		{
+			message = null;
+
+			var descriptor1 = QueryHelper.GetColumnDescriptor(expr1);
+
+			if (descriptor1 == null)
+				return false;
+
+			var descriptor2 = QueryHelper.GetColumnDescriptor(expr2);
+
+			if (descriptor2 == null || SequenceHelper.ReadTheSameWay(descriptor1, descriptor2))
+				return false;
+
+			message = string.Format(
+				CultureInfo.InvariantCulture,
+				ErrorHelper.Error_ValueConverter_DivergentOperands,
+				descriptor1.MemberName,
+				descriptor2.MemberName);
+
+			return true;
+		}
+
 		bool HandleDefaultIfEmptyInBinary(Expression left, Expression right, [NotNullWhen(true)] out Expression? newCondition)
 		{
 			if (left is SqlDefaultIfEmptyExpression { InnerExpression: SqlGenericConstructorExpression } defaultIfEmpty && right.IsNullValue)
@@ -3423,6 +3466,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			var r = rightPlaceholder.Sql;
 			var t = node.Type;
 
+			if (CombinesDivergentStorage(l, r, out var divergent))
+			{
+				translated = new SqlErrorExpression(node, divergent, node.Type);
+				return true;
+			}
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.Add            :
@@ -4207,6 +4256,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var leftPlaceholder  = leftExpr as SqlPlaceholderExpression;
 			var rightPlaceholder = rightExpr as SqlPlaceholderExpression;
+
+			// Asked before the switch below, so that it also covers the enum shape ConvertEnumConversion answers
+			// and the equality shape that leaves the switch immediately when both sides are placeholders.
+			if (leftPlaceholder != null && rightPlaceholder != null
+				&& CombinesDivergentStorage(leftPlaceholder.Sql, rightPlaceholder.Sql, out var divergent))
+			{
+				return new SqlErrorExpression(GetOriginalExpression(), divergent, typeof(bool));
+			}
 
 			switch (nodeType)
 			{
