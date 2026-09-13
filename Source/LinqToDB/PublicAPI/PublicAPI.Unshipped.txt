@@ -1,6 +1,7 @@
 ﻿#nullable enable
 const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_Conversion = "Time zone conversion is not supported by current provider." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_ZonedResult = "Producing an offset-carrying value from a time zone conversion is not supported by current provider. Read a component or .DateTime from it instead." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_TimeZone_OffsetFrame = "Reading a value through a fixed time zone offset is not supported by current provider. Use a named time zone instead." -> string!
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlTimeZoneConversion = 89 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.SqlTimeZoneConversionExpression
 LinqToDB.Internal.SqlQuery.SqlTimeZoneConversionExpression.Kind.get -> LinqToDB.Internal.SqlQuery.SqlTimeZoneConversionKind
