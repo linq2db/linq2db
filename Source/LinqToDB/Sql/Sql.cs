@@ -68,9 +68,9 @@ namespace LinqToDB
 			throw new ServerSideOnlyException(nameof(Spread));
 		}
 
-		// Nullability annotator, handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
-		// Deliberately carries no [Expression] attribute: that would let projection client-calculation
-		// (LinqOptions.PreferClientCalculation) pull it client-side, collapsing a SQL NULL to default(T).
+		// Nullability annotator. Pinned server-side by its registration in SqlFunctionsMemberTranslatorBase being
+		// mandatory (outside any TranslationRegistration.OptionalScope), which is what keeps projection
+		// client-calculation from pulling it client-side and collapsing a SQL NULL to default(T).
 		[CLSCompliant(false)]
 		public static T AsNullable<T>(T value)
 		{
@@ -91,9 +91,9 @@ namespace LinqToDB
 			return value;
 		}
 
-		// Pure nullability widener — handled by SqlFunctionsMemberTranslatorBase so it always stays server-side.
-		// Deliberately carries no [Expression] attribute: that would let projection client-calculation
-		// (LinqOptions.PreferClientCalculation) pull it client-side, collapsing a SQL NULL to default(T) before the widen.
+		// Pure nullability widener. Pinned server-side by its registration in SqlFunctionsMemberTranslatorBase
+		// being mandatory (outside any TranslationRegistration.OptionalScope); the same rule also keeps the
+		// option from applying to the translation of its argument, which linq2db#5923 covers.
 		[CLSCompliant(false)]
 		public static T? ToNullable<T>(T value)
 			where T : struct

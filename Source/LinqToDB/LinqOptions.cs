@@ -154,12 +154,25 @@ namespace LinqToDB
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="PreferClientCalculation">
-	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
-	/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
-	/// materialization instead of being translated into additional SQL columns. Real database columns,
-	/// already-built subqueries, and expressions that prefer or require server-side evaluation (for example,
-	/// members or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
-	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL.
+	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations,
+	/// string concatenation and interpolation, and mapped methods whose translation is declared optional) are
+	/// calculated on the client during materialization instead of being translated into additional SQL columns.
+	/// Real database columns, already-built subqueries, and expressions that prefer or require server-side
+	/// evaluation (for example, members or methods mapped with
+	/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
+	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL — as are aggregates,
+	/// window functions, non-deterministic functions such as <c>NewGuid</c> and the current timestamp, and the
+	/// nullability wideners <c>Sql.ToNullable</c> and <c>Sql.AsNullable</c>.
+	/// <para>
+	/// Two consequences worth knowing. A projection that produced a single computed SQL column may now select
+	/// several raw columns instead, so more data crosses the wire. And a diagnostic that is only raised while an
+	/// expression is translated to SQL is not raised for an expression kept on the client, so enabling this option
+	/// can suppress an error that would otherwise be reported.
+	/// </para>
+	/// <para>
+	/// Member access always translates to SQL. Bool-returning members are routed inconsistently and may or may not
+	/// move client-side depending on how they are mapped.
+	/// </para>
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="UpsertEmulationPolicy">

@@ -324,11 +324,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// When enabled, computed expressions in the final projection are calculated on the client during
-		/// materialization instead of being translated into additional SQL columns. Expressions that prefer or
-		/// require server-side evaluation (for example, members or methods mapped with
-		/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
-		/// are still translated to SQL.
+		/// When enabled, computed expressions in the final projection — including string concatenation and
+		/// interpolation — are calculated on the client during materialization instead of being translated into
+		/// additional SQL columns. Expressions that prefer or require server-side evaluation (for example, members
+		/// or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
+		/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL, as are aggregates,
+		/// window functions, non-deterministic functions and the nullability wideners.
+		/// <para>
+		/// Note that a projection which produced one computed SQL column may now select several raw columns, and
+		/// that a diagnostic only raised while translating to SQL is not raised for an expression kept on the
+		/// client. See <see cref="LinqOptions.PreferClientCalculation"/> for the full contract.
+		/// </para>
 		/// Default value: <see langword="false"/>.
 		/// </summary>
 		[Pure]
@@ -649,11 +655,17 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// When enabled, computed expressions in the final projection are calculated on the client during
-		/// materialization instead of being translated into additional SQL columns. Expressions that prefer or
-		/// require server-side evaluation (for example, members or methods mapped with
-		/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>)
-		/// are still translated to SQL.
+		/// When enabled, computed expressions in the final projection — including string concatenation and
+		/// interpolation — are calculated on the client during materialization instead of being translated into
+		/// additional SQL columns. Expressions that prefer or require server-side evaluation (for example, members
+		/// or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
+		/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL, as are aggregates,
+		/// window functions, non-deterministic functions and the nullability wideners.
+		/// <para>
+		/// Note that a projection which produced one computed SQL column may now select several raw columns, and
+		/// that a diagnostic only raised while translating to SQL is not raised for an expression kept on the
+		/// client. See <see cref="LinqOptions.PreferClientCalculation"/> for the full contract.
+		/// </para>
 		/// Default value: <see langword="false"/>.
 		/// </summary>
 		[Pure]
