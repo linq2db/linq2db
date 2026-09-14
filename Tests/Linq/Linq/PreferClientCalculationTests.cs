@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
@@ -268,6 +269,390 @@ namespace Tests.Linq
 			(selectQuery.Find(e => e is SqlFunction { Name: "ABS" }) != null).ShouldBeTrue();
 			// ...while the surrounding "+" is pushed down only when client calculation is NOT preferred.
 			(selectQuery.Find(e => e is SqlBinaryExpression) != null).ShouldBe(!preferClient);
+		}
+
+		// String composition. Inside an expression tree the C# compiler lowers every interpolated string to
+		// string.Format (its string.Concat optimisation does not apply there), while `a + b` stays a binary Add
+		// carrying string.Concat as its method and an explicitly written string.Concat(...) is a plain call. The
+		// three forms reach three different translation paths, so each needs its own case.
+		//
+		// Assertion shape: "every projected column is a raw field" holds for all forms. The SqlConcatExpression
+		// check applies only where the format string has more than one part - QueryHelper.ConvertFormatToConcatenation
+		// returns the single part unwrapped, so a lone hole like $"{x:D4}" produces a CAST/COALESCE, not a concat.
+
+		[Table]
+		sealed class StringCalcEntity
+		{
+			[Column, PrimaryKey] public int     Id    { get; set; }
+			[Column]             public string? Name  { get; set; }
+			[Column]             public string? Name2 { get; set; }
+			[Column]             public int     Num   { get; set; }
+
+			public static readonly StringCalcEntity[] Seed =
+			[
+				new() { Id = 1, Name = "John", Name2 = "Smith", Num = 42 },
+				new() { Id = 2, Name = null,   Name2 = "Doe",   Num = 7  },
+				new() { Id = 3, Name = "Ann",  Name2 = null,    Num = 0  },
+			];
+		}
+
+		static void AssertComposition<T>(IQueryable<T> query, bool preferClient, bool multiPart = true)
+		{
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.Select.Columns.All(c => c.Expression is SqlField).ShouldBe(preferClient);
+
+			if (multiPart)
+				(selectQuery.Find(e => e is SqlConcatExpression) != null).ShouldBe(!preferClient);
+		}
+
+		[Test]
+		public void InterpolationTwoHolesProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Name} {e.Name2}";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationManyHolesProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			// Four holes: the compiler picks string.Format(String, Object[]) with a NewArrayInit.
+			var query = from e in table select $"{e.Name}, {e.Name2} ({e.Name}/{e.Name2})";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationNonStringHoleProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Num}: {e.Name}";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationFormatSpecifierProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Num:D4}";
+
+			// Single-part format, so no concat node either way - only the raw-field assertion applies.
+			AssertComposition(query, preferClient, multiPart: false);
+
+			// The value can only be asserted client-side: translated to SQL the format specifier is silently
+			// dropped (linq2db#5921), so the server-side result is "42" where .NET produces "0042".
+			if (preferClient)
+				AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryAddConcatProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select e.Name + " " + e.Name2;
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void ExplicitConcatProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			// Exercises the registry path directly, independent of how the compiler lowers interpolation.
+			var query = from e in table select string.Concat(e.Name, " ", e.Name2);
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		// Nesting guard: a mandatory translator (Sql.ToNullable / Sql.AsNullable) forwards its flags into the
+		// translation of its own argument. If an optional registration nested underneath it declines, the widener
+		// receives a non-placeholder, declines in turn, and the whole call collapses to client-side - reading the
+		// missing LEFT JOIN row as default(int) = 0 instead of null. The argument shapes below are the ones that
+		// route through a registry registration (Math.Abs) and through VisitBinary (+ 1).
+
+		[Test]
+		public void ToNullableOverNestedMethodReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(Math.Abs(j.Value1)) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void AsNullableOverNestedMethodReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = (int?)Sql.AsNullable(Math.Abs(j.Value1)) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void ToNullableOverNestedBinaryReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(j.Value1 + 1) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		// Per-translator coverage, batched: one projection calls many members of a family at once, and the
+		// "every projected column is a raw field" assertion fails if *any* member in the batch stayed server-side.
+		// A newly registered member joins a batch by adding one line to its projection rather than adding a test.
+
+		[Table]
+		sealed class BatchCalcEntity
+		{
+			[Column, PrimaryKey] public int      Id   { get; set; }
+			[Column]             public int      Num  { get; set; }
+			[Column]             public double   Dbl  { get; set; }
+			[Column]             public decimal  Dec  { get; set; }
+			[Column]             public string   Name { get; set; } = null!;
+			[Column]             public DateTime Date { get; set; }
+
+			// Values deliberately avoid rounding midpoints: client and server disagree on midpoint rules, which
+			// would make the option-off arm fail for a reason unrelated to this change.
+			public static readonly BatchCalcEntity[] Seed =
+			[
+				new() { Id = 1, Num =  42, Dbl =  1.4, Dec =  10.2m, Name = "  John  ", Date = new DateTime(2020, 1, 15) },
+				new() { Id = 2, Num =  -7, Dbl = -2.6, Dec =  -3.7m, Name = "Ann",      Date = new DateTime(2021, 6, 30) },
+				new() { Id = 3, Num =   0, Dbl =  3.3, Dec =   5.1m, Name = "Bob",      Date = new DateTime(2022, 12, 1) },
+			];
+		}
+
+		[Test]
+		public void MathMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Abs   = Math.Abs(e.Num),
+					Max   = Math.Max(e.Num, 5),
+					Min   = Math.Min(e.Num, 5),
+					RndD  = Math.Round(e.Dbl),
+					RndM  = Math.Round(e.Dec),
+				};
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient, multiPart: false);
+		}
+
+		[Test]
+		public void ConvertMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// Numeric conversions only - Convert.ToString is excluded because client and server disagree on
+			// numeric formatting, which is accepted behaviour but would break the option-off arm.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					I64 = Convert.ToInt64(e.Num),
+					Dbl = Convert.ToDouble(e.Num),
+					Dec = Convert.ToDecimal(e.Num),
+					I32 = Convert.ToInt32(e.Dec),
+				};
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient, multiPart: false);
+		}
+
+		[Test]
+		public void DateMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					D1 = e.Date.AddDays(3),
+					D2 = e.Date.AddMonths(1),
+					D3 = e.Date.AddYears(1),
+					D4 = e.Date.AddHours(5),
+				};
+
+			AssertQuery(query);
+
+			// Only the option-on direction is asserted here. Measured on SQLite: with the option *off* these
+			// members are not pushed into SQL either (the projection selects the raw [Date] column), so the
+			// option-off shape is provider-dependent and asserting it would fail for an unrelated reason. A
+			// provider that does translate DATEADD is what makes the off arm meaningful.
+			if (preferClient)
+				query.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField).ShouldBeTrue();
+		}
+
+		[Test]
+		public void StringMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Rep  = e.Name.Replace("o", "0"),
+					Pad  = e.Name.PadLeft(12, '.'),
+					TrmS = e.Name.TrimStart(' '),
+					TrmE = e.Name.TrimEnd(' '),
+					Cmp  = e.Name.CompareTo("Bob"),
+				};
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient, multiPart: false);
+		}
+
+		[Sql.Expression("{0} > 0", IsPredicate = true)]                        static bool AttributedPredicate(int value) => value > 0;
+		[Sql.Expression("{0} > 0", IsPredicate = true, ServerSideOnly = true)] static bool ServerOnlyPredicate(int value) => throw new ServerSideOnlyException(nameof(ServerOnlyPredicate));
+
+		[ExpressionMethod(nameof(IsPositiveImpl))]
+		static bool IsPositive(int value) => value > 0;
+		static Expression<Func<int, bool>> IsPositiveImpl() => v => v > 0;
+
+		[Test]
+		public void BooleanPredicateRoutesUnderOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// Measured routing for bool-returning members, pinned so a change in any of them is visible. The last
+			// two rows are inconsistent with the rest and are tracked as linq2db#5925; they are asserted as they
+			// behave today, not as they arguably should.
+			static bool AllRaw<T>(IQueryable<T> q) => q.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField);
+
+			// [Sql.Expression] -> HandleExtension, which the option gates.
+			AllRaw(from e in table select new { e.Id, V = AttributedPredicate(e.Num) }).ShouldBeTrue();
+
+			// ServerSideOnly excludes the node from the option entirely.
+			AllRaw(from e in table select new { e.Id, V = ServerOnlyPredicate(e.Num) }).ShouldBeFalse();
+
+			// [ExpressionMethod] expands before the gate; the expansion is a binary, which the option gates.
+			AllRaw(from e in table select new { e.Id, V = IsPositive(e.Num) }).ShouldBeTrue();
+
+			// The built-in predicate path declines under the option, so this moves too.
+			AllRaw(from e in table select new { e.Id, V = e.Name.Contains("o") }).ShouldBeTrue();
+
+			// #5925: expands to `p == null || p.Length == 0`; the comparison moves but Length is a member, and
+			// members always translate, so a computed Length(...) column remains.
+			AllRaw(from e in table select new { e.Id, V = string.IsNullOrEmpty(e.Name) }).ShouldBeFalse();
+
+			// #5925: registered in the same optional scope as Replace / PadLeft / Trim*, which do move - this one
+			// does not, and the whole predicate stays in SQL.
+			AllRaw(from e in table select new { e.Id, V = string.IsNullOrWhiteSpace(e.Name) }).ShouldBeFalse();
+		}
+
+		[Test]
+		public void BooleanMethodStaysInSqlDespiteOptionalRegistration([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// string.IsNullOrWhiteSpace is registered optional but does not move client-side, unlike the other
+			// members of the same scope. Kept as its own case rather than silently dropped from the string batch:
+			// the divergence is real and tracked as linq2db#5925, where the mechanism is still open. Results are
+			// correct either way, so AssertQuery holds in both modes - only the SQL shape differs.
+			var query = from e in table select new { e.Id, Ws = string.IsNullOrWhiteSpace(e.Name) };
+
+			AssertQuery(query);
+
+			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
+		}
+
+		[Test]
+		public void MandatoryMembersStayInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// The mirror of the batches above: Sql.* marks intent to compute server-side, so none of these may be
+			// pulled client-side whatever the option says.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Added = Sql.DateAdd(Sql.DateParts.Day, 1, e.Date),
+					Part  = Sql.DatePart(Sql.DateParts.Year, e.Date),
+					Cat   = Sql.Concat(e.Name, "!"),
+				};
+
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
+			(selectQuery.Find(e => e is SqlConcatExpression) != null).ShouldBeTrue();
+		}
+
+		[Test]
+		public void GroupedCompositionStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// string.Concat / string.Join over a grouping share their delegate with aggregate concat, which has no
+			// client-side equivalent - declining them would leave the grouping in the projection.
+			var concat = from e in table group e by e.Id > 1 into g select string.Concat(g.Select(x => x.Name));
+			var join   = from e in table group e by e.Id > 1 into g select string.Join(", ", g.Select(x => x.Name));
+
+			_ = concat.ToArray();
+			_ = join.ToArray();
 		}
 
 		[Test]
