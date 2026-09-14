@@ -12,6 +12,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public GuidMemberTranslatorBase()
 		{
+			using var optional = Registration.OptionalScope();
+
 			Registration.RegisterMethod(() => Guid.Empty.ToString(),          TranslateGuildToStringMethod);
 			Registration.RegisterMethod(() => ((Guid?)Guid.Empty).ToString(), TranslateGuildToStringMethod);
 		}

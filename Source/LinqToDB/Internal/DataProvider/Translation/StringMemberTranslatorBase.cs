@@ -32,29 +32,36 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => Sql.Replace("", (char?)null, null), TranslateSqlReplace);
 			Registration.RegisterMember(() => "".Length, TranslateLength);
 
-			Registration.RegisterMethod(() => "".CompareTo(""), TranslateCompareTo);
+			using (Registration.OptionalScope())
+				Registration.RegisterMethod(() => "".CompareTo(""), TranslateCompareTo);
+
+			// Not optional: this binds string.CompareTo(object), which throws ArgumentException client-side
+			// whenever the runtime argument is not a string - i.e. exactly when the compiler picks this overload.
 			Registration.RegisterMethod(() => "".CompareTo(1),  TranslateCompareTo);
 
 			// ReSharper disable ReturnValueOfPureMethodIsNotUsed
 			// The lambdas below are expression trees that only name a method for the registry; none is invoked,
 			// so there is no return value to use.
 #pragma warning disable MA0060 // The return value of method is not used
-			Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
-			Registration.RegisterMethod(() => "".Replace(' ', ' '), TranslateStringReplace);
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
+				Registration.RegisterMethod(() => "".Replace(' ', ' '), TranslateStringReplace);
 
-			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
-			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
+				Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
+				Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
-			Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
+				Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
+				Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
 #if NET8_0_OR_GREATER
-			Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
-			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
+				Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
+				Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
+				Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
+				Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
 #endif
 
-			Registration.RegisterMethod(() => string.IsNullOrWhiteSpace(null), TranslateStringIsNullOrWhiteSpace);
+				Registration.RegisterMethod(() => string.IsNullOrWhiteSpace(null), TranslateStringIsNullOrWhiteSpace);
+			}
 
 			Registration.RegisterMethod(() => string.Join(string.Empty, Enumerable.Empty<string?>()),  TranslateStringJoin);
 			Registration.RegisterMethod(() => string.Join(string.Empty, Array.Empty<string?>()),       TranslateStringJoin);
@@ -76,12 +83,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => Sql.ConcatStringsNullable(",", Enumerable.Empty<string>()), TranslateConcatStringsNullable);
 
 			// CONCAT
-			Registration.RegisterMethod(() => string.Concat((object?)null),                                              TranslateConcatWithoutNull);
-			Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null),                               TranslateConcatWithoutNull);
-			Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null, (object?)null),                TranslateConcatWithoutNull);
-			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null),                               TranslateConcatWithoutNull);
-			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null),                TranslateConcatWithoutNull);
-			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null, (string?)null), TranslateConcatWithoutNull);
+			// Only the fixed-arity overloads are optional. The sequence overloads below share
+			// TranslateConcatWithoutNullList with aggregate-over-grouping concat, which has no client-side
+			// equivalent - declining it would leave the grouping in the projection and trip the GroupBy guard.
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod(() => string.Concat((object?)null),                                              TranslateConcatWithoutNull);
+				Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null),                               TranslateConcatWithoutNull);
+				Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null, (object?)null),                TranslateConcatWithoutNull);
+				Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null),                               TranslateConcatWithoutNull);
+				Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null),                TranslateConcatWithoutNull);
+				Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null, (string?)null), TranslateConcatWithoutNull);
+			}
+
 			Registration.RegisterMethod(() => string.Concat(Array.Empty<string?>()),                                     TranslateConcatWithoutNullList);
 			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<string?>()),                                TranslateConcatWithoutNullList);
 			Registration.RegisterMethod(() => string.Concat(Array.Empty<object?>()),                                     TranslateConcatWithoutNullList);

@@ -15,21 +15,28 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public ConvertMemberTranslatorDefault()
 		{
-			RegisterBoolean();
-			RegisterByte();
-			RegisterChar();
-			RegisterDateTime();
-			RegisterDecimal();
-			RegisterDouble();
-			RegisterInt16();
-			RegisterInt32();
-			RegisterInt64();
-			RegisterSByte();
-			RegisterSingle();
-			RegisterString();
-			RegisterUInt16();
-			RegisterUInt32();
-			RegisterUInt64();
+			// Every registration below is a System.Convert.ToXxx overload: a pure function of its argument, so the
+			// client result matches the server one and the whole set can be calculated client-side when the caller
+			// prefers that. HandleGuid is deliberately outside - it registers a replacement, not a method, and
+			// replacements are never optional.
+			using (Registration.OptionalScope())
+			{
+				RegisterBoolean();
+				RegisterByte();
+				RegisterChar();
+				RegisterDateTime();
+				RegisterDecimal();
+				RegisterDouble();
+				RegisterInt16();
+				RegisterInt32();
+				RegisterInt64();
+				RegisterSByte();
+				RegisterSingle();
+				RegisterString();
+				RegisterUInt16();
+				RegisterUInt32();
+				RegisterUInt64();
+			}
 
 			HandleGuid();
 		}
