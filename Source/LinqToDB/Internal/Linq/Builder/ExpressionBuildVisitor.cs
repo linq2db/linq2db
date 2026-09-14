@@ -251,8 +251,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (additional.HasFlag(BuildFlags.ResetPrevious))
 				// InsideTranslation survives the reset: it says "a translator is on the stack", which stays true
-				// however the nested build re-scopes its other flags. Dropping it lets PreferClientCalculation
-				// re-arm underneath a translator that requires its arguments in SQL.
+				// however the nested build re-scopes its other flags. Dropping it would let PreferClientCalculation
+				// re-arm underneath a translator that requires its arguments in SQL. Measured: the reset is reached
+				// with the flag set - ToNullableOverCteMethodReturnsNull is the only shape that does - but no shape
+				// found so far makes dropping it observable, so treat this as a guard rather than as dead code.
 				return (additional & ~BuildFlags.ResetPrevious) | (currentFlags & BuildFlags.InsideTranslation);
 			return currentFlags | additional;
 		}

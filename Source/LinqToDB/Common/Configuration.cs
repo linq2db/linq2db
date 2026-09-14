@@ -463,10 +463,10 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
-			/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
-			/// materialization instead of being translated into additional SQL columns. Expressions that prefer or require
-			/// server-side evaluation are still translated to SQL.
+			/// When enabled, computed expressions in the final projection are calculated on the client during
+			/// materialization instead of being translated into additional SQL columns. Which expressions move and
+			/// which stay in SQL is stated once on <see cref="LinqOptions.PreferClientCalculation"/> — this is the
+			/// same option, so the contract is not repeated here where the two could drift apart.
 			/// Default value: <see langword="false"/>.
 			/// </summary>
 			/// <remarks>

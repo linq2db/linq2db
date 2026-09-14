@@ -46,13 +46,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// </summary>
 		/// <remarks>
 		/// Only <c>RegisterMethod</c> registrations are affected. Member, constructor, binary, unary and
-		/// member-replacement registrations ignore the scope and are never optional, because declining them would
-		/// reach visitor paths that have no client-side fallback.
+		/// member-replacement registrations ignore the scope and are never optional: binary and unary nodes are
+		/// gated on the option before the registry is consulted, while member and constructor access always
+		/// translates.
 		/// <para>
 		/// A translation may only be made optional when evaluating it on the client over the materialized values of
-		/// its arguments gives the same answer. It must stay mandatory when it is SQL-only (aggregates, window
-		/// functions), marks intent (<c>Sql.*</c>), is non-deterministic or ambient (<c>NewGuid</c>, current
-		/// timestamp), or carries nullability semantics (<c>Sql.ToNullable</c>, <c>Sql.AsNullable</c>).
+		/// its arguments gives the same answer. The client result is the .NET one, which may differ from the
+		/// server's in formatting or rounding — that is accepted. A translation must stay mandatory when it is
+		/// SQL-only (aggregates, window functions), marks intent (<c>Sql.*</c>), is non-deterministic or ambient
+		/// (<c>NewGuid</c>, current timestamp), carries nullability semantics (<c>Sql.ToNullable</c>,
+		/// <c>Sql.AsNullable</c>), has no client body or throws for every input that binds it, throws for a value
+		/// the column can hold (an instance call on a nullable receiver), or would return a different value from
+		/// the SQL <see langword="null"/> of a missed <c>LeftJoin</c>.
 		/// </para>
 		/// </remarks>
 		public IDisposable OptionalScope()

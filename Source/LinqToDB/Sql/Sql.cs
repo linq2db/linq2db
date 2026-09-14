@@ -92,8 +92,8 @@ namespace LinqToDB
 		}
 
 		// Pure nullability widener. Pinned server-side by its registration in SqlFunctionsMemberTranslatorBase
-		// being mandatory (outside any TranslationRegistration.OptionalScope); the same rule also keeps the
-		// option from applying to the translation of its argument, which linq2db#5923 covers.
+		// being mandatory (outside any TranslationRegistration.OptionalScope). Its *argument* is kept in SQL by a
+		// separate guard, BuildFlags.InsideTranslation, which is what linq2db#5923 covers.
 		[CLSCompliant(false)]
 		public static T? ToNullable<T>(T value)
 			where T : struct
