@@ -3754,5 +3754,47 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Issue 5865
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5865")]
+		public void ElementFormLoadWithReturnsAllDetails([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parent = db.Parent
+				.Where(p => p.ParentID == 2)
+				.LoadWith(p => p.Children)
+				.First();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parent.ParentID, Is.EqualTo(2));
+				Assert.That(parent.Children, Has.Count.EqualTo(2));
+			}
+		}
+
+		// Control for the test above: the same limit expressed as Take keeps the parent's TOP one level
+		// below the joined source, which Sybase handles correctly - so this shape must keep working there.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5865")]
+		public void LimitedFormLoadWithReturnsAllDetails([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.Parent
+				.Where(p => p.ParentID == 2)
+				.LoadWith(p => p.Children)
+				.Take(1)
+				.ToList();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parents,             Has.Count.EqualTo(1));
+				Assert.That(parents[0].ParentID, Is.EqualTo(2));
+				Assert.That(parents[0].Children, Has.Count.EqualTo(2));
+			}
+		}
+
+		#endregion
 	}
 }
