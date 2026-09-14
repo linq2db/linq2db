@@ -52,7 +52,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (memberExpression is (MethodCallExpression or MemberExpression or NewExpression))
 			{
 				var memberInfoWithType = MemberHelper.GetMemberInfoWithType(memberExpression);
-				var translationFunc    = Registration.GetTranslation(memberInfoWithType);
+				var translationFunc    = Registration.GetTranslation(memberInfoWithType, out var isOptional);
+
+				// An optional registration declines when the caller prefers client calculation, so the expression
+				// falls through to client-side evaluation instead of becoming an SQL column.
+				if (isOptional && translationFlags.HasFlag(TranslationFlags.SkipOptional))
+					return null;
+
 				if (translationFunc != null)
 					return translationFunc(translationContext, memberExpression, translationFlags);
 			}
@@ -85,7 +91,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			translated = Registration.ProvideReplacement(memberExpression);
 			if (translated != null)
 			{
-				return Translate(translationContext, translated, translationFlags); 
+				// This recursion bypasses ITranslationContext.Translate, so it carries no InsideTranslation flag.
+				// Strip SkipOptional instead: a mandatory replacement has already been admitted, and its expansion
+				// must translate rather than decline on an optional registration underneath it.
+				return Translate(translationContext, translated, translationFlags & ~TranslationFlags.SkipOptional);
 			}
 
 			translated = TranslateOverrideHandler(translationContext, memberExpression, translationFlags);

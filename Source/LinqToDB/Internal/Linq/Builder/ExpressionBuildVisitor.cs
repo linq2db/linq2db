@@ -250,7 +250,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		static BuildFlags CombineFlags(BuildFlags currentFlags, BuildFlags additional)
 		{
 			if (additional.HasFlag(BuildFlags.ResetPrevious))
-				return additional & ~BuildFlags.ResetPrevious;
+				// InsideTranslation survives the reset: it says "a translator is on the stack", which stays true
+				// however the nested build re-scopes its other flags. Dropping it lets PreferClientCalculation
+				// re-arm underneath a translator that requires its arguments in SQL.
+				return (additional & ~BuildFlags.ResetPrevious) | (currentFlags & BuildFlags.InsideTranslation);
 			return currentFlags | additional;
 		}
 
@@ -875,21 +878,19 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
-				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
-				// (MappedFunctionAllowsClientCalculation). Functions like Sql.ToNullable deliberately carry no attribute and
-				// are translated server-side by SqlFunctionsMemberTranslatorBase, so they fail the check and keep translating;
-				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
-				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
+				// The two translation routes answer PreferClientCalculation differently. TranslateMember goes to the
+				// member-translator registry, which decides per registration: GetTranslationFlags passes SkipOptional
+				// and a registration made inside an OptionalScope() declines itself, so a mandatory one (Sql.ToNullable,
+				// aggregates, window functions) keeps translating. HandleExtension handles [Expression]-attributed
+				// functions, which have no such marker, so the option is applied here at the call site.
+				if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
 				{
-					if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
-					{
-						return Visit(translatedMember);
-					}
+					return Visit(translatedMember);
+				}
 
-					if (HandleExtension(BuildContext, node, out translatedMember))
-					{
-						return Visit(translatedMember);
-					}
+				if (!PreferClientCalculation(node) && HandleExtension(BuildContext, node, out translatedMember))
+				{
+					return Visit(translatedMember);
 				}
 
 				if (HandleValue(node, out var translated))
@@ -898,7 +899,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 				}
 
-				if (HandleStringFormat(node, out var translatedFormat))
+				// string.Format is translated inline rather than through the registry, so it has no registration to
+				// mark optional and the option is applied at the call site instead. Every interpolated string reaches
+				// us as string.Format, so this is the gate that keeps `$"{a} {b}"` client-side.
+				if (!PreferClientCalculation(node) && HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
 				if (node.Type == typeof(bool) && TryConvertPredicate(node, out var translatedPredicate))
@@ -2281,24 +2285,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
 		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
 		/// </summary>
+		/// <remarks>
+		/// Never applies inside a translation (<see cref="BuildFlags.InsideTranslation"/>). A translator that is
+		/// running has already been admitted, and it translates its own arguments through
+		/// <c>ITranslationContext.Translate</c>; letting the option decline one of those arguments would make the
+		/// translator itself decline. For <c>Sql.ToNullable</c> / <c>Sql.AsNullable</c> that silently collapses a SQL
+		/// NULL to <c>default(T)</c> — see linq2db#5923.
+		/// </remarks>
 		bool PreferClientCalculation(Expression node)
 		{
 			return _buildPurpose is BuildPurpose.Expression
 				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideTranslation)
 				&& BuildContext != null
 				&& DataOptions.LinqOptions.PreferClientCalculation
 				&& !Builder.PreferServerSide(node, false)
 				&& !Builder.IsServerSideOnly(node);
-		}
-
-		/// <summary>
-		/// A method may be pulled client-side (under <see cref="LinqOptions.PreferClientCalculation"/>) only when it is a
-		/// mapped function — i.e. it carries an <see cref="Sql.ExpressionAttribute"/>. Structural LINQ methods (e.g.
-		/// aggregates) have no attribute and must keep translating to SQL.
-		/// </summary>
-		bool MappedFunctionAllowsClientCalculation(MethodInfo method)
-		{
-			return method.GetExpressionAttribute(MappingSchema) != null;
 		}
 
 		bool TryConvertToSql(Expression node, out Expression translated)
@@ -5480,7 +5482,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
 
-				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
+				// InsideTranslation: this is the translator -> builder re-entry, used by a translator to translate
+				// its own arguments. Those must reach SQL, so PreferClientCalculation must not apply to them.
+				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.InsideTranslation, alias: CurrentAlias);
 			}
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
@@ -5651,9 +5655,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static ObjectPool<TranslationContext> _translationContexts = new(() => new TranslationContext(), c => c.Cleanup(), 100);
 
-		TranslationFlags GetTranslationFlags()
+		TranslationFlags GetTranslationFlags(Expression node)
 		{
 			var result = TranslationFlags.None;
+
+			// Tells the registry that a translation registered as optional may decline, so the expression is
+			// calculated on the client instead of becoming an SQL column.
+			if (PreferClientCalculation(node))
+				result |= TranslationFlags.SkipOptional;
 
 			if (_buildPurpose is BuildPurpose.Sql)
 				result |= TranslationFlags.Sql;
@@ -5693,7 +5702,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				translationContext.Value.Init(this, context, Alias);
 
-				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags());
+				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags(memberExpression));
 
 				if (translated == null)
 					return false;
