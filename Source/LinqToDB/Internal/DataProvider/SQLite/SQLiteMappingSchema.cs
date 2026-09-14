@@ -12,14 +12,19 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 	public sealed class SQLiteMappingSchema : LockedMappingSchema
 	{
 		internal const string DATE_FORMAT_RAW                   = "yyyy-MM-dd";
+		/// <summary>
+		/// Shared with the parameter path, which writes the same text for a value that is inlined as a literal here -
+		/// the two have to agree, because a comparison against such a column is a comparison of the stored text.
+		/// </summary>
+		internal const string DATETIMEOFFSET_FORMAT_RAW         = "yyyy-MM-dd HH:mm:ss.fffzzz";
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT           = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
 		private static readonly CompositeFormat DATETIME_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
-		private static readonly CompositeFormat DATETIMEOFFSET_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'");
+		private static readonly CompositeFormat DATETIMEOFFSET_FORMAT = CompositeFormat.Parse("'{0:" + DATETIMEOFFSET_FORMAT_RAW + "}'");
 #else
 		private  const string DATE_FORMAT           = "'{0:yyyy-MM-dd}'";
 		private  const string DATETIME_FORMAT       = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
-		private  const string DATETIMEOFFSET_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'";
+		private  const string DATETIMEOFFSET_FORMAT = "'{0:" + DATETIMEOFFSET_FORMAT_RAW + "}'";
 #endif
 
 		SQLiteMappingSchema() : base(ProviderName.SQLite)
