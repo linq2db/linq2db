@@ -21,8 +21,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterMax()
 		{
-			using var optional = Registration.OptionalScope();
-
+			// Not optional *for now*: over a missed LeftJoin the SQL yields NULL, materialized as 0, while a
+			// client-side Math.Max(0, 5) returns a plausible 5 for a row that does not exist. Revisit once
+			// linq2db#5929 propagates NULL into client calculation.
 			Registration.RegisterMethod((byte    x, byte    y) => Math.Max(x, y), TranslateMaxMethod);
 			Registration.RegisterMethod((decimal x, decimal y) => Math.Max(x, y), TranslateMaxMethod);
 			Registration.RegisterMethod((double  x, double  y) => Math.Max(x, y), TranslateMaxMethod);
@@ -38,8 +39,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterMin()
 		{
-			using var optional = Registration.OptionalScope();
-
+			// Not optional *for now*: same as RegisterMax - a client-side Math.Min(0, -5) returns -5 where the SQL
+			// yields NULL. Revisit once linq2db#5929 propagates NULL into client calculation.
 			Registration.RegisterMethod((byte    x, byte    y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((decimal x, decimal y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((double  x, double  y) => Math.Min(x, y), TranslateMinMethod);
@@ -78,6 +79,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterRound()
 		{
+			// The scope is not what moves Math.Round: measured, a projected Math.Round(col, col) is client-side under
+			// the option even with a mandatory registration, so an earlier gate already declines it. Kept optional
+			// for consistency with the other BCL Math methods, not because it is load-bearing.
 			using (Registration.OptionalScope())
 			{
 				Registration.RegisterMethod((double v) => Math.Round(v)                            , TranslateMathRoundMethod);

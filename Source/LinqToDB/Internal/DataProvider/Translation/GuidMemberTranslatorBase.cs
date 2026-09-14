@@ -12,8 +12,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public GuidMemberTranslatorBase()
 		{
-			using var optional = Registration.OptionalScope();
-
+			// Not optional *for now*: the result is a string, so over a missed LeftJoin the SQL yields NULL while a
+			// client-side call on default(Guid) yields the all-zero GUID. Revisit once linq2db#5929 propagates NULL
+			// into client calculation.
 			Registration.RegisterMethod(() => Guid.Empty.ToString(),          TranslateGuildToStringMethod);
 			Registration.RegisterMethod(() => ((Guid?)Guid.Empty).ToString(), TranslateGuildToStringMethod);
 		}
