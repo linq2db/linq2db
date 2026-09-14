@@ -713,6 +713,13 @@ namespace LinqToDB.Internal.SqlQuery
 				// match and the server refuses the union outright. Falling through to the CLR-type arm keeps them
 				// reconcilable, which is where the units are actually brought together.
 
+				// Listed, unlike the interval nodes above, because the reason they are absent does not apply: this
+				// node's Type is an ordinary temporal type rather than a per-provider storage representation, so
+				// typing a set-operation branch from it cannot make two branches disagree. Its declared type is also
+				// load-bearing - ToWallTime yields a zone-less value whose SQL type differs from its operand's, and
+				// answering with the operand's type would let the cast that carries that difference be elided.
+				SqlTimeZoneConversionExpression { Type: var t } => t,
+
 				// carries no type of its own - the provider picks one when rendering
 				SqlParameterCastExpression { Parameter: var p } => GetDbDataTypeImpl(p, visited),
 

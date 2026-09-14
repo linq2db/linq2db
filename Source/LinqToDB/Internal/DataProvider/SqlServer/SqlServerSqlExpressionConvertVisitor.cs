@@ -1,4 +1,6 @@
-﻿using LinqToDB.DataProvider.SqlServer;
+﻿using System;
+
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
@@ -22,6 +24,57 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// </remarks>
 		protected override SqlIntervalUnit? FinestDateUnit =>
 			_sqlServerVersion >= SqlServerVersion.v2008 ? SqlIntervalUnit.Nanosecond : SqlIntervalUnit.Millisecond;
+
+		/// <summary>
+		/// <c>AT TIME ZONE</c> arrived in 2016; earlier versions have no form for any of the three kinds. Checked
+		/// here rather than on a version-specific visitor for the reason <see cref="FinestDateUnit"/> gives - the
+		/// later visitors derive from the earlier ones and would inherit the wrong answer.
+		/// </summary>
+		public override bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind)
+			=> _sqlServerVersion >= SqlServerVersion.v2016;
+
+		protected override ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
+		{
+			if (_sqlServerVersion < SqlServerVersion.v2016)
+				return null;
+
+			// AT TIME ZONE resolves its argument against the registry's zone names and rejects a fixed offset with
+			// error 9820, so an offset gets its own function: SwitchOffset moves an instant to it, ToDateTimeOffset
+			// declares a zone-less reading to be at it. ToWallTime never carries one - it always names a zone.
+			if (TryGetZoneOffset(element.Zone, out var offset))
+			{
+				var function = element.Kind switch
+				{
+					SqlTimeZoneConversionKind.ConvertZone => "SwitchOffset",
+					SqlTimeZoneConversionKind.AttachZone  => "ToDateTimeOffset",
+					_                                     => null,
+				};
+
+				if (function != null)
+				{
+					return Factory.Function(
+						Factory.GetDbDataType(typeof(DateTimeOffset)),
+						function,
+						element.Value,
+						Factory.Value(offset));
+				}
+			}
+
+			// SQL Server spells the two directions with one operator: applied to a zone-less value it attaches the
+			// zone, applied to a datetimeoffset it converts to it. The zone-less reading needs an explicit cast back,
+			// and that cast is mandatory - dropping it would leave a datetimeoffset, silently turning ToWallTime into
+			// ConvertZone.
+			var atTimeZone = Factory.Expression(
+				Factory.GetDbDataType(typeof(DateTimeOffset)),
+				LinqToDB.SqlQuery.Precedence.Primary,
+				"({0} AT TIME ZONE {1})",
+				element.Value,
+				element.Zone);
+
+			return element.Kind == SqlTimeZoneConversionKind.ToWallTime
+				? Factory.Cast(atTimeZone, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2), true)
+				: atTimeZone;
+		}
 
 		static string? DatePartName(SqlIntervalUnit unit)
 		{

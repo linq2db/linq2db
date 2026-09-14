@@ -184,6 +184,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			QueryElementType.SqlIntervalDifference    or
 			QueryElementType.SqlIntervalPart          or
 			QueryElementType.SqlTemporalArithmetic    or
+			// time zones
+			QueryElementType.SqlTimeZoneConversion    or
 			// predicates / search conditions
 			QueryElementType.SearchCondition          or
 			QueryElementType.NotPredicate             or

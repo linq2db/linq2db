@@ -136,5 +136,9 @@
 		SqlIntervalDifference,
 		SqlIntervalPart,
 		SqlTemporalArithmetic,
+
+		// TODO: appended here because QueryElementType is public API - inserting mid-enum renumbers every
+		// later member and trips ApiCompat CP0011. In v7 group this with the temporal members above.
+		SqlTimeZoneConversion,
 	}
 }

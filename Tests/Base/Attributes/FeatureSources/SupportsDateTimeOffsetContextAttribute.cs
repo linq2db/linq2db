@@ -13,8 +13,10 @@ namespace Tests
 		// Excluded rather than declared as expected failures: the refusal says something about the type, not about
 		// the feature under test, so asserting it here would pin the wrong contract.
 		//
-		// Firebird is here for two reasons at once: 2.5 has no such type, and while 4+ does, the client rejects the
-		// offset on write with "Incorrect time zone value".
+		// Firebird is here for two reasons at once: 2.5 and 3 have no such type, and while 4 and 5 do, neither path
+		// round-trips a value. A parameterised write throws "Incorrect time zone value" in the client; a direct one
+		// goes through but drops the offset without converting, so 12:00 +00:40 reads back as 12:00 UTC - the same
+		// wall clock at a different instant, and no error either side.
 		//
 		// Providers that DO carry an offset stay in scope even when they answer wrongly - that is a defect to
 		// record, not a type gap to skip.

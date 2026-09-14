@@ -3599,6 +3599,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlTemporalArithmeticExpression((SqlTemporalArithmeticExpression)expr);
 					break;
 
+				case QueryElementType.SqlTimeZoneConversion:
+					BuildSqlTimeZoneConversionExpression((SqlTimeZoneConversionExpression)expr);
+					break;
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
@@ -3626,6 +3630,16 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildSqlIntervalPartExpression(SqlIntervalPartExpression element)
 		{
 			throw new LinqToDBException(ErrorHelper.Error_Interval_Member);
+		}
+
+		/// <summary>
+		/// A safety net, not a rendering path. Every provider lowers this node away in its
+		/// <c>SqlExpressionConvertVisitor</c>, and the translator refuses by name before building one a provider
+		/// cannot lower - so reaching here means a provider claimed a conversion kind it does not implement.
+		/// </summary>
+		protected virtual void BuildSqlTimeZoneConversionExpression(SqlTimeZoneConversionExpression element)
+		{
+			throw new LinqToDBException(ErrorHelper.Error_TimeZone_Conversion);
 		}
 
 		/// <inheritdoc cref="BuildSqlIntervalExpression"/>

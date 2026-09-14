@@ -93,9 +93,68 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return Factory.Function(resultType, "Extract", Factory.Expression(resultType, $"{part} From {{0}}", value));
 		}
 
+		/// <summary>
+		/// Brings a temporal operand to a plain <c>TIMESTAMP</c> for elapsed-time arithmetic.
+		/// </summary>
+		/// <remarks>
+		/// An offset-carrying operand goes through <c>SYS_EXTRACT_UTC</c> rather than a cast: casting a
+		/// <c>TIMESTAMP WITH TIME ZONE</c> to <c>TIMESTAMP</c> keeps the local fields and drops the zone, so two
+		/// marks denoting the same instant in different zones subtract to a non-zero interval. That is issue 5797.
+		/// </remarks>
 		ISqlExpression AsTimestamp(ISqlExpression value)
 		{
+			var type = QueryHelper.GetDbDataType(value, MappingSchema);
+
+			if (type.DataType == DataType.DateTimeOffset)
+				return Factory.Function(type.WithDataType(DataType.DateTime2), "Sys_Extract_Utc", value);
+
 			return Factory.Cast(value, Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2));
+		}
+
+		/// <summary>
+		/// Oracle carries a real <c>TIMESTAMP WITH TIME ZONE</c>, so all three directions are expressible.
+		/// </summary>
+		public override bool CanLowerTimeZoneConversion(SqlTimeZoneConversionKind kind) => true;
+
+		/// <summary>
+		/// Oracle's grammar takes no bind in the zone position: <c>AT TIME ZONE :p</c> raises ORA-02000 while the
+		/// same statement with a literal answers. Measured, not inferred.
+		/// </summary>
+		public override bool RequiresConstantTimeZone => true;
+
+		protected override ISqlExpression? LowerTimeZoneConversion(SqlTimeZoneConversionExpression element)
+		{
+			var zonedType = Factory.GetDbDataType(typeof(DateTimeOffset));
+
+			// Oracle takes a fixed offset wherever a zone name goes, in AT TIME ZONE and in FROM_TZ alike, so only the
+			// spelling differs from the named case below.
+			if (TryGetZoneOffset(element.Zone, out var offset))
+			{
+				var asText = Factory.Value(offset);
+
+				if (element.Kind == SqlTimeZoneConversionKind.ConvertZone)
+					return Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, asText);
+
+				if (element.Kind == SqlTimeZoneConversionKind.AttachZone)
+					return Factory.Function(zonedType, "From_Tz", element.Value, asText);
+			}
+
+			return element.Kind switch
+			{
+				// FROM_TZ builds an offset-carrying value out of a plain TIMESTAMP and a zone.
+				SqlTimeZoneConversionKind.AttachZone
+					=> Factory.Function(zonedType, "From_Tz", element.Value, element.Zone),
+
+				SqlTimeZoneConversionKind.ConvertZone
+					=> Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone),
+
+				// Mandatory: without the cast the result stays offset-carrying and ToWallTime would silently mean
+				// ConvertZone.
+				_ => Factory.Cast(
+					Factory.Expression(zonedType, Precedence.Primary, "({0} AT TIME ZONE {1})", element.Value, element.Zone),
+					Factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.DateTime2),
+					true),
+			};
 		}
 
 		#region LIKE
