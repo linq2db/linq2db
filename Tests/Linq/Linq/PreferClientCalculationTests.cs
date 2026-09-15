@@ -286,6 +286,194 @@ namespace Tests.Linq
 			(query.GetSelectQuery().Find(e => e is SqlBinaryExpression) != null).ShouldBeTrue();
 		}
 
+		// String composition. Inside an expression tree the compiler lowers every interpolated string to string.Format
+		// (its string.Concat optimisation does not apply there), which HandleStringFormat translates inline rather than
+		// a member translator. `a + b` on strings is a binary node instead.
+
+		[Table]
+		sealed class StringCalcEntity
+		{
+			[Column, PrimaryKey] public int     Id    { get; set; }
+			[Column]             public string? Name  { get; set; }
+			[Column]             public string? Name2 { get; set; }
+			[Column]             public int     Num   { get; set; }
+
+			public static readonly StringCalcEntity[] Seed =
+			[
+				new() { Id = 1, Name = "John", Name2 = "Smith", Num = 42 },
+				new() { Id = 2, Name = null,   Name2 = "Doe",   Num = 7  },
+				new() { Id = 3, Name = "Ann",  Name2 = null,    Num = 0  },
+			];
+		}
+
+		static void AssertComposition<T>(IQueryable<T> query, bool preferClient, bool multiPart = true)
+		{
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.Select.Columns.All(c => c.Expression is SqlField).ShouldBe(preferClient);
+
+			if (multiPart)
+				(selectQuery.Find(e => e is SqlConcatExpression) != null).ShouldBe(!preferClient);
+		}
+
+		[Test]
+		public void InterpolationTwoHolesProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Name} {e.Name2}";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationManyHolesProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			// Four holes: the compiler picks string.Format(String, Object[]) with a NewArrayInit.
+			var query = from e in table select $"{e.Name}, {e.Name2} ({e.Name}/{e.Name2})";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationNonStringHoleProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Num}: {e.Name}";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationFormatSpecifierProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Num:D4}";
+
+			// Single-part format, so no concat node either way - only the raw-field assertion applies.
+			AssertComposition(query, preferClient, multiPart: false);
+
+			// The value can only be asserted client-side: translated to SQL the format specifier is silently
+			// dropped (linq2db#5921), so the server-side result is "42" where .NET produces "0042".
+			if (preferClient)
+				AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryAddConcatProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select e.Name + " " + e.Name2;
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationOverMissedLeftJoinMatchesLinqToObjects([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// Calculated on the client, the missed row reads j.Value1 as default(int), which is also what LINQ to Objects
+			// with null propagation answers: "[0]". Option-on only: translated to SQL the NULL is coalesced to an empty
+			// string ("[]"), a divergence from LINQ to Objects that does not depend on this option.
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Str = $"[{j.Value1}]" };
+
+			AssertQuery(query);
+		}
+
+		// Sql.ToNullable / Sql.AsNullable translate their own argument through ITranslationContext.Translate. The option
+		// must not apply to that argument: kept client-side it is not SQL, the widener declines, the whole call is
+		// calculated on the client and the missed LEFT JOIN row reads default(int) instead of null (linq2db#5923).
+		// The arguments are the shapes the option moves client-side: a binary and an attributed function.
+
+		[Test]
+		public void ToNullableOverNestedBinaryReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(j.Value1 + 1) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void ToNullableOverNestedFunctionReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(PreferClient(j.Value1)) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void AsNullableOverNestedFunctionReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = (int?)Sql.AsNullable(PreferClient(j.Value1)) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void ToNullableOverNestedBinaryOnCteReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var cte = table.AsCte();
+
+			var query =
+				from e in table
+				from c in cte.LeftJoin(c => c.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(c.Value1 + 1) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
 		[Test]
 		public void ProjectionResultsMatchAcrossProviders([DataSources] string context, [Values] bool preferClient)
 		{
@@ -298,6 +486,29 @@ namespace Tests.Linq
 			AssertQuery(from e in table select e.Id > 1 ? e.Value1 : e.Value2);
 			AssertQuery(from e in table select -e.Value1);
 			AssertQuery(from e in table select e.Value1 + PreferServer(e.Value2));
+
+			// String interpolation. Only string holes: a numeric hole would compare .NET formatting against each
+			// provider's CAST, which is a difference this option accepts rather than a regression.
+			AssertQuery(from e in table select new { e.Id, Cat = $"{e.Name} {e.Name}" });
+		}
+
+		[Test]
+		public void NestedNullableOverMissedJoinMatchesAcrossProviders([DataSources] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// AssertQuery cannot be used here: a missed LeftJoin materializes as null in LINQ to Objects, so the in-memory
+			// arm would throw. The SQL answer is NULL, and it has to survive the option on every provider and through the
+			// remote context, which the [IncludeDataSources] tests in this fixture exclude.
+			var results =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new { e.Id, Joined = Sql.ToNullable(j.Value1 + 1) })
+				.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
 		}
 
 		// The following tests document a rule that is independent of PreferClientCalculation: in non-projection clauses
