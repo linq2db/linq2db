@@ -196,8 +196,11 @@ namespace Tests.Linq
 		}
 
 		// Split from the LikeClr case: only LikeSql fails on ClickHouse, and a gate targets a provider rather
-		// than one value of a [Values] axis. Placeholders because Shouldly breaks the expectation over lines.
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		// than one value of a [Values] axis. Placeholders because Shouldly breaks the expectation over lines,
+		// and the wording stops at "but was" because Shouldly writes "but was not" instead of the actual value
+		// whenever it cannot resolve the asserted expression's source text - which it does non-deterministically.
+		// The two sibling LikeSql gates below carry the same declaration for the same reason.
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
 		public void AllNullsLikeSql([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -227,7 +230,7 @@ namespace Tests.Linq
 			AllNullsEnum(context, withNullCompares: true);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
 		public void AllNullsEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -257,7 +260,7 @@ namespace Tests.Linq
 			AllNullsCEnum(context, withNullCompares: true);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/38439", Configuration = TestProvName.AllClickHouse, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
 		public void AllNullsCEnumLikeSql([DataSources(TestProvName.AllAccess)] string context)
 		{

@@ -193,6 +193,9 @@ namespace Tests.Linq
 		[ActiveIssue(3929, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
 			ErrorMessage = "42601: syntax error at or near \"Array\"",
 			Details = "PostgreSQL types the array and then emits SQL its own parser rejects.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccess,
+			ErrorMessage = "Syntax error in DROP TABLE or DROP INDEX.",
+			Details = "no-issue: unrelated to #3929 - the generic type's table name ArrayTTable`1 carries a backtick Access cannot parse, so CreateLocalTable's drop dies before the array column is reached. Type-less because the ODBC and OleDb drivers raise their own.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3929")]
 		public void TestDateOnly([DataSources] string context)
 		{

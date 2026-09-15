@@ -857,8 +857,8 @@ namespace Tests.Linq
 
 		#region Issue 3117
 
-		// AllSQLite narrowed to the MS provider: the Classic variants pass, only SQLite.MS refuses the type.
-		// AllOracle keeps no declaration - Oracle has no CI leg, so nothing was ever harvested for it.
+		// AllSQLite is not one gate: bare Classic passes, SQLite.MS refuses the type, and the MiniProfiler-wrapped
+		// Classic variants fail inside the wrapper rather than in the driver.
 		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Specified cast is not valid.",
 			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
@@ -870,7 +870,10 @@ namespace Tests.Linq
 			Details = "as the DB2 half; Npgsql reports the unsupported write instead.")]
 		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
-			Details = "as the DB2 half. Only the MS provider refuses - the Classic variants pass, so AllSQLite would have been over-broad.")]
+			Details = "as the DB2 half. Only the MS provider refuses - bare Classic passes, so AllSQLite would have been over-broad.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllSQLiteMP, ErrorTypeName = "System.NotImplementedException",
+			ErrorMessage = "The method or operation is not implemented.",
+			Details = "as the DB2 half. Wrapping Classic in MiniProfiler moves the refusal into the wrapper's parameter, which does not implement the value it is handed, so these two fail where bare Classic passes.")]
 		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]
@@ -895,8 +898,8 @@ namespace Tests.Linq
 			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
 		}
 
-		// AllSQLite narrowed to the MS provider: the Classic variants pass, only SQLite.MS refuses the type.
-		// AllOracle keeps no declaration - Oracle has no CI leg, so nothing was ever harvested for it.
+		// AllSQLite is not one gate: bare Classic passes, SQLite.MS refuses the type, and the MiniProfiler-wrapped
+		// Classic variants fail inside the wrapper rather than in the driver.
 		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Specified cast is not valid.",
 			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
@@ -908,7 +911,10 @@ namespace Tests.Linq
 			Details = "as the DB2 half; Npgsql reports the unsupported write instead.")]
 		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
-			Details = "as the DB2 half. Only the MS provider refuses - the Classic variants pass, so AllSQLite would have been over-broad.")]
+			Details = "as the DB2 half. Only the MS provider refuses - bare Classic passes, so AllSQLite would have been over-broad.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllSQLiteMP, ErrorTypeName = "System.NotImplementedException",
+			ErrorMessage = "The method or operation is not implemented.",
+			Details = "as the DB2 half. Wrapping Classic in MiniProfiler moves the refusal into the wrapper's parameter, which does not implement the value it is handed, so these two fail where bare Classic passes.")]
 		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]

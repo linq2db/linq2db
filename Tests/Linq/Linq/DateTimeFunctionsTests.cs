@@ -1725,8 +1725,9 @@ namespace Tests.Linq
 			};
 		}
 
-		// The same values without the null, for DateTimeAddTimeSpan: Access, MySQL and SQLite pass the null case
-		// and fail the rest, so the two are gated separately.
+		// The same values without the null. Both AddTimeSpan tests are split on it because their gates disagree
+		// across it: for DateTimeAddTimeSpan, Access, MySQL and SQLite pass the null case and fail the rest; for
+		// DateTimeOffsetAddTimeSpan, MySQL does the same while Oracle fails only the null case.
 		static TimeSpan?[] TimespansForTestNonNull()
 		{
 			return TimespansForTest().Where(_ => _ != null).ToArray();
@@ -1911,17 +1912,21 @@ namespace Tests.Linq
 				AssertQuery(concated);
 			}
 
-		// Declared where the failure differs in kind, not merely in wording. SQL Server produces two unrelated
-		// ones over the same provider set - the server rejecting datetimeoffset arithmetic, and the client
-		// refusing an out-of-bounds TIME - and no Configuration separates them, so that half declares nothing.
+		// Split on the null value, measured rather than assumed: MySQL passes the null arm and fails every other
+		// interval, Oracle does the reverse, and SQL Server produces one failure on the null arm and two on the
+		// other. [ActiveIssue] cannot target a [ValueSource] argument, so one attribute set cannot say all that.
+		//
+		// The non-null arm is where SQL Server's two unrelated failures land - the server rejecting datetimeoffset
+		// arithmetic, and the client refusing an out-of-bounds TIME - and the axis dividing them is the interval
+		// value, so this half declares nothing for it.
 		[ActiveIssue(Configuration = TestProvName.AllSqlServer,
-			Details = "no-declaration: two unrelated failures over the same providers - \"Operand data type datetimeoffset is invalid for add operator\" from the server, and \"TIME value is out-of-bounds\" from the client - and the axis separating them is not one the attribute can target.")]
+			Details = "no-declaration: two unrelated failures over the same providers - \"Operand data type datetimeoffset is invalid for add operator\" from the server for the sub-day intervals, and \"TIME value is out-of-bounds\" from the client for the two 24h ones - and the attribute cannot target the value that divides them.")]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Cannot infer type name from (System.DateTimeOffset, DateTimeOffset)",
 			Details = "no-issue: ClickHouse has no parameter type for the offset, so the query is never sent.")]
-		[ActiveIssue(Configuration = TestProvName.AllMySqlData, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+		[ActiveIssue(Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
 			ErrorMessage = "Mapping of column",
-			Details = "no-issue: MySQL accepts the query and fails reading the result back. MySqlConnector and MariaDB read it back fine, so only the MySql.Data driver keeps the gate.")]
+			Details = "no-issue: MySQL accepts the query and fails reading the result back. MySql.Data is excluded from the data sources, so MySqlConnector and MariaDB are the whole reachable set.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeOffsetAddTimeSpan(
 			[DataSources(
@@ -1936,7 +1941,42 @@ namespace Tests.Linq
 				TestProvName.AllMySqlData, // TODO: mysql.data doesn't support DateTimeOffset
 				ProviderName.SqlCe)]
 			string context,
-			[ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+			[ValueSource(nameof(TimespansForTestNonNull))] TimeSpan? ts)
+		{
+			DateTimeOffsetAddTimeSpanCore(context, ts);
+		}
+
+		// The null arm: MySQL is absent because it passes it, Oracle is present because it fails only here - with
+		// an interval the addition is a datetime plus an interval, which the server takes - and SQL Server can
+		// declare its single failure, the client-side TIME check never firing without an interval.
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer,
+			ErrorMessage = "Operand data type datetimeoffset is invalid for add operator.",
+			Details = "no-issue: message-only, the two SqlClient packages and the WCF transport each raising their own.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTimeOffset, DateTimeOffset)",
+			Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle,
+			ErrorMessage = "ORA-30087: Adding two datetime values is not allowed",
+			Details = "no-issue: without an interval both operands are datetimes and the server rejects the addition. Type-less because the managed and Devart drivers raise their own.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
+		public void DateTimeOffsetAddTimeSpanNull(
+			[DataSources(
+				TestProvName.AllAccess,
+				TestProvName.AllFirebird,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
+				TestProvName.AllSybase,
+				TestProvName.AllMySqlData, // TODO: mysql.data doesn't support DateTimeOffset
+				ProviderName.SqlCe)]
+			string context)
+		{
+			DateTimeOffsetAddTimeSpanCore(context, null);
+		}
+
+		void DateTimeOffsetAddTimeSpanCore(string context, TimeSpan? ts)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(DateTypesOffset.Seed());
