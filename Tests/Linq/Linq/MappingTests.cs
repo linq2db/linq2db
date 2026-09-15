@@ -857,8 +857,9 @@ namespace Tests.Linq
 
 		#region Issue 3117
 
-		// AllSQLite is not one gate: bare Classic passes, SQLite.MS refuses the type, and the MiniProfiler-wrapped
-		// Classic variants fail inside the wrapper rather than in the driver.
+		// AllSQLite is not one gate: only SQLite.MS refuses the type, bare Classic passes. The MiniProfiler-wrapped
+		// variants are excluded instead of gated - the profiler formats the SQL only when it happens to be
+		// profiling, and that path calls Id<T>.ToString, which throws, so their outcome flips with suite composition.
 		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Specified cast is not valid.",
 			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
@@ -871,9 +872,6 @@ namespace Tests.Linq
 		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
 			Details = "as the DB2 half. Only the MS provider refuses - bare Classic passes, so AllSQLite would have been over-broad.")]
-		[ActiveIssue(3117, Configuration = TestProvName.AllSQLiteMP, ErrorTypeName = "System.NotImplementedException",
-			ErrorMessage = "The method or operation is not implemented.",
-			Details = "as the DB2 half. Wrapping Classic in MiniProfiler moves the refusal into the wrapper's parameter, which does not implement the value it is handed, so these two fail where bare Classic passes.")]
 		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]
@@ -881,7 +879,7 @@ namespace Tests.Linq
 			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
 			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(IdConverter<>));
@@ -899,8 +897,9 @@ namespace Tests.Linq
 			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
 		}
 
-		// AllSQLite is not one gate: bare Classic passes, SQLite.MS refuses the type, and the MiniProfiler-wrapped
-		// Classic variants fail inside the wrapper rather than in the driver.
+		// AllSQLite is not one gate: only SQLite.MS refuses the type, bare Classic passes. The MiniProfiler-wrapped
+		// variants are excluded instead of gated - the profiler formats the SQL only when it happens to be
+		// profiling, and that path calls Id<T>.ToString, which throws, so their outcome flips with suite composition.
 		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
 			ErrorMessage = "Specified cast is not valid.",
 			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
@@ -913,9 +912,6 @@ namespace Tests.Linq
 		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
 			Details = "as the DB2 half. Only the MS provider refuses - bare Classic passes, so AllSQLite would have been over-broad.")]
-		[ActiveIssue(3117, Configuration = TestProvName.AllSQLiteMP, ErrorTypeName = "System.NotImplementedException",
-			ErrorMessage = "The method or operation is not implemented.",
-			Details = "as the DB2 half. Wrapping Classic in MiniProfiler moves the refusal into the wrapper's parameter, which does not implement the value it is handed, so these two fail where bare Classic passes.")]
 		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]
@@ -923,7 +919,7 @@ namespace Tests.Linq
 			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
 			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);
