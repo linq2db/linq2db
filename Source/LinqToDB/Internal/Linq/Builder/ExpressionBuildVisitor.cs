@@ -924,6 +924,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Traverse or BuildPurpose.Expand or BuildPurpose.Extract or BuildPurpose.SubQuery)
 			{
 				var newNode = base.VisitMethodCall(node);
+
+				// This is the general client-side fallback, so the guard applies only where the option is what
+				// declined the translation - everything else keeps the behaviour it had.
+				if (PreferClientCalculation(node))
+					newNode = MakeClientCalculationNullAware(newNode, node.Type);
+
 				FoundRoot = null;
 				return newNode;
 			}
@@ -2305,6 +2311,75 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& !Builder.IsServerSideOnly(node);
 		}
 
+		/// <summary>
+		/// Rebuilds a client-side calculation so it propagates a SQL NULL the way the translation it replaced did.
+		/// A column that is nullable in SQL but not in CLR materializes as <c>default(T)</c>, so the client answers
+		/// <c>f(default(T))</c> where the server answered NULL (linq2db#5929) — or, for a reference-typed receiver,
+		/// throws instead of answering at all (linq2db#5928).
+		/// </summary>
+		Expression MakeClientCalculationNullAware(Expression clientSide, Type resultType)
+		{
+			// Already inside a guard: the projection is rebuilt until it stops changing, so re-wrapping here would
+			// add a layer per pass and never converge.
+			if (_preferClientSide)
+				return clientSide;
+
+			// An eager-loaded collection is a separate query, so its placeholders say nothing about this row.
+			if (clientSide.Find(e => e is SqlEagerLoadExpression) != null)
+				return clientSide;
+
+			var placeholders = ExpressionBuilder.CollectPlaceholders(clientSide, false);
+			if (placeholders.Count == 0)
+				return clientSide;
+
+			// The instance receiver is guarded whatever its CLR type, because a null receiver throws rather than
+			// propagating. An argument is guarded only when its CLR type cannot carry the NULL itself - one that
+			// can already sees it, and the member's own semantics apply to it.
+			var receiverPlaceholders = clientSide is MethodCallExpression { Object: { } receiver }
+				? ExpressionBuilder.CollectPlaceholders(receiver, false)
+				: null;
+
+			var nullability = GetNullabilityContext();
+
+			List<Expression>?                   notNull    = null;
+			Dictionary<Expression, Expression>? replaceMap = null;
+
+			foreach (var placeholder in placeholders)
+			{
+				if (!placeholder.Sql.CanBeNullable(nullability))
+					continue;
+
+				var isReceiver = receiverPlaceholders?.Exists(p => ReferenceEquals(p, placeholder)) == true;
+
+				if (!isReceiver && placeholder.Type.IsNullableOrReferenceType)
+					continue;
+
+				var nullable = placeholder.MakeNullable();
+
+				(notNull ??= new List<Expression>()).Add(nullable);
+
+				if (!ReferenceEquals(nullable, placeholder))
+				{
+					// Read the column once: the value position uses the same placeholder the test reads, so both
+					// resolve to one select column instead of emitting the field twice.
+					(replaceMap ??= new Dictionary<Expression, Expression>())[placeholder] = Expression.Property(nullable, nameof(Nullable<>.Value));
+				}
+			}
+
+			if (notNull == null)
+				return clientSide;
+
+			if (replaceMap != null)
+				clientSide = clientSide.Replace(replaceMap);
+
+			var testCondition = notNull.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+			// The marker keeps the whole guard client-side and is what the early return above recognises on the
+			// next rebuild pass.
+			return MarkerExpression.PreferClientSide(
+				Expression.Condition(testCondition, clientSide, new DefaultValueExpression(MappingSchema, resultType, true)));
+		}
+
 		bool TryConvertToSql(Expression node, out Expression translated)
 		{
 			if ((_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
@@ -2348,7 +2423,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
 			if (PreferClientCalculation(node))
-				return base.VisitUnary(node);
+				return MakeClientCalculationNullAware(base.VisitUnary(node), node.Type);
 
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
@@ -3102,7 +3177,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(sqlValue);
 
 			if (_buildPurpose is BuildPurpose.Expression)
-				return base.VisitBinary(node);
+			{
+				var newNode = base.VisitBinary(node);
+
+				// TryConvertToSql above declines under the option without rebuilding, so this is where a binary
+				// left client-side by it lands.
+				return PreferClientCalculation(node) ? MakeClientCalculationNullAware(newNode, node.Type) : newNode;
+			}
 
 			if (HandleBinary(node, out var translated))
 				return translated; // Do not Visit again
