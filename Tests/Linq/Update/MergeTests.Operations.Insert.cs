@@ -1703,9 +1703,12 @@ namespace Tests.xUpdate
 
 		// same as CrossJoinedSourceWithSingleFieldSelection test but with server-side sort
 		// it returns incorrectly ordered data for DB2, PostgreSQL and Oracle for some reason
-		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllPostgreSQL15Plus, TestProvName.AllDuckDB },
+		[ActiveIssue(Configurations = new[] { ProviderName.DB2, TestProvName.AllOracle, TestProvName.AllPostgreSQL15Plus, TestProvName.AllDuckDB },
 			ErrorMessage = "Assert.That(result[0].Id, Is.Zero)",
 			Details = "no-issue: the server-side sort does not survive the merge on these providers, so the rows come back in another order. Nothing on the tracker covers it.")]
+		[ActiveIssue(Configuration = TestProvName.AllSybase,
+			ErrorMessage = "Assert.That(expected, Is.LessThanOrEqualTo(actual))",
+			Details = "no-issue: Sybase never reaches the ordering assertion - it reports 2 affected rows for the 4-row insert, and AssertRowCount's Sybase branch only tolerates over-reporting. Nothing on the tracker covers it.")]
 		[Test]
 		public void SortedMergeResultsIssue([MergeDataContextSource(false)] string context)
 		{
