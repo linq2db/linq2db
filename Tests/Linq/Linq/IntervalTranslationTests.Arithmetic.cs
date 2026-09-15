@@ -938,7 +938,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		public void AShiftTravelsToARemoteContext(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllDuckDB)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllSQLite)] string context)
 		{
 			var started = new DateTime(2026, 1, 1, 10, 0, 0);
 
