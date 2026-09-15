@@ -885,8 +885,9 @@ namespace Tests.Linq
 			Details = "no-issue: Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
 		[ActiveIssue(Configuration = TestProvName.AllSQLite, ErrorMessage = "no such function: CharIndex",
 			Details = "no-issue: as above; SQLite has no such function, so it refuses instead of answering nothing. Message-only because the two SQLite drivers put the detail on different lines.")]
-		[ActiveIssue(Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "Sequence contains no elements",
+			Details = "no-issue: as above - Oracle answers nothing rather than refusing, so the assertion runs out of rows. One wording over both transports, the failure being ours and not the driver's.")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,

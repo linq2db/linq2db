@@ -877,8 +877,9 @@ namespace Tests.Linq
 		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]
-		[ActiveIssue(3117, Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider and the original attribute carried no explanation.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllOracle, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
+			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -918,8 +919,9 @@ namespace Tests.Linq
 		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
 			Details = "as the DB2 half.")]
-		[ActiveIssue(3117, Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider and the original attribute carried no explanation.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllOracle, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
+			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
 		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{

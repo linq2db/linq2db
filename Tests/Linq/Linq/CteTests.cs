@@ -2888,13 +2888,12 @@ namespace Tests.Linq
 
 		}
 
-		// Split because the one gate covered two providers failing for unrelated reasons, and only one of them has
-		// a CI leg.
+		// Split because the one gate covered two providers failing for unrelated reasons.
 		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Conversion Error: invalid timestamp field format",
 			Details = "no-issue: DuckDB does not type a bare date parameter inside EXTRACT, so the value reaches the server as a locale-formatted string.")]
-		[ActiveIssue(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841",
-			Details = "no-issue: unvalidated: Wrong Date manipulations on Oracle 11. Carried from the gate's own prose - Oracle has no CI leg and this was not re-measured.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841: (full) year must be between -4713 and +9999, and not be 0",
+			Details = "no-issue: wrong date manipulations on Oracle 11. The gate's own prose named ORA-01841 and the Azure Oracle leg confirms it.")]
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void AggressiveCteOptimization([RecursiveCteContextSource(TestProvName.AllPostgreSQL93Minus)] string context)
@@ -2941,8 +2940,8 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
 			ErrorMessage = "Conversion Error: invalid timestamp field format",
 			Details = "no-issue: as AggressiveCteOptimization.")]
-		[ActiveIssue(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841",
-			Details = "no-issue: unvalidated: as AggressiveCteOptimization - carried from prose, Oracle has no CI leg.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle11, ErrorMessage = "ORA-01841: (full) year must be between -4713 and +9999, and not be 0",
+			Details = "no-issue: as AggressiveCteOptimization.")]
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void AggressiveCteOptimizationTwoColumns([RecursiveCteContextSource(TestProvName.AllPostgreSQL93Minus)] string context)

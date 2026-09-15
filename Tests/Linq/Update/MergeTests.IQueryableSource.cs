@@ -152,8 +152,8 @@ namespace Tests.xUpdate
 			ErrorMessage = "SQL0104N{0}An unexpected token", Details = "CTE-driven MERGE is unsupported - the WITH clause lands ahead of the MERGE.")]
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax",
 			Details = "CTE-driven MERGE is unsupported. Type-less because the ODBC and native HANA drivers raise their own.")]
-		[ActiveIssue(3015, Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
+		[ActiveIssue(3015, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-00928",
+			Details = "CTE-driven MERGE is unsupported. Code-only: 11-21 say \"missing SELECT keyword\" and 23 reorders it to \"SELECT keyword missing\".")]
 		public void MergeUsingCteJoin([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -192,8 +192,8 @@ namespace Tests.xUpdate
 			ErrorMessage = "SQL0104N{0}An unexpected token", Details = "CTE-driven MERGE is unsupported - the WITH clause lands ahead of the MERGE.")]
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana, ErrorMessage = "sql syntax error: incorrect syntax",
 			Details = "CTE-driven MERGE is unsupported. Type-less because the ODBC and native HANA drivers raise their own.")]
-		[ActiveIssue(3015, Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg, so no failure was harvested for this provider.")]
+		[ActiveIssue(3015, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-00928",
+			Details = "CTE-driven MERGE is unsupported. Code-only: 11-21 say \"missing SELECT keyword\" and 23 reorders it to \"SELECT keyword missing\".")]
 		public void MergeUsingCteWhere([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);

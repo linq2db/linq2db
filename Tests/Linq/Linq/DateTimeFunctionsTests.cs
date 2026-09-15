@@ -1869,7 +1869,8 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
 			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: as the non-null arm.")]
 		[ActiveIssue(Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no GitHub-CI leg.")]
+			ErrorMessage = "ORA-30087: Adding two datetime values is not allowed",
+			Details = "no-issue: without an interval both operands are datetimes and the server rejects the addition - the same refusal DateTimeOffsetAddTimeSpanNull gets. Type-less because the managed and Devart drivers raise their own.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeAddTimeSpanNull([DataSources(ProviderName.SQLiteMS)] string context)
 		{

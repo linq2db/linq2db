@@ -608,7 +608,8 @@ namespace Tests.xUpdate
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse,
 			Details = "no-declaration: the three ClickHouse drivers fail two different ways - a server syntax error, and Octonica losing the connection - with no text in common.")]
 		[ActiveIssue(Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: Oracle has no CI leg, so nothing was harvested for it. Kept rather than dropped - absence from the sweep is not evidence of passing.")]
+			ErrorMessage = "ORA-01732: data manipulation operation not legal on this view",
+			Details = "no-issue: the emulation deletes through a derived table Oracle will not accept as a DML target. Type-less because the managed and Devart drivers raise their own.")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void DeleteFromWithTake([DataSources] string context)
@@ -654,7 +655,8 @@ namespace Tests.xUpdate
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse,
 			Details = "no-declaration: as DeleteFromWithTake - two failure modes across the three drivers, no common text.")]
 		[ActiveIssue(Configuration = TestProvName.AllOracle,
-			Details = "no-declaration: unvalidated: as DeleteFromWithTake - no Oracle leg, so nothing was harvested for it.")]
+			ErrorMessage = "ORA-01732: data manipulation operation not legal on this view",
+			Details = "no-issue: as DeleteFromWithTake.")]
 		[Test]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)
 		{
