@@ -1533,8 +1533,9 @@ namespace Tests.Linq
 				.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.OrdinalIgnoreCase)).ShouldBe(1);
 		}
 
-		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
-		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		// Placeholders because Shouldly breaks the expectation over lines, and matched no further than "but was":
+		// remote loses the source expression, so Shouldly renders "but was not" where the direct case ends "but was" / "1".
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
 		public void ExplicitOrdinal_Contains([DataSources] string context)
 		{
@@ -1552,8 +1553,9 @@ namespace Tests.Linq
 				.Count(r => r.CaseInsensitive.Contains("stst", StringComparison.Ordinal)).ShouldBe(0);
 		}
 
-		// Placeholders because Shouldly breaks the expectation over four lines: "should be" / "0" / "but was" / "1".
-		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was{2}1")]
+		// Placeholders because Shouldly breaks the expectation over lines, and matched no further than "but was":
+		// remote loses the source expression, so Shouldly renders "but was not" where the direct case ends "but was" / "1".
+		[ActiveIssue(3444, Configuration = ProviderName.SqlCe, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0{1}but was")]
 		[Test]
 		public void Explicit_Contains([DataSources] string context)
 		{
