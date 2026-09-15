@@ -21,9 +21,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterMax()
 		{
-			// Not optional *for now*: over a missed LeftJoin the SQL yields NULL, materialized as 0, while a
-			// client-side Math.Max(0, 5) returns a plausible 5 for a row that does not exist. Revisit once
-			// linq2db#5929 propagates NULL into client calculation.
+			// Mandatory: what the SQL answers for a NULL argument is provider-dependent, so no client-side rule
+			// can match it. Measured over a missed LeftJoin - SQLite (CASE WHEN x >= y OR x IS NULL) and Oracle
+			// (GREATEST) yield NULL, while SQL Server 2022 emits GREATEST with IfAllParametersNullable and
+			// answers y. linq2db#5929's guard cannot reconcile the two.
 			Registration.RegisterMethod((byte    x, byte    y) => Math.Max(x, y), TranslateMaxMethod);
 			Registration.RegisterMethod((decimal x, decimal y) => Math.Max(x, y), TranslateMaxMethod);
 			Registration.RegisterMethod((double  x, double  y) => Math.Max(x, y), TranslateMaxMethod);
@@ -39,8 +40,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterMin()
 		{
-			// Not optional *for now*: same as RegisterMax - a client-side Math.Min(0, -5) returns -5 where the SQL
-			// yields NULL. Revisit once linq2db#5929 propagates NULL into client calculation.
+			// Mandatory - same provider-dependent NULL answer as RegisterMax.
 			Registration.RegisterMethod((byte    x, byte    y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((decimal x, decimal y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((double  x, double  y) => Math.Min(x, y), TranslateMinMethod);

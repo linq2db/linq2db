@@ -496,18 +496,18 @@ namespace Tests.Linq
 			[Column]             public int      Value1 { get; set; }
 			[Column]             public Guid     Key    { get; set; }
 			[Column]             public DateTime Date   { get; set; }
+			[Column]             public string?  Name   { get; set; }
 
 			public static readonly MissedJoinEntity[] Seed =
 			[
-				new() { Id = 1, Value1 = 10, Key = new Guid("11111111-1111-1111-1111-111111111111"), Date = new DateTime(2020, 1, 15) },
+				new() { Id = 1, Value1 = 10, Key = new Guid("11111111-1111-1111-1111-111111111111"), Date = new DateTime(2020, 1, 15), Name = "Alpha" },
 			];
 		}
 
-		// Over a missed LeftJoin the SQL propagates NULL through the function, while a client-side calculation sees
-		// the column materialized as default(T) and computes a real value from it - Math.Max(j.Value1, 5) returns a
-		// plausible 5 for a row that does not exist. Every member whose client value for default(T) differs from the
-		// SQL answer is kept mandatory until linq2db#5929; the ones absent here agree by arithmetic (Math.Abs(0) is
-		// 0) or because their argument is already nullable.
+		// The values below are what the SQL answers, and they must hold whichever side computes them. Three of these
+		// members now move client-side and reach them through the null guard (linq2db#5929); the other three stay in
+		// SQL, so the same assertions pin both halves of the split. SQLite-only on purpose: Math.Max over a missed
+		// LeftJoin answers 0 here and on Oracle but 5 on SQL Server 2022, which is a separate divergence.
 		[Test]
 		public void ClientCalculationOverMissedLeftJoinMatchesSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
@@ -534,6 +534,91 @@ namespace Tests.Linq
 			result.Min    .ShouldBe(0);
 			result.AddDays.ShouldBe(default(DateTime));
 			result.ConcatO.ShouldBe("!");
+		}
+
+		// The guard reproduces the NULL propagation of the SQL it replaced, so it has to stay out of the way
+		// wherever the SQL did not propagate one. These three pin that boundary.
+
+		[Test]
+		public void NullCapableArgumentIsNotGuarded([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// A string column carries the NULL itself, so the guard must leave it alone and let string.Concat's own
+			// null handling answer - guarding it would turn "!" into null.
+			var result =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select string.Concat(j.Name, "!"))
+				.ToArray().Single();
+
+			result.ShouldBe("!");
+		}
+
+		[Test]
+		public void NoOuterJoinEmitsNoGuard([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// Nothing here can be NULL, so the guard costs nothing: no conditional, and the same one column the
+			// option-off arm selects.
+			var query = from e in table select Convert.ToString(e.Value1);
+
+			query.ToArray().Single().ShouldBe("10");
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void GuardedColumnIsReadOnce([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// The not-null test and the value read share one placeholder, so a guarded column is still one column.
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select Convert.ToString(j.Value1);
+
+			query.ToArray().Single().ShouldBeNull();
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void BinaryOverMissedLeftJoinMatchesSql([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// The binary route reaches the client through TryConvertToSql declining, not through a registration,
+			// so it needs its own guard - without it this reads 1.
+			var result =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select j.Value1 + 1)
+				.ToArray().Single();
+
+			result.ShouldBe(0);
+		}
+
+		[Test]
+		public void DefaultIfEmptyOverMissedJoinMatchesSql([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// Same shape written as a join-into-DefaultIfEmpty rather than LeftJoin, which reaches the nullability
+			// through a different builder.
+			var result =
+				(from e in table
+				 join j in table on e.Id + 1000 equals j.Id into g
+				 from j in g.DefaultIfEmpty()
+				 select Convert.ToString(j.Value1))
+				.ToArray().Single();
+
+			result.ShouldBeNull();
 		}
 
 		// Per-translator coverage, batched: one projection calls many members of a family at once, and the
@@ -571,8 +656,8 @@ namespace Tests.Linq
 				select new
 				{
 					e.Id,
-					// Math.Max / Math.Min are absent on purpose: they stay in SQL, because a client-side
-					// Math.Max(0, 5) over a missed LeftJoin returns 5 where the SQL yields NULL. Pinned by
+					// Math.Max / Math.Min are absent on purpose: they stay in SQL, because what their SQL answers
+					// for a NULL argument is provider-dependent, so no client-side rule matches it. Pinned by
 					// ClientCalculationOverMissedLeftJoinMatchesSql.
 					Abs   = Math.Abs(e.Num),
 					// Column precision, not a constant: TranslateMathRoundMethod declines whenever every argument
@@ -688,9 +773,11 @@ namespace Tests.Linq
 					mandatory++;
 			}
 
-			// 34 with no client body, plus the 16 Convert.ToString overloads.
-			mandatory.ShouldBe(50);
-			optional.ShouldBe(190);
+			// 34 with no client body, plus Convert.ToString(object) - the only ToString overload still mandatory,
+			// because the null guard keys on the column's CLR type and leaves a reference-typed one to the member,
+			// whose answer for null is "" rather than the SQL's NULL (linq2db#5929).
+			mandatory.ShouldBe(35);
+			optional.ShouldBe(205);
 		}
 
 		static bool AlwaysThrowsInvalidCast(MethodInfo method)
@@ -751,14 +838,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddMembersStayInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		public void DateAddMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
 
 			// Column increments, not constants: with a constant the translator declines in a final projection
-			// whatever the option says, so such a query could not tell a mandatory registration from an optional
-			// one. With a column the members reach SQL, and they must do so in both arms - see linq2db#5929.
+			// whatever the option says, so such a query could not tell a mandatory registration from an optional one.
 			var query =
 				from e in table
 				select new
@@ -768,8 +854,10 @@ namespace Tests.Linq
 					D2 = e.Date.AddHours(e.Num),
 				};
 
-			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
+			// Values are not compared across the arms: SQLite computes these through strftime, which is not
+			// tick-for-tick equal to DateTime arithmetic. Where the computation happens is the point here.
 			query.ToArray().Length.ShouldBe(BatchCalcEntity.Seed.Length);
+			AssertComposition(query, preferClient, multiPart: false);
 		}
 
 		[Table]
@@ -784,31 +872,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeOffsetAddMembersStayInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		public void DateTimeOffsetAddMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(OffsetCalcEntity.Seed);
 
-			// Mandatory for the same missed-LeftJoin reason as the DateTime block (linq2db#5929). Asserted on the
-			// AST only: these registrations had no coverage of any kind, and the point here is where the
-			// computation happens, not how a provider stores an offset.
+			// Asserted on the AST only: these registrations had no coverage of any kind, and the point here is
+			// where the computation happens, not how a provider stores an offset.
 			var query =
 				from e in table
 				select new { e.Id, D = e.Dto.AddDays(e.Num) };
 
-			query.GetSelectQuery().Select.Columns.Count(c => c.Expression is not SqlField).ShouldBe(1);
+			query.GetSelectQuery().Select.Columns.Count(c => c.Expression is not SqlField).ShouldBe(preferClient ? 0 : 1);
 		}
 
 		[Test]
-		public void StringInstanceMembersStayInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		public void StringInstanceMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
 
-			// A declined registration is rebuilt over the materialized column, so for an instance call a NULL
-			// value arrives as a null receiver and throws. The emitted SQL defines an answer for NULL instead, so
-			// these must stay in SQL in both arms until linq2db#5928 lands. The seed's NULL Name is what makes the
-			// assertion able to fail.
+			// The seed's NULL Name is what carries this test: a declined instance call is rebuilt over the
+			// materialized column, so without the receiver guard the null arrives as a null receiver and throws
+			// (linq2db#5928). With it, both arms answer null, which is what the emitted SQL answers too.
 			var query =
 				from e in table
 				select new
@@ -820,10 +906,14 @@ namespace Tests.Linq
 					TrmE = e.Name!.TrimEnd(' '),
 				};
 
-			var results = query.ToArray();
+			var nullRow = query.ToArray().Single(r => r.Id == 2);
 
-			results.Single(r => r.Id == 2).Rep.ShouldBeNull();
-			query.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField).ShouldBeFalse();
+			nullRow.Rep .ShouldBeNull();
+			nullRow.Pad .ShouldBeNull();
+			nullRow.TrmS.ShouldBeNull();
+			nullRow.TrmE.ShouldBeNull();
+
+			AssertComposition(query, preferClient, multiPart: false);
 		}
 
 		[Test]

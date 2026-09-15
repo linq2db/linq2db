@@ -399,25 +399,34 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterString()
 		{
-			// Not optional *for now*: the result is a string, so over a missed LeftJoin the SQL yields NULL while a
-			// client-side call on default(T) yields "0". Revisit once linq2db#5929 propagates NULL into client
-			// calculation.
-			Registration.RegisterMethod((bool     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((byte     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((char     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((DateTime obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((double   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((short    obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((int      obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((long     obj) => Convert.ToString(obj), TranslateConvertToString);
+			// Optional: the translation is a cast, NULL-strict on every provider, and the client rebuild guards on
+			// the column, so a missed LeftJoin reads null either way (linq2db#5929).
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((byte     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((char     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((DateTime obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((decimal  obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((double   obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((short    obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((int      obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((long     obj) => Convert.ToString(obj), TranslateConvertToString);
+			}
+
+			// Mandatory: the guard keys on the column's CLR type, so a reference-typed column keeps the member's
+			// own semantics - and Convert.ToString((object)null) is "", where the SQL yields NULL.
 			Registration.RegisterMethod((object   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((float    obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((string   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((uint     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToString(obj), TranslateConvertToString);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((float    obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((string   obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((uint     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToString(obj), TranslateConvertToString);
+			}
 		}
 
 		void RegisterUInt16()

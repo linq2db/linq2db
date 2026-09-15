@@ -46,23 +46,25 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// The lambdas below are expression trees that only name a method for the registry; none is invoked,
 			// so there is no return value to use.
 #pragma warning disable MA0060 // The return value of method is not used
-			// Not optional *for now*: a declined registration is rebuilt over the materialized column, so for an
-			// instance call a NULL value arrives as a null receiver and throws, where the SQL below defines an
-			// answer for NULL. Revisit once linq2db#5928 gives a declined instance call a null guard.
-			Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
-			Registration.RegisterMethod(() => "".Replace(' ', ' '), TranslateStringReplace);
+			// Optional: each of these answers NULL for a NULL receiver in SQL, and a declined instance call is now
+			// rebuilt with a receiver guard that answers null too, instead of throwing (linq2db#5928).
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
+				Registration.RegisterMethod(() => "".Replace(' ', ' '), TranslateStringReplace);
 
-			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
-			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
+				Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
+				Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
-			Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
+				Registration.RegisterMethod(() => "".TrimStart((char[])null!), TranslateStringTrimStart);
+				Registration.RegisterMethod(() => "".TrimEnd  ((char[])null!), TranslateStringTrimEnd);
 #if NET8_0_OR_GREATER
-			Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
-			Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
-			Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
+				Registration.RegisterMethod(() => "".TrimStart(),    TranslateStringTrimStart);
+				Registration.RegisterMethod(() => "".TrimStart(' '), TranslateStringTrimStart);
+				Registration.RegisterMethod(() => "".TrimEnd  (),    TranslateStringTrimEnd);
+				Registration.RegisterMethod(() => "".TrimEnd  (' '), TranslateStringTrimEnd);
 #endif
+			}
 
 			// Static and null-tolerant, so it has a client body for every input.
 			using (Registration.OptionalScope())
@@ -91,8 +93,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// Only the fixed-arity overloads are optional. The sequence overloads below share
 			// TranslateConcatWithoutNullList with aggregate-over-grouping concat, which has no client-side
 			// equivalent - declining it would leave the grouping in the projection and trip the GroupBy guard.
-			// The object overloads are not optional *for now*: they accept a value-typed column, which over a missed
-			// LeftJoin materializes as default(T) and concatenates as "0" where the SQL yields "" (linq2db#5929).
+			// The object overloads stay mandatory: their SQL is deliberately NULL-tolerant - Coalesce(...) on SQLite
+			// and SQL Server, and Oracle's own || semantics - so it answers "" for a NULL argument where linq2db#5929's
+			// guard, which reproduces strict NULL propagation, would answer null. Measured on all three.
 			// The string overloads are unaffected - a string column is already nullable, so both arms see null.
 			Registration.RegisterMethod(() => string.Concat((object?)null),                                              TranslateConcatWithoutNull);
 			Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null),                               TranslateConcatWithoutNull);
