@@ -16,5 +16,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		FormatAsExpression  = 1 << 7,
 		// forces clearing flags
 		ResetPrevious       = 1 << 8,
+		// set while a member translator translates its own arguments: the translator has already claimed the node,
+		// so PreferClientCalculation must not leave an argument client-side
+		InsideTranslation   = 1 << 9,
 	}
 }

@@ -898,7 +898,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 				}
 
-				if (HandleStringFormat(node, out var translatedFormat))
+				// An interpolated string reaches here as string.Format, which is translated inline rather than by a member
+				// translator, so the option is applied at the call site.
+				if (!PreferClientCalculation(node) && HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
 				if (node.Type == typeof(bool) && TryConvertPredicate(node, out var translatedPredicate))
@@ -2278,13 +2280,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// When <see cref="LinqOptions.PreferClientCalculation"/> is enabled, computed expressions in the final
 		/// projection are left client-side instead of being forced into SQL columns. Anything that prefers or
-		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
-		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
+		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>), set projections
+		/// (<see cref="BuildFlags.ForSetProjection"/>) and the arguments a member translator translates for itself
+		/// (<see cref="BuildFlags.InsideTranslation"/>) still go to SQL.
 		/// </summary>
+		/// <remarks>
+		/// A running translator has already claimed its node. Were one of its arguments left client-side, the translator
+		/// would receive a non-SQL argument and decline, and the whole call would be calculated on the client.
+		/// </remarks>
 		bool PreferClientCalculation(Expression node)
 		{
 			return _buildPurpose is BuildPurpose.Expression
 				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideTranslation)
 				&& BuildContext != null
 				&& DataOptions.LinqOptions.PreferClientCalculation
 				&& !Builder.PreferServerSide(node, false)
@@ -5480,7 +5488,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
 
-				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
+				// A translator translating its own arguments: PreferClientCalculation must not leave them client-side.
+				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.InsideTranslation, alias: CurrentAlias);
 			}
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
