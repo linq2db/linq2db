@@ -85,6 +85,38 @@ namespace Tests
 			return false;
 		}
 
+		internal static int GetParameterIndex(IParameterInfo[] parameters, string parameterName)
+		{
+			for (var i = 0; i < parameters.Length; i++)
+			{
+				if (parameters[i].ParameterInfo.Name == parameterName)
+				{
+					return i;
+				}
+			}
+
+			return -1;
+		}
+
+		/// <summary>
+		/// Whether this instance expects the case <paramref name="test"/> is about to run to throw — the same
+		/// question <see cref="ThrowsWhenCommand"/> answers for itself, exposed so another wrapper can see that
+		/// this one owns the outcome. Read-only, and a query rather than an assertion: an unresolvable parameter
+		/// name answers "no" here and is still reported by the command.
+		/// </summary>
+		internal bool GovernsCurrentCase(ITest test)
+		{
+			if (test.Method == null)
+				return false;
+
+			var idx = GetParameterIndex(test.Method.GetParameters(), ParameterName);
+
+			if (idx < 0 || test.Arguments.Length <= idx)
+				return false;
+
+			return test.Arguments[idx] is { } value && ExpectsException(value);
+		}
+
 		public class ThrowsWhenCommand : DelegatingTestCommand
 		{
 			readonly ThrowsWhenAttribute _attribute;
@@ -93,19 +125,6 @@ namespace Tests
 				: base(innerCommand)
 			{
 				_attribute = attribute;
-			}
-
-			static int GetParameterIndex(IParameterInfo[] parameters, string parameterName)
-			{
-				for (var i = 0; i < parameters.Length; i++)
-				{
-					if (parameters[i].ParameterInfo.Name == parameterName)
-					{
-						return i;
-					}
-				}
-
-				return -1;
 			}
 
 			public override TestResult Execute(TestExecutionContext context)

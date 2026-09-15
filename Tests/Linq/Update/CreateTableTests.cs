@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -109,7 +109,8 @@ namespace Tests.xUpdate
 			table.Drop();
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
+			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.")]
 		[Test]
 		public async Task CreateLocalTempTable1Async([IncludeDataSources(
 			TestProvName.AllSQLite,
@@ -197,7 +198,8 @@ namespace Tests.xUpdate
 			table.Drop();
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
+			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.")]
 		[Test]
 		public async Task CreateLocalTempTable2Async([IncludeDataSources(
 			TestProvName.AllSQLite,
@@ -274,7 +276,8 @@ namespace Tests.xUpdate
 			public FieldType3 Field3;
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
+			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.")]
 		[Test]
 		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)] string context)
 		{
@@ -408,7 +411,8 @@ namespace Tests.xUpdate
 		}
 
 		#region Issue 3223
-		[ActiveIssue]
+		[ActiveIssue(3223, ErrorMessage = "Assert.That(res[0].Value, Is.EqualTo(\"Value1\"))",
+			Details = "CreateTable maps the enum to a single character rather than varchar, so the value comes back truncated to one char - #3223's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3223")]
 		public void Issue3223Test([DataSources] string context)
 		{
@@ -465,7 +469,10 @@ namespace Tests.xUpdate
 			public int Value { get; set; }
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllYdb, Details = "YDB temporary-table creation is not yet supported by the provider (\"Creating temporary table is not supported\").")]
+		// Not #4671, which the [Test] description below points at: on YDB this fails before reaching that
+		// issue's subject, because the provider has no CREATE TEMPORARY TABLE at all.
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{

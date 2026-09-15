@@ -1,0 +1,453 @@
+using System;
+
+using LinqToDB;
+
+using NUnit.Framework;
+using NUnit.Framework.Interfaces;
+
+using Shouldly;
+
+namespace Tests.Infrastructure
+{
+	/// <summary>
+	/// The decision logic behind <see cref="ActiveIssueAttribute"/>, tested as the pure functions it is factored
+	/// into. Exercising it end-to-end is not possible from inside the suite: a gated test that passes is reported as
+	/// a failure <em>by construction</em>, so it could not sit here green, and a nested
+	/// <c>NUnitTestAssemblyRunner</c> would share the static <see cref="TestProgressTracker"/> and mark the outer run
+	/// done part-way through. <see cref="ActiveIssueAttribute.Decide"/> exists so the policy is checkable without
+	/// either.
+	/// </summary>
+	[TestFixture]
+	public class ActiveIssueTests : TestBase
+	{
+		const string SqlError    = "LinqToDB.LinqToDBException : The LINQ expression could not be converted to SQL.";
+		const string OtherError  = "System.InvalidOperationException : something else entirely";
+		const string AssertError = "  Expected: 3\r\n  But was:  7\r\n";
+
+		static ActiveIssueAttribute Expecting(string? type = null, string? message = null) => new(1234)
+		{
+			ErrorTypeName = type,
+			ErrorMessage  = message,
+		};
+
+		#region Decide — SC-1 / SC-2 / SC-3 / SC-3b
+
+		[Test]
+		public void Decide_PassingTest_IsFailure()
+		{
+			var decision = ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false);
+
+			decision.ShouldNotBeNull();
+			decision!.Value.State.Status.ShouldBe(TestStatus.Failed);
+			decision.Value.Message.ShouldContain("Test passed but is marked");
+			decision.Value.Message.ShouldContain("1234");
+		}
+
+		[Test]
+		public void Decide_DeclaredError_IsInconclusive()
+		{
+			var decision = ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false);
+
+			decision.ShouldNotBeNull();
+			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+			decision.Value.Message.ShouldContain("Known issue");
+			decision.Value.Message.ShouldContain(SqlError);
+		}
+
+		[Test]
+		public void Decide_DeclaredErrorWithMessageFragment_IsInconclusive()
+		{
+			var decision = ActiveIssueAttribute.Decide(
+				Expecting("LinqToDB.LinqToDBException", "could not be converted to SQL."),
+				ResultState.Failure,
+				SqlError,
+				isRemote: false);
+
+			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+		}
+
+		[Test]
+		public void Decide_DifferentErrorType_IsFailure()
+		{
+			var decision = ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, OtherError, isRemote: false);
+
+			decision!.Value.State.Status.ShouldBe(TestStatus.Failed);
+
+			// Both halves must be named, or the reader cannot tell a moved message from a real regression.
+			decision.Value.Message.ShouldContain("LinqToDB.LinqToDBException");
+			decision.Value.Message.ShouldContain(OtherError);
+		}
+
+		[Test]
+		public void Decide_DifferentErrorMessage_IsFailure()
+		{
+			var decision = ActiveIssueAttribute.Decide(
+				Expecting("LinqToDB.LinqToDBException", "some other wording"),
+				ResultState.Failure,
+				SqlError,
+				isRemote: false);
+
+			decision!.Value.State.Status.ShouldBe(TestStatus.Failed);
+			decision.Value.Message.ShouldContain("some other wording");
+		}
+
+		[Test]
+		public void Decide_WrongResultsAssertion_MatchesOnMessageAlone()
+		{
+			// An assertion failure's message carries no type name, so leaving ErrorType unset is how a
+			// wrong-results issue is declared.
+			var decision = ActiveIssueAttribute.Decide(Expecting(message: "But was:  7"), ResultState.Failure, AssertError, isRemote: false);
+
+			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+		}
+
+		[Test]
+		public void Decide_NoExpectationDeclared_AnyFailureMatches()
+		{
+			var decision = ActiveIssueAttribute.Decide(Expecting(), ResultState.Failure, OtherError, isRemote: false);
+
+			decision!.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+		}
+
+		[TestCase("Skipped")]
+		[TestCase("Ignored")]
+		[TestCase("Inconclusive")]
+		[TestCase("Warning")]
+		public void Decide_InnerNonVerdictOutcome_PassesThrough(string outcome)
+		{
+			// The test opted out of running, so it produced no evidence about the issue either way. The pattern this
+			// attribute is modelled on gets this wrong and reports an ignored test as a failure.
+			var state = outcome switch
+			{
+				"Skipped"      => ResultState.Skipped,
+				"Ignored"      => ResultState.Ignored,
+				"Inconclusive" => ResultState.Inconclusive,
+				_              => ResultState.Warning,
+			};
+
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), state, "provider not configured", isRemote: false)
+				.ShouldBeNull();
+		}
+
+		[Test]
+		public void Decide_RemoteWrapsTheException_StillMatches()
+		{
+			// The remote transport wraps the original exception, so the type name is no longer at the start.
+			const string wrapped = "System.Exception : remote call failed ---> LinqToDB.LinqToDBException : nope";
+
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, wrapped, isRemote: true)!
+				.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+
+			// ... and the same message under a direct context is a mismatch, which is what makes the distinction real.
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, wrapped, isRemote: false)!
+				.Value.State.Status.ShouldBe(TestStatus.Failed);
+		}
+
+		#endregion
+
+		#region Decide — deference to the Throws* family (SC-11)
+
+		[Test]
+		public void Decide_ThrowsAttributeGoverns_DefersEvenWhenTheTestPassed()
+		{
+			// The Throws* wrapper rewrites an expected throw to Success. Without deference this case is the one
+			// that breaks: the gate sees a passing test and reports "passed but is marked", reddening a test that
+			// behaved exactly as both attributes expect.
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: true)
+				.ShouldBeNull();
+
+			// Control: the same inputs without a governing Throws* are decided, so the arm above is doing the work
+			// rather than the Success case being unreachable.
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Success, null, isRemote: false, throwsGoverns: false)
+				.ShouldNotBeNull();
+		}
+
+		[Test]
+		public void Decide_ThrowsAttributeGoverns_DefersOnAFailureItWouldHaveMatched()
+		{
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: true)
+				.ShouldBeNull();
+
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, SqlError, isRemote: false, throwsGoverns: false)!
+				.Value.State.Status.ShouldBe(TestStatus.Inconclusive);
+		}
+
+		[Test]
+		public void Decide_NoGoverningThrowsAttribute_IsTheDefault()
+		{
+			// Deference is opt-in per case: the parameter defaults to false, so a site with no Throws* sibling -
+			// which is all but 13 of them - keeps the ordinary policy without every caller opting out.
+			ActiveIssueAttribute.Decide(Expecting("LinqToDB.LinqToDBException"), ResultState.Error, OtherError, isRemote: false)!
+				.Value.State.Status.ShouldBe(TestStatus.Failed);
+		}
+
+		#endregion
+
+		#region Sweep mode — off unless asked for (SC-12)
+
+		[Test]
+		public void SweepMode_IsOffUnlessTheEnvironmentVariableIsSet()
+		{
+			// Sweep mode reports every governed case as a failure carrying a sentinel record, so a build that
+			// defaulted it on would redden every known-issue test in the suite. The variable is named here so the
+			// test fails if it is renamed without the docs and the sweep procedure following.
+			TestEnvironment.ActiveIssueSweepVariable.ShouldBe("L2DB_ACTIVEISSUE_SWEEP");
+
+			if (Environment.GetEnvironmentVariable(TestEnvironment.ActiveIssueSweepVariable) == "1")
+				Assert.Ignore("Sweep mode is enabled for this run, so the default cannot be observed.");
+
+			TestEnvironment.ActiveIssueSweep.ShouldBeFalse();
+		}
+
+		#endregion
+
+		#region AppliesTo — SC-4
+
+		[Test]
+		public void AppliesTo_NoTargeting_GovernsEveryProvider()
+		{
+			var attr = new ActiveIssueAttribute();
+
+			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+			attr.AppliesTo("Oracle.23.Managed", isLinqService: true).ShouldBeTrue();
+		}
+
+		[Test]
+		public void AppliesTo_NamedConfiguration_GovernsOnlyThatProvider()
+		{
+			var attr = new ActiveIssueAttribute { Configuration = "SQLite.MS" };
+
+			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+			attr.AppliesTo("SQLite.Classic", isLinqService: false).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_CommaSeparatedConfiguration_IsSplit()
+		{
+			var attr = new ActiveIssueAttribute { Configuration = TestProvName.AllFirebird };
+
+			attr.AppliesTo(ProviderName.Firebird5, isLinqService: false).ShouldBeTrue();
+			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_ConfigurationsArray_IsFlattened()
+		{
+			var attr = new ActiveIssueAttribute { Configurations = [TestProvName.AllFirebird, "SQLite.MS"] };
+
+			attr.AppliesTo(ProviderName.Firebird5, isLinqService: false).ShouldBeTrue();
+			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+			attr.AppliesTo("Oracle.23.Managed", isLinqService: false).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_SkipForLinqService_DropsTheRemoteCase()
+		{
+			var attr = new ActiveIssueAttribute { SkipForLinqService = true };
+
+			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+			attr.AppliesTo("SQLite.MS", isLinqService: true).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_SkipForNonLinqService_DropsTheDirectCase()
+		{
+			var attr = new ActiveIssueAttribute { SkipForNonLinqService = true };
+
+			attr.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeFalse();
+			attr.AppliesTo("SQLite.MS", isLinqService: true).ShouldBeTrue();
+		}
+
+		[Test]
+		public void AppliesTo_NoProviderParameter_GovernsUnconditionally()
+		{
+			// Matches ActiveIssueAttribute: a test with no data-source parameter is gated whatever Configuration
+			// says. Recorded because it means a Configuration on such a test is silently inert.
+			new ActiveIssueAttribute { Configuration = "SQLite.MS" }
+				.AppliesTo(null, isLinqService: false).ShouldBeTrue();
+		}
+
+		static TestPlatform Current =>
+			OperatingSystem.IsWindows() ? TestPlatform.Windows :
+			OperatingSystem.IsLinux()   ? TestPlatform.Linux   :
+			TestPlatform.MacOS;
+
+		static TestPlatform Other => Current == TestPlatform.Windows ? TestPlatform.Linux : TestPlatform.Windows;
+
+		[Test]
+		public void AppliesTo_PlatformsDefault_GovernsEverywhere()
+		{
+			new ActiveIssueAttribute().AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+		}
+
+		[Test]
+		public void AppliesTo_MatchingPlatform_Governs()
+		{
+			new ActiveIssueAttribute { Platforms = Current }
+				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+		}
+
+		[Test]
+		public void AppliesTo_OtherPlatform_DoesNotGovern()
+		{
+			new ActiveIssueAttribute { Platforms = Other }
+				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_PlatformIsCheckedBeforeTheNoProviderShortcut()
+		{
+			// The shortcut returns true for a test with no data-source parameter, so a platform bound that ran after
+			// it would be silently inert on exactly the tests that have no other targeting.
+			new ActiveIssueAttribute { Platforms = Other }
+				.AppliesTo(null, isLinqService: false).ShouldBeFalse();
+		}
+
+		[Test]
+		public void AppliesTo_PlatformFlagsCombine()
+		{
+			new ActiveIssueAttribute { Platforms = Current | Other }
+				.AppliesTo("SQLite.MS", isLinqService: false).ShouldBeTrue();
+		}
+
+		#endregion
+
+		#region SelectGoverning — precedence and overlap
+
+		[Test]
+		public void SelectGoverning_TwoProvidersTwoIssues_EachGovernsItsOwn()
+		{
+			// The capability AllowMultiple=false denies today.
+			var sqlite = new ActiveIssueAttribute(1) { Configuration = "SQLite.MS" };
+			var oracle = new ActiveIssueAttribute(2) { Configuration = "Oracle.23.Managed" };
+
+			ActiveIssueAttribute.SelectGoverning([sqlite, oracle], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(sqlite);
+			ambiguous.ShouldBeFalse();
+
+			ActiveIssueAttribute.SelectGoverning([sqlite, oracle], "Oracle.23.Managed", false, out ambiguous).ShouldBeSameAs(oracle);
+			ambiguous.ShouldBeFalse();
+
+			ActiveIssueAttribute.SelectGoverning([sqlite, oracle], "SqlServer.2022.MS", false, out _).ShouldBeNull();
+		}
+
+		[Test]
+		public void SelectGoverning_TargetedBeatsBlanket()
+		{
+			var blanket = new ActiveIssueAttribute(1);
+			var oracle  = new ActiveIssueAttribute(2) { Configuration = "Oracle.23.Managed" };
+
+			ActiveIssueAttribute.SelectGoverning([blanket, oracle], "Oracle.23.Managed", false, out var ambiguous).ShouldBeSameAs(oracle);
+			ambiguous.ShouldBeFalse();
+
+			ActiveIssueAttribute.SelectGoverning([blanket, oracle], "SQLite.MS", false, out ambiguous).ShouldBeSameAs(blanket);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_PlatformScopedBeatsBlanket()
+		{
+			var blanket  = new ActiveIssueAttribute(1);
+			var platform = new ActiveIssueAttribute(2) { Platforms = Current };
+
+			ActiveIssueAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(platform);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_PlatformScopedOnAnotherPlatform_FallsBackToBlanket()
+		{
+			var blanket  = new ActiveIssueAttribute(1);
+			var platform = new ActiveIssueAttribute(2) { Platforms = Other };
+
+			ActiveIssueAttribute.SelectGoverning([blanket, platform], "SQLite.MS", false, out var ambiguous).ShouldBeSameAs(blanket);
+			ambiguous.ShouldBeFalse();
+		}
+
+		[Test]
+		public void SelectGoverning_OnlyAttributeIsForAnotherPlatform_NothingGoverns()
+		{
+			// The case TestDoubleRoundTrip needs: on the platform where the test passes, no attribute applies, so
+			// the result is left alone rather than rewritten to "passed but is marked".
+			var platform = new ActiveIssueAttribute(1) { Platforms = Other };
+
+			ActiveIssueAttribute.SelectGoverning([platform], "SQLite.MS", false, out _).ShouldBeNull();
+		}
+
+		[Test]
+		public void SelectGoverning_TwoEquallySpecificMatches_IsAmbiguous()
+		{
+			var first  = new ActiveIssueAttribute(1) { Configuration = "SQLite.MS" };
+			var second = new ActiveIssueAttribute(2) { Configuration = "SQLite.MS" };
+
+			ActiveIssueAttribute.SelectGoverning([first, second], "SQLite.MS", false, out var ambiguous).ShouldNotBeNull();
+			ambiguous.ShouldBeTrue();
+		}
+
+		#endregion
+
+		#region Sentinel — SC-7
+
+		[Test]
+		public void Sentinel_RoundTripsAwkwardCharacters()
+		{
+			const string name    = "Tests.Linq.FooTests.Bar(\"SQLite.MS\")";
+			const string message = "a | b % c\r\nsecond line";
+
+			var line = ActiveIssueSentinel.Format(name, "SQLite.MS", isRemote: true, passed: false, "LinqToDB.LinqToDBException", message);
+
+			// One line, or the harvester's line-oriented scan splits one record into two.
+			line.ShouldNotContain("\r");
+			line.ShouldNotContain("\n");
+
+			ActiveIssueSentinel.TryParse("  " + line, out var record).ShouldBeTrue();
+
+			record!.FullName .ShouldBe(name);
+			record.Provider  .ShouldBe("SQLite.MS");
+			record.IsRemote  .ShouldBeTrue();
+			record.Passed    .ShouldBeFalse();
+			record.ErrorType .ShouldBe("LinqToDB.LinqToDBException");
+			record.Message   .ShouldBe(message);
+		}
+
+		[Test]
+		public void Sentinel_AbsentProviderAndTypeRoundTripAsNull()
+		{
+			var line = ActiveIssueSentinel.Format("Tests.Linq.FooTests.Bar", null, isRemote: false, passed: true, null, null);
+
+			ActiveIssueSentinel.TryParse(line, out var record).ShouldBeTrue();
+
+			record!.Provider.ShouldBeNull();
+			record.ErrorType.ShouldBeNull();
+			record.Passed   .ShouldBeTrue();
+		}
+
+		[Test]
+		public void Sentinel_LongMessageIsCapped()
+		{
+			var line = ActiveIssueSentinel.Format("T.M", "SQLite.MS", false, false, null, new string('x', 5000));
+
+			line.Length.ShouldBeLessThan(1000);
+		}
+
+		[Test]
+		public void Sentinel_ExtractsExceptionTypeButNotAssertionProse()
+		{
+			ActiveIssueSentinel.ExtractErrorType(SqlError).ShouldBe("LinqToDB.LinqToDBException");
+			ActiveIssueSentinel.ExtractErrorType(OtherError).ShouldBe("System.InvalidOperationException");
+
+			// An assertion failure carries no type, which is how a wrong-results site is recognised during triage.
+			ActiveIssueSentinel.ExtractErrorType(AssertError).ShouldBeNull();
+			ActiveIssueSentinel.ExtractErrorType("Expected 3 : but was 7").ShouldBeNull();
+			ActiveIssueSentinel.ExtractErrorType(null).ShouldBeNull();
+		}
+
+		[Test]
+		public void Sentinel_RejectsForeignLines()
+		{
+			ActiveIssueSentinel.TryParse("failed SomeTest (12ms)", out var record).ShouldBeFalse();
+			record.ShouldBeNull();
+		}
+
+		#endregion
+	}
+}

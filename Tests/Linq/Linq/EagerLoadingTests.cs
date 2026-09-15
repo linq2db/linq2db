@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -754,7 +754,6 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -820,7 +819,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
+		[ActiveIssue(3619, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Expected Was")]
 		[Test]
 		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
@@ -1782,7 +1781,8 @@ namespace Tests.Linq
 			[Column    ] public int AssociationKey { get; set; }
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3806, ErrorMessage = "Assert.That(queries.Queries, Has.Count.EqualTo(1))",
+			Details = "the association is fetched as a second query instead of an inner join - #3806's subject.")]
 		[Test]
 		public void Issue3806Test([DataSources(false)] string context)
 		{
@@ -3175,7 +3175,10 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4585
-		[ActiveIssue]
+		// As ComplexTests.Issue4139Test: the fragment starts after the per-run TableContext id.
+		[ActiveIssue(4585, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Issue4585Table).Nested' is not an association.",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The fluently-mapped nested association is not recognised as one.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4585")]
 		public void Issue4585Test([DataSources] string context)
 		{

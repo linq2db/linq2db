@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -262,7 +262,8 @@ namespace Tests.Linq
 
 		#region Floats
 
-		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value does not fit into decimal",
+			Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDefaultDecimal([DataSources] string context)
 		{
@@ -272,7 +273,8 @@ namespace Tests.Linq
 				from t in db.Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000));
 		}
 
-		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
+		[ActiveIssue(5592, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.OverflowException", ErrorMessage = "Value does not fit into decimal",
+			Details = "Ydb.Sdk UnpackDecimal throws OverflowException reading a computed Decimal result (client-side scale handling).")]
 		[Test]
 		public void ToDecimal1([DataSources] string context)
 		{
@@ -645,7 +647,9 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue("CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit", Configuration = ProviderName.DB2)]
+		[ActiveIssue(Configuration = ProviderName.DB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0245N{0}The invocation of routine \"DECIMAL\" is ambiguous",
+			Details = "no-issue: CI: SQL0245N  The invocation of routine DECIMAL is ambiguous. The argument in position 1 does not have a best fit. Nothing on the tracker covers it. The placeholder spans the two spaces DB2 pads after the code.")]
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
@@ -1780,7 +1784,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
 		[Test]
 		public void TextExecuteColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
@@ -1830,7 +1833,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
 		[Test]
 		public void TextExecuteScalarEntityColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
