@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -1495,6 +1496,153 @@ namespace Tests.Linq
 
 			rows.Count.ShouldBe(2);
 			rows.Select(r => r.Span).ShouldBe([value, value]);
+		}
+
+		/// <summary>
+		/// Two columns whose conversions are the same conversion, declared once each rather than shared, meeting in
+		/// one comparison.
+		/// </summary>
+		/// <remarks>
+		/// The refusal below rests on a comparison of what two conversions do, and that comparison answers "no" when
+		/// it cannot tell - so anything it fails to recognise is a query that used to work and now throws. Two
+		/// separately declared instances of one conversion are the shape where that would bite, and the only one
+		/// reaching the expression comparison at all: paired with itself a column is one descriptor object, and
+		/// identity settles it before either conversion is looked at.
+		/// </remarks>
+		[Test]
+		public void SeparatelyDeclaredConversionsStillCompare([DataSources] string context)
+		{
+			var value = TimeSpan.FromMinutes(90);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<SeparatelyDeclaredRowA>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Entity<SeparatelyDeclaredRowB>()
+					.Property(e => e.Span)
+						.HasConversion(ts => (long?)ts.Ticks, v => TimeSpan.FromTicks(v!.Value))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable<SeparatelyDeclaredRowA>();
+			using var b  = db.CreateLocalTable<SeparatelyDeclaredRowB>();
+
+			db.Insert(new SeparatelyDeclaredRowA { Id = 1, Span = value });
+			db.Insert(new SeparatelyDeclaredRowB { Id = 2, Span = value });
+
+			var matched =
+				(from x in a
+				 from y in b
+				 where x.Span == y.Span
+				 select x.Id)
+				.ToArray();
+
+			matched.ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class DivergentConversionRow
+		{
+			[PrimaryKey] public int Id      { get; set; }
+
+			// One CLR type, one storage type, two conversions that disagree about what the stored number is. Both
+			// are lossless and neither is unusual on its own; nothing but the conversions says they differ.
+			[Column    ] public int Doubled { get; set; }
+			[Column    ] public int Tripled { get; set; }
+
+			// No conversion, which disagrees with either of them just as sharply: what this column stores is the
+			// value, and what they store is not.
+			[Column    ] public int Plain   { get; set; }
+		}
+
+		/// <summary>
+		/// An operator between two columns whose value converters do not agree about what a stored value counts.
+		/// </summary>
+		/// <remarks>
+		/// A conversion is not arithmetic on the SQL side, so an operator between two columns runs on the numbers
+		/// they happen to be stored as: ten doubled and ten tripled add to fifty, which is then read back through
+		/// one of the two conversions and answers twenty-five for a sum the CLR puts at twenty. Compared, the same
+		/// two numbers answer no rows where the CLR answers one.
+		/// <para>
+		/// Not a duration problem - the pairing that reported it holds two <see cref="TimeSpan"/> columns counting
+		/// different units, but the shape is any two columns of one type whose converters disagree, and integers
+		/// scaled by two and by three are the smallest form of it.
+		/// </para>
+		/// <para>
+		/// A column carrying no conversion at all is refused against a converted one on the same terms, and it is
+		/// the commoner half of the shape: what it stores is the value itself and what the other stores is not, so
+		/// an operator between them counts neither. Nothing about that pairing looks unusual in the query text,
+		/// which is what makes it worth refusing rather than answering in the storage domain.
+		/// </para>
+		/// <para>
+		/// Refused only where the answer has to come from the database. A projection reads each column on its own
+		/// terms and the reader combines them, which is exact - and the two controls beside it are the pairings that
+		/// were never in doubt: a column with itself, and a column with a plain value, which is written down through
+		/// that column's own conversion and so arrives in its terms.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void DivergentConversionsRefuseToCombine([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<DivergentConversionRow>()
+					.Property(e => e.Doubled)
+						.HasConversion(v => v * 2, p => p / 2)
+					.Property(e => e.Tripled)
+						.HasConversion(v => v * 3, p => p / 3)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable<DivergentConversionRow>();
+
+			db.Insert(new DivergentConversionRow { Id = 1, Doubled = 10, Tripled = 10, Plain = 10 });
+
+			string Refusal(string member1, string member2)
+			{
+				return string.Format(
+					CultureInfo.InvariantCulture,
+					ErrorHelper.Error_ValueConverter_DivergentOperands,
+					member1,
+					member2);
+			}
+
+			var combined = () => t
+				.Select(r => Sql.AsSql(r.Doubled + r.Tripled))
+				.ToArray();
+
+			var compared = () => t
+				.Where(r => r.Doubled == r.Tripled)
+				.ToArray();
+
+			var unconverted = () => t
+				.Select(r => Sql.AsSql(r.Doubled + r.Plain))
+				.ToArray();
+
+			combined   .ShouldThrow<LinqToDBException>().Message.ShouldContain(Refusal(nameof(DivergentConversionRow.Doubled), nameof(DivergentConversionRow.Tripled)));
+			compared   .ShouldThrow<LinqToDBException>().Message.ShouldContain(Refusal(nameof(DivergentConversionRow.Doubled), nameof(DivergentConversionRow.Tripled)));
+			unconverted.ShouldThrow<LinqToDBException>().Message.ShouldContain(Refusal(nameof(DivergentConversionRow.Doubled), nameof(DivergentConversionRow.Plain)));
+
+			var row = t
+				.Select(r => new
+				{
+					Divergent   = r.Doubled + r.Tripled,
+					Unmapped    = r.Doubled + r.Plain,
+					SameColumn  = Sql.AsSql(r.Doubled + r.Doubled),
+					NoConverter = Sql.AsSql(r.Plain   + r.Plain),
+					PlainValue  = Sql.AsSql(r.Doubled + 5),
+				})
+				.Single();
+
+			row.Divergent.ShouldBe(20);
+			row.Unmapped.ShouldBe(20);
+			row.SameColumn.ShouldBe(20);
+			row.NoConverter.ShouldBe(20);
+			row.PlainValue.ShouldBe(15);
+
+			t.Count(r => r.Doubled == 10).ShouldBe(1);
 		}
 
 		sealed class ScaledValueRow
