@@ -621,6 +621,35 @@ namespace Tests.Linq
 			result.ShouldBeNull();
 		}
 
+		[Test]
+		public void ClientSideWithoutRegistrationMatchesSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var r =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 ToStr  = j.Value1.ToString(),
+					 Interp = $"[{j.Value1}]",
+				 })
+				.ToArray().Single();
+
+			// int.ToString() routes through TranslateOverrideHandler, which has no registration site, so it is
+			// client-side in both arms and the option must not touch its answer. Guarding it would turn "0" into
+			// null purely because an option about *where* computation happens was enabled.
+			r.ToStr.ShouldBe("0");
+
+			// An interpolated string is gated at HandleStringFormat, not a registration, so the method-call guard
+			// does not reach it - and must not, since guarding string.Format itself answers null where its
+			// COALESCE-based SQL answers "[]". The arms agree because the *unary* guard reaches the boxing
+			// conversion in the hole, making it a null object rather than a boxed 0. Without any guard this
+			// reads "[0]", which is what makes this assertion carry weight.
+			r.Interp.ShouldBe("[]");
+		}
+
 		// Per-translator coverage, batched: one projection calls many members of a family at once, and the
 		// "every projected column is a raw field" assertion fails if *any* member in the batch stayed server-side.
 		// A newly registered member joins a batch by adding one line to its projection rather than adding a test.

@@ -868,6 +868,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 			}
 
+			var declinedOptionalTranslation = false;
+
 			if (IsSqlOrExpression() && BuildContext != null)
 			{
 				var exposed = Builder.ConvertSingleExpression(node);
@@ -885,7 +887,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// and a registration made inside an OptionalScope() declines itself, so a mandatory one (Sql.ToNullable,
 				// aggregates, window functions) keeps translating. HandleExtension handles [Expression]-attributed
 				// functions, which have no such marker, so the option is applied here at the call site.
-				if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
+				if (TranslateMember(BuildContext, node, out var translatedMember, out declinedOptionalTranslation) && !DeclinedForSetProjection(node, translatedMember))
 				{
 					return Visit(translatedMember);
 				}
@@ -925,9 +927,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var newNode = base.VisitMethodCall(node);
 
-				// This is the general client-side fallback, so the guard applies only where the option is what
-				// declined the translation - everything else keeps the behaviour it had.
-				if (PreferClientCalculation(node))
+				// Only where a registration declined: that is the case where the client stands in for SQL this
+				// call would otherwise have emitted, and the families opted in were measured NULL-strict. Reaching
+				// this fallback for any other reason - string.Format under the option, whose SQL is deliberately
+				// NULL-tolerant, or int.ToString(), which is client-side in both arms - must not change the answer.
+				if (declinedOptionalTranslation)
 					newNode = MakeClientCalculationNullAware(newNode, node.Type);
 
 				FoundRoot = null;
@@ -5491,6 +5495,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class TranslationContext : ITranslationContext
 		{
+			public bool OptionalDeclined { get; set; }
+
 			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
 				readonly ITranslationContext _translationContext;
@@ -5507,9 +5513,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias)
 			{
-				Visitor        = visitor;
-				CurrentContext = currentContext;
-				CurrentAlias   = currentAlias;
+				Visitor          = visitor;
+				CurrentContext   = currentContext;
+				CurrentAlias     = currentAlias;
+				OptionalDeclined = false;
 			}
 
 			public void Cleanup()
@@ -5766,7 +5773,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool TranslateMember(IBuildContext? context, Expression memberExpression, [NotNullWhen(true)] out Expression? translated)
 		{
-			translated = null;
+			return TranslateMember(context, memberExpression, out translated, out _);
+		}
+
+		/// <param name="declinedOptional">
+		/// True when the registry had a translation and declined it because the caller prefers client calculation.
+		/// Distinct from "nothing could translate this", which also returns false - only the first means the
+		/// client-side rebuild replaces SQL that propagated NULL.
+		/// </param>
+		public bool TranslateMember(IBuildContext? context, Expression memberExpression, [NotNullWhen(true)] out Expression? translated, out bool declinedOptional)
+		{
+			translated       = null;
+			declinedOptional = false;
 
 			if (memberExpression
 			    is MethodCallExpression
@@ -5786,6 +5804,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				translationContext.Value.Init(this, context, Alias);
 
 				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags(memberExpression));
+
+				declinedOptional = translationContext.Value.OptionalDeclined;
 
 				if (translated == null)
 					return false;

@@ -36,6 +36,14 @@ namespace LinqToDB.Linq.Translation
 		SelectQuery       CurrentSelectQuery      { get; }
 		string?           CurrentAlias            { get; }
 
+		/// <summary>
+		/// Set by the translator when it declined a registration <i>because</i> the caller passed
+		/// <see cref="TranslationFlags.SkipOptional"/>, as opposed to there being nothing registered to translate.
+		/// The builder reads it to decide whether the client-side rebuild is standing in for SQL that propagated
+		/// NULL, and so needs a null guard — see linq2db#5929.
+		/// </summary>
+		bool OptionalDeclined { get; set; }
+
 		SqlPlaceholderExpression CreatePlaceholder(SelectQuery    selectQuery, ISqlExpression sqlExpression,  Expression basedOn);
 		SqlErrorExpression       CreateErrorExpression(Expression basedOn,     string?        message = null, Type?      type = null);
 
