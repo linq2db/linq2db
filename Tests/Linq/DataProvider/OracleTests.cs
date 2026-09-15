@@ -2986,7 +2986,10 @@ namespace Tests.DataProvider
 			public int BinaryDataID { get; set; }
 		}
 
-		[Test]
+		// NonParallelizable: mutates the process-global OracleOptions.Default. While DontEscapeLowercaseIdentifiers
+		// is on, every other Oracle context emits the test schema's mixed-case names unquoted, and Oracle folds
+		// them to upper case - so concurrent tests see ORA-00942 on tables that exist.
+		[Test, NonParallelizable]
 		public void TestLowercaseIdentifiersQuotation([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseDisableQueryCache(true));
