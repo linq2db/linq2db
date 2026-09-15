@@ -19,6 +19,44 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		/// <inheritdoc />
 		public override bool CanLowerIntervalDifference => true;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by whole milliseconds using SQLite's date modifiers.
+		/// </summary>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var stringType = Factory.GetDbDataType(typeof(string));
+
+			// Truncate before converting to double, and before negation so even Int64.MinValue is safe.
+			var milliseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond);
+			if (element.IsSubtract)
+				milliseconds = Factory.Multiply(longType, milliseconds, -1L);
+
+			var seconds  = Factory.Div(doubleType, Factory.Cast(milliseconds, doubleType), 1000);
+			var modifier = Factory.Concat(Factory.Cast(seconds, stringType), " Second");
+			var format   = Factory.Value("%Y-%m-%d %H:%M:%f");
+
+			if (element.Type.SystemType.ToUnderlying() == typeof(DateTimeOffset))
+			{
+				// strftime normalizes an offset-bearing value to UTC. Restore its local time and suffix.
+				var suffix = Factory.Function(stringType, "Substr", element.Temporal, Factory.Value(-6));
+				var hasOffset = new SqlPredicate.Expr(Factory.Expression(Factory.GetDbDataType(typeof(bool)),
+					"{0} GLOB {1}", suffix, Factory.Value("[+-][0-9][0-9]:[0-9][0-9]")));
+				var offset = Factory.Condition(hasOffset, suffix, Factory.Value("+00:00"));
+				var shifted = Factory.Function(stringType, "strftime", ParametersNullabilityType.IfAnyParameterNullable,
+					format, element.Temporal, modifier, offset);
+
+				return Factory.Expression(element.Type, "{0}", Factory.Concat(shifted, offset));
+			}
+
+			return Factory.Function(element.Type, "strftime", ParametersNullabilityType.IfAnyParameterNullable,
+				format, element.Temporal, modifier);
+		}
+
 		/// <summary>
 		/// <c>julianday</c> returns a double, and a Julian day number today is around 2460000 - so one unit in the
 		/// last place is about 47 microseconds. The millisecond is the finest quantum that survives that, whatever
