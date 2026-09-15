@@ -383,20 +383,38 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InterpolationOverMissedLeftJoinMatchesLinqToObjects([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InterpolationOverMissedLeftJoin([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			AssertInterpolationOverMissedLeftJoin(context, preferClient: true);
+		}
+
+		[Test]
+		[ActiveIssue(5932, Details = "Translated to SQL, a non-nullable column of a missed LEFT JOIN row stays NULL inside the calculation, so the hole reads empty instead of default(int)")]
+		public void InterpolationOverMissedLeftJoinWithoutOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			AssertInterpolationOverMissedLeftJoin(context, preferClient: false);
+		}
+
+		void AssertInterpolationOverMissedLeftJoin(string context, bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
 
-			// Calculated on the client, the missed row reads j.Value1 as default(int), which is also what LINQ to Objects
-			// with null propagation answers: "[0]". Option-on only: translated to SQL the NULL is coalesced to an empty
-			// string ("[]"), a divergence from LINQ to Objects that does not depend on this option.
-			var query =
-				from e in table
-				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
-				select new { e.Id, Str = $"[{j.Value1}]" };
+			// Not AssertQuery: its in-memory arm reads j.Value1 of the missed row as 0 even under a nullable cast.
+			var results =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 Value    = $"[{j.Value1}]",
+					 Nullable = $"[{(int?)j.Value1}]",
+				 })
+				.ToArray();
 
-			AssertQuery(query);
+			// The option must not change the result: a non-nullable column of the missed row reads as default(int), and a
+			// column cast to a nullable type carries the NULL into the hole.
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Value == "[0]" && r.Nullable == "[]");
 		}
 
 		// Sql.ToNullable / Sql.AsNullable translate their own argument through ITranslationContext.Translate. The option
