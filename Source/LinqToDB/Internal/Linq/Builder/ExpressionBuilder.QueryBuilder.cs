@@ -600,6 +600,26 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var simplified = expression.Transform(e =>
 			{
+				// A widening cast to a nullable type is written by the compiler as a numeric conversion followed by the lift.
+				// Read through the numeric conversion first, a NULL column would already be default(T) when it is lifted.
+				if (e is UnaryExpression
+					{
+						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+						Method: null,
+						Operand: UnaryExpression
+						{
+							NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+							Operand: SqlPlaceholderExpression liftedPlaceholder,
+						} numeric,
+					} lift
+					&& lift.Type.IsNullableType
+					&& lift.Type.UnwrapNullableType() == numeric.Type
+					&& !liftedPlaceholder.Type.IsNullableOrReferenceType
+					&& (numeric.Method == null || numeric.Method.DeclaringType == typeof(decimal)))
+				{
+					return liftedPlaceholder.WithType(lift.Type);
+				}
+
 				if (e is UnaryExpression
 					{
 						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,

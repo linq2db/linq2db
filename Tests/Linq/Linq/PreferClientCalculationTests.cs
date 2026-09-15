@@ -492,6 +492,58 @@ namespace Tests.Linq
 			results.ShouldAllBe(r => r.Joined == null);
 		}
 
+		// A cast to a nullable type asks for the NULL just as Sql.ToNullable does, whatever the target type. The compiler
+		// writes a cast to the operand's own type or a narrowing one as a single conversion, and a widening one as a numeric
+		// conversion followed by the lift; neither form, nor the option, may turn the NULL of a missed LEFT JOIN row into
+		// default(T).
+		[Test]
+		public void NullableCastOverMissedLeftJoinReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new
+				{
+					e.Id,
+					Int           = (int?)(j.Value1 + 1),
+					Short         = (short?)(j.Value1 + 1),
+					Byte          = (byte?)(j.Value1 + 1),
+					Long          = (long?)(j.Value1 + 1),
+					Float         = (float?)(j.Value1 + 1),
+					Double        = (double?)(j.Value1 + 1),
+					Decimal       = (decimal?)(j.Value1 + 1),
+					IntColumn     = (int?)j.Value1,
+					ShortColumn   = (short?)j.Value1,
+					ByteColumn    = (byte?)j.Value1,
+					LongColumn    = (long?)j.Value1,
+					FloatColumn   = (float?)j.Value1,
+					DoubleColumn  = (double?)j.Value1,
+					DecimalColumn = (decimal?)j.Value1,
+				};
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+
+			results.ShouldAllBe(r => r.Int           == null);
+			results.ShouldAllBe(r => r.Short         == null);
+			results.ShouldAllBe(r => r.Byte          == null);
+			results.ShouldAllBe(r => r.Long          == null);
+			results.ShouldAllBe(r => r.Float         == null);
+			results.ShouldAllBe(r => r.Double        == null);
+			results.ShouldAllBe(r => r.Decimal       == null);
+			results.ShouldAllBe(r => r.IntColumn     == null);
+			results.ShouldAllBe(r => r.ShortColumn   == null);
+			results.ShouldAllBe(r => r.ByteColumn    == null);
+			results.ShouldAllBe(r => r.LongColumn    == null);
+			results.ShouldAllBe(r => r.FloatColumn   == null);
+			results.ShouldAllBe(r => r.DoubleColumn  == null);
+			results.ShouldAllBe(r => r.DecimalColumn == null);
+		}
+
 		[Test]
 		public void ProjectionResultsMatchAcrossProviders([DataSources] string context, [Values] bool preferClient)
 		{

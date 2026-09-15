@@ -19,5 +19,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		// set while a member translator translates its own arguments: the translator has already claimed the node,
 		// so PreferClientCalculation must not leave an argument client-side
 		InsideTranslation   = 1 << 9,
+		// set while the operand of a conversion to a nullable type is built: the conversion asks for the NULL, so
+		// PreferClientCalculation must not leave the operand client-side
+		InsideNullableCast  = 1 << 10,
 	}
 }

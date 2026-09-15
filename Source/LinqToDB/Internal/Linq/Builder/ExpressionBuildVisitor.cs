@@ -2281,18 +2281,21 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// When <see cref="LinqOptions.PreferClientCalculation"/> is enabled, computed expressions in the final
 		/// projection are left client-side instead of being forced into SQL columns. Anything that prefers or
 		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>), set projections
-		/// (<see cref="BuildFlags.ForSetProjection"/>) and the arguments a member translator translates for itself
-		/// (<see cref="BuildFlags.InsideTranslation"/>) still go to SQL.
+		/// (<see cref="BuildFlags.ForSetProjection"/>), the arguments a member translator translates for itself
+		/// (<see cref="BuildFlags.InsideTranslation"/>) and the operand of a conversion to a nullable type
+		/// (<see cref="BuildFlags.InsideNullableCast"/>) still go to SQL.
 		/// </summary>
 		/// <remarks>
 		/// A running translator has already claimed its node. Were one of its arguments left client-side, the translator
 		/// would receive a non-SQL argument and decline, and the whole call would be calculated on the client.
+		/// A conversion to a nullable type asks for the NULL, which a calculation left client-side reads as default(T).
 		/// </remarks>
 		bool PreferClientCalculation(Expression node)
 		{
 			return _buildPurpose is BuildPurpose.Expression
 				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
 				&& !_buildFlags.HasFlag(BuildFlags.InsideTranslation)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideNullableCast)
 				&& BuildContext != null
 				&& DataOptions.LinqOptions.PreferClientCalculation
 				&& !Builder.PreferServerSide(node, false)
@@ -2349,10 +2352,29 @@ namespace LinqToDB.Internal.Linq.Builder
 			return node;
 		}
 
+		static bool IsConversionToNullable(UnaryExpression node)
+		{
+			return node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
+				&& node.Type.IsNullableType
+				&& !node.Operand.Type.IsNullableOrReferenceType;
+		}
+
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
 			if (PreferClientCalculation(node))
+			{
+				// A conversion to a nullable type asks for the NULL: its operand is built as it is without the option, so a
+				// calculation over a missed LEFT JOIN row is read from SQL rather than run over default(T).
+				if (IsConversionToNullable(node))
+				{
+					using (CombineBuildFlags(BuildFlags.InsideNullableCast))
+					{
+						return VisitUnary(node);
+					}
+				}
+
 				return base.VisitUnary(node);
+			}
 
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
