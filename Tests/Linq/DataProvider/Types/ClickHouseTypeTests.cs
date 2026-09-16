@@ -666,9 +666,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// The JSON refusal is what breaks the command; what surfaces is Octonica#58 - the *next* command on that
+		// The JSON refusal is what breaks the command; what surfaces is Octonica#113 - the *next* command on that
 		// connection reports it closed - so that is what this declares.
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/113", Configuration = ProviderName.ClickHouseOctonica,
 			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.",
 			Details = "the underlying refusal is that the type \"JSON\" is not supported")]
 		[Test]
