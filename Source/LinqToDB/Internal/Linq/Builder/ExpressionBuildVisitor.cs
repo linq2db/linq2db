@@ -764,6 +764,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
+			// The argument of Sql.ToNullable / Sql.AsNullable asks for the NULL (BuildFlags.InsideNullableCast).
+			if (IsSqlNullabilityMarker(node.Method) && !_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+			{
+				using (CombineBuildFlags(BuildFlags.InsideNullableCast))
+				{
+					return VisitMethodCall(node);
+				}
+			}
+
 			LogVisit(node);
 
 			if (_buildPurpose is BuildPurpose.Traverse)
@@ -873,6 +882,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (SequenceHelper.HasError(translatedExposed))
 						return node;
 					return translatedExposed;
+				}
+
+				// The call is about to be translated, so its arguments are read as the values it calculates with
+				// (ReadArgumentsAsValues).
+				if (_buildPurpose is BuildPurpose.Expression && (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method)))
+				{
+					var withValues = ReadArgumentsAsValues(node);
+					if (!ReferenceEquals(withValues, node))
+						return Visit(withValues);
 				}
 
 				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
@@ -1445,6 +1463,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (!HasContextReferenceOrSql(node))
 					return node;
+			}
+
+			// A member read off a value (j.Date.Year) is a calculation over that value, so it is read as default(T) when the
+			// LEFT JOIN row is missed (ReadAsValue).
+			if (_buildPurpose is BuildPurpose.Expression && node.Expression is MemberExpression { Type.IsValueType: true } obj)
+			{
+				var value = ReadAsValue(obj);
+				if (!ReferenceEquals(value, obj))
+					return Visit(node.Update(value));
 			}
 
 			FoundRoot = null;
@@ -2312,6 +2339,136 @@ namespace LinqToDB.Internal.Linq.Builder
 			return method.GetExpressionAttribute(MappingSchema) != null;
 		}
 
+		static bool IsSqlNullabilityMarker(MethodInfo method)
+		{
+			return method.DeclaringType == typeof(Sql) && method.Name is nameof(Sql.ToNullable) or nameof(Sql.AsNullable);
+		}
+
+		// A calculation reads its values the way .NET reads them: a non-nullable member of a missed LEFT JOIN row is read as
+		// default(T), so the calculation answers the same whether it is translated or run on the client. The value is followed
+		// through the operators it is calculated by and nowhere else - a call reads its own arguments when it is visited
+		// (ReadArgumentsAsValues), and what a lambda or a query method reads is a value of another query. A conversion to a
+		// nullable type, Sql.ToNullable and Sql.AsNullable ask for the NULL instead (BuildFlags.InsideNullableCast).
+		Expression ReadAsValue(Expression node)
+		{
+			if (BuildContext == null || _buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+				return node;
+
+			return node switch
+			{
+				UnaryExpression unary =>
+					IsConversionToNullable(unary) ? unary : unary.Update(ReadAsValue(unary.Operand)),
+
+				BinaryExpression binary =>
+					binary.Update(ReadAsValue(binary.Left), binary.Conversion, ReadAsValue(binary.Right)),
+
+				ConditionalExpression conditional =>
+					conditional.Update(ReadAsValue(conditional.Test), ReadAsValue(conditional.IfTrue), ReadAsValue(conditional.IfFalse)),
+
+				// A member read off a value (j.Date.Year) is a calculation over the member that value is read from.
+				MemberExpression { Expression: { } obj } member =>
+					obj.Type.IsValueType ? member.Update(ReadAsValue(obj)) : ReadColumnAsValue(member),
+
+				_ => node,
+			};
+		}
+
+		/// <summary>
+		/// A date is left out of <see cref="ReadAsValue"/>. The default of a <see cref="DateTime"/> is 0001-01-01, and not
+		/// every engine has that date: Access renders it as <c>#0001-01-01#</c> and reads that back as 2001-01-01, so a
+		/// comparison against it answers the other way round and the option starts changing the result (measured on
+		/// Access.Ace.Odbc; SQL CE, Sybase and ClickHouse begin at 1753, 1753 and 1970).
+		/// </summary>
+		static bool IsDateOrTimeType(Type type)
+		{
+			if (type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(TimeSpan))
+				return true;
+
+#if SUPPORTS_DATEONLY
+			if (type == typeof(DateOnly) || type == typeof(TimeOnly))
+				return true;
+#endif
+
+			return false;
+		}
+
+		Expression ReadColumnAsValue(MemberExpression member)
+		{
+			var type = member.Type;
+
+			if (!type.IsValueType || type.IsNullableType || type.IsEnum)
+				return member;
+
+			if (IsDateOrTimeType(type))
+				return member;
+
+			// Only what is read off the query's row can be a column of a missed one: a captured variable is a constant, and
+			// building it would make a parameter of it.
+			if (!HasContextReferenceOrSql(member))
+				return member;
+
+			// The member is translated here to learn whether its column can be NULL, which is what says the row can be
+			// missing at all - the mapping cannot tell, since j.Value1 is declared NOT NULL and only the LEFT JOIN makes it
+			// nullable. That answer comes from the context the member is read through, and only the built placeholder carries
+			// it. Asking is a probe, so its caches are rolled back - the query is shaped by the translation that follows.
+			//
+			// Leaving the answer to the optimizer instead (it drops a COALESCE its NullabilityContext says is redundant) is
+			// measurably wrong: by then this wrap has already changed what the rest of the builder sees. Without the check,
+			// 13 tests fail - a generic constructor's own null guard gets a non-nullable operand ("Coalesce used with type
+			// that cannot be null"), a position that needs a field gets an expression, and a declared-duration translator
+			// stops refusing an undeclared one.
+			using var probe = CreateSnapshot();
+
+			// Only a column is what a missed row does not have; anything computed is a value already calculated from the
+			// columns it reads, and Length(NULL) is not a zero-length name.
+			if (BuildSqlExpression(member) is not SqlPlaceholderExpression { Sql: SqlField or SqlColumn } placeholder
+				|| !placeholder.Sql.CanBeNullable(GetNullabilityContext())
+				|| QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter != null)
+			{
+				return member;
+			}
+
+			return Expression.Coalesce(Expression.Convert(member, type.AsNullable()), Expression.Default(type));
+		}
+
+		/// <summary>
+		/// A call calculates with the values it is given, so its arguments are read the way .NET reads them
+		/// (<see cref="ReadAsValue"/>). An aggregate is the exception: NULL is what tells it the row has no value, and AVG and
+		/// COUNT answer differently once it is a zero. <see cref="Sql.ToNullable"/> and <see cref="Sql.AsNullable"/> ask for the
+		/// NULL outright.
+		/// </summary>
+		Expression ReadArgumentsAsValues(MethodCallExpression node)
+		{
+			if (IsSqlNullabilityMarker(node.Method)
+				|| node.Method.GetExpressionAttribute(MappingSchema) is { IsAggregate: true } or { IsWindowFunction: true })
+			{
+				return node;
+			}
+
+			var               obj       = node.Object == null ? null : ReadAsValue(node.Object);
+			List<Expression>? arguments = null;
+
+			for (var i = 0; i < node.Arguments.Count; i++)
+			{
+				var argument = ReadAsValue(node.Arguments[i]);
+
+				if (arguments == null && !ReferenceEquals(argument, node.Arguments[i]))
+				{
+					arguments = new List<Expression>(node.Arguments.Count);
+
+					for (var j = 0; j < i; j++)
+						arguments.Add(node.Arguments[j]);
+				}
+
+				arguments?.Add(argument);
+			}
+
+			if (arguments == null && ReferenceEquals(obj, node.Object))
+				return node;
+
+			return node.Update(obj, (IEnumerable<Expression>?)arguments ?? node.Arguments);
+		}
+
 		bool TryConvertToSql(Expression node, out Expression translated)
 		{
 			if ((_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
@@ -2330,7 +2487,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Trying to convert whole expression
 			if (_buildPurpose is not BuildPurpose.Sql && node is BinaryExpression or UnaryExpression or ConditionalExpression)
 			{
-				translated = BuildSqlExpression(node);
+				// The whole expression is converted at once, so the values it calculates with are read here (ReadAsValue).
+				translated = BuildSqlExpression(ReadAsValue(node));
 				//if (!SequenceHelper.HasError(translated))
 				if (translated is SqlPlaceholderExpression)
 				{
@@ -2361,20 +2519,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
-			if (PreferClientCalculation(node))
+			// A conversion to a nullable type asks for the NULL: its operand is neither calculated on the client under the
+			// option nor given default(T) for a column of a missed LEFT JOIN row (BuildFlags.InsideNullableCast).
+			if (IsConversionToNullable(node) && !_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
 			{
-				// A conversion to a nullable type asks for the NULL: its operand is built as it is without the option, so a
-				// calculation over a missed LEFT JOIN row is read from SQL rather than run over default(T).
-				if (IsConversionToNullable(node))
+				using (CombineBuildFlags(BuildFlags.InsideNullableCast))
 				{
-					using (CombineBuildFlags(BuildFlags.InsideNullableCast))
-					{
-						return VisitUnary(node);
-					}
+					return VisitUnary(node);
 				}
-
-				return base.VisitUnary(node);
 			}
+
+			if (PreferClientCalculation(node))
+				return base.VisitUnary(node);
 
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
@@ -3066,6 +3222,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			// The operands of an operator are the values it calculates with, so they are read as default(T) when the LEFT JOIN
+			// row is missed (ReadAsValue). They are read before the translators are offered the node.
+			if (_buildPurpose is BuildPurpose.Expression && BuildContext != null && !PreferClientCalculation(node))
+			{
+				var withValues = ReadAsValue(node);
+				if (!ReferenceEquals(withValues, node))
+					return Visit(withValues);
+			}
+
 			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
 				// Offered to the translators whether or not the operator is a method: a comparison between numbers
