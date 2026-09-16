@@ -894,6 +894,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					// A date argument has no default the SQL can carry, so the call is answered for the missed row instead.
 					var guarded = GuardCalculationOverMissedDate(node);
+
 					if (!ReferenceEquals(guarded, node))
 					{
 						using (CombineBuildFlags(BuildFlags.InsideMissedRowGuard))
@@ -1483,6 +1484,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(node.Update(value));
 
 				var guarded = GuardCalculationOverMissedDate(node);
+
 				if (!ReferenceEquals(guarded, node))
 				{
 					using (CombineBuildFlags(BuildFlags.InsideMissedRowGuard))
@@ -2420,7 +2422,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			var nullable    = date.Type.AsNullable();
 			var substituted = node.Replace(date, Expression.Default(date.Type));
 
-			if (HasContextReferenceOrSql(substituted))
+			// The default of a date is the least value its type has, so what it is compared against is already decided:
+			// nothing is below the minimum and everything is at or above it. That answers a comparison with another column
+			// of the row without the literal the column itself would need.
+			if (ReadsTheQuery(substituted) && IsDefaultTheLeastValue(date.Type))
+				substituted = new LeastValueComparisonFolder().Visit(substituted);
+
+			// What is left still reads the query for the missed row (j.Date > e.Date with an operator this cannot decide),
+			// and answering it would need the date literal after all, so the calculation is left alone. Moving it to the
+			// client instead was tried and does not hold: the projection is translated once more in FinalizeConstructors,
+			// past every build flag and marker, and lands back in SQL.
+			if (ReadsTheQuery(substituted))
 				return node;
 
 			object? whenMissed;
@@ -2438,6 +2450,68 @@ namespace LinqToDB.Internal.Linq.Builder
 				Expression.Equal(Expression.Convert(date, nullable), Expression.Constant(null, nullable)),
 				Expression.Constant(whenMissed, node.Type),
 				node);
+		}
+
+		/// <summary>
+		/// Whether the expression still asks the query for something. A row is named by a context reference once the builder
+		/// has rewritten it and by the query's own parameter before that, so both count.
+		/// </summary>
+		static bool ReadsTheQuery(Expression expression)
+		{
+			return expression.Find(e => e is ContextRefExpression or SqlPlaceholderExpression or ParameterExpression) != null;
+		}
+
+		/// <summary>
+		/// Whether <c>default(T)</c> is the least value the type has, which is what makes a comparison against it decidable
+		/// without naming it. It holds for the dates and times, and not for <see cref="TimeSpan"/>, whose default is zero
+		/// while a stored one can be negative.
+		/// </summary>
+		static bool IsDefaultTheLeastValue(Type type)
+		{
+			if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
+				return true;
+
+#if SUPPORTS_DATEONLY
+			if (type == typeof(DateOnly) || type == typeof(TimeOnly))
+				return true;
+#endif
+
+			return false;
+		}
+
+		/// <summary>
+		/// Answers a comparison against the least value its type has: nothing is below it, and everything is at or above it.
+		/// The other operand is left untouched, so only the two comparisons this decides are folded - the rest still depend
+		/// on whether that operand is the least value itself.
+		/// </summary>
+		sealed class LeastValueComparisonFolder : ExpressionVisitor
+		{
+			protected override Expression VisitExtension(Expression node) => node;
+
+			protected override Expression VisitLambda<T>(Expression<T> node) => node;
+
+			protected override Expression VisitBinary(BinaryExpression node)
+			{
+				var visited = (BinaryExpression)base.VisitBinary(node);
+
+				if (visited.Left.Type != visited.Right.Type || visited.Left.Type.IsNullableType || !IsDefaultTheLeastValue(visited.Left.Type))
+					return visited;
+
+				var leastIsLeft  = visited.Left  is DefaultExpression;
+				var leastIsRight = visited.Right is DefaultExpression;
+
+				if (leastIsLeft == leastIsRight)
+					return visited;
+
+				return visited.NodeType switch
+				{
+					ExpressionType.GreaterThan      when leastIsLeft  => Expression.Constant(false),
+					ExpressionType.LessThanOrEqual  when leastIsLeft  => Expression.Constant(true),
+					ExpressionType.LessThan         when leastIsRight => Expression.Constant(false),
+					ExpressionType.GreaterThanOrEqual when leastIsRight => Expression.Constant(true),
+					_                                                => visited,
+				};
+			}
 		}
 
 		sealed class MissedDateCollector(ExpressionBuildVisitor owner) : ExpressionVisitor
@@ -3316,6 +3390,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// A date has no default the SQL can carry, so the operator is answered for the missed row instead.
 				var guarded = GuardCalculationOverMissedDate(node);
+
 				if (!ReferenceEquals(guarded, node))
 				{
 					using (CombineBuildFlags(BuildFlags.InsideMissedRowGuard))

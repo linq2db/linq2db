@@ -444,6 +444,12 @@ namespace Tests.Linq
 					Year    = j.Date.Year,
 					Later   = j.Date > new DateTime(2000, 1, 1) ? "y" : "n",
 					Earlier = j.Date < new DateTime(2000, 1, 1) ? "y" : "n",
+					// Compared against a column of the row instead of a constant: the missed row has the least date there
+					// is, so nothing of the row is below it and everything is at or above it, and both are answered
+					// without naming that date. The other four operators are not decided by that alone - they turn on
+					// whether the other column is the least date itself, which only the literal could tell.
+					AfterOwn  = j.Date > e.Date  ? "y" : "n",
+					AtMostOwn = j.Date <= e.Date ? "y" : "n",
 				};
 
 			AssertQuery(query);
