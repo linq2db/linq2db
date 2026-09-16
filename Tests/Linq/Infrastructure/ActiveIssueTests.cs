@@ -183,24 +183,6 @@ namespace Tests.Infrastructure
 
 		#endregion
 
-		#region Sweep mode — off unless asked for (SC-12)
-
-		[Test]
-		public void SweepMode_IsOffUnlessTheEnvironmentVariableIsSet()
-		{
-			// Sweep mode reports every governed case as a failure carrying a sentinel record, so a build that
-			// defaulted it on would redden every known-issue test in the suite. The variable is named here so the
-			// test fails if it is renamed without the docs and the sweep procedure following.
-			TestEnvironment.ActiveIssueSweepVariable.ShouldBe("L2DB_ACTIVEISSUE_SWEEP");
-
-			if (Environment.GetEnvironmentVariable(TestEnvironment.ActiveIssueSweepVariable) == "1")
-				Assert.Ignore("Sweep mode is enabled for this run, so the default cannot be observed.");
-
-			TestEnvironment.ActiveIssueSweep.ShouldBeFalse();
-		}
-
-		#endregion
-
 		#region AppliesTo — SC-4
 
 		[Test]
@@ -381,71 +363,6 @@ namespace Tests.Infrastructure
 
 			ActiveIssueAttribute.SelectGoverning([first, second], "SQLite.MS", false, out var ambiguous).ShouldNotBeNull();
 			ambiguous.ShouldBeTrue();
-		}
-
-		#endregion
-
-		#region Sentinel — SC-7
-
-		[Test]
-		public void Sentinel_RoundTripsAwkwardCharacters()
-		{
-			const string name    = "Tests.Linq.FooTests.Bar(\"SQLite.MS\")";
-			const string message = "a | b % c\r\nsecond line";
-
-			var line = ActiveIssueSentinel.Format(name, "SQLite.MS", isRemote: true, passed: false, "LinqToDB.LinqToDBException", message);
-
-			// One line, or the harvester's line-oriented scan splits one record into two.
-			line.ShouldNotContain("\r");
-			line.ShouldNotContain("\n");
-
-			ActiveIssueSentinel.TryParse("  " + line, out var record).ShouldBeTrue();
-
-			record!.FullName .ShouldBe(name);
-			record.Provider  .ShouldBe("SQLite.MS");
-			record.IsRemote  .ShouldBeTrue();
-			record.Passed    .ShouldBeFalse();
-			record.ErrorType .ShouldBe("LinqToDB.LinqToDBException");
-			record.Message   .ShouldBe(message);
-		}
-
-		[Test]
-		public void Sentinel_AbsentProviderAndTypeRoundTripAsNull()
-		{
-			var line = ActiveIssueSentinel.Format("Tests.Linq.FooTests.Bar", null, isRemote: false, passed: true, null, null);
-
-			ActiveIssueSentinel.TryParse(line, out var record).ShouldBeTrue();
-
-			record!.Provider.ShouldBeNull();
-			record.ErrorType.ShouldBeNull();
-			record.Passed   .ShouldBeTrue();
-		}
-
-		[Test]
-		public void Sentinel_LongMessageIsCapped()
-		{
-			var line = ActiveIssueSentinel.Format("T.M", "SQLite.MS", false, false, null, new string('x', 5000));
-
-			line.Length.ShouldBeLessThan(1000);
-		}
-
-		[Test]
-		public void Sentinel_ExtractsExceptionTypeButNotAssertionProse()
-		{
-			ActiveIssueSentinel.ExtractErrorType(SqlError).ShouldBe("LinqToDB.LinqToDBException");
-			ActiveIssueSentinel.ExtractErrorType(OtherError).ShouldBe("System.InvalidOperationException");
-
-			// An assertion failure carries no type, which is how a wrong-results site is recognised during triage.
-			ActiveIssueSentinel.ExtractErrorType(AssertError).ShouldBeNull();
-			ActiveIssueSentinel.ExtractErrorType("Expected 3 : but was 7").ShouldBeNull();
-			ActiveIssueSentinel.ExtractErrorType(null).ShouldBeNull();
-		}
-
-		[Test]
-		public void Sentinel_RejectsForeignLines()
-		{
-			ActiveIssueSentinel.TryParse("failed SomeTest (12ms)", out var record).ShouldBeFalse();
-			record.ShouldBeNull();
 		}
 
 		#endregion

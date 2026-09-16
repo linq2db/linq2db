@@ -364,26 +364,6 @@ namespace Tests
 					return testResult;
 				}
 
-				// Sweep mode: report what the test actually did, as one parsable line, instead of deciding. The
-				// whole point of a triage sweep is to see the failure the gate is hiding, so this deliberately
-				// reddens every governed case.
-				if (TestEnvironment.ActiveIssueSweep)
-				{
-					var passed = testResult.ResultState.Status == TestStatus.Passed;
-
-					testResult.SetResult(
-						ResultState.Failure,
-						ActiveIssueSentinel.Format(
-							test.FullName,
-							provider,
-							isLinqService,
-							passed,
-							ActiveIssueSentinel.ExtractErrorType(testResult.Message),
-							testResult.Message));
-
-					return testResult;
-				}
-
 				var decision = Decide(governing, testResult.ResultState, testResult.Message, isLinqService, ThrowsFamilyGoverns(test));
 
 				if (decision != null)
