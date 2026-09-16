@@ -649,7 +649,10 @@ namespace Tests.Linq
 			using var db   = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			// Assignment between SQL expressions doesn't go through converters
+			// Assignment between SQL expressions doesn't go through converters.
+			// The second element used to be `src.Ints * src.Cents`, which is now refused: one column stores what
+			// it holds and the other a hundred times it, so the product counts neither. Asserted as its own rule
+			// in ValueConversionTests.DivergentConversionsRefuseToCombine; the literal keeps the value the same.
 			int count = table
 				.Where(x => x.Id == 2)
 				.Set(
@@ -659,7 +662,7 @@ namespace Tests.Linq
 						where src.Id == x.Id - 1
 						// Note: linq2db applies *100 conversion to constant `1` in `Cents + 1`,
 						// so Cents = Cents + 100.
-						select Row(src.Cents + 1, src.Ints * src.Cents)
+						select Row(src.Cents + 1, src.Ints * 100)
 					).Single()
 				)
 				.Update();
@@ -668,7 +671,7 @@ namespace Tests.Linq
 
 			count.ShouldBe(1);
 			updated.Cents.ShouldBe(2);   // Conversion /100 when read back from db
-			updated.Ints.ShouldBe(200);  // Was computed as 100 * 2 in SQL update
+			updated.Ints.ShouldBe(200);  // Was computed as 2 * 100 in SQL update
 
 			// Literal values should be converted but this isn't supported yet
 			// because column context is lost in Row when building parameters.
@@ -680,7 +683,7 @@ namespace Tests.Linq
 						x => (
 							from src in table
 							where src.Id == x.Id - 1
-							select Row(3, src.Ints * src.Cents)
+							select Row(3, src.Ints * 100)
 						).Single()
 					)
 					.Update());
@@ -695,7 +698,7 @@ namespace Tests.Linq
 						x => (
 							from src in table
 							where src.Id == x.Id - 1
-							select Row(i, src.Ints * src.Cents)
+							select Row(i, src.Ints * 100)
 						).Single()
 					)
 					.Update());
