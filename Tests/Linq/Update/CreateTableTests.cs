@@ -109,8 +109,6 @@ namespace Tests.xUpdate
 			table.Drop();
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
-			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.")]
 		[Test]
 		public async Task CreateLocalTempTable1Async([IncludeDataSources(
 			TestProvName.AllSQLite,
@@ -198,8 +196,6 @@ namespace Tests.xUpdate
 			table.Drop();
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
-			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.")]
 		[Test]
 		public async Task CreateLocalTempTable2Async([IncludeDataSources(
 			TestProvName.AllSQLite,
@@ -276,8 +272,6 @@ namespace Tests.xUpdate
 			public FieldType3 Field3;
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica,
-			ErrorTypeName = "Octonica.ClickHouseClient.Exceptions.ClickHouseException", ErrorMessage = "The connection is closed.")]
 		[Test]
 		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)] string context)
 		{

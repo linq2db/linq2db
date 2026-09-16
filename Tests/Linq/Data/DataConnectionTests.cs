@@ -772,11 +772,6 @@ namespace Tests.Data
 		[Test]
 		public void TestDisposeFlagCloning962Test1([DataSources(false)] string context, [Values] bool withScope)
 		{
-			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-			{
-				Assert.Inconclusive("Provider goes crazy");
-			}
-
 			if (withScope && (
 				context == ProviderName.DB2                     ||
 				context == ProviderName.InformixDB2             ||
@@ -944,8 +939,6 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				// depends on connection pool size
 				//ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
-				//ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -991,8 +984,6 @@ namespace Tests.Data
 		public void MARS_MultipleDataReadersOnSameCommand_NotSupported(
 			[DataSources(false,
 				ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
-				ProviderName.ClickHouseOctonica,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
 				ProviderName.SQLiteMS,
@@ -1062,8 +1053,6 @@ namespace Tests.Data
 				// disabled - depends on connection pool size
 				// which is one for session-aware connection
 				//ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
-				//ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
@@ -1115,8 +1104,6 @@ namespace Tests.Data
 			[DataSources(false,
 				TestProvName.AllAccess,
 			ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
-				ProviderName.ClickHouseOctonica,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
 				TestProvName.AllInformix,
@@ -1193,8 +1180,6 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				// depends on connection pool size
 				//ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
-				//ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1245,8 +1230,6 @@ namespace Tests.Data
 			[DataSources(false,
 				TestProvName.AllAccess,
 				ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
-				ProviderName.ClickHouseOctonica,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllOracle,
@@ -1301,7 +1284,6 @@ namespace Tests.Data
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1330,8 +1312,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				TestProvName.AllYdb,
 				ProviderName.ClickHouseMySql,
-				// hangs: Octonica/ClickHouseClient#59
-				//ProviderName.ClickHouseOctonica,
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1387,7 +1368,6 @@ namespace Tests.Data
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
-				// hangs: Octonica/ClickHouseClient#59
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1416,8 +1396,7 @@ namespace Tests.Data
 				TestProvName.AllMySql,
 				TestProvName.AllYdb,
 				TestProvName.AllPostgreSQL,
-				// hangs: Octonica/ClickHouseClient#59
-				//ProviderName.ClickHouseOctonica,
+				ProviderName.ClickHouseOctonica,
 				ProviderName.ClickHouseMySql)] string context)
 		{
 			using var db = GetDataConnection(context);
