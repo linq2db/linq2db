@@ -438,6 +438,12 @@ namespace Tests.Linq
 					Plus    = j.Value1 + 1,
 					Compare = j.Value1 < 5 ? "a" : "b",
 					Abs     = Math.Abs(j.Value1 - 1),
+					// A date has no default the SQL can carry, so these are answered for the missed row instead, without a
+					// date ever reaching the query: the year of a missed row is 1, it is not later than 2000 and it is
+					// earlier - the last one is what a plain NULL comparison gets wrong, since NULL is not earlier either.
+					Year    = j.Date.Year,
+					Later   = j.Date > new DateTime(2000, 1, 1) ? "y" : "n",
+					Earlier = j.Date < new DateTime(2000, 1, 1) ? "y" : "n",
 				};
 
 			AssertQuery(query);
