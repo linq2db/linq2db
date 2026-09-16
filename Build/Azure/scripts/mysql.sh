@@ -38,8 +38,7 @@ done
 docker exec mysql57 mysql -e 'CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;' -uroot -proot
 docker exec mysql57 mysql -e 'CREATE DATABASE testdataconnector DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;' -uroot -proot
 
-# mariadb:12 -> MariaDB.11 (port 3316). Pinned to the major: MariaDB 13 adds UPDATE ... RETURNING,
-# which the MariaDB10 dialect cannot declare. Unpin once #5933 adds a MariaDB13 dialect.
+# mariadb:12 -> MariaDB.11 (port 3316)
 retries=0
 until docker exec mariadb mariadb --protocol TCP -uroot -proot -e "show databases;"; do
     sleep 3
