@@ -1536,7 +1536,14 @@ namespace Tests.Linq
 
 		#region Detail-side Take/Skip — scoped per parent (#5936)
 
+		// Gated for now: HANA's LATERAL only correlates to a base-table field and the key set's columns are
+		// literals — linq2db#5940 tracks the ROW_NUMBER fallback. Only KeyedQuery trips it; CteUnion cannot
+		// batch a single association and falls through to Default, which correlates nothing.
 		[Test]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
 		public void Select_KeyedQuery_DetailTakeIsPerParent(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
 			[Values] EagerLoadingStrategy strategy)
@@ -1575,6 +1582,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL")]
 		public void Select_KeyedQuery_AssociationDetailSkipTakeIsPerParent(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
@@ -1614,6 +1623,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL")]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL")]
 		public void Select_KeyedQuery_AssociationDetailTakeIsPerParent(
 			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
