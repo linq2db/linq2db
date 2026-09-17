@@ -1534,6 +1534,126 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Detail-side Take/Skip — scoped per parent (#5936)
+
+		[Test]
+		public void Select_KeyedQuery_DetailTakeIsPerParent(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context,
+			[Values] EagerLoadingStrategy strategy)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// Symmetry guard on the path the fix does not change: an explicitly filtered child table
+			// already builds the correlated VALUES-join shape, so its limit is per parent under every
+			// strategy. The association form below is the one that reaches the Contains rewrite.
+			var query =
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = tDep.Where(d => d.CompanyId == c.Id).OrderBy(d => d.Id).Take(2).ToList(),
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+			foreach (var c in result)
+			{
+				var expectedDepts = departments
+					.Where(d => d.CompanyId == c.Id)
+					.OrderBy(d => d.Id)
+					.Take(2)
+					.ToList();
+				c.Departments.OrderBy(d => d.Id).ToList()
+					.ShouldBe(expectedDepts, ComparerBuilder.GetEqualityComparer(expectedDepts));
+			}
+		}
+
+		[Test]
+		public void Select_KeyedQuery_AssociationDetailSkipTakeIsPerParent(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// A global Skip drops rows from the first parent only, so the offset has to be per parent
+			// as well as the limit.
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = c.Departments.OrderBy(d => d.Id).Skip(1).Take(2).Select(d => new { d.Id, d.Name }).ToArray(),
+				}
+			).WithKeyedLoadStrategy();
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+			foreach (var c in result)
+			{
+				var expectedIds = departments
+					.Where(d => d.CompanyId == c.Id)
+					.OrderBy(d => d.Id)
+					.Skip(1)
+					.Take(2)
+					.Select(d => d.Id)
+					.ToList();
+				c.Departments.Select(d => d.Id).OrderBy(id => id).ToList()
+					.ShouldBe(expectedIds);
+			}
+		}
+
+		[Test]
+		public void Select_KeyedQuery_AssociationDetailTakeIsPerParent(
+			[DataSources(true, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
+		{
+			var (companies, departments, _, _, _) = GenerateHierarchy();
+
+			using var db   = GetDataContext(context);
+			using var tCo  = db.CreateLocalTable(companies);
+			using var tDep = db.CreateLocalTable(departments);
+
+			// The reported shape: an association, limited, projected to a type that drops the FK
+			// (CompanyId) — so the child query goes through the terminal-Select envelope wrap.
+			// The ordering key stays in the projection: dropping it hits #5935, a separate defect.
+			var query = (
+				from c in tCo
+				orderby c.Id
+				select new
+				{
+					c.Id,
+					Departments = c.Departments.OrderBy(d => d.Id).Take(2).Select(d => new { d.Id, d.Name }).ToArray(),
+				}
+			).WithKeyedLoadStrategy();
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(companies.Length);
+			foreach (var c in result)
+			{
+				var expectedIds = departments
+					.Where(d => d.CompanyId == c.Id)
+					.OrderBy(d => d.Id)
+					.Take(2)
+					.Select(d => d.Id)
+					.ToList();
+				c.Departments.Select(d => d.Id).OrderBy(id => id).ToList()
+					.ShouldBe(expectedIds);
+			}
+		}
+
+		#endregion
+
 		#region Wide projection — exercises BuildValueTupleType beyond 56 fields
 
 		[Test]
