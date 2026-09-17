@@ -891,15 +891,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					var withValues = ReadArgumentsAsValues(node);
 					if (!ReferenceEquals(withValues, node))
 						return Visit(withValues);
-
-					// A date argument has no default the SQL can carry, so the call is answered for the missed row instead.
-					var guarded = GuardCalculationOverMissedDate(node);
-
-					if (!ReferenceEquals(guarded, node))
-					{
-						using (CombineBuildFlags(BuildFlags.InsideMissedRowGuard))
-							return Visit(guarded);
-					}
 				}
 
 				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
@@ -1475,21 +1466,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// A member read off a value (j.Date.Year) is a calculation over that value, so it is read as default(T) when the
-			// LEFT JOIN row is missed (ReadAsValue), or answered for the missed row outright when that value is a date
-			// (GuardCalculationOverMissedDate).
+			// LEFT JOIN row is missed (ReadAsValue).
 			if (_buildPurpose is BuildPurpose.Expression && node.Expression is MemberExpression { Type.IsValueType: true } obj)
 			{
 				var value = ReadAsValue(obj, true);
 				if (!ReferenceEquals(value, obj))
 					return Visit(node.Update(value));
-
-				var guarded = GuardCalculationOverMissedDate(node);
-
-				if (!ReferenceEquals(guarded, node))
-				{
-					using (CombineBuildFlags(BuildFlags.InsideMissedRowGuard))
-						return Visit(guarded);
-				}
 			}
 
 			FoundRoot = null;
@@ -2385,165 +2367,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				ConditionalExpression conditional =>
 					conditional.Update(ReadAsValue(conditional.Test, true), ReadAsValue(conditional.IfTrue, isOperand), ReadAsValue(conditional.IfFalse, isOperand)),
 
-				// A member read off a value (j.Date.Year) is a calculation over the member that value is read from.
-				MemberExpression { Expression: { } obj } member =>
-					obj.Type.IsValueType ? member.Update(ReadAsValue(obj, true)) : isOperand ? ReadColumnAsValue(member) : member,
+				// A member read off a value (j.Date.Year) is read by its translator, which asks for the value through
+				// ITranslationContext.Translate and gets it as default(T) there (ReadTranslatedAsValue).
+				MemberExpression { Expression.Type.IsValueType: false } member when isOperand =>
+					ReadColumnAsValue(member),
 
 				_ => node,
 			};
-		}
-
-		/// <summary>
-		/// A date cannot be read as its own default in place, the way <see cref="ReadAsValue"/> reads a number: 0001-01-01 is
-		/// not a date every engine has (<see cref="IsDateOrTimeType"/>). What can be answered is the calculation itself - the
-		/// date is replaced by <c>default(T)</c> in a copy of it, and when that copy asks the query for nothing else it is the
-		/// constant the calculation has for a missed row, so no date ever reaches the SQL:
-		/// <code>
-		/// j.Date.Year  ->  CASE WHEN j.Date IS NULL THEN 1 ELSE Year(j.Date) END
-		/// </code>
-		/// A calculation that still reads another column of the row for the missed case (<c>j.Date &gt; e.Date</c>) is left
-		/// alone, since answering it would need that literal after all.
-		/// </summary>
-		Expression GuardCalculationOverMissedDate(Expression node)
-		{
-			if (BuildContext == null
-				|| _buildFlags.HasFlag(BuildFlags.InsideNullableCast)
-				|| _buildFlags.HasFlag(BuildFlags.InsideMissedRowGuard)
-				|| node is MemberExpression { Expression: ContextRefExpression })
-			{
-				return node;
-			}
-
-			var dates = new MissedDateCollector(this);
-			dates.Visit(node);
-
-			if (dates.Found.Count != 1)
-				return node;
-
-			var date        = dates.Found[0];
-			var nullable    = date.Type.AsNullable();
-			var substituted = node.Replace(date, Expression.Default(date.Type));
-
-			// The default of a date is the least value its type has, so what it is compared against is already decided:
-			// nothing is below the minimum and everything is at or above it. That answers a comparison with another column
-			// of the row without the literal the column itself would need.
-			if (ReadsTheQuery(substituted) && IsDefaultTheLeastValue(date.Type))
-				substituted = new LeastValueComparisonFolder().Visit(substituted);
-
-			// What is left still reads the query for the missed row (j.Date > e.Date with an operator this cannot decide),
-			// and answering it would need the date literal after all, so the calculation is left alone. Moving it to the
-			// client instead was tried and does not hold: the projection is translated once more in FinalizeConstructors,
-			// past every build flag and marker, and lands back in SQL.
-			if (ReadsTheQuery(substituted))
-				return node;
-
-			object? whenMissed;
-
-			try
-			{
-				whenMissed = substituted.EvaluateExpression();
-			}
-			catch (Exception)
-			{
-				return node;
-			}
-
-			return Expression.Condition(
-				Expression.Equal(Expression.Convert(date, nullable), Expression.Constant(null, nullable)),
-				Expression.Constant(whenMissed, node.Type),
-				node);
-		}
-
-		/// <summary>
-		/// Whether the expression still asks the query for something. A row is named by a context reference once the builder
-		/// has rewritten it and by the query's own parameter before that, so both count.
-		/// </summary>
-		static bool ReadsTheQuery(Expression expression)
-		{
-			return expression.Find(e => e is ContextRefExpression or SqlPlaceholderExpression or ParameterExpression) != null;
-		}
-
-		/// <summary>
-		/// Whether <c>default(T)</c> is the least value the type has, which is what makes a comparison against it decidable
-		/// without naming it. It holds for the dates and times, and not for <see cref="TimeSpan"/>, whose default is zero
-		/// while a stored one can be negative.
-		/// </summary>
-		static bool IsDefaultTheLeastValue(Type type)
-		{
-			if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
-				return true;
-
-#if SUPPORTS_DATEONLY
-			if (type == typeof(DateOnly) || type == typeof(TimeOnly))
-				return true;
-#endif
-
-			return false;
-		}
-
-		/// <summary>
-		/// Answers a comparison against the least value its type has: nothing is below it, and everything is at or above it.
-		/// The other operand is left untouched, so only the two comparisons this decides are folded - the rest still depend
-		/// on whether that operand is the least value itself.
-		/// </summary>
-		sealed class LeastValueComparisonFolder : ExpressionVisitor
-		{
-			protected override Expression VisitExtension(Expression node) => node;
-
-			protected override Expression VisitLambda<T>(Expression<T> node) => node;
-
-			protected override Expression VisitBinary(BinaryExpression node)
-			{
-				var visited = (BinaryExpression)base.VisitBinary(node);
-
-				if (visited.Left.Type != visited.Right.Type || visited.Left.Type.IsNullableType || !IsDefaultTheLeastValue(visited.Left.Type))
-					return visited;
-
-				var leastIsLeft  = visited.Left  is DefaultExpression;
-				var leastIsRight = visited.Right is DefaultExpression;
-
-				if (leastIsLeft == leastIsRight)
-					return visited;
-
-				return visited.NodeType switch
-				{
-					ExpressionType.GreaterThan      when leastIsLeft  => Expression.Constant(false),
-					ExpressionType.LessThanOrEqual  when leastIsLeft  => Expression.Constant(true),
-					ExpressionType.LessThan         when leastIsRight => Expression.Constant(false),
-					ExpressionType.GreaterThanOrEqual when leastIsRight => Expression.Constant(true),
-					_                                                => visited,
-				};
-			}
-		}
-
-		sealed class MissedDateCollector(ExpressionBuildVisitor owner) : ExpressionVisitor
-		{
-			public List<MemberExpression> Found { get; } = [];
-
-			protected override Expression VisitExtension(Expression node) => node;
-
-			protected override Expression VisitLambda<T>(Expression<T> node) => node;
-
-			protected override Expression VisitMember(MemberExpression node)
-			{
-				if (IsDateOrTimeType(node.Type) && owner.IsMissedRowColumn(node) && !Found.Exists(f => ExpressionEqualityComparer.Instance.Equals(f, node)))
-					Found.Add(node);
-
-				return base.VisitMember(node);
-			}
-		}
-
-		static bool IsDateOrTimeType(Type type)
-		{
-			if (type == typeof(DateTime) || type == typeof(DateTimeOffset) || type == typeof(TimeSpan))
-				return true;
-
-#if SUPPORTS_DATEONLY
-			if (type == typeof(DateOnly) || type == typeof(TimeOnly))
-				return true;
-#endif
-
-			return false;
 		}
 
 		/// <summary>
@@ -2556,16 +2386,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (member.Expression == null || member.Expression.Type.IsValueType || !HasContextReferenceOrSql(member))
 				return false;
 
-			// The member is translated here to learn whether its column can be NULL, which is what says the row can be
-			// missing at all - the mapping cannot tell, since j.Value1 is declared NOT NULL and only the LEFT JOIN makes it
-			// nullable. That answer comes from the context the member is read through, and only the built placeholder carries
-			// it. Asking is a probe, so its caches are rolled back - the query is shaped by the translation that follows.
+			// The member is translated here to learn two things the expression alone does not say: that it is one column at
+			// all, and that the column can be NULL - which is what says the row can be missing, since j.Value1 is declared
+			// NOT NULL and only the LEFT JOIN makes it nullable. Asking is a probe, so its caches are rolled back; what it
+			// cannot roll back is the column it registers in a subquery's or a CTE's select list, which is why four
+			// baselines answer with the same columns in a different order.
 			//
-			// Leaving the answer to the optimizer instead (it drops a COALESCE its NullabilityContext says is redundant) is
-			// measurably wrong: by then the wrap has already changed what the rest of the builder sees. Without the check,
-			// 13 tests fail - a generic constructor's own null guard gets a non-nullable operand ("Coalesce used with type
-			// that cannot be null"), a position that needs a field gets an expression, and a declared-duration translator
-			// stops refusing an undeclared one.
+			// Wrapping unconditionally and leaving both answers to the optimizer was measured instead, and 13 tests fail:
+			// a composite struct member is not a column and Coalesce cannot be built over it, Sql.FieldName is given an
+			// expression where it needs a field, and a duration translator stops refusing an undeclared duration because
+			// the wrap hides the operand it inspects.
 			using var probe = CreateSnapshot();
 
 			// Only a column is what a missed row does not have; anything computed is a value already calculated from the
@@ -2575,13 +2405,60 @@ namespace LinqToDB.Internal.Linq.Builder
 				&& QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter == null;
 		}
 
+		/// <summary>
+		/// A value a translator calculates with is read the way .NET reads it: a column of a row the LEFT JOIN did not match
+		/// is its default. The translation has already happened here, so the column's nullability is known without asking for
+		/// it again, and the default goes around the SQL rather than around the expression - which leaves a placeholder for
+		/// the translator to keep working with.
+		/// </summary>
+		Expression ReadTranslatedAsValue(Expression translated, Type valueType)
+		{
+			// The rule is about what a projection answers. A predicate reads a missed row as NULL and filters it out, which
+			// is what LEFT JOIN means, so a WHERE is left alone. An expression of the projection converted as a whole is
+			// built with BuildPurpose.Sql, and says so with BuildFlags.InsideProjection.
+			if (_buildPurpose is not BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.InsideProjection))
+				return translated;
+
+			// Sql.ToNullable and Sql.AsNullable ask for the NULL, so what they are given keeps it.
+			if (_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+				return translated;
+
+			if (translated is not SqlPlaceholderExpression { Sql: SqlField or SqlColumn } placeholder)
+				return translated;
+
+			// An aggregate reads NULL as "no value" - AVG and COUNT answer differently once it is a zero - and what it has
+			// already counted is not a column of any one row. A column of a subquery is one of a chain, so the chain is
+			// followed to what it finally selects.
+			var selected = placeholder.Sql;
+
+			while (selected is SqlColumn { Expression: { } columnExpression })
+				selected = columnExpression;
+
+			if (QueryHelper.IsAggregationFunction(selected) || QueryHelper.IsWindowFunction(selected))
+				return translated;
+
+			if (!valueType.IsValueType || valueType.IsNullableType || valueType.IsEnum)
+				return translated;
+
+			var defaultValue = MappingSchema.GetDefaultValue(valueType);
+
+			if (defaultValue.IsNullValue)
+				return translated;
+
+			if (!placeholder.Sql.CanBeNullable(GetNullabilityContext())
+				|| QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter != null)
+			{
+				return translated;
+			}
+
+			return placeholder.WithSql(new SqlCoalesceExpression(placeholder.Sql, new SqlValue(MappingSchema.GetDbDataType(valueType), defaultValue)));
+		}
+
 		Expression ReadColumnAsValue(MemberExpression member)
 		{
 			var type = member.Type;
 
-			// A date is answered by GuardCalculationOverMissedDate instead, since its default has no literal every engine
-			// has.
-			if (!type.IsValueType || type.IsNullableType || type.IsEnum || IsDateOrTimeType(type))
+			if (!type.IsValueType || type.IsNullableType || type.IsEnum)
 				return member;
 
 			// A type whose own default is NULL in the database is read as NULL already, so reading it as that default says
@@ -2652,12 +2529,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Trying to convert whole expression
 			if (_buildPurpose is not BuildPurpose.Sql && node is BinaryExpression or UnaryExpression or ConditionalExpression)
 			{
-				// The whole expression is converted at once, so the values it calculates with are read here (ReadAsValue), and
-				// a date it calculates over is answered for the missed row (GuardCalculationOverMissedDate).
-				var forSql = GuardCalculationOverMissedDate(ReadAsValue(node));
-
-				using (CombineBuildFlags(ReferenceEquals(forSql, node) ? BuildFlags.None : BuildFlags.InsideMissedRowGuard))
-					translated = BuildSqlExpression(forSql);
+				// The whole expression of the projection is converted at once: the operators read their operands the way
+				// .NET reads them (ReadAsValue), and what a translator is given is read the same way while the conversion
+				// runs (BuildFlags.InsideProjection, ReadTranslatedAsValue).
+				using (CombineBuildFlags(BuildFlags.InsideProjection))
+					translated = BuildSqlExpression(ReadAsValue(node));
 				//if (!SequenceHelper.HasError(translated))
 				if (translated is SqlPlaceholderExpression)
 				{
@@ -3398,15 +3274,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				var withValues = ReadAsValue(node);
 				if (!ReferenceEquals(withValues, node))
 					return Visit(withValues);
-
-				// A date has no default the SQL can carry, so the operator is answered for the missed row instead.
-				var guarded = GuardCalculationOverMissedDate(node);
-
-				if (!ReferenceEquals(guarded, node))
-				{
-					using (CombineBuildFlags(BuildFlags.InsideMissedRowGuard))
-						return Visit(guarded);
-				}
 			}
 
 			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
@@ -5855,6 +5722,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// A translator translating its own arguments: PreferClientCalculation must not leave them client-side.
 				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.InsideTranslation, alias: CurrentAlias);
+			}
+
+			public Expression ReadAsValue(Expression translated, Type valueType)
+			{
+				return Visitor.ReadTranslatedAsValue(translated, valueType);
 			}
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)

@@ -24,6 +24,16 @@ namespace LinqToDB.Linq.Translation
 
 		Expression Translate(Expression expression, TranslationFlags translationFlags = TranslationFlags.Sql);
 
+		/// <summary>
+		/// Reads a translated value the way .NET reads it: a column of a row a LEFT JOIN did not match is NULL in SQL and
+		/// <c>default(T)</c> in .NET, so a member translated over it answers what C# answers. Returns the expression
+		/// unchanged wherever that does not apply - a value that is not such a column, a nullable one, or a place where the
+		/// NULL is the answer.
+		/// </summary>
+		/// <param name="translated">The translated value, as <see cref="Translate"/> returned it.</param>
+		/// <param name="valueType">The CLR type the value is read as.</param>
+		Expression ReadAsValue(Expression translated, Type valueType);
+
 		MappingSchema            MappingSchema { get; }
 		DataOptions              DataOptions   { get; }
 

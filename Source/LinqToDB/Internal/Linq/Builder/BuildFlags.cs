@@ -22,8 +22,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		// set while the operand of a conversion to a nullable type is built: the conversion asks for the NULL, so
 		// PreferClientCalculation must not leave the operand client-side
 		InsideNullableCast  = 1 << 10,
-		// set while a calculation already guarded for a missed LEFT JOIN row is built, so the guard is not put around
-		// its own result again
-		InsideMissedRowGuard = 1 << 11,
+		// set while an expression of the projection is converted to SQL as a whole: what it calculates with is read the
+		// way .NET reads it, which a predicate does not do
+		InsideProjection    = 1 << 11,
 	}
 }
