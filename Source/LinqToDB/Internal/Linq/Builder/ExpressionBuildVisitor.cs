@@ -2579,7 +2579,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// A date is answered by GuardCalculationOverMissedDate instead, since its default has no literal every engine
 			// has.
-			if (!type.IsValueType || type.IsNullableType || type.IsEnum || IsDateOrTimeType(type) || !IsMissedRowColumn(member))
+			if (!type.IsValueType || type.IsNullableType || type.IsEnum || IsDateOrTimeType(type))
+				return member;
+
+			// A type whose own default is NULL in the database is read as NULL already, so reading it as that default says
+			// nothing: the wrap would be Coalesce(column, NULL). SQL Server's hierarchyid is one - a struct whose default
+			// value is its Null.
+			if (MappingSchema.GetDefaultValue(type).IsNullValue)
+				return member;
+
+			if (!IsMissedRowColumn(member))
 				return member;
 
 			return Expression.Coalesce(Expression.Convert(member, type.AsNullable()), Expression.Default(type));

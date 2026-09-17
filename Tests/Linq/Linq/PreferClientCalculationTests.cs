@@ -429,6 +429,10 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
 
+			// A captured date rather than a constructed one: new DateTime(...) inside the query is built by the provider,
+			// and PostgreSQL builds it with make_timestamp, which its 9.2 and 9.3 do not have.
+			var bound = new DateTime(2000, 1, 1);
+
 			var query =
 				from e in table
 				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
@@ -442,8 +446,8 @@ namespace Tests.Linq
 					// date ever reaching the query: the year of a missed row is 1, it is not later than 2000 and it is
 					// earlier - the last one is what a plain NULL comparison gets wrong, since NULL is not earlier either.
 					Year    = j.Date.Year,
-					Later   = j.Date > new DateTime(2000, 1, 1) ? "y" : "n",
-					Earlier = j.Date < new DateTime(2000, 1, 1) ? "y" : "n",
+					Later   = j.Date > bound ? "y" : "n",
+					Earlier = j.Date < bound ? "y" : "n",
 					// Compared against a column of the row instead of a constant: the missed row has the least date there
 					// is, so nothing of the row is below it and everything is at or above it, and both are answered
 					// without naming that date. The other four operators are not decided by that alone - they turn on
