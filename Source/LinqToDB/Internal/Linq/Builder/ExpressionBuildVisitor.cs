@@ -1479,7 +1479,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// (GuardCalculationOverMissedDate).
 			if (_buildPurpose is BuildPurpose.Expression && node.Expression is MemberExpression { Type.IsValueType: true } obj)
 			{
-				var value = ReadAsValue(obj);
+				var value = ReadAsValue(obj, true);
 				if (!ReferenceEquals(value, obj))
 					return Visit(node.Update(value));
 
@@ -2367,7 +2367,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		// through the operators it is calculated by and nowhere else - a call reads its own arguments when it is visited
 		// (ReadArgumentsAsValues), and what a lambda or a query method reads is a value of another query. A conversion to a
 		// nullable type, Sql.ToNullable and Sql.AsNullable ask for the NULL instead (BuildFlags.InsideNullableCast).
-		Expression ReadAsValue(Expression node)
+		Expression ReadAsValue(Expression node, bool isOperand = false)
 		{
 			if (BuildContext == null || _buildFlags.HasFlag(BuildFlags.InsideNullableCast))
 				return node;
@@ -2375,17 +2375,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			return node switch
 			{
 				UnaryExpression unary =>
-					IsConversionToNullable(unary) ? unary : unary.Update(ReadAsValue(unary.Operand)),
+					IsConversionToNullable(unary) ? unary : unary.Update(ReadAsValue(unary.Operand, isOperand)),
 
 				BinaryExpression binary =>
-					binary.Update(ReadAsValue(binary.Left), binary.Conversion, ReadAsValue(binary.Right)),
+					binary.Update(ReadAsValue(binary.Left, true), binary.Conversion, ReadAsValue(binary.Right, true)),
 
+				// The test decides, so it calculates; the branches are the value the whole expression returns, and they
+				// calculate only where the expression around them does.
 				ConditionalExpression conditional =>
-					conditional.Update(ReadAsValue(conditional.Test), ReadAsValue(conditional.IfTrue), ReadAsValue(conditional.IfFalse)),
+					conditional.Update(ReadAsValue(conditional.Test, true), ReadAsValue(conditional.IfTrue, isOperand), ReadAsValue(conditional.IfFalse, isOperand)),
 
 				// A member read off a value (j.Date.Year) is a calculation over the member that value is read from.
 				MemberExpression { Expression: { } obj } member =>
-					obj.Type.IsValueType ? member.Update(ReadAsValue(obj)) : ReadColumnAsValue(member),
+					obj.Type.IsValueType ? member.Update(ReadAsValue(obj, true)) : isOperand ? ReadColumnAsValue(member) : member,
 
 				_ => node,
 			};
@@ -2608,12 +2610,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				return node;
 			}
 
-			var               obj       = node.Object == null ? null : ReadAsValue(node.Object);
+			var               obj       = node.Object == null ? null : ReadAsValue(node.Object, true);
 			List<Expression>? arguments = null;
 
 			for (var i = 0; i < node.Arguments.Count; i++)
 			{
-				var argument = ReadAsValue(node.Arguments[i]);
+				var argument = ReadAsValue(node.Arguments[i], true);
 
 				if (arguments == null && !ReferenceEquals(argument, node.Arguments[i]))
 				{
