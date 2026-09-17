@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -281,8 +282,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
+				// The key is not among the projected members, so it cannot be referenced on the projected
+				// type. Drop the ordering rather than keep a lambda typed for the source element.
 				if (!found)
-					remapped.Add((lambda, descending));
+					return null;
 			}
 
 			return remapped;
@@ -322,6 +325,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression ApplyEnumerableOrderBy(Expression queryExpr, List<(LambdaExpression Expression, bool Descending)> orderBy)
 		{
+			// CollectOrderBy crosses operators that change the element type without remapping the lambdas
+			// (SelectMany, Cast, OfType): such an ordering is not expressible over the projected elements.
+			var elementType = TypeHelper.GetEnumerableElementType(queryExpr.Type);
+
+			foreach (var order in orderBy)
+				if (!order.Expression.Parameters[0].Type.IsSameOrParentOf(elementType))
+					return queryExpr;
+
 			var isFirst = true;
 			foreach (var order in orderBy)
 			{
