@@ -33,11 +33,21 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			// in ASE DECIMAL=DECIMAL(18,0)
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal,  typeof(decimal), 18, 10));
 
-			SetDefaultValue(typeof(DateTime), new DateTime(1753, 1, 1));
+			SetDefaultValue(typeof(DateTime), AseMinDate);
 		}
+
+		/// <summary>
+		/// The earliest date ASE has. Below it a date has no literal at all - the server refuses the value with an
+		/// arithmetic overflow instead of storing something else - so what is written where a lower date is asked for is
+		/// the least date the server does have, which answers a comparison the way the value itself would.
+		/// </summary>
+		static readonly DateTime AseMinDate = new(1753, 1, 1);
 
 		static void BuildDateTime(StringBuilder stringBuilder, DateTime value)
 		{
+			if (value < AseMinDate)
+				value = AseMinDate;
+
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
 		}
 
