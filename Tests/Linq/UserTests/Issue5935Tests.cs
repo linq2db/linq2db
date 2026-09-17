@@ -190,6 +190,9 @@ namespace Tests.UserTests
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
 			using var items = db.CreateLocalTable(ItemData);
 			using var logs  = db.CreateLocalTable(LogData);
@@ -214,6 +217,9 @@ namespace Tests.UserTests
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
 			using var items = db.CreateLocalTable(ItemData);
 			using var logs  = db.CreateLocalTable(LogData);
