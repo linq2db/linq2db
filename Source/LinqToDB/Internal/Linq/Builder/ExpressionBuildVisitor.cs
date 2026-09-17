@@ -5644,7 +5644,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		sealed class TranslationContext : ITranslationContext
+		sealed class TranslationContext : ITranslationContext, ITranslationValueReader
 		{
 			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
