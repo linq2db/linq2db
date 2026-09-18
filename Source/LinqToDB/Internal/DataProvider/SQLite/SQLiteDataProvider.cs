@@ -293,6 +293,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
+			if (value is DateTimeOffset dto && string.Equals(Name, ProviderName.SQLiteClassic, StringComparison.Ordinal))
+			{
+				// System.Data.SQLite otherwise uses culture-dependent text that SQLite date functions cannot parse.
+				value    = dto.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFFzzz", DateTimeFormatInfo.InvariantInfo);
+				dataType = dataType.WithDataType(DataType.VarChar);
+			}
+
 #if SUPPORTS_DATEONLY
 			if (!Adapter.SupportsDateOnly && value is DateOnly d)
 			{
