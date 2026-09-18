@@ -25,6 +25,21 @@ namespace LinqToDB.Identity
 		// EF Core maps integral keys (int/long) as store-generated identity columns; string/Guid keys are client-assigned.
 		private static bool IsAutoIncrementKey<TKey>() => typeof(TKey) == typeof(int) || typeof(TKey) == typeof(long);
 
+		// LockoutEnd is DateTimeOffset?, which these providers cannot render in DDL - CreateTable emits the literal
+		// token "DateTimeOffset". Each value is what that provider's SQL builder already produces for its widest
+		// datetime type. DB2 z/OS and Firebird 4+ do render it, so those two are pinned per dialect, not per family.
+		private static readonly (string Configuration, DataType DataType)[] _lockoutEndDataTypes =
+		[
+			(ProviderName.Access,     DataType.DateTime ),
+			(ProviderName.SqlCe,      DataType.DateTime2),
+			(ProviderName.Sybase,     DataType.DateTime2),
+			(ProviderName.SapHana,    DataType.DateTime2),
+			(ProviderName.Informix,   DataType.DateTime2),
+			(ProviderName.DB2LUW,     DataType.DateTime2),
+			(ProviderName.Firebird25, DataType.DateTime2),
+			(ProviderName.Firebird3,  DataType.DateTime2),
+		];
+
 		public static void SetupIdentityUserClaim<TKey, TUserClaim>(FluentMappingBuilder mappings)
 			where TKey       : IEquatable<TKey>
 			where TUserClaim : IdentityUserClaim<TKey>
@@ -180,6 +195,12 @@ namespace LinqToDB.Identity
 				.Property(e => e.LockoutEnabled)
 				.Property(e => e.AccessFailedCount)
 				;
+
+			// DataTypeAttribute rather than a configuration-scoped ColumnAttribute: the latter replaces the unscoped one wholesale.
+			foreach (var (configuration, dataType) in _lockoutEndDataTypes)
+				mappings.Entity<TUser>()
+					.Property(e => e.LockoutEnd)
+						.HasAttribute(new DataTypeAttribute(dataType) { Configuration = configuration });
 		}
 
 		public static void SetupIdentityUser<TUser>(FluentMappingBuilder mappings)
