@@ -17,12 +17,17 @@ internal sealed class PostgreSQLProvider : DatabaseProviderBase
 		new(ProviderName.PostgreSQL13, "PostgreSQL 13 Dialect"             ),
 		new(ProviderName.PostgreSQL15, "PostgreSQL 15 Dialect"             ),
 		new(ProviderName.PostgreSQL18, "PostgreSQL 18 Dialect"             ),
+		new(ProviderName.PostgreSQL19, "PostgreSQL 19 Dialect"             ),
 	];
 
 	public PostgreSQLProvider()
 		: base(ProviderName.PostgreSQL, "PostgreSQL", _providers)
 	{
 	}
+
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("Npgsql", NuGetPackageVersions.Npgsql)];
+#endif
 
 	public override void ClearAllPools(string providerName)
 	{

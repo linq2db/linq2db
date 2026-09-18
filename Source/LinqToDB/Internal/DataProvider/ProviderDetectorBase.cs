@@ -100,25 +100,38 @@ namespace LinqToDB.Internal.DataProvider
 
 			TVersion? DetectVersion(ConnectionOptions options, DbConnection cn, DbTransaction? transaction)
 			{
-				if (cn.State != ConnectionState.Open)
+				// When the connection is supplied by the caller (e.g. EF Core's shared connection) we must
+				// leave it in the state we found it - opening it here and not closing it leaks an open
+				// connection back to the caller (issue #5296).
+				var wasClosed = cn.State != ConnectionState.Open;
+
+				try
 				{
-					if (options.ConnectionInterceptor == null)
+					if (wasClosed)
 					{
-						cn.Open();
-					}
-					else
-					{
-						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
-							options.ConnectionInterceptor.ConnectionOpening(new(null), cn);
+						if (options.ConnectionInterceptor == null)
+						{
+							cn.Open();
+						}
+						else
+						{
+							using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+								options.ConnectionInterceptor.ConnectionOpening(new(null), cn);
 
-						cn.Open();
+							cn.Open();
 
-						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
-							options.ConnectionInterceptor.ConnectionOpened(new(null), cn);
+							using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+								options.ConnectionInterceptor.ConnectionOpened(new(null), cn);
+						}
 					}
+
+					return DetectServerVersion(cn, transaction);
 				}
-
-				return DetectServerVersion(cn, transaction);
+				finally
+				{
+					if (wasClosed && cn.State != ConnectionState.Closed)
+						cn.Close();
+				}
 			}
 		}
 

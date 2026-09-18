@@ -229,6 +229,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (selectQuery.OrderBy.IsEmpty)
 				return false;
 
+			// A DISTINCT ON query's ORDER BY is semantically required: it selects the surviving row per ON key and
+			// must begin with the ON expressions. Never strip it or redistribute it to a parent.
+			if (selectQuery.Select.IsDistinctOn)
+				return false;
+
 			if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy))
 			{
 				if (needsOrderBy)

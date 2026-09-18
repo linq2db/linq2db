@@ -27,19 +27,27 @@ namespace LinqToDB.DataProvider.ClickHouse
 			public const string Semi        = "SEMI";
 			public const string Anti        = "ANTI";
 			public const string Any         = "ANY";
-			public const string AsOf        = "ASOF";
-			public const string Global      = "GLOBAL";
-			public const string GlobalOuter = Global + " OUTER";
-			public const string GlobalSemi  = Global + " SEMI";
-			public const string GlobalAnti  = Global + " ANTI";
-			public const string GlobalAny   = Global + " ANY";
-			public const string GlobalAsOf  = Global + " ASOF";
 			public const string All         = "ALL";
-			public const string AllOuter    = All + " OUTER";
-			public const string AllSemi     = All + " SEMI";
-			public const string AllAnti     = All + " ANTI";
-			public const string AllAny      = All + " ANY";
-			public const string AllAsOf     = All + " ASOF";
+			public const string AsOf        = "ASOF";
+
+			public const string Global      = "GLOBAL";
+			public const string GlobalOuter = $"{Global} {Outer}";
+			public const string GlobalSemi  = $"{Global} {Semi}";
+			public const string GlobalAnti  = $"{Global} {Anti}";
+			public const string GlobalAny   = $"{Global} {Any}";
+			public const string GlobalAll   = $"{Global} {All}";
+			public const string GlobalAsOf  = $"{Global} {AsOf}";
+
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Outer instead.")]
+			public const string AllOuter    = Outer;
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Semi instead.")]
+			public const string AllSemi     = Semi;
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Anti instead.")]
+			public const string AllAnti     = Anti;
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use Any instead.")]
+			public const string AllAny      = Any;
+			[Obsolete("TODO: remove in v7. This API is based on an incorrect ClickHouse join hint model and works incorrectly. Use AsOf instead.")]
+			public const string AllAsOf     = AsOf;
 		}
 
 		public static class Query

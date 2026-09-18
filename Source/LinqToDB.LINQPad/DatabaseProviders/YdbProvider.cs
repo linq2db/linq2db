@@ -19,6 +19,8 @@ internal sealed class YdbProvider : DatabaseProviderBase
 	{
 	}
 
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("Ydb.Sdk", NuGetPackageVersions.Ydb_Sdk)];
+
 	public override void ClearAllPools(string providerName)
 	{
 		YdbConnection.ClearAllPools().GetAwaiter().GetResult();

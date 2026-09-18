@@ -28,11 +28,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression MakeAssignExpression(Expression objExpression, MemberInfo memberInfo, ColumnDescriptor column)
 			{
-				var idx = Builder.GetReaderIndex(column.ColumnName);
+				var memberType = memberInfo.GetMemberType();
+				var idx        = Builder.GetReaderIndex(column.ColumnName);
 				if (idx < 0)
-					return Expression.Constant(Builder.MappingSchema.GetDefaultValue(memberInfo.GetMemberType()));
+					// Column absent from the result set (e.g. a raw SQL query that doesn't select it): bind the
+					// member's typed default. The constant must carry memberType — an untyped null would be typed
+					// object and rejected by the Assignment type check. Harmless on the LINQ path, where generated
+					// SELECTs always include every mapped column so this branch isn't reached.
+					return Expression.Constant(Builder.MappingSchema.GetDefaultValue(memberType), memberType);
 
-				return new ConvertFromDataReaderExpression(memberInfo.GetMemberType(), idx, column.ValueConverter, DataContextParam, DataReaderParam, Builder.DataContext);
+				// Reduce against the sample reader now (fast mode) rather than emitting a slow-mode node that
+				// dispatches through a ColumnReader for every row. Mirrors the main mapper path (QueryRunner) and the
+				// previous raw-SQL fast path: _readerVariable is the typed (converter-wrapped) reader the read targets,
+				// Builder.Reader is the sample used to bake the provider read method (2-arg Reduce also applies the
+				// data-reader unwrap interceptor).
+				return new ConvertFromDataReaderExpression(memberType, idx, column.ValueConverter, DataContextParam, _readerVariable, (bool?)null)
+					.Reduce(Builder.DataContext, Builder.Reader);
 			}
 
 			protected override Expression MakeIsNullExpression(Expression objExpression, MemberInfo memberInfo, ColumnDescriptor column)
@@ -67,7 +78,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			ObjectType    = objectType;
 			Reader        = reader;
 			ConverterExpr = converterExpr;
-			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, static i => i, MappingSchema.ColumnNameComparer);
+			// A raw-SQL result set can carry duplicate (or empty) column names — e.g. "select 1, 1" — which a
+			// plain ToDictionary would reject. Keep the first index per name, matching GetReaderIndex's first-match lookup.
+			var readerIndexes = new Dictionary<string,int>(MappingSchema.ColumnNameComparer);
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				var name = reader.GetName(i);
+				if (!readerIndexes.ContainsKey(name))
+					readerIndexes[name] = i;
+			}
+
+			ReaderIndexes = readerIndexes;
 		}
 
 		int GetReaderIndex(string columnName)
@@ -115,8 +136,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			
 			var lambda = Expression.Lambda<Func<IDataContext,DbDataReader,T>>(generator.ResultExpression, DataContextParam, DataReaderParam);
 
-			if (LinqToDB.Common.Configuration.OptimizeForSequentialAccess)
-				lambda = (Expression<Func<IDataContext, DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
+			if (DataContext.Options.LinqOptions.OptimizeForSequentialAccess)
+				// reduce: false — MakeAssignExpression already reduced the reads in fast mode, so no
+				// ConvertFromDataReaderExpression nodes remain (matches the previous raw-SQL fast path).
+				lambda = (Expression<Func<IDataContext, DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: false);
 
 			return lambda.CompileExpression();
 		}

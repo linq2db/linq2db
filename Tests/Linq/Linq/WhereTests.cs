@@ -976,6 +976,35 @@ namespace Tests.Linq
 				from p in db.Parent where ids.Contains(p.ParentID) select p);
 		}
 
+		[Test]
+		public void ContainsParameterAsTestedExpression([DataSources] string context)
+		{
+			var id = 2;
+
+			// Puts the parameter on the left of IN, with the values being columns: @id IN (ParentID, ChildID).
+			// The value list is exempt from parameter casting - a collection parameter there is expanded into
+			// the values when the command is built, and a cast would hide it from that - but the tested
+			// expression is an ordinary value position and keeps the normal rules.
+			using var db = GetDataContext(context);
+			AreEqual(
+				from c in    Child where new[] { c.ParentID, c.ChildID }.Contains(id) select c,
+				from c in db.Child where new[] { c.ParentID, c.ChildID }.Contains(id) select c);
+		}
+
+		[Test]
+		public void ContainsBooleanParameterAsTestedExpression([DataSources] string context)
+		{
+			var flag = true;
+
+			// Same shape with a boolean, which is the case that actually distinguishes the two: providers that
+			// wrap boolean parameters (Informix) cast this one regardless of position, so suppressing casts for
+			// the whole IN predicate rather than just its values would drop the cast here.
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in    Types where new[] { t.BoolValue }.Contains(flag) select t.ID,
+				from t in db.Types where new[] { t.BoolValue }.Contains(flag) select t.ID);
+		}
+
 		static IEnumerable<int> GetIds()
 		{
 			yield return 1;
@@ -1282,7 +1311,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest1([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest1([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1295,7 +1325,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest2([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest2([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1308,7 +1339,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest3([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1321,7 +1353,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest4([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest4([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1334,7 +1367,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest5([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest5([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1347,7 +1381,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void WhereDateTimeTest6([DataSources] string context)
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void WhereDateTimeTest6([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1454,12 +1489,16 @@ namespace Tests.Linq
 				AreEqualLocal(local, table, t => !(t.NullableBoolValue != null) && t.Id > 0);
 			}
 
+			// the un-simplified negations are the shapes under test - De Morgan here would feed the
+			// translator the simplified tree and stop covering the negated one
+#pragma warning disable MA0213 // Simplify negated boolean expression
 			AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
 			AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue != true) && t.Id > 0);
 
 			AreEqualLocal(local, table, t => (!t.BoolValue && t.NullableBoolValue == false) && t.Id > 0);
 
 			AreEqualLocal(local, table, t => !(!t.BoolValue && t.NullableBoolValue == false) && t.Id > 0);
+#pragma warning restore MA0213
 		}
 
 		[Test]
@@ -1637,44 +1676,63 @@ namespace Tests.Linq
 			Assert.That(cnt, Is.EqualTo(db.Person.Count()));
 		}
 
+		sealed record InterpolatedName(string FirstName, string LastName, string FullName);
+
+		// Sybase gives an empty string back as a single space, and there is no plan to change that, so a null
+		// MiddleName reads as " " rather than "". The two tests below assert that instead of being skipped there:
+		// the query is left alone and the expected rows are rebuilt over a source that already reads that way.
+		// MiddleName is the only nullable member of Person, so it is the only place a `?? ""` can fire.
+		//
+		// The substitution cannot be hoisted into a shared variable: that makes it a parameter, linq2db sizes a
+		// string parameter from its value, and ASE types COALESCE by the parameter's declared length - so the
+		// column comes back truncated to one character. Both spellings have to stay literals.
+		static IEnumerable<Person> AsSybaseReadsThem(IEnumerable<Person> source) =>
+			source.Select(p => new Person { ID = p.ID, FirstName = p.FirstName, LastName = p.LastName, MiddleName = p.MiddleName ?? " ", Gender = p.Gender });
+
+		static IQueryable<InterpolatedName> InterpolatedNullable(IQueryable<Person> source) =>
+			from p in source
+			select new InterpolatedName(
+				$"{p.FirstName}",
+				$"{p.LastName}, {p.FirstName}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})") // it should be more tan three expressions to avoid optimization
+			into s
+			where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+			orderby s.FirstName, s.LastName
+			select s;
+
+		static IQueryable<InterpolatedName> InterpolatedCoalesce(IQueryable<Person> source) =>
+			from p in source
+			select new InterpolatedName(
+				$"{p.FirstName ?? ""}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})") // it should be more tan three expressions to avoid optimization
+			into s
+			where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+			orderby s.FirstName, s.LastName
+			select s;
+
 		[Test]
-		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationTestsNullable([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			var query =
-					from p in db.Person
-					select new
-					{
-						FirstName = $"{p.FirstName}",
-						LastName  = $"{p.LastName }, {p.FirstName}",
-						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
-					} into s
-					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
-					orderby s.FirstName, s.LastName
-					select s;
+			var query = InterpolatedNullable(db.Person);
 
-			AssertQuery(query);
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				AreEqual(InterpolatedNullable(AsSybaseReadsThem(Person).AsQueryable()).ToList(), query.ToList());
+			else
+				AssertQuery(query);
 		}
 
 		[Test]
-		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationCoalesce([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			var query =
-					from p in db.Person
-					select new
-					{
-						FirstName = $"{p.FirstName ?? ""}",
-						LastName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""}",
-						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
-					} into s
-					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
-					orderby s.FirstName, s.LastName
-					select s;
+			var query = InterpolatedCoalesce(db.Person);
 
-			AssertQuery(query);
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				AreEqual(InterpolatedCoalesce(AsSybaseReadsThem(Person).AsQueryable()).ToList(), query.ToList());
+			else
+				AssertQuery(query);
 		}
 
 		[Test]
@@ -1746,7 +1804,7 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod(nameof(ComplexIsNullPredicateTestFuncExpr))]
-		private static string? ComplexIsNullPredicateTestFunc(string? value) => throw new NotImplementedException();
+		private static string? ComplexIsNullPredicateTestFunc(string? value) => throw new ServerSideOnlyException(nameof(ComplexIsNullPredicateTestFunc));
 
 		private static Expression<Func<string?, string?>> ComplexIsNullPredicateTestFuncExpr()
 		{
@@ -2501,6 +2559,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		// PostgreSQL 9.4+ (make_timestamp)
 		public void PredicateOptimization_Subquery([DataSources(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
@@ -2510,7 +2569,8 @@ namespace Tests.Linq
 			TestProvName.AllDB2,
 			// yep, it works in older versions...
 			TestProvName.AllFirebird5Plus,
-			TestProvName.AllClickHouse)] string context)
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 

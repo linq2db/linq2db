@@ -31,8 +31,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 		{
 			base.OnModelCreating(modelBuilder);
 
+#if EF10
+			// EF10 supports keyed filters; use named filters for both constraints
+			modelBuilder.Entity<Product>()
+				.HasQueryFilter("ProductIdFilter", e => !IsFilterProducts || e.ProductId > 2)
+				.HasQueryFilter("NotDiscontinued", e => !IsFilterProducts || !e.Discontinued);
+#else
+			// Earlier EF versions support only a single anonymous filter per entity
 			modelBuilder.Entity<Product>()
 				.HasQueryFilter(e => !IsFilterProducts || e.ProductId > 2);
+#endif
 
 			ConfigureGlobalQueryFilters(modelBuilder);
 		}
@@ -55,12 +63,25 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Northwind
 		public void ConfigureEntityFilter<TEntity>(ModelBuilder builder)
 			where TEntity : class, ISoftDelete
 		{
-			NorthwindContextBase? obj = null;
-
+			// The predicate references IsSoftDeleteFilterEnabled on the context directly, the same way the
+			// Product filters above reference IsFilterProducts. It used to go through a local initialised to
+			// null and never assigned, so EF had to translate a member access on a null constant and threw
+			// UnreachableException from RelationalSqlTranslatingExpressionVisitor - and the context property
+			// CreateContext(provider, enableFilter) sets was never actually read by the filter.
+#if EF10
+			// EF10: use named filter for soft-delete constraint to coexist with other named filters
 #if !NETFRAMEWORK
-			builder.Entity<TEntity>().HasQueryFilter(e => !obj!.IsSoftDeleteFilterEnabled || !e.IsDeleted || !EF.Property<bool>(e, "IsDeleted"));
+			builder.Entity<TEntity>().HasQueryFilter("SoftDeleteFilter", e => !IsSoftDeleteFilterEnabled || !e.IsDeleted || !EF.Property<bool>(e, "IsDeleted"));
 #else
-			builder.Entity<TEntity>().HasQueryFilter(e => !obj!.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			builder.Entity<TEntity>().HasQueryFilter("SoftDeleteFilter", e => !IsSoftDeleteFilterEnabled || !e.IsDeleted);
+#endif
+#else
+			// Earlier EF versions: only one query filter per entity (a later HasQueryFilter call replaces an earlier one)
+#if !NETFRAMEWORK
+			builder.Entity<TEntity>().HasQueryFilter(e => !IsSoftDeleteFilterEnabled || !e.IsDeleted || !EF.Property<bool>(e, "IsDeleted"));
+#else
+			builder.Entity<TEntity>().HasQueryFilter(e => !IsSoftDeleteFilterEnabled || !e.IsDeleted);
+#endif
 #endif
 		}
 

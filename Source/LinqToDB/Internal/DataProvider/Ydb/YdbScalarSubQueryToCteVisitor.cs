@@ -117,7 +117,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (position == Position.Wrapped)
 					return WrapScalarSubQueryAsCte(subQuery);
 
-				return new SqlCteTable(GetOrAddScalarCte(subQuery, column.SystemType), column.SystemType);
+				return new SqlCteTable(GetOrAddScalarCte(subQuery, column.SystemType), column.SystemType)
+				{
+					// The scalar reference is nullable iff the sub-query can yield no row (a SingleOrDefault scalar
+					// can be empty -> NULL; a guaranteed-single-row aggregate cannot). The nullability lives on the
+					// SelectQuery-as-value, not its projection column (which can be a non-nullable field); capture it
+					// here while the sub-query is intact (see SqlCteTable.CanBeNull).
+					CanBeNull = subQuery.CanBeNullable(NullabilityContext.GetContext(subQuery)),
+				};
 			}
 
 			return element;
@@ -176,13 +183,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var alias = column.Alias ?? "cte_value";
 			column.Alias = alias;
 
-			var dataType  = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
-			var canBeNull = column.Expression.CanBeNullable(NullabilityContext.GetContext(subQuery));
+			var dataType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
 
-			cte.Fields.Add(new SqlField(dataType, alias, canBeNull) { PhysicalName = alias });
+			var cteField = new SqlCteField(dataType, alias) { Column = column };
+			cte.Fields.Add(cteField);
 
 			var cteTable   = new SqlCteTable(cte, column.SystemType!);
-			var tableField = new SqlField(cte.Fields[0]);
+			var tableField = new SqlCteTableField(cteField);
 			cteTable.Add(tableField);
 
 			var wrap = new SelectQuery();

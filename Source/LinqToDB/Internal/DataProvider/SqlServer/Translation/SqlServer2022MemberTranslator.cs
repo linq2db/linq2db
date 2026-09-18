@@ -63,5 +63,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return factory.Function(valueType, "RTRIM", value, trimChars);
 			}
 		}
+
+		protected class SqlServer2022WindowFunctionsMemberTranslator : SqlServerWindowFunctionsMemberTranslator
+		{
+			// SQL Server 2022 added the NULL treatment clause (IGNORE NULLS / RESPECT NULLS) for
+			// FIRST_VALUE, LAST_VALUE, LAG and LEAD. NTH_VALUE remains unsupported (so FROM LAST is moot).
+			protected override bool IsLeadLagNullTreatmentSupported => true;
+			protected override bool IsValueNullTreatmentSupported   => true;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SqlServer2022WindowFunctionsMemberTranslator();
+		}
 	}
 }

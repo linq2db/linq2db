@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
@@ -29,8 +30,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			public          EntityDescriptor EntityDescriptor;
 
 			public Type            ObjectType   { get; set; }
-			public SqlTable        SqlTable     { get; set; }
+			public ISqlNamedTable  NamedTable     => SqlTable;
+			public SqlTable        SqlTable        { get; set; }
 			public LoadWithEntity? LoadWithRoot { get; set; }
+
+			List<Type>? _filteredByOfType;
+
+			/// <summary>
+			/// TPH types this context's rows have already been narrowed to via <c>OfType</c>/<c>Cast</c>
+			/// (the discriminator predicate is already applied to the query), or <see langword="null"/> when
+			/// none. Used to avoid emitting a redundant discriminator on associations declared on a derived
+			/// type. Lazily allocated — inheritance/OfType is rare, so most contexts never allocate it.
+			/// </summary>
+			public List<Type>? FilteredByOfType => _filteredByOfType;
+
+			public void AddFilteredByOfType(Type type) => (_filteredByOfType ??= new()).Add(type);
 
 			public bool IsSubQuery { get; }
 
@@ -124,7 +138,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
+				var translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
+
+				attr.SetTable(builder.DataOptions, (context: this, builder, translatedToSql), builder.DataContext.CreateSqlBuilder(), mappingSchema, SqlTable, mc, static (context, argument, _, inline) =>
 				{
 					using var saveState = context.builder.UsingColumnDescriptor(null);
 
@@ -155,10 +171,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
+					if (sqlExpr is SqlPlaceholderExpression)
+						context.translatedToSql.Add(argument);
+
 					return sqlExpr;
 				});
 
-				builder.RegisterExtensionAccessors(mc);
+				builder.RegisterExtensionAccessors(mc, translatedToSql);
 
 				Init(true);
 			}
@@ -198,22 +217,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsAggregationRoot() || flags.IsTraverse() || flags.IsExtractProjection() || flags.IsSubquery())
 					return path;
 
-				// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
-				if (flags.IsExpand() && !flags.IsKeys())
+				// Expand is initiated by Eager Loading. Keys never accompanies Expand - GetProjectFlags adds it
+				// only in the Sql / Expression / Extract arms - so there is no comparison case to exclude here.
+				if (flags.IsExpand())
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					if (flags.IsTable())
 						return path;
-
-					if (flags.IsSubquery() && !(path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type)))
-					{
-						var expr = Builder.GetSequenceExpression(this);
-						if (expr == null)
-							return path;
-						return expr;
-					}
 
 					if (MappingSchema.IsScalarType(ElementType))
 					{
@@ -224,9 +236,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (path.Type.IsAssignableFrom(ElementType) || ElementType.IsAssignableFrom(path.Type))
 					{
+						// Calculated columns (ExpressionMethodAttribute.IsColumn=true) are expanded during
+						// full-entity construction (EntityConstructor.ExposeCalculatedColumn); IsColumn=false
+						// expression-methods are intentionally left as plain column reads here — see #5540.
 						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
-						// Entity can contain calculated columns which should be exposed
-						fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
 						if (fullEntity.Type != path.Type)
 							fullEntity = Expression.Convert(fullEntity, path.Type);
@@ -280,11 +293,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					return path;
 				}
 
-				if (flags.IsExtractProjection())
-				{
-					return path;
-				}
-
 				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path, trackingPath : path);
 
 				return placeholder;
@@ -292,10 +300,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
+				var cloned = new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
 				{
 					LoadWithRoot = LoadWithRoot,
 				};
+
+				if (_filteredByOfType != null)
+					cloned._filteredByOfType = [.._filteredByOfType];
+
+				return cloned;
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -469,7 +482,8 @@ namespace LinqToDB.Internal.Linq.Builder
 									{
 										foreach (var mm in MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
 										{
-											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
+											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member)
+												&& string.Equals(mm.ColumnName, field.PhysicalName, StringComparison.Ordinal))
 												return field;
 										}
 									}

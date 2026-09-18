@@ -291,7 +291,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
+		// mutates global Configuration.MaxBinaryParameterLengthLogging and asserts on the global LastQuery
+		[Test, NonParallelizable]
 		public async ValueTask VectorPrintParameterSqlTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
 		{
 			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
@@ -315,7 +316,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
+		// mutates global Configuration.MaxBinaryParameterLengthLogging and asserts on the global LastQuery
+		[Test, NonParallelizable]
 		public async ValueTask VectorPrintParameterFloatTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
 		{
 			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;

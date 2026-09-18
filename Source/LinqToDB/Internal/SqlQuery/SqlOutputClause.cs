@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		List<SqlSetExpression>? _outputItems;
 
-		public SqlTable?             OutputTable   { get; set; }
+		public ISqlNamedTable?       OutputTable   { get; set; }
 		public List<ISqlExpression>? OutputColumns { get; set; }
 
 		public bool                   HasOutput      => HasOutputItems || OutputColumns != null;
@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.SqlQuery
 			set => _outputItems = value;
 		}
 
-		public void Modify(SqlTable? outputTable)
+		public void Modify(ISqlNamedTable? outputTable)
 		{
 			OutputTable   = outputTable;
 		}

@@ -16,6 +16,11 @@ internal abstract class DatabaseProviderBase(string database, string description
 
 	public virtual bool SupportsSecondaryConnection { get; }
 	public virtual bool AutomaticProviderSelection  { get; }
+	public virtual bool IsPlatformSupported         => true;
+
+#if !NETFRAMEWORK
+	public virtual IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [];
+#endif
 
 	public virtual IReadOnlyCollection<Assembly> GetAdditionalReferences      (string providerName                     ) => [];
 	public virtual IEnumerable<string>           GetProviderAssemblyNames     (string providerName                     ) => [];

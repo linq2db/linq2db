@@ -25,6 +25,9 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 #endif
 
 		public static readonly MethodInfo IgnoreQueryFiltersMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreQueryFilters());
+#if EF10
+		public static readonly MethodInfo IgnoreQueryFiltersByKeyMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreQueryFilters(default(IReadOnlyCollection<string>)!));
+#endif
 		public static readonly MethodInfo IncludeMethodInfo            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.Include(o => o));
 		public static readonly MethodInfo IncludeMethodInfoString      = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.Include(string.Empty));
 		public static readonly MethodInfo ThenIncludeMethodInfo        = MemberHelper.MethodOfGeneric<IIncludableQueryable<object, object>>(q => q.ThenInclude<object, object, object>(null!));

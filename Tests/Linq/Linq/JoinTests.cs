@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -1033,14 +1033,11 @@ namespace Tests.Linq
 			Assert.That(arr, Is.Not.Empty);
 		}
 
-		// MySQL: 61 joined tables limit
-		// SQLite: 64 joined tables limit
-		// ASE: The "default data cache (id: 0)" is configured with 410 buffers.  The current query plan requires 2448 buffers.  Please reconfigure the data cache and try the command again.
-		// Access: Query is too complex (lol)
-		// DB2: Processing was cancelled due to an interrupt.
-		// SQLCE: slow (~2-3 min)
+		// Query is not executed: Parent has no unique key, so JoinsOptimizer cannot collapse the self-join
+		// chain, and no server optimizes 101 joins within the default 30s command timeout. What this test
+		// guards is the query build, which needs no server - see StackOverflowExecute for the executed one.
 		[Test]
-		public void StackOverflow([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllDB2, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSybase)] string context)
+		public void StackOverflow([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -1056,8 +1053,31 @@ namespace Tests.Linq
 					select new { p, c.c };
 			}
 
+			var sql = q.ToSqlQuery().Sql;
+			sql.ShouldNotBeNullOrEmpty();
+
+			BaselinesManager.LogQuery(sql);
+		}
+
+		[Test]
+		public void StackOverflowExecute([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+					from c in db.Child
+					join p in db.Parent on c.ParentID equals p.ParentID
+					select new { p, c };
+
+			for (var i = 0; i < 10; i++)
+			{
+				q =
+					from c in q
+					join p in db.Parent on c.p.ParentID equals p.ParentID
+					select new { p, c.c };
+			}
+
 			var list = q.ToList();
-			Assert.That(list, Is.Not.Empty);
+			list.ShouldNotBeEmpty();
 		}
 
 		[Test]
@@ -1074,7 +1094,8 @@ namespace Tests.Linq
 
 		// MySQL doesn't support user-defined table functions
 		// system-defined JSON_TABLE function could be used with LATERAL, but it is not an easy task to define it...
-		[ActiveIssue("Implement JSON_TABLE-like functions support")]
+		[ActiveIssue(ErrorTypeName = "System.FormatException", ErrorMessage = "Input string was not in a correct format.",
+			Details = "no-issue: Implement JSON_TABLE-like functions support. Without it the apply source is emitted as something MySQL parses as a number and rejects. A tracker search for JSON_TABLE found nothing.")]
 		[Test]
 		public void ApplyJoin_MySql([IncludeDataSources(TestProvName.AllMySqlWithApply)] string context)
 		{
@@ -1088,7 +1109,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.TableExpression("JSON_TABLE('[ {\"ParentID\": 1}, {\"Value1\": 2} ]', '$[*]' COLUMNS( ParentID INT PATH '$.ParentID', Value1 INT PATH '$.Value1')")]
-		private static ITable<Parent> JsonTable() => throw new NotImplementedException();
+		private static ITable<Parent> JsonTable() => throw new ServerSideOnlyException(nameof(JsonTable));
 
 		[Test]
 		public void BltIssue257([DataSources] string context)
@@ -1405,9 +1426,10 @@ namespace Tests.Linq
 		}
 
 		// https://imgflip.com/i/2a6oc8
-		[ActiveIssue(
+		[ActiveIssue(5895,
 			Configuration = TestProvName.AllSybase,
-			Details       = "Cross-join doesn't work in Sybase")]
+			ErrorMessage  = "Assert.That(resultList, Has.Count.EqualTo(expectedList.Count))",
+			Details       = "Sybase applies a derived table's TOP to the outer result, so this returns 10 rows where 70 are due. Not the cross join: without Take the same query answers 7 x 17 = 119 correctly.")]
 		[Test]
 		public void SqlLinqCrossJoinSubQuery([DataSources] string context)
 		{
@@ -2991,7 +3013,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe
-		}, Details = "FULL OUTER JOIN support. Also check and enable other tests that do full join on fix")]
+		}, Details = "no-declaration: one mechanism - the server has no FULL OUTER JOIN and linq2db does not yet emulate it - reported five ways: SqlCe names the offending token ('Token in error = FULL'), Sybase says \"Incorrect syntax near 'FULL'\", MySQL gives its generic syntax-error paragraph, and the two Access ACE drivers give no usable text at all ('Reserved error (-1001)' on ODBC, 'Unspecified error: E_FAIL' on OleDb). Same text arrives wrapped in RpcException over LinqService.")]
 		[Test(Description = "Tests regression in v3.3 when for RightCount generated SQL started to use same field as for LeftCount")]
 		// InformixDB2 disabled due to serious bug in provider: while query returns 3, data reader returns 0 here
 		public void FullJoinCondition_Regression([DataSources(ProviderName.InformixDB2, TestProvName.AllClickHouse)] string context)
@@ -3038,7 +3060,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllOracle12)]
+		[ActiveIssue(4160, Configuration = TestProvName.AllOracle12, ErrorMessage = "Assert.That(data, Has.Count.EqualTo(2))",
+			Details = "Oracle 12 returns one row where two are due - the invalid sub-query SQL #4160 describes, still wrong on that version.")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue4160Test1([DataSources] string context)
@@ -3217,7 +3240,8 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
-		public void Issue3311Test3([DataSources] string context)
+		// PostgreSQL 9.3+ (LATERAL); 9.2 excluded
+		public void Issue3311Test3([DataSources(ProviderName.PostgreSQL92)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -3283,9 +3307,23 @@ namespace Tests.Linq
 			Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2));
 		}
 
-		[ActiveIssue]
+		// Only the LikeClr mode is broken here, so the two SQL modes stay in this test and LikeClr moves to its own
+		// gated one below - a gate over the whole [Values] set would mark two working cases as failing.
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test4([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		public void Issue3560Test4([DataSources(false, TestProvName.AllClickHouse)] string context, [Values(CompareNulls.LikeSql, CompareNulls.LikeSqlExceptParameters)] CompareNulls compareNulls)
+		{
+			Issue3560Test4Core(context, compareNulls);
+		}
+
+		[ActiveIssue(3560, ErrorMessage = "Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. Fails on every provider: the join key is an arithmetic expression and the compare-nulls rewrite does not reach through it.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test4LikeClr([DataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			Issue3560Test4Core(context, CompareNulls.LikeClr);
+		}
+
+		void Issue3560Test4Core(string context, CompareNulls compareNulls)
 		{
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
@@ -3354,7 +3392,8 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssue("YDB: CREATE TEMPORARY TABLE not supported (feature under development)", Configuration = TestProvName.AllYdb)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Creating temporary table is not supported.",
+			Details = "no-issue: YDB does not implement CREATE TEMPORARY TABLE (feature under development upstream)")]
 		[Test]
 		public void NullableCoalesceJoinTest([DataSources(false, [TestProvName.AllAccess, TestProvName.AllClickHouse])] string context)
 		{
@@ -3393,8 +3432,8 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			if (db is DataConnection { DataProvider: FirebirdDataProvider })
-				FirebirdTools.ClearAllPools();
+			if (db is DataConnection { DataProvider: FirebirdDataProvider } dc && dc.TryGetDbConnection() is { } cn)
+				FirebirdTools.ClearPool(cn);
 		}
 	}
 }

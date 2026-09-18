@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -237,9 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		sealed class PersonEx : Person
-		{
-		}
+		sealed class PersonEx : Person;
 
 		[Test]
 		public void SimplTest()
@@ -288,9 +286,9 @@ namespace Tests.Linq
 			public int ChildID { get; set; }
 		}
 
-		public class MyChildBase_11_21 : MyChildBase { }
-		public class MyChild11 : MyChildBase_11_21 { }
-		public class MyChild21 : MyChildBase_11_21 { }
+		public class MyChildBase_11_21 : MyChildBase;
+		public class MyChild11 : MyChildBase_11_21;
+		public class MyChild21 : MyChildBase_11_21;
 
 		[Test]
 		public void InheritanceMappingIssue106Test([DataSources] string context)
@@ -471,9 +469,7 @@ namespace Tests.Linq
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;
 		}
 
-		public class InheritanceB : InheritanceBase
-		{
-		}
+		public class InheritanceB : InheritanceBase;
 
 		[Table(Name="LinqDataTypes")]
 		public class InheritanceAssociation
@@ -717,7 +713,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?) - the overridden column property #2429 describes. That issue is closed; this shape is the residue.")]
 		[Test]
 		public void Issue2429PropertiesTest2([DataSources] string context)
 		{
@@ -738,7 +735,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "as Issue2429PropertiesTest2, through the method form.")]
 		[Test]
 		public void Issue2429MethodsTest2([DataSources] string context)
 		{
@@ -871,919 +869,6 @@ namespace Tests.Linq
 				Assert.That(data[1].SerialNumber, Is.EqualTo("TV00002"));
 				Assert.That(((Issue4280T2)data[1]).Location, Is.EqualTo("Anything"));
 			}
-		}
-		#endregion
-
-		#region issue 4460
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_MustFindRecord([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460Base>();
-
-			db.Insert(new Issue4460GrandChild() { Id = 1, Name = "Tom", Surname = "Black" });
-
-			var items = db.GetTable<Issue4460GrandChild>().ToList();
-
-			Assert.That(items, Has.Count.EqualTo(1));
-			Assert.That(items[0], Is.InstanceOf<Issue4460GrandChild>());
-			var gc = (Issue4460GrandChild)items[0];
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(gc.Name, Is.EqualTo("Tom"));
-				Assert.That(gc.Surname, Is.EqualTo("Black"));
-			}
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_MustTypeResultProperly([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460Base>();
-
-			db.Insert(new Issue4460GrandChild() { Id = 1, Name = "Tom", Surname = "Black" });
-
-			var items = db.GetTable<Issue4460Child>().ToList();
-
-			Assert.That(items, Has.Count.EqualTo(1));
-			Assert.That(items[0], Is.InstanceOf<Issue4460GrandChild>());
-			var gc = (Issue4460GrandChild)items[0];
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(gc.Name, Is.EqualTo("Tom"));
-				Assert.That(gc.Surname, Is.EqualTo("Black"));
-			}
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_MustInsertAllFields([DataSources(false)] string context, [Values] BulkCopyType copyType)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460Base>();
-
-			var items = new Issue4460Base[]
-			{
-				new Issue4460GrandChild() { Id = 1, Name = "Tom", Surname = "Black" }
-			};
-
-			tb.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, items);
-
-			var res = tb.ToList();
-
-			Assert.That(res, Has.Count.EqualTo(1));
-			Assert.That(res[0], Is.InstanceOf<Issue4460GrandChild>());
-			var gc = (Issue4460GrandChild)res[0];
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(gc.Name, Is.EqualTo("Tom"));
-				Assert.That(gc.Surname, Is.EqualTo("Black"));
-			}
-		}
-
-		[Table("Issue4460Table")]
-		[InheritanceMapping(Code = "Child", IsDefault = true, Type = typeof(Issue4460Child))]
-		[InheritanceMapping(Code = "GrandChild", Type = typeof(Issue4460GrandChild))]
-		abstract class Issue4460Base
-		{
-			[PrimaryKey] public int Id { get; set; }
-			[Column(IsDiscriminator = true)] public string? Code { get; set; }
-		}
-
-		[Table]
-		class Issue4460Child : Issue4460Base
-		{
-			[Column] public string? Name { get; set; }
-		}
-
-		abstract class Issue4460Abstract : Issue4460Child
-		{
-			[Column] public string? Surname { get; set; }
-		}
-
-		[Table("Issue4460Table")]
-		class Issue4460GrandChild : Issue4460Abstract
-		{ }
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_PropertiesWithSameNameMapped([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460TicketBase>();
-
-			db.Insert(new Issue4460TicketChild() { Id = 1, Code = "Code1" });
-			db.Insert(new Issue4460TicketChild2() { Id = 2, Code = "Code2", Price = 123 });
-
-			var res = tb.OrderBy(r => r.Id).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.That(res[0], Is.InstanceOf<Issue4460TicketChild>());
-			var child = (Issue4460TicketChild)res[0];
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(child.Code, Is.EqualTo("Code1"));
-
-				Assert.That(res[1], Is.InstanceOf<Issue4460TicketChild2>());
-			}
-
-			var child2 = (Issue4460TicketChild2)res[1];
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(child2.Code, Is.EqualTo("Code2"));
-				Assert.That(child2.Price, Is.EqualTo(123));
-			}
-		}
-
-		[Table("Tickets")]
-		[InheritanceMapping(Code = "TicketChild", IsDefault = true, Type = typeof(Issue4460TicketChild))]
-		[InheritanceMapping(Code = "TicketChild2", Type = typeof(Issue4460TicketChild2))]
-		abstract class Issue4460TicketBase
-		{
-			[Column(IsDiscriminator = true)] public string? EventCode { get; set; }
-			[PrimaryKey] public int Id { get; set; }
-		}
-
-		class Issue4460TicketChild : Issue4460TicketBase
-		{
-			[Column("TicketChildCode")] public string? Code { get; set; }
-		}
-
-		class Issue4460TicketChild2 : Issue4460TicketBase
-		{
-			[Column("TicketChild2Code")] public string? Code { get; set; }
-			[Column(CanBeNull = true)] public int Price { get; set; }
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_CodeFilter([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460_3_Base>();
-
-			db.Insert(new Issue4460_3_Child() { Id = 1, Name = "Jane" });
-			db.Insert(new Issue4460_3_Child2() { Id = 2, Age = 10 });
-
-			var result = db.GetTable<Issue4460_3_Base>().Where(e => e.Code != "Child").ToArray();
-
-			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.That(result[0], Is.InstanceOf<Issue4460_3_Child2>());
-			var record = (Issue4460_3_Child2)result[0];
-			Assert.That(record.Age, Is.EqualTo(10));
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_InterfaceFilter([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460_3_Base>();
-
-			db.Insert(new Issue4460_3_Child() { Id = 1, Name = "Jane" });
-			db.Insert(new Issue4460_3_Child2() { Id = 2, Age = 10 });
-
-			var result = db.GetTable<Issue4460_3_Base>().Where(e => !(e is IChild)).ToArray();
-
-			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.That(result[0], Is.InstanceOf<Issue4460_3_Child2>());
-			var record = (Issue4460_3_Child2)result[0];
-			Assert.That(record.Age, Is.EqualTo(10));
-		}
-
-		[Table(Name = "Base")]
-		[InheritanceMapping(Code = "Base", IsDefault = true, Type = typeof(Issue4460_3_Base))]
-		[InheritanceMapping(Code = "Child", Type = typeof(Issue4460_3_Child))]
-		[InheritanceMapping(Code = "Child2", Type = typeof(Issue4460_3_Child2))]
-		class Issue4460_3_Base
-		{
-			[Column(IsDiscriminator = true)] public string? Code { get; set; }
-			[PrimaryKey] public int Id { get; set; }
-		}
-
-		interface IChild
-		{
-			string? Name { get; }
-		}
-
-		[Table(Name = "Base")]
-		class Issue4460_3_Child : Issue4460_3_Base, IChild
-		{
-			[Column(CanBeNull = true)] public string? Name { get; set; }
-
-			public Issue4460_3_Child()
-			{
-				Code = "Child";
-			}
-		}
-
-		[Table(Name = "Base")]
-		class Issue4460_3_Child2 : Issue4460_3_Base
-		{
-			[Column(CanBeNull = true)] public int Age { get; set; }
-
-			public Issue4460_3_Child2()
-			{
-				Code = "Child2";
-			}
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_ConditionTranslation([DataSources(TestProvName.AllSybase)] string context, [Values] bool additionalFlag)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460_4_Base>();
-
-			db.Insert(new Issue4460_4_Child() { Id = 1, Name = "Jane" });
-			db.Insert(new Issue4460_4_Child2() { Id = 2, Age = 10 });
-
-			var res = db.GetTable<Issue4460_4_Base>()
-				.OrderBy(r => r.Id)
-				.Where(e => e is Issue4460_4_BaseChild ? additionalFlag || e.Id != default : e.Id == default).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.That(res[0], Is.InstanceOf<Issue4460_4_Child>());
-			var child = (Issue4460_4_Child)res[0];
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(child.Code, Is.EqualTo("Child"));
-				Assert.That(child.Name, Is.EqualTo("Jane"));
-
-				Assert.That(res[1], Is.InstanceOf<Issue4460_4_Child2>());
-			}
-
-			var child2 = (Issue4460_4_Child2)res[1];
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(child2.Code, Is.EqualTo("Child2"));
-				Assert.That(child2.Age, Is.EqualTo(10));
-			}
-		}
-
-		[Table(Name = "Base")]
-		[InheritanceMapping(Code = "Base", IsDefault = true, Type = typeof(Issue4460_4_Base))]
-		[InheritanceMapping(Code = "BaseChild", Type = typeof(Issue4460_4_BaseChild))]
-		[InheritanceMapping(Code = "Child", Type = typeof(Issue4460_4_Child))]
-		[InheritanceMapping(Code = "Child2", Type = typeof(Issue4460_4_Child2))]
-		class Issue4460_4_Base
-		{
-			[Column(IsDiscriminator = true)] public string? Code { get; set; }
-			[PrimaryKey] public int Id { get; set; }
-		}
-
-		[Table(Name = "Base")]
-		class Issue4460_4_BaseChild : Issue4460_4_Base
-		{
-			[Column(CanBeNull = true)] public string? Name { get; set; }
-
-			public Issue4460_4_BaseChild()
-			{
-				Code = "BaseChild";
-			}
-		}
-
-		[Table(Name = "Base")]
-		class Issue4460_4_Child : Issue4460_4_BaseChild
-		{
-			[Column(CanBeNull = true)] public bool IsMale { get; set; }
-
-			public Issue4460_4_Child()
-			{
-				Code = "Child";
-			}
-		}
-
-		[Table(Name = "Base")]
-		class Issue4460_4_Child2 : Issue4460_4_BaseChild
-		{
-			[Column(CanBeNull = true)] public int Age { get; set; }
-
-			public Issue4460_4_Child2()
-			{
-				Code = "Child2";
-			}
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_ScalarProjection([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460_5_Base>();
-
-			db.Insert(new Issue4460_5_Child() { Id = 1, Name = "Jane" });
-			db.Insert(new Issue4460_5_Child2() { Id = 2, Age = 10 });
-
-			var res = db.GetTable<Issue4460_5_Base>().Where(e => (e.Code == "Child") || (e.Code == "Child2"))
-					.Cast<Issue4460_5_BaseChild>().Select(x => x.Name).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.That(res[0], Is.EqualTo("Jane"));
-			Assert.That(res[0], Is.Null);
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_ObjectProjection([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue4460_5_Base>();
-
-			db.Insert(new Issue4460_5_Child() { Id = 1, Name = "Jane" });
-			db.Insert(new Issue4460_5_Child2() { Id = 2, Age = 10 });
-
-			var res = db.GetTable<Issue4460_5_Base>().Where(e => (e.Code == "Child") || (e.Code == "Child2"))
-					.Cast<Issue4460_5_BaseChild>().Select(x => new { x.Name }).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.That(res[0].Name, Is.EqualTo("Jane"));
-			Assert.That(res[0].Name, Is.Null);
-		}
-
-		[Table(Name = "Base")]
-		[InheritanceMapping(Code = "Child", IsDefault = true, Type = typeof(Issue4460_5_Child))]
-		[InheritanceMapping(Code = "GrandChild", Type = typeof(Issue4460_5_Child2))]
-		public class Issue4460_5_Base
-		{
-			[Column(IsDiscriminator = true)] public string? Code { get; set; }
-			[PrimaryKey] public int Id { get; set; }
-		}
-
-		[Table(Name = "Base")]
-		public class Issue4460_5_BaseChild : Issue4460_5_Base
-		{
-			[Column(CanBeNull = true)] public string? Name { get; set; }
-
-			public Issue4460_5_BaseChild()
-			{
-				Code = "BaseChild";
-			}
-		}
-
-		[Table(Name = "Base")]
-		public class Issue4460_5_Child : Issue4460_5_BaseChild
-		{
-			[Column(CanBeNull = true)] public bool IsMale { get; set; }
-
-			public Issue4460_5_Child()
-			{
-				Code = "Child";
-			}
-		}
-
-		[Table(Name = "Base")]
-		public class Issue4460_5_Child2 : Issue4460_5_BaseChild
-		{
-			[Column(CanBeNull = true)] public int Age { get; set; }
-
-			public Issue4460_5_Child2()
-			{
-				Code = "Child2";
-			}
-		}
-		#endregion
-
-		#region Issue 4364
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test1([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			var result = db.GetTable<Issue4364_IntermediateThing>().OrderBy(r => r.Id).ToArray();
-
-			AssertIssue4364(result);
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test2([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			var result = db.GetTable<Issue4364_BaseThing>().OrderBy(r => r.Id).ToArray();
-
-			Assert.That(result, Has.Length.EqualTo(4));
-
-			Assert.That(result[0], Is.InstanceOf<Issue4364_ConcreteBaseThingAlpha>());
-			var item1 = (Issue4364_ConcreteBaseThingAlpha)(object)result[0]!;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item1.Id, Is.EqualTo(1));
-				Assert.That(item1.Type, Is.EqualTo(1));
-				Assert.That(item1.BaseField, Is.EqualTo(2));
-
-				Assert.That(result[1], Is.InstanceOf<Issue4364_ConcreteBaseThingBeta>());
-			}
-
-			var item2 = (Issue4364_ConcreteBaseThingBeta)(object)result[1]!;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item2.Id, Is.EqualTo(2));
-				Assert.That(item2.Type, Is.EqualTo(2));
-				Assert.That(item2.BaseField, Is.EqualTo(3));
-				Assert.That(item2.ConcreteField, Is.EqualTo(4));
-
-				Assert.That(result[2], Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
-			}
-
-			var item3 = (Issue4364_ConcreteIntermediateThingOne)(object)result[2]!;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item3.Id, Is.EqualTo(3));
-				Assert.That(item3.Type, Is.EqualTo(101));
-				Assert.That(item3.BaseField, Is.EqualTo(4));
-				Assert.That(item3.ConcreteField, Is.EqualTo(5));
-				Assert.That(item3.IntermediateField, Is.EqualTo(6));
-
-				Assert.That(result[3], Is.InstanceOf<Issue4364_ConcreteIntermediateThingTwo>());
-			}
-
-			var item4 = (Issue4364_ConcreteIntermediateThingTwo)(object)result[3]!;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item4.Id, Is.EqualTo(4));
-				Assert.That(item4.Type, Is.EqualTo(102));
-				Assert.That(item3.BaseField, Is.EqualTo(5));
-				Assert.That(item4.IntermediateField, Is.EqualTo(6));
-			}
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test3([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			var result = db.GetTable<Issue4364_BaseThing>().OfType<Issue4364_IntermediateThing>().OrderBy(r => r.Id).ToArray();
-
-			AssertIssue4364(result);
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test4([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			var result = db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).Cast<Issue4364_IntermediateThing>().OrderBy(r => r.Id).ToArray();
-
-			AssertIssue4364(result);
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test5([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			var result = db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).Select(x => (Issue4364_IntermediateThing)x).OrderBy(r => r.Id).ToArray();
-
-			AssertIssue4364(result);
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test6([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			var result = db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).OrderBy(r => r.Id).ToArray();
-
-			AssertIssue4364(result);
-		}
-
-		static void TestUpdateAndFind(IQueryable<Issue4364_IntermediateThing> table)
-		{
-			var query = table.Where(x => x.Id == 3);
-
-			query.Set(y => y.IntermediateField, 333).Update();
-
-			var item = query.Single();
-
-			Assert.That(item, Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
-
-			var item3 = (Issue4364_ConcreteIntermediateThingOne)item;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item3.Id, Is.EqualTo(3));
-				Assert.That(item3.Type, Is.EqualTo(101));
-				Assert.That(item3.BaseField, Is.EqualTo(4));
-				Assert.That(item3.ConcreteField, Is.EqualTo(5));
-				Assert.That(item3.IntermediateField, Is.EqualTo(333));
-			}
-		}
-
-		static void TestJoinedAll(IDataContext db, IQueryable<Issue4364_BaseThing> table)
-		{
-			var result =
-				(
-					from b in table
-					join i in db.GetTable<Issue4364_Interaction>() on b.Id equals i.ThingId
-					join p in db.GetTable<Issue4364_Person>() on i.PersonId equals p.Id
-					orderby b.Id
-					select new
-					{
-						b.Type,
-						p.FullName
-					}
-				)
-				.ToArray();
-
-			Assert.That(result, Has.Length.EqualTo(4));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(result[0].Type, Is.EqualTo(1));
-				Assert.That(result[0].FullName, Is.EqualTo("Person 4"));
-
-				Assert.That(result[1].Type, Is.EqualTo(2));
-				Assert.That(result[1].FullName, Is.EqualTo("Person 1"));
-
-				Assert.That(result[2].Type, Is.EqualTo(101));
-				Assert.That(result[2].FullName, Is.EqualTo("Person 2"));
-
-				Assert.That(result[3].Type, Is.EqualTo(102));
-				Assert.That(result[3].FullName, Is.EqualTo("Person 3"));
-			}
-		}
-
-		static void TestJoined<T>(IDataContext db, IQueryable<T> table)
-			where T: Issue4364_BaseThing
-		{
-			var result =
-				(
-					from b in table
-					join i in db.GetTable<Issue4364_Interaction>() on b.Id equals i.ThingId
-					join p in db.GetTable<Issue4364_Person>() on i.PersonId equals p.Id
-					orderby b.Id
-					select new
-					{
-						b.Type,
-						p.FullName
-					}
-				)
-				.ToArray();
-
-			Assert.That(result, Has.Length.EqualTo(2));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(result[0].Type, Is.EqualTo(101));
-				Assert.That(result[0].FullName, Is.EqualTo("Person 2"));
-
-				Assert.That(result[1].Type, Is.EqualTo(102));
-				Assert.That(result[1].FullName, Is.EqualTo("Person 3"));
-			}
-		}
-
-		static void TestUpdateAndFindBase(IQueryable<Issue4364_BaseThing> table)
-		{
-			var query = table.Where(x => x.Id == 3);
-
-			query.Set(y => ((Issue4364_IntermediateThing)y).IntermediateField, 333).Update();
-
-			var item = query.Single();
-
-			Assert.That(item, Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
-
-			var item3 = (Issue4364_ConcreteIntermediateThingOne)item;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item3.Id, Is.EqualTo(3));
-				Assert.That(item3.Type, Is.EqualTo(101));
-				Assert.That(item3.BaseField, Is.EqualTo(4));
-				Assert.That(item3.ConcreteField, Is.EqualTo(5));
-				Assert.That(item3.IntermediateField, Is.EqualTo(333));
-			}
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test11([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			TestUpdateAndFindBase(db.GetTable<Issue4364_BaseThing>());
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test12([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-			using var tp = db.CreateLocalTable(Issue4364_Person.TestData);
-			using var ti = db.CreateLocalTable(Issue4364_Interaction.TestData);
-
-			TestJoinedAll(db, db.GetTable<Issue4364_BaseThing>());
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test21([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			TestUpdateAndFind(db.GetTable<Issue4364_IntermediateThing>());
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test22([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-			using var tp = db.CreateLocalTable(Issue4364_Person.TestData);
-			using var ti = db.CreateLocalTable(Issue4364_Interaction.TestData);
-
-			TestJoined(db, db.GetTable<Issue4364_IntermediateThing>());
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test31([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			TestUpdateAndFind(db.GetTable<Issue4364_BaseThing>().OfType<Issue4364_IntermediateThing>());
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test32([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-			using var tp = db.CreateLocalTable(Issue4364_Person.TestData);
-			using var ti = db.CreateLocalTable(Issue4364_Interaction.TestData);
-
-			TestJoined(db, db.GetTable<Issue4364_BaseThing>().OfType<Issue4364_IntermediateThing>());
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test41([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			TestUpdateAndFind(db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).Cast<Issue4364_IntermediateThing>());
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test42([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-			using var tp = db.CreateLocalTable(Issue4364_Person.TestData);
-			using var ti = db.CreateLocalTable(Issue4364_Interaction.TestData);
-
-			TestJoined(db, db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).Cast<Issue4364_IntermediateThing>());
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test51([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			TestUpdateAndFindBase(db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102));
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test52([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-			using var tp = db.CreateLocalTable(Issue4364_Person.TestData);
-			using var ti = db.CreateLocalTable(Issue4364_Interaction.TestData);
-
-			TestJoined(db, db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102));
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test61([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-
-			TestUpdateAndFind(db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).Select(x => (Issue4364_IntermediateThing)x));
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
-		public void Issue4364Test62([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(Issue4364_BaseThing.TestData);
-			using var tp = db.CreateLocalTable(Issue4364_Person.TestData);
-			using var ti = db.CreateLocalTable(Issue4364_Interaction.TestData);
-
-			TestJoined(db, db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).Select(x => (Issue4364_IntermediateThing)x));
-		}
-
-		static void AssertIssue4364<T>(T[] result)
-		{
-			Assert.That(result, Has.Length.EqualTo(2));
-
-			Assert.That(result[0], Is.InstanceOf<Issue4364_ConcreteIntermediateThingOne>());
-			var item3 = (Issue4364_ConcreteIntermediateThingOne)(object)result[0]!;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item3.Id, Is.EqualTo(3));
-				Assert.That(item3.Type, Is.EqualTo(101));
-				Assert.That(item3.BaseField, Is.EqualTo(4));
-				Assert.That(item3.ConcreteField, Is.EqualTo(5));
-				Assert.That(item3.IntermediateField, Is.EqualTo(6));
-
-				Assert.That(result[1], Is.InstanceOf<Issue4364_ConcreteIntermediateThingTwo>());
-			}
-
-			var item4 = (Issue4364_ConcreteIntermediateThingTwo)(object)result[1]!;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(item4.Id, Is.EqualTo(4));
-				Assert.That(item4.Type, Is.EqualTo(102));
-				Assert.That(item3.BaseField, Is.EqualTo(5));
-				Assert.That(item4.IntermediateField, Is.EqualTo(6));
-			}
-		}
-
-		[Table(IsColumnAttributeRequired = false)]
-		[InheritanceMapping(Code = 1, Type = typeof(Issue4364_ConcreteBaseThingAlpha))]
-		[InheritanceMapping(Code = 2, Type = typeof(Issue4364_ConcreteBaseThingBeta))]
-		[InheritanceMapping(Code = 101, Type = typeof(Issue4364_ConcreteIntermediateThingOne))]
-		[InheritanceMapping(Code = 102, Type = typeof(Issue4364_ConcreteIntermediateThingTwo))]
-		abstract class Issue4364_BaseThing
-		{
-			[PrimaryKey] public int Id { get; set; }
-			[Column(IsDiscriminator = true)] public int Type { get; set; }
-			public int BaseField { get; set; }
-
-			public static readonly Issue4364_BaseThing[] TestData = new Issue4364_BaseThing[]
-			{
-				new Issue4364_ConcreteBaseThingAlpha()
-				{
-					Id = 1,
-					Type = 1,
-					BaseField = 2
-				},
-				new Issue4364_ConcreteBaseThingBeta()
-				{
-					Id = 2,
-					Type = 2,
-					BaseField = 3,
-					ConcreteField = 4
-				},
-				new Issue4364_ConcreteIntermediateThingOne()
-				{
-					Id = 3,
-					Type = 101,
-					BaseField = 4,
-					ConcreteField = 5,
-					IntermediateField = 6
-				},
-				new Issue4364_ConcreteIntermediateThingTwo()
-				{
-					Id = 4,
-					Type = 102,
-					BaseField = 5,
-					IntermediateField = 6
-				}
-			};
-		}
-
-		class Issue4364_ConcreteBaseThingAlpha : Issue4364_BaseThing
-		{
-		}
-
-		class Issue4364_ConcreteBaseThingBeta : Issue4364_BaseThing
-		{
-			// TODO: remove when fixed, nullable added due to Issue4364Test_CreateTableWithNullableRequiredFields
-			[LinqToDB.Mapping.Nullable] public int ConcreteField { get; set; }
-		}
-
-		abstract class Issue4364_IntermediateThing : Issue4364_BaseThing
-		{
-			// TODO: remove when fixed, nullable added due to Issue4364Test_CreateTableWithNullableRequiredFields
-			[LinqToDB.Mapping.Nullable] public int IntermediateField { get; set; }
-		}
-
-		class Issue4364_ConcreteIntermediateThingOne : Issue4364_IntermediateThing
-		{
-			// TODO: remove when fixed, nullable added due to Issue4364Test_CreateTableWithNullableRequiredFields
-			[LinqToDB.Mapping.Nullable] public int ConcreteField { get; set; }
-		}
-
-		class Issue4364_ConcreteIntermediateThingTwo : Issue4364_IntermediateThing
-		{
-		}
-
-		[Table(IsColumnAttributeRequired = false)]
-		class Issue4364_Person
-		{
-			[PrimaryKey] public int Id { get; set; }
-			[NotNull] public string FullName { get; set; } = null!;
-
-			public static readonly Issue4364_Person[] TestData = new[]
-			{
-				new Issue4364_Person() { Id = 1, FullName = "Person 1" },
-				new Issue4364_Person() { Id = 2, FullName = "Person 2" },
-				new Issue4364_Person() { Id = 3, FullName = "Person 3" },
-				new Issue4364_Person() { Id = 4, FullName = "Person 4" },
-				new Issue4364_Person() { Id = 5, FullName = "Person 5" },
-			};
-		}
-
-		[Table(IsColumnAttributeRequired = false)]
-		class Issue4364_Interaction
-		{
-			[PrimaryKey] public int Id { get; set; }
-			public int PersonId { get; set; }
-			public int ThingId { get; set; }
-
-			public static readonly Issue4364_Interaction[] TestData = new[]
-			{
-				new Issue4364_Interaction() { Id = 1, PersonId = 2, ThingId = 3 },
-				new Issue4364_Interaction() { Id = 2, PersonId = 3, ThingId = 4 },
-				new Issue4364_Interaction() { Id = 3, PersonId = 4, ThingId = 1 },
-				new Issue4364_Interaction() { Id = 4, PersonId = 1, ThingId = 2 },
-			};
-		}
-		#endregion
-
-		#region Issue 4364 extra tests
-		[ActiveIssue]
-		[Test]
-		public void Issue4364Test_InsertByConcreteType([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<CreateTableBase>();
-
-			db.Insert(new CreateTable1() { Id = 1, Type = 1, Field1 = 1 });
-			db.Insert(new CreateTable2() { Id = 2, Type = 2, Field2 = 2 });
-
-			var result = tb.OrderBy(r => r.Id).ToArray();
-
-			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.That(result[0], Is.InstanceOf<CreateTable1>());
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(result[0].Id, Is.EqualTo(1));
-				Assert.That(result[0].Type, Is.EqualTo(1));
-				Assert.That(((CreateTable1)result[0]).Field1, Is.EqualTo(1));
-
-				Assert.That(result[1], Is.InstanceOf<CreateTable2>());
-				Assert.That(result[1].Id, Is.EqualTo(2));
-				Assert.That(result[1].Type, Is.EqualTo(2));
-				Assert.That(((CreateTable2)result[1]).Field2, Is.EqualTo(2));
-			}
-		}
-
-		[ActiveIssue]
-		[Test]
-		public void Issue4364Test_CreateTableWithNullableRequiredFields([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<CreateTableBase>();
-
-			tb.Insert(() => new CreateTable1() { Id = 1, Type = 1, Field1 = 1});
-			tb.Insert(() => new CreateTable2() { Id = 2, Type = 2, Field2 = 2});
-
-			// TODO: those asserts could be incorrect, depends on our fixed model
-			var column = db.MappingSchema.GetEntityDescriptor(typeof(CreateTable1)).Columns.Single(c => c.ColumnName == "Field1");
-			Assert.That(column.CanBeNull, Is.False);
-			column = db.MappingSchema.GetEntityDescriptor(typeof(CreateTable1)).Columns.Single(c => c.ColumnName == "Field2");
-			Assert.That(column.CanBeNull, Is.False);
-		}
-
-		[Table]
-		[InheritanceMapping(Code = 1, Type = typeof(CreateTable1))]
-		[InheritanceMapping(Code = 2, Type = typeof(CreateTable2))]
-		abstract class CreateTableBase
-		{
-			[PrimaryKey] public int Id { get; set; }
-			[Column(IsDiscriminator = true)]  public int Type { get; set; }
-		}
-
-		[Table]
-		sealed class CreateTable1 : CreateTableBase
-		{
-			[Column] public int Field1 { get; set; }
-		}
-
-		[Table]
-		sealed class CreateTable2 : CreateTableBase
-		{
-			[Column] public int Field2 { get; set; }
 		}
 		#endregion
 
@@ -1948,6 +1033,101 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region Calculated column on inheritance subtype
+		public class CalcSubtypeName
+		{
+			public string? First  { get; set; }
+			public string? Second { get; set; }
+		}
+
+		[Table("CalcSubtypeTable")]
+		[InheritanceMapping(Code = 1, Type = typeof(CalcSubtypeChild))]
+		public abstract class CalcSubtypeBase
+		{
+			[Column, PrimaryKey]             public int Id   { get; set; }
+			[Column(IsDiscriminator = true)] public int Type { get; set; }
+		}
+
+		// The complex member + its flattened (dotted-MemberName) columns AND the calculated column live on
+		// the DERIVED type only. Building GetTable<CalcSubtypeBase>() resolves "Name.First", which isn't on
+		// the base, so entity construction converts the construction path to the subtype. The calculated
+		// column must still be expanded against the subtype's descriptor, not the base's.
+		[Table("CalcSubtypeTable")]
+		[Column(MemberName = "Name.First",  Name = "Name_First")]
+		[Column(MemberName = "Name.Second", Name = "Name_Second")]
+		public class CalcSubtypeChild : CalcSubtypeBase
+		{
+			public CalcSubtypeChild() => Type = 1;
+
+			public CalcSubtypeName? Name { get; set; }
+
+			[ExpressionMethod(nameof(FullNameImpl), IsColumn = true)]
+			public string? FullName { get; set; }
+
+			private static Expression<Func<CalcSubtypeChild, string?>> FullNameImpl()
+				=> e => e.Name!.First + " " + e.Name!.Second;
+		}
+
+		[Test(Description = "Calculated column declared on an inheritance subtype reached via flattened-column conversion must be expanded against the subtype descriptor")]
+		public void CalculatedColumnOnInheritanceSubtype([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CalcSubtypeBase>();
+
+			db.Insert(new CalcSubtypeChild { Id = 1, Name = new CalcSubtypeName { First = "John", Second = "Doe" } });
+
+			var res = db.GetTable<CalcSubtypeBase>().Single();
+			Assert.That(res, Is.InstanceOf<CalcSubtypeChild>());
+			Assert.That(((CalcSubtypeChild)res).FullName, Is.EqualTo("John Doe"));
+		}
+
+		// Variant where the subtype's calculated column is ALSO mapped as a physical column ([Column] +
+		// [ExpressionMethod(IsColumn=true)]) with no backing DDL column. InitInheritanceMapping merges the
+		// subtype's physical column into the base but not its calculated member, so the base query must
+		// dedup it (and expand the calculated value) rather than emit a read of the non-existent column.
+		[Table("CalcSubtypeDual")]
+		public class CalcSubtypeStorage
+		{
+			[Column, PrimaryKey] public int     Id     { get; set; }
+			[Column]             public int     Type   { get; set; }
+			[Column]             public string? Stored { get; set; }
+		}
+
+		[Table("CalcSubtypeDual")]
+		[InheritanceMapping(Code = 1, Type = typeof(CalcSubtypeDualChild))]
+		public abstract class CalcSubtypeDualBase
+		{
+			[Column, PrimaryKey]             public int     Id     { get; set; }
+			[Column(IsDiscriminator = true)] public int     Type   { get; set; }
+			[Column]                         public string? Stored { get; set; }
+		}
+
+		public class CalcSubtypeDualChild : CalcSubtypeDualBase
+		{
+			public CalcSubtypeDualChild() => Type = 1;
+
+			[Column]
+			[ExpressionMethod(nameof(ComputedImpl), IsColumn = true)]
+			public string? Computed { get; set; }
+
+			private static Expression<Func<CalcSubtypeDualChild, string?>> ComputedImpl()
+				=> e => e.Stored + "!";
+		}
+
+		[Test(Description = "Calculated column on an inheritance subtype that is also mapped as a physical column must dedup + expand on a base query, not read the non-existent column")]
+		public void CalculatedColumnOnInheritanceSubtypeDualMapped([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CalcSubtypeStorage>();
+
+			db.Insert(new CalcSubtypeStorage { Id = 1, Type = 1, Stored = "John" });
+
+			var res = db.GetTable<CalcSubtypeDualBase>().Single();
+			Assert.That(res, Is.InstanceOf<CalcSubtypeDualChild>());
+			Assert.That(((CalcSubtypeDualChild)res).Computed, Is.EqualTo("John!"));
+		}
+		#endregion
+
 		#region Issue 4666
 		public enum Issue4666EntityType { None, Type1, Type2 }
 
@@ -1979,7 +1159,8 @@ namespace Tests.Linq
 		}
 
 		// also exists in efcore tests
-		[ActiveIssue]
+		[ActiveIssue(4666, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Member 'System.String Type1EntityProp' not found in type",
+			Details = "merging into a TPH table cannot resolve the derived member - #4666's subject. The fragment stops before the type name.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
 		public void Issue4666Test([MergeDataContextSource] string context)
 		{
@@ -2173,7 +1354,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Partial mapping is not supported for now")]
+		// YDB splits off on the direct path only: it never reaches the mapping error because the connection is
+		// already gone by then. Over a remote context the statement runs in the service process, so it reports the
+		// mapping error like everyone else and falls back to the blanket declaration.
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '2'",
+			Details = "no-issue: Partial mapping is not supported for now")]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "Connection is closed", SkipForLinqService = true,
+			Details = "no-issue: Partial mapping is not supported for now - on YDB the failure arrives as a closed connection instead, which is consistent with its one-statement-per-connection behaviour rather than with the mapping error the other providers report.")]
 		[Test]
 		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)
 		{
@@ -2208,7 +1397,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// One cause, about twenty wordings: the discriminator column is never written, and every server rejects
+		// the NULL in its own phrasing - twelve distinct texts across the drivers, plus their remote wrappers.
+		// Declaring them individually would be a catalogue of vendor prose, so the blanket half declares nothing
+		// and only ClickHouse, which fails differently in kind, is declared.
+		[ActiveIssue(
+			Details = "no-declaration: the Code discriminator column is never written, so every server rejects the NULL - in about twenty different wordings, none of them shared. ClickHouse is the exception and has its own attribute.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '0'",
+			Details = "no-issue: ClickHouse fails a stage earlier and in kind - linq2db refuses the mapping rather than the server refusing the row.")]
 		[Test]
 		public void TestInsertIssue1([DataSources] string context)
 		{
@@ -2230,7 +1427,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// 104 of the cases share one assertion; four providers never reach it because their server rejects the
+		// NULL first, each in its own words, so that half declares nothing.
+		[ActiveIssue(ErrorMessage = "Assert.That(result, Has.Length.EqualTo(3))",
+			Details = "no-issue: the rows inserted through the base table are not read back through the derived one.")]
+		[ActiveIssue(Configurations = [TestProvName.AllMariaDB, TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllYdb],
+			Details = "no-declaration: these four reject the NULL discriminator at the server before the assertion is reached, and each words it differently.")]
 		[Test]
 		public void TestInsertIssue2([DataSources] string context)
 		{
@@ -2250,6 +1452,229 @@ namespace Tests.Linq
 				Assert.That(result[1].Id, Is.EqualTo(2));
 				Assert.That(result[2].Id, Is.EqualTo(3));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertDerivedThroughBaseTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			db.GetTable<BaseClass>().Insert(() => new Child1 { Id = 1, Code = 1, Child1Field = 11 });
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Does.Contain("Child1Field"));
+
+			var result = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(result.Child1Field, Is.EqualTo(11));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateDerivedThroughBaseTable_Setter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.Update(t => new Child1 { Code = t.Code, Child1Field = 99 });
+
+			var result = db.GetTable<BaseClass>().OfType<Child1>().Single(c => c.Id == 1);
+			Assert.That(result.Child1Field, Is.EqualTo(99));
+		}
+
+		[Obsolete("Exercises the obsolete ITable<TTarget> Update() overload on purpose - covers Issue 5729's explicit-target path")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateDerivedThroughBaseTable_ExplicitTarget([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 2)
+				.Update(db.GetTable<BaseClass>(), s => new Child2 { Code = s.Code, Child2Field = 88 });
+
+			var result = db.GetTable<BaseClass>().OfType<Child2>().Single(c => c.Id == 2);
+			Assert.That(result.Child2Field, Is.EqualTo(88));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertOrUpdateDerivedThroughBaseTable([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			db.GetTable<BaseClass>().InsertOrUpdate(
+				() => new Child1 { Id = 1, Code = 1, Child1Field = 55 },
+				_ => new Child1 { Child1Field = 66 },
+				() => new Child1 { Id = 1 });
+
+			var inserted = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(inserted.Child1Field, Is.EqualTo(55));
+
+			// The row now exists, so the second call takes the update branch and the derived column is
+			// exercised through the update setter as well as the insert one.
+			db.GetTable<BaseClass>().InsertOrUpdate(
+				() => new Child1 { Id = 1, Code = 1, Child1Field = 55 },
+				_ => new Child1 { Child1Field = 66 },
+				() => new Child1 { Id = 1 });
+
+			var updated = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(updated.Child1Field, Is.EqualTo(66));
+		}
+
+		[Table("InheritanceFilterPositional")]
+		[InheritanceMapping(Code = 1, Type = typeof(PositionalChild))]
+		abstract class PositionalBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		// Constructor-parameter (positional/record-style) TPH subtype: BaseClass/Child1 above are
+		// property-only and can only exercise the Assignments arm of UpdateBuilder.ParseSetter's switch;
+		// this exercises the Parameters arm, since Value only ever arrives via the constructor.
+		class PositionalChild : PositionalBase
+		{
+			public PositionalChild(int id, int code, int value)
+			{
+				Id    = id;
+				Code  = code;
+				Value = value;
+			}
+
+			[Column(CanBeNull = true)] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertPositionalDerivedThroughBaseTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<PositionalBase>();
+
+			db.GetTable<PositionalBase>().Insert(() => new PositionalChild(1, 1, 42));
+
+			var result = db.GetTable<PositionalBase>().OfType<PositionalChild>().Single();
+			Assert.That(result.Id,    Is.EqualTo(1));
+			Assert.That(result.Value, Is.EqualTo(42));
+		}
+
+		// FeatureUpdateOutputWithoutOldSingle from UpdateWithOutputTests, minus YDB: the default projection
+		// emits Deleted and Inserted, so every column appears twice in RETURNING and YDB rejects that with
+		// "Duplicated member".
+		const string FeatureUpdateOutput = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllDuckDB}";
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, FeatureUpdateOutput)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			// The setter names only Code, declared on BaseClass itself, so it reaches the guard nowhere. The
+			// projection does: UpdateWithOutput without an explicit output expression builds full entities
+			// for Deleted and Inserted, and over an inheritance root those carry every mapped subtype's
+			// merged columns against a BaseClass-typed target. Pre-fix that threw ArgumentException before
+			// any SQL was emitted. Asserting on Inserted only - the providers here do not supply the old
+			// row, per FeatureUpdateOutputWithoutOldSingle.
+			var output = db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.UpdateWithOutput(t => new Child1 { Code = t.Code })
+				.ToArray();
+
+			Assert.That(output, Has.Length.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output[0].Inserted, Is.InstanceOf<Child1>());
+				Assert.That(output[0].Inserted.Id, Is.EqualTo(1));
+				Assert.That(((Child1)output[0].Inserted).Child1Field, Is.EqualTo(11));
+			}
+		}
+
+		// OUTPUT ... INTO builds its target ref from the output table's object type rather than the
+		// updated table's, so it reaches EnsureDeclaringType by a route no other test covers. Unlike the
+		// row-returning form above it materializes nothing, so this one can assert success.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateWithOutputIntoDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db          = GetDataContext(context);
+			using var _           = db.CreateLocalTable(BaseClass.Data);
+			using var destination = db.CreateLocalTable<BaseClass>(tableName: "InheritanceFilterOutput");
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.UpdateWithOutputInto(
+					t => new Child1 { Code = t.Code, Child1Field = 77 },
+					destination,
+					(deleted, inserted) => new Child1 { Id = inserted.Id, Code = inserted.Code, Child1Field = 88 });
+
+			var updated = db.GetTable<BaseClass>().OfType<Child1>().Single(c => c.Id == 1);
+			var written = destination.OfType<Child1>().Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(updated.Child1Field, Is.EqualTo(77));
+				Assert.That(written.Child1Field, Is.EqualTo(88));
+			}
+		}
+
+		[Table("InheritanceShadow")]
+		[InheritanceMapping(Code = 1, Type = typeof(ShadowChild))]
+		[InheritanceMapping(Code = 2, Type = typeof(ShadowGrandchild))]
+		abstract class ShadowBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		class ShadowChild : ShadowBase
+		{
+			[Column("ChildValue", CanBeNull = true)] public int Value { get; set; }
+		}
+
+		class ShadowGrandchild : ShadowChild
+		{
+			[Column("GrandchildValue", CanBeNull = true)] public new int Value { get; set; }
+		}
+
+		// Raw SQL below, so SQLite only.
+		// No ErrorTypeName: the two SQLite drivers raise their own exception types and only the message is shared.
+		[ActiveIssue(5852, ErrorMessage = "no such column: GrandchildValue",
+			Details = "the shadowing member is not mapped onto the base table at all, so the column the insert should have written is never created - #5852's subject.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5852")]
+		public void InsertShadowedMemberThroughBaseTable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<ShadowBase>();
+
+			db.GetTable<ShadowBase>().Insert(() => new ShadowGrandchild { Id = 1, Code = 2, Value = 42 });
+
+			var dc = (DataConnection)db;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(dc.Execute<int?>("SELECT GrandchildValue FROM InheritanceShadow"), Is.EqualTo(42));
+				Assert.That(dc.Execute<int?>("SELECT ChildValue FROM InheritanceShadow"),      Is.Null);
+			}
+		}
+
+		// Derives from BaseClass but carries no [InheritanceMapping] entry, so UnmappedField maps to no
+		// column on the base entity descriptor. EnsureDeclaringType retypes the target for it just the
+		// same, so the guard must not turn the failure into a silently omitted column.
+		class UnmappedChild : BaseClass
+		{
+			[Column(CanBeNull = true)] public int UnmappedField { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertUnmappedDerivedThroughBaseTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			Assert.Throws<LinqToDBException>(
+				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }));
+
+			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
 		}
 
 		#endregion

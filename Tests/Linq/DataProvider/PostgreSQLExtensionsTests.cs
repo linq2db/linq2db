@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -52,7 +52,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var testData = SampleClass.Seed();
@@ -291,7 +291,8 @@ namespace Tests.DataProvider
 
 		#region 4562
 
-		[ActiveIssue]
+		[ActiveIssue(4562, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Sql.Ext.PostgreSQL().Overlaps is not translated, as #4562 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4562")]
 		public void Issue4562Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
@@ -445,7 +446,7 @@ namespace Tests.DataProvider
 			_ = query.ToArray();
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void FromSqlScalarCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var testData = SampleClass.Seed();
@@ -466,7 +467,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void UnnestCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -487,7 +488,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void UnnestWithOrdinalityCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -508,7 +509,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void GenerateSubscriptsCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -529,7 +530,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void GenerateSubscriptsReverseCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -550,7 +551,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void GenerateSeriesIntCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -572,7 +573,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void GenerateSeriesIntStepCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			var       testData = SampleClass.Seed();
@@ -595,7 +596,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5480"), QueryCacheTest]
 		public void GenerateSeriesDateCache([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);

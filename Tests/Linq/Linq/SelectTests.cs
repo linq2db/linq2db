@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -958,9 +958,7 @@ namespace Tests.Linq
 			Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 		}
 
-		sealed class LocalClass
-		{
-		}
+		sealed class LocalClass;
 
 		[Test]
 		public void SelectLocalTest([DataSources] string context)
@@ -1088,7 +1086,7 @@ namespace Tests.Linq
 			public Child? Child    { get; set; }
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values] bool includeChild,
@@ -1594,7 +1592,8 @@ namespace Tests.Linq
 		[Test]
 		public void OuterApplyTest(
 			[IncludeDataSources(
-				TestProvName.AllPostgreSQL95Plus,
+				// PostgreSQL 9.5 fails with "unknown to text" conversion on this projection
+				TestProvName.AllPostgreSQL10Plus,
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllOracle12Plus,
 				TestProvName.AllMySqlWithApply,
@@ -1695,13 +1694,17 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		private static T Wrap1<T>(T value) => throw new InvalidOperationException();
+		private static T Wrap1<T>(T value) => throw new ServerSideOnlyException(nameof(Wrap1));
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static T Wrap2<T>(T value) => value;
 
+		// SelectExpression4 asserts the query-time failure this combination causes, so the L2DB1003
+		// violation is the fixture. Suppressed rather than fixed, so a code-fix sweep cannot re-apply it.
+#pragma warning disable L2DB1003 // Declare a server-side-only stub, or implement it
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap3<T>(T value) => throw new InvalidOperationException();
+#pragma warning restore L2DB1003
 
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap4<T>(T value) => value;
@@ -1837,7 +1840,7 @@ namespace Tests.Linq
 
 		#region Caching Tests
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116"), QueryCacheTest]
 		public void CachedObjectRefence([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1879,42 +1882,56 @@ namespace Tests.Linq
 			// System.Data.SqlClient
 			// Microsoft.Data.SqlClient
 			// SqlCe
-			using (new OptimizeForSequentialAccess(true))
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
-			{
-				var q = db.Person
-					.Select(p => new
-					{
-						FirstName  = p.FirstName,
-						ID         = p.ID,
-						IDNullable = Sql.ToNullable(p.ID),
-						LastName   = p.LastName,
-						FullName   = $"{p.FirstName} {p.LastName}"
-					});
+			using var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true);
 
-				foreach (var p in q.ToArray())
-					Assert.That(p.FullName, Is.EqualTo($"{p.FirstName} {p.LastName}"));
-			}
+			var q = db.Person
+				.Select(p => new
+				{
+					FirstName  = p.FirstName,
+					ID         = p.ID,
+					IDNullable = Sql.ToNullable(p.ID),
+					LastName   = p.LastName,
+					FullName   = $"{p.FirstName} {p.LastName}"
+				});
+
+			foreach (var p in q.ToArray())
+				Assert.That(p.FullName, Is.EqualTo($"{p.FirstName} {p.LastName}"));
 		}
 
 		[Test]
 		public void SequentialAccessTest_Complex([DataSources] string context)
 		{
 			// fields read out-of-order, multiple times and with different types
-			using (new OptimizeForSequentialAccess(true))
 			// suppressSequentialAccess: true to avoid interceptor added twice
-			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true))
-			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
-					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
-					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
-				}
+			using var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true);
 
-				AreEqual(InheritanceParent, db.InheritanceParent);
-				AreEqual(InheritanceChild, db.InheritanceChild);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
+				Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
+				Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
 			}
+
+			AreEqual(InheritanceParent, db.InheritanceParent);
+			AreEqual(InheritanceChild, db.InheritanceChild);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5639 - a non-sequential materialization plan cached for a configuration must not be reused by a SequentialAccess context sharing that configuration")]
+		public void SequentialAccessTest_CacheKey([DataSources] string context)
+		{
+			// Warm the query cache for this configuration with OptimizeForSequentialAccess OFF (random column-access plan).
+			// Exception: on the SqlServer .SA lane the factory forces the option ON for every context, so the warm-up there
+			// is already a sequential-access plan and the divergence below is exercised by the other [DataSources] providers.
+			using (var db = GetDataContext(context))
+				AreEqual(InheritanceParent, db.InheritanceParent);
+
+			// Same query and configuration, now with the option ON and the reader opened with
+			// CommandBehavior.SequentialAccess. The two plans differ only by OptimizeForSequentialAccess,
+			// which now participates in DataOptions.ConfigurationID; before this fix the cached
+			// random-access plan was reused here and threw "Invalid attempt to read from column ordinal
+			// '0'. With CommandBehavior.SequentialAccess, you may only read from column ordinal 'N' or greater."
+			using (var db = GetDataContext(context, interceptor: SequentialAccessCommandInterceptor.Instance, suppressSequentialAccess: true, optimizeForSequentialAccess: true))
+				AreEqual(InheritanceParent, db.InheritanceParent);
 		}
 		#endregion
 
@@ -1923,8 +1940,6 @@ namespace Tests.Linq
 		public void Issue4520Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
-			using var _ = context.IsAnyOf(TestProvName.AllYdb) ? new DisableBaseline("https://github.com/linq2db/linq2db/issues/5169 - remote/direct derived-table alias numbering divergence") : null;
 
 			db.Types2
 				.Where(i => i.ID == 1)
@@ -1991,7 +2006,11 @@ namespace Tests.Linq
 		}
 
 		#region 4199
-		[ActiveIssue]
+		// One kind of failure, twenty wordings. Every provider reports that UserAccount does not exist - the
+		// interface-typed table has no backing table - and each says so in its own phrasing, with no text shared
+		// even between the two SQLite drivers. Declaring them would pin vendor prose rather than a contract.
+		[ActiveIssue(4199,
+			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Every provider fails identically in kind and differently in wording - twenty phrasings across the matrix, sharing no fragment.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test1([DataSources] string context)
 		{
@@ -2005,7 +2024,8 @@ namespace Tests.Linq
 			var r = q.Count();
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4199,
+			Details = "no-declaration: as Issue4199Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test2([DataSources] string context)
 		{

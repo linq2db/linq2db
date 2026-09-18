@@ -1,0 +1,511 @@
+﻿using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Internal.Common;
+
+using NUnit.Framework;
+
+using Shouldly;
+
+namespace Tests.Linq
+{
+	partial class WindowFunctionsTests
+	{
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		// YDB and SAP HANA: gate RANGE (the AvgFilteredRange member) — RANGE is the frame type, so it is reported before any other clause.
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void AggregateWithFilter([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					SumFiltered             = Sql.Window.Sum(t.IntValue, w => w.Filter(t.CategoryId == 1).PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					SumFilteredWithFrame    = Sql.Window.Sum(t.IntValue, w => w.Filter(t.IntValue > 20).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+					SumFilterPartitionFrame = Sql.Window.Sum(t.IntValue, w => w.Filter(t.IntValue > 10).PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.ValueFollowing(1)),
+					AvgFilteredRange        = Sql.Window.Average(t.DoubleValue, w => w.Filter(t.DoubleValue > 15.0).OrderBy(t.Id).RangeBetween.Unbounded.And.CurrentRow),
+					MinFiltered             = Sql.Window.Min(t.IntValue, w => w.Filter(t.IntValue > 10).PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					MaxFilteredFrame        = Sql.Window.Max(t.IntValue, w => w.Filter(t.IntValue < 80).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+					CountFiltered           = Sql.Window.Count(w => w.Filter(t.IntValue > 20).PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		// YDB and SAP HANA: gate RANGE (the SumRange member).
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void AggregateWithFrame([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					SumFrame    = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+					SumFrameVal = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(2)),
+					SumRange    = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.Unbounded.And.CurrentRow),
+					AvgFrame    = Sql.Window.Average(t.DoubleValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.ValuePreceding(1).And.CurrentRow),
+					CountFrame  = Sql.Window.Count(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		public void CountArgWithFrame([SupportsAnalyticFunctionsContext(
+			ProviderName.Firebird3,
+			// ClickHouse has DB bug with COUNT(nullable_column) in window context
+			TestProvName.AllClickHouse)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					CountArgFrame = Sql.Window.Count(t.NullableIntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(2)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL10Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllSapHana, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void AggregateWithFrameExclude([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					SumFrameExclude      = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
+					AvgGroupsExcludeTies = Sql.Window.Average(t.DoubleValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).GroupsBetween.Unbounded.And.Unbounded.ExcludeTies()),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		// MariaDB and YDB excluded (DataSources is an exclude list): neither supports the LEAD/LAG default-value (3rd) argument,
+		// and YDB additionally hits a type-annotation limit on this mixed projection.
+		public void MixedFunctionsInOneSelect([SupportsAnalyticFunctionsContext(TestProvName.AllMariaDB, ProviderName.Ydb)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					RowNum    = Sql.Window.RowNumber(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					Rank      = Sql.Window.Rank(w => w.PartitionBy(t.CategoryId).OrderBy(t.IntValue)),
+					DenseRank = Sql.Window.DenseRank(w => w.PartitionBy(t.CategoryId).OrderBy(t.IntValue)),
+					Sum       = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+					LeadVal   = Sql.Window.Lead(t.IntValue, 1, 0, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					LagVal    = Sql.Window.Lag(t.IntValue, 1, 0, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					First     = Sql.Window.FirstValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+					Last      = Sql.Window.LastValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_FirstLastValue)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		// YDB and SAP HANA: gate RANGE (the FirstRange member).
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, TestProvName.AllSapHana, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void ValueFunctionWithFrames([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					FirstRows       = Sql.Window.FirstValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+					FirstRange      = Sql.Window.FirstValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.Unbounded.And.CurrentRow),
+					LastRowsAll     = Sql.Window.LastValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded),
+					LastRowsCurrent = Sql.Window.LastValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.CurrentRow.And.Unbounded),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_WindowFunction_NthValue)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL10Minus, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, ProviderName.Ydb, TestProvName.AllSapHana, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void ValueFunctionWithFrameExclude([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					NthRowsAll   = Sql.Window.NthValue(t.IntValue, 2L, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded),
+					FirstExclude = Sql.Window.FirstValue(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		public void RowsFrameAllBoundaries([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					RowsUnbCurr  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.CurrentRow),
+					RowsUnbUnb   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded),
+					RowsUnbVal   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.ValueFollowing(3)),
+					RowsCurrCurr = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.CurrentRow.And.CurrentRow),
+					RowsCurrUnb  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.CurrentRow.And.Unbounded),
+					RowsCurrVal  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.CurrentRow.And.ValueFollowing(3)),
+					RowsValCurr  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.CurrentRow),
+					RowsValUnb   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.Unbounded),
+					RowsValVal   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(3)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		public void RangeFrameBoundaries([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					RangeUnbCurr = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.Unbounded.And.CurrentRow),
+					RangeUnbUnb  = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.Unbounded.And.Unbounded),
+					RangeCurrUnb = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.CurrentRow.And.Unbounded),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void DefineWindowReuseRanking([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
+				select new
+				{
+					RowNum = Sql.Window.RowNumber(w => w.UseWindow(wnd)),
+					Rank   = Sql.Window.Rank(w => w.UseWindow(wnd)),
+					Sum    = Sql.Window.Sum(t.IntValue, w => w.UseWindow(wnd)),
+					Avg    = Sql.Window.Average(t.DoubleValue, w => w.UseWindow(wnd)),
+					Min    = Sql.Window.Min(t.IntValue, w => w.UseWindow(wnd)),
+					Max    = Sql.Window.Max(t.IntValue, w => w.UseWindow(wnd)),
+					Count  = Sql.Window.Count(w => w.UseWindow(wnd)),
+					Lead   = Sql.Window.Lead(t.IntValue, w => w.UseWindow(wnd)),
+					Lag    = Sql.Window.Lag(t.IntValue, w => w.UseWindow(wnd)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_FirstLastValue)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		public void DefineWindowReuseValueFunctions([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded)
+				select new
+				{
+					First = Sql.Window.FirstValue(t.IntValue, w => w.UseWindow(wnd)),
+					Last  = Sql.Window.LastValue(t.IntValue, w => w.UseWindow(wnd)),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRows)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL10Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllSapHana, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameExclusionRows([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					ExclCurrRow = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
+					ExclGroup   = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeGroup()),
+					ExclTies    = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.Unbounded.And.Unbounded.ExcludeTies()),
+					ValExcl     = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RowsBetween.ValuePreceding(2).And.ValueFollowing(2).ExcludeCurrentRow()),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird3, TestProvName.AllSapHana, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameRange)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL10Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameExclude)]
+		public void FrameExclusionRange([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					RangeExclCurrRow = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).RangeBetween.Unbounded.And.Unbounded.ExcludeCurrentRow()),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL10Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse, TestProvName.AllMySql80, TestProvName.AllMariaDB, ProviderName.Firebird3, ProviderName.Firebird4, ProviderName.Firebird5, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_FrameGroups)]
+		public void FrameExclusionGroups([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					GroupsExclTies = Sql.Window.Sum(t.IntValue, w => w.OrderBy(t.Id).GroupsBetween.Unbounded.And.Unbounded.ExcludeTies()),
+				};
+
+			_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLagDefault)]
+		// MariaDB excluded (DataSources is an exclude list): it does not support the LEAD/LAG default-value (3rd) argument.
+		public void LeadLagAllOverloads([SupportsAnalyticFunctionsContext(TestProvName.AllMariaDB)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Lead1 = Sql.Window.Lead(t.IntValue,       w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					Lead2 = Sql.Window.Lead(t.IntValue, 2,    w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					Lead3 = Sql.Window.Lead(t.IntValue, 2, 0, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					Lag1  = Sql.Window.Lag(t.IntValue,        w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					Lag2  = Sql.Window.Lag(t.IntValue, 2,     w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					Lag3  = Sql.Window.Lag(t.IntValue, 2, 0,  w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+			_ = query.ToList();
+		}
+
+		// A window function whose whole call — argument and window definition — references no table column is still
+		// server-side: without the ServerSideOnly marker the enclosing comparison looked client-evaluable and was
+		// folded into a query parameter, so the throwing stub was invoked at execution time (issue #5782).
+		[Test]
+		public void FunctionWithoutColumnReference([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data     = WindowFunctionTestEntity.Seed();
+			var rowCount = data.Length;
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					CountAll   = Sql.Window.Count(w => w),
+					CountConst = Sql.Window.Count(1, w => w),
+					SumConst   = Sql.Window.Sum(1, w => w),
+					// Left out when this test was written because it emitted ORDER BY 1, which SQL Server rejects
+					// with error 5308. A constant sort key no longer reaches any dialect, so it needs no gate.
+					RowNumConst = Sql.Window.RowNumber(w => w.OrderBy(1)),
+					AllRows    = Sql.Window.Count(w => w) == rowCount     && Sql.Window.Sum(t.IntValue, w => w) > 0,
+					WrongCount = Sql.Window.Count(w => w) == rowCount + 1 && Sql.Window.Sum(t.IntValue, w => w) > 0,
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(data.Length);
+			result.ShouldAllBe(r => r.CountAll   == data.Length);
+			result.ShouldAllBe(r => r.CountConst == data.Length);
+			result.ShouldAllBe(r => r.SumConst   == data.Length);
+			result.ShouldAllBe(r => r.AllRows);
+			result.ShouldAllBe(r => !r.WrongCount);
+
+			// Every row ties on the constant key, so the numbering is arbitrary but still a complete 1..N.
+			result.Select(r => r.RowNumConst)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_LeadLag)]
+		public void LeadLagDifferentTypes([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					LeadDouble   = Sql.Window.Lead(t.DoubleValue,      w => w.OrderBy(t.Id)),
+					LagDecimal   = Sql.Window.Lag(t.DecimalValue,      w => w.OrderBy(t.Id)),
+					LeadNullable = Sql.Window.Lead(t.NullableIntValue, w => w.OrderBy(t.Id)),
+					LeadMultiOrd = Sql.Window.Lead(t.IntValue,         w => w.OrderBy(t.CategoryId).ThenBy(t.Id)),
+				};
+
+			_ = query.ToList();
+		}
+
+		// A window function projected by one Select and then used inside another window's PARTITION BY. The inner
+		// value is computed over the inner query's row set, so it has to reach the outer window as a column of a
+		// subquery - inlined, it nests one window function inside another, which no provider accepts.
+		[Test]
+		public void WindowFunctionOverWindowFunctionColumn([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var numbered =
+				from t in table
+				select new
+				{
+					t.Id,
+					RowNum    = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+					CatRowNum = Sql.Window.RowNumber(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+				};
+
+			var query =
+				from t in numbered
+				select new
+				{
+					t.RowNum,
+					t.CatRowNum,
+					OverRowNum = Sql.Window.RowNumber(w => w.PartitionBy(t.RowNum).OrderBy(t.Id)),
+					OverCatNum = Sql.Window.RowNumber(w => w.PartitionBy(t.CatRowNum).OrderBy(t.Id)),
+				};
+
+			var result = query.ToList();
+
+			result.Count.ShouldBe(data.Length);
+
+			// RowNum is unique per row, so partitioning by it leaves single-row partitions.
+			result.Select(r => r.RowNum)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+
+			result.ShouldAllBe(r => r.OverRowNum == 1);
+
+			// CatRowNum repeats across categories, so each of its partitions must still number 1..size exactly once.
+			foreach (var partition in result.GroupBy(r => r.CatRowNum))
+			{
+				partition.Select(r => r.OverCatNum)
+					.OrderBy(n => n)
+					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
+
+		// Same shape, with the outer window supplied by DefineWindow/UseWindow rather than the fluent chain.
+		[Test]
+		public void WindowFunctionOverWindowFunctionColumnWithDefinedWindow([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var numbered =
+				from t in table
+				select new
+				{
+					t.Id,
+					RowNum = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+				};
+
+			var query =
+				from t in numbered
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.RowNum).OrderBy(t.Id))
+				select new
+				{
+					t.RowNum,
+					OverRowNum = Sql.Window.RowNumber(w => w.UseWindow(wnd)),
+				};
+
+			var result = query.ToList();
+
+			result.Select(r => r.RowNum)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, data.Length).Select(n => (long)n));
+
+			result.ShouldAllBe(r => r.OverRowNum == 1);
+		}
+	}
+}

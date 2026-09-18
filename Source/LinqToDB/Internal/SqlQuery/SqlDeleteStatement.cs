@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.SqlQuery
 			set => SelectQuery.IsParameterDependent = value;
 		}
 
-		public SqlTable?       Table   { get; set; }
+		public ISqlNamedTable? Table   { get; set; }
 		public ISqlExpression? Top     { get; set; }
 
 		public SqlOutputClause? Output { get; set; }

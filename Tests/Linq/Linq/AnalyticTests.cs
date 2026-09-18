@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using Newtonsoft.Json.Linq;
@@ -490,13 +491,13 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
 			else if (context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllDuckDB))
-				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER (ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
 			else
 				Assert.Fail("Missing assertion");
 		}
 
-		[Test]
-		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
+		[Test, QueryCacheTest]
+		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -519,7 +520,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -537,7 +538,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -554,7 +555,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllDuckDB, TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -759,6 +760,25 @@ namespace Tests.Linq
 					};
 			var res = q.ToArray();
 			Assert.That(res, Is.Not.Empty);
+		}
+
+		// Regression: a legacy Sql.Ext NthValue FROM LAST modifier must survive conversion to the Sql.Window
+		// pipeline. It was previously discarded (the converter skipped Sql.From), so NTH_VALUE(...) FROM LAST
+		// silently emitted without FROM LAST and returned the value counted from the first row instead of the last.
+		[Test]
+		public void TestNthValueOracleFromLast([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select Sql.Ext.NthValue(c.ChildID, p.ParentID, Sql.From.Last, Sql.Nulls.Ignore).Over().PartitionBy(p.Value1, c.ChildID).ToValue();
+
+			var sql = q.ToSqlQuery().Sql;
+			sql.ShouldContain("FROM LAST");
+			sql.ShouldContain("IGNORE NULLS");
+
+			q.ToArray();
 		}
 
 		[Test]
@@ -1373,7 +1393,8 @@ namespace Tests.Linq
 		[Test]
 		public void FirstLastValueIgnoreNulls([IncludeDataSources(
 			TestProvName.AllSqlServer2022Plus,
-			TestProvName.AllOracle, TestProvName.AllDuckDB)] string context)
+			TestProvName.AllOracle, TestProvName.AllDuckDB,
+			TestProvName.AllPostgreSQL19Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(Position.TestData);
@@ -1419,6 +1440,63 @@ namespace Tests.Linq
 				Assert.That(res[3].FirstIgnore, Is.Null);
 				Assert.That(res[3].LastRespect, Is.Null);
 				Assert.That(res[3].LastIgnore, Is.EqualTo(6));
+			}
+		}
+
+		[Test]
+		public void LagLeadIgnoreNulls([IncludeDataSources(
+			TestProvName.AllOracle, TestProvName.AllDuckDB,
+			TestProvName.AllPostgreSQL19Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
+
+			var q =
+					from p in db.GetTable<Position>()
+					where p.Group == @group
+					orderby p.Order
+					select new
+					{
+						Id          = p.Id,
+						LagRespect  = (int?)Sql.Ext.Lag (p.Id, Sql.Nulls.Respect).Over().OrderBy(p.Order).ToValue(),
+						LagIgnore   = (int?)Sql.Ext.Lag (p.Id, Sql.Nulls.Ignore ).Over().OrderBy(p.Order).ToValue(),
+						LeadRespect = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Respect).Over().OrderByDesc(p.Order).ToValue(),
+						LeadIgnore  = (int?)Sql.Ext.Lead(p.Id, Sql.Nulls.Ignore ).Over().OrderByDesc(p.Order).ToValue(),
+					};
+
+			var res = q.ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				// Order 10, Id 5
+				Assert.That(res[0].Id,          Is.EqualTo(5));
+				Assert.That(res[0].LagRespect,  Is.Null);
+				Assert.That(res[0].LagIgnore,   Is.Null);
+				Assert.That(res[0].LeadRespect, Is.Null);
+				Assert.That(res[0].LeadIgnore,  Is.Null);
+
+				// Order 20, Id 6
+				Assert.That(res[1].Id,          Is.EqualTo(6));
+				Assert.That(res[1].LagRespect,  Is.EqualTo(5));
+				Assert.That(res[1].LagIgnore,   Is.EqualTo(5));
+				Assert.That(res[1].LeadRespect, Is.EqualTo(5));
+				Assert.That(res[1].LeadIgnore,  Is.EqualTo(5));
+
+				// Order 30, Id null
+				Assert.That(res[2].Id,          Is.Null);
+				Assert.That(res[2].LagRespect,  Is.EqualTo(6));
+				Assert.That(res[2].LagIgnore,   Is.EqualTo(6));
+				Assert.That(res[2].LeadRespect, Is.EqualTo(6));
+				Assert.That(res[2].LeadIgnore,  Is.EqualTo(6));
+
+				// Order 40, Id null — RESPECT sees the trailing null, IGNORE skips back/forward to 6
+				Assert.That(res[3].Id,          Is.Null);
+				Assert.That(res[3].LagRespect,  Is.Null);
+				Assert.That(res[3].LagIgnore,   Is.EqualTo(6));
+				Assert.That(res[3].LeadRespect, Is.Null);
+				Assert.That(res[3].LeadIgnore,  Is.EqualTo(6));
 			}
 		}
 
@@ -1624,7 +1702,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle21Minus, TestProvName.AllSapHana])]
 		[Test]
 		public void Issue2842Test1([DataSources(
 			TestProvName.AllAccess,
@@ -1642,8 +1719,74 @@ namespace Tests.Linq
 						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2).ToValue()
 					};
 
-			query
+			var result = query.ToList();
+
+			// RANK() over the folded flag: false sorts first, so every non-matching row ties at rank 1 and only
+			// the single ID == 2 row ranks above it. An inverted fold puts that row at 1 and every other row at 2,
+			// and a constant fold flattens them all to 1 - so the count below is 1 only when the fold is correct.
+			result.Count(r => r.rank > 1).ShouldBe(1);
+		}
+
+		[Table]
+		sealed class Issue5123Left
+		{
+			[PrimaryKey] public int Id    { get; set; }
+			[Column]     public int Group { get; set; }
+		}
+
+		[Table]
+		sealed class Issue5123Right
+		{
+			[PrimaryKey] public int     Id      { get; set; }
+			[Column]     public string? Payload { get; set; }
+		}
+
+		// #5123: a null check on the right side of a LEFT JOIN, used as an OVER (ORDER BY) key through the legacy
+		// Sql.Ext API. The predicate is a value position, so it has to be folded before it reaches ORDER BY.
+		//
+		// The issue's own repro null-checks a non-nullable int column, which relies on CS0472 being a warning in
+		// the reporter's project - it is an error here - so the same join-driven nullability is expressed through
+		// a nullable payload column: it is non-null in every seeded right row, so the check is false exactly for
+		// the rows the LEFT JOIN did not match.
+		[Test]
+		public void Issue5123Test([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.Firebird25,
+			TestProvName.AllMySql57,
+			ProviderName.SqlCe,
+			TestProvName.AllSybase)] string context)
+		{
+			var left = new[]
+			{
+				new Issue5123Left { Id = 1, Group = 1 },
+				new Issue5123Left { Id = 2, Group = 1 },
+				new Issue5123Left { Id = 3, Group = 1 },
+			};
+
+			// Only Id 1 has a match. The matched row therefore has the *lowest* Id, so the predicate ordering and
+			// the Id ordering disagree - which is what makes the assertion below able to detect a constant fold.
+			var right = new[] { new Issue5123Right { Id = 1, Payload = "matched" } };
+
+			using var db      = GetDataContext(context);
+			using var tLeft   = db.CreateLocalTable(left);
+			using var tRight  = db.CreateLocalTable(right);
+
+			var result = tLeft
+				.LeftJoin(tRight, (l, r) => l.Id == r.Id, (l, r) => new { Left = l, Right = r })
+				.Select(q => new
+				{
+					q.Left.Id,
+					RowNum = Sql.Ext.RowNumber().Over().PartitionBy(q.Left.Group).OrderBy(q.Right.Payload != null).ThenBy(q.Left.Id).ToValue()
+				})
+				.OrderBy(r => r.Id)
 				.ToList();
+
+			// false sorts before true, so the two unmatched rows (Ids 2 and 3) are numbered first and the matched
+			// row (Id 1) last. Both failure modes collapse the ordering to the ThenBy key and yield 1/2/3 by Id
+			// instead: an inverted fold puts Id 1 first, and a constant one drops the key entirely.
+			result.Single(r => r.Id == 2).RowNum.ShouldBe(1);
+			result.Single(r => r.Id == 3).RowNum.ShouldBe(2);
+			result.Single(r => r.Id == 1).RowNum.ShouldBe(3);
 		}
 
 		[Test]
@@ -1898,7 +2041,6 @@ namespace Tests.Linq
 		// - all other unmapped methods should throw
 		// - empty resulting sequence should return default(T)
 		// This will require additional asserts for results and tests to ensure expected behavior
-		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
 		public void EmptySequenceTest([DataSources] string context)
 		{
@@ -1942,7 +2084,7 @@ namespace Tests.Linq
 			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFields));
 		}
 
 		[Sql.Expression("concat('{{',string_agg(concat('\"', {1}, '\"', ': {{', '\"DateCreated\":\"', cast({3} as datetime2), '\", \"Link\":\"', {4}, '\",\"fields\":',  {2}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
@@ -1953,7 +2095,7 @@ namespace Tests.Linq
 			Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsNoIndeces));
 		}
 
 		[Sql.Extension("concat('{{',string_agg(concat('\"', {templateId}, '\"', ': {{', '\"DateCreated\":\"', cast({DateCreated} as datetime2), '\", \"Link\":\"', {Link}, '\",\"fields\":',  {fieldResultsJson}), '}},'), '}}}}') ", ServerSideOnly = true, IsAggregate = true)]
@@ -1964,7 +2106,7 @@ namespace Tests.Linq
 			[ExprParameter] Expression<Func<Issue4870Document, DateTime?>> DateCreated,
 			[ExprParameter] Expression<Func<Issue4870Document, string>> Link)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AggregateDocumentFieldsExtension));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4870")]
@@ -2091,5 +2233,199 @@ namespace Tests.Linq
 			documentCombinedJson.ToArray();
 		}
 		#endregion
+
+		// These legacy-analytic NULLS tests run on the full analytic provider set (SupportsAnalyticFunctionsContext),
+		// excluding SQL Server 2005/2008 which have no aggregate window functions (SUM() OVER (ORDER BY ...)). A
+		// requested NULLS FIRST surfaces differently per provider, so the assertion is gated on the provider's
+		// capability flags, mirroring the builder's own emission rule (BuildWindowOrderByItem): the position is emitted
+		// only when it is NOT already the provider's natural NULL placement (QueryHelper.MatchesNaturalNullsPosition) —
+		// then natively as a NULLS FIRST token, or as a CASE-WHEN sort key on providers without native support.
+		static void AssertNullsFirstHonored(TestDataConnection db)
+		{
+			var flags = db.DataProvider.SqlProviderFlags;
+
+			if (QueryHelper.MatchesNaturalNullsPosition(flags.DefaultNullsOrdering, Sql.NullsPosition.First, descending: false))
+				// NULLS FIRST already matches the provider's natural ASC ordering — emitted implicitly, must not be inverted.
+				Assert.That(db.LastQuery, Does.Not.Contain("NULLS LAST"));
+			else if (flags.IsNullsOrderingSupported)
+				Assert.That(db.LastQuery, Does.Contain("NULLS FIRST"));
+			else
+				Assert.That(db.LastQuery, Does.Contain("CASE").And.Contains("IS NULL"));
+		}
+
+		[Test]
+		public void LegacyAnalytic_DefaultNullsPosition_AppliedToOrderBy(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.First));
+
+			// A legacy Sql.Ext analytic chain (converted to the new Sql.Window pipeline) must pick up the
+			// configured DefaultNullsPosition for its ORDER BY, just like a plain query OrderBy would.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_AppliedToOrderBy(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// A legacy Sql.Ext analytic chain with an explicit NULLS position on its ORDER BY (the OrderBy(expr, nulls)
+			// overload) must carry that position through the conversion to the new Sql.Window pipeline rather than dropping it.
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
+
+		[Test]
+		public void LegacyAnalytic_ExplicitNullsPosition_OverridesConfiguredDefault(
+			[SupportsAnalyticFunctionsContext(false, TestProvName.AllSqlServer2008Minus)] string context)
+		{
+			// An explicit NULLS position on a legacy analytic ORDER BY must win over the configured default: the configured
+			// default is Last while the explicit position is First. Seeing the First position honored (per provider) proves
+			// the explicit value survives the conversion; had the configured default wrongly overridden it, it would be Last.
+			using var db = GetDataConnection(context, o => o.UseDefaultNullsPosition(Sql.NullsPosition.Last));
+
+			var q =
+				from p in db.Parent
+				select Sql.Ext.Sum(p.Value1!.Value).Over().OrderBy(p.Value1, Sql.NullsPosition.First).ToValue();
+
+			q.ToArray();
+
+			AssertNullsFirstHonored(db);
+		}
+
+		// #5806: the legacy Sql.Ext analytic chain feeds the same window pipeline, so a constant ORDER BY key
+		// misbehaved here identically - ROW_NUMBER() OVER (ORDER BY 1), which SQL Server and SAP HANA reject
+		// outright and MySQL 8 reads as a legacy column position. The issue recorded this API as unchecked; it
+		// was affected, and the same normalization fixes both spellings.
+		[Test]
+		public void LegacyAnalytic_ConstantWindowOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					ConstantOnly  = Sql.Ext.RowNumber().Over().OrderBy(1).ToValue(),
+					TrailingConst = Sql.Ext.RowNumber().Over().OrderBy(p.ParentID).ThenBy(1).ToValue(),
+					LeadingConst  = Sql.Ext.RowNumber().Over().OrderBy(1).ThenBy(p.ParentID).ToValue(),
+				};
+
+			var rows = query.ToList();
+
+			// A constant never breaks a tie, so wherever it sits the real key alone decides the numbering.
+			var expected = rows
+				.OrderBy(r => r.ParentID)
+				.Select((r, i) => (r.ParentID, Number: (long)(i + 1)))
+				.ToDictionary(x => x.ParentID, x => x.Number);
+
+			foreach (var row in rows)
+			{
+				row.TrailingConst.ShouldBe(expected[row.ParentID]);
+				row.LeadingConst.ShouldBe(expected[row.ParentID]);
+			}
+
+			// Ordering by nothing but a constant leaves every row tied, so which row gets which number is the
+			// server's business - but the numbering must still be a complete 1..N with no repeats.
+			rows.Select(r => r.ConstantOnly)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, rows.Count).Select(n => (long)n));
+
+			query.ToSqlQuery().Sql.ShouldNotContain("ORDER BY 1");
+		}
+
+		// #5806 companion, in its legacy spelling: Over().PartitionBy(...) completes with no ORDER BY at all,
+		// which SQL Server, Oracle and SAP HANA refuse for a ranking function.
+		[Test]
+		public void LegacyAnalytic_RankingFunctionWithoutWindowOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					p.Value1,
+					Number = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1).ToValue(),
+				};
+
+			var rows = query.ToList();
+
+			// Unordered, so the numbering within a partition is arbitrary - but it must still cover
+			// 1..partition size exactly once.
+			foreach (var partition in rows.GroupBy(r => r.Value1))
+			{
+				partition.Select(r => r.Number)
+					.OrderBy(n => n)
+					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
+
+		// A window function projected by one Select and then used inside another window's PARTITION BY. The inner
+		// value is computed over the inner query's row set, so it has to reach the outer window as a column of a
+		// subquery - inlined, it nests one window function inside another, which no provider accepts.
+		[Test]
+		public void LegacyAnalytic_WindowFunctionOverWindowFunctionColumn([SupportsAnalyticFunctionsContext] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var numbered =
+				from p in db.Parent
+				select new
+				{
+					p.ParentID,
+					// The reported spelling: an empty OVER (). Providers that refuse a ranking function without a sort
+					// key get ORDER BY (SELECT 1) from NormalizeWindowOrderBy, so this stays portable.
+					Unordered   = Sql.Ext.RowNumber().Over().ToValue(),
+					Ordered     = Sql.Ext.RowNumber().Over().OrderBy(p.ParentID).ToValue(),
+					Partitioned = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1).ToValue(),
+				};
+
+			var query =
+				from p in numbered
+				select new
+				{
+					p.Ordered,
+					p.Partitioned,
+					OverUnordered   = Sql.Ext.RowNumber().Over().PartitionBy(p.Unordered).OrderBy(p.ParentID).ToValue(),
+					OverOrdered     = Sql.Ext.RowNumber().Over().PartitionBy(p.Ordered).OrderBy(p.ParentID).ToValue(),
+					OverPartitioned = Sql.Ext.RowNumber().Over().PartitionBy(p.Partitioned).OrderBy(p.ParentID).ToValue(),
+				};
+
+			var rows = query.ToList();
+
+			rows.ShouldNotBeEmpty();
+
+			// Ordered numbers every row uniquely, so partitioning by it leaves single-row partitions.
+			rows.Select(r => r.Ordered)
+				.OrderBy(n => n)
+				.ShouldBe(Enumerable.Range(1, rows.Count).Select(n => (long)n));
+
+			// Unordered numbers the rows arbitrarily but still uniquely, so it too leaves single-row partitions.
+			rows.ShouldAllBe(r => r.OverUnordered == 1);
+			rows.ShouldAllBe(r => r.OverOrdered   == 1);
+
+			// Partitioned repeats across Value1 groups, so each of its partitions must number 1..size exactly once.
+			foreach (var partition in rows.GroupBy(r => r.Partitioned))
+			{
+				partition.Select(r => r.OverPartitioned)
+					.OrderBy(n => n)
+					.ShouldBe(Enumerable.Range(1, partition.Count()).Select(n => (long)n));
+			}
+		}
 	}
 }

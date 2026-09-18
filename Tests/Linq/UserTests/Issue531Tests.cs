@@ -56,19 +56,20 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([NorthwindDataContext] string context)
 		{
-			MappingSchema.Default.SetConverter<List<string>?, string?>((obj) =>
+			var ms = new MappingSchema();
+			ms.SetConverter<List<string>?, string?>((obj) =>
 			{
 				if (obj == null)
 					return null;
 				return string.Join(";", obj);
 			});
-			MappingSchema.Default.SetConverter<List<string>, DataParameter>((obj) =>
+			ms.SetConverter<List<string>, DataParameter>((obj) =>
 			{
 				if (obj == null)
 					return new DataParameter();
 				return new DataParameter { Value = string.Join(";", obj) };
 			});
-			MappingSchema.Default.SetConverter<string?, List<string>?>((txt) =>
+			ms.SetConverter<string?, List<string>?>((txt) =>
 			{
 				if (string.IsNullOrEmpty(txt))
 					return null;
@@ -80,6 +81,7 @@ namespace Tests.UserTests
 			var ext = new List<string>() { "5467" };
 
 			using var db = new NorthwindDB(context);
+			db.AddMappingSchema(ms);
 			var jj = from e in db.GetTable<EmployeeWithList>()
 					 where e.Extension == ext
 					 select e;

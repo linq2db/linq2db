@@ -341,10 +341,8 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
-			var factory  = translationContext.ExpressionFactory;
-			var timePart = factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
-
-			return timePart;
+			var factory = translationContext.ExpressionFactory;
+			return factory.NonPureFunction(factory.GetDbDataType(typeof(Guid)), "NewID");
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -367,6 +365,16 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 		{
 			protected override bool IsCountDistinctSupported       => false;
 			protected override bool IsAggregationDistinctSupported => false;
+		}
+
+		protected class SqlCeWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsWindowFunctionsSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SqlCeWindowFunctionsMemberTranslator();
 		}
 	}
 }

@@ -118,7 +118,16 @@ namespace LinqToDB.EntityFrameworkCore
 			else
 				info = GetLinqToDBProviderInfo(providerInfo);
 
-			return _knownProviders.GetOrAdd(new ProviderKey(info.ProviderName, connectionInfo.ConnectionString), k =>
+			// A context configured with a DbDataSource (or an externally-supplied DbConnection) carries no
+			// connection string on its EF options extension, so the key has to fall back to the connection the
+			// provider is detected from - otherwise every server of one family shares a single entry and all
+			// but the first are served the dialect detected from someone else's server.
+			// Precedence mirrors ProviderDetectorBase.DetectServerVersion.
+			var connectionString = connectionInfo.ConnectionString
+				?? connectionInfo.Connection?.ConnectionString
+				?? connectionInfo.Transaction?.Connection?.ConnectionString;
+
+			return _knownProviders.GetOrAdd(new ProviderKey(info.ProviderName, connectionString), k =>
 			{
 				return CreateLinqToDBDataProvider(providerInfo, info, connectionInfo);
 			});
@@ -190,9 +199,12 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL11                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v11, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL12                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v12, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL13                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v13, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 				ProviderName.PostgreSQL18                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v18, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
+				ProviderName.PostgreSQL19                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v19, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 
 				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString, connectionInfo.Connection, connectionInfo.Transaction),
 
@@ -231,6 +243,8 @@ namespace LinqToDB.EntityFrameworkCore
 			{
 				"Microsoft.EntityFrameworkCore.SqlServer"                                                   => new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer      },
 				"Pomelo.EntityFrameworkCore.MySql" or "Devart.Data.MySql.EFCore"                            => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
+				// Microting is a fork of Pomelo; it renames the assembly, which is what EF reports here
+				"Microting.EntityFrameworkCore.MySql"                                                       => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"MySql.Data.EntityFrameworkCore"                                                            => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"Npgsql.EntityFrameworkCore.PostgreSQL" or "Devart.Data.PostgreSql.EFCore"                  => new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL     },
 				"Microsoft.EntityFrameworkCore.Sqlite" or "Devart.Data.SQLite.EFCore"                       => new LinqToDBProviderInfo { ProviderName = ProviderName.SQLite         },
@@ -593,8 +607,8 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Transformed expression.</returns>
 		public virtual Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model, bool isQueryExpression)
 		{
-			var visitor       = new TransformExpressionVisitor();
-			var newExpression = visitor.Transform(dc, model, expression);
+			using var visitor = TransformExpressionVisitor.Pool.Allocate();
+			var newExpression = visitor.Value.Transform(dc, model, expression);
 
 			if (ReferenceEquals(newExpression, expression))
 				return expression;
@@ -605,7 +619,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 				bool tracking;
 
-				if (visitor.Tracking == null)
+				if (visitor.Value.Tracking == null)
 				{
 					if (ctx == null)
 					{
@@ -624,7 +638,7 @@ namespace LinqToDB.EntityFrameworkCore
 					}
 				}
 				else
-					tracking = visitor.Tracking.Value;
+					tracking = visitor.Value.Tracking.Value;
 
 				dataConnection.Tracking = tracking;
 			}

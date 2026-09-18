@@ -699,9 +699,25 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					return base.VisitSqlTable(element);
 				}
 
+				protected internal override IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+				{
+					if (element.CteField != null)
+						RegisterInSerializer(element.CteField);
+					return element;
+				}
+
 				protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 				{
 					RegisterInSerializer(element.All);
+
+					// Register CteField references before visiting fields,
+					// since SqlCteTableField references may be visited before CteClause.Fields
+					foreach (var field in element.Fields)
+					{
+						if (field.CteField != null)
+							RegisterInSerializer(field.CteField);
+					}
+
 					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlCteTable(element);
 				}
@@ -824,6 +840,22 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							break;
 						}
 
+					case QueryElementType.SqlCteTableField :
+						{
+							// Type comes from CteField, which is registered separately
+							break;
+						}
+
+					case QueryElementType.SqlCteField :
+						{
+							var fld = (SqlCteField)e;
+
+							if (fld.Type.SystemType != null)
+								GetType(fld.Type.SystemType);
+
+							break;
+						}
+
 					case QueryElementType.SqlParameter :
 						{
 							var p = (SqlParameter)e;
@@ -896,6 +928,33 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							break;
 						}
 
+					case QueryElementType.SqlCteField :
+						{
+							var elem = (SqlCteField)e;
+
+							Append(elem.Type);
+							Append(elem.Name);
+
+							// Column may reference a body column that was removed by optimizer.
+							// Only serialize if registered, otherwise write null (0).
+							if (elem.Column != null && ObjectIndices.ContainsKey(elem.Column))
+								AppendDelayed(elem.Column);
+							else
+								Append(0);
+
+							break;
+						}
+
+					case QueryElementType.SqlCteTableField :
+						{
+							var elem = (SqlCteTableField)e;
+
+							AppendDelayed(elem.Table);
+							AppendDelayed(elem.CteField);
+
+							break;
+						}
+
 					case QueryElementType.SqlFunction :
 						{
 							var elem = (SqlFunction)e;
@@ -918,7 +977,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
-							Append(elem.NeedsCast);
 							Append(paramValue.DbDataType);
 
 							var value = paramValue.ProviderValue;
@@ -1086,6 +1144,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 								Append(ObjectIndices[field]);
 
 							Append(elem.SqlQueryExtensions);
+							Append(elem.CanBeNull);
 
 							break;
 						}
@@ -1352,6 +1411,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.TakeValue);
 							Append((int?)elem.TakeHints);
 							Append(elem.OptimizeDistinct);
+							Append(elem.DistinctOn);
 
 							Append(elem.Columns);
 
@@ -1722,6 +1782,58 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						break;
 					}
 
+					case QueryElementType.SqlParameterCast:
+					{
+						var elem = (SqlParameterCastExpression)e;
+						Append(elem.Parameter);
+						break;
+					}
+
+					case QueryElementType.SqlInterval:
+					{
+						var elem = (SqlIntervalExpression)e;
+						Append(elem.Type);
+						Append(elem.Value);
+						Append((int)elem.IntervalType.Domain);
+						Append((int)elem.IntervalType.Resolution);
+						Append(elem.IntervalType.IsSigned);
+						break;
+					}
+
+					case QueryElementType.SqlIntervalDifference:
+					{
+						var elem = (SqlIntervalDifferenceExpression)e;
+						Append(elem.Type);
+						Append(elem.Start);
+						Append(elem.End);
+						Append((int)elem.IntervalType.Domain);
+						Append((int)elem.IntervalType.Resolution);
+						Append(elem.IntervalType.IsSigned);
+						break;
+					}
+
+					case QueryElementType.SqlIntervalPart:
+					{
+						var elem = (SqlIntervalPartExpression)e;
+						Append(elem.Type);
+						Append(elem.Interval);
+						Append((int)elem.Unit);
+						Append((int)elem.Kind);
+						// -1 stands for "nothing encloses it" - Days does not wrap.
+						Append(elem.Within is { } within ? (int)within : -1);
+						break;
+					}
+
+					case QueryElementType.SqlTemporalArithmetic:
+					{
+						var elem = (SqlTemporalArithmeticExpression)e;
+						Append(elem.Type);
+						Append(elem.Temporal);
+						Append(elem.Interval);
+						Append(elem.IsSubtract);
+						break;
+					}
+
 					case QueryElementType.SqlCondition:
 					{
 						var elem = (SqlConditionExpression)e;
@@ -1792,6 +1904,11 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.OrderBy);
 						Append(elem.PartitionBy);
 						Append(elem.FrameClause);
+						Append(elem.KeepClause);
+						Append((int)elem.NullTreatment);
+						Append((int)elem.FromPosition);
+						Append(elem.IsWindowFunction);
+						Append((int)elem.ArgumentDomain);
 						break;
 					}
 
@@ -1819,6 +1936,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.Start);
 						Append((int)elem.FrameType);
 						Append(elem.End);
+						Append((int)elem.Exclusion);
 						break;
 					}
 
@@ -1828,6 +1946,14 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						Append(elem.IsPreceding);
 						Append((int)elem.BoundaryType);
 						Append(elem.Offset);
+						break;
+					}
+
+					case QueryElementType.SqlKeepClause:
+					{
+						var elem = (SqlKeepClause)e;
+						Append((int)elem.Type);
+						Append(elem.OrderBy);
 						break;
 					}
 
@@ -2005,6 +2131,40 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							break;
 						}
 
+					case QueryElementType.SqlCteField :
+						{
+							var dbDataType = ReadDbDataType();
+							var name      = ReadString()!;
+
+							SqlCteField cteField;
+							obj = cteField = new SqlCteField(dbDataType, name);
+
+							ReadDelayedObject(column =>
+							{
+								cteField.Column = column as SqlColumn;
+							});
+
+							break;
+						}
+
+					case QueryElementType.SqlCteTableField :
+						{
+							SqlCteTableField cteTableField;
+							obj = cteTableField = new SqlCteTableField((SqlCteField?)null);
+
+							ReadDelayedObject(table =>
+							{
+								cteTableField.Table = table as ISqlTableSource;
+							});
+
+							ReadDelayedObject(cf =>
+							{
+								cteTableField.CteField = cf as SqlCteField;
+							});
+
+							break;
+						}
+
 					case QueryElementType.SqlFunction :
 						{
 							var dbDataType    = ReadDbDataType();
@@ -2027,7 +2187,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var needCast         = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
 							var value            = ReadValue(ReadType()!);
@@ -2035,7 +2194,6 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							obj = new SqlParameter(dbDataType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
-								NeedsCast = needCast,
 							};
 
 							break;
@@ -2184,19 +2342,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							});
 
 							var all        = Read<SqlField>()!;
-							var fields     = ReadArray<SqlField>()!;
+							var fields     = ReadArray<SqlCteTableField>()!;
 							var extensions = ReadList<SqlQueryExtension>();
-
-							var flds   = new SqlField[fields.Length + 1];
-
-							flds[0] = all;
-							Array.Copy(fields, 0, flds, 1, fields.Length);
+							var canBeNull  = ReadNullableBool();
 
 							cteTable = isDelayed ?
-								new SqlCteTable(sourceID, alias, flds) :
-								new SqlCteTable(sourceID, alias, flds, cte!);
+								new SqlCteTable(sourceID, alias, all, fields, null) :
+								new SqlCteTable(sourceID, alias, all, fields, cte!);
 
 							cteTable.SqlQueryExtensions = extensions;
+							cteTable.CanBeNull          = canBeNull;
 
 							obj = cteTable;
 
@@ -2472,11 +2627,13 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var takeValue        = Read<ISqlExpression>()!;
 							var takeHints        = (TakeHints?)ReadNullableInt();
 							var optimizeDistinct = ReadBool();
+							var distinctOn       = ReadArray<ISqlExpression>();
 							var columns          = ReadArray<SqlColumn>()!;
 
 							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns)
 							{
 								OptimizeDistinct = optimizeDistinct,
+								DistinctOn       = distinctOn == null ? null : [..distinctOn],
 							};
 
 							break;
@@ -2501,7 +2658,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var items         = ReadArray<SqlSetExpression>();
 							var keys          = ReadArray<SqlSetExpression>();
-							var table         = Read<SqlTable>();
+							var table         = Read<ISqlNamedTable>();
 							var tableSource   = Read<SqlTableSource>();
 							var hasComparison = ReadBool();
 
@@ -2534,7 +2691,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var name        = ReadString()!;
 							var body        = Read<SelectQuery>();
 							var objectType  = ReadType()!;
-							var fields      = ReadArray<SqlField>()!;
+							var fields      = ReadArray<SqlCteField>()!;
 							var isRecursive = ReadBool();
 
 							var c = new CteClause(body, fields, objectType, isRecursive, name);
@@ -2639,7 +2796,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						{
 							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
-							var table       = Read<SqlTable>();
+							var table       = Read<ISqlNamedTable>();
 							var output      = Read<SqlOutputClause>();
 							var top         = Read<ISqlExpression>()!;
 							var selectQuery = Read<SelectQuery>();
@@ -2864,7 +3021,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.OutputClause:
 						{
-							var output   = Read<SqlTable>();
+							var output   = Read<ISqlNamedTable>();
 							var items    = ReadArray<SqlSetExpression>()!;
 							var columns  = ReadList<ISqlExpression>();
 
@@ -2923,6 +3080,66 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var mandatory  = ReadBool();
 
 						obj = new SqlCastExpression(expression!, dataType!, fromType, mandatory);
+
+						break;
+					}
+
+					case QueryElementType.SqlParameterCast:
+					{
+						obj = new SqlParameterCastExpression(Read<SqlParameter>()!);
+
+						break;
+					}
+
+					// Field order here must mirror the writer's exactly - the stream carries no field names.
+					case QueryElementType.SqlInterval:
+					{
+						var dataType   = ReadDbDataType();
+						var value      = Read<ISqlExpression>();
+						var domain     = (SqlIntervalDomain)ReadInt();
+						var resolution = (SqlIntervalUnit)ReadInt();
+						var isSigned   = ReadBool();
+
+						obj = new SqlIntervalExpression(value!, dataType, new SqlIntervalType(domain, resolution, isSigned));
+
+						break;
+					}
+
+					case QueryElementType.SqlIntervalDifference:
+					{
+						var dataType   = ReadDbDataType();
+						var start      = Read<ISqlExpression>();
+						var end        = Read<ISqlExpression>();
+						var domain     = (SqlIntervalDomain)ReadInt();
+						var resolution = (SqlIntervalUnit)ReadInt();
+						var isSigned   = ReadBool();
+
+						obj = new SqlIntervalDifferenceExpression(start!, end!, dataType, new SqlIntervalType(domain, resolution, isSigned));
+
+						break;
+					}
+
+					case QueryElementType.SqlIntervalPart:
+					{
+						var dataType = ReadDbDataType();
+						var interval = Read<ISqlExpression>();
+						var unit     = (SqlIntervalUnit)ReadInt();
+						var kind     = (SqlIntervalPartKind)ReadInt();
+						var within   = ReadInt();
+
+						obj = new SqlIntervalPartExpression(interval!, unit, kind, dataType, within < 0 ? null : (SqlIntervalUnit)within);
+
+						break;
+					}
+
+					case QueryElementType.SqlTemporalArithmetic:
+					{
+						var dataType = ReadDbDataType();
+						var temporal = Read<ISqlExpression>();
+						var interval = Read<ISqlExpression>();
+						var subtract = ReadBool();
+
+						obj = new SqlTemporalArithmeticExpression(temporal!, interval!, subtract, dataType);
 
 						break;
 					}
@@ -3004,9 +3221,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var orderBy                     = ReadArray<SqlWindowOrderItem>()!;
 						var partitionBy                 = ReadArray<ISqlExpression>()!;
 						var frame                       = Read<SqlFrameClause>();
+						var keepClause                  = Read<SqlKeepClause>();
+						var nullTreatment               = (Sql.Nulls)ReadInt();
+						var fromPosition                = (Sql.From)ReadInt();
+						var isWindowFunction            = ReadBool();
+						var argumentDomain              = (SqlArgumentDomain)ReadInt();
 
 						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
-							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeNullInAggregationQuery: canBeNullInAggregationQuery, canBeAffectedByOrderBy: canBeAffectedByOrderBy);
+							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeNullInAggregationQuery: canBeNullInAggregationQuery, canBeAffectedByOrderBy: canBeAffectedByOrderBy,
+							keepClause: keepClause, nullTreatment: nullTreatment, fromPosition: fromPosition, isWindowFunction: isWindowFunction,
+							argumentDomain: argumentDomain);
 
 						break;
 					}
@@ -3038,8 +3262,9 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var start     = Read<SqlFrameBoundary>()!;
 						var frameType = (SqlFrameClause.FrameTypeKind)ReadInt();
 						var end       = Read<SqlFrameBoundary>()!;
+						var exclusion = (SqlFrameClause.FrameExclusionKind)ReadInt();
 
-						obj = new SqlFrameClause(frameType, start, end);
+						obj = new SqlFrameClause(frameType, start, end, exclusion);
 
 						break;
 					}
@@ -3051,6 +3276,16 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 						var offset       = Read<ISqlExpression>();
 
 						obj = new SqlFrameBoundary(isPreceding, boundaryType, offset);
+
+						break;
+					}
+
+					case QueryElementType.SqlKeepClause:
+					{
+						var keepType = (SqlKeepClause.KeepType)ReadInt();
+						var orderBy  = ReadArray<SqlWindowOrderItem>()!;
+
+						obj = new SqlKeepClause(keepType, orderBy.ToList());
 
 						break;
 					}

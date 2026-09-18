@@ -78,8 +78,23 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!_constructedAssignments.TryGetValue(node, out var assignmentPair))
 					{
 						var variable = _generator.AssignToVariable(Expression.Default(node.Type));
-						var assign   = Expression.Assign(variable, Expression.Coalesce(variable, constructed));
+						Expression assign;
+
+						if (SequenceHelper.HasContextRef(constructed))
+						{
+							// Keep unresolved context references visible to subsequent builder passes.
+							assign = Expression.Assign(variable, Expression.Coalesce(variable, constructed));
+						}
+						else
+						{
+							// Keep a single copy of a potentially large constructor tree while preserving lazy,
+							// branch-specific construction at each use site.
+							var factory = _generator.AssignToVariable(Expression.Lambda(constructed));
+							assign = Expression.Assign(variable, Expression.Coalesce(variable, Expression.Invoke(factory)));
+						}
+
 						assignmentPair = (variable, assign);
+
 						_constructedAssignments.Add(node, assignmentPair);
 					}
 
@@ -168,6 +183,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
+		/// <summary>
+		/// Set while eager-load processing recursively builds a preamble sub-query, so the nested
+		/// <see cref="FinalizeProjection{T}"/> calls skip the <c>ImplicitCollectionLoading</c> guard —
+		/// those loads were already validated on the top-level query.
+		/// </summary>
+		bool _inEagerLoadProcessing;
+
+		/// <summary>
+		/// Finalizes the query projection: resolves constructors, processes eager loads, and applies the
+		/// strategy-determined finalizer (e.g. <c>ToColumns</c> for Default/KeyedQuery, identity for CteUnion).
+		/// </summary>
 		Expression FinalizeProjection<T>(
 			IBuildContext       context,
 			Expression          expression,
@@ -175,28 +201,40 @@ namespace LinqToDB.Internal.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
-			// Quick shortcut for non-queries
 			if (expression.NodeType == ExpressionType.Default)
 				return expression;
 
-			// convert all missed references
-			
-			var postProcessed = FinalizeConstructors(context, expression);
+			var postProcessed  = FinalizeConstructors(context, expression);
 
-			// process eager loading queries
-			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
-
-			if (SequenceHelper.HasError(correctedEager))
-				return correctedEager;
-
-			if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
+			if (DataContext.Options.LinqOptions.ImplicitCollectionLoading == ImplicitCollectionLoading.Throw && !_inEagerLoadProcessing && context.TranslationModifier.EagerLoadingStrategy == null)
 			{
-				// convert all missed references
-				postProcessed = FinalizeConstructors(context, correctedEager);
+				// Strict mode: reject implicit collection eager loads (those not explicitly marked via LoadWith/ThenLoad).
+				// A per-query With*LoadStrategy marker sets a strategy on the context modifier and opts the whole query in.
+				// Guarded only for the top-level user query — the recursive preamble sub-query builds that
+				// eager-load processing performs (below) re-build already-authorized loads (e.g. a LoadWith
+				// load-function's nested collection) and would otherwise re-trip the guard without marker context.
+				new ImplicitEagerLoadGuardVisitor().Visit(postProcessed);
 			}
 
-			var withColumns = ToColumns(context.GetResultQuery(), postProcessed);
-			return withColumns;
+			var savedInEagerLoadProcessing = _inEagerLoadProcessing;
+			_inEagerLoadProcessing = true;
+
+			try
+			{
+				var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys, out var finalizer);
+
+				if (SequenceHelper.HasError(correctedEager))
+					return correctedEager;
+
+				if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
+					postProcessed = FinalizeConstructors(context, correctedEager);
+
+				return finalizer(postProcessed);
+			}
+			finally
+			{
+				_inEagerLoadProcessing = savedInEagerLoadProcessing;
+			}
 		}
 
 		public sealed class ParentInfo
@@ -359,15 +397,55 @@ namespace LinqToDB.Internal.Linq.Builder
 			return new SqlErrorExpression(expression);
 		}
 
-		public void RegisterExtensionAccessors(Expression expression)
+		/// <summary>
+		/// Registers extension member/arguments, which are not translated into SQL, for by-value comparison during query
+		/// cache lookup. Extension builder may read such value to generate SQL, which makes it a part of the query shape.
+		/// </summary>
+		/// <param name="expression">Extension member or method call expression.</param>
+		/// <param name="translatedToSql">Expressions, translated into SQL while extension was built.</param>
+		public void RegisterExtensionAccessors(Expression expression, HashSet<Expression> translatedToSql)
 		{
 			void Register(Expression expr)
 			{
-				if (!MappingSchema.IsScalarType(expr.Type) && CanBeEvaluatedOnClient(expr))
+				// Translated value is passed to the database as a parameter (or registered as SqlValue by
+				// ParametersContext), so it is already compared through its own accessor.
+				//
+				if (IsTranslatedToSql(expr) || !CanBeEvaluatedOnClient(expr))
+					return;
+
+				// A constant the cache key keeps is already compared there, structurally and for free. Registering it
+				// would replace it with a placeholder and move that comparison onto a compiled accessor instead.
+				//
+				if (expr is ConstantExpression constant && !ExpressionCacheHelpers.ShouldRemoveConstantFromCache(constant, MappingSchema))
+					return;
+
+				var value = EvaluateExpression(expr);
+				ParametersContext.MarkAsValue(expr, value);
+			}
+
+			bool IsTranslatedToSql(Expression expr)
+			{
+				if (translatedToSql.Contains(expr))
+					return true;
+
+				// builders may request conversion of unwrapped argument
+				var unwrapped = expr.UnwrapConvert();
+				if (!ReferenceEquals(unwrapped, expr) && translatedToSql.Contains(unwrapped))
+					return true;
+
+				// params/array arguments are translated element-wise
+				if (expr is NewArrayExpression { Expressions.Count: > 0 } array)
 				{
-					var value = EvaluateExpression(expr);
-					ParametersContext.MarkAsValue(expr, value);
+					foreach (var element in array.Expressions)
+					{
+						if (!translatedToSql.Contains(element))
+							return false;
+					}
+
+					return true;
 				}
+
+				return false;
 			}
 
 			// Extensions may have instance reference. Try to register them as parameterized to disallow caching objects in Expression Tree

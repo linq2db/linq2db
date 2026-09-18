@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -11,12 +12,28 @@ using Shouldly;
 namespace Tests.Extensions
 {
 	[TestFixture]
-	public class ClickHouseTests : TestBase
+	public partial class ClickHouseTests : TestBase
 	{
 		sealed class ReplacingMergeTreeTable
 		{
 			public uint     ID;
 			public DateTime TS;
+		}
+
+		[Table("AsofTrade")]
+		sealed class AsofTrade
+		{
+			[Column] public int      ID     { get; set; }
+			[Column] public string   Symbol { get; set; } = null!;
+			[Column] public DateTime Time   { get; set; }
+		}
+
+		[Table("AsofQuote")]
+		sealed class AsofQuote
+		{
+			[Column] public int      ID     { get; set; }
+			[Column] public string   Symbol { get; set; } = null!;
+			[Column] public DateTime Time   { get; set; }
 		}
 
 		[Test]
@@ -88,69 +105,6 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void JoinOuterHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinOuterHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("LEFT OUTER JOIN"));
-		}
-
-		[Test]
-		public void JoinSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinSemiHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("LEFT SEMI JOIN"));
-		}
-
-		[Test]
-		public void JoinAntiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinAntiHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("LEFT ANTI JOIN"));
-		}
-
-		[Test]
-		public void JoinAnyHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinAnyHint() on c.ParentID equals p.ParentID
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("INNER ANY JOIN"));
-		}
-
-		[Test]
 		public void SettingsHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -186,70 +140,6 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("SETTINGS additional_table_filters = {'Child': 'ParentID != 2'}"));
-		}
-
-		[Test]
-		public void JoinGlobalHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinGlobalHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("GLOBAL LEFT JOIN"));
-		}
-
-		[Test]
-		public void JoinGlobalSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinGlobalSemiHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("GLOBAL LEFT SEMI JOIN"));
-		}
-
-		[Test]
-		public void JoinAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinAllHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("ALL LEFT JOIN"));
-		}
-
-		[Test]
-		public void JoinAllSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var q =
-				from c in db.Child
-				join p in db.Parent.AsClickHouse().JoinAllSemiHint() on c.ParentID equals p.ParentID into g
-				from p in g.DefaultIfEmpty()
-				select p;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Contains.Substring("ALL LEFT SEMI JOIN"));
 		}
 
 		[Test]
@@ -301,6 +191,84 @@ namespace Tests.Extensions
 			LastQuery
 				.ShouldNotBeNull()
 				.ShouldContain(" " + ClickHouseHints.Table.Final);
+		}
+
+		static (AsofTrade[] trades, AsofQuote[] quotes) GetAsofData() =>
+		(
+			[
+				new AsofTrade { ID = 1, Symbol = "A", Time = new DateTime(2020, 1, 1, 9, 0, 15) },
+			],
+			[
+				new AsofQuote { ID = 1, Symbol = "A", Time = new DateTime(2020, 1, 1, 9, 0,  0) },
+				new AsofQuote { ID = 2, Symbol = "A", Time = new DateTime(2020, 1, 1, 9, 0, 10) },
+			]
+		);
+
+		[Test]
+		public void AsOfJoinHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var (tradeData, quoteData) = GetAsofData();
+			using var trades = db.CreateLocalTable(tradeData);
+			using var quotes = db.CreateLocalTable(quoteData);
+
+			var res = trades
+				.Join(
+					quotes.AsClickHouse().JoinAsOfHint(),
+					SqlJoinType.Left,
+					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID })
+				.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("LEFT ASOF JOIN"));
+			// ASOF picks the latest quote at or before the trade time (9:00:15) -> quote ID 2 (9:00:10).
+			res.ShouldHaveSingleItem().QuoteID.ShouldBe(2);
+		}
+
+		[Test]
+		public void ObsoleteAllAsOfJoinHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var (tradeData, quoteData) = GetAsofData();
+			using var trades = db.CreateLocalTable(tradeData);
+			using var quotes = db.CreateLocalTable(quoteData);
+
+#pragma warning disable CS0618 // Type or member is obsolete
+			var res = trades
+				.Join(
+					quotes.AsClickHouse().JoinAllAsOfHint(),
+					SqlJoinType.Left,
+					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID })
+				.ToList();
+#pragma warning restore CS0618 // Type or member is obsolete
+
+			// Deprecated AllAsOf alias re-points to the standalone ASOF hint.
+			Assert.That(LastQuery, Contains.Substring("LEFT ASOF JOIN"));
+			res.ShouldHaveSingleItem().QuoteID.ShouldBe(2);
+		}
+
+		[Test]
+		public void GlobalAsOfJoinHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var (tradeData, quoteData) = GetAsofData();
+			using var trades = db.CreateLocalTable(tradeData);
+			using var quotes = db.CreateLocalTable(quoteData);
+
+			var res = trades
+				.Join(
+					quotes.AsClickHouse().JoinGlobalAsOfHint(),
+					SqlJoinType.Left,
+					(trade, quote) => trade.Symbol == quote.Symbol && trade.Time >= quote.Time,
+					(trade, quote) => new { trade.ID, QuoteID = quote.ID })
+				.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("GLOBAL LEFT ASOF JOIN"));
+			res.ShouldHaveSingleItem().QuoteID.ShouldBe(2);
 		}
 	}
 }

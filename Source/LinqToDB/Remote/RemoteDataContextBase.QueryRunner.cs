@@ -68,8 +68,6 @@ namespace LinqToDB.Remote
 
 				for (var i = 0; i < commandCount; i++)
 				{
-					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), query.Statement, query.Aliases, out var aliases);
-
 					var optimizationContext = new OptimizationContext(
 						_evaluationContext,
 						DataContext.Options,
@@ -83,6 +81,11 @@ namespace LinqToDB.Remote
 						parametersNormalizerFactory : static () => NoopQueryParametersNormalizer.Instance);
 
 					var statement = query.Statement.PrepareStatementForSql(optimizationContext);
+
+					// Alias the prepared statement - the one actually rendered. PrepareStatementForSql can
+					// produce new nodes, and the alias context is keyed to the nodes it visits, so aliasing
+					// query.Statement (pre-prepare) would leave the rendered nodes unresolved.
+					AliasesHelper.PrepareQueryAndAliases(new IdentifierServiceSimple(128), statement, out var aliases);
 
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder.Value, optimizationContext, aliases, null);
 
@@ -128,16 +131,24 @@ namespace LinqToDB.Remote
 
 			public override void Dispose()
 			{
-				if (_client != null)
-					DisposeClient(_client);
+				var client = _client;
+
+				_client = null;
+
+				if (client != null && _dataContext.OwnsClient)
+					DisposeClient(client);
 
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (_client != null)
-					await DisposeClientAsync(_client).ConfigureAwait(false);
+				var client = _client;
+
+				_client = null;
+
+				if (client != null && _dataContext.OwnsClient)
+					await DisposeClientAsync(client).ConfigureAwait(false);
 
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
@@ -189,7 +200,7 @@ namespace LinqToDB.Remote
 					_dataContext.GetNextCommandHints(true),
 					_dataContext.Options);
 
-				_client = _dataContext.GetClient();
+				_client ??= _dataContext.GetClient();
 
 				var ret = await _client.ExecuteReaderAsync(_dataContext.ConfigurationString, data, cancellationToken).ConfigureAwait(false);
 
@@ -221,7 +232,7 @@ namespace LinqToDB.Remote
 					_dataContext.GetNextCommandHints(true),
 					_dataContext.Options);
 
-				_client = _dataContext.GetClient();
+				_client ??= _dataContext.GetClient();
 
 				var ret = await _client.ExecuteScalarAsync(_dataContext.ConfigurationString, data, cancellationToken)
 					.ConfigureAwait(false);
@@ -262,7 +273,7 @@ namespace LinqToDB.Remote
 					return -1;
 				}
 
-				_client = _dataContext.GetClient();
+				_client ??= _dataContext.GetClient();
 
 				return await _client.ExecuteNonQueryAsync(_dataContext.ConfigurationString, data, cancellationToken)
 					.ConfigureAwait(false);

@@ -26,7 +26,6 @@ namespace LinqToDB.Internal.Linq
 		public SqlStatement    Statement       { get; set; } = null!;
 		public object?         Context         { get; set; }
 		public bool            IsContinuousRun { get; set; }
-		public AliasesContext? Aliases         { get; set; }
 		public DataOptions?    DataOptions     { get; set; }
 	}
 }

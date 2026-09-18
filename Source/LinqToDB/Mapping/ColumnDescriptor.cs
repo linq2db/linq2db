@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,6 +11,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
@@ -139,12 +141,80 @@ namespace LinqToDB.Mapping
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
+			var duration = mappingSchema.GetAttribute<DurationAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
+			if (duration != null)
+			{
+				// A declared unit and a hand-written converter are two answers to the same question, and the two
+				// halves of a query believe different ones: the value comes back through the converter, while the
+				// SQL is built on the unit. A pair that disagrees is then wrong by whatever they differ by, and
+				// wrong without saying so - a unit of seconds beside a converter storing ticks reads an hour and a
+				// half as fifteen million. Letting one of them quietly win is the failure this feature exists to
+				// prevent, so the pair is refused where it is stated.
+				if (ValueConverter != null)
+				{
+					throw new LinqToDBException(
+						$"Member '{memberAccessor.TypeAccessor.Type.Name}.{MemberInfo.Name}' declares both a duration unit ({duration.Unit}) and a value converter. "
+						+ "The unit is what the SQL translation is built on and the converter is what the value is read through, so the two cannot both define the stored form. "
+						+ "State the unit and let the conversion follow from it, or keep the converter and drop the unit.");
+				}
+
+				// A unit describes how a duration is stored, so it says nothing about a member that is not one. Left
+				// alone such a column would carry a unit no conversion follows from, and the unit is what the rest of
+				// the query trusts - the SQL is built on it and two columns are called interchangeable by it. Refused
+				// here for the same reason the pair above is: a declaration that cannot mean anything is a mistake in
+				// the mapping, and it is cheaper to hear about it now than to find the query answering oddly later.
+				ValueConverter = CreateDurationConverter(MemberType, duration.Unit)
+					?? throw new LinqToDBException(
+						$"Member '{memberAccessor.TypeAccessor.Type.Name}.{MemberInfo.Name}' declares a duration unit ({duration.Unit}) but is a {MemberType.Name}. "
+						+ "A duration unit describes how a TimeSpan is stored, so it can only be declared on a TimeSpan or TimeSpan? member.");
+
+				DurationUnit = duration.Unit;
+			}
+
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (skipValueAttributes.Length > 0)
 			{
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
+		}
+
+		/// <summary>
+		/// Builds the <see cref="TimeSpan"/> to integral conversion implied by a declared duration unit.
+		/// </summary>
+		/// <remarks>
+		/// Writing a duration whose precision is finer than the storage unit truncates - storing 1.5 seconds in a
+		/// column declared as seconds keeps 1. That is inherent to the storage the user chose, not something the
+		/// conversion can avoid.
+		/// </remarks>
+		static IValueConverter? CreateDurationConverter(Type memberType, DurationUnit unit)
+		{
+			if (!SqlIntervalUnits.TryGetTicksRatio(SqlIntervalType.ToIntervalUnit(unit), out var perUnit, out var perTick))
+				return null;
+
+			// ticks = amount * perUnit / perTick, so the stored amount is its inverse.
+			//
+			// Checked, for the reason SqlIntervalUnits.TryToTicks gives: a silent wrap here is a wrong duration,
+			// not a large one. It is reachable - a unit finer than a tick scales up rather than down, so storing
+			// nanoseconds multiplies by a hundred and leaves the long past about 292 years, well inside what a
+			// TimeSpan holds - and reading a coarse unit back scales up the same way from whatever the column has.
+			if (memberType == typeof(TimeSpan))
+			{
+				return new ValueConverter<TimeSpan, long>(
+					ts => checked(ts.Ticks * perTick) / perUnit,
+					v  => TimeSpan.FromTicks(checked(v * perUnit) / perTick),
+					handlesNulls: false);
+			}
+
+			if (memberType == typeof(TimeSpan?))
+			{
+				return new ValueConverter<TimeSpan?, long?>(
+					ts => ts == null ? null : checked(ts.Value.Ticks * perTick) / perUnit,
+					v  => v  == null ? null : TimeSpan.FromTicks(checked(v.Value * perUnit) / perTick),
+					handlesNulls: true);
+			}
+
+			return null;
 		}
 
 		private bool AnalyzeCanBeNull(ColumnAttribute? columnAttribute)
@@ -294,12 +364,12 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
 		/// </summary>
-		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false;
+		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => s.Affects.HasFlag(SkipModification.Insert)) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on update.
 		/// </summary>
-		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false;
+		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => s.Affects.HasFlag(SkipModification.Update)) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
@@ -397,6 +467,17 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
+
+		/// <summary>
+		/// Gets the unit in which this column stores a duration, or <see langword="null"/> when the column was not
+		/// declared as a duration. See <see cref="DurationAttribute"/>.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="TimeSpan"/> column without this set keeps its existing, provider-defined meaning - notably a
+		/// time of day where <see cref="TimeSpan"/> maps to a <c>TIME</c> column. Duration semantics are opt-in so
+		/// that existing mappings are not silently reinterpreted.
+		/// </remarks>
+		public DurationUnit?    DurationUnit    { get; }
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;
@@ -417,7 +498,13 @@ namespace LinqToDB.Mapping
 			DbDataType? dbDataType = null;
 
 			if (completeDataType && dataType == DataType.Undefined)
-				dbDataType = CalculateDbDataType(MappingSchema, systemType);
+				// When a ValueConverter is present, resolve the DB type from the converter's *provider* type
+				// against this descriptor's (active, provider-inclusive) MappingSchema rather than the member
+				// type - so e.g. an F# 'decimal option' (provider type Nullable<decimal>) picks up the
+				// provider's decimal(18,10) and 'string option' the provider's preferred string type. The
+				// member type often has no DB type of its own (the converter is what maps it to a column).
+				// Falls back to the member type when there is no converter.
+				dbDataType = CalculateDbDataType(MappingSchema, ValueConverter?.ToProviderExpression.Body.Type ?? systemType);
 
 			return new DbDataType(systemType, dbDataType?.DataType ?? dataType, DbType ?? dbDataType?.DbType, Length ?? dbDataType?.Length, Precision ?? dbDataType?.Precision, Scale ?? dbDataType?.Scale);
 		}
@@ -771,6 +858,15 @@ namespace LinqToDB.Mapping
 			return ApplyConversions(MappingSchema, getterExpr, dbDataType, ValueConverter, includingEnum, CanBeNull);
 		}
 
+		List<ColumnDescriptor>? _valueSiblings;
+
+		/// <summary>
+		/// Registers another inheritance-mapped column that maps a distinct member to the same physical
+		/// column as this one. Lets <see cref="GetProviderValue"/> read the value from the member matching
+		/// the row's runtime type, so inserts of a base-typed (mixed) source write shared columns correctly.
+		/// </summary>
+		internal void AddValueSibling(ColumnDescriptor sibling) => (_valueSiblings ??= new()).Add(sibling);
+
 		/// <summary>
 		/// Extracts column value, converted to database type, from entity object.
 		/// </summary>
@@ -782,15 +878,53 @@ namespace LinqToDB.Mapping
 			{
 				var objParam      = Expression.Parameter(typeof(object), "obj");
 
-				var objExpression = Expression.Convert(objParam, MemberAccessor.TypeAccessor.Type);
+				// A column inherited from an abstract intermediate type is owned by the member's declaring
+				// type, which every concrete subtype shares. Guarding/casting by the single concrete entity
+				// type would exclude sibling subtypes, so a base-typed (mixed) insert would write the default
+				// for them. Widen to the declaring type for inheritance-mapped columns.
+				var entityType    = MemberAccessor.TypeAccessor.Type;
+				if (HasInheritanceMapping
+					&& MemberAccessor.MemberInfo.DeclaringType is { } declaringType
+					&& declaringType != entityType
+					&& declaringType.IsAssignableFrom(entityType))
+				{
+					entityType = declaringType;
+				}
+
+				var objExpression = Expression.Convert(objParam, entityType);
 				var getterExpr    = InternalExtensions.ApplyLambdaToExpression(GetDbValueLambda(), objExpression);
 
 				if (HasInheritanceMapping)
 				{
+					// The column value belongs to a specific entity type. When several sibling types map
+					// distinct members to the same physical column, pick the value from the member matching
+					// the row's runtime type; for any other type write the default. Without this, a
+					// base-typed (mixed) insert writes the default for every non-primary sibling row.
+					Expression elseExpr = GetDefaultDbValueExpression();
+
+					// The value-sibling chain below is only reached when TypeIs(obj, entityType) is false.
+					// Declaring-type widening above and the sibling chain are mutually exclusive on a given
+					// physical column in current TPH models: a shared column is reached either via one
+					// inherited (widened) member or via distinct sibling members, never both. If a future
+					// mapping ever targets one physical column with both an inherited shared member (which
+					// widens entityType so TypeIs is true for all subtypes) AND value-siblings, this branch
+					// becomes unreachable and those sibling rows would write the default — revisit then.
+					if (_valueSiblings != null)
+					{
+						foreach (var sibling in _valueSiblings)
+						{
+							var siblingType = sibling.MemberAccessor.TypeAccessor.Type;
+							var siblingExpr = InternalExtensions.ApplyLambdaToExpression(
+								sibling.GetDbValueLambda(), Expression.Convert(objParam, siblingType));
+
+							elseExpr = Expression.Condition(Expression.TypeIs(objParam, siblingType), siblingExpr, elseExpr);
+						}
+					}
+
 					// Additional check that column member belong to proper entity
 					//
-					getterExpr = Expression.Condition(Expression.TypeIs(objParam, MemberAccessor.TypeAccessor.Type),
-						getterExpr, GetDefaultDbValueExpression());
+					getterExpr = Expression.Condition(Expression.TypeIs(objParam, entityType),
+						getterExpr, elseExpr);
 				}
 
 				var getterLambda = Expression.Lambda<Func<object, object>>(Expression.Convert(getterExpr, typeof(object)), objParam);

@@ -240,8 +240,11 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
-			return context.CreateLinqToDBContext().GetTable<T>();
+			var dc = context.CreateLinqToDBContext();
 #pragma warning restore CA2000 // Dispose objects before losing scope
+			// #5364: this implicit context is never disposed — release the EF connection per command.
+			dc.CloseAfterUse = true;
+			return dc.GetTable<T>();
 		}
 
 		#endregion

@@ -1,22 +1,43 @@
-﻿using System.Linq;
+using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
+		// SUM takes only numeric arguments, so a boolean can reach this function only through the window clause.
+		// ORDER BY / PARTITION BY are value positions: providers without a native boolean type reject a bare
+		// predicate there, so it has to be folded into a value.
 		[Test]
-		public void SumOverloads([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void SumWithBooleanWindow([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id           = t.Id,
+					ByOrder      = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.IntValue == 20).ThenBy(t.Id)),
+					ByPartition  = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.IntValue == 20).OrderBy(t.Id)),
+					ByNullCheck  = Sql.Window.Sum(t.IntValue, w => w.PartitionBy(t.NullableIntValue != null).OrderBy(t.Id)),
+				};
+
+				_ = query.ToList();
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void SumOverloads([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -43,21 +64,12 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Sum(t.NullableByteValue,    w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
 		}
 
 		[Test]
-		public void SumOverloadsViaWindow([IncludeDataSources(
-			true,
-			// native oracle provider crashes with AV
-			TestProvName.AllOracleManaged,
-			TestProvName.AllOracleDevart,
-			TestProvName.AllSqlServer2012Plus,
-			TestProvName.AllClickHouse,
-			TestProvName.AllPostgreSQL)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSqlServer2008Minus, ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateWindowFunctions)]
+		public void SumOverloadsViaWindow([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
 
@@ -84,10 +96,37 @@ namespace Tests.Linq
 					NullableByteSum    = Sql.Window.Sum(t.NullableByteValue,    w => w.UseWindow(wnd))
 				};
 
-			Assert.DoesNotThrow(() =>
-			{
 				_ = query.ToList();
-			});
+		}
+
+		// DISTINCT in a window aggregate is supported by Oracle, ClickHouse and DuckDB; on the providers below it is
+		// rejected and gated with a descriptive error.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException),
+			TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus, TestProvName.AllSQLite,
+			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllDB2, TestProvName.AllInformix, ProviderName.Ydb,
+			ErrorMessage = ErrorHelper.Error_WindowFunction_AggregateDistinct)]
+		public void SumDistinct([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				select new
+				{
+					Id  = t.Id,
+					Sum = Sql.Window.Sum(t.IntValue, w => w.Distinct().PartitionBy(t.CategoryId)),
+				};
+
+			// Only reached on providers that support DISTINCT in a window aggregate (ClickHouse); the rest are
+			// gated by [ThrowsForProvider]. Verify the DISTINCT modifier is actually emitted, not silently dropped.
+			var sql = query.ToSqlQuery().Sql;
+			sql.ShouldContain("OVER");
+			sql.ShouldContain("DISTINCT");
+
+			_ = query.ToList();
 		}
 
 	}

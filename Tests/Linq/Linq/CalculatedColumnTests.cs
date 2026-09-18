@@ -195,13 +195,13 @@ namespace Tests.Linq
 			public string? StrVal { get; set; }
 			public int     IntVal { get; set; }
 
-			[ExpressionMethod(nameof(Expr1Impl))]
+			[ExpressionMethod(nameof(Expr1Impl), IsColumn = true)]
 			public string? SimpleExpression { get; set; }
 
 			private static Expression<Func<InterpolatedStringTable, IDataContext, string?>> Expr1Impl() =>
 				(e, ctx) => !string.IsNullOrEmpty(e.StrVal) ? e.StrVal : e.IntVal.ToString();
 
-			[ExpressionMethod(nameof(Expr2Impl))]
+			[ExpressionMethod(nameof(Expr2Impl), IsColumn = true)]
 			public string? InterpolatedExpression { get; set; }
 
 			private static Expression<Func<InterpolatedStringTable, IDataContext, string?>> Expr2Impl() =>

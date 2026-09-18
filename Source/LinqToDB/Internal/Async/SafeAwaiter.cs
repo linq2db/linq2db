@@ -23,14 +23,14 @@ namespace LinqToDB.Internal.Async
 
 		public static T Run<T>(Func<Task<T>> task)
 		{
-			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
-			return Task.Run(async () => await task().ConfigureAwait(false)).GetAwaiter().GetResult();
+			// task started in Task.Run context as doing it in main thread could cause deadlock too
+			return Task.Run(task).GetAwaiter().GetResult();
 		}
 
 		public static T Run<T>(Func<CancellationToken, Task<T>> task)
 		{
-			// awaited ValueTask retrieved in Task.Run context as doing it in main thread could cause deadlock too
-			return Task.Run(async () => await task(default).ConfigureAwait(false)).GetAwaiter().GetResult();
+			// task started in Task.Run context as doing it in main thread could cause deadlock too
+			return Task.Run(() => task(default)).GetAwaiter().GetResult();
 		}
 
 		public static void Run(Func<CancellationToken, ValueTask> task)

@@ -12,7 +12,16 @@ docker exec hana2 sudo chown 12000:79 /hana/password.json
 
 docker ps -a
 
-git clone https://github.com/linq2db/linq2db.ci.git ~/linq2db_ci
+# Authenticate the clone when the pipeline supplies a token: github throttles unauthenticated
+# downloads. proactiveAuth is required because git sends credentials only after a 401 challenge, which
+# github never issues for an anonymous read of a public repository, and the credential has to be
+# complete - user:token, not token alone, or git asks for the password it is missing. Falls back to an
+# anonymous clone so the script still runs outside the pipeline.
+if [ -n "$GITHUB_TOKEN" ]; then
+    git clone -c http.proactiveAuth=basic "https://x-access-token:${GITHUB_TOKEN}@github.com/linq2db/linq2db.ci.git" ~/linq2db_ci
+else
+    git clone https://github.com/linq2db/linq2db.ci.git ~/linq2db_ci
+fi
 
 retries=0
 until docker logs hana2 | grep -q 'Startup finished'; do

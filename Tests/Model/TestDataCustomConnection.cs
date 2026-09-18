@@ -7,15 +7,25 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
-	public class TestDataCustomConnection : ITestDataContext
+	public class TestDataCustomConnection : ITestDataContext, IInfrastructure<IServiceProvider>, IInterceptable<IEntityServiceInterceptor>
 	{
 		protected TestDataConnection Connection { get; }
+
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)Connection).Instance;
+
+		IEntityServiceInterceptor? IInterceptable<IEntityServiceInterceptor>.Interceptor
+		{
+			get => ((IInterceptable<IEntityServiceInterceptor>)Connection).Interceptor;
+			set => ((IInterceptable<IEntityServiceInterceptor>)Connection).Interceptor = value;
+		}
 
 		public TestDataCustomConnection(DataOptions options)
 		{

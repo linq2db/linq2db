@@ -1,16 +1,5 @@
-docker run -d -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Password12!" -p 1433:1433 -h mssql --name=mssql linq2db/linq2db:win-mssql-2019
-docker ps -a
-
-echo "Waiting for SQL Server to accept connections"
-set max=100
-:repeat
-set /a max=max-1
-if %max% EQU 0 goto fail
-echo pinging sql server
-sleep 1
-docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT 1"
-if %errorlevel% NEQ 0 goto repeat
-echo "SQL Server is operational"
+pwsh -NoProfile -ExecutionPolicy Bypass -File "%~dp0mssql-container.ps1" -Container "mssql|1433|linq2db/linq2db:win-mssql-2019"
+if %errorlevel% NEQ 0 exit /b 1
 
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
 
@@ -22,8 +11,8 @@ docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "RECONFIGURE;"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataContained CONTAINMENT = PARTIAL;"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMSContained CONTAINMENT = PARTIAL;"
 
-goto:eof
-
-:fail
-echo "Fail"
-docker logs mssql
+REM test-DB perf: SIMPLE recovery + delayed durability cut transaction-log-flush cost on the write-heavy suite (SQL 2019 image)
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "ALTER DATABASE TestDataSA SET RECOVERY SIMPLE; ALTER DATABASE TestDataSA SET DELAYED_DURABILITY = FORCED;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "ALTER DATABASE TestDataMSSA SET RECOVERY SIMPLE; ALTER DATABASE TestDataMSSA SET DELAYED_DURABILITY = FORCED;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "ALTER DATABASE TestDataContained SET RECOVERY SIMPLE; ALTER DATABASE TestDataContained SET DELAYED_DURABILITY = FORCED;"
+docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "ALTER DATABASE TestDataMSContained SET RECOVERY SIMPLE; ALTER DATABASE TestDataMSContained SET DELAYED_DURABILITY = FORCED;"

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Linq;
 using System.Text;
@@ -27,6 +27,8 @@ using IBM.Data.DB2Types;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.DataProvider
@@ -49,6 +51,83 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<int>("SELECT Cast(@p1 as int) + Cast(@p2 as int) FROM SYSIBM.SYSDUMMY1", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
 				Assert.That(conn.Execute<int>("SELECT Cast(@p2 as int) + Cast(@p1 as int) FROM SYSIBM.SYSDUMMY1", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
 			}
+		}
+
+		public enum DecFloatSpecial
+		{
+			PositiveInfinity,
+			NegativeInfinity,
+			NaN,
+		}
+
+		static string DecFloatSpecialSql(DecFloatSpecial special) => special switch
+		{
+			DecFloatSpecial.PositiveInfinity => "SELECT (CAST(1 AS DECFLOAT)/CAST(0 AS DECFLOAT))  FROM SYSIBM.SYSDUMMY1",
+			DecFloatSpecial.NegativeInfinity => "SELECT (CAST(-1 AS DECFLOAT)/CAST(0 AS DECFLOAT)) FROM SYSIBM.SYSDUMMY1",
+			_                                => "SELECT (CAST(0 AS DECFLOAT)/CAST(0 AS DECFLOAT))  FROM SYSIBM.SYSDUMMY1",
+		};
+
+		// DECFLOAT special values mapped to floating-point targets keep the value. See issue #5663.
+		[Test]
+		public void DecFloatSpecialToFloatingPoint([IncludeDataSources(CurrentProvider)] string context, [Values] DecFloatSpecial special)
+		{
+			using var db = GetDataContext(context);
+			var sql = DecFloatSpecialSql(special);
+
+			var d  = db.Execute<double> (sql);
+			var f  = db.Execute<float>  (sql);
+			var dn = db.Execute<double?>(sql);
+			var fn = db.Execute<float?> (sql);
+
+			switch (special)
+			{
+				case DecFloatSpecial.PositiveInfinity:
+					double.IsPositiveInfinity(d).ShouldBeTrue();
+					float .IsPositiveInfinity(f).ShouldBeTrue();
+					double.IsPositiveInfinity(dn!.Value).ShouldBeTrue();
+					float .IsPositiveInfinity(fn!.Value).ShouldBeTrue();
+					break;
+				case DecFloatSpecial.NegativeInfinity:
+					double.IsNegativeInfinity(d).ShouldBeTrue();
+					float .IsNegativeInfinity(f).ShouldBeTrue();
+					double.IsNegativeInfinity(dn!.Value).ShouldBeTrue();
+					float .IsNegativeInfinity(fn!.Value).ShouldBeTrue();
+					break;
+				default:
+					double.IsNaN(d).ShouldBeTrue();
+					float .IsNaN(f).ShouldBeTrue();
+					double.IsNaN(dn!.Value).ShouldBeTrue();
+					float .IsNaN(fn!.Value).ShouldBeTrue();
+					break;
+			}
+		}
+
+		// DECFLOAT special values can't be represented as decimal/integral: nullable -> null, non-nullable -> default. See issue #5663.
+		[Test]
+		public void DecFloatSpecialToDecimalAndIntegral([IncludeDataSources(CurrentProvider)] string context, [Values] DecFloatSpecial special)
+		{
+			using var db = GetDataContext(context);
+			var sql = DecFloatSpecialSql(special);
+
+			db.Execute<decimal?>(sql).ShouldBeNull();
+			db.Execute<int?>    (sql).ShouldBeNull();
+			db.Execute<long?>   (sql).ShouldBeNull();
+
+			db.Execute<decimal>(sql).ShouldBe(0m);
+			db.Execute<int>    (sql).ShouldBe(0);
+			db.Execute<long>   (sql).ShouldBe(0L);
+		}
+
+		// finite DECFLOAT values still round-trip exactly after the special-value handling. See issue #5663.
+		[Test]
+		public void DecFloatFiniteValue([IncludeDataSources(CurrentProvider)] string context)
+		{
+			using var db = GetDataContext(context);
+			var sql = "SELECT (CAST(123.45 AS DECFLOAT)) FROM SYSIBM.SYSDUMMY1";
+
+			db.Execute<decimal> (sql).ShouldBe(123.45m);
+			db.Execute<double>  (sql).ShouldBe(123.45d);
+			db.Execute<decimal?>(sql).ShouldBe(123.45m);
 		}
 
 		[Test]
@@ -405,6 +484,11 @@ namespace Tests.DataProvider
 		void BulkCopyTest(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// AllTypes.ID is GENERATED ALWAYS, so the IDs set below are discarded and the server assigns
+			// its own - clean up by the high-water mark rather than by a value we think we inserted.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				conn.BulkCopy(
@@ -442,13 +526,17 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				conn.GetTable<ALLTYPE>().Delete(p => p.SMALLINTDATATYPE >= 5000);
+				conn.GetTable<ALLTYPE>().Delete(p => p.ID > maxId);
 			}
 		}
 
 		async Task BulkCopyTestAsync(string context, BulkCopyType bulkCopyType, int maxSize, int batchSize)
 		{
 			using var conn = GetDataContext(context);
+
+			// see BulkCopyTest: the supplied IDs are discarded, so clean up by the high-water mark.
+			var maxId = conn.GetTable<ALLTYPE>().Select(_ => _.ID).Max();
+
 			try
 			{
 				await conn.BulkCopyAsync(
@@ -485,7 +573,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.SMALLINTDATATYPE >= 5000);
+				await conn.GetTable<ALLTYPE>().DeleteAsync(p => p.ID > maxId);
 			}
 		}
 
@@ -810,7 +898,8 @@ namespace Tests.DataProvider
 			public static readonly Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]
+		[ActiveIssue(SkipForNonLinqService = true, ErrorMessage = "Assert.That(TestTimeTypes.Comparer(record, TestTimeTypes.Data[0]), Is.True)",
+			Details = "no-issue: RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]
 		[Test]
 		public void TestTimespanAndTimeValues([IncludeDataSources(true, ProviderName.DB2)] string context, [Values] bool useParameters)
 		{
@@ -873,7 +962,7 @@ namespace Tests.DataProvider
 		[Sql.Expression("{0} = {1}", IsPredicate = true, ServerSideOnly = true, PreferServerSide = true)]
 		private static bool Compare(DB2TimeStamp left, DB2TimeStamp right)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Compare));
 		}
 
 		[Table]
@@ -903,10 +992,9 @@ namespace Tests.DataProvider
 		{
 			using var db = GetDataConnection(context);
 			// DB2 SYSCAT.COLUMNS.TABSCHEMA column is padded with spaces to max(schema.length) length despite it being of varchar type
-			var schemas = db.Query<string>("SELECT SCHEMANAME FROM SYSCAT.SCHEMATA").AsEnumerable().Select(_ => _.TrimEnd(' ')).ToArray();
-
-			if (schemas.Select(_ => _.Length).Distinct().Count() < 2)
-				Assert.Inconclusive("Test requires at least two schemas with different name length");
+			// Fixed rather than read from SYSCAT.SCHEMATA: the list reaches the captured SQL, so a live one makes the
+			// baseline depend on what ran before (SESSION appears for good once any test creates a global temporary table).
+			var schemas = new[] { "SYSCAT", "SYSSTAT" };
 
 			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { IncludedSchemas = schemas });
 
@@ -923,6 +1011,7 @@ namespace Tests.DataProvider
 				usedSchemas.Add(table.SchemaName!);
 			}
 
+			Assert.That(usedSchemas, Is.EquivalentTo(schemas));
 			Assert.That(usedSchemas.Select(_ => _.Length).Distinct().Count(), Is.GreaterThan(1));
 		}
 
@@ -959,19 +1048,19 @@ namespace Tests.DataProvider
 			[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunction(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunction));
 			}
 
 			[Sql.Function("TEST_MODULE1.TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP1(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP1));
 			}
 
 			[Sql.Function("TEST_MODULE2.TEST_FUNCTION", ServerSideOnly = true)]
 			public static int TestFunctionP2(int param)
 			{
-				throw new InvalidOperationException("Scalar function cannot be called outside of query");
+				throw new ServerSideOnlyException(nameof(TestFunctionP2));
 			}
 
 			[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]

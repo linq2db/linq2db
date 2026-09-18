@@ -372,6 +372,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
+		internal bool IsServerSideOnly(Expression expr)
+		{
+			return _optimizationContext.IsServerSideOnly(expr);
+		}
+
 		Expression? _currentlyTestingForTranslation;
 
 		public bool HasTranslation(Expression expression)
@@ -781,7 +786,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.NamedTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
@@ -1133,12 +1138,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilters(disabledFilters), true);
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(null, disabledFilters)), true);
+		}
+
+		public void PushDisabledQueryFilters(string[] filterKeys, Type[] entityTypes)
+		{
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilterScope(new FilterIgnoreScope(filterKeys, entityTypes)), true);
 		}
 
 		public bool IsFilterDisabled(Type entityType)
 		{
 			return GetTranslationModifier().IsFilterDisabled(entityType);
+		}
+
+		public bool IsFilterDisabled(Type entityType, string filterKey)
+		{
+			return GetTranslationModifier().IsFilterDisabled(entityType, filterKey);
 		}
 
 		public void PopDisabledFilter()
@@ -1565,6 +1580,12 @@ namespace LinqToDB.Internal.Linq.Builder
 							return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[paramAccess.ParamIndex], strict);
 						}
 
+						// With no member and nothing left in the path, the whole object is what was asked for - the
+						// New case above answers with its own body for the same question. Reached when a constructed
+						// object is read through `as`, which projects through the conversion rather than round it.
+						if (next == null)
+							return mi;
+
 						throw new NotImplementedException($"Projecting '{next}' is not supported yet.");
 					}
 
@@ -1788,7 +1809,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (isPredicate is ConstantExpression constExpr)
 					{
 						if (constExpr.Value is true)
-							return truePath;
+						{
+							// A set operation pairs its branches by the type the projection is read as, so a
+							// projection handed back with its conversion stripped would key by the type it
+							// constructs instead and pair with nothing. See issue #5683. Only when the whole
+							// object is what was asked for - with a member still to resolve truePath is that
+							// member's value, which the cast does not apply to.
+							return next == null ? SequenceHelper.EnsureType(truePath, unary.Type) : truePath;
+						}
+
 						return new DefaultValueExpression(MappingSchema, truePath.Type, true);
 					}
 

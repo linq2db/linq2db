@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 
@@ -54,13 +56,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
 					_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
 						=> optionsBuilder.UseNpgsql(connectionString, o => o.UseNodaTime()).UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
-#if !NET10_0
 					_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
 #if !NETFRAMEWORK
 						.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
 #else
 						.UseMySql(connectionString),
-#endif
 #endif
 					_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
 					_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),
@@ -90,6 +90,83 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 #endregion
+
+		#region Issue 4669
+
+		// Regression test for #4669 with its own DbContext. The equivalent test on the shared Northwind model
+		// (ToolsTests.TestGlobalQueryFilters) cannot serve as one: it fails only when run alone, and passes
+		// whenever ToolsTests.NavigationProperties has run first - which it always has in a full run, since it
+		// sorts earlier. The masking is process-global state tied to the shared NorthwindContextBase model, so a
+		// separate context type is what makes the outcome independent of execution order.
+		public class Issue4669Item
+		{
+			public int     Id   { get; set; }
+			public string? Name { get; set; }
+		}
+
+		public sealed class Issue4669Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue4669Item> Items { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				// Mirrors IssueContextBase's ShadowTable: IsDeleted is a SHADOW property, and the query filter
+				// reaches it through EF.Property. Both tests that reproduce #4669 have a filter of this shape;
+				// an earlier attempt here used EF.Property against a real CLR property and did not reproduce.
+				modelBuilder.Entity<Issue4669Item>(e =>
+				{
+					e.Property(x => x.Id).ValueGeneratedNever();
+					e.Property<bool>("IsDeleted").IsRequired();
+					e.HasQueryFilter(p => !EF.Property<bool>(p, "IsDeleted"));
+				});
+			}
+		}
+
+		// Named distinctly from IssueTests.Issue4669Test, which covers a different aspect of the same issue and
+		// is not gated - a FullyQualifiedName~ filter would otherwise select both.
+		[ActiveIssue(4669, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.Diagnostics.UnreachableException")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
+		public void Issue4669QueryFilterTest([EFDataSources] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
+			optionsBuilder = provider switch
+			{
+				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => optionsBuilder.UseNpgsql(connectionString),
+				_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
+#if !NETFRAMEWORK
+					.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
+#else
+					.UseMySql(connectionString),
+#endif
+				_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
+				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),
+				_ => throw new InvalidOperationException($"ProviderSetup is not implemented for provider {provider}")
+			};
+
+			using var ctx = new Issue4669Context(optionsBuilder.Options);
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			ctx.Add(new Issue4669Item { Id = 1, Name = "TestOne" });
+			ctx.Add(new Issue4669Item { Id = 2, Name = "Other"   });
+			ctx.SaveChanges();
+
+			// Same shape as IssueTests.Issue4669Test: a linq2db call, then the EF call that throws.
+			var linq2dbResult = ctx.Items.Where(x => x.Name!.Contains("Test")).OrderBy(x => x.Name).ToLinqToDB().ToList();
+			var efResult      = ctx.Items.Where(x => x.Name!.StartsWith("Test")).ToList();
+
+			linq2dbResult.Count.ShouldBe(efResult.Count);
+		}
+
+		#endregion
 
 		#region Issue 4657
 #if !NETFRAMEWORK // requires UseCollation API
@@ -231,6 +308,58 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 		#endregion
 
+		#region Issue 5296
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5296")]
+		public async ValueTask Issue5296Test([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
+			optionsBuilder = provider switch
+			{
+				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => optionsBuilder.UseNpgsql(connectionString),
+				_ when provider.IsAnyOf(TestProvName.AllSqlServer)  => optionsBuilder.UseSqlServer(connectionString),
+				_                                                   => throw new InvalidOperationException($"ProviderSetup is not implemented for provider {provider}")
+			};
+
+			using var ctx = new Issue5296Context(optionsBuilder.Options);
+
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+
+				// creating the linq2db connection triggers provider version auto-detection,
+				// which opens EF's shared DbConnection and (before the fix) leaves it open
+				using (var db = ctx.CreateLinqToDBConnection())
+				{
+					await db.GetTable<Issue5296Entity>().ToListAsyncLinqToDB();
+				}
+
+				// must not throw: a leaked-open connection bound to the dropped database
+				// breaks EF's drop/recreate cycle (SocketException / broken-connection recovery)
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+		}
+
+		public sealed class Issue5296Context(DbContextOptions options) : DbContext(options)
+		{
+			public DbSet<Issue5296Entity> Entities { get; set; } = null!;
+
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity<Issue5296Entity>();
+			}
+		}
+
+		public record Issue5296Entity(int Id, string Name);
+
+		#endregion
+
 		#region Issue 4783
 
 #if NET9_0_OR_GREATER
@@ -325,7 +454,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 
 			using var db  = ctx.CreateLinqToDBConnection(); //should not throw an exception
-			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB(); 
+
+			// the data source carries the connection string, so EF exposes none: the dialect still has to come
+			// from this server and not from whichever PostgreSQL instance the process resolved first
+			db.DataProvider.Name.ShouldBe(DataConnection.GetDataProvider(provider).Name);
+
+			await db.GetTable<Issue4917RecordDb>().ToListAsyncLinqToDB();
 		}
 
 		public sealed class Issue4917Context(DbContextOptions options) : DbContext(options)

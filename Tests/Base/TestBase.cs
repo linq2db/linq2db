@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -19,7 +20,37 @@ namespace Tests
 	{
 		const int TRACES_LIMIT = 50000;
 
-		protected static string? LastQuery { get; set; }
+		// Live per-query trace echo to TestContext.Out. Under the MTP test runner this stream is
+		// captured into the CI build log, so echoing every executed query inflated per-leg logs
+		// ~100x (e.g. the Access leg log grew from 0.13MB to 25MB). Default: on locally, off under
+		// CI; override with LINQ2DB_TESTS_TRACE_CONSOLE=1/0. Failed tests still get the full trace
+		// appended to their failure message in OnAfterTest, and baseline capture is independent.
+		static readonly bool EchoTraceToConsole = GetEchoTraceToConsole();
+
+		static bool GetEchoTraceToConsole()
+		{
+			var setting = Environment.GetEnvironmentVariable("LINQ2DB_TESTS_TRACE_CONSOLE");
+			if (!string.IsNullOrEmpty(setting))
+				return setting is "1"
+					|| string.Equals(setting, "true", StringComparison.OrdinalIgnoreCase)
+					|| string.Equals(setting, "on",   StringComparison.OrdinalIgnoreCase);
+
+			// Azure Pipelines sets TF_BUILD; most CI providers set CI.
+			return Environment.GetEnvironmentVariable("TF_BUILD") == null
+				&& Environment.GetEnvironmentVariable("CI")       == null;
+		}
+
+		// Per-test (stored in CustomTestContext) so parallel tests don't clobber each other's
+		// last-executed-query; the trace sink writes it and tests read it back on their own thread.
+		protected static string? LastQuery
+		{
+			get => CustomTestContext.Get().Get<string?>(CustomTestContext.LASTQUERY);
+			set => CustomTestContext.Get().Set(CustomTestContext.LASTQUERY, value);
+		}
+
+		// Set when the parallel dispatcher is installed (TestsInitialization). Gates the
+		// per-provider database-readiness wait below, so a serial run is unaffected.
+		public static bool ParallelExecutionEnabled;
 
 		static TestBase()
 		{
@@ -63,12 +94,17 @@ namespace Tests
 						lock (trace)
 							trace.AppendLine(CultureInfo.InvariantCulture, $"{name}: {message}");
 
-						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
-						{
-							ctx.Set(CustomTestContext.LIMITED, true);
+						// Record that this test captured trace output so OnAfterTest appends it to the
+						// failure message (Azure surfaces only ErrorInfo). Independent of the console
+						// echo below, so failure diagnostics survive when the echo is suppressed.
+						ctx.Set(CustomTestContext.TRACE_CAPTURED, true);
+
+						// Echoing every query to TestContext.Out floods the MTP-captured CI log (~100x).
+						// Keep it opt-in; Debug.WriteLine stays (debugger only, never hits the build log).
+						if (EchoTraceToConsole && (traceCount < TRACES_LIMIT || level == TraceLevel.Error))
 							TestContext.Out.WriteLine("{0}: {1}", name, message);
-							Debug.WriteLine(message, name);
-						}
+
+						Debug.WriteLine(message, name);
 
 						Interlocked.Increment(ref traceCount);
 					}
@@ -129,26 +165,54 @@ namespace Tests
 		[SetUp]
 		public virtual void OnBeforeTest()
 		{
-			// SequentialAccess-enabled provider setup
-			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
+			var test = TestExecutionContext.CurrentContext.CurrentTest;
+			var (provider, isRemote) = NUnitUtils.GetContext(test);
+
+			// Drop any server-provider marker left on this thread. It is set on the LinqService server's
+			// execution flow and CustomTestContext.Get consults it *before* the current test id, so a stale
+			// value would misroute this test's traces and baselines. Today every transport answers on a
+			// thread-pool thread, whose ExecutionContext is reset per work item, so none can survive - but
+			// lane threads are dedicated and outlive the item that ran on them, so an in-process transport
+			// would leave one set on a lane for the rest of the run.
+			CustomTestContext.SetServerProvider(null);
+
+			// establish a fresh per-test context before anything in setup/test can log
+			CustomTestContext.Begin(isRemote, provider);
+
+			// Under parallel execution, wait until this provider's database has been created
+			// (CreateDatabase runs off-lane and signals readiness). A serial run skips this; providers
+			// that get no CreateDatabase case are pre-marked ready in TestsInitialization, so only
+			// providers this run actually creates are waited on.
+			if (ParallelExecutionEnabled && provider != null)
 			{
-				Configuration.OptimizeForSequentialAccess = true;
+				if (!NUnitUtils.IsCreateDatabase(test))
+				{
+					var signaled = CustomTestContext.AwaitDatabaseReady(provider);
+
+					// Backstop: if the wait timed out (no CreateDatabase ever signalled it), release the
+					// other waiters so they don't each pay the full timeout — one wait per provider, not per test.
+					if (!signaled)
+						CustomTestContext.MarkDatabaseReady(provider);
+				}
 			}
+
+			// SequentialAccess for the SqlServer.SA provider is now a per-context option set in the
+			// GetDataConnection/GetDataContext factory, so parallel lanes don't share a process-global toggle.
 		}
 
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
+			var test = TestExecutionContext.CurrentContext.CurrentTest;
+			var (provider, isRemote) = NUnitUtils.GetContext(test);
+
+			// release any tests waiting on this provider's database: signalled after CreateDatabase
+			// runs (here, not inside the try, so a failed CreateDatabase still unblocks waiters)
+			if (provider != null && NUnitUtils.IsCreateDatabase(test))
+				CustomTestContext.MarkDatabaseReady(provider);
+
 			try
 			{
-				// SequentialAccess-enabled provider cleanup
-				var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-				if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-				{
-					Configuration.OptimizeForSequentialAccess = false;
-				}
-
 				if (provider?.IsAnyOf(TestProvName.AllSapHana) == true)
 				{
 					using (new DisableLogging())
@@ -169,7 +233,7 @@ namespace Tests
 
 				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
 
-				if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.LIMITED))
+				if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.TRACE_CAPTURED))
 				{
 					// we need to set ErrorInfo.Message element text
 					// because Azure displays only ErrorInfo node data

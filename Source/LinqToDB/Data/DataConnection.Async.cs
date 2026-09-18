@@ -146,9 +146,9 @@ namespace LinqToDB.Data
 		/// <returns>Async operation task.</returns>
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public async Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
+		public Task EnsureConnectionAsync(CancellationToken cancellationToken = default)
 		{
-			await OpenConnectionAsync(cancellationToken).ConfigureAwait(false);
+			return OpenConnectionAsync(cancellationToken);
 		}
 
 		/// <summary>

@@ -86,5 +86,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected override bool IsDistinctSupported    => true;
 		}
 
+		protected class Firebird5WindowFunctionsMemberTranslator : Firebird4WindowFunctionsMemberTranslator
+		{
+			// PERCENT_RANK / CUME_DIST / NTILE inherited from Firebird 4; NTH_VALUE from Firebird 3.
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new Firebird5WindowFunctionsMemberTranslator();
+		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -198,25 +199,20 @@ namespace Tests
 
 			public override void Dispose()
 			{
-				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
-				{
-					FirebirdTools.ClearAllPools();
-				}
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				DataContext.Close();
-				FirebirdTools.ClearAllPools();
+				ClearFirebirdPool(DataContext, fbConnection);
+
 				base.Dispose();
 			}
 
 			public override async ValueTask DisposeAsync()
 			{
-				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
-				{
-					FirebirdTools.ClearAllPools();
-				}
+				var fbConnection = DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird) ? dc.TryGetDbConnection() : null;
 
 				await DataContext.CloseAsync();
-				FirebirdTools.ClearAllPools();
+				ClearFirebirdPool(DataContext, fbConnection);
 
 				await base.DisposeAsync();
 			}
@@ -253,9 +249,24 @@ namespace Tests
 		{
 			if (db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true)
 			{
+				var fbConnection = db is DataConnection dc ? dc.TryGetDbConnection() : null;
+
 				db.Close();
-				FirebirdTools.ClearAllPools();
+				ClearFirebirdPool(db, fbConnection);
 			}
+		}
+
+		// Firebird serializes DDL against object references: after dropping a temp table, the closed-but-pooled
+		// connection keeps a reference that fails the next CREATE/DROP ("object TABLE is in use"). Evict only
+		// THIS database's pool — by the live connection when we have one (direct path), else by its connection
+		// string (remote/LinqService path, where DataContext is not a DataConnection). Never ClearAllPools: it is
+		// process-wide and would tear down the connections other concurrently-running Firebird versions are using.
+		static void ClearFirebirdPool(IDataContext dataContext, DbConnection? connection)
+		{
+			if (connection != null)
+				FirebirdTools.ClearPool(connection);
+			else if (dataContext.ConfigurationString is { } configuration)
+				FirebirdTools.ClearPool(DataConnection.GetConnectionString(configuration.StripRemote()));
 		}
 
 		public static Version GetSqliteVersion(DataConnection db)

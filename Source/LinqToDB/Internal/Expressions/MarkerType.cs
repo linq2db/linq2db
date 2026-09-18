@@ -5,5 +5,6 @@ namespace LinqToDB.Internal.Expressions
 		None = 0,
 		PreferClientSide,
 		AggregationFallback,
+		ExplicitEagerLoad,
 	}
 }

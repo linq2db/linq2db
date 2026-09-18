@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -365,7 +365,7 @@ namespace Tests.Linq
 
 		public class     Entity    { [PrimaryKey] public int Id { get; set; } }
 		public interface IDocument { int Id { get; set; } }
-		public class     Document : Entity, IDocument { }
+		public class     Document : Entity, IDocument;
 
 		[Test]
 		public void TestMethod([DataSources] string context)
@@ -764,7 +764,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(279, ErrorMessage = "Assert.That(record.TestAccess, Is.EqualTo(5))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The get-only Field property has no writable storage, so the value never reaches the backing field on materialization - #279's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/279")]
 		public void StorageFieldTest([DataSources] string context)
 		{
@@ -856,9 +857,29 @@ namespace Tests.Linq
 
 		#region Issue 3117
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllYdb])]
+		// AllSQLite is not one gate: only SQLite.MS refuses the type, bare Classic passes. The MiniProfiler-wrapped
+		// variants are excluded instead of gated - the profiler formats the SQL only when it happens to be
+		// profiling, and that path calls Id<T>.ToString, which throws, so their outcome flips with suite composition.
+		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Specified cast is not valid.",
+			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Unable to cast object of type 'Id`1[Tests.Linq.MappingTests+User]' to type 'System.Int32'.",
+			Details = "as the DB2 half, with the client naming the types.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "is not supported for parameters having DataTypeName 'integer'.",
+			Details = "as the DB2 half; Npgsql reports the unsupported write instead.")]
+		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
+			Details = "as the DB2 half. Only the MS provider refuses - bare Classic passes, so AllSQLite would have been over-broad.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
+			Details = "as the DB2 half.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllOracle, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
+			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(IdConverter<>));
@@ -876,9 +897,29 @@ namespace Tests.Linq
 			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllYdb])]
+		// AllSQLite is not one gate: only SQLite.MS refuses the type, bare Classic passes. The MiniProfiler-wrapped
+		// variants are excluded instead of gated - the profiler formats the SQL only when it happens to be
+		// profiling, and that path calls Id<T>.ToString, which throws, so their outcome flips with suite composition.
+		[ActiveIssue(3117, Configurations = [TestProvName.AllDB2, TestProvName.AllInformix], ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Specified cast is not valid.",
+			Details = "Issue number taken from the test's own Description. The generic Id<T> converter is not consulted when the parameter is bound.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Unable to cast object of type 'Id`1[Tests.Linq.MappingTests+User]' to type 'System.Int32'.",
+			Details = "as the DB2 half, with the client naming the types.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "is not supported for parameters having DataTypeName 'integer'.",
+			Details = "as the DB2 half; Npgsql reports the unsupported write instead.")]
+		[ActiveIssue(3117, Configuration = ProviderName.SQLiteMS, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "No mapping exists from object type Tests.Linq.MappingTests+Id`1[Tests.Linq.MappingTests+User] to a known managed provider native type.",
+			Details = "as the DB2 half. Only the MS provider refuses - bare Classic passes, so AllSQLite would have been over-broad.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "is not supported for parameters having YdbDbType 'Int32'",
+			Details = "as the DB2 half.")]
+		[ActiveIssue(3117, Configuration = TestProvName.AllOracle, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value '5: System.Decimal' to type 'Tests.Linq.MappingTests+Id",
+			Details = "as the DB2 half; Oracle hands the identity back as a decimal. Message truncated before the assembly-qualified type argument, which carries the product version.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSQLiteMP)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);
@@ -1288,7 +1329,6 @@ namespace Tests.Linq
 			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
@@ -1307,14 +1347,40 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
+			// Constructor materialization is unified with the LINQ path: the mapped column name (some_column) is
+			// authoritative, so a result column aliased to the member name does not bind and the parameter stays
+			// at its default. Select the mapped column name (Issue4437Test2) to populate it.
 			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
-			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
+			Assert.That(result[0].SomeColumn, Is.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
+		public void Issue4437Test4([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(new Issue4437VcRecord[] { new(true) });
+
+			var result = db.Query<Issue4437VcRecord>("select some_column from test4437vc").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].SomeColumn, Is.True);
 		}
 
 		[Table("test4437")]
 		sealed record Issue4437Record([property: Column("some_column")] string SomeColumn);
+
+		[Table("test4437vc")]
+		sealed record Issue4437VcRecord(
+			[property: Column("some_column", DataType = DataType.VarChar, Length = 1), ValueConverter(ConverterType = typeof(Issue4437BoolConverter))] bool SomeColumn);
+
+		sealed class Issue4437BoolConverter : ValueConverter<bool, string>
+		{
+			public Issue4437BoolConverter() : base(v => v ? "Y" : "N", p => p == "Y", true)
+			{
+			}
+		}
 		#endregion
 
 		#region Issue 1833
@@ -1363,9 +1429,29 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 2362
-		[ActiveIssue]
+		// Split by the [Values] argument, because the two arms are not equally broken: filtering on false fails
+		// everywhere, filtering on true fails only on ClickHouse. One gate over both marked ~50 working cases as
+		// failing.
+		[ActiveIssue(2362, Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllDuckDB, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllYdb],
+			ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The empty string the converter writes for false is not matched back - #2362's 'Query skips rows with empty string'. Spelled out rather than left unconditional because Oracle matches the empty string back and passes.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test([DataSources] string context, [Values] bool value)
+		public void Issue2362Test([DataSources] string context)
+		{
+			Issue2362Core(context, false);
+		}
+
+		[ActiveIssue(2362, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Assert.That(res[0].Value, Is.True)",
+			Details = "The true arm of #2362, which ClickHouse gets wrong by reading the value back as false.")]
+		[ActiveIssue(2362, Configuration = TestProvName.AllOracle, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(1))",
+			Details = "Oracle gets the same arm wrong a step earlier: the row is not matched at all, so nothing comes back to read.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
+		public void Issue2362TestMatchingValue([DataSources] string context)
+		{
+			Issue2362Core(context, true);
+		}
+
+		void Issue2362Core(string context, bool value)
 		{
 			var fb = new FluentMappingBuilder()
 				.Entity<Issue2362Table>()
@@ -1466,8 +1552,13 @@ namespace Tests.Linq
 
 		record MappingTypingByConstant<T>(int Id, T Value);
 
-		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB and MySQL 5.7", Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true)]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[ActiveIssue(4955, Configurations = [TestProvName.AllMariaDB, TestProvName.MySql57Connector], SkipForLinqService = true,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
+			Details = "CAST to BIGINT doesn't work in MariaDB and MySQL 5.7, so 2147483648 comes back as an int and overflows on the way out.")]
+		[ActiveIssue(4955, Configuration = ProviderName.MySql57, SkipForLinqService = true,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Value was either too large or too small for an Int32.",
+			Details = "as above; the MySql.Data driver names the target type where MySqlConnector words it generically.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
 		{
 			using var db = GetDataContext(context);
@@ -1490,7 +1581,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB", Configuration = TestProvName.AllMariaDB, SkipForLinqService = true)]
+		[ActiveIssue(4955, Configuration = TestProvName.AllMariaDB, SkipForLinqService = true,
+			ErrorTypeName = "System.OverflowException", ErrorMessage = "Arithmetic operation resulted in an overflow.",
+			Details = "CAST to BIGINT doesn't work in MariaDB, so 2147483648 comes back as an int and overflows on the way out.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromQuery_Int64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1L)] long? first)
 		{
@@ -1512,7 +1605,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1ul)] ulong? first)
 		{
 			using var db = GetDataContext(context);
@@ -1538,8 +1631,6 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromQuery_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1ul)] ulong? first)
 		{
-			using var _ = inline && context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
-
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
 
@@ -1558,7 +1649,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_UInt32([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1u)] uint? first)
 		{
 			using var db = GetDataContext(context);
@@ -1602,7 +1693,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Decimal([DataSources(TestProvName.AllAccess)] string context, [Values] bool isNull)
 		{
 			using var db = GetDataContext(context);
@@ -1646,7 +1737,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Double([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0D)] double? first)
 		{
 			using var db = GetDataContext(context);
@@ -1690,7 +1781,7 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]
 		public void MappingTypingByConstant_FromEnumerable_Float([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0F)] float? first)
 		{
 			using var db = GetDataContext(context);
@@ -1865,5 +1956,79 @@ namespace Tests.Linq
 			Assert.That(res, Has.Count.EqualTo(1));
 			Assert.That(res[0].Id, Is.EqualTo(1));
 		}
+
+		#region Issue 5540
+
+		[Table("Issue5540")]
+		sealed class Issue5540Entity
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 200)]
+			public IList<Issue5540SubItem> Items { get; set; } = new List<Issue5540SubItem>();
+		}
+
+		sealed class Issue5540SubItem
+		{
+			public string Code { get; set; } = null!;
+		}
+
+		sealed class Issue5540JsonEachRow<T>
+		{
+			public T Value { get; set; } = default!;
+		}
+
+		[Sql.TableFunction("json_each", argIndices: [0])]
+		static IQueryable<Issue5540JsonEachRow<T>> Issue5540JsonEach<T>(IEnumerable<T> _)
+			=> throw new ServerSideOnlyException(nameof(Issue5540JsonEach));
+
+		static Expression<Func<Issue5540Entity, IQueryable<Issue5540SubItem>>> Issue5540ItemsExpr()
+			=> e => Issue5540JsonEach(Sql.Property<IList<Issue5540SubItem>>(e, nameof(Issue5540Entity.Items))).Select(r => r.Value);
+
+		static MappingSchema Issue5540Schema()
+		{
+			var fb = new FluentMappingBuilder()
+				.Entity<Issue5540Entity>()
+					.Property(e => e.Items).HasAttribute(new ExpressionMethodAttribute(Issue5540ItemsExpr()) { IsColumn = false })
+				.Build();
+
+			var ms = fb.MappingSchema;
+
+			ms.SetConvertExpression<string, IList<Issue5540SubItem>>(
+				s => string.IsNullOrEmpty(s)
+					? (IList<Issue5540SubItem>)new List<Issue5540SubItem>()
+					: s.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries).Select(c => new Issue5540SubItem { Code = c }).ToList());
+			ms.SetConvertExpression<IList<Issue5540SubItem>, DataParameter>(
+				list => new DataParameter { Value = string.Join(";", list.Select(i => i.Code)), DataType = DataType.NVarChar });
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
+		public void Issue5540Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context, Issue5540Schema());
+			using var tb = db.CreateLocalTable<Issue5540Entity>();
+
+			db.Insert(new Issue5540Entity { Id = 1, Items = new List<Issue5540SubItem> { new() { Code = "A" }, new() { Code = "B" } } });
+
+			var res = tb.ToList();
+
+			Assert.That(res, Has.Count.EqualTo(1));
+			Assert.That(res[0].Items.Select(i => i.Code), Is.EqualTo(new[] { "A", "B" }));
+		}
+
+		// SQLite-only: assertion shape relies on linq2db giving up at translation, which is SQLite-specific.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5540")]
+		public void Issue5540Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, Issue5540Schema());
+			using var tb = db.CreateLocalTable<Issue5540Entity>();
+
+			var ex = Assert.Throws<LinqToDB.LinqToDBException>(
+				() => tb.Where(e => e.Items.Any(i => i.Code == "X")).ToList());
+			Assert.That(ex!.Message, Does.Contain(nameof(Issue5540JsonEach)));
+		}
+
+		#endregion
 	}
 }

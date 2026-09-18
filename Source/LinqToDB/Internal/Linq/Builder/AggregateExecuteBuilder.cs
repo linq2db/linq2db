@@ -40,6 +40,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			// Aggregate's source is an independent sub-sequence — isolate its OrderBy so it
+			// doesn't leak into outer state consumed by CteUnion's parent RN OVER (ORDER BY ...).
+			using var orderByIsolation = builder.IsolateOrderBy();
+
 			if (sequence == null)
 			{
 				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true });

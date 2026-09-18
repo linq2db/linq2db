@@ -1,4 +1,4 @@
-﻿extern alias MySqlData;
+extern alias MySqlData;
 
 using System;
 using System.Collections.Generic;
@@ -54,7 +54,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		// NonParallelizable: cleanDefault=true nulls the process-global DataConnection.DefaultConfiguration /
+		// DefaultSettings (via EmptyDefaultSetingsScope); a concurrent context-less test reading the global
+		// would throw "Invalid configuration. Configuration string is not provided.".
+		[Test, NonParallelizable]
 		public void TestNullConfiguration_Unset([Values] bool cleanDefault)
 		{
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
@@ -66,7 +69,8 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test]
+		// NonParallelizable: nulls the process-global DataConnection.DefaultConfiguration (EmptyDefaultSetingsScope) - see TestNullConfiguration_Unset.
+		[Test, NonParallelizable]
 		public void TestNullConfiguration_UnsetRemote([Values] bool cleanDefault)
 		{
 			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
@@ -82,7 +86,8 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test]
+		// NonParallelizable: nulls the process-global DataConnection.DefaultConfiguration (EmptyDefaultSetingsScope) - see TestNullConfiguration_Unset.
+		[Test, NonParallelizable]
 		public void TestNullConfiguration_SetNull([Values] bool cleanDefault)
 		{
 			var connectionString = GetConnectionString(ProviderName.SQLiteClassic);
@@ -94,7 +99,8 @@ namespace Tests.Linq
 			_ = db.GetTable<Person>().ToArray();
 		}
 
-		[Test]
+		// NonParallelizable: nulls the process-global DataConnection.DefaultConfiguration (EmptyDefaultSetingsScope) - see TestNullConfiguration_Unset.
+		[Test, NonParallelizable]
 		public void TestNullConfiguration_SetNullRemote([Values] bool cleanDefault)
 		{
 			if (TestConfiguration.DisableRemoteContext) Assert.Ignore("Remote context disabled");
@@ -175,7 +181,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue("Provider detector picks managed provider as we don't have separate provider name for native Sybase provider", Configuration = ProviderName.Sybase)]
+		[ActiveIssue(Configuration = ProviderName.Sybase, ErrorMessage = "db1.DataProvider.Name",
+			Details = "no-issue: unvalidated: the provider detector picks the managed provider because there is no separate provider name for the native Sybase one. ProviderName.Sybase is netfx-only, so this case does not exist on net10.0 and the declared failure is read off the assertion rather than harvested.")]
 		public void ProviderConnectionStringConstructorTest3([DataSources(false)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);

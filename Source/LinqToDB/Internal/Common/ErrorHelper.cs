@@ -25,8 +25,65 @@
 		public const string Error_RowNumber                        = "Provider does not support ROW_NUMBER function.";
 		public const string Error_OrderByRequiredForIndexing       = "For retrieving index of row, specify OrderBy part.";
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
+		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
+		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
 
-		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
+		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
+		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";
+		public const string Error_WindowFunction_CumeDist                         = "CUME_DIST is not supported by current provider.";
+		public const string Error_WindowFunction_NTile                            = "NTILE is not supported by current provider.";
+		public const string Error_WindowFunction_NthValue                         = "NTH_VALUE is not supported by current provider.";
+		public const string Error_WindowFunction_LeadLag                          = "LEAD/LAG is not supported by current provider.";
+		public const string Error_WindowFunction_FirstLastValue                   = "FIRST_VALUE/LAST_VALUE is not supported by current provider.";
+		public const string Error_WindowFunction_FirstLastValueBoolean            = "FIRST_VALUE/LAST_VALUE over a boolean value is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileCont                   = "PERCENTILE_CONT is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileContBooleanOrderBy     = "PERCENTILE_CONT over a boolean sort key is not supported.";
+		public const string Error_WindowFunction_PercentileDisc                   = "PERCENTILE_DISC is not supported by current provider.";
+		public const string Error_WindowFunction_PercentileDiscBooleanOrderBy     = "PERCENTILE_DISC over a boolean sort key is not supported by current provider.";
+		public const string Error_WindowFunction_Variance                         = "STDDEV/VARIANCE is not supported by current provider.";
+		public const string Error_WindowFunction_Correlation                      = "COVAR/CORR is not supported by current provider.";
+		public const string Error_WindowFunction_LinearRegression                 = "REGR_* is not supported by current provider.";
+		public const string Error_WindowFunction_Median                           = "MEDIAN is not supported by current provider.";
+		public const string Error_WindowFunction_HypotheticalSet                  = "Hypothetical-set RANK/DENSE_RANK/PERCENT_RANK/CUME_DIST is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRows                        = "ROWS frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRange                       = "RANGE frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameGroups                      = "GROUPS frame is not supported by current provider.";
+		public const string Error_WindowFunction_FrameExclude                     = "Frame EXCLUDE clause is not supported by current provider.";
+		public const string Error_WindowFunction_FrameRangeGroupsOrderBy          = "A RANGE or GROUPS frame with a value offset requires exactly one ORDER BY expression.";
+		public const string Error_WindowFunction_FrameRangeGroupsNullsEmulation   = "A RANGE or GROUPS frame with a value offset requires a single ORDER BY key, but the requested NULLS ordering is emulated with an extra sort key on this provider. Use a non-nullable ORDER BY key, drop the explicit NULLS position, or use a ROWS frame.";
+		public const string Error_WindowFunction_OrderedSetFilter                 = "FILTER (WHERE ...) on ordered-set aggregates (PERCENTILE_CONT/PERCENTILE_DISC) is not supported by current provider.";
+		public const string Error_WindowFunction_Keep                             = "KEEP clause is not supported by current provider.";
+		public const string Error_WindowFunction_KeepOrderBy                      = "KEEP (DENSE_RANK FIRST/LAST) requires an ORDER BY.";
+		public const string Error_WindowFunction_NullTreatment                    = "IGNORE NULLS is not supported by current provider.";
+		public const string Error_WindowFunction_NthValueFrom                     = "NTH_VALUE FROM LAST is not supported by current provider.";
+		public const string Error_WindowFunction_LeadLagDefault                   = "Default value argument for LEAD/LAG is not supported by current provider.";
+		public const string Error_WindowFunction_AggregateWindowFunctions         = "Aggregate window functions are not supported by current provider.";
+		public const string Error_WindowFunction_AggregateDistinct                = "DISTINCT is not supported in window aggregate functions by current provider.";
+		public const string Error_WindowFunction_NotSupported                     = "Window functions are not supported by current provider.";
+
+		public const string Error_Interval_Operation                              = "This TimeSpan operation is not supported by current provider.";
+		/// <summary>
+		/// Spelled out rather than terse, unlike its neighbours, because this one describes a capability that was
+		/// taken away rather than one that never existed: before 6.5 the same expression was rewritten into
+		/// <c>Sql.DateDiff</c>, which counts crossed boundaries instead of measuring elapsed time. Provider-neutral
+		/// wording because more than one provider reaches it.
+		/// </summary>
+		public const string Error_Interval_Difference                             = "Subtracting one date/time value from another is not supported by current provider. Compute the difference in .NET, or use Sql.DateDiff where a count of crossed unit boundaries answers the question.";
+		public const string Error_Interval_Member                                 = "This TimeSpan member is not supported by current provider.";
+		/// <summary>
+		/// Names the declaration rather than the provider, because no provider can answer this one: the two stored
+		/// numbers are counted in different units and only one of them says so.
+		/// </summary>
+		public const string Error_Interval_UndeclaredOperand                      = "Cannot combine a duration whose unit is declared with one stored through a value converter, which does not say what its number counts. Declare that column with DurationAttribute, or combine the two in .NET.";
+		public const string Error_Interval_Shift                                  = "Adding a TimeSpan to a date/time value is not supported by current provider.";
+		/// <summary><c>{0}</c> - the requested component unit, <c>{1}</c> - the finest unit the provider resolves.</summary>
+		public const string Error_Interval_ComponentBelowResolution               = "Current provider measures elapsed time to the {1}, so the {0} component of an interval is always zero and is not translated.";
+
+		/// <summary>
+		/// <c>{0}</c> and <c>{1}</c> - the two columns. Named rather than described, because two conversions are
+		/// indistinguishable in the query text and the mistake is in the model rather than in what was written.
+		/// </summary>
+		public const string Error_ValueConverter_DivergentOperands                = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion.";
 
 		public const string Error_Upsert_MergeLowering_NotSupported =
 			"Upsert configuration requires MERGE lowering (bulk source, non-PK match, conditional Insert, or SkipInsert), "
@@ -60,6 +117,18 @@
 			"Upsert cannot be expressed natively for this provider / configuration and would fall back to an emulated UPDATE+INSERT sequence. "
 			+ "LinqOptions.UpsertEmulationPolicy is set to Throw — change the provider, adjust the Upsert configuration, or set it to Allow to permit emulation.";
 
+		public const string Error_Concurrency_UpdateWithRefresh_NotSupported =
+			"UpdateOptimisticWithRefresh requires the provider to either return updated rows from the UPDATE statement (OUTPUT / RETURNING) "
+			+ "or report the number of affected rows. The current provider supports neither, so the optimistic-concurrency result cannot be guaranteed.";
+
+		public const string Error_Concurrency_UpdateWithRefresh_ReadOnlyLockMember =
+			"UpdateOptimisticWithRefresh cannot refresh '{0}.{1}': the optimistic-lock member has no setter, "
+			+ "so the regenerated value cannot be written back onto the entity.";
+
+		public const string Error_Concurrency_UpdateWithRefresh_UnsupportedSource =
+			"UpdateOptimisticWithRefresh cannot refresh through '{0}': the query operator does not expose the updated table as its source, "
+			+ "so the regenerated value cannot be read back reliably.";
+
 		public const string Error_GroupGuard =
 							"""
 							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.
@@ -67,6 +136,10 @@
 							Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().
 							NOTE! By disabling this guard you accept Eager Loading for grouping query.
 							""";
+
+		public const string Error_ImplicitEagerLoadingNotAllowed =
+			"Implicit eager loading is not allowed (LinqOptions.ImplicitCollectionLoading = Throw): a collection was projected without an explicit eager-load request. "
+			+ "To allow it, request the load explicitly with LoadWith()/ThenLoad(), or opt the whole query in with WithUnionLoadStrategy()/WithKeyedLoadStrategy()/WithSeparateLoadStrategy() — or set ImplicitCollectionLoading = Allow to turn the guard off.";
 
 		public static class Oracle
 		{

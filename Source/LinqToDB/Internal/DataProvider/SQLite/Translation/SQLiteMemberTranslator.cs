@@ -14,9 +14,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 {
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-		}
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault;
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -389,6 +387,17 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 					return factory.Function(stringDbType, "substr", expression, factory.Value(pos), factory.Value(length));
 				}
 			}
+		}
+
+		protected class SQLiteWindowFunctionsMemberTranslator : WindowFunctionsMemberTranslator
+		{
+			protected override bool IsPercentileContSupported => false;
+			protected override bool IsPercentileDiscSupported => false;
+		}
+
+		protected override IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new SQLiteWindowFunctionsMemberTranslator();
 		}
 	}
 }

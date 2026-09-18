@@ -60,11 +60,12 @@ namespace Tests.UserTests
 		{
 			ResetPersonIdentity(context);
 
-			MappingSchema.Default.SetConverter<Dictionary<string, string>?, string?>(obj => obj == null ? null : obj.Keys.FirstOrDefault());
-			MappingSchema.Default.SetConverter<Dictionary<string, string>?, DataParameter?>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar });
-			MappingSchema.Default.SetConverter<string?, Dictionary<string, string>?>(txt => txt == null ? null : new Dictionary<string, string> { { txt, txt } });
+			var ms = new MappingSchema();
+			ms.SetConverter<Dictionary<string, string>?, string?>(obj => obj == null ? null : obj.Keys.FirstOrDefault());
+			ms.SetConverter<Dictionary<string, string>?, DataParameter?>(obj => obj == null ? null : new DataParameter { Value = obj.Keys.FirstOrDefault(), DataType = DataType.NVarChar });
+			ms.SetConverter<string?, Dictionary<string, string>?>(txt => txt == null ? null : new Dictionary<string, string> { { txt, txt } });
 
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, ms);
 			using var _ = new RestoreBaseTables(db);
 
 			var person = new Person

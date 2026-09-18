@@ -282,6 +282,20 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Declares that current column stores a duration, and in which unit.
+		/// </summary>
+		/// <param name="unit">Unit in which the duration is stored.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		/// <remarks>
+		/// The unit is what makes server-side translation possible: a <c>BIGINT</c> column alone does not say whether
+		/// it holds ticks or seconds. Without this, a <see cref="TimeSpan"/> column keeps its existing meaning.
+		/// </remarks>
+		public PropertyMappingBuilder<TEntity, TProperty> HasDuration(DurationUnit unit)
+		{
+			return HasAttribute(new DurationAttribute(unit));
+		}
+
+		/// <summary>
 		/// Sets custom column create SQL template.
 		/// </summary>
 		/// <param name="format">
@@ -477,7 +491,21 @@ namespace LinqToDB.Mapping
 		{
 			ArgumentNullException.ThrowIfNull(expression);
 
-			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
+			LambdaExpression lambda = expression;
+
+			// For a nested/complex property path (e.g. c => c.Address.Postcode) the column lives on the
+			// complex type, not on TEntity. Rebase the expression's parameter from TEntity to that owner
+			// type so the materialization-time substitution binds it to the nested object root; otherwise
+			// ExposeExpressionVisitor.ConvertMemberExpression throws "Can't convert <param> to expression".
+			if (_memberInfo.ReflectedType != null && _memberInfo.ReflectedType != typeof(TEntity))
+			{
+				var oldParameter = expression.Parameters[0];
+				var newParameter = Expression.Parameter(_memberInfo.ReflectedType, oldParameter.Name);
+
+				lambda = Expression.Lambda(expression.Body.Replace(oldParameter, newParameter), newParameter);
+			}
+
+			return HasAttribute(new ExpressionMethodAttribute(lambda) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}
 
 		/// <summary>

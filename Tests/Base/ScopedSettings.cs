@@ -82,20 +82,6 @@ namespace Tests
 		}
 	}
 
-	public class OptimizeForSequentialAccess : IDisposable
-	{
-		private readonly bool _original = Configuration.OptimizeForSequentialAccess;
-		public OptimizeForSequentialAccess(bool enable)
-		{
-			Configuration.OptimizeForSequentialAccess = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.OptimizeForSequentialAccess = _original;
-		}
-	}
-
 	public class ThreadHopsScope : IDisposable
 	{
 		private readonly int _original = Configuration.TranslationThreadMaxHopCount;

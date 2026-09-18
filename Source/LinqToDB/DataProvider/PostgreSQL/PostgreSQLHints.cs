@@ -59,7 +59,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95, StringComparer.Ordinal)
 						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL13, StringComparer.Ordinal)
 						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15, StringComparer.Ordinal)
-						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL18, StringComparer.Ordinal))
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL18, StringComparer.Ordinal)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL19, StringComparer.Ordinal))
 					{
 						stringBuilder.Append(' ');
 						stringBuilder.Append(value);

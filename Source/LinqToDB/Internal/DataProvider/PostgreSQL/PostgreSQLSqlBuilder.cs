@@ -36,9 +36,17 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
 
-		protected override bool SupportsMaterializedCteHint   => true;
+		// AS [NOT] MATERIALIZED requires PostgreSQL 12+; the base builder (used by pre-12 providers) omits it.
+		// PostgreSQL13SqlBuilder enables it for v13+ — see PostgreSQLDataProvider.CreateSqlBuilder.
+		protected override bool SupportsMaterializedCteHint   => false;
 
 		protected override ConcatBuildStyle ConcatStyle       => ConcatBuildStyle.Pipes;
+
+		protected override void BuildDistinctModifier(SelectQuery selectQuery)
+		{
+			StringBuilder.Append(" DISTINCT");
+			BuildDistinctOnExpressions(selectQuery);
+		}
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
@@ -449,14 +457,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			var saveStep = BuildStep;
-			BuildStep = Step.TypedExpression;
-
 			BuildExpression(Precedence.Primary, value);
 			StringBuilder.Append("::");
 			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
-
-			BuildStep = saveStep;
 		}
 
 		protected override void BuildSql()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -267,9 +267,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
-#if NET8_0_OR_GREATER
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
-#endif
 		[Test]
 		public void TestGlobalQueryFilters([EFDataSources] string provider, [Values] bool enableFilter)
 		{
@@ -300,6 +297,69 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(linq2dbResult2, Has.Length.EqualTo(efResult2.Length));
 			}
 		}
+
+#if EF10
+		[Test]
+		public void TestNamedQueryFilter_AppliesAll([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// Both named filters apply (AND-combined) — "ProductIdFilter" (ProductId > 2) AND "NotDiscontinued" (!Discontinued)
+			var efResult      = ctx.Products.ToArray();
+			var linq2dbResult = ctx.Products.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
+		}
+
+		[Test]
+		public void TestIgnoreQueryFilters_ByKey([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// IgnoreQueryFilters(["NotDiscontinued"]) disables only "NotDiscontinued"; "ProductIdFilter" (ProductId > 2) stays.
+			var query         = ctx.Products.IgnoreQueryFilters(["NotDiscontinued"]);
+			var efResult      = query.ToArray();
+			var linq2dbResult = query.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+			linq2dbResult.ShouldAllBe(p => p.ProductId > 2);
+			linq2dbResult.ShouldContain(p => p.Discontinued);
+		}
+
+		[Test]
+		public void TestIgnoreQueryFilters_All_StillWorks([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// Back-compat: no-arg IgnoreQueryFilters() still disables every filter on the entity.
+			var query         = ctx.Products.IgnoreQueryFilters();
+			var efResult      = query.ToArray();
+			var linq2dbResult = query.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+		}
+
+		[Test]
+		public void TestIgnoreQueryFilters_Empty_IsNoOp([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider, true);
+			ctx.IsFilterProducts = true;
+
+			// EF Core treats IgnoreQueryFilters([]) (empty key collection) as a no-op — all filters stay applied.
+			// linq2db must mirror that rather than disabling every filter (empty array = "any key" wildcard on its
+			// native IgnoreFilters API), so the EF and linq2db row sets must match and both keep the named filters.
+			var query         = ctx.Products.IgnoreQueryFilters(Array.Empty<string>());
+			var efResult      = query.ToArray();
+			var linq2dbResult = query.ToLinqToDB().ToArray();
+
+			Assert.That(linq2dbResult, Has.Length.EqualTo(efResult.Length));
+			linq2dbResult.ShouldAllBe(p => p.ProductId > 2 && !p.Discontinued);
+		}
+#endif
 
 		[Test]
 		public async Task TestAsyncMethods([EFDataSources] string provider, [Values] bool enableFilter)
@@ -632,7 +692,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
 		}
 
-		[ActiveIssue("Delete with limit translation not yet implemented", Configurations = [TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL])]
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllSQLite,
+			ErrorTypeName = "Microsoft.Data.Sqlite.SqliteException", ErrorMessage = "syntax error")]
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllPostgreSQL,
+			ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42601: syntax error at or near")]
+		// No ErrorTypeName for the MySQL family: the same failure surfaces as MySqlConnector.MySqlException on
+		// net8.0+ and MySql.Data.MySqlClient.MySqlException on net462, so the message is the stable part.
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMySqlServer,
+			ErrorMessage = "Every derived table must have its own alias")]
+		[ActiveIssue(Details = "no-issue: DELETE with limit not implemented", Configuration = TestProvName.AllMariaDB,
+			ErrorMessage = "You have an error in your SQL syntax")]
 		[Test]
 		public async Task TestDeleteFrom([EFDataSources] string provider)
 		{

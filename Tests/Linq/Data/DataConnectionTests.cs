@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
@@ -13,6 +13,7 @@ using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
@@ -86,6 +87,24 @@ namespace Tests.Data
 				var sdp = conn.DataProvider;
 				Assert.That(sdp.Name, Is.EqualTo("SqlServer.2008"));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5296")]
+		public void ProviderDetectionDoesNotLeakConnection([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string context)
+		{
+			var provider         = DataConnection.GetDataProvider(context);
+			var connectionString = DataConnection.GetConnectionString(context);
+
+			using var connection = provider.CreateConnection(connectionString);
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
+
+			// AutoDetect version detection on a caller-owned connection must leave it in the state it found it -
+			// opening and not closing it leaks an open connection back to the caller (issue #5296).
+			_ = context.IsAnyOf(TestProvName.AllSqlServer)
+				? SqlServerTools .GetDataProvider(SqlServerVersion .AutoDetect, connection: connection)
+				: PostgreSQLTools.GetDataProvider(PostgreSQLVersion.AutoDetect, connection: connection);
+
+			Assert.That(connection.State, Is.EqualTo(ConnectionState.Closed));
 		}
 
 		[Test]
@@ -410,7 +429,7 @@ namespace Tests.Data
 			}
 		}
 
-		public class DummyService { }
+		public class DummyService;
 
 		public class DbConnection3 : DataConnection
 		{
@@ -503,7 +522,8 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4811, ErrorMessage = "Assert.That(c2.ConnectionString, Is.EqualTo(cs2))",
+			Details = "the second registration comes back with the first one's connection string - #4811's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4811")]
 		public void Issue4811Test2()
 		{
@@ -752,11 +772,6 @@ namespace Tests.Data
 		[Test]
 		public void TestDisposeFlagCloning962Test1([DataSources(false)] string context, [Values] bool withScope)
 		{
-			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-			{
-				Assert.Inconclusive("Provider goes crazy");
-			}
-
 			if (withScope && (
 				context == ProviderName.DB2                     ||
 				context == ProviderName.InformixDB2             ||
@@ -917,7 +932,6 @@ namespace Tests.Data
 		// SQLCE : System.Data.SqlServerCe
 		// SQLITE: Microsoft.Data.Sqlite (prior to v2.1.0)
 		// SYBASE: AdoNetCore.AseClient
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_Supported(
 			[IncludeDataSources(false,
@@ -925,7 +939,6 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				// depends on connection pool size
 				//ProviderName.ClickHouseDriver,
-				ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -967,7 +980,6 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_MultipleDataReadersOnSameCommand_NotSupported(
 			[DataSources(false,
@@ -1028,7 +1040,6 @@ namespace Tests.Data
 		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
 		// SYBASE   : Sybase.AdoNet45.AseClient
 		// SYBASE   : AdoNetCore.AseClient
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_Supported(
 			[IncludeDataSources(false,
@@ -1042,7 +1053,6 @@ namespace Tests.Data
 				// disabled - depends on connection pool size
 				// which is one for session-aware connection
 				//ProviderName.ClickHouseDriver,
-				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase)] string context)
@@ -1089,7 +1099,6 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_NotSupported(
 			[DataSources(false,
@@ -1158,7 +1167,6 @@ namespace Tests.Data
 		// SQLServer: Microsoft.Data.SqlClient (with MARS enabled)
 		// SYBASE   : Sybase.AdoNet45.AseClient
 		// SYBASE   : AdoNetCore.AseClient
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_Supported(
 			[IncludeDataSources(false,
@@ -1172,7 +1180,6 @@ namespace Tests.Data
 				TestProvName.AllSqlServer,
 				// depends on connection pool size
 				//ProviderName.ClickHouseDriver,
-				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1218,7 +1225,6 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_NotSupported(
 			[DataSources(false,
@@ -1270,7 +1276,6 @@ namespace Tests.Data
 			Assert.Fail("Failure expected");
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_Supported(
 			[DataSources(false,
@@ -1279,6 +1284,7 @@ namespace Tests.Data
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1300,7 +1306,6 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MARS_Unsupported(
 			[IncludeDataSources(false,
@@ -1355,7 +1360,6 @@ namespace Tests.Data
 		}
 
 #if !NETFRAMEWORK
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_SupportedAsync(
 			[DataSources(false,
@@ -1364,6 +1368,7 @@ namespace Tests.Data
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
+				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataConnection(context);
@@ -1385,15 +1390,14 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_UnsupportedAsync(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
 				TestProvName.AllYdb,
 				TestProvName.AllPostgreSQL,
-				ProviderName.ClickHouseMySql,
-				ProviderName.ClickHouseOctonica)] string context)
+				ProviderName.ClickHouseOctonica,
+				ProviderName.ClickHouseMySql)] string context)
 		{
 			using var db = GetDataConnection(context);
 			if (db.DataProvider is SqlServerDataProvider && IsSqlServerMarsEnabled(db))
@@ -1413,7 +1417,8 @@ namespace Tests.Data
 #endif
 		#endregion
 
-		[Test]
+		// NonParallelizable: asserts the process-global mapping-schema cache returns the same instance for equal inputs; concurrent cache pressure can evict between the two contexts.
+		[Test, NonParallelizable]
 		public void MappingSchemaReuse([DataSources] string context)
 		{
 			using var cn1 = GetDataContext(context);
@@ -1422,7 +1427,8 @@ namespace Tests.Data
 			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 
-		[Test]
+		// NonParallelizable: asserts the process-global mapping-schema cache returns the same instance for equal inputs; concurrent cache pressure can evict between the two contexts.
+		[Test, NonParallelizable]
 		public void CustomMappingSchemaCaching([DataSources] string context)
 		{
 			var ms = new MappingSchema();

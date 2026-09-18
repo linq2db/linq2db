@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
@@ -56,15 +58,7 @@ namespace LinqToDB.Concurrency
 		{
 			var query = FilterByPrimaryKey(source, obj, ed);
 
-			var concurrencyColumns = ed.Columns
-				.Select(c => new
-				{
-					Column = c,
-					Attr   = ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo),
-				})
-				.Where(_ => _.Attr != null)
-				.Select(_ => _.Column)
-				.ToArray();
+			var concurrencyColumns = GetOptimisticLockColumns(ed, objType);
 
 			if (concurrencyColumns.Length > 0)
 				query = FilterByColumns(query, obj, concurrencyColumns);
@@ -116,7 +110,10 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static int UpdateOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
@@ -134,7 +131,10 @@ namespace LinqToDB.Concurrency
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static Task<int> UpdateOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
@@ -151,14 +151,17 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static int UpdateOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).Update();
 		}
@@ -171,14 +174,17 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of updated records.</returns>
+		/// <returns>
+		/// Number of updated records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static Task<int> UpdateOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).UpdateAsync(cancellationToken);
 		}
@@ -190,11 +196,15 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to delete.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static int DeleteOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
 			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).Delete();
 		}
@@ -207,11 +217,15 @@ namespace LinqToDB.Concurrency
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static Task<int> DeleteOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
 			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
@@ -223,10 +237,16 @@ namespace LinqToDB.Concurrency
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to delete.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static int DeleteOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
 			return source.WhereKeyOptimistic(obj).Delete();
 		}
 
@@ -238,10 +258,16 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Table source with optional filtering applied.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		/// <returns>Number of deleted records.</returns>
+		/// <returns>
+		/// Number of deleted records. On providers that do not report affected rows the count is unreliable - always
+		/// <c>0</c> on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+		/// </returns>
 		public static Task<int> DeleteOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
 			return source.WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
 
@@ -259,11 +285,400 @@ namespace LinqToDB.Concurrency
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(obj);
 
-			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			return MakeConcurrentFilter(source, obj, objType, ed);
 		}
+
+		#region OUTPUT / RETURNING overloads
+
+		private static ColumnDescriptor[] GetOptimisticLockColumns(EntityDescriptor ed, Type objType)
+		{
+			return ed.Columns
+				.Where(c => ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo) != null)
+				.ToArray();
+		}
+
+		private static void CopyColumns<T>(ColumnDescriptor[] columns, T from, T to)
+			where T : class
+		{
+			foreach (var cd in columns)
+				cd.MemberAccessor.SetValue(to, cd.MemberAccessor.GetValue(from));
+		}
+
+		// a lock member without a setter would make the write-back a silent no-op, leaving the caller with a
+		// stale token and a success result; reject before the UPDATE runs rather than report an unobservable success
+		private static void EnsureLockColumnsWritable(ColumnDescriptor[] lockColumns, Type objType)
+		{
+			foreach (var cd in lockColumns)
+				if (!cd.MemberAccessor.HasSetter)
+					throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Concurrency_UpdateWithRefresh_ReadOnlyLockMember, objType.Name, cd.MemberName));
+		}
+
+		// new T { lockCol = <source>.lockCol, ... } — only the optimistic-lock column(s), nothing else
+		private static MemberInitExpression InitLockColumns(Type objType, ColumnDescriptor[] lockColumns, Expression source)
+		{
+			var bindings = new MemberBinding[lockColumns.Length];
+
+			for (var i = 0; i < lockColumns.Length; i++)
+				bindings[i] = Expression.Bind(lockColumns[i].MemberInfo, Expression.MakeMemberAccess(source, lockColumns[i].MemberInfo));
+
+			return Expression.MemberInit(Expression.New(objType), bindings);
+		}
+
+		// `new T { ... }` needs a parameterless constructor, which a constructor-mapped entity does not have.
+		// Those are projected whole instead and materialized through the usual constructor mapping.
+		private static bool CanInitLockColumns(Type objType)
+		{
+			return objType.GetConstructor(Type.EmptyTypes) != null;
+		}
+
+		// (deleted, inserted) => new T { lockCol = inserted.lockCol, ... } — OUTPUT projection of new lock value(s)
+		private static Expression<Func<T, T, T>> LockColumnsOutput<T>(Type objType, ColumnDescriptor[] lockColumns)
+		{
+			var deleted  = Expression.Parameter(objType, "deleted");
+			var inserted = Expression.Parameter(objType, "inserted");
+
+			Expression body = CanInitLockColumns(objType)
+				? InitLockColumns(objType, lockColumns, inserted)
+				: inserted;
+
+			return Expression.Lambda<Func<T, T, T>>(body, deleted, inserted);
+		}
+
+		// x => new T { lockCol = x.lockCol, ... } — SELECT projection of the lock value(s) for the fallback read-back
+		private static Expression<Func<T, T>> LockColumnsSelector<T>(Type objType, ColumnDescriptor[] lockColumns)
+		{
+			var x = Expression.Parameter(objType, "x");
+
+			Expression body = CanInitLockColumns(objType)
+				? InitLockColumns(objType, lockColumns, x)
+				: x;
+
+			return Expression.Lambda<Func<T, T>>(body, x);
+		}
+
+		// Table-shaping calls on the caller's source (TableName / SchemaName / ...) are kept so the read-back hits
+		// the same table the UPDATE targeted; the caller's query operators are dropped (except IgnoreFilters, which
+		// is re-issued - see below), because their predicates may test columns the UPDATE itself rewrites - the
+		// updated row would then no longer match and the refresh would silently not happen. A source the peel
+		// cannot reduce to that table is rejected outright.
+		private static IQueryable<T> ReadBackSource<T>(IQueryable<T> source, IDataContext dc)
+			where T : class
+		{
+			var expression = ReadBackExpression<T>(source.Expression);
+
+			return ReferenceEquals(expression, source.Expression)
+				? source
+				: Internals.CreateExpressionQueryInstance<T>(dc, expression);
+		}
+
+		private static Expression ReadBackExpression<T>(Expression expression)
+			where T : class
+		{
+			if (expression is not MethodCallExpression call || typeof(ITable<T>).IsAssignableFrom(call.Type))
+				return expression;
+
+			// the operator doesn't expose the updated table as its own source (SelectMany / Join with a different
+			// outer, OfType / Cast over a base type), so the caller's filters cannot be dropped from the read-back:
+			// a predicate over a column the UPDATE rewrites would hide the updated row and leave the entity stale
+			if (call.Arguments.Count == 0 || !typeof(IQueryable<T>).IsAssignableFrom(call.Arguments[0].Type))
+				throw new LinqToDBException(string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Concurrency_UpdateWithRefresh_UnsupportedSource, call.Method.Name));
+
+			var inner = ReadBackExpression<T>(call.Arguments[0]);
+
+			// IgnoreFilters is the one operator that must not be dropped: it changes which rows are visible, and
+			// without it the read-back re-enables entity query filters the caller disabled, hiding the row the UPDATE reached
+			if (call.Method.DeclaringType == typeof(LinqExtensions) && string.Equals(call.Method.Name, nameof(LinqExtensions.IgnoreFilters), StringComparison.Ordinal))
+			{
+				if (ReferenceEquals(inner, call.Arguments[0]))
+					return call;
+
+				var arguments = call.Arguments.ToArray();
+				arguments[0]  = inner;
+
+				return Expression.Call(call.Method, arguments);
+			}
+
+			return inner;
+		}
+
+		private static int UpdateOptimisticWithRefreshCore<T>(IQueryable<T> source, IDataContext dc, T obj)
+			where T : class
+		{
+			var objType     = typeof(T);
+			var ed          = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var updatable   = MakeUpdateOptimistic(source, dc, obj);
+			var lockColumns = GetOptimisticLockColumns(ed, objType);
+
+			// no optimistic-lock column -> nothing to refresh, behave like a plain optimistic update
+			if (lockColumns.Length == 0)
+				return updatable.Update();
+
+			EnsureLockColumnsWritable(lockColumns, objType);
+
+			if (dc.SqlProviderFlags.IsUpdateOutputRowsSupported)
+			{
+				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
+				// providers that cannot return the old row (SQLite / DuckDB / YDB / PostgreSQL < 18)
+				var refreshed = updatable.UpdateWithOutput(LockColumnsOutput<T>(objType, lockColumns)).ToList();
+
+				if (refreshed.Count > 0)
+					CopyColumns(lockColumns, refreshed[0], obj);
+
+				return refreshed.Count;
+			}
+
+			// No single-statement OUTPUT / RETURNING and no reliable affected-row count (e.g. ClickHouse) -> the
+			// optimistic-concurrency result cannot be reported, so the operation is unsupported for this provider.
+			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
+				throw new LinqToDBException(ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported);
+
+			// built before the UPDATE so an unsupported source shape is rejected without having modified anything
+			var readBack = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns));
+
+			var count = updatable.Update();
+
+			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
+			if (count > 0)
+			{
+				var fresh = readBack.FirstOrDefault();
+
+				if (fresh != null)
+					CopyColumns(lockColumns, fresh, obj);
+			}
+
+			return count;
+		}
+
+		private static async Task<int> UpdateOptimisticWithRefreshCoreAsync<T>(IQueryable<T> source, IDataContext dc, T obj, CancellationToken cancellationToken)
+			where T : class
+		{
+			var objType     = typeof(T);
+			var ed          = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+			var updatable   = MakeUpdateOptimistic(source, dc, obj);
+			var lockColumns = GetOptimisticLockColumns(ed, objType);
+
+			// no optimistic-lock column -> nothing to refresh, behave like a plain optimistic update
+			if (lockColumns.Length == 0)
+				return await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
+
+			EnsureLockColumnsWritable(lockColumns, objType);
+
+			if (dc.SqlProviderFlags.IsUpdateOutputRowsSupported)
+			{
+				// output only the regenerated lock column(s); referencing the inserted (new) row keeps it valid on
+				// providers that cannot return the old row (SQLite / DuckDB / YDB / PostgreSQL < 18)
+				var refreshed = await updatable.UpdateWithOutputAsync(LockColumnsOutput<T>(objType, lockColumns)).ToListAsync(cancellationToken).ConfigureAwait(false);
+
+				if (refreshed.Count > 0)
+					CopyColumns(lockColumns, refreshed[0], obj);
+
+				return refreshed.Count;
+			}
+
+			// No single-statement OUTPUT / RETURNING and no reliable affected-row count (e.g. ClickHouse) -> the
+			// optimistic-concurrency result cannot be reported, so the operation is unsupported for this provider.
+			if (!dc.SqlProviderFlags.IsAffectedRowsCountSupported)
+				throw new LinqToDBException(ErrorHelper.Error_Concurrency_UpdateWithRefresh_NotSupported);
+
+			// built before the UPDATE so an unsupported source shape is rejected without having modified anything
+			var readBack = FilterByPrimaryKey(ReadBackSource(source, dc), obj, ed).Select(LockColumnsSelector<T>(objType, lockColumns));
+
+			var count = await updatable.UpdateAsync(cancellationToken).ConfigureAwait(false);
+
+			// reliable affected-row count: 0 is a genuine concurrency failure -> leave the entity untouched
+			if (count > 0)
+			{
+				var fresh = await readBack.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+
+				if (fresh != null)
+					CopyColumns(lockColumns, fresh, obj);
+			}
+
+			return count;
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on
+		/// <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
+		/// </para>
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="dc">Database context.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <returns>
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
+		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
+		/// </exception>
+		public static int UpdateOptimisticWithRefresh<T>(this IDataContext dc, T obj)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			return UpdateOptimisticWithRefreshCore(dc.GetTable<T>(), dc, obj);
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s)
+		/// on <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
+		/// </para>
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="dc">Database context.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
+		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
+		/// </exception>
+		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			return UpdateOptimisticWithRefreshCoreAsync(dc.GetTable<T>(), dc, obj, cancellationToken);
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on
+		/// <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
+		/// </para>
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <returns>
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
+		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
+		/// </exception>
+		public static int UpdateOptimisticWithRefresh<T>(this IQueryable<T> source, T obj)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
+
+			return UpdateOptimisticWithRefreshCore(source, dc, obj);
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s)
+		/// on <paramref name="obj"/> with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING).
+		/// On providers without OUTPUT / RETURNING support the value is read back with a follow-up <c>SELECT</c> instead.
+		/// <para>
+		/// That follow-up <c>SELECT</c> is a separate statement, so the refreshed value is only guaranteed to be the one
+		/// this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be
+		/// observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an
+		/// entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a
+		/// non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying <b>any</b>
+		/// enabled UPDATE trigger - not just a version-generating one - because <c>OUTPUT</c> without <c>INTO</c> is
+		/// rejected there; that also rules out the database-trigger variant of <see cref="VersionBehavior.Auto"/>.
+		/// </para>
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// Number of updated records. When the entity declares at least one optimistic-lock column, <c>0</c> indicates an
+		/// optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is
+		/// supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB).
+		/// When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING
+		/// path is not used, so the raw provider count is returned and is unreliable on every provider that does not
+		/// report affected rows - including YDB, and always <c>0</c> on ClickHouse.
+		/// </returns>
+		/// <exception cref="LinqToDBException">
+		/// Thrown when the provider supports neither single-statement UPDATE OUTPUT / RETURNING nor a reliable
+		/// affected-rows count (e.g. ClickHouse), so the optimistic-concurrency result cannot be guaranteed.
+		/// Also thrown when an optimistic-lock member has no setter, so the regenerated value cannot be written
+		/// back onto <paramref name="obj"/>.
+		/// Also thrown on the read-back path when an operator in the source query does not expose the updated table
+		/// as its own source (<c>SelectMany</c> / <c>Join</c> with a different outer, <c>OfType</c> / <c>Cast</c>
+		/// over a base type), because the caller's filters then cannot be excluded from the read-back.
+		/// </exception>
+		public static Task<int> UpdateOptimisticWithRefreshAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
+
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException(ErrorHelper.Error_LinqToDBQueryExpected, nameof(source));
+
+			return UpdateOptimisticWithRefreshCoreAsync(source, dc, obj, cancellationToken);
+		}
+
+		#endregion
 	}
 }

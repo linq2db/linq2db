@@ -103,6 +103,13 @@ namespace LinqToDB.Internal.SqlQuery
 							context.DependencyFound = true;
 						break;
 					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var f = (SqlCteTableField) e;
+						if (f.Table != null && context.OnSources.Contains(f.Table, QueryElement.ReferenceComparer))
+							context.DependencyFound = true;
+						break;
+					}
 				}
 
 				return !context.DependencyFound;
@@ -136,6 +143,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 					case SqlField field when field.Table != null:
 						context.dependedOnSources.Add(field.Table);
+						break;
+
+					case SqlCteTableField { Table: not null } cteTableField:
+						context.dependedOnSources.Add(cteTableField.Table);
 						break;
 
 					case SqlColumn column when column.Parent != null:
@@ -173,12 +184,12 @@ namespace LinqToDB.Internal.SqlQuery
 			return false;
 		}
 
-		public static bool HasTableInQuery(SelectQuery query, SqlTable table)
+		public static bool HasTableInQuery(SelectQuery query, ISqlNamedTable table)
 		{
 			return EnumerateAccessibleTables(query).Any(t => t == table);
 		}
 
-		public static bool IsSingleTableInQuery(SelectQuery query, SqlTable table)
+		public static bool IsSingleTableInQuery(SelectQuery query, ISqlNamedTable table)
 		{
 			return query.From.Tables switch
 			{
@@ -230,19 +241,73 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
+		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/> - the column an expression's value is
+		/// read from, when there is one, which is the descriptor that says how to turn what the database returns
+		/// back into the member's value.
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
 		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
-			switch (expr?.ElementType)
+			return GetColumnDescriptor(expr, new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default), forTyping: false);
+		}
+
+		/// <summary>
+		/// The column whose declared type may be given to a value written down beside this expression, when there
+		/// is one.
+		/// </summary>
+		/// <remarks>
+		/// Stricter than <see cref="GetColumnDescriptor(ISqlExpression)"/>: a result that is merely of its
+		/// argument's kind rather than one of its argument's values - a <c>SUM</c> - is read through the argument's
+		/// column but cannot lend that column's width to anything, because the sum outgrows it.
+		/// </remarks>
+		public static ColumnDescriptor? GetColumnDescriptorForTyping(ISqlExpression? expr)
+		{
+			return GetColumnDescriptor(expr, new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default), forTyping: true);
+		}
+
+		/// <summary>
+		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
+		/// </summary>
+		/// <param name="expr">Tested SQL Expression.</param>
+		/// <param name="alreadyVisitedElements">Set of already visited elements to avoid infinite recursion.</param>
+		/// <param name="forTyping">
+		/// What the descriptor is wanted for, which decides how much of an aggregate the walk sees through.
+		/// <see langword="false"/> asks how the value is read back - the converter and the unit it is stored in -
+		/// and passes through any aggregate answering in its argument's terms. <see langword="true"/> asks for the
+		/// column whose declared type may be given to a value written down beside this expression, and stops at an
+		/// aggregate that can outgrow its argument's width.
+		/// <para>
+		/// Threaded through the recursion rather than tested at the top, because the aggregate need not be the
+		/// outermost node: a grouped <c>SUM</c> is lifted into a column of the enclosing query, and the walk reaches
+		/// it through that column.
+		/// </para>
+		/// </param>
+		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
+		static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements, bool forTyping)
+		{
+			if (expr != null && !alreadyVisitedElements.Add(expr))
+				return null;
+
+			var result = GetColumnDescriptorCore(expr, alreadyVisitedElements, forTyping);
+
+			// Remove after traversal so the guard only prevents cycles along the current path,
+			// not legitimate re-visits from sibling branches (e.g. UNION ALL, CASE, COALESCE).
+			if (expr != null)
+				alreadyVisitedElements.Remove(expr);
+
+			return result;
+		}
+
+		static ColumnDescriptor? GetColumnDescriptorCore(ISqlExpression? expr, HashSet<IQueryElement> alreadyVisitedElements, bool forTyping)
+		{
+			switch (expr)
 			{
-				case QueryElementType.Column:
+				case SqlColumn column:
 				{
-					var column = (SqlColumn)expr;
-					var result = GetColumnDescriptor(column.Expression);
-					if (result is not null)
+					var result = GetColumnDescriptor(column.Expression, alreadyVisitedElements, forTyping);
+
+					if (result != null)
 						return result;
 
 					if (column.Parent?.HasSetOperators == true)
@@ -252,7 +317,7 @@ namespace LinqToDB.Internal.SqlQuery
 						{
 							foreach (var setOperator in column.Parent.SetOperators)
 							{
-								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression);
+								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression, alreadyVisitedElements, forTyping);
 								if (result is not null)
 									return result;
 							}
@@ -262,95 +327,210 @@ namespace LinqToDB.Internal.SqlQuery
 					return null;
 				}
 
-				case QueryElementType.SqlField:
-				{
-					return ((SqlField)expr).ColumnDescriptor;
-				}
+				case SqlField field:
+					return field.ColumnDescriptor;
 
-				case QueryElementType.SqlExpression:
-				{
-					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal))
-						return GetColumnDescriptor(sqlExpr.Parameters[0]);
-					break;
-				}
+				case SqlCteTableField cteTableField:
+					return GetColumnDescriptor(cteTableField.CteField, alreadyVisitedElements, forTyping);
 
-				case QueryElementType.SqlQuery:
-				{
-					var query = (SelectQuery)expr;
-					if (query.Select.Columns.Count == 1)
-						return GetColumnDescriptor(query.Select.Columns[0]);
-					break;
-				}
+				case SqlCteField cteField:
+					return GetColumnDescriptor(cteField.Column, alreadyVisitedElements, forTyping);
 
-				case QueryElementType.SqlBinaryExpression:
+				case SqlExpression sqlExpr when sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal):
+					return GetColumnDescriptor(sqlExpr.Parameters[0], alreadyVisitedElements, forTyping);
+
+				case SelectQuery { Select.Columns: [var singleColumn] }:
+					return GetColumnDescriptor(singleColumn, alreadyVisitedElements, forTyping);
+
+				case SqlBinaryExpression binary:
 				{
-					var binary = (SqlBinaryExpression)expr;
-					var found = GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
+					var found = GetColumnDescriptor(binary.Expr1, alreadyVisitedElements, forTyping) ?? GetColumnDescriptor(binary.Expr2, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
 						return null;
 					return found;
 				}
 
-				case QueryElementType.SqlNullabilityExpression:
+				case SqlNullabilityExpression nullability:
+					return GetColumnDescriptor(nullability.SqlExpression, alreadyVisitedElements, forTyping);
+
+				// Same rule as the binary branch above: the operand's descriptor still describes the result as
+				// long as the operation left the type alone. Without this, negating a column with a value
+				// converter loses the converter and the value is read as its raw provider representation.
+				case SqlUnaryExpression unary:
 				{
-					var nullability = (SqlNullabilityExpression)expr;
-					return GetColumnDescriptor(nullability.SqlExpression);
+					var found = GetColumnDescriptor(unary.Expr, alreadyVisitedElements, forTyping);
+					if (found?.GetDbDataType(true).SystemType != unary.SystemType)
+						return null;
+					return found;
 				}
 
-				case QueryElementType.SqlCoalesce:
+				// A cast is transparent on the same terms as the operator above, and it is here because the
+				// invariant this walk exists for names one: whatever wraps an expression has to leave the
+				// descriptor reachable from the result. The type guard is what makes that safe - a cast that
+				// changed the type is describing something else and the operand's column no longer speaks for it,
+				// while one that did not is a restatement the reader can see straight through.
+				//
+				// Ordinary queries reach this, which is worth saying because it was assumed they did not: over the
+				// SQLite suite the arm resolves for Convert.ToDecimal and its money variants, for string
+				// concatenation and for interpolation - measured by making it throw and counting who arrived.
+				// None of them changes answer, because the columns underneath carry no conversion for the
+				// descriptor to matter to; what changes is that a column that does carry one is no longer hidden
+				// by a cast that kept its type. The failure that guards against is silent by construction: the
+				// statement stays valid and the value is read through the wrong conversion.
+				case SqlCastExpression cast:
 				{
-					var coalesce = (SqlCoalesceExpression)expr;
+					var found = GetColumnDescriptor(cast.Expression, alreadyVisitedElements, forTyping);
+					if (found == null)
+						return null;
+
+					var columnType = found.GetDbDataType(true);
+
+					if (columnType.SystemType != cast.SystemType)
+						return null;
+
+					// The CLR type surviving is enough to read the value through this column, and not enough to write
+					// one down beside it. A cast that keeps the type while changing the database type changes the
+					// domain with it - CAST(x AS Date) over a datetime column, where a bound before 1753 fits the
+					// column's type and not the cast's - and typing the value from the column then hands the provider
+					// a value it cannot represent. Asked of the typing caller only, so the converter and unit the
+					// read path comes here for are still found through a cast that narrowed nothing but the type.
+					//
+					// Compared across precision and scale and not the data type alone, because a cast between two of
+					// the same type changes the domain just as much: Decimal(6,2) widened to Decimal(22,9), where a
+					// bound needing a third decimal place fits the cast's type and not the column's, and typing it
+					// from the column declares a scale too small for its own digits. An absent size counts as a
+					// difference - a cast that names a decimal type without sizing it takes whatever the provider
+					// makes of it, and the column's own sizing cannot speak for that domain either way.
+					//
+					// Length is deliberately not compared. It bounds how much of a value is kept rather than which
+					// values exist, and a bound beside a cast that renamed a string type has always taken the
+					// column's length.
+					if (forTyping
+						&& (   columnType.DataType  != cast.Type.DataType
+							|| columnType.Precision != cast.Type.Precision
+							|| columnType.Scale     != cast.Type.Scale))
+					{
+						return null;
+					}
+
+					return found;
+				}
+
+				// A single-argument function that keeps its operand's type is transparent for this purpose, the
+				// same way a unary operator is. Providers rewrite operators into functions - ClickHouse turns
+				// negation into negate(x) - and the remote path resolves the descriptor from the *lowered*
+				// statement, so without this the converter is found on the client and lost on the server.
+				case SqlFunction { Parameters: [var singleArgument] } function:
+				{
+					var found = GetColumnDescriptor(singleArgument, alreadyVisitedElements, forTyping);
+					if (found?.GetDbDataType(true).SystemType != function.SystemType)
+						return null;
+					return found;
+				}
+
+				// Coalescing a value with nothing is that value, so a two-argument function whose second argument
+				// is a null literal describes the same column its first argument does. The shape exists for one
+				// reason: a provider that has to state a set-operation column is nullable writes it that way -
+				// Informix wraps in NVL(x, NULL) to stop its driver typing the column from the first branch alone.
+				// Without this the wrapper hides the column, and every value converter in a set operation is lost
+				// there: the stored number is read raw, off by whatever the conversion was worth.
+				//
+				// Matched by shape rather than by name, deliberately: naming the coalescing functions would add to
+				// the string matching that issue #5334 asks to be removed from this method. A null literal as a
+				// second argument is not something an ordinary call is built with, and the type guard below is the
+				// same one the neighbouring arms rely on.
+				case SqlFunction { Parameters: [var coalesced, SqlValue { Value: null }] } function:
+				{
+					var found = GetColumnDescriptor(coalesced, alreadyVisitedElements, forTyping);
+					if (found?.GetDbDataType(true).SystemType != function.SystemType)
+						return null;
+					return found;
+				}
+
+				// The same rule once more for the extended form, which is what an aggregate is built as. The node
+				// states how its result relates to its argument, and the two callers want different amounts of it:
+				// reading a value goes through the argument's converter whether the aggregate returned one of its
+				// values or merely one of the same kind, while typing a value beside it needs the stricter of the
+				// two - a SUM outgrows the width its argument is declared with, and a literal typed from that
+				// argument would be narrowed to fit a column it never came from.
+				//
+				// COUNT and AVG stop here either way. The type guard below cannot do this on its own: it separates
+				// them only while the result type and the column's member type differ, which over an int column
+				// counted into an int they do not.
+				case SqlExtendedFunction { Arguments: [var singleArgument] } extendedFunction
+					when extendedFunction.ArgumentDomain == SqlArgumentDomain.Element
+						|| (extendedFunction.ArgumentDomain == SqlArgumentDomain.SameKind && !forTyping):
+				{
+					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements, forTyping);
+					if (found?.GetDbDataType(true).SystemType != extendedFunction.SystemType)
+						return null;
+					return found;
+				}
+
+				// An interval keeps its operand's storage, so the operand's descriptor - and with it the value
+				// converter the read path needs - still describes the result. This is why a computed interval
+				// needs no converter attached to the expression itself.
+				case SqlIntervalExpression interval:
+					return GetColumnDescriptor(interval.Value, alreadyVisitedElements, forTyping);
+
+				case SqlCoalesceExpression coalesce:
+				{
 					foreach (var expression in coalesce.Expressions)
 					{
-						var descriptor = GetColumnDescriptor(expression);
+						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements, forTyping);
 						if (descriptor != null)
 							return descriptor;
 					}
 
-					break;
+					return null;
 				}
 
-				case QueryElementType.SqlConcat:
+				case SqlConditionExpression condition:
+					return GetColumnDescriptor(condition.TrueValue, alreadyVisitedElements, forTyping) ??
+					       GetColumnDescriptor(condition.FalseValue, alreadyVisitedElements, forTyping);
+
+				case SqlConcatExpression concat:
 				{
-					var concat = (SqlConcatExpression)expr;
 					foreach (var expression in concat.Expressions)
 					{
-						var descriptor = GetColumnDescriptor(expression);
+						var descriptor = GetColumnDescriptor(expression, alreadyVisitedElements, forTyping);
 						if (descriptor != null)
 							return descriptor;
 					}
 
-					break;
+					return null;
 				}
 
-				case QueryElementType.SqlCondition:
+				case SqlCaseExpression caseExpression:
 				{
-					var condition = (SqlConditionExpression)expr;
-
-					return 
-						GetColumnDescriptor(condition.TrueValue) ??
-					       GetColumnDescriptor(condition.FalseValue);
-				}
-
-				case QueryElementType.SqlCase:
-				{
-					var caseExpression = (SqlCaseExpression)expr;
-
 					foreach (var caseItem in caseExpression.Cases)
 					{
-						var descriptor = GetColumnDescriptor(caseItem.ResultExpression);
+						var descriptor = GetColumnDescriptor(caseItem.ResultExpression, alreadyVisitedElements, forTyping);
 						if (descriptor != null)
 							return descriptor;
 					}
 
-					return GetColumnDescriptor(caseExpression.ElseExpression);
+					return GetColumnDescriptor(caseExpression.ElseExpression, alreadyVisitedElements, forTyping);
 				}
 
-				case QueryElementType.SqlAnchor:
-				{
-					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression);
-				}
+				case SqlAnchor anchor:
+					return GetColumnDescriptor(anchor.SqlExpression, alreadyVisitedElements, forTyping);
+
+				// A scalar sub-query lifted into a CTE and referred to as a value still describes what its body
+				// projects, exactly as the SelectQuery case above does for the shape before the lowering. A
+				// provider with no inline scalar sub-query rewrites one into a bare reference to the CTE, and
+				// the read expression is built from the lowered statement - so this is where the walk arrives
+				// instead, and without it every value converter on that column is lost.
+				//
+				// Fields.Count tells the scalar use from a CTE table named in a FROM clause, whose columns answer
+				// for themselves through SqlCteTableField - but only once they exist, and CteTableContext builds
+				// its table field-less too and fills it later. So a second condition carries the weight: a
+				// recursive expression is never a single value, and refusing it here keeps the walk away from a
+				// body that names the expression it belongs to. The tempting discriminator - CanBeNull, which
+				// SqlCteTable documents as meaning exactly the scalar use - is not safe: neither the Transform
+				// nor the Clone visitor copies it, so a rebuilt table silently stops being recognised.
+				case SqlCteTable { Fields.Count: 0, Cte: { IsRecursive: false, Body: { Select.Columns: [_] } cteBody } }:
+					return GetColumnDescriptor(cteBody, alreadyVisitedElements, forTyping);
 			}
 
 			return null;
@@ -358,13 +538,30 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static DbDataType? SuggestDbDataType(ISqlExpression expr)
 		{
-			switch (expr.ElementType)
-			{
-				case QueryElementType.Column:
-				{
-					var column = (SqlColumn)expr;
+			return SuggestDbDataType(expr, null);
+		}
 
-					var suggested = SuggestDbDataType(column.Expression);
+		static DbDataType? SuggestDbDataType(ISqlExpression expr, HashSet<IQueryElement>? visited)
+		{
+			if (visited != null && !visited.Add(expr))
+				return null;
+
+			var result = SuggestDbDataTypeCore(expr, ref visited);
+
+			visited?.Remove(expr);
+
+			return result;
+		}
+
+		static DbDataType? SuggestDbDataTypeCore(ISqlExpression expr, ref HashSet<IQueryElement>? visited)
+		{
+			switch (expr)
+			{
+				case SqlColumn column:
+				{
+					visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+					var suggested = SuggestDbDataType(column.Expression, visited);
 					if (suggested != null)
 						return suggested;
 
@@ -375,7 +572,7 @@ namespace LinqToDB.Internal.SqlQuery
 						{
 							foreach (var setOperator in column.Parent.SetOperators)
 							{
-								suggested = SuggestDbDataType(setOperator.SelectQuery.Select.Columns[idx].Expression);
+								suggested = SuggestDbDataType(setOperator.SelectQuery.Select.Columns[idx].Expression, visited);
 								if (suggested != null)
 									return suggested;
 							}
@@ -385,37 +582,39 @@ namespace LinqToDB.Internal.SqlQuery
 					break;
 				}
 
-				case QueryElementType.SqlField:
-				{
-					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(completeDataType: true);
-				}
+				case SqlField field:
+					return field.ColumnDescriptor?.GetDbDataType(completeDataType: true);
 
-				case QueryElementType.SqlExpression:
+				case SqlCteTableField { CteField: { } cf }:
 				{
-					if (expr is SqlExpression { Expr: "{0}", Parameters: [var parameter] })
-						return SuggestDbDataType(parameter);
+					visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+					if (cf.Column != null)
+						return SuggestDbDataType(cf.Column, visited);
 					break;
 				}
 
-				case QueryElementType.SqlQuery:
+				case SqlCteField cteField:
 				{
-					var query = (SelectQuery)expr;
-					if (query.Select.Columns.Count == 1)
-						return SuggestDbDataType(query.Select.Columns[0]);
-					break;
-				}
-				case QueryElementType.SqlValue:
-				{
-					var sqlValue = (SqlValue)expr;
-					if (sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined)
-						return sqlValue.ValueType;
+					if (cteField.Column != null)
+					{
+						visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+						return SuggestDbDataType(cteField.Column, visited);
+					}
+
 					break;
 				}
 
-				case QueryElementType.SqlAnchor:
-				{
-					return SuggestDbDataType(((SqlAnchor)expr).SqlExpression);
-				}
+				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
+					return SuggestDbDataType(parameter, visited);
+
+				case SelectQuery { Select.Columns: [var singleColumn] }:
+					return SuggestDbDataType(singleColumn, visited);
+
+				case SqlValue sqlValue when sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined:
+					return sqlValue.ValueType;
+
+				case SqlAnchor anchor:
+					return SuggestDbDataType(anchor.SqlExpression, visited);
 			}
 
 			return null;
@@ -492,6 +691,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		static DbDataType GetDbDataType(ISqlExpression? expr)
 		{
+			return GetDbDataTypeImpl(expr, null);
+		}
+
+		static DbDataType GetDbDataTypeImpl(ISqlExpression? expr, HashSet<IQueryElement>? visited)
+		{
 			return expr switch
 			{
 				null => DbDataType.Undefined,
@@ -503,40 +707,80 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlCastExpression   { Type: var t } => t,
 				SqlBinaryExpression { Type: var t } => t,
 
+				// The four interval nodes are deliberately absent. Listing them types a set-operation branch from the
+				// node's own storage, which is what InitializeProjections then gives the opposite branch - and where
+				// one branch holds a native interval and another a stored number, the two column types no longer
+				// match and the server refuses the union outright. Falling through to the CLR-type arm keeps them
+				// reconcilable, which is where the units are actually brought together.
+
+				// carries no type of its own - the provider picks one when rendering
+				SqlParameterCastExpression { Parameter: var p } => GetDbDataTypeImpl(p, visited),
+
 				SqlParameterizedExpressionBase { Type: var t } => t,
 
-				SqlColumn                { Expression:    var e } => GetDbDataType(e),
-				SqlNullabilityExpression { SqlExpression: var e } => GetDbDataType(e),
+				SqlCteField cteField                  => GetCteFieldType(cteField, ref visited),
+				SqlCteTableField { CteField: { } cf } => GetCteFieldType(cf, ref visited),
+				SqlCteTableField                      => DbDataType.Undefined,
 
-				SelectQuery { Select.Columns: [{ Expression: var e }] } => GetDbDataType(e),
+				SqlColumn column                                        => GetColumnType(column, ref visited),
+				SqlNullabilityExpression { SqlExpression: var e }       => GetDbDataTypeImpl(e, visited),
+
+				SelectQuery { Select.Columns: [{ Expression: var e }] } => GetDbDataTypeImpl(e, visited),
 				SelectQuery                                             => DbDataType.Undefined,
 
-				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression),
-				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression),
+				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression, visited),
+				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression, visited),
 
 				{ SystemType: null }  => DbDataType.Undefined,
 				{ SystemType: var t } => new(t),
 			};
 
-			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression)
+			static DbDataType GetColumnType(SqlColumn column, ref HashSet<IQueryElement>? visited)
+			{
+				visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+				if (!visited.Add(column))
+					return new DbDataType(column.SystemType ?? typeof(object));
+
+				var result = GetDbDataTypeImpl(column.Expression, visited);
+				visited.Remove(column);
+				return result;
+			}
+
+			static DbDataType GetCteFieldType(SqlCteField cteField, ref HashSet<IQueryElement>? visited)
+			{
+				if (cteField.Column == null)
+					return cteField.Type;
+
+				visited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+				if (!visited.Add(cteField))
+					return cteField.Type;
+
+				var result = GetDbDataTypeImpl(cteField.Column, visited);
+				visited.Remove(cteField);
+				return result.DataType != DataType.Undefined ? result : cteField.Type;
+			}
+
+			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression, HashSet<IQueryElement>? visited)
 			{
 				foreach (var caseItem in caseExpression.Cases)
 				{
-					var caseType = GetDbDataType(caseItem.ResultExpression);
+					var caseType = GetDbDataTypeImpl(caseItem.ResultExpression, visited);
 					if (caseType.DataType != DataType.Undefined)
 						return caseType;
 				}
 
-				return GetDbDataType(caseExpression.ElseExpression);
+				return GetDbDataTypeImpl(caseExpression.ElseExpression, visited);
 			}
 
-			static DbDataType GetConditionExpressionType(SqlConditionExpression sqlCondition)
+			static DbDataType GetConditionExpressionType(SqlConditionExpression sqlCondition, HashSet<IQueryElement>? visited)
 			{
-				var trueType = GetDbDataType(sqlCondition.TrueValue);
+				var trueType = GetDbDataTypeImpl(sqlCondition.TrueValue, visited);
 				if (trueType.DataType != DataType.Undefined)
 					return trueType;
 
-				return GetDbDataType(sqlCondition.FalseValue);
+				return GetDbDataTypeImpl(sqlCondition.FalseValue, visited);
 			}
 		}
 
@@ -564,6 +808,13 @@ namespace LinqToDB.Internal.SqlQuery
 					case QueryElementType.SqlField:
 					{
 						var f = (SqlField) e;
+						if (f.Table != null && context.hash.Contains(f.Table))
+							context.found.Add(f);
+						break;
+					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var f = (SqlCteTableField) e;
 						if (f.Table != null && context.hash.Contains(f.Table))
 							context.found.Add(f);
 						break;
@@ -598,6 +849,12 @@ namespace LinqToDB.Internal.SqlQuery
 					case QueryElementType.SqlField:
 					{
 						var f = (SqlField) e;
+						context.found.Add(f.Table!);
+						return false;
+					}
+					case QueryElementType.SqlCteTableField:
+					{
+						var f = (SqlCteTableField) e;
 						context.found.Add(f.Table!);
 						return false;
 					}
@@ -659,6 +916,15 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } =>
 					IsConstantFast(expression),
 
+				// A cast is as constant as what it wraps. Narrowed to the operands EnsureParameterCast produces:
+				// without this, a parameter that carries a cast stops looking constant, and callers such as the
+				// builder's constant ORDER BY removal start emitting the item instead of dropping it.
+				SqlCastExpression { ElementType: QueryElementType.SqlCast, Expression: SqlParameter or SqlValue } =>
+					true,
+
+				SqlParameterCastExpression { ElementType: QueryElementType.SqlParameterCast } =>
+					true,
+
 				_ => false,
 			};
 		}
@@ -674,6 +940,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				case QueryElementType.SqlValue:
 				case QueryElementType.SqlParameter:
+				case QueryElementType.SqlParameterCast:
 					return true;
 
 				case QueryElementType.SqlCast:
@@ -806,6 +1073,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return whereClause.SearchCondition;
 		}
 
+		public static bool IsEqualTables([NotNullWhen(true)] ISqlNamedTable? table1, [NotNullWhen(true)] ISqlNamedTable? table2, bool withExtensions = true)
+		{
+			return IsEqualTables(table1 as SqlTable, table2 as SqlTable, withExtensions);
+		}
+
 		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2, bool withExtensions = true)
 		{
 			if (table1 == null || table2 == null)
@@ -896,10 +1168,10 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 		}
 
-		public static IEnumerable<SqlTable> EnumerateAccessibleTables(SelectQuery selectQuery)
+		public static IEnumerable<ISqlNamedTable> EnumerateAccessibleTables(SelectQuery selectQuery)
 		{
 			return EnumerateAccessibleSources(selectQuery)
-				.OfType<SqlTable>();
+				.OfType<ISqlNamedTable>();
 		}
 
 		static IEnumerable<SqlTableSource> EnumerateLevelSources(SqlTableSource tableSource)
@@ -1029,20 +1301,22 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns SqlTable from specific expression. Usually from SqlColumn.
+		/// Returns ISqlNamedTable from specific expression. Usually from SqlColumn.
 		/// Conversion is ignored.
 		/// </summary>
 		/// <param name="expression"></param>
-		/// <returns>SqlTable instance associated with expression</returns>
-		public static SqlTable? ExtractSqlTable(ISqlExpression? expression)
+		/// <returns>ISqlNamedTable instance associated with expression</returns>
+		public static ISqlNamedTable? ExtractSqlTable(ISqlExpression? expression)
 		{
 			return expression switch
 			{
 				SqlTable t => t,
 
-				SqlField f when f.Table is SqlTable t => t,
+				SqlField { Table: SqlTable t } => t,
 
-				SqlField f when f.Table is SelectQuery { From.Tables: [{ Source: var s }] } =>
+				SqlCteTableField { Table: ISqlNamedTable t } => t,
+
+				SqlField { Table: SelectQuery { From.Tables: [{ Source: var s }] } } =>
 					ExtractSqlTable(s),
 
 				SqlColumn c => ExtractSqlTable(ExtractField(c)),
@@ -1092,6 +1366,12 @@ namespace LinqToDB.Internal.SqlQuery
 						case QueryElementType.SqlField:
 						{
 							var f = (SqlField) e;
+							foundSources.Add(f.Table!);
+							break;
+						}
+						case QueryElementType.SqlCteTableField:
+						{
+							var f = (SqlCteTableField) e;
 							foundSources.Add(f.Table!);
 							break;
 						}
@@ -1462,7 +1742,9 @@ namespace LinqToDB.Internal.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
-					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct)
+					// DISTINCT ON guarantees uniqueness only on the ON tuple, not on the full projection, so it must
+					// not contribute the projected columns as a unique key.
+					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct && !selectQuery.Select.IsDistinctOn)
 						knownKeys.Add(selectQuery.Select.Columns.Select(c => c.Expression).ToList());
 
 					if (includeDistinctAndGrouping && !selectQuery.Select.GroupBy.IsEmpty)
@@ -1519,6 +1801,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (expr.ElementType
 					is QueryElementType.SqlField
+					or QueryElementType.SqlCteTableField
 					or QueryElementType.Column
 					or QueryElementType.SqlValue
 					or QueryElementType.SqlParameter)
@@ -1612,18 +1895,26 @@ namespace LinqToDB.Internal.SqlQuery
 		public static ISqlExpression CreateSqlValue(object? value, DbDataType dbDataType, params ISqlExpression[] basedOn)
 		{
 			SqlParameter? foundParam = null;
+			var           foundCast  = false;
 
 			foreach (var element in basedOn)
 			{
-				if (element.ElementType == QueryElementType.SqlParameter)
+				var isCast    = element is SqlParameterCastExpression;
+				var unwrapped = element is SqlParameterCastExpression parameterCast ? parameterCast.Parameter : element;
+
+				if (unwrapped.ElementType == QueryElementType.SqlParameter)
 				{
-					var param = (SqlParameter)element;
+					var param = (SqlParameter)unwrapped;
 					if (param.IsQueryParameter)
 					{
 						foundParam = param;
+						foundCast  = isCast;
 					}
-					else
-						foundParam ??= param;
+					else if (foundParam == null)
+					{
+						foundParam = param;
+						foundCast  = isCast;
+					}
 				}
 			}
 
@@ -1632,8 +1923,13 @@ namespace LinqToDB.Internal.SqlQuery
 				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
 				{
 					IsQueryParameter = foundParam.IsQueryParameter,
-					NeedsCast = foundParam.NeedsCast,
 				};
+
+				// A cast-wrapped source usage folds to a cast-wrapped result: the folded parameter still needs its
+				// explicit type at this position - a bare parameter here is rejected at prepare time by Firebird and
+				// Informix. This mirrors the pre-fold usage's cast (what master carried via SqlParameter.NeedsCast).
+				if (foundCast)
+					return new SqlParameterCastExpression(newParam);
 
 				return newParam;
 			}
@@ -1647,6 +1943,31 @@ namespace LinqToDB.Internal.SqlQuery
 				expr = nullability.SqlExpression;
 
 			return expr;
+		}
+
+		/// <summary>
+		/// Marks a single usage of <paramref name="expression"/> as needing an explicit cast in the generated SQL,
+		/// without touching the expression itself - so a parameter shared by several usages keeps one instance,
+		/// and one DECLARE, while only the positions that need it are cast.
+		/// </summary>
+		/// <remarks>
+		/// A cast that is already there is promoted rather than wrapped: it states a type someone chose
+		/// deliberately, and a second cast would render as <c>CAST(CAST(x))</c>, which the optimizer does not
+		/// collapse (it only folds casts that are not mandatory). Mandatory is what keeps such a cast alive -
+		/// through <c>SqlExpressionOptimizerVisitor.VisitSqlCastExpression</c>, and through
+		/// <c>DB2SqlExpressionConvertVisitor</c>, which drops a non-mandatory cast over a same-type parameter.
+		/// A bare parameter instead gets a <see cref="SqlParameterCastExpression"/>, which has no type of its
+		/// own - see that type for why.
+		/// </remarks>
+		public static ISqlExpression EnsureParameterCast(ISqlExpression expression)
+		{
+			if (expression is SqlParameterCastExpression)
+				return expression;
+
+			if (expression is SqlCastExpression cast)
+				return cast.MakeMandatory();
+
+			return expression is SqlParameter parameter ? new SqlParameterCastExpression(parameter) : expression;
 		}
 
 		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext, bool withoutUnknownErased)
@@ -1791,6 +2112,13 @@ namespace LinqToDB.Internal.SqlQuery
 					if (ts == null && f != f.Table!.All)
 						throw new LinqToDBException($"Table '{f.Table}' not found.");
 				}
+				else if (e is SqlCteTableField ctf && ctf.Table != null)
+				{
+					var ts = statement.SelectQuery?.GetTableSource(ctf.Table) ?? statement.GetTableSource(ctf.Table, out _);
+
+					if (ts == null)
+						throw new LinqToDBException($"Table '{ctf.Table}' not found.");
+				}
 			});
 		}
 
@@ -1804,6 +2132,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if (ts == null && f != f.Table!.All)
 						throw new LinqToDBException($"Table '{f.Table}' not found.");
+				}
+				else if (e is SqlCteTableField ctf && ctf.Table != null)
+				{
+					var ts = query.GetTableSource(ctf.Table);
+
+					if (ts == null)
+						throw new LinqToDBException($"Table '{ctf.Table}' not found.");
 				}
 			});
 		}
@@ -1870,7 +2205,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 			}
 
-			if (includeFields && expr is SqlField or SqlColumn)
+			if (includeFields && expr is SqlField or SqlCteTableField or SqlColumn)
 				return true;
 
 			return false;

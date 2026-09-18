@@ -1265,7 +1265,7 @@ WHERE
 			[Association(QueryExpressionMethod = nameof(AssociationImpl), CanBeNull = true)]
 			public string? Association { get; set; }
 
-			[ExpressionMethod(nameof(ExpressionMethodImpl))]
+			[ExpressionMethod(nameof(ExpressionMethodImpl), IsColumn = true)]
 			public string? ExpressionMethod { get; set; }
 
 			private static Expression<Func<Issue4723Table1, IDataContext, IQueryable<string?>>> AssociationImpl()

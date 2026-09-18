@@ -7,7 +7,7 @@
 	/// <para>
 	/// Run before the query optimizer so the emulation key is an ordinary derived order expression and the existing
 	/// DISTINCT / set-operation / sub-query handling (column promotion, sub-query wrapping) treats it correctly.
-	/// Window <c>OVER(ORDER BY …)</c> ordering is emulated separately at SQL-build time (it has no select-list
+	/// Window <c>OVER (ORDER BY …)</c> ordering is emulated separately at SQL-build time (it has no select-list
 	/// constraint), so it is intentionally not touched here.
 	/// </para>
 	/// </summary>

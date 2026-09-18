@@ -47,6 +47,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			// we enable InsertOrUpdate deliberately here and then throw exception from SqlBuilder
 			// as emulation doesn't work properly due to missing rowcount functionality
 			SqlProviderFlags.IsInsertOrUpdateSupported         = true;
+			SqlProviderFlags.IsAffectedRowsCountSupported      = false; // async ALTER TABLE UPDATE/DELETE mutations don't report affected-row counts
 
 			SqlProviderFlags.IsUpdateFromSupported                     = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported         = true;

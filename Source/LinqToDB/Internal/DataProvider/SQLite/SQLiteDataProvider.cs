@@ -49,8 +49,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.DefaultNullsOrdering              = NullsDefaultOrdering.Smallest; // SQLite sorts NULL as the smallest value
 			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
+			SqlProviderFlags.IsUpdateOutputRowsSupported       = true; // RETURNING, since 3.35.0
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
+			SqlProviderFlags.MaxColumnCount                    = 2000;
 
 			// This is commented, because runtime for SDS 2 has this flag disabled
 			// and there is no value in supporting it for v1 as it doesn't add any additional value

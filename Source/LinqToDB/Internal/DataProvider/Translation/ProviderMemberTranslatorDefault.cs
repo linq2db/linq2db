@@ -60,13 +60,27 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			InitDefaultTranslators();
 
-			Registration.RegisterMethod(() => Sql.NewGuid(),  TranslateNewGuidMethod);
-			Registration.RegisterMethod(() => Guid.NewGuid(), TranslateNewGuidMethod);
+			Registration.RegisterMethod(() => Sql.NewGuid(),   TranslateNewGuidMethod);
+			Registration.RegisterMethod(() => Guid.NewGuid(),  TranslateNewGuidMethod);
+
+			Registration.RegisterMethod(() => Sql.NewGuid7(),       TranslateNewGuid7Method);
+#if NET9_0_OR_GREATER
+			Registration.RegisterMethod(() => Guid.CreateVersion7(), TranslateNewGuid7Method);
+#endif
 		}
 
 		Expression? TranslateNewGuidMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var translated = TranslateNewGuidMethod(translationContext, translationFlags);
+			if (translated == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
+		}
+
+		Expression? TranslateNewGuid7Method(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var translated = TranslateNewGuid7Method(translationContext, translationFlags);
 			if (translated == null)
 				return null;
 
@@ -258,7 +272,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			return null;
 		}
-		
+
+		protected virtual ISqlExpression? TranslateNewGuid7Method(ITranslationContext translationContext, TranslationFlags translationFlags)
+		{
+			return null;
+		}
+
 		#endregion
 	}
 }

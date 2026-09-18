@@ -22,6 +22,10 @@ internal sealed class FirebirdProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("FirebirdSql.Data.FirebirdClient", NuGetPackageVersions.FirebirdSql_Data_FirebirdClient)];
+#endif
+
 	public override void ClearAllPools(string providerName)
 	{
 		FbConnection.ClearAllPools();

@@ -34,9 +34,7 @@ namespace Tests.UserTests
 			[Association(ThisKey = "ParentID", OtherKey = "ID")] public Parent? Parent   { get; set; }
 		}
 
-		public class ChildViewModel : Child
-		{
-		}
+		public class ChildViewModel : Child;
 
 		[Test]
 		public void InheritedAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)

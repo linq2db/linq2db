@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -959,7 +960,8 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
+		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorMessage = "This operation is not allowed in subqueries.",
+			Details = "no-issue: UNION in a subquery is not supported by Access; supporting it means transforming the shape, and nothing tracks that.")]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
 		{
@@ -1018,9 +1020,7 @@ namespace Tests.Linq
 		}
 
 		[Table("ConcatTest")]
-		sealed class DerivedEntity : BaseEntity
-		{
-		}
+		sealed class DerivedEntity : BaseEntity;
 
 		[Test]
 		public void TestConcatInheritance1([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
@@ -1051,7 +1051,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("type !=/== type parsing is not supported currently")]
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Type.op_Equality",
+			Details = "no-issue: type !=/== type parsing is not supported currently. The fragment is the operator the translator names when it gives up, which is stable across the two providers this gate covers.")]
 		[Test]
 		public void TestConcatInheritance2([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
@@ -1264,9 +1265,13 @@ namespace Tests.Linq
 			var query2 = db.Person.Select(p => new { p.FirstName, p.LastName });
 			var query3 = db.Person.Select(p => new { p.FirstName, p.LastName });
 
-			query1.Concat(query2).Concat(query3).ToArray();
+			var query = query1.Concat(query2).Concat(query3);
+			_ = query.ToArray();
 
-			db.LastQuery!.ShouldContain("SELECT", Exactly.Thrice());
+			var selectQuery = query.GetSelectQuery()!;
+
+			selectQuery.HasSetOperators.ShouldBeTrue();
+			selectQuery.SetOperators.Count.ShouldBe(2);
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
@@ -1281,9 +1286,13 @@ namespace Tests.Linq
 			var query5 = db.Person.Select(p => new { p.FirstName, p.LastName });
 			var query6 = db.Person.Select(p => new { p.FirstName, p.LastName });
 
-			query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6)).ToArray();
+			var query = query1.Concat(query2.Concat(query3)).Concat(query4.Concat(query5).Concat(query6));
+			_ = query.ToArray();
 
-			db.LastQuery!.ShouldContain("SELECT", Exactly.Times(6));
+			var selectQuery = query.GetSelectQuery()!;
+
+			selectQuery.HasSetOperators.ShouldBeTrue();
+			selectQuery.SetOperators.Count.ShouldBe(5);
 		}
 
 		// only pgsql and CH support all 6 operators right now
@@ -1341,6 +1350,22 @@ namespace Tests.Linq
 				Assert.That(i3, Is.LessThan(i4));
 				Assert.That(i4, Is.LessThan(i5));
 			}
+		}
+
+		[Test(Description = "Ordering of selected columns inside UnionAll breaks query building")]
+		public void ColumnOrderInUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Parent.Select(p => new { Column1 = 123, Id = p.ParentID });
+			var query2 = db.Parent.Select(p => new { Column1 = 234, Id = p.ParentID });
+
+			var query3 = query1.UnionAll(query2).Select(x => new { Id = x.Id, Column2 = 222, Column1 = x.Column1 });
+			var query4 = query1.UnionAll(query2).Select(x => new { Id = x.Id, Column2 = 333, Column1 = x.Column1 });
+
+			var result = query3.UnionAll(query4);
+
+			AssertQuery(result);
 		}
 
 		public record class RecordClass (int Id, string FirstName, string LastName);
@@ -1532,7 +1557,7 @@ namespace Tests.Linq
 				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[ActiveIssue(3360, Configurations = [TestProvName.AllDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByOtherQuery_AllProviders([DataSources] string context)
 		{
@@ -1564,7 +1589,7 @@ namespace Tests.Linq
 				dc2.LastQuery!.ShouldNotContain("N'");
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[ActiveIssue(3360, Configurations = [TestProvName.AllDB2], ErrorTypeName = "IBM.Data.Db2.DB2Exception", ErrorMessage = "SQL0604N")]
 		[Test(Description = "Test that non-sqlserver providers work too")]
 		public void Issue3360_TypeByProjectionProperty_AllProviders([DataSources] string context)
 		{
@@ -1614,7 +1639,8 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so a bool? column cannot be created or compared against null. Update BoolN handling for sybase.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_NullsInAnchor([DataSources] string context)
 		{
@@ -1659,7 +1685,10 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		// Only the direct transport fails: over LinqService the seed insert goes through and the query answers.
+		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
 		[Test(Description = "double columns in first query")]
 		public void Issue3360_DoubleColumnSelection([DataSources] string context)
 		{
@@ -1700,7 +1729,11 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllSQLite])]
+		// SQLite was gated here too and now passes on all four of its cases, so only the Sybase half is left - and
+		// there, as in Issue3360_DoubleColumnSelection, only the direct transport fails.
+		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
+			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{
@@ -2473,7 +2506,8 @@ namespace Tests.Linq
 				=> (b, cl) => b.Contract.IdClient == cl.Id;
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4620, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Interface not found.",
+			Details = "a union over associations of several classes implementing one interface cannot resolve it - #4620's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
 		public void Issue4620Test1([DataSources] string context)
 		{
@@ -2534,6 +2568,166 @@ namespace Tests.Linq
 				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
 			}
 		}
+		#endregion
+
+		#region Asymmetric branches
+
+		sealed class ConvertedFlagRow
+		{
+			[PrimaryKey] public int   Id   { get; set; }
+			[Column    ] public bool? Flag { get; set; }
+
+			public static readonly ConvertedFlagRow[] Data =
+			{
+				new() { Id = 1, Flag = true  },
+				new() { Id = 2, Flag = false },
+			};
+		}
+
+		/// <summary>
+		/// A branch supplying a plain <c>NULL</c> where the other reads a column through a conversion.
+		/// </summary>
+		/// <remarks>
+		/// The branches are deliberately not the same query. Every other set-operation test here unions a query with
+		/// itself, so both sides carry the same descriptor and agree by reference alone - which is exactly the shape
+		/// that cannot catch a divergence check reading too much into an absent descriptor. A <c>NULL</c> is stored
+		/// in no terms and read through no conversion, so it cannot disagree with what the other branch declares.
+		/// </remarks>
+		[Test]
+		public void UnionPadsAConvertedColumnWithNull([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var withValue = t.Select(x => new { x.Id, x.Flag });
+			var withNull  = t.Select(x => new { x.Id, Flag = (bool?)null });
+
+			var result = withValue.Union(withNull).ToArray();
+
+			result.Length.ShouldBe(4);
+			result.Count(r => r.Flag == null).ShouldBe(2);
+			result.Single(r => r.Id == 1 && r.Flag != null).Flag.ShouldBe(true);
+			result.Single(r => r.Id == 2 && r.Flag != null).Flag.ShouldBe(false);
+		}
+
+		/// <summary>
+		/// A branch supplying a constant where the other reads a column through a conversion is refused rather than
+		/// compared on unequal terms.
+		/// </summary>
+		/// <remarks>
+		/// The companion to the <c>NULL</c> case above, and the one that behaves differently. A <c>NULL</c> is stored
+		/// in no terms and read through none, so it cannot disagree with what the other branch declares. A constant
+		/// has terms of its own and no descriptor to state them, and a set operation other than <c>UNION ALL</c>
+		/// decides which rows survive by comparing values in the database - where a raw <see langword="true"/> and a column
+		/// written as <c>'Y'</c> are two different values.
+		/// <para>
+		/// Which is what that comparison did: before this the query answered two rows where the CLR says one, the
+		/// constant and the column each coming back through the converter as though they had matched nothing. A
+		/// refusal replaces a wrong answer here rather than a right one, so the loud form is the improvement.
+		/// </para>
+		/// <para>
+		/// What neither form does is convert the constant through the column's descriptor and answer the single
+		/// correct row. That is a design question about descriptor-less branches rather than a defect in the
+		/// refusal, and it is left open.
+		/// </para>
+		/// <para>
+		/// Asked of every operation that compares, not only of <c>Union</c>, because the refusal is decided by a
+		/// single equality against <c>UnionAll</c> - so the four others reach it by construction, and the message
+		/// names the operation it refused. <c>ExceptAll</c> and <c>IntersectAll</c> are the pair worth having:
+		/// they are the ones a reader most expects to behave like <c>UnionAll</c>, and the ones where reading each
+		/// branch on its own terms inside a multiset difference would answer a wrong row set rather than refuse.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void SetOperationRefusesAConstantBranchAgainstAConvertedColumn(
+			[DataSources] string context,
+			[Values(
+				SetOperation.Union,
+				SetOperation.Except,
+				SetOperation.ExceptAll,
+				SetOperation.Intersect,
+				SetOperation.IntersectAll)]
+			SetOperation operation)
+		{
+			static IQueryable<T> Combine<T>(IQueryable<T> first, IQueryable<T> second, SetOperation operation)
+			{
+				return operation switch
+				{
+					SetOperation.Union        => first.Union(second),
+					SetOperation.Except       => first.Except(second),
+					SetOperation.ExceptAll    => first.ExceptAll(second),
+					SetOperation.Intersect    => first.Intersect(second),
+					SetOperation.IntersectAll => first.IntersectAll(second),
+					_                         => throw new InvalidOperationException($"Unhandled set operation {operation}."),
+				};
+			}
+
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
+
+			var combined = () => Combine(fromColumn, fromConstant, operation).ToArray();
+
+			var refusal = combined.ShouldThrow<LinqToDBException>();
+
+			refusal.Message.ShouldContain("in different terms");
+			refusal.Message.ShouldContain(operation.ToString());
+		}
+
+		/// <summary>
+		/// The one set operation that has no comparison to get wrong.
+		/// </summary>
+		/// <remarks>
+		/// <c>UNION ALL</c> hands every row back and reads each on its own branch's terms, so a branch supplying a
+		/// constant where the other reads a converted column is kept apart rather than refused. The control for the
+		/// refusal above, and the reason that refusal is keyed on this operation alone.
+		/// </remarks>
+		[Test]
+		public void UnionAllReadsAConstantBranchOnItsOwnTerms([DataSources(TestProvName.AllSybase)] string context)
+		{
+			// Not asked of Sybase, and the reason is the same gap seen from the other side: the constant is emitted
+			// as the value it is rather than through the column's conversion, so it arrives as BIT against a column
+			// stored as a character - which that provider rejects outright instead of comparing. Where the storage
+			// tolerates both, the rows come back read on their own branch's terms.
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConvertedFlagRow>()
+					.Property(e => e.Flag)
+						.HasConversion(v => v == true ? 'Y' : 'N', p => (bool?)(p == 'Y'))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var t  = db.CreateLocalTable(ConvertedFlagRow.Data);
+
+			var fromColumn   = t.Select(x => new { x.Id, x.Flag });
+			var fromConstant = t.Select(x => new { x.Id, Flag = (bool?)true });
+
+			var all = fromColumn.UnionAll(fromConstant).ToArray();
+
+			all.Length.ShouldBe(4);
+			all.Count(r => r.Flag == true).ShouldBe(3);
+			all.Count(r => r.Flag == false).ShouldBe(1);
+		}
+
 		#endregion
 	}
 }

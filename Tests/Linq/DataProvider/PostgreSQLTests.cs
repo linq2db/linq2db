@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
@@ -879,6 +879,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL17)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL18)]
+			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL19)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -1198,6 +1199,11 @@ namespace Tests.DataProvider
 			public string Value = null!;
 		}
 
+		// Does committed (non-transactional) writes to SequenceTest1 and the sequence sequencetestseq, and
+		// asserts exact sequence values 1..40 - so nothing else may touch them while it runs. Both are
+		// scoped to one database, and every test against a database runs on that database's lane, so no
+		// concurrent test can reach them: this needs no NonParallelizable. Different PostgreSQL versions are
+		// different databases.
 		[Test]
 		public void BulkCopyRetrieveSequences(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
@@ -1378,7 +1384,10 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo(124));
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		// Fragment stops before the system type: that renders as an assembly-qualified name carrying the assembly
+		// version, which would stop matching at the next version bump.
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "Database column type cannot be determined automatically and must be specified explicitly for system type",
+			Details = "no-issue: functionality not implemented yet - a dynamic record function's column types cannot be inferred.")]
 		[Test]
 		public void TestDynamicRecordFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1398,7 +1407,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Functionality not implemented yet")]
+		[ActiveIssue(ErrorTypeName = "System.ArgumentException", ErrorMessage = "is a generic method definition",
+			Details = "no-issue: Functionality not implemented yet - the builder is handed the open generic method definition and never closes it. Nothing on the tracker covers it.")]
 		[Test]
 		public void TestDynamicTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2217,7 +2227,8 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3352, ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42883: function test_parameter_typing",
+			Details = "the overload cannot be resolved because the parameters are not typed - #3352's subject. The fragment stops before the argument list, which the server spells out in full.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3352")]
 		public void FunctionParameterTyping([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2260,7 +2271,7 @@ $function$
 		[Sql.Function(ServerSideOnly = true)]
 		static short? test_parameter_typing(short? input1, int? input2, long? input3, decimal? input4, float? input5, double? input6)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(test_parameter_typing));
 		}
 
 		[Table]
@@ -2781,9 +2792,10 @@ $function$
 		#region issue 4250
 
 		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
-		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new NotImplementedException();
+		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new ServerSideOnlyException(nameof(Distance));
 
-		[ActiveIssue]
+		[ActiveIssue(4250, ErrorTypeName = "System.FormatException", ErrorMessage = "The input string 'point1' was not in a correct format.",
+			Details = "a named parameter inside Sql.Expression is read as a format placeholder - #4250's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
 		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2797,7 +2809,7 @@ $function$
 		#region issue 4348
 
 		[Sql.Expression("{0} @> '[{1}]'", ServerSideOnly = true, IsPredicate = true, InlineParameters = true)]
-		static bool JsonContains(string? json, int value) => throw new NotImplementedException();
+		static bool JsonContains(string? json, int value) => throw new ServerSideOnlyException(nameof(JsonContains));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
 		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
@@ -2840,7 +2852,8 @@ $function$
 		// - from Pg* attributes
 		// - schema tables
 		// - using npgsql-specific naming conventions
-		[ActiveIssue]
+		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\". Needs the pg-specific metadata provider described above. The 4780 in these names is npgsql's issue, not linq2db's - linq2db 4780 is an unrelated merged PR.")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2880,7 +2893,8 @@ $function$
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue("https://github.com/npgsql/npgsql/issues/4780", ErrorTypeName = "Npgsql.PostgresException", ErrorMessage = "42704: type \"enum\" does not exist",
+			Details = "as Issue4780Test1 - the enum's PostgreSQL type name is not known to us, so the column is rendered against a type literally called \"enum\".")]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2941,7 +2955,8 @@ $function$
 
 		#region Issue 2796
 
-		[ActiveIssue(SkipForNonLinqService = true)]
+		[ActiveIssue(2796, SkipForNonLinqService = true, ErrorTypeName = "System.ArgumentException", ErrorMessage = "Cannot write DateTime with",
+			Details = "the tstzrange's DateTime kind does not survive the remote transport - #2796's mapping gap, remote only.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -2960,7 +2975,8 @@ $function$
 			Assert.That(res.RangeMappedAsDateTime, Is.EqualTo(record.RangeMappedAsDateTime));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(2796, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Cannot convert value{0}NpgsqlTypes.NpgsqlRange",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. One attribute covers both transports: the remote message carries the inner type name, which is what Matches looks for there.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
 		public void Issue2796Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -3073,10 +3089,10 @@ $function$
 		}
 
 		[Sql.Extension("", BuilderType = typeof(Issue5549CoalesceBuilder), ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+		static NodaTime.Instant? Issue5549CoalesceBuilt(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceBuilt));
 
 		[Sql.Expression("coalesce({0},{1})", ServerSideOnly = true)]
-		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new NotImplementedException();
+		static NodaTime.Instant? Issue5549CoalesceRaw(NodaTime.Instant? obj1, NodaTime.Instant obj2) => throw new ServerSideOnlyException(nameof(Issue5549CoalesceRaw));
 
 		// Npgsql NodaTime plugin handles Instant at the ADO layer; linq2db has no built-in DataType for it.
 		(NpgsqlDataSource DataSource, IDataProvider Provider) Issue5549Setup(string context)
@@ -3275,13 +3291,13 @@ $function$
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double>> value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(CustomAvg));
 		}
 
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
 		public static double? CustomAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(CustomAvg));
 		}
 	}
 
@@ -3298,7 +3314,7 @@ $function$
 		public static object AddIfNotExists(string value)
 		{
 			// this function has void return type in pg, but we use object in C# to make it usable
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(AddIfNotExists));
 		}
 
 		[Sql.TableFunction("TestTableFunctionSchema")]
@@ -3313,7 +3329,7 @@ $function$
 		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestParameters));
 		}
 
 		[Sql.TableFunction("TestTableFunction")]
@@ -3335,19 +3351,19 @@ $function$
 		[Sql.Function("\"TestScalarFunction\"", ServerSideOnly = true)]
 		public static string TestScalarFunction(int? param)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestScalarFunction));
 		}
 
 		[Sql.Function("\"TestSingleOutParameterFunction\"", ServerSideOnly = true)]
 		public static int? TestSingleOutParameterFunction(int? param)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TestSingleOutParameterFunction));
 		}
 
 		[Sql.Function("jsonb_to_record", ServerSideOnly = true)]
 		public static TRecord DynamicRecordFunction<TRecord>(string json)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(DynamicRecordFunction));
 		}
 
 		[Sql.TableFunction("jsonb_to_recordset")]
@@ -3362,7 +3378,7 @@ $function$
 		[Sql.Function("unnest", 0, IsAggregate = true, ServerSideOnly = true, Precedence = Precedence.Primary)]
 		public static T Unnest<T>(T[] array)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Unnest));
 		}
 
 		public class TestScalarTableFunctionResult

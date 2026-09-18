@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var translated = Builder.BuildExpression(BuildContext, currentExpression, buildFlags: buildFlags);
 
-			if (!(flags.IsExpression() && !flags.IsForSetProjection())) 
+			if (!flags.IsExpression() || flags.IsForSetProjection())
 			{
 				if (ExpressionEqualityComparer.Instance.Equals(translated, currentExpression))
 					return path;
@@ -232,6 +232,24 @@ namespace LinqToDB.Internal.Linq.Builder
 						.ToList();
 
 					return defaultIfEmptyExpression.Update(processed, notNull.AsReadOnly());
+				}
+
+				case ConditionalExpression conditional when SequenceHelper.IsConstructorBranch(conditional.IfTrue) && SequenceHelper.IsConstructorBranch(conditional.IfFalse):
+				{
+					// A set operation merges its two projections into `test ? proj1 : proj2` (both
+					// constructors). Propagate toPath into each branch (as with a plain constructor's
+					// assignments) so a member surviving as a conditional keeps its tracking path and
+					// resolves against the owner's fields. Restricted to constructor branches so scalar /
+					// DefaultIfEmpty conditionals (e.g. in eager-load key queries) are left to the generic
+					// visitor. A branch may be Convert-wrapped when the two projections have differing but
+					// assignable types (SetOperationBuilder.MakeCondition unifies them) - the Convert case
+					// above passes toPath through and rebuilds the conversion. The test is a predicate, not
+					// a projected value. See issues #5457 and #5683.
+					var test    = ProcessTranslated(conditional.Test, null);
+					var ifTrue  = ProcessTranslated(conditional.IfTrue, toPath);
+					var ifFalse = ProcessTranslated(conditional.IfFalse, toPath);
+
+					return conditional.Update(test, ifTrue, ifFalse);
 				}
 			}
 

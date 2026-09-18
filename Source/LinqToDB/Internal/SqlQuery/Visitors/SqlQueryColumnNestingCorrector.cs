@@ -179,6 +179,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			QueryElementType.SqlConcat                or
 			QueryElementType.CompareTo                or
 			QueryElementType.SqlRow                   or
+			// intervals
+			QueryElementType.SqlInterval              or
+			QueryElementType.SqlIntervalDifference    or
+			QueryElementType.SqlIntervalPart          or
+			QueryElementType.SqlTemporalArithmetic    or
 			// predicates / search conditions
 			QueryElementType.SearchCondition          or
 			QueryElementType.NotPredicate             or
@@ -273,6 +278,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
+				newElement = ProcessNesting(element.Table, element);
+			}
+
+			return newElement;
+		}
+
+		protected internal override IQueryElement VisitSqlCteTableField(SqlCteTableField element)
+		{
+			var newElement = base.VisitSqlCteTableField(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (element.Table != null)
+			{
 				newElement = ProcessNesting(element.Table, element);
 			}
 

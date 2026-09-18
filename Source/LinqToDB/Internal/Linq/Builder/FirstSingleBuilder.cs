@@ -150,7 +150,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var canBeWeak = false;
 
-			if (buildInfo.Parent != null && (cardinality & SourceCardinality.Zero) != 0)
+			if (buildInfo.Parent != null && cardinality.HasFlag(SourceCardinality.Zero))
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
 					buildInfo.Parent,
@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public bool              CanBeWeak            { get; }
 			public SourceCardinality Cardinality          { get; set; }
 
-			public override bool IsOptional => (Cardinality & SourceCardinality.Zero) != 0 || Cardinality == SourceCardinality.Unknown;
+			public override bool IsOptional => Cardinality.HasFlag(SourceCardinality.Zero) || Cardinality == SourceCardinality.Unknown;
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
@@ -203,6 +203,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				QueryRunner.SetRunQuery(query, mapper);
 
+				SetElementSelection(query);
+			}
+
+			public override void SetElementSelection<T>(Query<T> query)
+			{
 				switch (_methodKind)
 				{
 					case MethodKind.First           : GetFirstElement          (query); break;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		bool             _isExpression;
 		SelectQuery?     _applySelect;
 		SelectQuery?     _inSubquery;
-		bool             _isInRecursiveCte;
+		CteClause?       _recursiveCteClause;
 		CteClause?       _currentCteClause;
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					ProcessElement(_root);
 
-					_root               = _columnOptimizerVisitor.OptimizeColumns(_root);
+					_root               = _columnOptimizerVisitor.OptimizeColumns(_root, _mappingSchema);
 
 					if (!_isColumnsOptimized)
 					{
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				// convert remaining nested joins to subqueries
 				if (!_providerFlags.IsNestedJoinsSupported)
-					JoinsOptimizer.UndoNestedJoins(_root);
+					_root = JoinsOptimizer.UndoNestedJoins(_root, _columnNestingCorrector, _columnOptimizerVisitor, _mappingSchema);
 			}
 
 			return _root;
@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_applySelect        = default!;
 			_isExpression       = false;
 			_version            = default;
-			_isInRecursiveCte   = false;
+			_recursiveCteClause = null;
 			_currentCteClause   = null;
 			_updateQuery        = default;
 			_updateTable        = default;
@@ -449,109 +449,184 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
+		/// <summary>
+		/// Dispatcher for the three independent set-operator flattening transformations. Each sub-
+		/// transformation is idempotent on its own, so we can OR their "modified" flags — the outer
+		/// <see cref="FinalizeAndValidateInternal"/> loop re-runs us until nothing changes.
+		/// </summary>
 		bool OptimizeUnions(SelectQuery selectQuery)
 		{
 			var isModified = false;
 
-			if (selectQuery.From.Tables is [{ Source: SelectQuery { HasSetOperators: true } mainSubquery }])
-			{
-				var isOk = !HasSetOperatorBarrier(selectQuery);
-
-				if (isOk && !selectQuery.HasSetOperators)
-				{
-					isOk = !selectQuery.HasOrderBy;
-					if (isOk)
-					{
-						if (_currentSetOperator != null)
-						{
-							isOk = _currentSetOperator.Operation == mainSubquery.SetOperators[0].Operation;
-						}
-					}
-				}
-
-				if (isOk && mainSubquery.Select.Columns.Count == selectQuery.Select.Columns.Count)
-				{
-					var newIndexes = new Dictionary<ISqlExpression, int>(Utils
-						.ObjectReferenceEqualityComparer<ISqlExpression>
-						.Default);
-
-					for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
-					{
-						var scol = selectQuery.Select.Columns[i];
-
-						if (!newIndexes.ContainsKey(scol.Expression))
-							newIndexes[scol.Expression] = i;
-					}
-
-					var operation = selectQuery.HasSetOperators ? selectQuery.SetOperators[0].Operation : mainSubquery.SetOperators[0].Operation;
-
-					if (mainSubquery.SetOperators.TrueForAll(so => so.Operation == operation))
-					{
-						if (CheckSetColumns(newIndexes, mainSubquery, operation))
-						{
-							UpdateSetIndexes(newIndexes, mainSubquery, operation);
-							selectQuery.SetOperators.InsertRange(0, mainSubquery.SetOperators);
-							mainSubquery.SetOperators.Clear();
-
-							selectQuery.From.Tables[0].Source = mainSubquery;
-
-							for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
-							{
-								var c = selectQuery.Select.Columns[i];
-								c.Expression = mainSubquery.Select.Columns[i];
-							}
-
-							isModified = true;
-						}
-					}
-				}
-			}
+			if (TryLiftSetOperatorsFromSoleFromSubquery(selectQuery))
+				isModified = true;
 
 			if (!selectQuery.HasSetOperators)
 				return isModified;
+
+			if (TryCoalescePeerSetOperators(selectQuery))
+				isModified = true;
+
+			if (TryLiftSetOperatorsFromOperandFromSubquery(selectQuery))
+				isModified = true;
+
+			return isModified;
+		}
+
+		/// <summary>
+		/// Pattern: <c>SELECT ... FROM (A op B op C) x</c> where the outer query is a thin projection
+		/// with no barrier clauses. Promotes the subquery's set operators into the outer query so
+		/// the extra wrapping select is eliminated.
+		/// <para>
+		/// Safety: requires (a) no barrier clauses (WHERE / GROUP BY / HAVING / modifiers) on the
+		/// outer, (b) no ORDER BY when the outer has no set operators of its own, (c) operator-
+		/// compatibility with the surrounding set context (<see cref="_currentSetOperator"/>), and
+		/// (d) all of the subquery's operators sharing a single operation. Associativity of
+		/// compatible set operations (<c>A op B op C</c>) guarantees that promoting the legs does
+		/// not change the result — the operator joining the last lifted leg with the outer's
+		/// existing first operator (if any) is <c>operation</c> by construction.
+		/// </para>
+		/// </summary>
+		bool TryLiftSetOperatorsFromSoleFromSubquery(SelectQuery selectQuery)
+		{
+			// A join on the sole FROM table references the subquery's columns; lifting the set
+			// operators here would orphan that reference (the hazard #5625 guards in IsMovingUpValid).
+			if (selectQuery.From.Tables is not [{ Source: SelectQuery { HasSetOperators: true } mainSubquery, HasJoins: false }])
+				return false;
+
+			if (HasSetOperatorBarrier(selectQuery))
+				return false;
+
+			// ORDER BY and enclosing set-operator compatibility only matter when the lifted legs
+			// become direct peers of the outer chain. If selectQuery already has its own set
+			// operators, the lifted legs are absorbed into that internal chain and the enclosing
+			// operator relationship is unchanged.
+			if (!selectQuery.HasSetOperators)
+			{
+				if (selectQuery.HasOrderBy)
+					return false;
+
+				if (_currentSetOperator != null
+					&& _currentSetOperator.Operation != mainSubquery.SetOperators[0].Operation)
+				{
+					return false;
+				}
+			}
+
+			var operation = selectQuery.HasSetOperators
+				? selectQuery.SetOperators[0].Operation
+				: mainSubquery.SetOperators[0].Operation;
+
+			// UnionAll can widen mainSubquery's legs by synthesising constant columns for outer
+			// positions that don't project a mainSubquery column (TryReorderSetColumns handles it
+			// and bails gracefully if a non-constant is missing). Other set operations need strict
+			// column alignment because every position is significant.
+			if (operation != SetOperation.UnionAll
+				&& mainSubquery.Select.Columns.Count != selectQuery.Select.Columns.Count)
+			{
+				return false;
+			}
+
+			if (!TryBuildOuterColumnIndexes(selectQuery.Select.Columns, out var newIndexes))
+				return false;
+
+			if (!mainSubquery.SetOperators.TrueForAll(so => so.Operation == operation))
+				return false;
+
+			if (!TryReorderSetColumns(newIndexes, mainSubquery, operation, AllowDerivedSetColumns(mainSubquery)))
+				return false;
+
+			selectQuery.SetOperators.InsertRange(0, mainSubquery.SetOperators);
+			mainSubquery.SetOperators.Clear();
+
+			for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+			{
+				selectQuery.Select.Columns[i].Expression = mainSubquery.Select.Columns[i];
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Pattern: <c>A op (B op C)</c> where the right-hand operand itself has set operators
+		/// using the same operation. Flattens to <c>A op B op C</c>.
+		/// <para>
+		/// No barrier check is needed here because we do not collapse the operand's body — the
+		/// operand's <see cref="SelectQuery"/> (with any WHERE / GROUP BY etc.) remains as the
+		/// first leg of the flattened chain; only its trailing <see cref="SelectQuery.SetOperators"/>
+		/// are moved up as siblings.
+		/// </para>
+		/// </summary>
+		static bool TryCoalescePeerSetOperators(SelectQuery selectQuery)
+		{
+			var isModified = false;
 
 			for (var index = 0; index < selectQuery.SetOperators.Count; index++)
 			{
 				var setOperator = selectQuery.SetOperators[index];
 
-				if (setOperator.SelectQuery.From.Tables is [{ Source: SelectQuery { HasSetOperators: true } subQuery }])
+				if (!setOperator.SelectQuery.HasSetOperators)
+					continue;
+
+				if (!setOperator.SelectQuery.SetOperators.TrueForAll(so => so.Operation == setOperator.Operation))
+					continue;
+
+				selectQuery.SetOperators.InsertRange(index + 1, setOperator.SelectQuery.SetOperators);
+				setOperator.SelectQuery.SetOperators.Clear();
+				--index;
+				isModified = true;
+			}
+
+			return isModified;
+		}
+
+		/// <summary>
+		/// Pattern: <c>A op (SELECT ... FROM (B op C) x)</c> — an operand is a thin projection over
+		/// a set-operation subquery. Lifts the inner set operators up to the outer chain, after
+		/// reordering their columns to match the operand's projection.
+		/// <para>
+		/// Safety: the operand's body must have no barrier clauses (otherwise dropping the wrapper
+		/// would change semantics), its sub-operators must all share a single operation matching
+		/// the surrounding operator, and for non-UnionAll operations the column widths must agree
+		/// (UnionAll can synthesise constants for missing columns; other operations cannot, because
+		/// every column is significant for INTERSECT/EXCEPT/UNION).
+		/// </para>
+		/// </summary>
+		bool TryLiftSetOperatorsFromOperandFromSubquery(SelectQuery selectQuery)
+		{
+			var isModified = false;
+
+			for (var index = 0; index < selectQuery.SetOperators.Count; index++)
+			{
+				var setOperator = selectQuery.SetOperators[index];
+
+				if (setOperator.SelectQuery.From.Tables is not [{ Source: SelectQuery { HasSetOperators: true } subQuery }])
+					continue;
+
+				if (HasSetOperatorBarrier(setOperator.SelectQuery))
+					continue;
+
+				if (!subQuery.SetOperators.TrueForAll(so => so.Operation == setOperator.Operation))
+					continue;
+
+				if (setOperator.Operation != SetOperation.UnionAll
+					&& subQuery.Select.Columns.Count != selectQuery.Select.Columns.Count)
 				{
-					if (HasSetOperatorBarrier(setOperator.SelectQuery))
-						continue;
-
-					if (subQuery.SetOperators.TrueForAll(so => so.Operation == setOperator.Operation))
-					{
-						var allColumns = setOperator.Operation != SetOperation.UnionAll;
-
-						if (allColumns)
-						{
-							if (subQuery.Select.Columns.Count != selectQuery.Select.Columns.Count)
-								continue;
-						}
-
-						var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
-
-						for (var i = 0; i < setOperator.SelectQuery.Select.Columns.Count; i++)
-						{
-							var scol = setOperator.SelectQuery.Select.Columns[i];
-
-							if (!newIndexes.ContainsKey(scol.Expression))
-								newIndexes[scol.Expression] = i;
-						}
-
-						if (!CheckSetColumns(newIndexes, subQuery, setOperator.Operation))
-							continue;
-
-						UpdateSetIndexes(newIndexes, subQuery, setOperator.Operation);
-
-						setOperator.Modify(subQuery);
-						selectQuery.SetOperators.InsertRange(index + 1, subQuery.SetOperators);
-						subQuery.SetOperators.Clear();
-						--index;
-
-						isModified = true;
-					}
+					continue;
 				}
+
+				if (!TryBuildOuterColumnIndexes(setOperator.SelectQuery.Select.Columns, out var newIndexes))
+					continue;
+
+				if (!TryReorderSetColumns(newIndexes, subQuery, setOperator.Operation, AllowDerivedSetColumns(subQuery)))
+					continue;
+
+				setOperator.Modify(subQuery);
+				selectQuery.SetOperators.InsertRange(index + 1, subQuery.SetOperators);
+				subQuery.SetOperators.Clear();
+				--index;
+
+				isModified = true;
 			}
 
 			return isModified;
@@ -567,78 +642,330 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return query.HasWhere || query.HasGroupBy || query.HasHaving || query.Select.HasModifier;
 		}
 
-		static void UpdateSetIndexes(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery, SetOperation setOperation)
+		/// <summary>
+		/// Builds a map from each outer column's <see cref="SqlColumn.Expression"/> to its position
+		/// in <paramref name="outerColumns"/>. Returns <see langword="false"/> (and a <see langword="null"/> map) when two
+		/// outer columns share the same underlying expression - flattening would silently collapse
+		/// them, so the caller must bail out instead.
+		/// </summary>
+		static bool TryBuildOuterColumnIndexes(
+			IReadOnlyList<SqlColumn> outerColumns,
+			[NotNullWhen(true)] out Dictionary<ISqlExpression, int>? indexes)
 		{
-			if (setOperation == SetOperation.UnionAll)
+			indexes = new Dictionary<ISqlExpression, int>(
+				Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+
+			for (var i = 0; i < outerColumns.Count; i++)
 			{
-				for (var index = 0; index < setQuery.Select.Columns.Count; index++)
+				if (!indexes.TryAdd(outerColumns[i].Expression, i))
 				{
-					var column = setQuery.Select.Columns[index];
-					if (!newIndexes.ContainsKey(column))
+					indexes = null;
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Where the column for one target position of a set operation comes from: a column the set
+		/// query already projects, a shared stateless expression synthesised into every leg, or an
+		/// expression each leg recomputes from what it projects itself.
+		/// <para>
+		/// <see cref="Constant"/> and <see cref="Derived"/> build fresh columns, which carry no alias.
+		/// For <see cref="Derived"/> that is invisible while <see cref="AllowDerivedSetColumns"/> confines
+		/// it to a recursive CTE body, where result names come from <see cref="CteClause.Fields"/> - widen
+		/// that gate and the first leg's aliases start naming the result columns. <see cref="Constant"/> is
+		/// not gated and already synthesises alias-less columns for any UnionAll rewrite.
+		/// </para>
+		/// </summary>
+		enum SetColumnSource
+		{
+			Existing,
+			Constant,
+			Derived,
+		}
+
+		/// <summary>
+		/// Reorders (and, for <see cref="SetOperation.UnionAll"/>, trims/augments) the columns of
+		/// <paramref name="setQuery"/> and every one of its <see cref="SelectQuery.SetOperators"/>
+		/// legs so that column <c>i</c> corresponds to the expression whose target position is
+		/// <c>i</c> in <paramref name="newIndexes"/>. Returns <see langword="false"/> — leaving the query
+		/// untouched — when the requested layout cannot be realized:
+		/// <list type="bullet">
+		///   <item>a target expression is missing from <paramref name="setQuery"/> and the operation
+		///         forbids synthesis (non-UnionAll) or the expression is neither a constant nor,
+		///         when <paramref name="allowDerivedColumns"/> is set, derivable from the legs;</item>
+		///   <item>a leg has fewer columns than <paramref name="setQuery"/> for a non-UnionAll
+		///         operation (legs must be aligned);</item>
+		///   <item>a leg is too short to hold a position that resolved to an existing
+		///         <paramref name="setQuery"/> column — for any operation, since widening the leg
+		///         would make it read a column of a sibling query;</item>
+		///   <item>a derived position reads a <paramref name="setQuery"/> column that one of the legs
+		///         does not project at the same index.</item>
+		/// </list>
+		/// <para>
+		/// Runs in O(N + M·L) where N is the setQuery column count, M is the target column count,
+		/// and L is the number of set-operator legs — linear per column, no in-place shuffling.
+		/// </para>
+		/// </summary>
+		static bool TryReorderSetColumns(
+			Dictionary<ISqlExpression, int> newIndexes,
+			SelectQuery                     setQuery,
+			SetOperation                    setOperation,
+			bool                            allowDerivedColumns)
+		{
+			var mainColumns = setQuery.Select.Columns;
+
+			// Index current setQuery columns by reference so we can locate each target expression
+			// in a single pass rather than an O(N) FindIndex per target.
+			var currentByRef = new Dictionary<ISqlExpression, int>(
+				mainColumns.Count,
+				Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+
+			for (var i = 0; i < mainColumns.Count; i++)
+				currentByRef[mainColumns[i]] = i;
+
+			var targetSize = newIndexes.Count;
+			var newMain    = new SqlColumn[targetSize];
+			var legs       = setQuery.SetOperators;
+			var newLegs    = legs.Count == 0 ? null : new SqlColumn[legs.Count][];
+
+			if (newLegs != null)
+			{
+				for (var li = 0; li < legs.Count; li++)
+					newLegs[li] = new SqlColumn[targetSize];
+			}
+
+			// Track which original positions got consumed so we can preserve any unreferenced
+			// columns for non-UnionAll operations (the original code left them in place; dropping
+			// them would change the leg width and break INTERSECT/EXCEPT semantics).
+			var consumedOld = mainColumns.Count == 0 ? null : new bool[mainColumns.Count];
+
+			foreach (var pair in newIndexes)
+			{
+				var             targetIdx     = pair.Value;
+				var             existingIndex = -1;
+				SetColumnSource source;
+
+				// Decide once per target position where its column comes from ...
+				if (currentByRef.TryGetValue(pair.Key, out var foundIndex))
+				{
+					source                   = SetColumnSource.Existing;
+					existingIndex            = foundIndex;
+					consumedOld![foundIndex] = true;
+				}
+				else if (setOperation == SetOperation.UnionAll && QueryHelper.IsConstantFast(pair.Key))
+				{
+					// IsConstantFast guarantees no parent-dependent state, so the same ISqlExpression
+					// instance can be shared across the synthesised SqlColumns.
+					source = SetColumnSource.Constant;
+				}
+				else if (allowDerivedColumns
+					&& setOperation == SetOperation.UnionAll
+					&& CanDeriveFromSetColumns(pair.Key, setQuery))
+				{
+					// Computed from the set operation's own columns, which every leg projects, so each
+					// leg can compute it for itself. Costs one copy of the expression per leg, which is
+					// why the caller has to ask for it.
+					source = SetColumnSource.Derived;
+				}
+				else
+				{
+					return false;
+				}
+
+				// ... then apply that one decision to the main query and to every leg alike. They have
+				// to stay positionally aligned for the set operation to be valid SQL, so this is the
+				// only place that walks them.
+				var mainColumn = BuildColumn(source, existingIndex, pair.Key, setQuery, mainColumns);
+
+				if (mainColumn == null)
+					return false;
+
+				newMain[targetIdx] = mainColumn;
+
+				if (newLegs != null)
+				{
+					for (var li = 0; li < legs.Count; li++)
 					{
-						setQuery.Select.Columns.RemoveAt(index);
+						var legQuery  = legs[li].SelectQuery;
+						var legColumn = BuildColumn(source, existingIndex, pair.Key, legQuery, legQuery.Select.Columns);
 
-						foreach (var op in setQuery.SetOperators)
-						{
-							if (index < op.SelectQuery.Select.Columns.Count)
-								op.SelectQuery.Select.Columns.RemoveAt(index);
-						}
+						if (legColumn == null)
+							return false;
 
-						--index;
+						newLegs[li][targetIdx] = legColumn;
 					}
 				}
 			}
 
-			foreach (var pair in newIndexes.OrderBy(x => x.Value))
-			{
-				var currentIndex = setQuery.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
-				if (currentIndex < 0)
-				{
-					if (setOperation != SetOperation.UnionAll)
-						throw new InvalidOperationException();
+			// Commit: replace column lists. For UnionAll any unreferenced original columns are
+			// dropped (intentional — callers rely on this to prune projections). For other
+			// operations we append them to keep the leg width invariant.
+			List<SqlColumn>?       preservedMain = null;
+			List<SqlColumn>[]?     preservedLegs = null;
 
-					foreach (var op in setQuery.SetOperators)
+			if (setOperation != SetOperation.UnionAll && consumedOld != null)
+			{
+				for (var i = 0; i < consumedOld.Length; i++)
+				{
+					if (consumedOld[i])
+						continue;
+
+					preservedMain ??= new List<SqlColumn>();
+					preservedMain.Add(mainColumns[i]);
+
+					if (newLegs != null)
 					{
-						op.SelectQuery.Select.Columns.Insert(pair.Value, new SqlColumn(op.SelectQuery, pair.Key));
+						preservedLegs ??= new List<SqlColumn>[legs.Count];
+						for (var li = 0; li < legs.Count; li++)
+						{
+							var legCols = legs[li].SelectQuery.Select.Columns;
+							if (i >= legCols.Count)
+								return false;
+
+							preservedLegs[li] ??= new List<SqlColumn>();
+							preservedLegs[li].Add(legCols[i]);
+						}
+					}
+				}
+			}
+
+			mainColumns.Clear();
+			for (var i = 0; i < targetSize; i++)
+				mainColumns.Add(newMain[i]);
+			if (preservedMain != null)
+				mainColumns.AddRange(preservedMain);
+
+			if (newLegs != null)
+			{
+				for (var li = 0; li < legs.Count; li++)
+				{
+					var legCols = legs[li].SelectQuery.Select.Columns;
+					legCols.Clear();
+					for (var i = 0; i < targetSize; i++)
+						legCols.Add(newLegs[li][i]);
+					if (preservedLegs?[li] != null)
+						legCols.AddRange(preservedLegs[li]);
+				}
+			}
+
+			return true;
+
+			// Produces the column that owner - the set query itself, or one of its legs - should
+			// project at the resolved position. Returns null when that owner cannot supply it, which
+			// is always a hard failure for the caller.
+			SqlColumn? BuildColumn(SetColumnSource columnSource, int existingIndex, ISqlExpression target, SelectQuery owner, IReadOnlyList<SqlColumn> ownerColumns)
+			{
+				switch (columnSource)
+				{
+					case SetColumnSource.Existing:
+					{
+						// A leg too short to hold this position cannot be widened: reaching Existing means
+						// target is one of setQuery's own columns, so projecting it from the leg would make
+						// that leg read a sibling query's column - a reference no table source backs, which
+						// dies in the SQL builder. Decline the rewrite and leave the query alone.
+						return existingIndex < ownerColumns.Count ? ownerColumns[existingIndex] : null;
 					}
 
-					continue;
-				}
+					case SetColumnSource.Constant:
+						return new SqlColumn(owner, target);
 
-				var newIndex = pair.Value;
-				if (currentIndex != newIndex)
-				{
-					var uc = setQuery.Select.Columns[currentIndex];
-					setQuery.Select.Columns.RemoveAt(currentIndex);
-					setQuery.Select.Select.Columns.Insert(newIndex, uc);
-
-					// change indexes in SetOperators
-					foreach (var op in setQuery.SetOperators)
+					default:
 					{
-						var column = op.SelectQuery.Select.Columns[currentIndex];
-						op.SelectQuery.Select.Columns.RemoveAt(currentIndex);
-						op.SelectQuery.Select.Columns.Insert(newIndex, column);
+						var expression = BuildSetLegExpression(target, setQuery, currentByRef, ownerColumns);
+						return expression == null ? null : new SqlColumn(owner, expression);
 					}
 				}
 			}
 		}
 
-		static bool CheckSetColumns(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery, SetOperation setOperation)
+		/// <summary>
+		/// Whether an outer projection over <paramref name="setQuery"/> may be pushed down into its legs
+		/// at the cost of repeating the expression once per leg.
+		/// <para>
+		/// Only the body of a recursive CTE asks for it: SQL forbids the self-reference from sitting
+		/// inside a derived table, so a wrapping projection there is not merely redundant - it makes the
+		/// statement invalid ("circular reference" on SQLite, and its equivalents elsewhere), and the
+		/// wrapper has to go even when folding it duplicates work. Everywhere else the wrapper renders
+		/// fine and is cheaper than N copies of the expression, so derivation stays off.
+		/// </para>
+		/// <para>
+		/// Keyed on the enclosing recursive clause rather than on <see cref="_currentCteClause"/> plus a
+		/// separate "is recursive" flag: a single field carries both facts, so they cannot disagree about
+		/// which clause the reference is tested against.
+		/// </para>
+		/// </summary>
+		bool AllowDerivedSetColumns(SelectQuery setQuery)
 		{
-			foreach (var pair in newIndexes.OrderBy(x => x.Value))
+			return QueryHelper.HasCteClauseReference(setQuery, _recursiveCteClause);
+		}
+
+		/// <summary>
+		/// Tests whether <paramref name="expression"/> - an outer projection with no matching column in
+		/// <paramref name="setQuery"/> - can be recomputed inside each leg of that set operation. It must
+		/// read nothing but <paramref name="setQuery"/>'s own columns, which every leg supplies at the
+		/// same position, and must not be sensitive to what it is evaluated over: an aggregate, a window
+		/// function or a subquery means something different per leg than it does over the whole union.
+		/// </summary>
+		static bool CanDeriveFromSetColumns(ISqlExpression expression, SelectQuery setQuery)
+		{
+			if (QueryHelper.ContainsAggregationOrWindowFunction(expression))
+				return false;
+
+			// GetUsedSources is the AST's own account of what an expression reads from - listing the
+			// source-bearing node types here instead would silently pass any type it doesn't know, and
+			// a read from elsewhere copied into the legs is wrong SQL rather than a declined rewrite.
+			var usedSources = new HashSet<ISqlTableSource>();
+
+			QueryHelper.GetUsedSources(expression, usedSources);
+
+			// Exactly one source, and it is the set operation itself: every leg projects its columns at
+			// the same positions, so each can recompute the expression from what it has.
+			return usedSources.Count == 1 && usedSources.Contains(setQuery);
+		}
+
+		/// <summary>
+		/// Rewrites <paramref name="expression"/> for one leg of a set operation: every read of a
+		/// <paramref name="setQuery"/> column becomes the expression <paramref name="legColumns"/>
+		/// projects at the same position. Returns <see langword="null"/> when the leg is too narrow to
+		/// supply one of them.
+		/// </summary>
+		static ISqlExpression? BuildSetLegExpression(
+			ISqlExpression                  expression,
+			SelectQuery                     setQuery,
+			Dictionary<ISqlExpression, int> setColumnIndexes,
+			IReadOnlyList<SqlColumn>        legColumns)
+		{
+			var isValid = true;
+
+			expression.VisitParentFirstAll(e =>
 			{
-				var currentIndex = setQuery.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
-				if (currentIndex < 0)
+				if (!isValid)
+					return false;
+
+				if (e is SqlColumn column && ReferenceEquals(column.Parent, setQuery))
 				{
-					if (setOperation != SetOperation.UnionAll)
-						return false;
+					if (!setColumnIndexes.TryGetValue(column, out var index) || index >= legColumns.Count)
+						isValid = false;
 
-					if (!QueryHelper.IsConstantFast(pair.Key))
-						return false;
+					return false;
 				}
-			}
 
-			return true;
+				return true;
+			});
+
+			if (!isValid)
+				return null;
+
+			return expression.Convert((setQuery, setColumnIndexes, legColumns), static (visitor, e) =>
+			{
+				if (e is SqlColumn column && ReferenceEquals(column.Parent, visitor.Context.setQuery))
+					return visitor.Context.legColumns[visitor.Context.setColumnIndexes[column]].Expression;
+
+				return e;
+			});
 		}
 
 		bool FinalizeAndValidateInternal(SelectQuery selectQuery)
@@ -834,7 +1161,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (join.JoinType is JoinType.Left or JoinType.OuterApply)
 			{
-				if ((join.Cardinality & SourceCardinality.One) != 0)
+				if (join.Cardinality.HasFlag(SourceCardinality.One))
 					return true;
 
 				if (join.Table.Source is SelectQuery joinQuery)
@@ -867,7 +1194,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var sources = QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						var ignore  = new[] { join };
-						if (QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
+
+						// Probe the enclosing query before walking the whole statement: 99% of kept joins are
+						// referenced from their own query, and reaching them from the statement root wastes the
+						// whole descent. selectQuery is reachable from _rootElement without passing through join,
+						// so a local hit is necessarily a root hit as well - this changes how quickly the verdict
+						// is reached, never the verdict itself.
+						var probeLocally = !ReferenceEquals(_rootElement, selectQuery);
+
+						if ((probeLocally && QueryHelper.IsDependsOnSources(selectQuery, sources, ignore))
+							|| QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
 						{
 							join.IsWeak = false;
 							continue;
@@ -1074,6 +1410,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		bool OptimizeDistinct(SelectQuery selectQuery)
 		{
 			if (!selectQuery.Select.IsDistinct || !selectQuery.Select.OptimizeDistinct)
+				return false;
+
+			// DISTINCT ON is never "redundant": removing it changes which row survives per ON key. Leave it intact.
+			if (selectQuery.Select.IsDistinctOn)
 				return false;
 
 			if (IsComplexQuery(selectQuery, false))
@@ -1386,7 +1726,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						else
 							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
 					}
-					else if (sql.Select.IsDistinct)
+					else if (sql.Select.IsDistinct && !sql.Select.IsDistinctOn)
 					{
 						sql.Select.IsDistinct = false;
 						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, new SqlValue(1), null));
@@ -1394,6 +1734,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 
 				var toCheck = QueryHelper.EnumerateAccessibleSources(sql).ToList();
+
+				// Hoist correlated SELECT projections to the outer query. A column whose expression references
+				// only outer sources (e.g. a group aggregate projected through a `.First()` apply body) cannot
+				// remain in the apply body once it becomes a plain join - it would reference a sibling derived
+				// table out of scope. Redirect every reference to such a column to its underlying outer expression
+				// and drop the column, mirroring the column inlining done in OptimizeJoinSubQueries. Sound only for
+				// CrossApply (-> INNER JOIN): the joined row exists only when matched, so the hoisted outer value
+				// is always correct. OuterApply/Full/Right (-> LEFT/FULL/RIGHT JOIN) must keep the projection NULL
+				// when there is no matching row, so they are left untouched.
+				if (joinTable.JoinType == JoinType.CrossApply)
+				{
+					for (var hi = sql.Select.Columns.Count - 1; hi >= 0; hi--)
+					{
+						var hoistColumn = sql.Select.Columns[hi];
+
+						if (QueryHelper.IsDependsOnOuterSources(hoistColumn.Expression, currentSources: toCheck)
+							&& !QueryHelper.IsDependsOnSources(hoistColumn.Expression, toCheck))
+						{
+							NotifyReplaced(hoistColumn.Expression, hoistColumn);
+							sql.Select.Columns.RemoveAt(hi);
+						}
+					}
+				}
 
 				for (int i = 0; i < searchCondition.Count; i++)
 				{
@@ -1417,7 +1780,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere, bool inGrouping)
 		{
-			if (columnExpression.ElementType is QueryElementType.Column or QueryElementType.SqlRawSqlTable or QueryElementType.SqlField or QueryElementType.SqlValue or QueryElementType.SqlParameter)
+			if (columnExpression.ElementType is QueryElementType.Column or QueryElementType.SqlRawSqlTable or QueryElementType.SqlField or QueryElementType.SqlCteTableField or QueryElementType.SqlValue or QueryElementType.SqlParameter)
 			{
 				return true;
 			}
@@ -1506,33 +1869,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.HasSetOperators)
 			{
-				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+				Dictionary<ISqlExpression, int>? newIndexes;
 
 				if (parentQuery.Select.Columns.Count == 0)
 				{
-					for (var i = 0; i < subQuery.Select.Columns.Count; i++)
-					{
-						var scol = subQuery.Select.Columns[i];
-						newIndexes[scol] = i;
-					}
-				}
-				else
-				{
-					for (var i = 0; i < parentQuery.Select.Columns.Count; i++)
-					{
-						var scol = parentQuery.Select.Columns[i];
+					// No projection on the parent — align the set-operator layout to the subquery's
+					// existing column order. Column identity is SqlColumn references, so we use them
+					// directly as keys.
+					newIndexes = new Dictionary<ISqlExpression, int>(
+						subQuery.Select.Columns.Count,
+						Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
-						if (!newIndexes.ContainsKey(scol.Expression))
-							newIndexes[scol.Expression] = i;
-					}
+					for (var i = 0; i < subQuery.Select.Columns.Count; i++)
+						newIndexes[subQuery.Select.Columns[i]] = i;
+				}
+				else if (!TryBuildOuterColumnIndexes(parentQuery.Select.Columns, out newIndexes))
+				{
+					return false;
 				}
 
 				var operation = subQuery.SetOperators[0].Operation;
 
-				if (!CheckSetColumns(newIndexes, subQuery, operation))
+				if (!TryReorderSetColumns(newIndexes, subQuery, operation, AllowDerivedSetColumns(subQuery)))
 					return false;
-
-				UpdateSetIndexes(newIndexes, subQuery, operation);
 
 				parentQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
 				subQuery.SetOperators.Clear();
@@ -1567,6 +1926,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				parentQuery.Select.OptimizeDistinct = parentQuery.Select.OptimizeDistinct || subQuery.Select.OptimizeDistinct;
 				parentQuery.Select.IsDistinct       = true;
+				// carry DISTINCT ON keys with the modifier so a flattened parent keeps the correct distinct semantics
+				if (subQuery.Select.IsDistinctOn)
+					parentQuery.Select.DistinctOn = subQuery.Select.DistinctOn;
 			}
 
 			if (subQuery.Select.TakeValue != null)
@@ -1730,13 +2092,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			havingDetected = null;
 
-			if (subQuery.IsSimple && parentQuery.IsSimple)
+			// Fast path: both queries are trivial SELECTs over a single table with no clauses,
+			// no set operators, no query-name pinning, and every outer column is a straight
+			// SqlColumn — nothing further can force a rejection, so merging is always safe.
+			// IsSimple already covers HasOrderBy/HasSetOperators and the single-table shape
+			// (see SelectQueryExtensions.IsSimpleOrSet).
+			if (subQuery.IsSimple
+				&& parentQuery.IsSimple
+				&& subQuery.QueryName == null
+				&& parentQuery.Select.Columns.TrueForAll(c => c.Expression is SqlColumn))
 			{
-				if (parentQuery.Select.Columns.TrueForAll(c => c.Expression is SqlColumn))
-				{
-					// shortcut
-					return true;
-				}
+				return true;
 			}
 
 			if (subQuery.From.Tables.Count > 1)
@@ -1754,7 +2120,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Trying to do not mix query hints
 			if (subQuery.SqlQueryExtensions?.Count > 0)
 			{
-				if (tableSource.Joins.Count > 0 || parentQuery.From.Tables.Count > 1)
+				if (tableSource.HasJoins || parentQuery.From.Tables.Count > 1)
 					return false;
 			}
 
@@ -1778,7 +2144,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					    if (gi is not SqlColumn sc)
 						    return true;
 
-					    if (QueryHelper.UnwrapNullablity(sc.Expression) is not (SqlColumn or SqlField or SqlParameter or SqlValue))
+					    if (QueryHelper.UnwrapNullablity(sc.Expression) is not (SqlColumn or SqlField or SqlCteTableField or SqlParameter or SqlValue))
 						    return true;
 
 					    return false;
@@ -1793,28 +2159,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.HasOrderBy)
 			{
-				if (parentQuery.HasGroupBy || parentQuery.IsDistinct || QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
+				if (parentQuery.HasGroupBy
+					|| parentQuery.IsDistinct
+					|| QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
 				{
 					return false;
 				}
-			}
 
-			if (subQuery.HasOrderBy)
-			{
 				if (QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
 					return false;
-
-				if (parentQuery.IsDistinct)
-				{
-					// Check that all order by columns are in select list
-					foreach (var ob in subQuery.OrderBy.Items)
-					{
-						if (!parentQuery.Select.Columns.Exists(c => QueryHelper.SameWithoutNullablity(c.Expression, ob.Expression)))
-						{
-							return false;
-						}
-					}
-				}
 			}
 
 			if (!subQuery.HasGroupBy && QueryHelper.IsAggregationQuery(subQuery))
@@ -1881,26 +2234,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (containsWindowFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere && subQuery.HasWhere) || subQuery.HasGroupBy)
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere && subQuery.HasWhere)
+							|| (subQuery.HasGroupBy && parentQuery is not { Select.HasModifier: false, HasWhere: false, HasGroupBy: false, HasHaving: false, From.Tables: [{ Joins.Count: 0 }] }))
 					{
 						// not allowed to break window
 						return false;
 					}
-				}
-
-				if (parentQuery.HasGroupBy)
-				{
-					if (QueryHelper.UnwrapNullablity(parentColumn.Expression) is SqlColumn sc && sc.Parent == subQuery)
-					{
-						var expr = QueryHelper.UnwrapNullablity(sc.Expression);
-
-						// not allowed to move complex expressions for grouping
-						if (expr.ElementType is not (QueryElementType.SqlField or QueryElementType.Column or QueryElementType.SqlValue or QueryElementType.SqlParameter))
-						{
-							return false;
-						}
-					}
-
 				}
 			}
 
@@ -1910,16 +2249,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (QueryHelper.ContainsWindowFunction(column.Expression))
 				{
-					if (parentQuery is not
+					// Window function in a subquery column can only be safely lifted into a
+					// plain single-table SELECT with no modifiers / WHERE / GROUP BY / HAVING.
+					if (parentQuery.Select.HasModifier
+						|| parentQuery.HasWhere
+						|| parentQuery.HasGroupBy
+						|| parentQuery.HasHaving
+						|| !parentQuery.IsSingleTableQueryWithoutJoins)
 					{
-							Select.HasModifier: false,
-							HasWhere: false,
-							HasGroupBy: false,
-							HasHaving: false,
-							From.Tables: [{ Joins.Count: 0 }],
-						})
-					{
-						// not allowed to break query window
 						return false;
 					}
 				}
@@ -2031,11 +2368,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			// named sub-query cannot be removed
 			if (subQuery.QueryName != null
-			    // parent also has name
-			    && (parentQuery.QueryName != null
-			        // parent has other tables/sub-queries
-			        || parentQuery.From.Tables.Count > 1
-					|| parentQuery.From.Tables.Exists(static t => t.Joins.Count > 0)))
+				// parent also has name, or has other tables/sub-queries
+				&& (parentQuery.QueryName != null || !parentQuery.IsSingleTableQueryWithoutJoins))
 			{
 				return false;
 			}
@@ -2085,6 +2419,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.IsDistinct)
 			{
+				// A DISTINCT ON subquery must not be flattened into its parent: moving the modifier up would drop the
+				// ON list and break its ORDER BY dependency. Keep it as a nested derived table.
+				if (subQuery.Select.IsDistinctOn)
+					return false;
+
 				if (parentQuery.HasOrderBy && !parentQuery.OrderBy.Items.TrueForAll(oi => oi.Expression is SqlColumn col && subQuery.Select.Columns.Contains(col)))
 				{
 					return false;
@@ -2125,7 +2464,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					&& subQuery.Select.HasSomeModifiers(_providerFlags.IsUpdateSkipTakeSupported, _providerFlags.IsUpdateTakeSupported))
 					return false;
 
-				if (tableSource.Joins.Count > 0)
+				if (tableSource.HasJoins)
 					return false;
 				if (parentQuery.From.Tables.Count > 1)
 					return false;
@@ -2170,7 +2509,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!parentQuery.HasGroupBy && subQuery.HasGroupBy)
 			{
-				if (tableSource.Joins.Count > 0)
+				if (tableSource.HasJoins)
 					return false;
 
 				if (parentQuery.From.Tables.Count > 1)
@@ -2209,9 +2548,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var operation = subQuery.SetOperators[0].Operation;
 
 				if (_currentSetOperator != null && _currentSetOperator.Operation != operation)
-					return false;
-
-				if (!subQuery.SetOperators.TrueForAll(so => so.Operation == operation))
 					return false;
 			}
 
@@ -2329,7 +2665,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				foreach (var c in subQuery.Select.Columns)
 				{
 					var columnExpression = QueryHelper.UnwrapCast(c.Expression);
-					if (columnExpression is not (SqlField or SqlColumn or SqlRowExpression))
+					if (columnExpression is not (SqlField or SqlCteTableField or SqlColumn or SqlRowExpression))
 					{
 						nullabilityContext ??= NullabilityContext.GetContext(subQuery);
 						if (!c.Expression.CanBeNullable(nullabilityContext))
@@ -2498,25 +2834,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						if (
 							tableSource.Joins[index] is
-						{
-								JoinType: JoinType.Inner,
-								Table:
 							{
+								JoinType: JoinType.Inner or JoinType.Cross or JoinType.Left,
+								Condition.IsTrue: true,
+								Table:
+								{
 									Joins.Count: 0,
-									Source: SelectQuery { From.Tables.Count: 0 } joinQuery,
+									Source: SelectQuery { From.Tables.Count: 0, HasSetOperators: false, Select.HasModifier: false, DoNotRemove: false, Where.SearchCondition.IsTrue: true } joinQuery,
 								},
 							} join
 						)
 						{
-								replaced = true;
+							replaced = true;
 
-								foreach (var c in joinQuery.Select.Columns)
-								{
-									NotifyReplaced(c.Expression, c);
-								}
+							foreach (var c in joinQuery.Select.Columns)
+							{
+								NotifyReplaced(c.Expression, c);
+							}
 
-								tableSource.Joins.RemoveAt(index);
-								--index;
+							tableSource.Joins.RemoveAt(index);
+							--index;
 						}
 					}
 				}
@@ -2552,7 +2889,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			bool MoveJoinConditionsToWhere(SqlStatement root, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 			{
-				var modified                   = false;
+				var moved                      = false;
 				var isLeft                     = join.JoinType == JoinType.Left;
 				List<ISqlTableSource>? sources = null;
 
@@ -2583,7 +2920,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								{
 									QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
 									nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
-									modified = true;
+									moved = true;
 								}
 								else if (join.Table.Source is SqlTable t)
 								{
@@ -2606,7 +2943,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 										_rootElement.Replace(toReplace, subQuery.Select);
 									}
 
-									modified = true;
+									moved = true;
 								}
 							}
 
@@ -2641,7 +2978,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 
 				// this could result in empty condition, but it is fine - user created unsupported query
-				return modified;
+				return moved;
 			}
 		}
 
@@ -2649,7 +2986,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			var isModified = false;
 
-			if (!_providerFlags.IsRecursiveCTEJoinWithConditionSupported && _isInRecursiveCte)
+			if (!_providerFlags.IsRecursiveCTEJoinWithConditionSupported && _recursiveCteClause != null)
 			{
 				for (int i = 0; i < selectQuery.From.Tables.Count; i++)
 				{
@@ -2809,10 +3146,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				return expr switch
 				{
-					SqlColumn column   => column.Parent,
-					SqlField field     => field.Table,
-					ISqlTableSource ts => ts,
-					_                  => null,
+					SqlColumn column          => column.Parent,
+					SqlField field            => field.Table,
+					SqlCteTableField cteField => cteField.Table,
+					ISqlTableSource ts        => ts,
+					_                         => null,
 				};
 			}
 		}
@@ -2972,6 +3310,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							--index;
 							continue;
+						}
+
+						// A conditionless INNER JOIN renders as `JOIN ON 1=1`, which providers with
+						// IsSupportsJoinWithoutCondition == false reject. Where the provider supports CROSS
+						// JOIN, express it as one (the validator accepts CROSS). INNER ON 1=1 is always
+						// equivalent to CROSS; LEFT ON 1=1 only when the joined source is guaranteed non-empty
+						// (an aggregate without GROUP BY, e.g. a scalar COUNT carrier, yields exactly one row).
+						// A HAVING clause breaks that guarantee — a no-GROUP BY aggregate with HAVING yields
+						// zero rows when the predicate fails, so the LEFT JOIN is not equivalent to CROSS.
+						if (join.Condition.IsTrue && _providerFlags.IsCrossJoinSupported
+							&& (join.JoinType == JoinType.Inner
+								|| (join is { JoinType: JoinType.Left, Table.Source: SelectQuery { HasGroupBy: false, HasHaving: false } aggSrc } && QueryHelper.IsAggregationQuery(aggSrc))))
+						{
+							join.JoinType = JoinType.Cross;
+
+							if (join.Table.Joins.Count > 0)
+							{
+								// CROSS JOIN can't carry the joined subquery's own joins; lift them to the parent level
+								for (var ij = 0; ij < join.Table.Joins.Count; ij++)
+									table.Joins.Insert(index + ij + 1, join.Table.Joins[ij]);
+
+								join.Table.Joins.Clear();
+							}
+
+							isModified = true;
 						}
 
 						isModified = isModified || modified;
@@ -3301,6 +3664,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				subQuery.Select.IsDistinct = true;
 				query.Select.IsDistinct    = false;
+				// move DISTINCT ON keys down with the modifier and clear them from the source query
+				subQuery.Select.DistinctOn = query.Select.DistinctOn;
+				query.Select.DistinctOn    = null;
 			}
 
 			_columnNestingCorrector.CorrectColumnNesting(query);
@@ -3402,7 +3768,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct)
+			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct && !joinQuery.Select.IsDistinctOn)
 			{
 				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 1, _providerFlags, out _))
 					return false;
@@ -3542,10 +3908,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
-			var saveIsInRecursiveCte = _isInRecursiveCte;
+			var saveRecursiveCte     = _recursiveCteClause;
 			var saveCurrentCteClause = _currentCteClause;
 			if (element.IsRecursive)
-				_isInRecursiveCte = true;
+				_recursiveCteClause = element;
 
 			var saveParent = _parentSelect;
 			_parentSelect = null;
@@ -3555,8 +3921,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			_parentSelect = saveParent;
 
-			_currentCteClause = saveCurrentCteClause;
-			_isInRecursiveCte = saveIsInRecursiveCte;
+			_currentCteClause   = saveCurrentCteClause;
+			_recursiveCteClause = saveRecursiveCte;
 
 			return newElement;
 		}
@@ -3575,8 +3941,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var sq = predicate.SubQuery;
 
-			// We can safely optimize out Distinct
-			if (sq.Select.IsDistinct)
+			// We can safely optimize out Distinct (but not DISTINCT ON — clearing only IsDistinct would leave the ON
+			// list dangling; EXISTS ignores distinctness/ordering anyway, so leaving it intact is harmless).
+			if (sq.Select.IsDistinct && !sq.Select.IsDistinctOn)
 			{
 				sq.Select.IsDistinct = false;
 			}

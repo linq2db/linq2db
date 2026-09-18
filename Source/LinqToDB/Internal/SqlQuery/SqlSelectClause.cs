@@ -21,9 +21,15 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		internal SqlSelectClause(bool isDistinct, ISqlExpression? takeValue, TakeHints? takeHints, ISqlExpression? skipValue, IEnumerable<SqlColumn> columns)
+			: this(isDistinct, null, takeValue, takeHints, skipValue, columns)
+		{
+		}
+
+		internal SqlSelectClause(bool isDistinct, List<ISqlExpression>? distinctOn, ISqlExpression? takeValue, TakeHints? takeHints, ISqlExpression? skipValue, IEnumerable<SqlColumn> columns)
 			: base(null)
 		{
 			IsDistinct = isDistinct;
+			DistinctOn = distinctOn;
 			TakeValue  = takeValue;
 			TakeHints  = takeHints;
 			SkipValue  = skipValue;
@@ -233,6 +239,19 @@ namespace LinqToDB.Internal.SqlQuery
 		public bool IsDistinct       { get; set; }
 		public bool OptimizeDistinct { get; set; }
 
+		/// <summary>
+		/// When non-empty, marks the clause as a <c>DISTINCT ON (...)</c> query (PostgreSQL, DuckDB): the listed
+		/// expressions form the distinct key and, per key, the row that sorts first under the query's <c>ORDER BY</c>
+		/// (which must begin with these expressions) is kept. Honored only by providers that support <c>DISTINCT ON</c>.
+		/// Callers that populate this must also set <see cref="IsDistinct"/> to <see langword="true"/>.
+		/// </summary>
+		public List<ISqlExpression>? DistinctOn { get; set; }
+
+		/// <summary>
+		/// Returns <see langword="true"/> when <see cref="DistinctOn"/> carries one or more expressions.
+		/// </summary>
+		public bool IsDistinctOn => DistinctOn is { Count: > 0 };
+
 		#endregion
 
 		#region Take
@@ -285,6 +304,10 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(TakeValue?.GetElementHashCode());
 			hash.Add(TakeHints);
 
+			if (DistinctOn != null)
+				foreach (var on in DistinctOn)
+					hash.Add(on.GetElementHashCode());
+
 			foreach (var column in Columns)
 				hash.Add(column.GetElementHashCode());
 
@@ -308,6 +331,19 @@ namespace LinqToDB.Internal.SqlQuery
 			writer.Append("SELECT ");
 
 			if (IsDistinct) writer.Append("DISTINCT ");
+
+			if (IsDistinctOn)
+			{
+				writer.Append("ON (");
+				for (var i = 0; i < DistinctOn!.Count; i++)
+				{
+					if (i > 0)
+						writer.Append(", ");
+					writer.AppendElement(DistinctOn[i]);
+				}
+
+				writer.Append(") ");
+			}
 
 			if (SkipValue != null)
 			{
@@ -399,6 +435,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public void Cleanup()
 		{
 			IsDistinct = false;
+			DistinctOn = null;
 			TakeValue  = null;
 			TakeHints  = null;
 			SkipValue  = null;

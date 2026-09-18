@@ -30,17 +30,13 @@ namespace Tests.UserTests
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
 	{
 		[DefaultMember("Item")]
-		public class BasicDTOwithExtensionData : BasicDTO, IMccEntityState, IInterlinqDTO, IDTOWithId, Interfaces.IExtensionData
-		{
-		}
+		public class BasicDTOwithExtensionData : BasicDTO, IMccEntityState, IInterlinqDTO, IDTOWithId, Interfaces.IExtensionData;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
 	{
 		[KnownType("KnownTypes")]
-		public class BasicDTOwithoutID : IMccEntityState, IInterlinqDTO
-		{
-		}
+		public class BasicDTOwithoutID : IMccEntityState, IInterlinqDTO;
 	}
 
 	namespace MCC.Common.ServiceInterfaces.DTO.Base
@@ -144,9 +140,7 @@ namespace Tests.UserTests
 	namespace MCC.WMS.ServiceInterfaces.DTO
 	{
 		[DataContract(Name = "WMS_StorageShelfDTO")]
-		public class StorageShelfDTO : Common.ServiceInterfaces.DTO.Base.BasicDTOwithExtensionData, Common.ServiceInterfaces.DTO.Base.IMccEntityState, Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, Common.ServiceInterfaces.DTO.Base.IDTOWithId, Common.ServiceInterfaces.Interfaces.IExtensionData, Common.ServiceInterfaces.DTO.IModifiedTimeStamp
-		{
-		}
+		public class StorageShelfDTO : Common.ServiceInterfaces.DTO.Base.BasicDTOwithExtensionData, Common.ServiceInterfaces.DTO.Base.IMccEntityState, Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, Common.ServiceInterfaces.DTO.Base.IDTOWithId, Common.ServiceInterfaces.Interfaces.IExtensionData, Common.ServiceInterfaces.DTO.IModifiedTimeStamp;
 	}
 
 	namespace MCC.WMS.ServiceInterfaces.DTO
@@ -234,9 +228,7 @@ namespace Tests.UserTests
 	namespace MCC.WMS.ServiceInterfaces.DTO
 	{
 		[DataContract(Name = "WMS_ResourcePointDTO")]
-		public class WmsResourcePointDTO : Common.ServiceInterfaces.DTO.Base.BasicDTOwithExtensionData, Common.ServiceInterfaces.DTO.Base.IMccEntityState, Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, Common.ServiceInterfaces.DTO.Base.IDTOWithId, Common.ServiceInterfaces.Interfaces.IExtensionData
-		{
-		}
+		public class WmsResourcePointDTO : Common.ServiceInterfaces.DTO.Base.BasicDTOwithExtensionData, Common.ServiceInterfaces.DTO.Base.IMccEntityState, Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, Common.ServiceInterfaces.DTO.Base.IDTOWithId, Common.ServiceInterfaces.Interfaces.IExtensionData;
 	}
 
 	namespace Tests.UserTests

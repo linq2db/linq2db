@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
 						var sequenceTableContext = SequenceHelper.GetTableOrCteContext(sequence);
-						var intoTableContext     = SequenceHelper.GetTableOrCteContext(into);
+						var intoTableContext     = SequenceHelper.GetTableContext(into);
 
 						if (intoTableContext == null)
 						{
@@ -212,17 +212,17 @@ namespace LinqToDB.Internal.Linq.Builder
 							sequenceTableContext    = kvp.Key;
 						}
 
-						if (QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable, false))
+						if (sequenceTableContext is TableBuilder.TableContext stctx && QueryHelper.IsEqualTables(stctx.SqlTable, intoTableContext.SqlTable, false))
 						{
-							intoTableContext = sequenceTableContext;
+							intoTableContext = stctx;
 						}
 						else
 						{
 							// create join between tables
 							//
 
-							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
-							var intoRef     = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
+							var sequenceRef = new ContextRefExpression(sequenceTableContext.ObjectType, sequenceTableContext);
+							var intoRef     = new ContextRefExpression(sequenceTableContext.ObjectType, into);
 
 							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef, BuildPurpose.Sql);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
@@ -280,7 +280,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-				var destinationContext = SequenceHelper.GetTableOrCteContext(destination);
+				var destinationContext = SequenceHelper.GetTableContext(destination);
 				if (destinationContext == null)
 					throw new InvalidOperationException();
 
@@ -355,14 +355,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (targetTableContext is CteTableContext cteTable)
 			{
 				insertedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
+					cteTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 				deletedContext = new CteTableContext(builder.GetTranslationModifier(), builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
+					cteTable.ObjectType, outputSelectQuery, cteTable.CteContext);
+			}
+			else if (targetTableContext is TableBuilder.TableContext tableContext)
+			{
+				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, tableContext.SqlTable, false);
+				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, tableContext.SqlTable, false);
 			}
 			else
 			{
-				insertedContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
-				deletedContext  = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				throw new InvalidOperationException("Unexpected table context type: " + targetTableContext.GetType().Name);
 			}
 
 			outputContext = deletedContext;
@@ -535,7 +539,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			static bool NeedsConversion(ISqlExpression sqlExpression, ColumnDescriptor? targetDescriptor)
 			{
-				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlField)
+				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlFieldBase)
 					return false;
 
 				if (sqlExpression is SqlAnchor anchor)
@@ -574,7 +578,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		static void ParseSet(
 			ExpressionBuilder           builder,
 			IBuildContext               buildContext,
-			Expression                  targetPath,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes,
@@ -602,8 +605,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var (f, v) in pairs)
 				{
-					var currentPath = Expression.MakeMemberAccess(targetPath, f.MemberInfo);
-					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
+					ParseSet(builder, buildContext, f.Expression, v.Expression, envelopes, false);
 				}
 			}
 			else
@@ -619,8 +621,29 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<SetExpressionEnvelope> envelopes,
 			bool                        forceParameters)
 		{
-			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes, forceParameters);
+			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, fieldExpression, valueExpression, envelopes, forceParameters);
 		}
+
+		/// <summary>
+		/// Retypes <paramref name="target"/> to <paramref name="memberInfo"/>'s declaring type when the
+		/// member is declared on a subtype of what the target currently carries.
+		/// </summary>
+		/// <remarks>
+		/// A setter may construct a type derived from the table's entity type, as in
+		/// <c>GetTable&lt;Base&gt;().Insert(() =&gt; new Derived { ... })</c>; an output projection over an
+		/// inheritance root carries the subtypes' columns for the same reason. Either way the member is
+		/// declared on a subtype while the target carries the table's type, a pairing
+		/// <see cref="Expression.MakeMemberAccess(Expression, MemberInfo)"/> rejects. Retyping is enough for
+		/// the column to resolve in the reported shape: the subtype's <see cref="ColumnDescriptor"/> is
+		/// merged into the base entity descriptor unless its member name collides with an already-merged
+		/// one, and the field lookup compares members by name and declaring-type relationship rather than
+		/// by the target's type. Requiring a same-or-parent relation rather than plain name equality is
+		/// also what keeps two sibling-declared members of the same name from matching each other.
+		/// </remarks>
+		static Expression EnsureDeclaringType(Expression target, MemberInfo memberInfo)
+			=> memberInfo.DeclaringType?.IsAssignableFrom(target.Type) == false
+				? SequenceHelper.EnsureType(target, memberInfo.DeclaringType)
+				: target;
 
 		internal static void ParseSetter(
 			ExpressionBuilder           builder,
@@ -642,18 +665,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					foreach (var assignment in generic.Assignments)
 					{
-						var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
+						var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef, assignment.MemberInfo), assignment.MemberInfo);
 
-						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
+						ParseSet(builder, sourceRef.BuildContext, memberAccess, assignment.Expression, envelopes, false);
 					}
 
 					foreach (var parameter in generic.Parameters)
 					{
 						if (parameter.MemberInfo != null)
 						{
-							var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+							var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef, parameter.MemberInfo), parameter.MemberInfo);
 
-							ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+							ParseSet(builder, sourceRef.BuildContext, memberAccess, parameter.Expression, envelopes, false);
 						}
 					}
 
@@ -709,7 +732,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					field = value;
 
-					UpdateStatement.Update.Table = value?.SqlTable;
+					UpdateStatement.Update.Table = value?.NamedTable;
 				}
 			}
 
@@ -744,7 +767,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var tableContext = TargetTable;
 
-				update.Table                = tableContext?.SqlTable;
+				update.Table                = tableContext?.NamedTable;
 				UpdateStatement.SelectQuery = QuerySequence.SelectQuery;
 
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
@@ -926,7 +949,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						updateExpr      = SequenceHelper.PrepareBody(lambda, sequence);
 					}
 
-					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions, forceParameters);
+					ParseSet(builder, sequence, extractExpr, updateExpr, updateContext.SetExpressions, forceParameters);
 				}
 
 				return BuildSequenceResult.FromContext(updateContext);

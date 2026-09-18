@@ -9,6 +9,7 @@
 		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
 		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
 		<PackageReference Include="Microsoft.Testing.Extensions.HangDump" />
+		<PackageReference Include="Microsoft.Testing.Extensions.Retry" />
 		<PackageReference Include="Shouldly" />
 		<!-- Was a transitive dependency of Microsoft.NET.Test.Sdk; referenced directly now that the SDK is gone. -->
 		<PackageReference Include="Newtonsoft.Json" />
