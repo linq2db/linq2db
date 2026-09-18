@@ -1676,44 +1676,63 @@ namespace Tests.Linq
 			Assert.That(cnt, Is.EqualTo(db.Person.Count()));
 		}
 
+		sealed record InterpolatedName(string FirstName, string LastName, string FullName);
+
+		// Sybase gives an empty string back as a single space, and there is no plan to change that, so a null
+		// MiddleName reads as " " rather than "". The two tests below assert that instead of being skipped there:
+		// the query is left alone and the expected rows are rebuilt over a source that already reads that way.
+		// MiddleName is the only nullable member of Person, so it is the only place a `?? ""` can fire.
+		//
+		// The substitution cannot be hoisted into a shared variable: that makes it a parameter, linq2db sizes a
+		// string parameter from its value, and ASE types COALESCE by the parameter's declared length - so the
+		// column comes back truncated to one character. Both spellings have to stay literals.
+		static IEnumerable<Person> AsSybaseReadsThem(IEnumerable<Person> source) =>
+			source.Select(p => new Person { ID = p.ID, FirstName = p.FirstName, LastName = p.LastName, MiddleName = p.MiddleName ?? " ", Gender = p.Gender });
+
+		static IQueryable<InterpolatedName> InterpolatedNullable(IQueryable<Person> source) =>
+			from p in source
+			select new InterpolatedName(
+				$"{p.FirstName}",
+				$"{p.LastName}, {p.FirstName}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})") // it should be more tan three expressions to avoid optimization
+			into s
+			where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+			orderby s.FirstName, s.LastName
+			select s;
+
+		static IQueryable<InterpolatedName> InterpolatedCoalesce(IQueryable<Person> source) =>
+			from p in source
+			select new InterpolatedName(
+				$"{p.FirstName ?? ""}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""}",
+				$"{p.LastName ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})") // it should be more tan three expressions to avoid optimization
+			into s
+			where s.FirstName != "" || s.LastName != "" || s.FullName != ""
+			orderby s.FirstName, s.LastName
+			select s;
+
 		[Test]
-		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationTestsNullable([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			var query =
-					from p in db.Person
-					select new
-					{
-						FirstName = $"{p.FirstName}",
-						LastName  = $"{p.LastName }, {p.FirstName}",
-						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
-					} into s
-					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
-					orderby s.FirstName, s.LastName
-					select s;
+			var query = InterpolatedNullable(db.Person);
 
-			AssertQuery(query);
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				AreEqual(InterpolatedNullable(AsSybaseReadsThem(Person).AsQueryable()).ToList(), query.ToList());
+			else
+				AssertQuery(query);
 		}
 
 		[Test]
-		[ActiveIssue("Sybase converts empty string to space and we don't plan to do anything about it for now", Configuration = TestProvName.AllSybase)]
 		public void StringInterpolationCoalesce([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
-			var query =
-					from p in db.Person
-					select new
-					{
-						FirstName = $"{p.FirstName ?? ""}",
-						LastName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""}",
-						FullName  = $"{p.LastName  ?? ""}, {p.FirstName ?? ""} ({p.MiddleName ?? ""} + {p.MiddleName ?? ""})", // it should be more tan three expressions to avoid optimization
-					} into s
-					where s.FirstName != "" || s.LastName != "" || s.FullName != ""
-					orderby s.FirstName, s.LastName
-					select s;
+			var query = InterpolatedCoalesce(db.Person);
 
-			AssertQuery(query);
+			if (context.IsAnyOf(TestProvName.AllSybase))
+				AreEqual(InterpolatedCoalesce(AsSybaseReadsThem(Person).AsQueryable()).ToList(), query.ToList());
+			else
+				AssertQuery(query);
 		}
 
 		[Test]

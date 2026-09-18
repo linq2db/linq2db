@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -992,7 +992,8 @@ namespace Tests.Mapping
 		}
 
 		#region Issue 2953
-		[ActiveIssue]
+		[ActiveIssue(2953, ErrorMessage = "Assert.That(result[0].Properties.ContainsKey(\"FirstName\"), Is.True)",
+			Details = "dynamic columns are not populated through this path, so the property bag comes back without them - #2953's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
 		public void Issue2953Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
@@ -1008,7 +1009,8 @@ namespace Tests.Mapping
 			}
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(2953, ErrorMessage = "Assert.That(result[0].Properties.ContainsKey(\"FirstName\"), Is.True)",
+			Details = "as Issue2953Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
 		public void Issue2953Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

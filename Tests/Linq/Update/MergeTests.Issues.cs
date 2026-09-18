@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -979,7 +979,14 @@ namespace Tests.xUpdate
 		}
 		#endregion
 
-		[ActiveIssue]
+		// Blanket, plus the two providers that never get as far as the assertion: Firebird 2.5 and Informix reject
+		// the statement outright.
+		[ActiveIssue(4584, ErrorMessage = "Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The merge emits fewer parameters than the source rows require - #4584's subject.")]
+		[ActiveIssue(4584, Configuration = TestProvName.AllFirebirdLess3, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Dynamic SQL Error", Details = "Firebird 2.5 refuses the generated statement before any parameter can be counted.")]
+		[ActiveIssue(4584, Configuration = ProviderName.InformixDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "as Firebird 2.5 - refused before the assertion is reached.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
 		public void Issue4584Test([MergeDataContextSource(false)] string context)
 		{
@@ -1089,8 +1096,18 @@ namespace Tests.xUpdate
 			];
 		}
 
-		// Current Sybase version cannot handle such queries and crash with generic error
-		[ActiveIssue(TestProvName.AllSybase, Details = "ASE is terminating this process")]
+		// Current Sybase version cannot handle such queries and crash with generic error.
+		// The provider name used to sit in the positional argument, which binds the (string issue) constructor, so
+		// the gate applied to every provider rather than to Sybase. Measured: everything else passes.
+		// Two attributes because the crash surfaces differently per transport - the client reports a broken
+		// connection directly, while over the remote transport the server side dies mid-token and only the Grpc
+		// wrapper is stable; the socket error inside it is not.
+		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
+			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "Connection entered broken state",
+			Details = "no-issue: ASE is terminating this process")]
+		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForNonLinqService = true,
+			ErrorTypeName = "Grpc.Core.RpcException",
+			Details = "no-issue: ASE is terminating this process")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5181")]
 		public void UnusedSource_Query([MergeDataContextSource] string context)
 		{
