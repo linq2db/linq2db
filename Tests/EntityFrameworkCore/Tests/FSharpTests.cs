@@ -1,4 +1,4 @@
-#if EF8
+#if EF_FSHARP
 using System;
 using System.Linq;
 
