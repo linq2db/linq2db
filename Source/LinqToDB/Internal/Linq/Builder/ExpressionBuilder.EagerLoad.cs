@@ -325,8 +325,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression ApplyEnumerableOrderBy(Expression queryExpr, List<(LambdaExpression Expression, bool Descending)> orderBy)
 		{
-			// CollectOrderBy crosses operators that change the element type without remapping the lambdas
-			// (SelectMany, Cast, OfType): such an ordering is not expressible over the projected elements.
+			// CollectOrderBy crosses element-type-changing operators (SelectMany, Cast, OfType) without
+			// remapping the lambdas, so skip rather than emit a call that cannot bind.
 			var elementType = TypeHelper.GetEnumerableElementType(queryExpr.Type);
 
 			foreach (var order in orderBy)
