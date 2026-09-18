@@ -3,6 +3,11 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Scaffold</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
+
+		<!--Same as LinqToDB.csproj: $(BaselineVersion) ships net8.0/net9.0 this package no longer has, so the
+		    baseline comparison falls back to netstandard2.0. Remove both once a released baseline drops them.-->
+		<DisablePackageBaselineValidation>true</DisablePackageBaselineValidation>
+		<ApiCompatPermitUnnecessarySuppressions>true</ApiCompatPermitUnnecessarySuppressions>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
