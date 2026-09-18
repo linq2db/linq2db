@@ -16,5 +16,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		FormatAsExpression  = 1 << 7,
 		// forces clearing flags
 		ResetPrevious       = 1 << 8,
+		// Set while a member translator is translating: it re-enters the builder through
+		// ITranslationContext.Translate to translate its own arguments, and those must not be pulled client-side
+		// by PreferClientCalculation - the translator would then receive a non-placeholder and decline.
+		// Survives ResetPrevious (see CombineFlags).
+		InsideTranslation   = 1 << 9,
 	}
 }

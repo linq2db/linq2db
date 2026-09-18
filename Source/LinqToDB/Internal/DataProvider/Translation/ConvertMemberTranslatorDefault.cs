@@ -15,6 +15,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public ConvertMemberTranslatorDefault()
 		{
+			// Each helper scopes its own registrations. A System.Convert.ToXxx overload is optional only when it has
+			// a client body: evaluated on the client the result is the .NET one, which may differ from the server's
+			// in formatting or rounding, and that is accepted. An overload documented as always throwing
+			// InvalidCastException has no client body at all and stays mandatory - see the comment in each helper.
+			// RegisterString is wholly mandatory for a different reason, recorded there: its result is a string.
+			// HandleGuid is deliberately outside any scope: it registers a replacement, not a method, and
+			// replacements are never optional.
 			RegisterBoolean();
 			RegisterByte();
 			RegisterChar();
@@ -38,79 +45,136 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterBoolean()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((byte     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			// Convert.ToBoolean(char) and (DateTime) always throw InvalidCastException, so both stay mandatory:
+			// a client-side call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((byte     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			}
+
 			Registration.RegisterMethod((char     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
 			Registration.RegisterMethod((DateTime obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((double   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((short    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((int      obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((long     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((object   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((float    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((string   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((uint     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((double   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((short    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((int      obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((long     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((object   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((float    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((string   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((uint     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			}
 		}
 
 		void RegisterByte()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((byte     obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((char     obj) => Convert.ToByte(obj), TranslateConvertToByte);
+			// Convert.ToByte(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((byte     obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((char     obj) => Convert.ToByte(obj), TranslateConvertToByte);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((double   obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((short    obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((int      obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((long     obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((object   obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((float    obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((string   obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((uint     obj) => Convert.ToByte(obj), TranslateConvertToByte);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToByte(obj), TranslateConvertToByte);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((double   obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((short    obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((int      obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((long     obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((object   obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((float    obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((string   obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((uint     obj) => Convert.ToByte(obj), TranslateConvertToByte);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToByte(obj), TranslateConvertToByte);
+			}
 		}
 
 		void RegisterChar()
 		{
+			// Convert.ToChar(bool), (DateTime), (decimal), (double) and (float) always throw InvalidCastException,
+			// so they stay mandatory: a client-side call cannot reproduce the CAST the server-side translation emits.
+
 			Registration.RegisterMethod((bool     obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((byte     obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((char     obj) => Convert.ToChar(obj), TranslateConvertToChar);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((byte     obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((char     obj) => Convert.ToChar(obj), TranslateConvertToChar);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToChar(obj), TranslateConvertToChar);
 			Registration.RegisterMethod((decimal  obj) => Convert.ToChar(obj), TranslateConvertToChar);
 			Registration.RegisterMethod((double   obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((short    obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((int      obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((long     obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((object   obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToChar(obj), TranslateConvertToChar);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((short    obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((int      obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((long     obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((object   obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToChar(obj), TranslateConvertToChar);
+			}
+
 			Registration.RegisterMethod((float    obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((string   obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((uint     obj) => Convert.ToChar(obj), TranslateConvertToChar);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToChar(obj), TranslateConvertToChar);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((string   obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((uint     obj) => Convert.ToChar(obj), TranslateConvertToChar);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToChar(obj), TranslateConvertToChar);
+			}
 		}
 
 		void RegisterDateTime()
 		{
+			// Every Convert.ToDateTime overload other than (DateTime), (object) and (string) always throws
+			// InvalidCastException, so only those three are optional.
+
 			Registration.RegisterMethod((bool     obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((byte     obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((char     obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
-			Registration.RegisterMethod((DateTime obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((DateTime obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
+			}
+
 			Registration.RegisterMethod((decimal  obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((double   obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((short    obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((int      obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((long     obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
-			Registration.RegisterMethod((object   obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((object   obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
+			}
+
 			Registration.RegisterMethod((sbyte    obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((float    obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
-			Registration.RegisterMethod((string   obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((string   obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
+			}
+
 			Registration.RegisterMethod((ushort   obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((uint     obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
 			Registration.RegisterMethod((ulong    obj) => Convert.ToDateTime(obj), TranslateConvertToDateTime);
@@ -118,222 +182,344 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterDecimal()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((byte     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+			// Convert.ToDecimal(char) and (DateTime) always throw InvalidCastException, so both stay mandatory:
+			// a client-side call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((byte     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+			}
+
 			Registration.RegisterMethod((char     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
 			Registration.RegisterMethod((DateTime obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((double   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((short    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((int      obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((long     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((object   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((float    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((string   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((uint     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((double   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((short    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((int      obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((long     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((object   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((float    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((string   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((uint     obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToDecimal(obj), TranslateConvertToDecimal);
+			}
 		}
 
 		void RegisterDouble()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((byte     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+			// Convert.ToDouble(char) and (DateTime) always throw InvalidCastException, so both stay mandatory:
+			// a client-side call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((byte     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+			}
+
 			Registration.RegisterMethod((char     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
 			Registration.RegisterMethod((DateTime obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((double   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((short    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((int      obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((long     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((object   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((float    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((string   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((uint     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((double   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((short    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((int      obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((long     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((object   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((float    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((string   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((uint     obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToDouble(obj), TranslateConvertToDouble);
+			}
 		}
 
 		void RegisterInt16()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((byte     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((char     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+			// Convert.ToInt16(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((byte     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((char     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((double   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((short    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((int      obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((long     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((object   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((float    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((string   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((uint     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((double   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((short    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((int      obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((long     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((object   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((float    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((string   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((uint     obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToInt16(obj), TranslateConvertToInt16);
+			}
 		}
 
 		void RegisterInt32()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((byte     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((char     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+			// Convert.ToInt32(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((byte     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((char     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((double   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((short    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((int      obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((long     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((object   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((float    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((string   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((uint     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((double   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((short    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((int      obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((long     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((object   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((float    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((string   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((uint     obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToInt32(obj), TranslateConvertToInt32);
+			}
 		}
 
 		void RegisterInt64()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((byte     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((char     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+			// Convert.ToInt64(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((byte     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((char     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((double   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((short    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((int      obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((long     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((object   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((float    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((string   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((uint     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((double   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((short    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((int      obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((long     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((object   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((float    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((string   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((uint     obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToInt64(obj), TranslateConvertToInt64);
+			}
 		}
 
 		void RegisterSByte()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((byte     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((char     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+			// Convert.ToSByte(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((byte     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((char     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((double   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((short    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((int      obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((long     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((object   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((float    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((string   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((uint     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((double   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((short    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((int      obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((long     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((object   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((float    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((string   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((uint     obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToSByte(obj), TranslateConvertToSByte);
+			}
 		}
 
 		void RegisterSingle()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((byte     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+			// Convert.ToSingle(char) and (DateTime) always throw InvalidCastException, so both stay mandatory:
+			// a client-side call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((byte     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+			}
+
 			Registration.RegisterMethod((char     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
 			Registration.RegisterMethod((DateTime obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((double   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((short    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((int      obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((long     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((object   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((float    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((string   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((uint     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((double   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((short    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((int      obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((long     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((object   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((float    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((string   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((uint     obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToSingle(obj), TranslateConvertToSingle);
+			}
 		}
 
 		void RegisterString()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((byte     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((char     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((DateTime obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((double   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((short    obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((int      obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((long     obj) => Convert.ToString(obj), TranslateConvertToString);
+			// Optional: the translation is a cast, NULL-strict on every provider, and the client rebuild guards on
+			// the column, so a missed LeftJoin reads null either way (linq2db#5929).
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((byte     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((char     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((DateTime obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((decimal  obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((double   obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((short    obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((int      obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((long     obj) => Convert.ToString(obj), TranslateConvertToString);
+			}
+
+			// Mandatory: the guard keys on the column's CLR type, so a reference-typed column keeps the member's
+			// own semantics - and Convert.ToString((object)null) is "", where the SQL yields NULL.
 			Registration.RegisterMethod((object   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((float    obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((string   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((uint     obj) => Convert.ToString(obj), TranslateConvertToString);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToString(obj), TranslateConvertToString);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((float    obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((string   obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((uint     obj) => Convert.ToString(obj), TranslateConvertToString);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToString(obj), TranslateConvertToString);
+			}
 		}
 
 		void RegisterUInt16()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((byte     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((char     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+			// Convert.ToUInt16(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((byte     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((char     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((double   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((short    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((int      obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((long     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((object   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((float    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((string   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((uint     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((double   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((short    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((int      obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((long     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((object   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((float    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((string   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((uint     obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToUInt16(obj), TranslateConvertToUInt16);
+			}
 		}
 
 		void RegisterUInt32()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((byte     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((char     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+			// Convert.ToUInt32(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((byte     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((char     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((double   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((short    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((int      obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((long     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((object   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((float    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((string   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((uint     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((double   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((short    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((int      obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((long     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((object   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((float    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((string   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((uint     obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToUInt32(obj), TranslateConvertToUInt32);
+			}
 		}
 
 		void RegisterUInt64()
 		{
-			Registration.RegisterMethod((bool     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((byte     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((char     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+			// Convert.ToUInt64(DateTime) always throws InvalidCastException, so it stays mandatory: a client-side
+			// call cannot reproduce the CAST the server-side translation emits.
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((bool     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((byte     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((char     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+			}
+
 			Registration.RegisterMethod((DateTime obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((decimal  obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((double   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((short    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((int      obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((long     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((object   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((sbyte    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((float    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((string   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((ushort   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((uint     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
-			Registration.RegisterMethod((ulong    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal  obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((double   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((short    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((int      obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((long     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((object   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((sbyte    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((float    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((string   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((ushort   obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((uint     obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+				Registration.RegisterMethod((ulong    obj) => Convert.ToUInt64(obj), TranslateConvertToUInt64);
+			}
 		}
 
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
