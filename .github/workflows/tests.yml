@@ -18,7 +18,7 @@ on:
         required: true
         default: '[sqlite.all]'
       full_run:
-        description: "Run every TFM's main suite, not just net10 (release-run behaviour)"
+        description: "Run every TFM's main suite, not just the newest (release-run behaviour)"
         type: boolean
         default: false
       ref:
