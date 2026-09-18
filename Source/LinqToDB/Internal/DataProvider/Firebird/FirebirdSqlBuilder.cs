@@ -74,7 +74,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			if (Statement.QueryType is QueryType.Update or QueryType.Delete)
 			{
-				SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+				// TAKE/SKIP resolved during render-prep (see SqlExpressionConvertVisitor.ResolveSkipTakeValues).
+				var takeExpr = selectQuery.Select.TakeValue;
+				var skipExpr = selectQuery.Select.SkipValue;
 
 				if (takeExpr != null)
 				{
@@ -270,16 +272,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return GetValueBasedParameterCastType(parameter);
 		}
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement truncate => truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1,
-
-				_ => base.CommandCount(statement),
-			};
-		}
-
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var identityField = dropTable.Table.IdentityFields.Count > 0 ? dropTable.Table.IdentityFields[0] : null;
@@ -349,19 +341,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				if (dropTable.Table.TableOptions.HasDropIfExists() || dropTable.Table.TableOptions.HasIsTemporary())
 					Indent--;
-			}
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			// should we introduce new convertion types like NameToGeneratorName/NameToTriggerName?
-			switch (Statement)
-			{
-				case SqlTruncateTableStatement truncate:
-					StringBuilder.Append("SET GENERATOR ");
-					Convert(StringBuilder, "GIDENTITY_" + truncate.Table!.TableName.Name, ConvertType.NameToQueryTable);
-					StringBuilder.AppendLine(" TO 0");
-					break;
 			}
 		}
 
@@ -641,7 +620,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					case SqlParameter param:
 					{
 						typeRequired = true;
-						var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+						var paramValue = param.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 						providerValue = paramValue.ProviderValue;
 						isClientValue = true;
 						break;
@@ -685,7 +664,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					dataType = CorrectDecimalFacets(dataType, val);
 				else if (value is SqlParameter param)
 				{
-					var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+					var paramValue = param.GetParameterValue(RenderContext.EvaluationContext.ParameterValues);
 
 					if (paramValue.ProviderValue is decimal decValue)
 						dataType = CorrectDecimalFacets(dataType, decValue);

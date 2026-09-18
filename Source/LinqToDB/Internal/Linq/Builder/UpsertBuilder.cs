@@ -8,6 +8,7 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -713,6 +714,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
+		// The single native-vs-alternative decision for InsertOrUpdate / Upsert / InsertOrReplace, shared by the
+		// build-time policy check (UpsertContext) and the execution-time scenario producer
+		// (DmlServiceBase.BuildInsertOrUpdateScenario). Kept in one place so the client-side policy throw and the
+		// server-side (remote) reshape can never disagree. Returns true when the provider's native single-statement
+		// upsert cannot honor this statement and the UPDATE→INSERT emulation must be used instead:
+		//   - no native InsertOrUpdate at all;
+		//   - an UPDATE predicate (Upsert.Update.When) the native form can't carry;
+		//   - a provider whose native upsert requires aligned Insert/Update branches (SAP HANA) faced with
+		//     divergent branches or a non-PK match key.
+		internal static bool WillEmulateInsertOrUpdate(SqlInsertOrUpdateStatement statement, SqlProviderFlags flags)
+		{
+			var needsPredicateEmulation =
+				statement.UpdateWhere != null
+				&& statement.Update.Items.Count > 0
+				&& !flags.IsInsertOrUpdateWithPredicateSupported;
+
+			var needsAlignedBranchesEmulation =
+				flags.IsInsertOrUpdateRequiresAlignedBranches
+				&& (HasDivergentInsertOrUpdateBranches(statement)
+					|| MatchKeysDivergeFromPrimaryKey(statement));
+
+			return !flags.IsInsertOrUpdateSupported || needsPredicateEmulation || needsAlignedBranchesEmulation;
+		}
+
 		#region UpsertContext
 
 		sealed class UpsertContext : BuildContextBase
@@ -750,32 +775,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				// orchestration in QueryRunner.
 				// Skip the forced emulation when the UPDATE branch is empty — the predicate has
 				// no SQL effect there, so the native ON CONFLICT DO NOTHING / equivalent is fine.
-				var needsPredicateEmulation =
-					Statement.UpdateWhere != null
-					&& Statement.Update.Items.Count > 0
-					&& !flags.IsInsertOrUpdateWithPredicateSupported;
-
-				// Providers whose native single-statement upsert applies one VALUES list to both
-				// branches (SAP HANA UPSERT … WITH PRIMARY KEY) cannot honor per-branch divergence
-				// in SET expressions or column sets, and have no "skip update on match" form. When
-				// the configuration produces divergent Insert/Update items — including SkipUpdate /
-				// Update.DoNothing where Update.Items is empty but Insert.Items isn't — transparently
-				// fall back to UPDATE→INSERT emulation so the per-branch behavior is preserved.
-				var needsAlignedBranchesEmulation =
-					flags.IsInsertOrUpdateRequiresAlignedBranches
-					&& HasDivergentInsertOrUpdateBranches(Statement);
-
-				var willEmulate = !flags.IsInsertOrUpdateSupported || needsPredicateEmulation || needsAlignedBranchesEmulation;
+				// The reshape into the UPDATE→INSERT emulation now happens at execution time in
+				// DmlServiceBase.BuildInsertOrUpdateScenario (so remote data contexts rebuild it server-side too).
+				// Here we only enforce the build-time policy: if the provider will emulate and the user forbade it,
+				// fail fast before the query runs.
+				var willEmulate = WillEmulateInsertOrUpdate(Statement, flags);
 
 				if (willEmulate && Builder.DataContext.Options.LinqOptions.UpsertEmulationPolicy == UpsertEmulationPolicy.Throw)
 				{
 					throw new LinqToDBException(ErrorHelper.Error_Upsert_EmulationDisallowed);
 				}
 
-				if (willEmulate)
-					QueryRunner.MakeAlternativeInsertOrUpdate(Builder.DataContext.MappingSchema, query);
-				else
-					QueryRunner.SetNonQueryQuery(query);
+				QueryRunner.SetNonQueryQuery(query);
 			}
 
 			public override SqlStatement GetResultStatement() => Statement;
