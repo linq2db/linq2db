@@ -4,8 +4,7 @@ parameters:
   # Per-TFM knobs driving the loops below. One entry generates the whole
   # extract -> configure -> setup -> test -> cleanup block for that TFM, so adding or retiring a TFM
   # is a one-line change rather than a copied 70-line section.
-  #   flag    : names the binaries artifact ($(artifact_test_<flag>_binaries)) and the config
-  #             subdirectory (configs\<flag>)
+  #   flag    : names the binaries artifact ($(artifact_test_<flag>_binaries))
   #   gate    : matrix variable holding the per-leg enable switch. netfx has its own per-entry switch;
   #             the modern TFMs share one, because no entry ever enabled them individually
   #   label   : human-readable name used in step display names
@@ -209,7 +208,7 @@ steps:
 
   - task: CmdLine@2
     inputs:
-      script: 'copy $(System.DefaultWorkingDirectory)\configs\${{ tfm.flag }}\$(config).json $(System.DefaultWorkingDirectory)\${{ tfm.dir }}\UserDataProviders.json'
+      script: 'copy $(System.DefaultWorkingDirectory)\configs\$(config).json $(System.DefaultWorkingDirectory)\${{ tfm.dir }}\UserDataProviders.json'
     condition: and(variables.title, eq(variables['${{ tfm.gate }}'], 'true'), succeeded())
     displayName: 'Copy ${{ tfm.label }} test config'
 

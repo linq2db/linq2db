@@ -1,7 +1,0 @@
-﻿{
-	"NETFX.Azure": {
-		"Providers": [
-			"SqlCe"
-		]
-	}
-}

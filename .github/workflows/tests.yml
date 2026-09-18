@@ -256,8 +256,8 @@ jobs:
         run: |
           $cfg = '${{ env.TEST_CONFIGURATION }}'
           $tfms = @(
-            @{ dir = 'net10.0'; flag = 'net100'; ef = 'EF10' },
-            @{ dir = 'net11.0'; flag = 'net110'; ef = 'EF11' }
+            @{ dir = 'net10.0'; ef = 'EF10' },
+            @{ dir = 'net11.0'; ef = 'EF11' }
           )
           foreach ($t in $tfms) {
             dotnet publish Tests/Linq/Tests.csproj -f $t.dir -c $cfg -o ".build/publish/Tests/$cfg/$($t.dir)_x64"
@@ -275,12 +275,13 @@ jobs:
               # DataProviders.json is where the *.Azure connection strings come from.
               Copy-Item DataProviders.json, .runsettings $dest
             }
-            Copy-Item -Recurse -Force "Build/$cfg/$($t.flag)" "testing/configs/$($t.flag)"
           }
 
-          # Unconditional, unlike the netfx binaries below: these are three-line JSON files, and one
+          # One config per test job, shared by every TFM: the provider list does not depend on the
+          # target framework, and DataProviders.json points each <TFM>.Azure at the same Azure.TestJob
+          # key. Staged unconditionally, netfx included - these are three-line JSON files, and one
           # shape for test_configs beats a second artifact variant to reason about.
-          Copy-Item -Recurse -Force "Build/$cfg/netfx" "testing/configs/netfx"
+          Copy-Item -Recurse -Force "Build/$cfg/configs" "testing/configs"
 
           New-Item -ItemType Directory -Force -Path testing/scripts | Out-Null
           Copy-Item -Recurse -Force "Build/$cfg/scripts/*" testing/scripts
@@ -506,7 +507,7 @@ jobs:
           # always runs. Mirrors pr_main in test-workflow-linux.yml.
           RUN_MAIN: ${{ inputs.full_run }}
         run: >
-          scripts/run-provider-tests.sh --tfm net10.0 --flag net100
+          scripts/run-provider-tests.sh --tfm net10.0
           --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
 
       - name: Extract .NET 11 test binaries
@@ -523,7 +524,7 @@ jobs:
           # The newest TFM carries the main suite on every run - pr_main: true.
           RUN_MAIN: 'true'
         run: >
-          scripts/run-provider-tests.sh --tfm net11.0 --flag net110
+          scripts/run-provider-tests.sh --tfm net11.0
           --config "$CONFIG" --setup "$SETUP" --retry "$RETRY" --main "$RUN_MAIN"
 
       # Stands in for PublishTestResults@2, including its failTaskOnMissingResultsFile: a leg whose
@@ -670,7 +671,7 @@ jobs:
           # win_efcore_only in test-workflow-windows.yml.
           RUN_MAIN: ${{ inputs.full_run || !matrix.efcore_only }}
         run: |
-          ./scripts/run-provider-tests.ps1 -Tfm net462 -Flag netfx -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
+          ./scripts/run-provider-tests.ps1 -Tfm net462 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
             -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
             -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
           exit $LASTEXITCODE
@@ -697,7 +698,7 @@ jobs:
           # always runs.
           RUN_MAIN: ${{ inputs.full_run }}
         run: |
-          ./scripts/run-provider-tests.ps1 -Tfm net10.0 -Flag net100 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
+          ./scripts/run-provider-tests.ps1 -Tfm net10.0 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
             -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
             -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
           exit $LASTEXITCODE
@@ -724,7 +725,7 @@ jobs:
           # leaves it to the linux legs.
           RUN_MAIN: ${{ inputs.full_run || !matrix.efcore_only }}
         run: |
-          ./scripts/run-provider-tests.ps1 -Tfm net11.0 -Flag net110 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
+          ./scripts/run-provider-tests.ps1 -Tfm net11.0 -Arch "$Env:ARCH" -Config "$Env:CONFIG" `
             -SetupCmd "$Env:SETUP_CMD" -SetupPs1 "$Env:SETUP_PS1" -PreTest "$Env:PRE_TEST" -PostTest "$Env:POST_TEST" `
             -Retry "$Env:RETRY" -Main "$Env:RUN_MAIN"
           exit $LASTEXITCODE

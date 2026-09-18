@@ -1,7 +1,0 @@
-{
-	"NET110.Azure": {
-		"Providers": [
-			"SqlCe"
-		]
-	}
-}

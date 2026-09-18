@@ -124,7 +124,7 @@ steps:
 
   - task: CmdLine@2
     inputs:
-      script: 'cp $(System.DefaultWorkingDirectory)/configs/${{ tfm.flag }}/$(config).json ${{ tfm.dir }}/UserDataProviders.json'
+      script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json ${{ tfm.dir }}/UserDataProviders.json'
       workingDirectory: '$(System.DefaultWorkingDirectory)'
     condition: and(variables.title, succeeded())
     displayName: 'Copy ${{ tfm.label }} test config'

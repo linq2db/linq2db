@@ -36,20 +36,28 @@
 		"DefaultConfiguration": "SQLite.MS"
 	},
 
+	// A CI test job's provider list does not depend on the target framework, so it is stored once,
+	// under this key, in Build/Azure/configs/<job>.json - staged as UserDataProviders.json for whichever
+	// TFM the leg runs. Everything a new .NET version costs here is its own two sections; nothing
+	// under Build/Azure changes.
+	"Azure.TestJob": {
+		"BasedOn": "AzureConnectionStrings"
+	},
+
 	"NETFX.Azure": {
-		"BasedOn": "AzureConnectionStrings",
+		"BasedOn": "Azure.TestJob",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
 	},
 
 	"NET100.Azure": {
-		"BasedOn": "AzureConnectionStrings",
+		"BasedOn": "Azure.TestJob",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
 	},
 
 	"NET110.Azure": {
-		"BasedOn": "AzureConnectionStrings",
+		"BasedOn": "Azure.TestJob",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"
 	},

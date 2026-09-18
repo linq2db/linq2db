@@ -12,7 +12,7 @@ EF.Core suite and later TFMs while leaving the .trx already written.
 Run from the leg root - the directory holding scripts/, configs/ and the downloaded <tfm>/.
 
 Usage:
-    ./scripts/run-provider-tests.ps1 -Tfm net10.0 -Flag net100 -Arch x64 -Config sqlce `
+    ./scripts/run-provider-tests.ps1 -Tfm net10.0 -Arch x64 -Config sqlce `
                                      -Main true -Retry false
 #>
 
@@ -20,8 +20,6 @@ Usage:
 param(
     # Directory the binaries were extracted into, and the TFM's moniker: net462, net10.0, net11.0.
     [Parameter(Mandatory)][string] $Tfm,
-    # Matrix flag for the same TFM - netfx, net100, net110. Names the config subdirectory.
-    [Parameter(Mandatory)][string] $Flag,
     # Config file name without extension, from the entry's config_win.
     [Parameter(Mandatory)][string] $Config,
     [ValidateSet('x64', 'x86')][string] $Arch = 'x64',
@@ -130,15 +128,15 @@ try {
     #
     # Checked, because a silent failure here leaves the suite to fall back to DataProviders.json
     # defaults and run a different provider set to a green finish.
-    $source = Join-Path (Join-Path (Join-Path $root 'configs') $Flag) "$Config.json"
+    $source = Join-Path (Join-Path $root 'configs') "$Config.json"
     try {
         Copy-Item -LiteralPath $source -Destination (Join-Path $tfmDir 'UserDataProviders.json') -Force -ErrorAction Stop
     }
     catch {
-        Write-Host "::error::run-provider-tests: could not stage configs/$Flag/$Config.json - the leg would test the wrong providers"
+        Write-Host "::error::run-provider-tests: could not stage configs/$Config.json - the leg would test the wrong providers"
         exit 2
     }
-    Write-Host ">>> config: configs/$Flag/$Config.json -> $Tfm/UserDataProviders.json"
+    Write-Host ">>> config: configs/$Config.json -> $Tfm/UserDataProviders.json"
 
     $appDir = Join-Path (Join-Path $tfmDir 'main') $Arch
 

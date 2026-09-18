@@ -146,10 +146,8 @@ jobs:
             )
         )
 
-        FOR %%c IN (netfx net100 net110) DO (
-            xcopy /i Build\$(test_configuration)\%%c testing\configs\%%c
-            if %errorlevel% neq 0 exit
-        )
+        xcopy /i Build\$(test_configuration)\configs testing\configs
+        if %errorlevel% neq 0 exit
 
         xcopy /i Build\$(test_configuration)\scripts testing\scripts
         if %errorlevel% neq 0 exit

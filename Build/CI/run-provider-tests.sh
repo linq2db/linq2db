@@ -3,7 +3,7 @@
 #   config -> local setup -> main suite (optional) -> EF.Core suite -> remove binaries
 #
 # Usage:
-#   run-provider-tests.sh --tfm net11.0 --flag net110 --config sqlite.core \
+#   run-provider-tests.sh --tfm net11.0 --config sqlite.core \
 #                         --setup mysql.local.sh --main true --retry false
 #
 # The body of test-workflow-linux.yml's per-TFM loop, which GitHub cannot express: a matrix leg's
@@ -18,7 +18,6 @@
 set -u
 
 tfm=
-flag=
 config=
 setup=
 run_main=false
@@ -27,7 +26,6 @@ retry=false
 while [ $# -gt 0 ]; do
 	case "$1" in
 		--tfm)    tfm=$2;      shift 2 ;;
-		--flag)   flag=$2;     shift 2 ;;
 		--config) config=$2;   shift 2 ;;
 		--setup)  setup=$2;    shift 2 ;;
 		--main)   run_main=$2; shift 2 ;;
@@ -36,7 +34,7 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
-for required in tfm flag config; do
+for required in tfm config; do
 	if [ -z "${!required}" ]; then
 		echo "::error::run-provider-tests: --$required is required"
 		exit 2
@@ -66,11 +64,11 @@ mkdir -p "$results"
 #
 # Checked, because this script runs without set -e: an unnoticed failure here leaves the suite to
 # fall back to DataProviders.json defaults and run a different provider set to a green finish.
-if ! cp "configs/$flag/$config.json" "$tfm/UserDataProviders.json"; then
-	echo "::error::run-provider-tests: could not stage configs/$flag/$config.json - the leg would test the wrong providers"
+if ! cp "configs/$config.json" "$tfm/UserDataProviders.json"; then
+	echo "::error::run-provider-tests: could not stage configs/$config.json - the leg would test the wrong providers"
 	exit 2
 fi
-echo ">>> config: configs/$flag/$config.json -> $tfm/UserDataProviders.json"
+echo ">>> config: configs/$config.json -> $tfm/UserDataProviders.json"
 
 # Azure removes the TFM directory whether or not the suites passed, so the next TFM's download has
 # the disk. Re-raise $? as captured at trap entry, not a variable: an `exit N` anywhere below would
