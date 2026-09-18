@@ -3,8 +3,13 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CommandLine</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<TargetFrameworks>$(ToolTargetFrameworks)</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
+		<!--.NET 11 added TextWriter.WriteLineAsync(string, CancellationToken), so CA2016 asks the console
+		    writes here to forward their token - on net11 only. The argument is a compile error on net10.0,
+		    which this tool also targets, and Meziantou.Polyfill does not offer the overload yet. Drop this
+		    once it does, or when net10.0 is dropped; the ~54 call sites then become a real improvement.-->
+		<NoWarn Condition="'$(TargetFramework)'=='net11.0'">$(NoWarn);CA2016</NoWarn>
 		<OutputType>Exe</OutputType>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<SignAssembly>False</SignAssembly>

@@ -26,17 +26,12 @@
 		"DefaultConfiguration": "SQLite.MS"
 	},
 
-	"NET80": {
-		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS"
-	},
-
-	"NET90": {
-		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS"
-	},
-
 	"NET100": {
+		"BasedOn": "LocalConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS"
+	},
+
+	"NET110": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS"
 	},
@@ -47,19 +42,13 @@
 		"TraceLevel": "Info"
 	},
 
-	"NET80.Azure": {
-		"BasedOn": "AzureConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"TraceLevel": "Info"
-	},
-
-	"NET90.Azure": {
-		"BasedOn": "AzureConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"TraceLevel": "Info"
-	},
-
 	"NET100.Azure": {
+		"BasedOn": "AzureConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS",
+		"TraceLevel": "Info"
+	},
+
+	"NET110.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"

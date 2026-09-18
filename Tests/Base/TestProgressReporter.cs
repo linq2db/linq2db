@@ -36,12 +36,10 @@ namespace Tests
 		// Resolved at compile time per target framework so the moniker is always exact (avoids net462 API gaps).
 #if NET462
 		const string Tfm = "net462";
-#elif NET8_0
-		const string Tfm = "net8.0";
-#elif NET9_0
-		const string Tfm = "net9.0";
 #elif NET10_0
 		const string Tfm = "net10.0";
+#elif NET11_0
+		const string Tfm = "net11.0";
 #else
 		const string Tfm = "unknown";
 #endif
