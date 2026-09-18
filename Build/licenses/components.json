@@ -584,7 +584,8 @@
       "packageId": "Microsoft.Bcl.AsyncInterfaces",
       "versions": {
         "net462": "10.0.3",
-        "net472": "10.0.3"
+        "net472": "10.0.3",
+        "net8.0-windows7.0": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2377,7 +2378,7 @@
       "versions": {
         "net462": "9.0.10",
         "net472": "10.0.3",
-        "net8.0-windows7.0": "8.0.0"
+        "net8.0-windows7.0": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2402,7 +2403,8 @@
       "packageId": "System.ComponentModel.Annotations",
       "versions": {
         "net462": "5.0.0",
-        "net472": "5.0.0"
+        "net472": "5.0.0",
+        "net8.0-windows7.0": "5.0.0"
       },
       "license": "MIT",
       "licenseTexts": [

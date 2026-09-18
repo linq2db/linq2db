@@ -46,7 +46,7 @@ COMPONENTS
    https://github.com/LinqToDB4iSeries/Linq2DB4iSeries
    License: MIT  see [5]
 
-7. Microsoft.Bcl.AsyncInterfaces 10.0.3
+7. Microsoft.Bcl.AsyncInterfaces net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -242,7 +242,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-47. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 8.0.0
+47. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 10.0.12
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.

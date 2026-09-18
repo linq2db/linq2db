@@ -395,7 +395,7 @@ COMPONENTS
    License: MIT  see [13]
    © Microsoft Corporation. All rights reserved.
 
-78. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 8.0.0
+78. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 10.0.12
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
