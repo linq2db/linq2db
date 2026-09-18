@@ -87,8 +87,19 @@ namespace LinqToDB.Internal.DataProvider.Access
 			DataTools.ConvertCharToSql(stringBuilder, "'", _appendConversionAction, value);
 		}
 
+		/// <summary>
+		/// The earliest date Jet has. Below it a date has no literal at all: Access reads a year under 100 by the
+		/// two-digit rule, so <c>#0001-01-01#</c> comes back as 2001-01-01 - a date later than almost anything it would
+		/// be compared against, which is the opposite of what the value says. The least date Jet does have answers those
+		/// comparisons the way the value itself would.
+		/// </summary>
+		static readonly DateTime JetMinDate = new(100, 1, 1);
+
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
 		{
+			if (value < JetMinDate)
+				value = JetMinDate;
+
 			var format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ? DATE_FORMAT : DATETIME_FORMAT;
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
@@ -97,6 +108,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 #if SUPPORTS_DATEONLY
 		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
+			if (value.Year < JetMinDate.Year)
+				value = DateOnly.FromDateTime(JetMinDate);
+
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}
 #endif

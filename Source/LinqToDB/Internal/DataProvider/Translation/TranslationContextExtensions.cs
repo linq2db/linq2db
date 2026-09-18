@@ -13,6 +13,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public static class TranslationContextExtensions
 	{
+		/// <summary>
+		/// Reads a translated value the way .NET reads it: a column of a row a LEFT JOIN did not match is NULL in SQL and
+		/// <c>default(T)</c> in .NET, so a member translated over it answers what C# answers. Returns the expression
+		/// unchanged wherever that does not apply - a value that is not such a column, a nullable one, a place where the
+		/// NULL is the answer, or a context that does not read values at all.
+		/// </summary>
+		/// <param name="translationContext">The context the value was translated by.</param>
+		/// <param name="translated">The translated value, as <see cref="ITranslationContext.Translate"/> returned it.</param>
+		/// <param name="valueType">The CLR type the value is read as.</param>
+		public static Expression ReadAsValue(this ITranslationContext translationContext, Expression translated, Type valueType)
+		{
+			return translationContext is ITranslationValueReader reader
+				? reader.ReadAsValue(translated, valueType)
+				: translated;
+		}
+
 		public static bool TryEvaluate<T>(this ITranslationContext translationContext, Expression expression, out T result)
 		{
 			if (translationContext.CanBeEvaluated(expression))
