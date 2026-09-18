@@ -32,22 +32,22 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-4. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+4. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-5. Npgsql net10.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0: 10.0.3, net8.0-windows7.0: 10.0.3, net9.0: 10.0.3
+5. Npgsql net10.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0-windows7.0: 10.0.3
    https://github.com/npgsql/npgsql
    License: PostgreSQL  see [3]
    Copyright 2025 © The Npgsql Development Team
 
-6. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0: 10.0.3, net8.0-windows7.0: 8.0.0, net9.0: 10.0.3
+6. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 8.0.0
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-7. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+7. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -57,7 +57,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-9. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+9. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
