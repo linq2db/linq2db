@@ -1,9 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+
 	<Import Project="..\linq2db.BasicTestProjects.props" />
 
+	<!-- Shared by the per-EF-version projects beside this file. They exist separately, rather than as one
+	     multi-targeted project, because every LinqToDB.EntityFrameworkCore.EFnn publishes the same PackageId:
+	     NuGet collapses them inside a single project's restore graph, so a TFM-conditional reference to two of
+	     them resolves to the wrong one and restore fails with NU1201. -->
 	<PropertyGroup>
 		<LangVersion>9</LangVersion>
-		<TargetFrameworks>net10.0</TargetFrameworks>
 		<WarningLevel>5</WarningLevel>
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
 
@@ -17,7 +21,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF10.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
 
 		<PackageReference Include="EntityFrameworkCore.FSharp" />

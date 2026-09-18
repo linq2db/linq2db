@@ -11,7 +11,7 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF10.csproj" />
 		<!--The F# model project was wired into the EF8 test project only, and that project never defined
 		    EF8 - so FSharpTests.cs compiled into no assembly at all. EF_FSHARP is what makes it live.-->
-		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.fsproj" />
+		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.EF10.fsproj" />
 		<!--FSharpTests.cs uses the package's own types, and a ProjectReference does not flow them-->
 		<PackageReference Include="EntityFrameworkCore.FSharp" />
 		<!--Pomelo has no EF Core 10 release; the Microting fork of it does-->

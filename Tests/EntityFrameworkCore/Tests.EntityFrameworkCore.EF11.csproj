@@ -5,13 +5,16 @@
 	<PropertyGroup>
 		<TargetFrameworks>net11.0</TargetFrameworks>
 		<!--EF_MYSQL is absent: see the PackageReference Remove below-->
-		<DefineConstants>EF11;EF10_OR_GREATER;$(DefineConstants)</DefineConstants>
+		<DefineConstants>EF11;EF10_OR_GREATER;EF_FSHARP;$(DefineConstants)</DefineConstants>
 		<!--NU1605 is the downgrade the two EF pins below deliberately perform-->
 		<NoWarn>$(NoWarn);NU1605</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF11.csproj" />
+		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.EF11.fsproj" />
+		<!--FSharpTests.cs uses the package's own types, and a ProjectReference does not flow them-->
+		<PackageReference Include="EntityFrameworkCore.FSharp" />
 		<!--neither Pomelo nor the Microting fork has an EF Core 11 release, so this leg runs without the
 		    MySQL EF provider - EF_MYSQL guards the three call sites. The ADO driver itself has no such gap
 		    and TestBase builds connection strings with it, so it is referenced directly instead of guarded.-->
