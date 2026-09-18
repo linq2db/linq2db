@@ -288,7 +288,7 @@ namespace Tests.Linq
 		public void ToDecimal2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types select Sql.Convert(Sql.Types.Decimal(10, 4), t.MoneyValue),
 				from t in db.Types select Sql.Convert(Sql.Types.Decimal(10, 4), t.MoneyValue));
 		}
@@ -334,7 +334,7 @@ namespace Tests.Linq
 		public void ToSmallMoney([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in Types select (decimal)Sql.Convert(Sql.Types.SmallMoney, t.MoneyValue),
 				from t in db.Types select (decimal)Sql.Convert(Sql.Types.SmallMoney, t.MoneyValue));
 		}

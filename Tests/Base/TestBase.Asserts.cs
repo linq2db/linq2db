@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 using LinqToDB;
@@ -39,6 +40,84 @@ namespace Tests
 			}
 		}
 #endif
+
+		/// <summary>
+		/// <see cref="AreEqual{T}(IEnumerable{T}, IEnumerable{T}, bool, bool)"/>, but floating-point values -
+		/// the value itself, or each such member of a projection - compare within <paramref name="delta"/>
+		/// instead of exactly. Everything else keeps its own equality.
+		/// </summary>
+		/// <remarks>
+		/// .NET 11 converts <see cref="double"/> to <see cref="decimal"/> exactly rather than rounding to 15
+		/// significant digits (<see href="https://learn.microsoft.com/dotnet/core/compatibility/core-libraries/11/decimal-biginteger-floating-point-conversions"/>),
+		/// so a value a provider stores as REAL no longer equals the in-memory decimal it is compared against.
+		/// </remarks>
+		protected void AreEqualWithinDelta<T>(IEnumerable<T> expected, IEnumerable<T> result, decimal delta = FloatingPointDelta)
+			=> AreEqual(t => t, expected, result, new DeltaComparer<T>(delta));
+
+		/// <summary>
+		/// Default <b>relative</b> tolerance for <see cref="AreEqualWithinDelta{T}"/>. Four orders of magnitude
+		/// above the conversion noise (|value| * 2^-53, i.e. ~1.1e-16 relative) and far below any difference
+		/// these tests assert - the tightest is five decimal places on values of order 10.
+		/// </summary>
+		protected const decimal FloatingPointDelta = 0.000000000001m;
+
+		/// <summary>
+		/// <see cref="FloatingPointDelta"/> for NUnit's <c>Within(...).Percent</c>, which takes a percentage
+		/// rather than a ratio. Use it where the comparison is an <c>Assert.That</c> rather than
+		/// <see cref="AreEqualWithinDelta{T}"/>.
+		/// </summary>
+		protected const double FloatingPointDeltaPercent = 0.0000000001d;
+
+		sealed class DeltaComparer<T>(decimal delta) : IEqualityComparer<T>
+		{
+			bool IEqualityComparer<T>.Equals(T? x, T? y) => ValuesEqual(x, y);
+
+			// Constant on purpose: AreEqual compares through Enumerable.Except, which buckets by hash before
+			// it ever calls Equals, so any hash finer than this would keep two tolerantly-equal values apart.
+			int IEqualityComparer<T>.GetHashCode(T obj) => 0;
+
+			bool ValuesEqual(object? x, object? y)
+			{
+				if (ReferenceEquals(x, y)) return true;
+				if (x is null || y is null) return false;
+
+				// Relative, because the conversion noise scales with the value: it is |x| * 2^-53, so a fixed
+				// absolute tolerance would be too tight for 2147483648.123 and too loose for a value the
+				// rounding tests compare to five decimal places.
+				switch (x)
+				{
+					case decimal dx: return y is decimal dy && Math.Abs(dx - dy) <= delta * Math.Max(1m, Math.Abs(dx));
+					case double  ox: return y is double  oy && Math.Abs(ox - oy) <= (double)delta * Math.Max(1d, Math.Abs(ox));
+					case float   fx: return y is float   fy && Math.Abs(fx - fy) <= (float)delta * Math.Max(1f, Math.Abs(fx));
+				}
+
+				var type = x.GetType();
+
+				if (type != y.GetType())
+					return false;
+
+				// A projection or an entity is walked member-by-member, so the tolerance reaches a decimal
+				// nested inside it; a leaf keeps its own equality.
+				if (IsLeaf(type))
+					return x.Equals(y);
+
+				foreach (var property in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+					if (!ValuesEqual(property.GetValue(x), property.GetValue(y)))
+						return false;
+
+				return true;
+			}
+
+			static bool IsLeaf(Type type)
+				=> type.IsPrimitive
+				|| type.IsEnum
+				|| type == typeof(string)
+				|| type == typeof(DateTime)
+				|| type == typeof(DateTimeOffset)
+				|| type == typeof(TimeSpan)
+				|| type == typeof(Guid)
+				|| typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
+		}
 
         protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false, bool printData = false)
 		{

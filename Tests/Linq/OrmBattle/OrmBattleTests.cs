@@ -310,7 +310,9 @@ namespace Tests.OrmBattle
 			//                       Assert.AreEqual(i,j);
 			//                       return true;
 			//                     });
-			Assert.That(list, Is.EquivalentTo(expectedList));
+			// Both lists are sorted above, so ordered equality stands in for equivalence, which has no
+			// Within overload to carry the tolerance.
+			Assert.That(list, Is.EqualTo(expectedList).Within(FloatingPointDeltaPercent).Percent);
 		}
 
 		[Test]
