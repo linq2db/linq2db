@@ -25,25 +25,14 @@ jobs:
     displayName: 'Use latest .NET SDK'
     inputs:
       packageType: sdk
-      version: 9.x
+      version: 10.x
 
   - task: UseDotNet@2
     displayName: 'Use latest .NET SDK'
     inputs:
       packageType: sdk
-      version: 10.x
-
-  # Tests.Analyzers targets net8.0 (to match the Net80 reference pack the Roslyn testing SDK compiles snippets
-  # against); the windows-2025 image no longer ships an x64 .NET 8 runtime, so provision it or the net8.0 test
-  # host fails to launch ("You must install or update .NET"). Runtime only — SDK 10 builds the net8.0 target.
-  - task: UseDotNet@2
-    displayName: 'Use .NET 8 runtime (Tests.Analyzers net8.0 host)'
-    inputs:
-      packageType: runtime
-      version: 8.x
-    # Only when the analyzer tests actually run — the provider matrix inherits with_analyzer_tests: false
-    # and skips them, so it needn't provision the net8.0 runtime.
-    condition: and(succeeded(), ${{ parameters.with_analyzer_tests }})
+      version: 11.x
+      includePreviewVersions: true
 
 # tag version numbers appropriately
   - powershell: echo "##vso[task.setvariable variable=versionSuffix]-dev.$(Build.BuildId)"
@@ -93,7 +82,7 @@ jobs:
     inputs:
       script: |
         ECHO ON
-        dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net10.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
+        dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net11.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
         if %errorlevel% neq 0 exit /b %errorlevel%
         .build\publish\singlefile\linq2db.Tests.SingleFile.exe
         if %errorlevel% neq 0 exit /b %errorlevel%
@@ -119,7 +108,7 @@ jobs:
       script: |
         ECHO ON
         REM publish main and ef.core tests for all TFMs (without architecture!)
-        FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
+        FOR %%f IN ($(netfx_tfm) net10.0 net11.0) DO (
             dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -o .build/publish/Tests/$(test_configuration)/%%f_x64
             if %errorlevel% neq 0 exit
             )
@@ -129,20 +118,17 @@ jobs:
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x64 -o .build/publish/EFTests/$(test_configuration)/net462_x64
         if %errorlevel% neq 0 exit
 
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net8.0_x64
-        if %errorlevel% neq 0 exit
-        
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f net9.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net9.0_x64
-        if %errorlevel% neq 0 exit
-        
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net10.0_x64
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF11.csproj -f net11.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net11.0_x64
         if %errorlevel% neq 0 exit
 
         mkdir testing
         if %errorlevel% neq 0 exit
 
         REM prepare test artifacts with binaries and test configs
-        FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
+        FOR %%f IN ($(netfx_tfm) net10.0 net11.0) DO (
             FOR %%a IN (x64) DO (
                 xcopy /i /s .build\publish\Tests\$(test_configuration)\%%f_%%a testing\%%f\main\%%a
                 if %errorlevel% neq 0 exit
@@ -160,7 +146,7 @@ jobs:
             )
         )
 
-        FOR %%c IN (netfx net80 net90 net100) DO (
+        FOR %%c IN (netfx net100 net110) DO (
             xcopy /i Build\$(test_configuration)\%%c testing\configs\%%c
             if %errorlevel% neq 0 exit
         )
@@ -201,24 +187,17 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/testing/net8.0'
-      artifact: $(artifact_test_net80_binaries)
-    condition: and(succeeded(), ${{ parameters.with_tests }})
-    displayName: Publish NET 8.0 Test Binaries
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/testing/net9.0'
-      artifact: $(artifact_test_net90_binaries)
-    condition: and(succeeded(), ${{ parameters.with_tests }})
-    displayName: Publish NET 9.0 Test Binaries
-
-  - task: PublishPipelineArtifact@1
-    inputs:
       path: '$(Build.SourcesDirectory)/testing/net10.0'
       artifact: $(artifact_test_net100_binaries)
     condition: and(succeeded(), ${{ parameters.with_tests }})
     displayName: Publish NET 10.0 Test Binaries
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net11.0'
+      artifact: $(artifact_test_net110_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NET 11.0 Test Binaries
 
 # we shouldn't care about CI cleanup in general, but it's about limited disk space we need for next tasks
   - task: CmdLine@2
@@ -331,13 +310,14 @@ jobs:
     displayName: 'Use latest .NET SDK'
     inputs:
       packageType: sdk
-      version: 9.x
+      version: 10.x
 
   - task: UseDotNet@2
     displayName: 'Use latest .NET SDK'
     inputs:
       packageType: sdk
-      version: 10.x
+      version: 11.x
+      includePreviewVersions: true
 
 # stamped the same way as build_job, so both halves of a leg's binaries carry one version
   - powershell: echo "##vso[task.setvariable variable=versionSuffix]-dev.$(Build.BuildId)"
@@ -356,7 +336,7 @@ jobs:
         dotnet publish Tests/Linq/Tests.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/net462_x86
         if %errorlevel% neq 0 exit
 
-        FOR %%f IN (net8.0 net9.0 net10.0) DO (
+        FOR %%f IN (net10.0 net11.0) DO (
             dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:X86STUBS=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
             if %errorlevel% neq 0 exit
         )
@@ -364,20 +344,17 @@ jobs:
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net462_x86
         if %errorlevel% neq 0 exit
 
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net8.0_x86
-        if %errorlevel% neq 0 exit
-
-        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f net9.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net9.0_x86
-        if %errorlevel% neq 0 exit
-
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net10.0_x86
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF11.csproj -f net11.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net11.0_x86
         if %errorlevel% neq 0 exit
 
         mkdir testing_x86
         if %errorlevel% neq 0 exit
 
         REM same layout as the x64 artifacts, so a leg finds main/x86 and efcore/x86 where it expects
-        FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
+        FOR %%f IN ($(netfx_tfm) net10.0 net11.0) DO (
             xcopy /i /s .build\publish\Tests\$(test_configuration)\%%f_x86 testing_x86\%%f\main\x86
             if %errorlevel% neq 0 exit
             xcopy /i /s .build\publish\EFTests\$(test_configuration)\%%f_x86 testing_x86\%%f\efcore\x86

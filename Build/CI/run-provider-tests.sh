@@ -3,7 +3,7 @@
 #   config -> local setup -> main suite (optional) -> EF.Core suite -> remove binaries
 #
 # Usage:
-#   run-provider-tests.sh --tfm net8.0 --flag net80 --config sqlite.core \
+#   run-provider-tests.sh --tfm net11.0 --flag net110 --config sqlite.core \
 #                         --setup mysql.local.sh --main true --retry false
 #
 # The body of test-workflow-linux.yml's per-TFM loop, which GitHub cannot express: a matrix leg's

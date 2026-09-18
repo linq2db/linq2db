@@ -18,9 +18,9 @@ Usage:
 
 [CmdletBinding()]
 param(
-    # Directory the binaries were extracted into, and the TFM's moniker: net462, net8.0, net9.0, net10.0.
+    # Directory the binaries were extracted into, and the TFM's moniker: net462, net10.0, net11.0.
     [Parameter(Mandatory)][string] $Tfm,
-    # Matrix flag for the same TFM - netfx, net80, net90, net100. Names the config subdirectory.
+    # Matrix flag for the same TFM - netfx, net100, net110. Names the config subdirectory.
     [Parameter(Mandatory)][string] $Flag,
     # Config file name without extension, from the entry's config_win.
     [Parameter(Mandatory)][string] $Config,

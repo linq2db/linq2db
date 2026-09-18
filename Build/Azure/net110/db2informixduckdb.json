@@ -1,0 +1,9 @@
+{
+	"NET110.Azure": {
+		"Providers": [
+			"DB2",
+			"Informix.DB2",
+			"DuckDB"
+		]
+	}
+}
