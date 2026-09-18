@@ -145,29 +145,11 @@ namespace LinqToDB.Identity
 
 			ArgumentNullException.ThrowIfNull(user);
 
-			var result = await Context
-				.UpdateOptimisticAsync(user, cancellationToken)
-				.ConfigureAwait(false);
+			// refreshes the regenerated ConcurrencyStamp on the entity, so the same instance stays usable for
+			// further operations (EF Core refreshes the tracked entity the same way)
+			var result = await Context.UpdateOptimisticWithRefreshAsync(user, cancellationToken).ConfigureAwait(false);
 
-			if (result != 1)
-				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
-
-			// The optimistic update regenerated the concurrency stamp; refresh the in-memory entity so it stays
-			// usable for further operations (EF Core refreshes the tracked entity the same way). A null read-back
-			// means the row was deleted concurrently after the update - surface that as a concurrency failure
-			// rather than nulling out the stamp on an otherwise "successful" result.
-			var stamp = await Users
-				.Where(u => u.Id.Equals(user.Id))
-				.Select(u => u.ConcurrencyStamp)
-				.FirstOrDefaultAsync(cancellationToken)
-				.ConfigureAwait(false);
-
-			if (stamp == null)
-				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
-
-			user.ConcurrencyStamp = stamp;
-
-			return IdentityResult.Success;
+			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
 		}
 
 		/// <inheritdoc cref="DeleteAsync(TUser, CancellationToken)"/>
