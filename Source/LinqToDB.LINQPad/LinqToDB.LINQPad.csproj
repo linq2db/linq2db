@@ -126,9 +126,10 @@
 		</Page>
 	</ItemGroup>
 
-	<!-- Generate the LINQPad 5 .lpx plugin on build. Set to false to build the driver assembly only
-	     (e.g. from LinqToDB.LINQPad.Pack, which packs the NuGet and doesn't need the .lpx, and to
-	     avoid coupling `dotnet pack` to 7-Zip / Pack.cmd). -->
+	<!-- Generate the LINQPad 5 .lpx plugin on build. Set to false (on the command line) to build the
+	     driver assembly only, e.g. to avoid coupling a local build to 7-Zip / Pack.cmd. Never pass it
+	     from a ProjectReference: a global property the solution build does not also set forks a second
+	     MSBuild instance of this project, and the two race to write the same output files. -->
 	<PropertyGroup>
 		<GenerateLpxArtifacts Condition="'$(GenerateLpxArtifacts)' == ''">true</GenerateLpxArtifacts>
 	</PropertyGroup>

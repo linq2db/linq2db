@@ -69,19 +69,20 @@
 		<PackageReference Include="linq2db4iSeries" Condition="$(DefineConstants.Contains('WITH_ISERIES'))" />
 
 		<!-- build-ordering only: build the WPF driver assembly, but don't link it
-		     (its net8.0-windows7.0 TFM is intentionally incompatible with this net8.0 project) -->
+		     (its net8.0-windows7.0 TFM is intentionally incompatible with this net8.0 project).
+		     No AdditionalProperties here: any global property the solution build does not also set would make
+		     this a second MSBuild instance of the same project+TFM, and both would race to write its deps.json. -->
 		<ProjectReference Include="LinqToDB.LINQPad.csproj"
 		                  ReferenceOutputAssembly="false"
 		                  SkipGetTargetFrameworkProperties="true"
-		                  SetTargetFramework="TargetFramework=net8.0-windows7.0"
-		                  AdditionalProperties="GenerateLpxArtifacts=false" />
+		                  SetTargetFramework="TargetFramework=net8.0-windows7.0" />
 	</ItemGroup>
 
 	<!-- Pull the net8.0-windows7.0 driver assembly into the platform-neutral lib/net8.0 folder. -->
 	<Target Name="_AddLinqPadDriverToPackage" BeforeTargets="_GetPackageFiles">
 		<MSBuild Projects="LinqToDB.LINQPad.csproj"
 		         Targets="GetTargetPath"
-		         Properties="TargetFramework=net8.0-windows7.0;Configuration=$(Configuration);GenerateLpxArtifacts=false">
+		         Properties="TargetFramework=net8.0-windows7.0;Configuration=$(Configuration)">
 			<Output TaskParameter="TargetOutputs" ItemName="_LinqPadDriverAssembly" />
 		</MSBuild>
 		<ItemGroup>
