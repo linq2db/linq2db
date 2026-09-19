@@ -257,8 +257,6 @@ namespace Tests.Linq
 				from t in from p in db.Types select Math.Round(p.MoneyValue, 1) where t != 0 select Math.Round(t, 5));
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllDB2, ErrorMessage = "Assert.That(exceptExpected, Is.Zero)",
-			Details = "no-issue: DB2's ROUND on a Float is not exact - ROUND(CAST(6.6 AS Float), 5) returns 6.6000000000000005, one ulp above .NET's. Two of the twelve rows differ that way. Not linq2db's banker's-rounding emulation: its midpoint branch is never taken for these values, so the emitted CASE reduces to a plain ROUND.")]
 		[Test]
 		public void Round4Sql([DataSources] string context)
 		{
