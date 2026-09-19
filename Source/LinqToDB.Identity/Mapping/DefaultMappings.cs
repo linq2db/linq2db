@@ -25,19 +25,19 @@ namespace LinqToDB.Identity
 		// EF Core maps integral keys (int/long) as store-generated identity columns; string/Guid keys are client-assigned.
 		private static bool IsAutoIncrementKey<TKey>() => typeof(TKey) == typeof(int) || typeof(TKey) == typeof(long);
 
-		// LockoutEnd is DateTimeOffset?, which these providers cannot render in DDL - CreateTable emits the literal
-		// token "DateTimeOffset". Each value is what that provider's SQL builder already produces for its widest
-		// datetime type. DB2 z/OS and Firebird 4+ do render it, so those two are pinned per dialect, not per family.
+		// LockoutEnd is DateTimeOffset?, which these providers cannot store as one: most cannot render the type in
+		// DDL at all - CreateTable emits the literal token "DateTimeOffset" - and Firebird, which does render it
+		// from 4.0 on, cannot write the value (https://github.com/linq2db/linq2db/issues/5915). DB2 z/OS renders
+		// it, hence the LUW-only pin. Each value is that provider's widest datetime type.
 		private static readonly (string Configuration, DataType DataType)[] _lockoutEndDataTypes =
 		[
-			(ProviderName.Access,     DataType.DateTime ),
-			(ProviderName.SqlCe,      DataType.DateTime2),
-			(ProviderName.Sybase,     DataType.DateTime2),
-			(ProviderName.SapHana,    DataType.DateTime2),
-			(ProviderName.Informix,   DataType.DateTime2),
-			(ProviderName.DB2LUW,     DataType.DateTime2),
-			(ProviderName.Firebird25, DataType.DateTime2),
-			(ProviderName.Firebird3,  DataType.DateTime2),
+			(ProviderName.Access,   DataType.DateTime ),
+			(ProviderName.SqlCe,    DataType.DateTime2),
+			(ProviderName.Sybase,   DataType.DateTime2),
+			(ProviderName.SapHana,  DataType.DateTime2),
+			(ProviderName.Informix, DataType.DateTime2),
+			(ProviderName.DB2LUW,   DataType.DateTime2),
+			(ProviderName.Firebird, DataType.DateTime2),
 		];
 
 		// The DataType pin above only fixes the DDL; the value needs converting too. A column that cannot hold an
