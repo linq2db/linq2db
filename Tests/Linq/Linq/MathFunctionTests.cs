@@ -360,6 +360,18 @@ namespace Tests.Linq
 				q.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
+		// Rounds server-side to more digits than the column's declared scale, so a provider that emulates
+		// ROUND by scaling has to widen the intermediate: MoneyValue is Decimal(6,2) on YDB, and 11.45 * 10^5
+		// does not fit that.
+		[Test]
+		public void Round13([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqualWithinDelta(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5)));
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
