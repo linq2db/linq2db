@@ -72,16 +72,18 @@ namespace Tests.Identity
 			await users.CreateAsync(u1);
 			await users.CreateAsync(u2);
 
-			// corrupt the stored ConcurrencyStamp out-of-band so the optimistic filter no longer matches
-			await setup.GetTable<IdentityUser>().Where(u => u.Id == u1.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
-			await setup.GetTable<IdentityUser>().Where(u => u.Id == u2.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
+			// Corrupt the stored ConcurrencyStamp out-of-band so the optimistic filter no longer matches. Through
+			// ctx, not the setup connection: Access does not show one connection the rows another just inserted,
+			// so the same statement there matches 0 rows and the test's premise silently evaporates.
+			await ctx.GetTable<IdentityUser>().Where(u => u.Id == u1.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
+			await ctx.GetTable<IdentityUser>().Where(u => u.Id == u2.Id).Set(u => u.ConcurrencyStamp, "stale").UpdateAsync();
 
 			Assert.That((await users.UpdateAsync(u1)).Succeeded, Is.False);
 			Assert.That((await users.DeleteAsync(u2)).Succeeded, Is.False);
 
 			var role = NewRole("conc-role");
 			await roles.CreateAsync(role);
-			await setup.GetTable<IdentityRole>().Where(r => r.Id == role.Id).Set(r => r.ConcurrencyStamp, "stale").UpdateAsync();
+			await ctx.GetTable<IdentityRole>().Where(r => r.Id == role.Id).Set(r => r.ConcurrencyStamp, "stale").UpdateAsync();
 			Assert.That((await roles.UpdateAsync(role)).Succeeded, Is.False);
 			Assert.That((await roles.DeleteAsync(role)).Succeeded, Is.False);
 		}

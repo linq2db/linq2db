@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -22,33 +23,23 @@ namespace Tests.Identity
 			where TUser : IdentityUser<TKey>
 			where TRole : IdentityRole<TKey>
 		{
-			readonly IDataContext _db;
+			readonly List<IDisposable> _tables = [];
 
 			public KeyedSchema(IDataContext db)
 			{
-				_db = db;
-				Drop();
-
-				_db.CreateTable<TUser>();
-				_db.CreateTable<TRole>();
-				_db.CreateTable<IdentityUserClaim<TKey>>();
-				_db.CreateTable<IdentityUserRole <TKey>>();
-				_db.CreateTable<IdentityUserLogin<TKey>>();
-				_db.CreateTable<IdentityUserToken<TKey>>();
-				_db.CreateTable<IdentityRoleClaim<TKey>>();
+				_tables.Add(db.CreateLocalTable<TUser>());
+				_tables.Add(db.CreateLocalTable<TRole>());
+				_tables.Add(db.CreateLocalTable<IdentityUserClaim<TKey>>());
+				_tables.Add(db.CreateLocalTable<IdentityUserRole <TKey>>());
+				_tables.Add(db.CreateLocalTable<IdentityUserLogin<TKey>>());
+				_tables.Add(db.CreateLocalTable<IdentityUserToken<TKey>>());
+				_tables.Add(db.CreateLocalTable<IdentityRoleClaim<TKey>>());
 			}
 
-			public void Dispose() => Drop();
-
-			void Drop()
+			public void Dispose()
 			{
-				_db.DropTable<IdentityRoleClaim<TKey>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserToken<TKey>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserLogin<TKey>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserRole <TKey>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserClaim<TKey>>(throwExceptionIfNotExists: false);
-				_db.DropTable<TRole>(throwExceptionIfNotExists: false);
-				_db.DropTable<TUser>(throwExceptionIfNotExists: false);
+				for (var i = _tables.Count - 1; i >= 0; i--)
+					_tables[i].Dispose();
 			}
 		}
 

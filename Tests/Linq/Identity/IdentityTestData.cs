@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -24,43 +25,32 @@ namespace Tests.Identity
 			CustomTestContext.Get().Set(CustomTestContext.BASELINE_DISABLED, true);
 		}
 
-		// Creates the default string-key AspNet* schema and drops it on dispose. Drop-then-create is idempotent,
-		// covering a prior (possibly crashed) run that left tables in the reused database file.
+		// Creates the default string-key AspNet* schema and drops it on dispose. CreateLocalTable is
+		// drop-then-create, so it also covers a prior (possibly crashed) run that left tables in the reused
+		// database file - and it carries the Firebird pool eviction that provider's DDL needs between tests,
+		// which a bare CreateTable/DropTable pair fails without ("object TABLE ... is in use").
 		protected sealed class Schema : IDisposable
 		{
-			readonly IdentityDataConnection _db;
+			readonly List<IDisposable> _tables = [];
 
 			public Schema(IdentityDataConnection db)
 			{
-				_db = db;
-				Drop();
-
-				_db.CreateTable<IdentityUser>();
-				_db.CreateTable<IdentityRole>();
-				_db.CreateTable<IdentityUserClaim <string>>();
-				_db.CreateTable<IdentityUserRole  <string>>();
-				_db.CreateTable<IdentityUserLogin <string>>();
-				_db.CreateTable<IdentityUserToken <string>>();
-				_db.CreateTable<IdentityRoleClaim <string>>();
+				_tables.Add(db.CreateLocalTable<IdentityUser>());
+				_tables.Add(db.CreateLocalTable<IdentityRole>());
+				_tables.Add(db.CreateLocalTable<IdentityUserClaim <string>>());
+				_tables.Add(db.CreateLocalTable<IdentityUserRole  <string>>());
+				_tables.Add(db.CreateLocalTable<IdentityUserLogin <string>>());
+				_tables.Add(db.CreateLocalTable<IdentityUserToken <string>>());
+				_tables.Add(db.CreateLocalTable<IdentityRoleClaim <string>>());
 #if NET10_0_OR_GREATER
-				_db.CreateTable<IdentityUserPasskey<string>>();
+				_tables.Add(db.CreateLocalTable<IdentityUserPasskey<string>>());
 #endif
 			}
 
-			public void Dispose() => Drop();
-
-			void Drop()
+			public void Dispose()
 			{
-#if NET10_0_OR_GREATER
-				_db.DropTable<IdentityUserPasskey<string>>(throwExceptionIfNotExists: false);
-#endif
-				_db.DropTable<IdentityRoleClaim <string>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserToken <string>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserLogin <string>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserRole  <string>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUserClaim <string>>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityRole>(throwExceptionIfNotExists: false);
-				_db.DropTable<IdentityUser>(throwExceptionIfNotExists: false);
+				for (var i = _tables.Count - 1; i >= 0; i--)
+					_tables[i].Dispose();
 			}
 		}
 
