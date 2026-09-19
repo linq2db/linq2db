@@ -14,6 +14,14 @@ namespace Tests.Identity
 	// and entity factories. DDL always runs on a direct connection - it can't go over the remote path.
 	public abstract class IdentityTestData : TestBase
 	{
+		// Both engines can host the schema but not the store's write model, so the gates are per-test rather
+		// than a blanket provider exclusion - the read-only and claim tests pass on both.
+		protected const string ClickHouseGate = "ClickHouse reports no affected-rows count and has no UPDATE ... RETURNING, so the store's optimistic update and delete cannot tell a conflict from a success; InsertOrUpdate is unsupported outright.";
+		protected const string YdbGate        = "linq2db's YDB provider implements no InsertOrUpdate, which the role and token upserts need, and reports no affected-rows count for the optimistic delete.";
+
+		// The table itself creates (without its key - see DefaultMappings); it is the lookups that cannot run.
+		protected const string InformixPasskeyGate = "A 1024-byte credential id fits only an Informix BYTE column, and BYTE values cannot appear in a comparison - so every passkey lookup filters on a column Informix refuses to filter on.";
+
 		// ASP.NET Core Identity entities carry non-deterministic values - GUID Ids (IdentityUser/IdentityRole default
 		// ctors), the security stamp, and the optimistic-concurrency stamp are all freshly generated per run. The SQL
 		// is structurally identical between the direct and remote (LinqService) paths; only those random parameter

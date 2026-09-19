@@ -58,6 +58,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
 		public async Task ConcurrencyFailure([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);

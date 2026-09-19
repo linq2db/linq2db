@@ -37,6 +37,8 @@ namespace Tests.Identity
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task UserCrud([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -69,6 +71,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
 		public async Task UserProfileFields([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -103,6 +106,7 @@ namespace Tests.Identity
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
 		public async Task UserLockout([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -179,6 +183,8 @@ namespace Tests.Identity
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task UserRoles([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -207,6 +213,8 @@ namespace Tests.Identity
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task NavigationAssociations([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -270,6 +278,8 @@ namespace Tests.Identity
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
 		public async Task RoleCrudAndClaims([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
@@ -306,6 +316,7 @@ namespace Tests.Identity
 
 #if NET10_0_OR_GREATER
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = InformixPasskeyGate)]
 		public async Task Passkeys([DataSources] string context)
 		{
 			using var setup  = GetSetup(context);
