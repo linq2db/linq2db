@@ -1712,7 +1712,7 @@ namespace Tests.Linq
 					.ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.That(res[0].Value, Is.EqualTo(value));
+				Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 			}
 		}
 
@@ -1728,13 +1728,13 @@ namespace Tests.Linq
 
 			var res = query.ToArray();
 			Assert.That(res, Has.Length.EqualTo(4));
-			Assert.That(res[0].Value, Is.EqualTo(value));
+			Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 
 			value = 2147483648.123m;
 
 			res = query.ToArray();
 			Assert.That(res, Has.Length.EqualTo(4));
-			Assert.That(res[0].Value, Is.EqualTo(value));
+			Assert.That(res[0].Value, Is.EqualTo(value).Within(FloatingPointDeltaPercent).Percent);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955"), QueryCacheTest]

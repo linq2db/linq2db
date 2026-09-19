@@ -207,6 +207,33 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		protected virtual Expression? TranslateMinMaxSumAverage(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+#if NET8_0_OR_GREATER
+			// On .NET 11 `new[] { ... }.Max()` binds to MemoryExtensions over an implicit ReadOnlySpan
+			// conversion instead of Enumerable - the move .NET 10 already made for Contains, which
+			// ExpressionBuildVisitor unwraps the same way. Only Min and Max moved; Sum, Average and Count
+			// still bind to Enumerable.
+			if (methodCall is
+				{
+					Method   : { DeclaringType.IsMemoryExtensionsType: true, IsGenericMethod: true, Name: nameof(Enumerable.Min) or nameof(Enumerable.Max) },
+					Arguments:
+					[
+						MethodCallExpression
+						{
+							Method.Name: "op_Implicit",
+							Type.Name  : "ReadOnlySpan`1" or "Span`1",
+							Arguments  : [var spanSource],
+						}
+					],
+				})
+			{
+				methodCall = Expression.Call(
+					typeof(Enumerable),
+					methodCall.Method.Name,
+					methodCall.Method.GetGenericArguments(),
+					spanSource.UnwrapConvertToSelf()!);
+			}
+#endif
+
 			if (methodCall.Method.DeclaringType != typeof(Queryable) && methodCall.Method.DeclaringType != typeof(Enumerable))
 				return null;
 

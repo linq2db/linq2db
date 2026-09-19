@@ -14,15 +14,27 @@
 	over dependencies like linq2db.cli
 	-->
 	<PropertyGroup>
-		<!--initial version for .NET LATEST packages, referenced from nuspec-->
-		<Net8LatestForNuget>8.0.0</Net8LatestForNuget>
-		<Net9LatestForNuget>9.0.0</Net9LatestForNuget>
-		<Net10LatestForNuget>10.0.0</Net10LatestForNuget>
+		<!--In-box .NET package versions that track $(TargetFramework). Two rows per supported band is the
+		    whole per-version cost: every package whose major follows the runtime reads $(BandLatest*) and
+		    needs no condition of its own. Empty on net462/netstandard2.0, which is how the rows below
+		    select between the modern and the legacy surface.-->
+		<!--initial version, referenced from nuspec-->
+		<BandLatestForNuget Condition="'$(TargetFramework)'=='net10.0'">10.0.0</BandLatestForNuget>
+		<BandLatestForNuget Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.1.26425.128</BandLatestForNuget>
+		<!--latest version (not referenced from nuspec)-->
+		<BandLatest Condition="'$(TargetFramework)'=='net10.0'">10.0.12</BandLatest>
+		<BandLatest Condition="'$(TargetFramework)'=='net11.0'">11.0.0-rc.1.26425.128</BandLatest>
 
-		<!--latest version for .NET LATEST packages (not referenced from nuspec)-->
-		<Net8Latest>8.0.31</Net8Latest>
-		<Net9Latest>9.0.20</Net9Latest>
+		<!--single version across every TFM, for packages we deliberately do not float per band-->
 		<Net10Latest>10.0.12</Net10Latest>
+
+		<!--In-box package floor for the net462/netstandard2.0 surfaces: the lowest supported runtime, per
+		    https://github.com/linq2db/linq2db/issues/3953. Moves with the oldest row of $(BandLatestForNuget)
+		    above, so dropping a runtime raises it.-->
+		<LegacyNetPackageVersion>10.0.0</LegacyNetPackageVersion>
+		<!--Same band, newest patch. For pins that must not sit on a known-vulnerable build - the floor
+		    release is routinely the one an advisory names - and for test-only packages.-->
+		<LegacyNetPackageLatest>10.0.12</LegacyNetPackageLatest>
 
 		<!--EF 3.1 versions for netfx support-->
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
@@ -84,15 +96,15 @@
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.231"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.165"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.9.0"                        />
-		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK (.NET 8 => Roslyn 4.8) for broad IDE reach; bump only when that SDK is dropped. Kept separate from the conditional 5.6.0/5.9.0 runtime pin below; CentralPackageTransitivePinningEnabled=false so the 4.8 transitive CodeAnalysis assemblies don't clash.-->
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces"              Version="4.8.0"                        />
+		<!--Shipped analyzer package (linq2db.Analyzers) targets the Roslyn bundled with the LOWEST supported .NET SDK's first feature band (.NET 10 => 10.0.1xx => Roslyn 5.0) for broad IDE reach; bump only when that SDK is dropped. Measured mapping: 10.0.2xx ships 5.3 and 10.0.4xx ships 5.9. Kept separate from the runtime pin below; CentralPackageTransitivePinningEnabled=false so the transitive CodeAnalysis assemblies don't clash.-->
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces"              Version="5.0.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.6.0"                        />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.6.0"                        />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="10.0.401"                     />
 	</ItemGroup>
 
 	<ItemGroup Label="Polyfills">
-		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="$(Net8LatestForNuget)"        />
+		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="$(LegacyNetPackageVersion)"   />
 		<PackageVersion Include="Microsoft.CSharp"                                      Version="4.7.0"                        />
 		<PackageVersion Include="System.Collections.Immutable"                          Version="$(Net10Latest)"               />
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"                        />
@@ -102,32 +114,22 @@
 
 	<ItemGroup Label="Released Dependencies">
 		<PackageVersion Include="Humanizer.Core"                                        Version="3.0.10"                       />
-		<!--5.9.0 dropped the lib/net8.0 asset, so net8.0/net9.0 would resolve netstandard2.0 and bundle six
-		    compat packages into the packed linq2db.cli; those two TFMs stay on 5.6.0. netstandard2.0 and net472
-		    already resolve netstandard2.0, so 5.9.0 costs them nothing.-->
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.6.0"                         Condition=" '$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0' "   />
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.9.0"                         Condition=" '$(TargetFramework)' != 'net8.0' and '$(TargetFramework)' != 'net9.0' " />
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.9.0"                        />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="$(Net10Latest)"               />
-		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net8LatestForNuget)"         Condition="'$(TargetFramework)'=='net8.0'"  />
-		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net9LatestForNuget)"         Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(Net10LatestForNuget)"        Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Hosting"                          Version="$(BandLatestForNuget)"         Condition="'$(BandLatestForNuget)'!=''" />
 		<PackageVersion Include="ModelContextProtocol"                                  Version="2.2.0"                        />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                        />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.3.14"                       />
 		<PackageVersion Include="protobuf-net"                                          Version="3.4.21"                       />
 
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(EF3LatestNuget)"            Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net8LatestForNuget)"        Condition="'$(TargetFramework)'=='net8.0'"         />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"         />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'"        />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(EF3LatestNuget)"            Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 
-		<!-- pin abstractions packages to lowest supported runtime (.net 8 currently) : https://github.com/linq2db/linq2db/issues/3953 -->
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<!-- pin abstractions packages to lowest supported runtime : https://github.com/linq2db/linq2db/issues/3953 -->
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 	</ItemGroup>
 
 	<ItemGroup Label="LINQPad-only">
@@ -153,12 +155,13 @@
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.6.2"                        />
 		<PackageVersion Include="MySql.Data"                                            Version="26.7.0"                       />
+		<!--IBM ships no .NET 11 build; 10.0.0.200 is the newest and its net10.0 asset binds on net11 too-->
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="10.0.0.200"                   Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="10.0.0.200"                   Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="10.0.0.200"                   Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
 		<PackageVersion Include="Npgsql"                                                Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql"                                                Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
@@ -183,17 +186,13 @@
 
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Core"                     Version="$(SignalRLegacyVersion)"      />
 
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(SignalRLegacyVersion)"      Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(Net8LatestForNuget)"        Condition="'$(TargetFramework)'=='net8.0'"  />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(SignalRLegacyVersion)"      Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 
-		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
-		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
-		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
+		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 	</ItemGroup>
 
 	<ItemGroup Label="Testing">
@@ -224,36 +223,33 @@
 		<PackageVersion Include="FSharp.Core"                                           Version="10.1.401"                     />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.11"                       />
 
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
 		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="6.0.7"                        />
 
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'"  />
-		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="8.0.3"                        Condition="'$(TargetFramework)'=='net8.0'"  />
-		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0"                        Condition="'$(TargetFramework)'=='net9.0'"  />
 		<!--Pomelo's newest line is EF Core 9; Microting is a maintained fork of it that ships an EF Core 10 line.
-		    Its versions track EF Core patch numbers 1:1, so keep this in step with $(Net10Latest) - or, when
-		    Microting lags, at the newest release whose own dependency floors $(Net10Latest) already satisfies.-->
+		    Its versions track EF Core patch numbers 1:1, so keep this in step with $(BandLatest) - or, when
+		    Microting lags, at the newest release whose own dependency floors $(BandLatest) already satisfies.
+		    There is no EF Core 11 line from either, so the net11 EF tests carry no MySQL provider.-->
 		<PackageVersion Include="Microting.EntityFrameworkCore.MySql"                   Version="10.0.11"                      Condition="'$(TargetFramework)'=='net10.0'" />
+		<!--numbered independently of the runtime band, so these stay explicit rather than reading $(BandLatest).
+		    The net11 row needs the EF11 test project's direct EF pins: Npgsql's 11.0.0-rc.1 hard-pins
+		    Microsoft.EntityFrameworkCore [11.0.0-rc.1.26431.118], a build that was never published
+		    (npgsql/efcore.pg#3913). Drop those pins once Npgsql ships a release that resolves.-->
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'"  />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="8.0.11"                       Condition="'$(TargetFramework)'=='net8.0'"  />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="9.0.4"                        Condition="'$(TargetFramework)'=='net9.0'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="10.0.3"                       Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net8Latest)"                Condition="'$(TargetFramework)'=='net8.0'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(Net8Latest)"                Condition="'$(TargetFramework)'=='net8.0'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net8Latest)"                Condition="'$(TargetFramework)'=='net8.0'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="11.0.0-rc.1"                  Condition="'$(TargetFramework)'=='net11.0'" />
+		<!--referenced directly only by the EF11 test project, to override the pin above-->
+		<PackageVersion Include="Microsoft.EntityFrameworkCore"                         Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(BandLatest)'==''" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(EF3Latest)"                 Condition="'$(BandLatest)'==''" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(EF3Latest)"                 Condition="'$(BandLatest)'==''" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
 
-		<PackageVersion Include="System.Text.Json"                                      Version="8.0.5"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="System.Text.Json"                                      Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatestForNuget)'==''" />
 		<PackageVersion Include="Microsoft.AspNetCore"                                  Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="$(SignalRLegacyVersion)"      Condition="'$(TargetFramework)'=='net462'" />
 	</ItemGroup>
@@ -276,9 +272,8 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Compat">
-		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
-		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(LegacyNetPackageVersion)"   Condition="'$(BandLatestForNuget)'==''" />
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(BandLatestForNuget)"        Condition="'$(BandLatestForNuget)'!=''" />
 	</ItemGroup>
 
 	<ItemGroup Label="Manage Transient Packages with Vulnerabilities">
@@ -302,8 +297,9 @@
 		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-2m69-gcr7-jv3q" />
 
 		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="$(AspNetCoreLegacyVersion)"   Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net9Latest)"                Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
+		<!--not $(LegacyNetPackageVersion): 10.0.0 is the build GHSA-73j8-2gch-69rq names-->
+		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(LegacyNetPackageLatest)"    Condition="'$(BandLatest)'==''" />
+		<PackageVersion Include="Microsoft.Bcl.Memory"                                  Version="$(BandLatest)"                Condition="'$(BandLatest)'!=''" />
 	</ItemGroup>
 
 </Project>

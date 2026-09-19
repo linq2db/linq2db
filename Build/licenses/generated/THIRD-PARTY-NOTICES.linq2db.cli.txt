@@ -11,7 +11,7 @@ redistributed inside this artifact; they are NOT covered by that MIT license and
 subject to their own terms, reproduced in full below.
 
 Artifact:   linq2db.cli
-Components: 97
+Components: 96
 
 --------------------------------------------------------------------------------------------------
 COMPONENTS
@@ -31,7 +31,7 @@ COMPONENTS
    License: Apache-2.0  see [1]
    Copyright 2016-2025 The Apache Software Foundation
 
-4. ClickHouse.Driver net10.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.4.0, net8.0-windows7.0: 1.4.0, net9.0: 1.4.0
+4. ClickHouse.Driver net10.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0-windows7.0: 1.4.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [2]
 
@@ -80,17 +80,17 @@ COMPONENTS
    License: MIT  see [5]
    Milosz Krajewski
 
-14. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0: 8.0.0, net8.0-windows7.0: 8.0.0, net9.0: 9.0.13
+14. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-15. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net472: 5.9.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
+15. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
    https://github.com/dotnet/roslyn
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-16. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net472: 5.9.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
+16. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
    https://github.com/dotnet/roslyn
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -125,62 +125,62 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-23. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.10, net462: 8.0.0, net472: 8.0.0, net8.0: 10.0.10, net8.0-windows7.0: 8.0.0, net9.0: 10.0.10
+23. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.10, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Extensions.Caching.Memory net10.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0: 8.0.1, net8.0-windows7.0: 8.0.1, net9.0: 9.0.13
+24. Microsoft.Extensions.Caching.Memory net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-25. Microsoft.Extensions.Configuration net10.0: 10.0.12, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+25. Microsoft.Extensions.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-26. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+26. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-27. Microsoft.Extensions.Configuration.Binder net10.0: 10.0.12, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+27. Microsoft.Extensions.Configuration.Binder net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-28. Microsoft.Extensions.Configuration.CommandLine net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+28. Microsoft.Extensions.Configuration.CommandLine net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-29. Microsoft.Extensions.Configuration.EnvironmentVariables net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+29. Microsoft.Extensions.Configuration.EnvironmentVariables net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-30. Microsoft.Extensions.Configuration.FileExtensions net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+30. Microsoft.Extensions.Configuration.FileExtensions net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-31. Microsoft.Extensions.Configuration.Json net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+31. Microsoft.Extensions.Configuration.Json net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-32. Microsoft.Extensions.Configuration.UserSecrets net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+32. Microsoft.Extensions.Configuration.UserSecrets net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-33. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+33. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-34. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+34. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
@@ -190,12 +190,12 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-36. Microsoft.Extensions.Diagnostics 10.0.8
+36. Microsoft.Extensions.Diagnostics net10.0: 10.0.8, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-37. Microsoft.Extensions.Diagnostics.Abstractions net10.0: 10.0.10, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+37. Microsoft.Extensions.Diagnostics.Abstractions net10.0: 10.0.10, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
@@ -205,17 +205,17 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-39. Microsoft.Extensions.FileProviders.Physical net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+39. Microsoft.Extensions.FileProviders.Physical net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-40. Microsoft.Extensions.FileSystemGlobbing net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+40. Microsoft.Extensions.FileSystemGlobbing net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-41. Microsoft.Extensions.Hosting net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+41. Microsoft.Extensions.Hosting net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
@@ -225,57 +225,57 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-43. Microsoft.Extensions.Http net10.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+43. Microsoft.Extensions.Http net10.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-44. Microsoft.Extensions.Logging net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+44. Microsoft.Extensions.Logging net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-45. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+45. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-46. Microsoft.Extensions.Logging.Configuration net10.0: 10.0.12, net8.0: 8.0.1, net9.0: 9.0.20
+46. Microsoft.Extensions.Logging.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-47. Microsoft.Extensions.Logging.Console net10.0: 10.0.12, net8.0: 8.0.1, net9.0: 9.0.20
+47. Microsoft.Extensions.Logging.Console net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-48. Microsoft.Extensions.Logging.Debug net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+48. Microsoft.Extensions.Logging.Debug net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-49. Microsoft.Extensions.Logging.EventLog net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+49. Microsoft.Extensions.Logging.EventLog net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-50. Microsoft.Extensions.Logging.EventSource net10.0: 10.0.0, net8.0: 8.0.0, net9.0: 9.0.0
+50. Microsoft.Extensions.Logging.EventSource net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-51. Microsoft.Extensions.Options net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+51. Microsoft.Extensions.Options net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-52. Microsoft.Extensions.Options.ConfigurationExtensions net10.0: 10.0.12, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+52. Microsoft.Extensions.Options.ConfigurationExtensions net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-53. Microsoft.Extensions.Primitives net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+53. Microsoft.Extensions.Primitives net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
@@ -350,11 +350,11 @@ COMPONENTS
    License: MIT  see [2]
    Copyright 2016–2026 Bradley Grainger
 
-68. NodaTime net10.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0: 3.2.3, net8.0-windows7.0: 3.2.3, net9.0: 3.2.3
+68. NodaTime net10.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0-windows7.0: 3.2.3
    https://nodatime.org/
    License: Apache-2.0  see [1]
 
-69. Npgsql net10.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0: 10.0.3, net8.0-windows7.0: 10.0.3, net9.0: 10.0.3
+69. Npgsql net10.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0-windows7.0: 10.0.3
    https://github.com/npgsql/npgsql
    License: PostgreSQL  see [10]
    Copyright 2025 © The Npgsql Development Team
@@ -382,7 +382,7 @@ COMPONENTS
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-75. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0: 2.1.12, net8.0-windows7.0: 3.53.3, net9.0: 2.1.12
+75. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net11.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0-windows7.0: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
@@ -395,7 +395,7 @@ COMPONENTS
    License: MIT  see [13]
    © Microsoft Corporation. All rights reserved.
 
-78. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0: 10.0.3, net8.0-windows7.0: 8.0.0, net9.0: 10.0.3
+78. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 10.0.12
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
@@ -415,12 +415,12 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-82. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+82. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-83. System.Diagnostics.EventLog 10.0.12
+83. System.Diagnostics.EventLog net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.12
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
@@ -440,56 +440,51 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-87. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+87. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-88. System.Net.ServerSentEvents 10.0.10
+88. System.Reflection.Metadata net472: 10.0.1, net8.0-windows7.0: 8.0.0
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-89. System.Reflection.Metadata net472: 10.0.1, net8.0: 10.0.1, net8.0-windows7.0: 8.0.0, net9.0: 10.0.1
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-90. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0: 8.0.1, net8.0-windows7.0: 8.0.1, net9.0: 9.0.13
+89. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-91. System.Security.Cryptography.ProtectedData 10.0.12
+90. System.Security.Cryptography.ProtectedData 10.0.12
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-92. System.Security.Permissions 4.5.0
+91. System.Security.Permissions 4.5.0
    https://dot.net/
    License: MIT  see [2] [15]
    © Microsoft Corporation.  All rights reserved.
 
-93. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+92. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-94. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+93. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-95. System.Threading.AccessControl 10.0.12
+94. System.Threading.AccessControl 10.0.12
    https://dot.net/
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-96. Ydb.Protos 1.2.0
+95. Ydb.Protos 1.2.0
    https://github.com/ydb-platform/ydb-dotnet-genproto
    License: Apache-2.0  see [1]
 
-97. Ydb.Sdk 0.35.0
+96. Ydb.Sdk 0.35.0
    https://github.com/ydb-platform/ydb-dotnet-sdk
    License: Apache-2.0  see [1]
 
@@ -2470,7 +2465,7 @@ IF YOU COMPLY WITH THESE LICENSE TERMS, YOU HAVE THE RIGHTS BELOW.
 --------------------------------------------------------------------------------------------------
 
 [8] notices-6d15e10a.txt
-    Applies to: Microsoft.Extensions.Caching.Abstractions, Microsoft.Extensions.Configuration, Microsoft.Extensions.Configuration.Abstractions, Microsoft.Extensions.Configuration.Binder, Microsoft.Extensions.Configuration.CommandLine, Microsoft.Extensions.Configuration.EnvironmentVariables, Microsoft.Extensions.Configuration.FileExtensions, Microsoft.Extensions.Configuration.Json, Microsoft.Extensions.Configuration.UserSecrets, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.DependencyInjection.Abstractions, Microsoft.Extensions.DependencyModel, Microsoft.Extensions.Diagnostics, Microsoft.Extensions.Diagnostics.Abstractions, Microsoft.Extensions.FileProviders.Abstractions, Microsoft.Extensions.FileProviders.Physical, Microsoft.Extensions.FileSystemGlobbing, Microsoft.Extensions.Hosting, Microsoft.Extensions.Hosting.Abstractions, Microsoft.Extensions.Http, Microsoft.Extensions.Logging, Microsoft.Extensions.Logging.Abstractions, Microsoft.Extensions.Logging.Configuration, Microsoft.Extensions.Logging.Console, Microsoft.Extensions.Logging.Debug, Microsoft.Extensions.Logging.EventLog, Microsoft.Extensions.Logging.EventSource, Microsoft.Extensions.Options, Microsoft.Extensions.Options.ConfigurationExtensions, Microsoft.Extensions.Primitives, System.Collections.Immutable, System.Configuration.ConfigurationManager, System.Data.Odbc, System.Data.OleDb, System.Diagnostics.DiagnosticSource, System.Diagnostics.EventLog, System.Diagnostics.PerformanceCounter, System.IO.Pipelines, System.Net.ServerSentEvents, System.Reflection.Metadata, System.Security.Cryptography.ProtectedData, System.Text.Encodings.Web, System.Text.Json, System.Threading.AccessControl
+    Applies to: Microsoft.Extensions.Caching.Abstractions, Microsoft.Extensions.Configuration, Microsoft.Extensions.Configuration.Abstractions, Microsoft.Extensions.Configuration.Binder, Microsoft.Extensions.Configuration.CommandLine, Microsoft.Extensions.Configuration.EnvironmentVariables, Microsoft.Extensions.Configuration.FileExtensions, Microsoft.Extensions.Configuration.Json, Microsoft.Extensions.Configuration.UserSecrets, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.DependencyInjection.Abstractions, Microsoft.Extensions.DependencyModel, Microsoft.Extensions.Diagnostics, Microsoft.Extensions.Diagnostics.Abstractions, Microsoft.Extensions.FileProviders.Abstractions, Microsoft.Extensions.FileProviders.Physical, Microsoft.Extensions.FileSystemGlobbing, Microsoft.Extensions.Hosting, Microsoft.Extensions.Hosting.Abstractions, Microsoft.Extensions.Http, Microsoft.Extensions.Logging, Microsoft.Extensions.Logging.Abstractions, Microsoft.Extensions.Logging.Configuration, Microsoft.Extensions.Logging.Console, Microsoft.Extensions.Logging.Debug, Microsoft.Extensions.Logging.EventLog, Microsoft.Extensions.Logging.EventSource, Microsoft.Extensions.Options, Microsoft.Extensions.Options.ConfigurationExtensions, Microsoft.Extensions.Primitives, System.Collections.Immutable, System.Configuration.ConfigurationManager, System.Data.Odbc, System.Data.OleDb, System.Diagnostics.DiagnosticSource, System.Diagnostics.EventLog, System.Diagnostics.PerformanceCounter, System.IO.Pipelines, System.Reflection.Metadata, System.Security.Cryptography.ProtectedData, System.Text.Encodings.Web, System.Text.Json, System.Threading.AccessControl
 
 .NET Runtime uses third-party libraries or other resources that may be
 distributed under licenses different than the .NET Runtime software.

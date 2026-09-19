@@ -1,0 +1,8 @@
+{
+	"Azure.TestJob": {
+		"Providers": [
+			"YDB",
+			"Sybase.Managed"
+		]
+	}
+}

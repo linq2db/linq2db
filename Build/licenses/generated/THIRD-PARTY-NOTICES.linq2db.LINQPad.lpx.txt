@@ -21,7 +21,7 @@ COMPONENTS
    https://github.com/DataAction/AdoNetCore.AseClient
    License: Apache-2.0  see [1]
 
-2. ClickHouse.Driver net10.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.4.0, net8.0-windows7.0: 1.4.0, net9.0: 1.4.0
+2. ClickHouse.Driver net10.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0-windows7.0: 1.4.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [2]
 
@@ -46,12 +46,12 @@ COMPONENTS
    https://github.com/LinqToDB4iSeries/Linq2DB4iSeries
    License: MIT  see [5]
 
-7. Microsoft.Bcl.AsyncInterfaces 10.0.3
+7. Microsoft.Bcl.AsyncInterfaces net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-8. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0: 8.0.0, net8.0-windows7.0: 8.0.0, net9.0: 9.0.13
+8. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -66,12 +66,12 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-11. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net472: 5.9.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
+11. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
    https://github.com/dotnet/roslyn
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-12. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net472: 5.9.0, net8.0: 5.6.0, net8.0-windows7.0: 4.13.0, net9.0: 5.6.0
+12. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
    https://github.com/dotnet/roslyn
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -101,52 +101,52 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-18. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.10, net462: 8.0.0, net472: 8.0.0, net8.0: 10.0.10, net8.0-windows7.0: 8.0.0, net9.0: 10.0.10
+18. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.10, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-19. Microsoft.Extensions.Caching.Memory net10.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0: 8.0.1, net8.0-windows7.0: 8.0.1, net9.0: 9.0.13
+19. Microsoft.Extensions.Caching.Memory net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-20. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+20. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+21. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-22. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+22. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-23. Microsoft.Extensions.Http net10.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+23. Microsoft.Extensions.Http net10.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Extensions.Logging net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+24. Microsoft.Extensions.Logging net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-25. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+25. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-26. Microsoft.Extensions.Options net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+26. Microsoft.Extensions.Options net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-27. Microsoft.Extensions.Primitives net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+27. Microsoft.Extensions.Primitives net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -207,11 +207,11 @@ COMPONENTS
    Copyright(c) 2025 IBM Corporation. All rights reserved
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.
 
-39. NodaTime net10.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0: 3.2.3, net8.0-windows7.0: 3.2.3, net9.0: 3.2.3
+39. NodaTime net10.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0-windows7.0: 3.2.3
    https://nodatime.org/
    License: Apache-2.0  see [1]
 
-40. Npgsql net10.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0: 10.0.3, net8.0-windows7.0: 10.0.3, net9.0: 10.0.3
+40. Npgsql net10.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0-windows7.0: 10.0.3
    https://github.com/npgsql/npgsql
    License: PostgreSQL  see [12]
    Copyright 2025 © The Npgsql Development Team
@@ -229,7 +229,7 @@ COMPONENTS
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-44. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0: 2.1.12, net8.0-windows7.0: 3.53.3, net9.0: 2.1.12
+44. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net11.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0-windows7.0: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
@@ -242,7 +242,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-47. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0: 10.0.3, net8.0-windows7.0: 8.0.0, net9.0: 10.0.3
+47. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 10.0.12
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -256,7 +256,7 @@ COMPONENTS
    License: Public Domain
    Public Domain
 
-50. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+50. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.8
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -276,7 +276,7 @@ COMPONENTS
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-54. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+54. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -291,7 +291,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-57. System.Reflection.Metadata net472: 10.0.1, net8.0: 10.0.1, net8.0-windows7.0: 8.0.0, net9.0: 10.0.1
+57. System.Reflection.Metadata net472: 10.0.1, net8.0-windows7.0: 8.0.0
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
@@ -301,7 +301,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-59. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0: 8.0.1, net8.0-windows7.0: 8.0.1, net9.0: 9.0.13
+59. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
    https://dot.net/
    License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
@@ -311,12 +311,12 @@ COMPONENTS
    License: MIT  see [8]
    © Microsoft Corporation. All rights reserved.
 
-61. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+61. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
 
-62. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+62. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
    License: MIT  see [6]
    © Microsoft Corporation. All rights reserved.
