@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
@@ -138,28 +139,39 @@ namespace LinqToDB
 
 		// Emits the UnpivotMulti marker call; UnpivotBuilder rewrites it to native multi-value UNPIVOT
 		// (Oracle/DuckDB) or a portable UNION ALL derived table.
+		//
+		// The groups are split into a name array and a flat, quoted column array rather than passed as one
+		// constant: a constant holding an array is compared by reference in the query cache, so a single
+		// constant would miss on every execution. Quoted lambdas compare structurally and the names are
+		// query-dependent, so both halves take part in the cache key.
 		static IQueryable<TResult> BuildMultiValueUnpivot<TSource, TValue, TResult>(
-			IQueryable<TSource>                       source,
-			LambdaExpression                          resultSelector,
+			IQueryable<TSource>                        source,
+			LambdaExpression                           resultSelector,
 			(string name, LambdaExpression[] columns)[] groups)
 		{
 			var currentSource = source.ProcessIQueryable();
+
+			var names   = groups.Select(static g => g.name).ToArray();
+			var columns = groups.SelectMany(static g => g.columns).Select(static c => (Expression)Expression.Quote(c));
 
 			var expr = Expression.Call(
 				null,
 				_unpivotMultiMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TValue), typeof(TResult)),
 				currentSource.Expression,
 				Expression.Quote(resultSelector),
-				Expression.Constant(groups, typeof((string, LambdaExpression[])[])));
+				Expression.Constant(names),
+				Expression.NewArrayInit(typeof(Expression<Func<TSource, TValue>>), columns));
 
 			return currentSource.Provider.CreateQuery<TResult>(expr);
 		}
 
 		// Query marker for multi-value UNPIVOT — never executed; recognized by UnpivotBuilder.
+		// Columns are flattened group-major; the group size is the result selector's arity minus two.
 		internal static IQueryable<TResult> UnpivotMulti<TSource, TValue, TResult>(
-			IQueryable<TSource>                       source,
-			LambdaExpression                          resultSelector,
-			(string name, LambdaExpression[] columns)[] groups)
+			IQueryable<TSource>                source,
+			LambdaExpression                   resultSelector,
+			[SqlQueryDependent] string[]       names,
+			Expression<Func<TSource, TValue>>[] columns)
 			=> throw new InvalidOperationException("UnpivotMulti is a query marker and must not be invoked directly.");
 	}
 }

@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			=> call.IsQueryable
 				&& call.Method.DeclaringType == typeof(LinqExtensions)
 				&& (string.Equals(call.Method.Name, nameof(LinqExtensions.UnpivotMulti), StringComparison.Ordinal)
-					? call.Arguments.Count == 3
+					? call.Arguments.Count == 4
 					: call.Arguments.Count == 5);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -52,7 +52,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			var resultType     = genericArgs[2];
 			var sourceExpr     = methodCall.Arguments[0];
 			var resultSelector = methodCall.Arguments[1].UnwrapLambda();
-			var groups         = ((string name, LambdaExpression[] columns)[])methodCall.Arguments[2].EvaluateExpression()!;
+			// Columns arrive flattened group-major alongside the group names - see BuildMultiValueUnpivot.
+			var names       = methodCall.Arguments[2].EvaluateExpression<string[]>()!;
+			var columnExprs = ((NewArrayExpression)methodCall.Arguments[3]).Expressions;
+			var groupSize   = resultSelector.Parameters.Count - 2;
+
+			var groups = new (string name, LambdaExpression[] columns)[names.Length];
+
+			for (var i = 0; i < names.Length; i++)
+			{
+				var columns = new LambdaExpression[groupSize];
+
+				for (var j = 0; j < groupSize; j++)
+					columns[j] = columnExprs[(i * groupSize) + j].UnwrapLambda();
+
+				groups[i] = (names[i], columns);
+			}
 
 			if (builder.DataContext.SqlProviderFlags.IsMultiValueUnpivotSupported)
 			{

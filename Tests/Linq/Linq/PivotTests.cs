@@ -391,5 +391,44 @@ namespace Tests.Linq
 					sql.ShouldNotContain("UNPIVOT");
 			}
 		}
+
+		/// <summary>
+		/// The multi-value overload used to pass its groups as a single array constant, which the query cache
+		/// compares by reference - so every execution rebuilt the query. The groups now travel as a
+		/// query-dependent name array plus quoted column lambdas, both of which compare by value.
+		/// </summary>
+		[Test, QueryCacheTest]
+		public void UnpivotMultiValueQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(MonthlySales.Data);
+
+			var probe = t.Unpivot(
+				(row, quarter, m1, m2, m3) => new { row.Id, Quarter = quarter, M1 = m1, M2 = m2, M3 = m3 },
+				("Q1", x => x.Jan, x => x.Feb, x => x.Mar));
+
+			probe.ClearCache();
+			var start = probe.GetCacheMissCount();
+
+			for (var i = 0; i < 3; i++)
+			{
+				_ = t.Unpivot(
+						(row, quarter, m1, m2, m3) => new { row.Id, Quarter = quarter, M1 = m1, M2 = m2, M3 = m3 },
+						("Q1", x => x.Jan, x => x.Feb, x => x.Mar),
+						("Q2", x => x.Apr, x => x.May, x => x.Jun))
+					.ToSqlQuery();
+			}
+
+			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same groups must reuse the compiled query");
+
+			// A different group name is a different query - the names must discriminate.
+			_ = t.Unpivot(
+					(row, quarter, m1, m2, m3) => new { row.Id, Quarter = quarter, M1 = m1, M2 = m2, M3 = m3 },
+					("Q1", x => x.Jan, x => x.Feb, x => x.Mar),
+					("Q3", x => x.Apr, x => x.May, x => x.Jun))
+				.ToSqlQuery();
+
+			(probe.GetCacheMissCount() - start).ShouldBe(2);
+		}
 	}
 }
