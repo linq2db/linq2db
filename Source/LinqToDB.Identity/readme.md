@@ -73,11 +73,12 @@ Creating the schema (e.g. in tests or first-run setup) is ordinary linq2db DDL �
 * `IdentityDataConnection` (based on `DataConnection`) — keeps the connection open for its lifetime.
 * `IdentityDataContext` (based on `DataContext`) — opens a connection per query and closes it afterwards (EF-like).
 
-You can also use **any** `IDataContext` and configure the mappings yourself — the default mappings live in
-`LinqToDB.Identity.Mapping.DefaultMappings` and are public.
+Deriving from one of those contexts is how you get the default mappings — they are applied by the context
+constructor and are not exposed separately.
 
-To customize a column for a specific provider, override `ConfigureMappings` (it is `protected virtual`) or layer an
-additional `MappingSchema` via `DataOptions.UseMappingSchema(...)`. For example, the .NET 10 passkey `Data` column
+To customize, override `ConfigureMappings` (it is `protected virtual`): call `base.ConfigureMappings(ms)` first,
+then run a second `FluentMappingBuilder` over the same schema. The later pass wins and inherits what the defaults
+already set, so a rename keeps the default length and nullability. For example, the .NET 10 passkey `Data` column
 defaults to an unbounded `NVarChar` (`nvarchar(max)` on SQL Server); on Oracle, where `NVARCHAR2` is capped at 4000
 bytes, map it to `DataType.NText` (`NCLOB`):
 
@@ -91,6 +92,26 @@ protected override void ConfigureMappings(MappingSchema ms)
         .Build();
 }
 ```
+
+`context.AddMappingSchema(ms)` after construction works the same way. `DataOptions.UseMappingSchema(...)` does
+**not** — the contexts add their own schema in the constructor, after the options have been applied, so the
+defaults outrank anything supplied that way.
+
+### Customization limits
+
+* **A column the defaults pin for a specific provider cannot be renamed on that provider by an unscoped mapping.**
+  `AspNetUserTokens.UserId` / `LoginProvider` / `Name` on Firebird 2.5, and `AspNetUserPasskeys.CredentialId` on
+  Access, Informix and Firebird 2.5, carry provider-scoped mappings that drop a primary key those engines cannot
+  index. A provider-scoped mapping outranks an unscoped one, so the rename is dropped with no error. Scope your own
+  mapping to the same provider to override it.
+* **Extra properties on a subclass become columns.** `class AppUser : IdentityUser<string> { public string Tenant { get; set; } }`
+  maps `Tenant` as a column, so `CreateTable` emits it and inserts include it — the same as EF Core, but the table is
+  then no longer interchangeable with a stock `AspNetUsers` unless you `Ignore` the property.
+* **Mappings are built once per context type, for the process lifetime.** `ConfigureMappings` runs on the first
+  instantiation of a given context class and the result is cached against that class, so mappings cannot vary per
+  instance — per-tenant table names, for example.
+* **`AddLinqToDBStores<TContext>` applies no mappings when `TContext` is not one of the identity contexts.** The
+  stores are still registered and will run, but against tables named after the CLR types.
 
 ## Custom key types (int / Guid)
 

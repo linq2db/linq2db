@@ -62,6 +62,51 @@ namespace Tests.Identity
 			}
 		}
 
+		// The same thing for an arbitrary key type and satellite set, via the generic contexts. No passkey table:
+		// the eight type parameters of IdentityDataConnection<...> don't include one, and the fixtures that need
+		// passkeys are string-keyed and use Schema above.
+		protected sealed class KeyedSchema<TUser, TRole, TKey, TUserClaim, TUserRole, TUserLogin, TRoleClaim, TUserToken> : IDisposable
+			where TKey       : IEquatable<TKey>
+			where TUser      : IdentityUser     <TKey>
+			where TRole      : IdentityRole     <TKey>
+			where TUserClaim : IdentityUserClaim<TKey>
+			where TUserRole  : IdentityUserRole <TKey>
+			where TUserLogin : IdentityUserLogin<TKey>
+			where TRoleClaim : IdentityRoleClaim<TKey>
+			where TUserToken : IdentityUserToken<TKey>
+		{
+			readonly List<IDisposable> _tables = [];
+
+			public KeyedSchema(IDataContext db)
+			{
+				_tables.Add(db.CreateLocalTable<TUser>());
+				_tables.Add(db.CreateLocalTable<TRole>());
+				_tables.Add(db.CreateLocalTable<TUserClaim>());
+				_tables.Add(db.CreateLocalTable<TUserRole >());
+				_tables.Add(db.CreateLocalTable<TUserLogin>());
+				_tables.Add(db.CreateLocalTable<TUserToken>());
+				_tables.Add(db.CreateLocalTable<TRoleClaim>());
+			}
+
+			public void Dispose()
+			{
+				for (var i = _tables.Count - 1; i >= 0; i--)
+					_tables[i].Dispose();
+			}
+		}
+
+		protected sealed class KeyedSchema<TUser, TRole, TKey> : IDisposable
+			where TKey  : IEquatable<TKey>
+			where TUser : IdentityUser<TKey>
+			where TRole : IdentityRole<TKey>
+		{
+			readonly KeyedSchema<TUser, TRole, TKey, IdentityUserClaim<TKey>, IdentityUserRole<TKey>, IdentityUserLogin<TKey>, IdentityRoleClaim<TKey>, IdentityUserToken<TKey>> _schema;
+
+			public KeyedSchema(IDataContext db) => _schema = new (db);
+
+			public void Dispose() => _schema.Dispose();
+		}
+
 		protected static IdentityDataConnection GetSetup(string context)
 			=> new (new DataOptions().UseConfiguration(context.StripRemote()));
 

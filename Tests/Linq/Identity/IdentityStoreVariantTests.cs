@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -17,32 +16,6 @@ namespace Tests.Identity
 	[TestFixture]
 	public class IdentityStoreVariantTests : IdentityTestData
 	{
-		// Generic AspNet* schema for an arbitrary key type, via the generic IdentityDataConnection<TUser, TRole, TKey>.
-		sealed class KeyedSchema<TUser, TRole, TKey> : IDisposable
-			where TKey  : IEquatable<TKey>
-			where TUser : IdentityUser<TKey>
-			where TRole : IdentityRole<TKey>
-		{
-			readonly List<IDisposable> _tables = [];
-
-			public KeyedSchema(IDataContext db)
-			{
-				_tables.Add(db.CreateLocalTable<TUser>());
-				_tables.Add(db.CreateLocalTable<TRole>());
-				_tables.Add(db.CreateLocalTable<IdentityUserClaim<TKey>>());
-				_tables.Add(db.CreateLocalTable<IdentityUserRole <TKey>>());
-				_tables.Add(db.CreateLocalTable<IdentityUserLogin<TKey>>());
-				_tables.Add(db.CreateLocalTable<IdentityUserToken<TKey>>());
-				_tables.Add(db.CreateLocalTable<IdentityRoleClaim<TKey>>());
-			}
-
-			public void Dispose()
-			{
-				for (var i = _tables.Count - 1; i >= 0; i--)
-					_tables[i].Dispose();
-			}
-		}
-
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
 		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
