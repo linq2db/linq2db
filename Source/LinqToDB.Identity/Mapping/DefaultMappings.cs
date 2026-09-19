@@ -25,6 +25,12 @@ namespace LinqToDB.Identity
 		// EF Core maps integral keys (int/long) as store-generated identity columns; string/Guid keys are client-assigned.
 		private static bool IsAutoIncrementKey<TKey>() => typeof(TKey) == typeof(int) || typeof(TKey) == typeof(long);
 
+		// The string-key width has to be pinned here rather than only in the string-specific overloads below: a
+		// consumer registering IdentityDataConnection<..., string, ...> never reaches those, and an unpinned key
+		// widens to the provider default - which diverges from the EF Core schema everywhere, and overruns
+		// Firebird 2.5's index limit on the AspNetUserRoles composite key.
+		private static bool IsStringKey<TKey>() => typeof(TKey) == typeof(string);
+
 		// LockoutEnd is DateTimeOffset?, which these providers cannot store as one: most cannot render the type in
 		// DDL at all - CreateTable emits the literal token "DateTimeOffset" - and Firebird, which does render it
 		// from 4.0 on, cannot write the value (https://github.com/linq2db/linq2db/issues/5915). DB2 z/OS renders
@@ -72,18 +78,17 @@ namespace LinqToDB.Identity
 				.Property(e => e.ClaimType)
 				.Property(e => e.ClaimValue)
 				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUserClaim>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH);
 		}
 
 		public static void SetupIdentityUserClaim<TUserClaim>(FluentMappingBuilder mappings)
 			where TUserClaim : IdentityUserClaim<string>
-		{
-			SetupIdentityUserClaim<string, TUserClaim>(mappings);
-
-			// add length
-			mappings.Entity<TUserClaim>()
-				.Property(e => e.UserId)
-					.HasLength(STRING_KEY_LENGTH);
-		}
+			=> SetupIdentityUserClaim<string, TUserClaim>(mappings);
 
 		public static void SetupIdentityRoleClaim<TKey, TRoleClaim>(FluentMappingBuilder mappings)
 			where TKey       : IEquatable<TKey>
@@ -98,18 +103,17 @@ namespace LinqToDB.Identity
 				.Property(e => e.ClaimType)
 				.Property(e => e.ClaimValue)
 				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TRoleClaim>()
+					.Property(e => e.RoleId)
+						.HasLength(STRING_KEY_LENGTH);
 		}
 
 		public static void SetupIdentityRoleClaim<TRoleClaim>(FluentMappingBuilder mappings)
 			where TRoleClaim : IdentityRoleClaim<string>
-		{
-			SetupIdentityRoleClaim<string, TRoleClaim>(mappings);
-
-			// add length
-			mappings.Entity<TRoleClaim>()
-				.Property(e => e.RoleId)
-					.HasLength(STRING_KEY_LENGTH);
-		}
+			=> SetupIdentityRoleClaim<string, TRoleClaim>(mappings);
 
 		public static void SetupIdentityUserRole<TKey, TUserRole>(FluentMappingBuilder mappings)
 			where TKey      : IEquatable<TKey>
@@ -123,20 +127,19 @@ namespace LinqToDB.Identity
 					.IsPrimaryKey()
 					.IsNullable(false)
 				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUserRole>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH)
+					.Property(e => e.RoleId)
+						.HasLength(STRING_KEY_LENGTH);
 		}
 
 		public static void SetupIdentityUserRole<TUserRole>(FluentMappingBuilder mappings)
 			where TUserRole : IdentityUserRole<string>
-		{
-			SetupIdentityUserRole<string, TUserRole>(mappings);
-
-			// add length
-			mappings.Entity<TUserRole>()
-				.Property(e => e.UserId)
-					.HasLength(STRING_KEY_LENGTH)
-				.Property(e => e.RoleId)
-					.HasLength(STRING_KEY_LENGTH);
-		}
+			=> SetupIdentityUserRole<string, TUserRole>(mappings);
 
 		public static void SetupIdentityRole<TKey, TRole>(FluentMappingBuilder mappings)
 			where TKey  : IEquatable<TKey>
@@ -161,18 +164,17 @@ namespace LinqToDB.Identity
 					.HasLength(STAMP_LENGTH)
 					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TRole>()
+					.Property(e => e.Id)
+						.HasLength(STRING_KEY_LENGTH);
 		}
 
 		public static void SetupIdentityRole<TRole>(FluentMappingBuilder mappings)
 			where TRole : IdentityRole<string>
-		{
-			SetupIdentityRole<string, TRole>(mappings);
-
-			// add length
-			mappings.Entity<TRole>()
-				.Property(e => e.Id)
-					.HasLength(STRING_KEY_LENGTH);
-		}
+			=> SetupIdentityRole<string, TRole>(mappings);
 
 		public static void SetupIdentityUser<TKey, TUser>(FluentMappingBuilder mappings)
 			where TKey  : IEquatable<TKey>
@@ -221,6 +223,12 @@ namespace LinqToDB.Identity
 				.Property(e => e.AccessFailedCount)
 				;
 
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUser>()
+					.Property(e => e.Id)
+						.HasLength(STRING_KEY_LENGTH);
+
 			// DataTypeAttribute rather than a configuration-scoped ColumnAttribute: the latter replaces the unscoped one wholesale.
 			foreach (var (configuration, dataType) in _lockoutEndDataTypes)
 				mappings.Entity<TUser>()
@@ -231,14 +239,7 @@ namespace LinqToDB.Identity
 
 		public static void SetupIdentityUser<TUser>(FluentMappingBuilder mappings)
 			where TUser : IdentityUser<string>
-		{
-			SetupIdentityUser<string, TUser>(mappings);
-
-			// add length
-			mappings.Entity<TUser>()
-				.Property(e => e.Id)
-					.HasLength(STRING_KEY_LENGTH);
-		}
+			=> SetupIdentityUser<string, TUser>(mappings);
 
 		public static void SetupIdentityUserLogin<TKey, TUserLogin>(FluentMappingBuilder mappings)
 			where TKey       : IEquatable<TKey>
@@ -258,23 +259,24 @@ namespace LinqToDB.Identity
 				.Property(e => e.UserId)
 					.IsNullable(false)
 				;
+
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<TUserLogin>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH);
 		}
 
 		public static void SetupIdentityUserLogin<TUserLogin>(FluentMappingBuilder mappings)
 			where TUserLogin : IdentityUserLogin<string>
-		{
-			SetupIdentityUserLogin<string, TUserLogin>(mappings);
+			=> SetupIdentityUserLogin<string, TUserLogin>(mappings);
 
-			// add length
-			mappings.Entity<TUserLogin>()
-				.Property(e => e.UserId)
-					.HasLength(STRING_KEY_LENGTH);
-		}
-
-		public static void SetupIdentityUserToken<TKey, TUserToken>(FluentMappingBuilder mappings, int? userIdLength = null)
+		public static void SetupIdentityUserToken<TKey, TUserToken>(FluentMappingBuilder mappings)
 			where TKey       : IEquatable<TKey>
 			where TUserToken : IdentityUserToken<TKey>
 		{
+			var userIdLength = IsStringKey<TKey>() ? STRING_KEY_LENGTH : (int?)null;
+
 			var userId = mappings.Entity<TUserToken>().HasTableName("AspNetUserTokens")
 				.Property(e => e.UserId)
 					.IsPrimaryKey()
@@ -321,9 +323,7 @@ namespace LinqToDB.Identity
 
 		public static void SetupIdentityUserToken<TUserToken>(FluentMappingBuilder mappings)
 			where TUserToken : IdentityUserToken<string>
-		{
-			SetupIdentityUserToken<string, TUserToken>(mappings, STRING_KEY_LENGTH);
-		}
+			=> SetupIdentityUserToken<string, TUserToken>(mappings);
 
 #if NET10_0_OR_GREATER
 		// WebAuthn credential ids are variable-length (spec: no longer than 1023 bytes). 1024 matches EF Core's
@@ -364,6 +364,12 @@ namespace LinqToDB.Identity
 					.HasDataType(DataType.NVarChar)
 				;
 
+			// add length
+			if (IsStringKey<TKey>())
+				mappings.Entity<IdentityUserPasskey<TKey>>()
+					.Property(e => e.UserId)
+						.HasLength(STRING_KEY_LENGTH);
+
 			// Access caps a binary column at 255 bytes, so it rejects the column itself ("Size of field
 			// 'CredentialId' is too long"); Informix accepts BYTE but cannot index a blob ("-103 illegal key
 			// descriptor"). Neither can carry a 1024-byte key, so on those two the table is emitted without the
@@ -376,14 +382,7 @@ namespace LinqToDB.Identity
 		}
 
 		public static void SetupIdentityUserPasskey(FluentMappingBuilder mappings)
-		{
-			SetupIdentityUserPasskey<string>(mappings);
-
-			// add length
-			mappings.Entity<IdentityUserPasskey<string>>()
-				.Property(e => e.UserId)
-					.HasLength(STRING_KEY_LENGTH);
-		}
+			=> SetupIdentityUserPasskey<string>(mappings);
 
 		[UnconditionalSuppressMessage("Trimming", "IL2026", Justification = "Passkey data is a flat DTO serialized with reflection-based JSON; passkey storage is not supported in trimmed/AOT apps.")]
 		[UnconditionalSuppressMessage("AOT",      "IL3050", Justification = "See IL2026.")]
