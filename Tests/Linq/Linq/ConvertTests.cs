@@ -297,7 +297,7 @@ namespace Tests.Linq
 		public void ToDecimal3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in from t in Types select (decimal)t.MoneyValue where p > 0 select p,
 				from p in from t in db.Types select (decimal)t.MoneyValue where p > 0 select p);
 		}

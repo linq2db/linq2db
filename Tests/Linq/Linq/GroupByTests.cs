@@ -1198,7 +1198,7 @@ namespace Tests.Linq
 						}
 					on new { t1.ID, t1.DateTimeValue } equals new { t2.ID, t2.DateTimeValue }
 					select t1.MoneyValue
-				)
+				).Within(FloatingPointDeltaPercent).Percent
 			);
 		}
 

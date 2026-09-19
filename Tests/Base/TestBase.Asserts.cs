@@ -55,18 +55,17 @@ namespace Tests
 			=> AreEqual(t => t, expected, result, new DeltaComparer<T>(delta));
 
 		/// <summary>
-		/// Default <b>relative</b> tolerance for <see cref="AreEqualWithinDelta{T}"/>. Four orders of magnitude
-		/// above the conversion noise (|value| * 2^-53, i.e. ~1.1e-16 relative) and far below any difference
-		/// these tests assert - the tightest is five decimal places on values of order 10.
+		/// Default <b>relative</b> tolerance for <see cref="AreEqualWithinDelta{T}"/>. See
+		/// <see cref="FloatingPoint.Delta"/>, which <see cref="LinqDataTypes"/> equality shares.
 		/// </summary>
-		protected const decimal FloatingPointDelta = 0.000000000001m;
+		protected const decimal FloatingPointDelta = FloatingPoint.Delta;
 
 		/// <summary>
 		/// <see cref="FloatingPointDelta"/> for NUnit's <c>Within(...).Percent</c>, which takes a percentage
 		/// rather than a ratio. Use it where the comparison is an <c>Assert.That</c> rather than
 		/// <see cref="AreEqualWithinDelta{T}"/>.
 		/// </summary>
-		protected const double FloatingPointDeltaPercent = 0.0000000001d;
+		protected const double FloatingPointDeltaPercent = FloatingPoint.DeltaPercent;
 
 		sealed class DeltaComparer<T>(decimal delta) : IEqualityComparer<T>
 		{

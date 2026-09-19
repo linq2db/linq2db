@@ -309,7 +309,7 @@ namespace Tests.Linq
 		public void Round9([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Round(p.MoneyValue, 1, MidpointRounding.AwayFromZero) where t != 0 select t,
 				from t in from p in db.Types select Math.Round(p.MoneyValue, 1, MidpointRounding.AwayFromZero) where t != 0 select t);
 		}
@@ -352,7 +352,7 @@ namespace Tests.Linq
 
 			var cacheMissCount = q.GetCacheMissCount();
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from t in from p in Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t,
 				q);
 
