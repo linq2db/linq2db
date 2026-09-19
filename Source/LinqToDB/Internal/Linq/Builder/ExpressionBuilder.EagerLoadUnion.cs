@@ -601,7 +601,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			int AllocateSlot(int branchIndex, Type colType, DbDataType dbType, IValueConverter? converter, int[] currentSlotMap, int columnsBuiltSoFar)
 			{
-				for (int s = 0; s < slotOwners.Count; s++)
+				nextSlot: for (int s = 0; s < slotOwners.Count; s++)
 				{
 					if (slotOwners[s] == branchIndex)
 						continue;
@@ -615,18 +615,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!ReferenceEquals(slotConverters[s], converter))
 						continue;
 
-					var alreadyUsed = false;
 					for (int pc = 0; pc < columnsBuiltSoFar; pc++)
 					{
 						if (currentSlotMap[pc] == s + dataSlotOffset)
-						{
-							alreadyUsed = true;
-							break;
-						}
+							continue nextSlot;
 					}
-
-					if (alreadyUsed)
-						continue;
 
 					slotOwners[s] = -1; // Mark as shared (used by multiple branches)
 					return s + dataSlotOffset;
