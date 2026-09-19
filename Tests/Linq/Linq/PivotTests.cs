@@ -392,6 +392,40 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table]
+		sealed class AliasedQuarterly
+		{
+			[Column]            public int      Id { get; set; }
+			[Column("Q_ONE")]   public decimal? Q1 { get; set; }
+			[Column("Q_TWO")]   public decimal? Q2 { get; set; }
+
+			public static readonly AliasedQuarterly[] Data =
+			{
+				new() { Id = 1, Q1 = 10m, Q2 = 20m },
+			};
+		}
+
+		/// <summary>
+		/// The name column carries the physical column name on every provider. Native UNPIVOT takes it from the
+		/// database, so the portable lowering has to emit the same string - emitting the CLR member name made
+		/// the identical query return Q1/Q2 where it lowers and Q_ONE/Q_TWO where it does not.
+		/// </summary>
+		[Test]
+		public void UnpivotNameColumnUsesPhysicalName([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(AliasedQuarterly.Data);
+
+			var result = t
+				.Unpivot((row, name, value) => new { row.Id, Name = name, Value = value }, x => x.Q1, x => x.Q2)
+				.OrderBy(r => r.Name)
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Name.ShouldBe("Q_ONE");
+			result[1].Name.ShouldBe("Q_TWO");
+		}
+
 		/// <summary>
 		/// The multi-value overload used to pass its groups as a single array constant, which the query cache
 		/// compares by reference - so every execution rebuilt the query. The groups now travel as a

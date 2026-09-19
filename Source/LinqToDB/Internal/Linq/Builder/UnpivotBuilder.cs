@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return native.Value;
 			}
 
-			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, BuildLoweredExpression(info))));
+			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, BuildLoweredExpression(info, builder.MappingSchema))));
 		}
 
 		#region Multi-value
@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region Portable lowering
 
-		static Expression BuildLoweredExpression(UnpivotInfo info)
+		static Expression BuildLoweredExpression(UnpivotInfo info, MappingSchema mappingSchema)
 		{
 			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(info.SourceType, info.ResultType);
 			var whereMethod  = Methods.Queryable.Where .MakeGenericMethod(info.SourceType);
@@ -272,7 +272,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var column in info.Columns)
 			{
-				var name     = GetColumnName(column);
+				var name     = GetPhysicalColumnName(column, info.SourceType, mappingSchema);
 				var rowParam = Expression.Parameter(info.SourceType, "row");
 
 				var projectionBody   = info.ResultSelector.GetBody(rowParam, Expression.Constant(name), column.GetBody(rowParam));
@@ -298,6 +298,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		#endregion
+
+		// Native UNPIVOT reports the physical column name, so the lowering has to emit the same string or the
+		// query returns different name values depending on the provider.
+		static string GetPhysicalColumnName(LambdaExpression column, Type sourceType, MappingSchema mappingSchema)
+		{
+			var memberName = GetColumnName(column);
+
+			return mappingSchema.GetEntityDescriptor(sourceType)[memberName]?.ColumnName ?? memberName;
+		}
 
 		static string GetColumnName(LambdaExpression column)
 		{
