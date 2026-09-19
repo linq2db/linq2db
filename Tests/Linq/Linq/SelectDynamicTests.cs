@@ -69,6 +69,39 @@ namespace Tests.Linq
 			result[1].Values!["Eur"].ShouldBe(40m);
 		}
 
+		/// <summary>
+		/// <see cref="PivotRow{TKey}"/> is the zero-ceremony result type: a typed key plus name-addressed cells,
+		/// with no DTO to declare. It has to work through the same store machinery as a user-supplied type.
+		/// </summary>
+		[Test]
+		public void ProjectsIntoBuiltInPivotRow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(_data);
+
+			var result = t
+				.SelectDynamic(
+					x => new PivotRow<int> { Key = x.Id },
+					new[] { "Usd", "Eur" },
+					(x, n) => Sql.Property<decimal>(x, n))
+				.ToList()
+				.OrderBy(r => r.Key)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe(1);
+			result[0]["Usd"].ShouldBe(10.5m);
+			result[0].Get<decimal>("Eur").ShouldBe(20.25m);
+
+			result[1].Key.ShouldBe(2);
+			result[1].Get<decimal>("Usd").ShouldBe(30m);
+
+			// A name that was never generated reads as absent rather than throwing.
+			result[0]["Gbp"].ShouldBeNull();
+			result[0].Get<decimal>("Gbp").ShouldBe(0m);
+		}
+
 		[Test]
 		public void ResultWithoutStoreThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

@@ -89,15 +89,27 @@ namespace LinqToDB
 
 			var currentSource = source.ProcessIQueryable();
 
+			return BuildSelectDynamic<TSource, TResult>(currentSource, staticSelector, names, cells);
+		}
+
+		// Shared tail for every operator that projects a runtime column set: emits the SelectDynamicCore marker.
+		// Cells are carried as LambdaExpression so each one keeps its own result type - a dynamic pivot mixes
+		// them (Sum yields decimal?, Count yields int) and the builder reads the type off each lambda's body.
+		internal static IQueryable<TResult> BuildSelectDynamic<TSource, TResult>(
+			IQueryable<TSource>                source,
+			Expression<Func<TSource, TResult>> staticSelector,
+			string[]                           names,
+			Expression[]                       cells)
+		{
 			var expr = Expression.Call(
 				null,
-				_selectDynamicCoreMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TCell), typeof(TResult)),
-				currentSource.Expression,
+				_selectDynamicCoreMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TResult)),
+				source.Expression,
 				Expression.Quote(staticSelector),
 				Expression.Constant(names),
-				Expression.NewArrayInit(typeof(Expression<Func<TSource, TCell>>), cells));
+				Expression.NewArrayInit(typeof(LambdaExpression), cells));
 
-			return currentSource.Provider.CreateQuery<TResult>(expr);
+			return source.Provider.CreateQuery<TResult>(expr);
 		}
 
 		static readonly MethodInfo _selectDynamicCoreMethodInfo =
@@ -106,11 +118,11 @@ namespace LinqToDB
 		// Query marker for SelectDynamic - never executed; recognized by SelectDynamicBuilder.
 		// The template is already instantiated per key by the time this call is built, so the tree carries only
 		// ordinary single-parameter lambdas plus the name array.
-		internal static IQueryable<TResult> SelectDynamicCore<TSource, TCell, TResult>(
-			IQueryable<TSource>                 source,
-			Expression<Func<TSource, TResult>>  staticSelector,
-			[SqlQueryDependent] string[]        names,
-			Expression<Func<TSource, TCell>>[]  cells)
+		internal static IQueryable<TResult> SelectDynamicCore<TSource, TResult>(
+			IQueryable<TSource>                source,
+			Expression<Func<TSource, TResult>> staticSelector,
+			[SqlQueryDependent] string[]       names,
+			LambdaExpression[]                 cells)
 			=> throw new InvalidOperationException("SelectDynamicCore is a query marker and must not be invoked directly.");
 	}
 }

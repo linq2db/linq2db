@@ -1,0 +1,205 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
+
+using JetBrains.Annotations;
+
+using LinqToDB.Expressions;
+using LinqToDB.Internal.Linq;
+
+namespace LinqToDB
+{
+	public static partial class LinqExtensions
+	{
+		/// <summary>
+		/// Rotates a runtime set of values of the <paramref name="forColumn"/> column into columns, producing one
+		/// generated column per (cell template, value) pair in <typeparamref name="TResult"/>'s
+		/// <see cref="Mapping.DynamicColumnsStoreAttribute"/> member. The pivoted values are decided when the
+		/// query is built, while the key, the FOR column and every cell expression stay statically typed.
+		/// </summary>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TKey">Grouping key type.</typeparam>
+		/// <typeparam name="TFor">Type of the pivoted column.</typeparam>
+		/// <typeparam name="TResult">Result record type; must expose a dynamic-columns store.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="keySelector">Grouping key.</param>
+		/// <param name="forColumn">The column whose values become columns.</param>
+		/// <param name="forValues">The runtime set of pivoted values.</param>
+		/// <param name="staticSelector">Projection for the statically known members, over the grouping.</param>
+		/// <param name="cells">Cell templates. More than one requires each to supply a name factory.</param>
+		/// <returns>Query with one row per key and one generated column per (cell, value) pair.</returns>
+		[Pure, LinqTunnel]
+		public static IQueryable<TResult> Pivot<TSource, TKey, TFor, TResult>(
+			this            IQueryable<TSource>                                 source,
+			[InstantHandle] Expression<Func<TSource, TKey>>                     keySelector,
+			[InstantHandle] Expression<Func<TSource, TFor>>                     forColumn,
+			[InstantHandle] IEnumerable<TFor>                                   forValues,
+			[InstantHandle] Expression<Func<IGrouping<TKey, TSource>, TResult>> staticSelector,
+			[InstantHandle] params PivotCell<TSource, TFor>[]                   cells)
+		{
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(keySelector);
+			ArgumentNullException.ThrowIfNull(forColumn);
+			ArgumentNullException.ThrowIfNull(forValues);
+			ArgumentNullException.ThrowIfNull(staticSelector);
+			ArgumentNullException.ThrowIfNull(cells);
+
+			if (cells.Length == 0)
+				throw new ArgumentException("A pivot needs at least one cell template.", nameof(cells));
+
+			var values = forValues as TFor[] ?? forValues.ToArray();
+
+			var names     = new string[values.Length * cells.Length];
+			var cellExprs = new Expression[names.Length];
+			var seen      = new HashSet<string>(StringComparer.Ordinal);
+			var grouped   = source.GroupBy(keySelector);
+			var groupType = typeof(IGrouping<,>).MakeGenericType(typeof(TKey), typeof(TSource));
+
+			var k = 0;
+
+			foreach (var cell in cells)
+			{
+				if (cell.Name == null && cells.Length > 1)
+					throw new ArgumentException("A pivot with more than one cell template needs a name factory on each, so the generated columns can be told apart.", nameof(cells));
+
+				foreach (var value in values)
+				{
+					var name = cell.Name != null
+						? cell.Name(value)
+						: Convert.ToString(value, CultureInfo.InvariantCulture);
+
+					if (string.IsNullOrEmpty(name))
+						throw new ArgumentException($"Pivot value '{value}' produced an empty column name.", nameof(forValues));
+
+					if (!seen.Add(name!))
+						throw new ArgumentException($"Duplicate pivot column name '{name}'.", nameof(cells));
+
+					names[k]     = name!;
+					cellExprs[k] = Expression.Quote(BuildCell(cell, forColumn, value, groupType));
+
+					k++;
+				}
+			}
+
+			return BuildSelectDynamic(grouped, staticSelector, names, cellExprs);
+		}
+
+		/// <summary>
+		/// Rotates a runtime set of values into the cells of a <see cref="PivotRow{TKey}"/>, so no result type
+		/// has to be declared. See
+		/// <see cref="Pivot{TSource,TKey,TFor,TResult}(IQueryable{TSource},Expression{Func{TSource,TKey}},Expression{Func{TSource,TFor}},IEnumerable{TFor},Expression{Func{IGrouping{TKey,TSource},TResult}},PivotCell{TSource,TFor}[])"/>
+		/// to project static members alongside the cells.
+		/// </summary>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TKey">Grouping key type.</typeparam>
+		/// <typeparam name="TFor">Type of the pivoted column.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="keySelector">Grouping key.</param>
+		/// <param name="forColumn">The column whose values become columns.</param>
+		/// <param name="forValues">The runtime set of pivoted values.</param>
+		/// <param name="cells">Cell templates. More than one requires each to supply a name factory.</param>
+		/// <returns>Query with one <see cref="PivotRow{TKey}"/> per key.</returns>
+		[Pure, LinqTunnel]
+		public static IQueryable<PivotRow<TKey>> Pivot<TSource, TKey, TFor>(
+			this            IQueryable<TSource>                source,
+			[InstantHandle] Expression<Func<TSource, TKey>>    keySelector,
+			[InstantHandle] Expression<Func<TSource, TFor>>    forColumn,
+			[InstantHandle] IEnumerable<TFor>                  forValues,
+			[InstantHandle] params PivotCell<TSource, TFor>[]  cells)
+		{
+			var gParam = Expression.Parameter(typeof(IGrouping<TKey, TSource>), "g");
+
+			var selector = Expression.Lambda<Func<IGrouping<TKey, TSource>, PivotRow<TKey>>>(
+				Expression.MemberInit(
+					Expression.New(typeof(PivotRow<TKey>)),
+					Expression.Bind(
+						typeof(PivotRow<TKey>).GetProperty(nameof(PivotRow<>.Key))!,
+						Expression.Property(gParam, nameof(IGrouping<,>.Key)))),
+				gParam);
+
+			return Pivot(source, keySelector, forColumn, forValues, selector, cells);
+		}
+
+		// g => Aggregate(g, row => forColumn(row) == value ? (TCell?)cell(row) : null)
+		// The same conditional-aggregation shape a portable PIVOT lowers to, built per (cell, value) pair.
+		static LambdaExpression BuildCell<TSource, TFor>(PivotCell<TSource, TFor> cell, Expression<Func<TSource, TFor>> forColumn, TFor value, Type groupType)
+		{
+			var gParam    = Expression.Parameter(groupType, "g");
+			var rowParam  = Expression.Parameter(typeof(TSource), "row");
+			var predicate = Expression.Equal(forColumn.GetBody(rowParam), Expression.Constant(value, typeof(TFor)));
+
+			if (cell.Aggregate == PivotAggregate.Count)
+			{
+				var countMethod = typeof(Enumerable).GetMethods()
+					.First(m => string.Equals(m.Name, nameof(Enumerable.Count), StringComparison.Ordinal) && m.IsGenericMethodDefinition && m.GetParameters().Length == 2)
+					.MakeGenericMethod(typeof(TSource));
+
+				return Expression.Lambda(
+					Expression.Call(countMethod, gParam, Expression.Lambda(predicate, rowParam)),
+					gParam);
+			}
+
+			var valueBody   = cell.Value.GetBody(rowParam);
+			var cellType    = MakeNullable(valueBody.Type);
+			var nullableVal = valueBody.Type == cellType ? valueBody : Expression.Convert(valueBody, cellType);
+
+			var selector = Expression.Lambda(
+				Expression.Condition(predicate, nullableVal, Expression.Constant(null, cellType)),
+				rowParam);
+
+			return Expression.Lambda(
+				Expression.Call(GetAggregate(cell.Aggregate, typeof(TSource), cellType), gParam, selector),
+				gParam);
+		}
+
+		static Type MakeNullable(Type type)
+			=> type.IsValueType && Nullable.GetUnderlyingType(type) == null
+				? typeof(Nullable<>).MakeGenericType(type)
+				: type;
+
+		static MethodInfo GetAggregate(PivotAggregate aggregate, Type sourceType, Type cellType)
+		{
+			switch (aggregate)
+			{
+				case PivotAggregate.Sum:
+				case PivotAggregate.Avg:
+				{
+					// Sum and Average are overloaded per numeric type rather than generic in the result.
+					var name = aggregate == PivotAggregate.Avg ? nameof(Enumerable.Average) : nameof(Enumerable.Sum);
+
+					var method = typeof(Enumerable).GetMethods()
+						.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal)
+							&& m.IsGenericMethodDefinition
+							&& m.GetParameters().Length == 2
+							&& m.GetParameters()[1].ParameterType.IsGenericType
+							&& m.GetParameters()[1].ParameterType.GetGenericArguments()[1] == cellType);
+
+					if (method == null)
+						throw new LinqToDBException($"Pivot cannot {aggregate} a column of type '{cellType.Name}'.");
+
+					return method.MakeGenericMethod(sourceType);
+				}
+
+				case PivotAggregate.Min:
+				case PivotAggregate.Max:
+				{
+					var name = aggregate == PivotAggregate.Min ? nameof(Enumerable.Min) : nameof(Enumerable.Max);
+
+					var method = typeof(Enumerable).GetMethods()
+						.First(m => string.Equals(m.Name, name, StringComparison.Ordinal)
+							&& m.IsGenericMethodDefinition
+							&& m.GetGenericArguments().Length == 2
+							&& m.GetParameters().Length == 2);
+
+					return method.MakeGenericMethod(sourceType, cellType);
+				}
+
+				default:
+					throw new LinqToDBException($"Unsupported pivot aggregate '{aggregate}'.");
+			}
+		}
+	}
+}

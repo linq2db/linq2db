@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var staticSelector = methodCall.Arguments[1].UnwrapLambda();
 			var names          = methodCall.Arguments[2].EvaluateExpression<string[]>()!;
 			var cellArray      = (NewArrayExpression)methodCall.Arguments[3];
-			var resultType     = methodCall.Method.GetGenericArguments()[2];
+			var resultType     = methodCall.Method.GetGenericArguments()[1];
 
 			var entityDescriptor = builder.MappingSchema.GetEntityDescriptor(resultType);
 
