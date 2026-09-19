@@ -177,10 +177,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			switch (function)
 			{
 				case "Sum":
-				case "Average":
+				case "Avg":
 				{
+					// The marker is named after the SQL function; the Enumerable counterpart is Average.
+					var methodName = string.Equals(function, "Avg", StringComparison.Ordinal) ? nameof(Enumerable.Average) : function;
+
 					var method = typeof(Enumerable).GetMethods()
-						.First(m => string.Equals(m.Name, function, StringComparison.Ordinal)
+						.First(m => string.Equals(m.Name, methodName, StringComparison.Ordinal)
 							&& m.IsGenericMethodDefinition
 							&& m.GetParameters().Length == 2
 							&& m.GetParameters()[1].ParameterType.IsGenericType

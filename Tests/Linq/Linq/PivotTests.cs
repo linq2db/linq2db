@@ -110,6 +110,14 @@ namespace Tests.Linq
 				new() { Category = "B", Year = 2000, Amount = 5m  },
 				new() { Category = "B", Year = 2010, Amount = 15m },
 			};
+
+			// Two rows per cell, so AVG / MIN / MAX are distinguishable from SUM.
+			public static readonly CategorySales[] MultiRowData =
+			{
+				new() { Category = "A", Year = 2000, Amount = 10m },
+				new() { Category = "A", Year = 2000, Amount = 30m },
+				new() { Category = "B", Year = 2000, Amount = 5m  },
+			};
 		}
 
 		[Test]
@@ -167,6 +175,46 @@ namespace Tests.Linq
 			result[0].Category.ShouldBe("A");
 			result[0].Sum2000.ShouldBe(10m);
 			result[0].Cnt2000.ShouldBe(1);
+		}
+
+		[Test]
+		public void PivotAvgMinMax([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
+
+			// Three aggregates - always the conditional-aggregation lowering.
+			var lowered = t
+				.Pivot(p => new
+				{
+					p.Key.Category,
+					Avg2000 = p.Avg(x => x.Amount, x => x.Year, 2000),
+					Min2000 = p.Min(x => x.Amount, x => x.Year, 2000),
+					Max2000 = p.Max(x => x.Amount, x => x.Year, 2000),
+				})
+				.OrderBy(r => r.Category)
+				.ToArray();
+
+			lowered.Length.ShouldBe(2);
+			lowered[0].Category.ShouldBe("A");
+			lowered[0].Avg2000.ShouldBe(20d);
+			lowered[0].Min2000.ShouldBe(10m);
+			lowered[0].Max2000.ShouldBe(30m);
+			lowered[1].Category.ShouldBe("B");
+			lowered[1].Avg2000.ShouldBe(5d);
+
+			// Single aggregate over a plain table - native PIVOT where the provider supports it.
+			var single = t
+				.Pivot(p => new
+				{
+					p.Key.Category,
+					Avg2000 = p.Avg(x => x.Amount, x => x.Year, 2000),
+				})
+				.OrderBy(r => r.Category)
+				.ToArray();
+
+			single[0].Avg2000.ShouldBe(20d);
+			single[1].Avg2000.ShouldBe(5d);
 		}
 
 		[Table]
