@@ -136,5 +136,11 @@
 		SqlIntervalDifference,
 		SqlIntervalPart,
 		SqlTemporalArithmetic,
+
+		// TODO: appended here for v6.x LinqService wire-compat (enum ordinals are serialized as int) —
+		// inserting mid-enum shifts later members' ordinals and breaks the LinqService wire.
+		// In v7 move next to SqlTableLikeSource where they belong logically.
+		SqlPivotTable,
+		SqlUnpivotTable,
 	}
 }

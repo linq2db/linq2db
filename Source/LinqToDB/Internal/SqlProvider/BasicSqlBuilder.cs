@@ -2090,6 +2090,18 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 				}
 
+				case QueryElementType.SqlUnpivotTable:
+				{
+					BuildUnpivotTable((SqlUnpivotTable)table);
+					break;
+				}
+
+				case QueryElementType.SqlPivotTable:
+				{
+					BuildPivotTable((SqlPivotTable)table);
+					break;
+				}
+
 				default:
 					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
@@ -2097,6 +2109,142 @@ namespace LinqToDB.Internal.SqlProvider
 			TablePath = tablePath;
 
 			return buildAlias;
+		}
+
+		protected virtual void BuildUnpivotTable(SqlUnpivotTable unpivot)
+		{
+			BuildPhysicalTable(unpivot.PivotSource, null);
+
+			StringBuilder.Append(" UNPIVOT ");
+
+			if (unpivot.IncludeNulls)
+				StringBuilder.Append("INCLUDE NULLS ");
+
+			var multiValue = unpivot.ValueFields.Count > 1;
+
+			StringBuilder.Append('(');
+
+			// Multi-value: the value columns are a parenthesized tuple, e.g. (M1, M2, M3).
+			if (multiValue)
+				StringBuilder.Append('(');
+
+			for (var i = 0; i < unpivot.ValueFields.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(", ");
+				BuildExpression(unpivot.ValueFields[i], buildTableName: false, checkParentheses: false);
+			}
+
+			if (multiValue)
+				StringBuilder.Append(')');
+
+			StringBuilder.Append(" FOR ");
+			BuildExpression(unpivot.NameField, buildTableName: false, checkParentheses: false);
+			StringBuilder.Append(" IN (");
+
+			for (var i = 0; i < unpivot.Items.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(", ");
+
+				var item = unpivot.Items[i];
+
+				// Multi-value: each group is a parenthesized tuple with an explicit name label, e.g. (Jan, Feb, Mar) AS 'Q1'.
+				if (multiValue)
+					StringBuilder.Append('(');
+
+				for (var j = 0; j < item.Columns.Count; j++)
+				{
+					if (j > 0)
+						StringBuilder.Append(", ");
+					BuildExpression(item.Columns[j], buildTableName: false, checkParentheses: false);
+				}
+
+				if (multiValue)
+				{
+					StringBuilder.Append(") AS ");
+					BuildExpression(new SqlValue(item.Label), buildTableName: false, checkParentheses: false);
+				}
+			}
+
+			StringBuilder.Append("))");
+		}
+
+		protected virtual void BuildPivotTable(SqlPivotTable pivot)
+		{
+			BuildPhysicalTable(pivot.PivotSource, null);
+
+			StringBuilder.Append(" PIVOT (");
+
+			for (var i = 0; i < pivot.Aggregates.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(", ");
+
+				var aggregate = pivot.Aggregates[i];
+				StringBuilder.Append(aggregate.AggregationName).Append('(');
+				BuildExpression(aggregate.Value, buildTableName: false, checkParentheses: false);
+				StringBuilder.Append(')');
+			}
+
+			var forColumns = pivot.Aggregates[0].ForColumns;
+			var composite  = forColumns.Count > 1;
+
+			StringBuilder.Append(" FOR ");
+
+			if (composite)
+				StringBuilder.Append('(');
+
+			for (var i = 0; i < forColumns.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(", ");
+				BuildExpression(forColumns[i], buildTableName: false, checkParentheses: false);
+			}
+
+			if (composite)
+				StringBuilder.Append(')');
+
+			StringBuilder.Append(" IN (");
+
+			var values = pivot.Aggregates[0].Values;
+			for (var i = 0; i < values.Count; i++)
+			{
+				if (i > 0)
+					StringBuilder.Append(", ");
+
+				var value     = values[i];
+				var forValues = value.ForValues;
+
+				// Composite FOR emits a value tuple with an explicit alias: (v1, v2) AS name.
+				if (composite)
+					StringBuilder.Append('(');
+
+				for (var j = 0; j < forValues.Count; j++)
+				{
+					if (j > 0)
+						StringBuilder.Append(", ");
+					BuildPivotInValue(forValues[j]);
+				}
+
+				if (composite)
+				{
+					StringBuilder.Append(") AS ");
+					BuildExpression(value.OutputField, buildTableName: false, checkParentheses: false);
+				}
+			}
+
+			StringBuilder.Append("))");
+		}
+
+		/// <summary>
+		/// Renders one value of a native <c>PIVOT (… FOR … IN (…))</c> list. The base emits the value as a
+		/// literal (DuckDB / Oracle); providers that require the values as quoted identifiers (SQL Server:
+		/// <c>IN ([2000], [2010])</c>) override this.
+		/// </summary>
+		protected virtual void BuildPivotInValue(ISqlExpression value)
+		{
+			BuildExpression(value, buildTableName: false, checkParentheses: false);
 		}
 
 		protected virtual void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)

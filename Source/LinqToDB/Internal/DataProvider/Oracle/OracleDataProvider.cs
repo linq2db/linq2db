@@ -57,6 +57,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;
 
+			// Oracle 11g+ (the minimum modelled version) supports native PIVOT/UNPIVOT including composite-FOR
+			// and multi-value unpivot.
+			SqlProviderFlags.IsPivotSupported             = true;
+			SqlProviderFlags.IsMultiColumnPivotSupported  = true;
+			SqlProviderFlags.IsUnpivotSupported           = true;
+			SqlProviderFlags.IsMultiValueUnpivotSupported = true;
+
 			if (version >= OracleVersion.v12)
 				SqlProviderFlags.IsApplyJoinSupported          = true;
 
