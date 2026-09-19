@@ -404,10 +404,10 @@ namespace LinqToDB.Identity
 		}
 
 		/// <inheritdoc cref="AddUserTokenAsync(TUserToken)"/>
-		protected override async Task RemoveUserTokenAsync(TUserToken token)
+		protected override Task RemoveUserTokenAsync(TUserToken token)
 		{
 			// wut? no cancellation token parameter?
-			await Context.DeleteAsync(token, default).ConfigureAwait(false);
+			return Context.DeleteAsync(token, default);
 		}
 
 		/// <inheritdoc cref="FindUserAsync(TKey, CancellationToken)"/>
@@ -449,7 +449,15 @@ namespace LinqToDB.Identity
 			if (existing != null)
 			{
 				UpdateFromUserPasskeyInfo(existing, passkey);
-				await Context.UpdateAsync(existing, token: cancellationToken).ConfigureAwait(false);
+
+				// Keyed on the predicate rather than on the mapped PK: Access and Informix cannot index a
+				// 1024-byte CredentialId, so the column is not a key there and Context.UpdateAsync would have no
+				// fields left to set. Data is the only column UpdateFromUserPasskeyInfo can change.
+				await UserPasskeys
+					.Where(p => p.CredentialId == passkey.CredentialId)
+					.Set(p => p.Data, existing.Data)
+					.UpdateAsync(cancellationToken)
+					.ConfigureAwait(false);
 			}
 			else
 			{

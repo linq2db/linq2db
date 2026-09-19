@@ -40,6 +40,25 @@ namespace LinqToDB.Identity
 			(ProviderName.Firebird3,  DataType.DateTime2),
 		];
 
+		// The DataType pin above only fixes the DDL; the value needs converting too. A column that cannot hold an
+		// offset otherwise round-trips the value through the machine's *local* offset (Firebird returns
+		// 13:52+02:00 for a 13:52Z write), and Sybase and SAP HANA reject the DateTimeOffset parameter outright
+		// ("Specified cast is not valid. From: DateTimeOffset to: DateTime"). Store UTC and read back at zero
+		// offset - the only answer that holds outside a UTC machine.
+		private static ValueConverterAttribute LockoutEndAsUtc(string configuration) => new ()
+		{
+			Configuration  = configuration,
+			ValueConverter = new ValueConverter<DateTimeOffset?, DateTime?>(
+				v => v == null ? null : v.Value.UtcDateTime,
+				v => v == null ? null : new DateTimeOffset(DateTime.SpecifyKind(v.Value, DateTimeKind.Utc)),
+				handlesNulls: true),
+		};
+
+		// Access caps a text column at 255 characters, so the 256-char name/email columns fail CREATE TABLE
+		// outright ("Size of field 'UserName' is too long"). DbType rather than a scoped ColumnAttribute for
+		// the same reason as the LockoutEnd pins - the latter would replace the unscoped one wholesale.
+		private static DataTypeAttribute AccessTextLimit() => new (DataType.NVarChar, "NVarChar(255)") { Configuration = ProviderName.Access };
+
 		public static void SetupIdentityUserClaim<TKey, TUserClaim>(FluentMappingBuilder mappings)
 			where TKey       : IEquatable<TKey>
 			where TUserClaim : IdentityUserClaim<TKey>
@@ -134,8 +153,10 @@ namespace LinqToDB.Identity
 			id
 				.Property(e => e.Name)
 					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
 				.Property(e => e.NormalizedName)
 					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
 				.Property(e => e.ConcurrencyStamp)
 					.HasLength(STAMP_LENGTH)
 					.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
@@ -168,12 +189,16 @@ namespace LinqToDB.Identity
 			id
 				.Property(e => e.UserName)
 					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
 				.Property(e => e.NormalizedUserName)
 					.HasLength(NAME_LENGTH)
+					.HasAttribute(AccessTextLimit())
 				.Property(e => e.Email)
 					.HasLength(EMAIL_LENGTH)
+					.HasAttribute(AccessTextLimit())
 				.Property(e => e.NormalizedEmail)
 					.HasLength(EMAIL_LENGTH)
+					.HasAttribute(AccessTextLimit())
 				.Property(e => e.EmailConfirmed)
 
 				// length for those fields not set by ef.core implementation
@@ -200,7 +225,8 @@ namespace LinqToDB.Identity
 			foreach (var (configuration, dataType) in _lockoutEndDataTypes)
 				mappings.Entity<TUser>()
 					.Property(e => e.LockoutEnd)
-						.HasAttribute(new DataTypeAttribute(dataType) { Configuration = configuration });
+						.HasAttribute(new DataTypeAttribute(dataType) { Configuration = configuration })
+						.HasAttribute(LockoutEndAsUtc(configuration));
 		}
 
 		public static void SetupIdentityUser<TUser>(FluentMappingBuilder mappings)
@@ -245,14 +271,19 @@ namespace LinqToDB.Identity
 					.HasLength(STRING_KEY_LENGTH);
 		}
 
-		public static void SetupIdentityUserToken<TKey, TUserToken>(FluentMappingBuilder mappings)
+		public static void SetupIdentityUserToken<TKey, TUserToken>(FluentMappingBuilder mappings, int? userIdLength = null)
 			where TKey       : IEquatable<TKey>
 			where TUserToken : IdentityUserToken<TKey>
 		{
-			mappings.Entity<TUserToken>().HasTableName("AspNetUserTokens")
+			var userId = mappings.Entity<TUserToken>().HasTableName("AspNetUserTokens")
 				.Property(e => e.UserId)
 					.IsPrimaryKey()
-					.IsNullable(false)
+					.IsNullable(false);
+
+			if (userIdLength != null)
+				userId = userId.HasLength(userIdLength.Value);
+
+			userId
 				.Property(e => e.LoginProvider)
 					.IsPrimaryKey()
 					.IsNullable(false)
@@ -264,17 +295,34 @@ namespace LinqToDB.Identity
 				.Property(e => e.Value)
 					//.HasLength(???)
 				;
+
+			// Firebird 2.5's index key is narrower than this three-column PK (36 + 128 + 128 characters, rendered
+			// CHARACTER SET UNICODE_FSS at 3 bytes each), so CREATE TABLE fails outright with "cannot create index
+			// PK_AspNetUserTokens". A table without the constraint beats a table that cannot be created: a
+			// configuration-scoped ColumnAttribute replaces the unscoped one wholesale, which is what drops the key.
+			// Consequence on that one dialect: no uniqueness and no index on (UserId, LoginProvider, Name) - the
+			// engine cannot index them at any width that fits. SetTokenAsync's find-then-insert still serialises
+			// normal use, and every token read is a predicate query rather than a key lookup.
+			var noKey = mappings.Entity<TUserToken>();
+
+			// IsPrimaryKey = false rather than merely omitted: fluent .IsPrimaryKey() registers a separate
+			// PrimaryKeyAttribute, which ColumnDescriptor consults whenever the column attribute left the flag
+			// unset - so the scoped attribute has to answer the question, not decline it.
+			var userIdColumn = new ColumnAttribute { Configuration = ProviderName.Firebird25, CanBeNull = false, IsPrimaryKey = false };
+
+			if (userIdLength != null)
+				userIdColumn.Length = userIdLength.Value;
+
+			noKey.Property(e => e.UserId)       .HasAttribute(userIdColumn)
+				 .Property(e => e.LoginProvider).HasAttribute(new ColumnAttribute { Configuration = ProviderName.Firebird25, CanBeNull = false, Length = KEYS_LENGTH, IsPrimaryKey = false })
+				 .Property(e => e.Name)         .HasAttribute(new ColumnAttribute { Configuration = ProviderName.Firebird25, CanBeNull = false, Length = KEYS_LENGTH, IsPrimaryKey = false })
+				 ;
 		}
 
 		public static void SetupIdentityUserToken<TUserToken>(FluentMappingBuilder mappings)
 			where TUserToken : IdentityUserToken<string>
 		{
-			SetupIdentityUserToken<string, TUserToken>(mappings);
-
-			// add length
-			mappings.Entity<TUserToken>()
-				.Property(e => e.UserId)
-					.HasLength(STRING_KEY_LENGTH);
+			SetupIdentityUserToken<string, TUserToken>(mappings, STRING_KEY_LENGTH);
 		}
 
 #if NET10_0_OR_GREATER
@@ -284,6 +332,16 @@ namespace LinqToDB.Identity
 		// CREATE TABLE and rejects only an inserted key > 900 bytes - identical to EF Core, and real credential
 		// ids are well under 900 bytes.
 		private const int CREDENTIAL_ID_LENGTH = 1024;
+
+		// Access needs the type changed too: VarBinary caps at 255 bytes there, LongBinary is the unbounded one.
+		// Informix (BYTE) and Firebird 2.5 (VARCHAR(1024) CHARACTER SET OCTETS) both hold the value fine - for
+		// them only the index was ever the problem. Firebird 3+ indexes a 1024-byte key, so it keeps its PK.
+		private static readonly (string Configuration, string? DbType)[] _passkeyIdWithoutPrimaryKey =
+		[
+			(ProviderName.Access,     "LongBinary"),
+			(ProviderName.Informix,   null),
+			(ProviderName.Firebird25, null),
+		];
 
 		public static void SetupIdentityUserPasskey<TKey>(FluentMappingBuilder mappings)
 			where TKey : IEquatable<TKey>
@@ -305,6 +363,16 @@ namespace LinqToDB.Identity
 					// for large passkey JSON - a provider-specific follow-up (passkeys are .NET 10 only).
 					.HasDataType(DataType.NVarChar)
 				;
+
+			// Access caps a binary column at 255 bytes, so it rejects the column itself ("Size of field
+			// 'CredentialId' is too long"); Informix accepts BYTE but cannot index a blob ("-103 illegal key
+			// descriptor"). Neither can carry a 1024-byte key, so on those two the table is emitted without the
+			// constraint - which beats not being able to create it at all. Uniqueness then rests on
+			// AddOrUpdatePasskeyAsync's find-then-insert rather than on the database.
+			foreach (var (configuration, dbType) in _passkeyIdWithoutPrimaryKey)
+				mappings.Entity<IdentityUserPasskey<TKey>>()
+					.Property(e => e.CredentialId)
+						.HasAttribute(new ColumnAttribute { Configuration = configuration, CanBeNull = false, DbType = dbType, Length = CREDENTIAL_ID_LENGTH, IsPrimaryKey = false });
 		}
 
 		public static void SetupIdentityUserPasskey(FluentMappingBuilder mappings)
