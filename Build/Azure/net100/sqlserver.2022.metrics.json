@@ -1,9 +1,0 @@
-﻿{
-	"NET100.Azure": {
-		"StoreMetrics": true,
-		"Providers": [
-			"SqlServer.2022",
-			"SqlServer.2022.MS"
-		]
-	}
-}

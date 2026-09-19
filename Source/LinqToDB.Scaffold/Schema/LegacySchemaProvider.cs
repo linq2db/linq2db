@@ -131,9 +131,9 @@ namespace LinqToDB.Schema
 			// API debug asserts for unexpected/unsupported inputs
 			if (proc.IsResultDynamic)
 				throw new InvalidOperationException($"IsResultDynamic set for function {dbName}");
-			if (proc.IsLoaded && !(!proc.IsFunction || proc.IsTableFunction))
+			if (proc.IsLoaded && proc.IsFunction && !proc.IsTableFunction)
 				throw new InvalidOperationException($"IsLoaded set for scalar/aggregate function {dbName}");
-			if (proc.ResultTable != null && !(!proc.IsFunction || proc.IsTableFunction))
+			if (proc.ResultTable != null && proc.IsFunction && !proc.IsTableFunction)
 				throw new InvalidOperationException($"ResultTable set for scalar/aggregate function {dbName}");
 			if (proc.ResultTable != null && !proc.IsLoaded)
 				throw new InvalidOperationException($"ResultTable specified but IsLoaded not set for function {dbName}");

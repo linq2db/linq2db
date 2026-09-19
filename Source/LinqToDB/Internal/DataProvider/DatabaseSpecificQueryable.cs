@@ -11,8 +11,10 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public abstract class DatabaseSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : IExpressionQuery<TSource>
+	public abstract class DatabaseSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : IExpressionQuery<TSource>, IQueryableWrapper<TSource>
 	{
+		IQueryable<TSource> IQueryableWrapper<TSource>.WrappedQuery => query;
+
 		public IEnumerator<TSource> GetEnumerator() 
 			=> query.GetEnumerator();
 

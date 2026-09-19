@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -41,6 +41,11 @@ namespace Tests.Linq
 			{
 				return (m, dc) => dc.GetTable<DetailClass>().Where(d => d.MasterId == m.Id1 && d.MasterId == m.Id2 && d.DetailId % 2 == 0);
 			}
+
+			// Value equality by key so the in-memory AssertQuery reference groups by master the same way
+			// SQL does (by key), rather than by object reference.
+			public override bool Equals(object? obj) => obj is MasterClass other && other.Id1 == Id1 && other.Id2 == Id2;
+			public override int GetHashCode()         => (Id1, Id2).GetHashCode();
 		}
 
 		[Table]
@@ -67,6 +72,9 @@ namespace Tests.Linq
 			[Column][PrimaryKey] public int DetailId { get; set; }
 			[Column] public int? MasterId { get; set; }
 			[Column] public string? DetailValue { get; set; }
+
+			[Association(ThisKey = nameof(MasterId), OtherKey = nameof(MasterClass.Id1))]
+			public MasterClass? Master { get; set; }
 
 			[Association(ThisKey = nameof(DetailId), OtherKey = nameof(SubDetailClass.DetailId))]
 			public SubDetailClass[] SubDetails { get; set; } = null!;
@@ -563,6 +571,48 @@ namespace Tests.Linq
 			var result = masterQuery.ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624")]
+		public void TestGroupByEntityKeyEagerLoad([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+
+			var query =
+				from d in detail.LoadWith(x => x.Master!.Details)
+				group d by d.Master into g
+				select new
+				{
+					g.Key!.Id1,
+					Details = g.Key!.Details.Select(x => x.DetailId).OrderBy(x => x).ToList()
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624 - anonymous (non-scalar) composite key, member-root column read off g.Key")]
+		public void TestGroupByCompositeKeyEagerLoad([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using var db = GetDataContext(context);
+			using var master = db.CreateLocalTable(masterRecords);
+			using var detail = db.CreateLocalTable(detailRecords);
+
+			var query =
+				from d in detail
+				group d by new { d.MasterId } into g
+				select new
+				{
+					g.Key.MasterId,
+					Details = detail.Where(x => x.MasterId == g.Key.MasterId).Select(x => x.DetailId).OrderBy(x => x).ToList()
+				};
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void TestQueryableAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -704,7 +754,6 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void TestJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -770,7 +819,7 @@ namespace Tests.Linq
 			AreEqual(expected, result, ComparerBuilder.GetEqualityComparer(result));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
+		[ActiveIssue(3619, Configuration = TestProvName.AllClickHouse, ErrorMessage = "Expected Was")]
 		[Test]
 		public void TestGroupJoin([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
@@ -1732,7 +1781,8 @@ namespace Tests.Linq
 			[Column    ] public int AssociationKey { get; set; }
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(3806, ErrorMessage = "Assert.That(queries.Queries, Has.Count.EqualTo(1))",
+			Details = "the association is fetched as a second query instead of an inner join - #3806's subject.")]
 		[Test]
 		public void Issue3806Test([DataSources(false)] string context)
 		{
@@ -3125,7 +3175,10 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4585
-		[ActiveIssue]
+		// As ComplexTests.Issue4139Test: the fragment starts after the per-run TableContext id.
+		[ActiveIssue(4585, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Issue4585Table).Nested' is not an association.",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The fluently-mapped nested association is not recognised as one.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4585")]
 		public void Issue4585Test([DataSources] string context)
 		{
@@ -3611,7 +3664,7 @@ namespace Tests.Linq
 			public LoadWithPassthroughLeaf[] Leaves { get; set; } = null!;
 		}
 
-		sealed class LoadWithPassthroughLeaf { }
+		sealed class LoadWithPassthroughLeaf;
 
 		static readonly LoadWithPassthroughRoot _passthroughRoot = new()
 		{

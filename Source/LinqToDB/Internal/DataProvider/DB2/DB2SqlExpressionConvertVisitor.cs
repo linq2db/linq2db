@@ -1,4 +1,7 @@
-﻿using LinqToDB.Internal.Extensions;
+﻿using System;
+
+using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
@@ -12,6 +15,46 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// The tick count is built from <c>MICROSECOND()</c> scaled by ten, so it is a multiple of ten by
+		/// construction and a component below the microsecond is identically zero rather than merely imprecise.
+		/// </summary>
+		/// <remarks>
+		/// Declared even though a column may be wider - <c>timestamp(7)</c> is what this fixture's model asks for -
+		/// because what the measurement can distinguish is what the count is taken from, not what the column holds.
+		/// The declined member falls back to .NET and answers from the two dates.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Microsecond;
+
+		/// <summary>
+		/// Elapsed ticks summed from the three fields a DB2 timestamp decomposes into.
+		/// </summary>
+		/// <remarks>
+		/// <c>TIMESTAMPDIFF</c> is documented as an estimate - it assumes months of thirty days - so it cannot
+		/// answer this. A timestamp is a whole number of days plus seconds since midnight plus microseconds, and
+		/// each field's difference is exact, so their sum is the exact elapsed time. This is the same
+		/// decomposition the provider's <c>DateDiff</c> lowering already uses.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+			var intType  = Factory.GetDbDataType(typeof(int));
+
+			ISqlExpression FieldDifference(string function)
+			{
+				return Factory.Sub(longType,
+					Factory.Cast(Factory.Function(intType, function, element.End),   longType, true),
+					Factory.Cast(Factory.Function(intType, function, element.Start), longType, true));
+			}
+
+			return Factory.Add(longType, Factory.Multiply(longType, FieldDifference("Days"), TimeSpan.TicksPerDay),
+				Factory.Add(longType, Factory.Multiply(longType, FieldDifference("Midnight_Seconds"), TimeSpan.TicksPerSecond),
+					Factory.Multiply(longType, FieldDifference("Microsecond"), TimeSpan.TicksPerMillisecond / 1000)));
+		}
 
 		static readonly string[] DB2LikeCharactersToEscape = {"%", "_"};
 
@@ -142,5 +185,16 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			return columnExpression;
 		}
+
+		/// <summary>
+		/// Every ranking function, <c>NTILE</c>, and <c>LAG</c>/<c>LEAD</c> - all of them <c>SQL0104N ... Expected
+		/// tokens may include: "ORDER BY"</c> - plus any frame, which is <c>SQL20117N A window specification for an
+		/// OLAP function is not valid</c> on its own. <c>ROW_NUMBER</c> and the <c>*_VALUE</c> pair are fine
+		/// unordered, and so is an unframed aggregate.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> func.FrameClause != null
+				|| IsOrderDependentWindowFunction(func.FunctionName)
+				|| func.FunctionName is "NTILE";
 	}
 }

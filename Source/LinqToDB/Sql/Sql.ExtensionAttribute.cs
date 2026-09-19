@@ -24,8 +24,8 @@ namespace LinqToDB
 		public interface ISqlExtension { }
 		public interface IWindowFunction { }
 
-		sealed class SqlExtensionImpl : ISqlExtension { }
-		sealed class WindowFunctionImpl : IWindowFunction { }
+		sealed class SqlExtensionImpl : ISqlExtension;
+		sealed class WindowFunctionImpl : IWindowFunction;
 
 		public static readonly ISqlExtension?  Ext    = new SqlExtensionImpl();
 		public static readonly IWindowFunction Window = new WindowFunctionImpl();
@@ -58,12 +58,59 @@ namespace LinqToDB
 			IsNullableType  IsNullable       { get; }
 			bool?           CanBeNull        { get; }
 
+			/// <remarks>
+			/// Read value is baked into generated SQL by the builder, so it becomes a part of the query cache key.
+			/// See <see cref="GetExpression(int, bool, bool?)"/> for the translated-argument counterpart.
+			/// Only the outermost call of a chained extension has its arguments registered, so a builder reading an
+			/// argument of an inner element must mark it with <see cref="SqlQueryDependentAttribute"/> to keep the
+			/// value in the key.
+			/// </remarks>
 			T      GetValue<T>   (int    index);
+
+			/// <remarks>
+			/// Read value is baked into generated SQL by the builder, so it becomes a part of the query cache key.
+			/// See <see cref="GetExpression(string, bool, bool?)"/> for the translated-argument counterpart.
+			/// Only the outermost call of a chained extension has its arguments registered, so a builder reading an
+			/// argument of an inner element must mark it with <see cref="SqlQueryDependentAttribute"/> to keep the
+			/// value in the key.
+			/// </remarks>
 			T      GetValue<T>   (string argName);
+
 			object GetObjectValue(int    index);
 			object GetObjectValue(string argName);
 
+			/// <summary>
+			/// Translates extension method argument to SQL.
+			/// </summary>
+			/// <param name="index">Argument position in the extension method call.</param>
+			/// <param name="unwrap">When <see langword="true"/>, conversion operators are removed from the argument expression before translation.</param>
+			/// <param name="inlineParameters">When <see langword="true"/>, argument value is rendered as a literal instead of a parameter. <see langword="null"/> keeps current query setting.</param>
+			/// <returns>Argument SQL or <see langword="null"/> when argument cannot be translated.</returns>
+			/// <remarks>
+			/// Translated argument travels to the database as a parameter, whose value is re-read from the query
+			/// expression on every execution, or as a literal when <paramref name="inlineParameters"/> is
+			/// <see langword="true"/>, in which case the parameters context registers the value for comparison. Either
+			/// way the builder does not have to make it a part of the query cache key itself. Argument, read with
+			/// <see cref="GetValue{T}(int)"/> or taken from <see cref="Arguments"/> instead, is baked into generated
+			/// SQL by the builder, so it becomes a part of the query cache key.
+			/// </remarks>
 			ISqlExpression? GetExpression(int    index,   bool unwrap = false, bool? inlineParameters = null);
+
+			/// <summary>
+			/// Translates extension method argument to SQL.
+			/// </summary>
+			/// <param name="argName">Name of the extension method parameter.</param>
+			/// <param name="unwrap">When <see langword="true"/>, conversion operators are removed from the argument expression before translation.</param>
+			/// <param name="inlineParameters">When <see langword="true"/>, argument value is rendered as a literal instead of a parameter. <see langword="null"/> keeps current query setting.</param>
+			/// <returns>Argument SQL or <see langword="null"/> when argument cannot be translated.</returns>
+			/// <remarks>
+			/// Translated argument travels to the database as a parameter, whose value is re-read from the query
+			/// expression on every execution, or as a literal when <paramref name="inlineParameters"/> is
+			/// <see langword="true"/>, in which case the parameters context registers the value for comparison. Either
+			/// way the builder does not have to make it a part of the query cache key itself. Argument, read with
+			/// <see cref="GetValue{T}(string)"/> or taken from <see cref="Arguments"/> instead, is baked into generated
+			/// SQL by the builder, so it becomes a part of the query cache key.
+			/// </remarks>
 			ISqlExpression? GetExpression(string argName, bool unwrap = false, bool? inlineParameters = null);
 			ISqlExpression? ConvertToSqlExpression();
 			ISqlExpression? ConvertToSqlExpression(int        precedence);
@@ -116,10 +163,10 @@ namespace LinqToDB
 
 			public SqlFlags Flags            { get; set; }
 
-			public bool IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
-			public bool IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
-			public bool IsPure           => (Flags & SqlFlags.IsPure)           != 0;
-			public bool IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
+			public bool IsAggregate      => Flags.HasFlag(SqlFlags.IsAggregate);
+			public bool IsWindowFunction => Flags.HasFlag(SqlFlags.IsWindowFunction);
+			public bool IsPure           => Flags.HasFlag(SqlFlags.IsPure);
+			public bool IsPredicate      => Flags.HasFlag(SqlFlags.IsPredicate);
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -342,7 +389,7 @@ namespace LinqToDB
 						{
 							if (string.Equals(parameters[i].Name, argName, StringComparison.Ordinal))
 							{
-								return GetExpression(i, unwrap);
+								return GetExpression(i, unwrap, inlineParameters);
 							}
 						}
 					}
@@ -832,6 +879,7 @@ namespace LinqToDB
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpression, System.Linq.Expressions.Expression.Default(systemType));
 			}
 
+			/// <inheritdoc/>
 			public override Expression GetExpression<TContext>(TContext context, IDataContext dataContext, IExpressionEvaluator evaluator, SelectQuery query, Expression expression, ConvertFunc<TContext> converter)
 			{
 				// chain starts from the tail

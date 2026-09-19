@@ -139,7 +139,7 @@ namespace Tests.Linq
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void EntityFilterTests([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -193,7 +193,7 @@ namespace Tests.Linq
 			Assert.That(currentMissCount, Is.EqualTo(query.GetCacheMissCount()), () => "Caching is wrong.");
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void EntityFilterTestsCache([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2, 3)] int iteration, [Values] bool filtered)
 		{
 			var testData = GenerateTestData();
@@ -223,7 +223,7 @@ namespace Tests.Linq
 				}
 			}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -250,7 +250,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void AssociationToFilteredEntityFunc([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -293,7 +293,7 @@ namespace Tests.Linq
 			return query;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void AssociationToFilteredEntityMethod([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -383,7 +383,7 @@ namespace Tests.Linq
 
 		int Issue4508Test_Id;
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508"), QueryCacheTest]
 		public void Issue4508Test([DataSources] string context)
 		{
 			Test(context);
@@ -840,6 +840,175 @@ namespace Tests.Linq
 				// Every master row must survive even when its Info is filter-excluded or absent.
 				result.Count.ShouldBe(testData.Item1.Length);
 				result.ShouldContain(r => r.InfoId == null);
+			}
+		}
+
+		[Test]
+		public void FilteredLeftJoinNullCheckSurvivesSetOperation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Regression: with a query filter on the joined entity, the `joined != null ? joined.X : fallback`
+			// conditional was discarded in every set-operation branch except the first, so a non-matching left
+			// join produced NULL instead of the fallback. Two ingredients keep the shape intact: the filter must
+			// not fold to a constant, and the projected column must be computed — with a plain column the join
+			// is flattened and the null check never has to survive on its own.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   }, // resolves
+				new DetailClass { Id = 2, MasterId = 100 }, // does not
+				new DetailClass { Id = 3, MasterId = 200 }  // does not either
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(details))
+			{
+				IQueryable<string> Values(int id) =>
+					from d in db.GetTable<DetailClass>().Where(d => d.Id == id)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					select m != null ? m.Value : "Unknown";
+
+				Values(1).Concat(Values(2)).Concat(Values(3)).ToList().ShouldBe(["Master!", "Unknown", "Unknown"], ignoreOrder: true);
+			}
+		}
+
+		[Test]
+		public void FilteredLeftJoinFallbackChainSurvivesSetOperation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// Companion to FilteredLeftJoinNullCheckSurvivesSetOperation: with a two-level fallback the whole chain
+			// collapsed to the first join's column in every branch after the first, so the second join stayed in the
+			// FROM clause but was never referenced in the projection.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+			builder.Entity<InfoClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var infos   = new[] { new InfoClass   { Id = 1, Value = "Info", MasterId = 2 } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   }, // resolves through master
+				new DetailClass { Id = 2, MasterId = 2   }, // resolves through info only
+				new DetailClass { Id = 3, MasterId = 100 }  // resolves through neither
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(infos))
+			using (db.CreateLocalTable(details))
+			{
+				IQueryable<string> Values(int id) =>
+					from d in db.GetTable<DetailClass>().Where(d => d.Id == id)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					from i in db.GetTable<InfoClass>()
+						.Select(x => new { x.Id, x.MasterId, Value = x.Value + "?" })
+						.LeftJoin(x => x.MasterId == d.MasterId)
+					select m != null ? m.Value : i != null ? i.Value : "Unknown";
+
+				Values(1).Concat(Values(2)).Concat(Values(3)).ToList().ShouldBe(["Master!", "Info?", "Unknown"], ignoreOrder: true);
+			}
+		}
+
+		[Test]
+		public void SetOperationBranchNullabilityReachesEnclosingQuery([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// The enclosing query resolves a set-operation column by fanning out over SetOperators. Branch 1 is
+			// deliberately non-nullable so that the fan-out is the only thing that can report the column nullable,
+			// and branch 2 is nullable only through a LEFT JOIN living inside the branch - which the source walk
+			// cannot see unless the branch query is registered in the nullability scope. Without that the null
+			// check folds away and the NULL surfaces as a default value.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   },
+				new DetailClass { Id = 2, MasterId = 100 }
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(details))
+			{
+				// branch 1 is non-nullable, so CanBeNull cannot short-circuit before the set-operator fan-out
+				var branch1 = from d in db.GetTable<DetailClass>().Where(d => d.Id == 1)
+					select new { Key = (int?)d.Id };
+
+				// branch 2's key is nullable only through the LEFT JOIN, which lives inside SetOperators
+				var branch2 = from d in db.GetTable<DetailClass>().Where(d => d.Id == 2)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					select new { Key = (int?)m.Id };
+
+				var query = from u in branch1.Concat(branch2)
+					select u.Key != null ? u.Key.Value : -1;
+
+				query.ToList().ShouldBe([1, -1], ignoreOrder: true);
+			}
+		}
+
+		[Test]
+		public void SetOperationNullabilityIgnoresNarrowingBranches([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			// EXCEPT / INTERSECT narrow the accumulated left side and contribute no values of their own, so a
+			// branch that is nullable only through a join inside itself must not make the enclosing column
+			// nullable. The UNION ALL case shares the shape and must keep the check - that is the #5792 fix.
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted);
+
+			builder.Build();
+
+			var masters = new[] { new MasterClass { Id = 1, Value = "Master" } };
+			var details = new[]
+			{
+				new DetailClass { Id = 1, MasterId = 1   },
+				new DetailClass { Id = 2, MasterId = 100 }
+			};
+
+			using var db = new MyDataContext(context, builder.MappingSchema);
+			using (db.CreateLocalTable(masters))
+			using (db.CreateLocalTable(details))
+			{
+				var head = from d in db.GetTable<DetailClass>().Where(d => d.Id == 1)
+					select new { Key = (int?)d.Id };
+
+				// nullable only through the LEFT JOIN, which lives inside the branch
+				var branch = from d in db.GetTable<DetailClass>().Where(d => d.Id == 2)
+					from m in db.GetTable<MasterClass>()
+						.Select(x => new { x.Id, Value = x.Value + "!" })
+						.LeftJoin(x => x.Id == d.MasterId)
+					select new { Key = (int?)m.Id };
+
+				head.Concat(branch).Select(u => u.Key != null ? u.Key.Value : -1).ToList().ShouldBe([1, -1], ignoreOrder: true);
+				db.LastQuery!.ShouldContain("IS NOT NULL");
+
+				head.Except(branch).Select(u => u.Key != null ? u.Key.Value : -1).ToList().ShouldBe([1]);
+				db.LastQuery!.ShouldNotContain("IS NOT NULL");
+
+				head.Intersect(branch).Select(u => u.Key != null ? u.Key.Value : -1).ToList().ShouldBeEmpty();
+				db.LastQuery!.ShouldNotContain("IS NOT NULL");
 			}
 		}
 

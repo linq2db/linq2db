@@ -359,6 +359,8 @@ namespace Tests.DataProvider
 			public BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source) where T : notnull => _baseProvider.BulkCopy(options, table, source);
 			public Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken) where T : notnull => _baseProvider.BulkCopyAsync(options, table, source, cancellationToken);
 			public Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken) where T : notnull => _baseProvider.BulkCopyAsync(options, table, source, cancellationToken);
+			public DbParameter CreateParameter(DataConnection dataConnection, DbCommand command, DataProviderParameterContext context) => _baseProvider.CreateParameter(dataConnection, command, context);
+
 			public Type ConvertParameterType(Type type, DbDataType dataType) => _baseProvider.ConvertParameterType(type, dataType);
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);

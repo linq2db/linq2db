@@ -382,9 +382,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		[Wrapper]
-		internal sealed class IDriver
-		{
-		}
+		internal sealed class IDriver;
 
 		[Wrapper]
 		internal sealed class YdbSchema
@@ -401,9 +399,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		[Wrapper]
-		internal struct DescribeTableSettings
-		{
-		}
+		internal struct DescribeTableSettings;
 
 		#endregion
 	}

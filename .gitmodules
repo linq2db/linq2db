@@ -1,0 +1,6 @@
+[submodule ".claude"]
+	path = .claude
+	url = https://github.com/linq2db/agents.git
+	branch = master
+	update = merge
+	ignore = all

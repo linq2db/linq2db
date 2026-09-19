@@ -23,3 +23,10 @@ Follow the next steps to create a data model from your existing database:
 
 If you use database scaffolding, consider migration to the scaffolding tool https://www.nuget.org/packages/linq2db.cli
 Discussion thread: https://github.com/linq2db/linq2db/discussions/3531
+
+
+LICENSING
+
+The MIT license declared by this package applies to LINQ to DB's own code. To run the T4 templates
+this package also carries database client assemblies in its tools folder, which are third-party
+software under their own terms - see THIRD-PARTY-NOTICES.txt in this package.

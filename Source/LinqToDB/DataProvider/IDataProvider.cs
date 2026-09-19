@@ -48,7 +48,16 @@ namespace LinqToDB.DataProvider
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (DbDataReader reader, int idx, Expression readerExpression, Type toType);
 		bool?              IsDBNullAllowed       (DataOptions options, DbDataReader reader, int idx);
+		/// <summary>
+		/// Creates <see cref="DbParameter"/> instance for <see cref="DataConnection"/> command.
+		/// </summary>
+		/// <param name="dataConnection">Data connection instance used to create parameter.</param>
+		/// <param name="command">Command instance to which parameter will be added.</param>
+		/// <param name="context">Context containing parameter metadata.</param>
+		/// <returns>Created <see cref="DbParameter"/> instance.</returns>
+		DbParameter        CreateParameter       (DataConnection dataConnection, DbCommand command, DataProviderParameterContext context);
 		void               SetParameter          (DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value);
+
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
 		/// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -120,7 +120,7 @@ namespace Tests.DataProvider
 		[Sql.TableExpression("select * from {0}")]
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(DataParameter p)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(TableValue));
 		}
 
 		private static ITable<SqlServerTestUtils.TVPRecord> TableValue(IDataContext ctx, DataParameter p)
@@ -203,7 +203,9 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("DataParameter not supported by TableExpressionAttribute")]
+		// No ErrorTypeName: the two SqlClient packages raise their own SqlException and share only the message.
+		[ActiveIssue(ErrorMessage = "Incorrect syntax near the keyword 'select'.",
+			Details = "no-issue: DataParameter not supported by TableExpressionAttribute, so the table-valued parameter is emitted inline and the server rejects the statement. Nothing on the tracker covers it.")]
 		[Test]
 		public void TableValuedParameterInQueryUsingTableMethodTest(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,

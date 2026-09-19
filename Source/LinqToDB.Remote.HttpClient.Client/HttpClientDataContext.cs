@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Remote.HttpClient.Client
 {
@@ -8,6 +9,8 @@ namespace LinqToDB.Remote.HttpClient.Client
 	public class HttpClientDataContext : RemoteDataContextBase
 	{
 		protected HttpClientLinqServiceClient Client;
+
+		readonly System.Net.Http.HttpClient? _ownedHttpClient;
 
 		#region Init
 
@@ -42,15 +45,16 @@ namespace LinqToDB.Remote.HttpClient.Client
 		/// <param name="requestUri"></param>
 		/// <param name="optionBuilder"></param>
 		public HttpClientDataContext(Uri baseAddress, string requestUri, Func<DataOptions,DataOptions>? optionBuilder = null)
-#pragma warning disable CA2000 // Dispose objects before losing scope
 			: this(new System.Net.Http.HttpClient() { BaseAddress = baseAddress }, requestUri, optionBuilder)
-#pragma warning restore CA2000 // Dispose objects before losing scope
 		{
+			_ownedHttpClient = Client.HttpClient;
 		}
 
 		#endregion
 
 		#region Overrides
+
+		protected override bool OwnsClient => false;
 
 		protected override ILinqService GetClient()
 		{
@@ -58,6 +62,20 @@ namespace LinqToDB.Remote.HttpClient.Client
 		}
 
 		protected override string ContextIDPrefix => "HttpRemoteLinqService";
+
+		public override void Dispose()
+		{
+			base.Dispose();
+
+			_ownedHttpClient?.Dispose();
+		}
+
+		public override async ValueTask DisposeAsync()
+		{
+			await base.DisposeAsync().ConfigureAwait(false);
+
+			_ownedHttpClient?.Dispose();
+		}
 
 		#endregion
 	}

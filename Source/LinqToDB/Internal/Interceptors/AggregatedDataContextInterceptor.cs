@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 
 using LinqToDB.Interceptors;
 using LinqToDB.Metrics;
@@ -27,26 +27,26 @@ namespace LinqToDB.Internal.Interceptors
 			});
 		}
 
-		public async Task OnClosingAsync(DataContextEventData eventData)
+		public Task OnClosingAsync(DataContextEventData eventData)
 		{
-			await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 						await interceptor.OnClosingAsync(eventData)
 							.ConfigureAwait(false);
-			}).ConfigureAwait(false);
+			});
 		}
 
-		public async Task OnClosedAsync(DataContextEventData eventData)
+		public Task OnClosedAsync(DataContextEventData eventData)
 		{
-			await Apply(async () =>
+			return Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
 						await interceptor.OnClosedAsync(eventData)
 							.ConfigureAwait(false);
-			}).ConfigureAwait(false);
+			});
 		}
 	}
 }

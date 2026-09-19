@@ -1,0 +1,31 @@
+<Project>
+
+	<!-- Opt-out for the linq2db user-facing analyzer rules:
+
+	       <PropertyGroup>
+	         <EnableLinqToDBAnalyzers>false</EnableLinqToDBAnalyzers>
+	       </PropertyGroup>
+
+	     Per-rule severity in .editorconfig stays the finer-grained control; this is the all-or-nothing
+	     switch, and currently the only one that works. The .NET SDK hands analyzers to csc even across a
+	     dependency edge that excludes them, so neither ExcludeAssets="analyzers" on the consumer's linq2db
+	     reference nor exclude="Analyzers" in a nuspec suppresses the rules (measured on SDK 10.0.302).
+	     Removing the items from @(Analyzer) is not subject to that - it runs after asset resolution.
+
+	     Packed to both build/ and buildTransitive/, so it applies to a direct reference to this package
+	     and to the normal delivery path (linq2db -> linq2db.Analyzers, possibly via a satellite package).
+	     The hook has to be ResolveLockFileAnalyzers - that is what fills @(Analyzer) from the resolved
+	     package assets; ResolvePackageAssets itself runs before it, so hooking there removes nothing.
+	     It also runs in an IDE design-time build, where CoreCompile never does. NuGetPackageId is set by
+	     ResolvePackageAssets, so only the two assemblies this package delivers are removed - every other
+	     analyzer in the project is untouched. -->
+	<Target Name="LinqToDBRemoveAnalyzers"
+			Condition="'$(EnableLinqToDBAnalyzers)' == 'false'"
+			AfterTargets="ResolveLockFileAnalyzers"
+			BeforeTargets="CoreCompile">
+		<ItemGroup>
+			<Analyzer Remove="@(Analyzer->WithMetadataValue('NuGetPackageId','linq2db.Analyzers'))" />
+		</ItemGroup>
+	</Target>
+
+</Project>

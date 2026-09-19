@@ -1,4 +1,4 @@
-﻿{
+{
 	"NET100.Azure": {
 		"Providers": [
 			"SqlServer.2016",

@@ -967,43 +967,43 @@ partial class Sql
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1>(this SqlRow<T1> thisRow, SqlRow<T1> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2>(this SqlRow<T1, T2> thisRow, SqlRow<T1, T2> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3>(this SqlRow<T1, T2, T3> thisRow, SqlRow<T1, T2, T3> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3, T4>(this SqlRow<T1, T2, T3, T4> thisRow, SqlRow<T1, T2, T3, T4> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3, T4, T5>(this SqlRow<T1, T2, T3, T4, T5> thisRow, SqlRow<T1, T2, T3, T4, T5> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3, T4, T5, T6>(this SqlRow<T1, T2, T3, T4, T5, T6> thisRow, SqlRow<T1, T2, T3, T4, T5, T6> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3, T4, T5, T6, T7>(this SqlRow<T1, T2, T3, T4, T5, T6, T7> thisRow, SqlRow<T1, T2, T3, T4, T5, T6, T7> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3, T4, T5, T6, T7, T8>(this SqlRow<T1, T2, T3, T4, T5, T6, T7, T8> thisRow, SqlRow<T1, T2, T3, T4, T5, T6, T7, T8> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3, T4, T5, T6, T7, T8, T9>(this SqlRow<T1, T2, T3, T4, T5, T6, T7, T8, T9> thisRow, SqlRow<T1, T2, T3, T4, T5, T6, T7, T8, T9> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 	public static bool Overlaps<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(this SqlRow<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> thisRow, SqlRow<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> other)
-		=> throw new NotImplementedException();
+		=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 	#endregion Overlaps
 }

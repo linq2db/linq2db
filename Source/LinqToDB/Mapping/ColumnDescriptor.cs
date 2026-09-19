@@ -11,6 +11,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
@@ -140,12 +141,80 @@ namespace LinqToDB.Mapping
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
+			var duration = mappingSchema.GetAttribute<DurationAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
+			if (duration != null)
+			{
+				// A declared unit and a hand-written converter are two answers to the same question, and the two
+				// halves of a query believe different ones: the value comes back through the converter, while the
+				// SQL is built on the unit. A pair that disagrees is then wrong by whatever they differ by, and
+				// wrong without saying so - a unit of seconds beside a converter storing ticks reads an hour and a
+				// half as fifteen million. Letting one of them quietly win is the failure this feature exists to
+				// prevent, so the pair is refused where it is stated.
+				if (ValueConverter != null)
+				{
+					throw new LinqToDBException(
+						$"Member '{memberAccessor.TypeAccessor.Type.Name}.{MemberInfo.Name}' declares both a duration unit ({duration.Unit}) and a value converter. "
+						+ "The unit is what the SQL translation is built on and the converter is what the value is read through, so the two cannot both define the stored form. "
+						+ "State the unit and let the conversion follow from it, or keep the converter and drop the unit.");
+				}
+
+				// A unit describes how a duration is stored, so it says nothing about a member that is not one. Left
+				// alone such a column would carry a unit no conversion follows from, and the unit is what the rest of
+				// the query trusts - the SQL is built on it and two columns are called interchangeable by it. Refused
+				// here for the same reason the pair above is: a declaration that cannot mean anything is a mistake in
+				// the mapping, and it is cheaper to hear about it now than to find the query answering oddly later.
+				ValueConverter = CreateDurationConverter(MemberType, duration.Unit)
+					?? throw new LinqToDBException(
+						$"Member '{memberAccessor.TypeAccessor.Type.Name}.{MemberInfo.Name}' declares a duration unit ({duration.Unit}) but is a {MemberType.Name}. "
+						+ "A duration unit describes how a TimeSpan is stored, so it can only be declared on a TimeSpan or TimeSpan? member.");
+
+				DurationUnit = duration.Unit;
+			}
+
 			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (skipValueAttributes.Length > 0)
 			{
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
+		}
+
+		/// <summary>
+		/// Builds the <see cref="TimeSpan"/> to integral conversion implied by a declared duration unit.
+		/// </summary>
+		/// <remarks>
+		/// Writing a duration whose precision is finer than the storage unit truncates - storing 1.5 seconds in a
+		/// column declared as seconds keeps 1. That is inherent to the storage the user chose, not something the
+		/// conversion can avoid.
+		/// </remarks>
+		static IValueConverter? CreateDurationConverter(Type memberType, DurationUnit unit)
+		{
+			if (!SqlIntervalUnits.TryGetTicksRatio(SqlIntervalType.ToIntervalUnit(unit), out var perUnit, out var perTick))
+				return null;
+
+			// ticks = amount * perUnit / perTick, so the stored amount is its inverse.
+			//
+			// Checked, for the reason SqlIntervalUnits.TryToTicks gives: a silent wrap here is a wrong duration,
+			// not a large one. It is reachable - a unit finer than a tick scales up rather than down, so storing
+			// nanoseconds multiplies by a hundred and leaves the long past about 292 years, well inside what a
+			// TimeSpan holds - and reading a coarse unit back scales up the same way from whatever the column has.
+			if (memberType == typeof(TimeSpan))
+			{
+				return new ValueConverter<TimeSpan, long>(
+					ts => checked(ts.Ticks * perTick) / perUnit,
+					v  => TimeSpan.FromTicks(checked(v * perUnit) / perTick),
+					handlesNulls: false);
+			}
+
+			if (memberType == typeof(TimeSpan?))
+			{
+				return new ValueConverter<TimeSpan?, long?>(
+					ts => ts == null ? null : checked(ts.Value.Ticks * perTick) / perUnit,
+					v  => v  == null ? null : TimeSpan.FromTicks(checked(v.Value * perUnit) / perTick),
+					handlesNulls: true);
+			}
+
+			return null;
 		}
 
 		private bool AnalyzeCanBeNull(ColumnAttribute? columnAttribute)
@@ -295,12 +364,12 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
 		/// </summary>
-		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Insert) != 0) ?? false;
+		public bool           HasValuesToSkipOnInsert => SkipBaseAttributes?.Any(s => s.Affects.HasFlag(SkipModification.Insert)) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on update.
 		/// </summary>
-		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => (s.Affects & SkipModification.Update) != 0) ?? false;
+		public bool           HasValuesToSkipOnUpdate => SkipBaseAttributes?.Any(s => s.Affects.HasFlag(SkipModification.Update)) ?? false;
 
 		/// <summary>
 		/// Gets whether the column has specific values that should be skipped on insert.
@@ -398,6 +467,17 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
+
+		/// <summary>
+		/// Gets the unit in which this column stores a duration, or <see langword="null"/> when the column was not
+		/// declared as a duration. See <see cref="DurationAttribute"/>.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="TimeSpan"/> column without this set keeps its existing, provider-defined meaning - notably a
+		/// time of day where <see cref="TimeSpan"/> maps to a <c>TIME</c> column. Duration semantics are opt-in so
+		/// that existing mappings are not silently reinterpreted.
+		/// </remarks>
+		public DurationUnit?    DurationUnit    { get; }
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;

@@ -412,11 +412,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS3OptimizeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+		public static Task FTS3OptimizeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')", cancellationToken);
 		}
 
 		/// <summary>
@@ -441,11 +440,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS3RebuildAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+		public static Task FTS3RebuildAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')", cancellationToken);
 		}
 
 		/// <summary>
@@ -470,11 +468,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS3IntegrityCheckAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+		public static Task FTS3IntegrityCheckAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')", cancellationToken);
 		}
 
 		/// <summary>
@@ -503,11 +500,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="segments">Segments command parameter.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS3MergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int blocks, int segments, CancellationToken cancellationToken = default)
+		public static Task FTS3MergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int blocks, int segments, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('merge={blocks.ToString(NumberFormatInfo.InvariantInfo)},{segments.ToString(NumberFormatInfo.InvariantInfo)}')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('merge={blocks.ToString(NumberFormatInfo.InvariantInfo)},{segments.ToString(NumberFormatInfo.InvariantInfo)}')", cancellationToken);
 		}
 
 		/// <summary>
@@ -534,11 +530,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="segments">Segments command parameter.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS3AutoMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int segments, CancellationToken cancellationToken = default)
+		public static Task FTS3AutoMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int segments, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('automerge={segments.ToString(NumberFormatInfo.InvariantInfo)}')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('automerge={segments.ToString(NumberFormatInfo.InvariantInfo)}')", cancellationToken);
 		}
 		#endregion
 
@@ -567,11 +562,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="value">Command parameter.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5AutoMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+		public static Task FTS5AutoMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('automerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('automerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken);
 		}
 
 		/// <summary>
@@ -598,11 +592,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="value">Command parameter.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5CrisisMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+		public static Task FTS5CrisisMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('crisismerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('crisismerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken);
 		}
 
 		/// <summary>
@@ -690,11 +683,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5DeleteAllAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+		public static Task FTS5DeleteAllAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('delete-all')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('delete-all')", cancellationToken);
 		}
 
 		/// <summary>
@@ -719,11 +711,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5IntegrityCheckAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+		public static Task FTS5IntegrityCheckAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')", cancellationToken);
 		}
 
 		/// <summary>
@@ -750,11 +741,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="value">Command parameter.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5MergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+		public static Task FTS5MergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('merge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
-			.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('merge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken);
 		}
 
 		/// <summary>
@@ -779,11 +769,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5OptimizeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+		public static Task FTS5OptimizeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')", cancellationToken);
 		}
 
 		/// <summary>
@@ -810,11 +799,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="value">Command parameter.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5PgszAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+		public static Task FTS5PgszAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('pgsz', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('pgsz', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken);
 		}
 
 		/// <summary>
@@ -841,11 +829,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="function">Rank function.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5RankAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, string function, CancellationToken cancellationToken = default)
+		public static Task FTS5RankAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, string function, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function), cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function), cancellationToken);
 		}
 
 		/// <summary>
@@ -870,11 +857,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="table">FTS table.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5RebuildAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+		public static Task FTS5RebuildAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')", cancellationToken);
 		}
 
 		/// <summary>
@@ -901,11 +887,10 @@ namespace LinqToDB.DataProvider.SQLite
 		/// <param name="value">Command parameter.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns task.</returns>
-		public static async Task FTS5UserMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+		public static Task FTS5UserMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
 			where TEntity : class
 		{
-			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('usermerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
-				.ConfigureAwait(false);
+			return dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('usermerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken);
 		}
 
 		#endregion

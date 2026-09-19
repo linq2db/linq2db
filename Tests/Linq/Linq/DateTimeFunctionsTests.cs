@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -18,6 +18,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class DateTimeFunctionsTests : TestBase
 	{
+		const string DevartRoundsDown = "no-declaration: unvalidated: Devart returns the whole-unit difference a hair under the integer (100 as 99.999..., 6000 as 5999.999...), so the (int) truncation loses one unit. The provider cannot be reached from this workstation - it needs a licence key - and Oracle has no GitHub-CI leg, so no failure text was ever harvested to declare against. No issue tracks it; the original attributes named the symptom but not the exception.";
+
 		//This custom comparers allows for an error of 1 millisecond.
 		public class CustomIntComparer : IEqualityComparer<int>
 		{
@@ -1432,6 +1434,10 @@ namespace Tests.Linq
 
 		#region DateDiff
 
+		// SQL Server before 2016 has no exact measure of elapsed time - DATEDIFF_BIG arrived there - and Sql.AsSql
+		// below asks for the value in SQL, so there is no client-side answer to fall back to. Declared rather than
+		// excluded so it goes red the day the lowering reaches those versions.
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[DataSources(TestProvName.AllInformix)]
@@ -1454,6 +1460,7 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateHour(
 			[DataSources(TestProvName.AllInformix)]
@@ -1476,7 +1483,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
-		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1488,7 +1496,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalMinutes));
 		}
 
-		[ActiveIssue("Devart returns 100 as 99.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
 		[Test]
 		public void DateDiffMinute(
 			[DataSources(TestProvName.AllInformix)]
@@ -1500,7 +1508,8 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.DateTimeValue, t.DateTimeValue.AddMinutes(100))));
 		}
 
-		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1512,7 +1521,7 @@ namespace Tests.Linq
 					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddMinutes(100) - t.DateTimeValue).TotalSeconds));
 		}
 
-		[ActiveIssue("Devart returns 6000 as 5999.999...", Configuration = TestProvName.AllOracleDevart)]
+		[ActiveIssue(Configuration = TestProvName.AllOracleDevart, Details = DevartRoundsDown)]
 		[Test]
 		public void DateDiffSecond(
 			[DataSources(TestProvName.AllInformix)]
@@ -1532,6 +1541,7 @@ namespace Tests.Linq
 		// Possible reason:
 		// looks like Access runtime modify some C++ runtime options that affect runtime's rounding behavior
 		// used also by SQLite provider's native part
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMillisecond(
 			[DataSources(
@@ -1715,6 +1725,14 @@ namespace Tests.Linq
 			};
 		}
 
+		// The same values without the null. Both AddTimeSpan tests are split on it because their gates disagree
+		// across it: for DateTimeAddTimeSpan, Access, MySQL and SQLite pass the null case and fail the rest; for
+		// DateTimeOffsetAddTimeSpan, MySQL does the same while Oracle fails only the null case.
+		static TimeSpan?[] TimespansForTestNonNull()
+		{
+			return TimespansForTest().Where(_ => _ != null).ToArray();
+		}
+
 		class DateTypes
 		{
 			[Column(CanBeNull = false, IsPrimaryKey = true)]
@@ -1790,9 +1808,76 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllSQLiteClassic])]
+		// Split on the null value, measured rather than assumed: with a null interval Access, MySQL and SQLite all
+		// pass, so gating them there marked working cases as failing. The two arms also differ in kind on SQL
+		// Server - the null one produces only the server's type-mismatch, while the non-null one adds a
+		// client-side out-of-bounds TIME, which is why only the non-null arm declares nothing for it.
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer,
+			Details = "no-declaration: two unrelated failures over the same providers - the server's \"data types datetime and time are incompatible\" and the client's \"TIME value is out-of-bounds\" - and no Configuration separates them.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessOleDb,
+			Details = "no-declaration: two unrelated failures - a column-mapping error and the provider failing to determine an Int16 - over the same two providers.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value", Details = "no-issue: Access ODBC returns the sum as a Double the mapper will not take as a DateTime.")]
+		[ActiveIssue(Configurations = [TestProvName.AllMySqlConnector, TestProvName.AllMySqlData], ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Cannot convert value", Details = "no-issue: MySQL returns the sum as a numeric the mapper will not take as a DateTime.")]
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTime", Details = "no-issue: no parameter type for the interval, so nothing is sent.")]
+		// SkipForLinqService because the test body returns early for remote SQLite, so those cases pass trivially.
+		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic, SkipForLinqService = true, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "Unable to cast object of type 'System.TimeSpan'", Details = "no-issue: the Classic driver cannot bind the interval at all.")]
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+			ErrorMessage = "Invalid operator for datatype op: ADD", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssue(Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0402N{0}The data type of an operand of an arithmetic function or operation", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "Intervals or datetimes are incompatible for the operation.", Details = "no-issue: the server rejects the addition.")]
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+			Details = "no-issue: the server rejects the addition. Type-less because the ODBC and native drivers raise their own.")]
+		[ActiveIssue(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: SqlCe has no Time parameter type.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
-		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTestNonNull))] TimeSpan? ts)
+		{
+			DateTimeAddTimeSpanCore(context, ts);
+		}
+
+		// The null arm: Access, MySQL and SQLite are absent because they pass it, and SQL Server declares its one
+		// failure because the client-side TIME check never fires without an interval.
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2012Plus,
+			ErrorMessage = "The data types datetime and time are incompatible in the add operator.",
+			Details = "no-issue: message-only, the two SqlClient packages raising their own.")]
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2005, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "The version of SQL Server in use does not support datatype 'time'.",
+			Details = "no-issue: 2005 has no TIME at all, so the client refuses the parameter before the server sees the add.")]
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2008,
+			ErrorMessage = "Operand data type datetime2 is invalid for add operator.",
+			Details = "no-issue: 2008 takes the parameter and the server names datetime2 rather than time.")]
+		[ActiveIssue(Configuration = TestProvName.AllFirebird, ErrorTypeName = "FirebirdSql.Data.FirebirdClient.FbException",
+			ErrorMessage = "Dynamic SQL Error", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTime", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "AdoNetCore.AseClient.AseException",
+			ErrorMessage = "Invalid operator for datatype op: ADD", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0402N{0}The data type of an operand of an arithmetic function or operation", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "no-issue: Informix words the null case differently from the non-null one.")]
+		[ActiveIssue(Configuration = TestProvName.AllSapHana, ErrorMessage = "[SAP AG][LIBODBCHDB SO][HDBODBC]",
+			Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle,
+			ErrorMessage = "ORA-30087: Adding two datetime values is not allowed",
+			Details = "no-issue: without an interval both operands are datetimes and the server rejects the addition - the same refusal DateTimeOffsetAddTimeSpanNull gets. Type-less because the managed and Devart drivers raise their own.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
+		public void DateTimeAddTimeSpanNull([DataSources(ProviderName.SQLiteMS)] string context)
+		{
+			DateTimeAddTimeSpanCore(context, null);
+		}
+
+		void DateTimeAddTimeSpanCore(string context, TimeSpan? ts)
 		{
 			// something wrong with retrieving DateTime values for SQLite
 			if (context.IsAnyOf(TestProvName.AllSQLite) && context.IsRemote())
@@ -1828,7 +1913,21 @@ namespace Tests.Linq
 				AssertQuery(concated);
 			}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		// Split on the null value, measured rather than assumed: MySQL passes the null arm and fails every other
+		// interval, Oracle does the reverse, and SQL Server produces one failure on the null arm and two on the
+		// other. [ActiveIssue] cannot target a [ValueSource] argument, so one attribute set cannot say all that.
+		//
+		// The non-null arm is where SQL Server's two unrelated failures land - the server rejecting datetimeoffset
+		// arithmetic, and the client refusing an out-of-bounds TIME - and the axis dividing them is the interval
+		// value, so this half declares nothing for it.
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer,
+			Details = "no-declaration: two unrelated failures over the same providers - \"Operand data type datetimeoffset is invalid for add operator\" from the server for the sub-day intervals, and \"TIME value is out-of-bounds\" from the client for the two 24h ones - and the attribute cannot target the value that divides them.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTimeOffset, DateTimeOffset)",
+			Details = "no-issue: ClickHouse has no parameter type for the offset, so the query is never sent.")]
+		[ActiveIssue(Configuration = TestProvName.AllMySqlConnector, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			ErrorMessage = "Mapping of column",
+			Details = "no-issue: MySQL accepts the query and fails reading the result back. MySql.Data is excluded from the data sources, so MySqlConnector and MariaDB are the whole reachable set.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeOffsetAddTimeSpan(
 			[DataSources(
@@ -1843,7 +1942,42 @@ namespace Tests.Linq
 				TestProvName.AllMySqlData, // TODO: mysql.data doesn't support DateTimeOffset
 				ProviderName.SqlCe)]
 			string context,
-			[ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+			[ValueSource(nameof(TimespansForTestNonNull))] TimeSpan? ts)
+		{
+			DateTimeOffsetAddTimeSpanCore(context, ts);
+		}
+
+		// The null arm: MySQL is absent because it passes it, Oracle is present because it fails only here - with
+		// an interval the addition is a datetime plus an interval, which the server takes - and SQL Server can
+		// declare its single failure, the client-side TIME check never firing without an interval.
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer,
+			ErrorMessage = "Operand data type datetimeoffset is invalid for add operator.",
+			Details = "no-issue: message-only, the two SqlClient packages and the WCF transport each raising their own.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Cannot infer type name from (System.DateTimeOffset, DateTimeOffset)",
+			Details = "no-issue: as the non-null arm.")]
+		[ActiveIssue(Configuration = TestProvName.AllOracle,
+			ErrorMessage = "ORA-30087: Adding two datetime values is not allowed",
+			Details = "no-issue: without an interval both operands are datetimes and the server rejects the addition. Type-less because the managed and Devart drivers raise their own.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
+		public void DateTimeOffsetAddTimeSpanNull(
+			[DataSources(
+				TestProvName.AllAccess,
+				TestProvName.AllFirebird,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
+				TestProvName.AllSybase,
+				TestProvName.AllMySqlData, // TODO: mysql.data doesn't support DateTimeOffset
+				ProviderName.SqlCe)]
+			string context)
+		{
+			DateTimeOffsetAddTimeSpanCore(context, null);
+		}
+
+		void DateTimeOffsetAddTimeSpanCore(string context, TimeSpan? ts)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(DateTypesOffset.Seed());
@@ -1971,7 +2105,8 @@ namespace Tests.Linq
 			];
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(2950, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'x.Time.Value.Hours' could not be converted to SQL.",
+			Details = "the Hours component of a TimeSpan is not translated on PostgreSQL - #2950's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2950")]
 		public void Issue2950Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -1992,16 +2127,37 @@ namespace Tests.Linq
 		}
 
 		// Short name: Oracle 11 (30) and Firebird <= 3 (31) cap identifier length; the 32-char class name overflows both.
+		/// <summary>
+		/// Providers whose lowering expresses an elapsed date difference in SQL. One name to add as each gains
+		/// support - the three tests below read it in opposite directions, so they cannot drift apart.
+		/// </summary>
+		const string ElapsedDifferenceProviders =
+			TestProvName.AllSqlServer2016Plus + "," +
+			TestProvName.AllPostgreSQL        + "," +
+			TestProvName.AllSQLite            + "," +
+			TestProvName.AllMySql             + "," +
+			TestProvName.AllDuckDB            + "," +
+			ProviderName.SqlCe                + "," +
+			TestProvName.AllFirebird          + "," +
+			TestProvName.AllClickHouse        + "," +
+			TestProvName.AllSapHana           + "," +
+			TestProvName.AllSybase            + "," +
+			TestProvName.AllOracle            + "," +
+			TestProvName.AllDB2               + "," +
+			TestProvName.AllYdb;
+
 		[Table("NullableDateTimeSub")]
 		sealed class NullableDateTimeSubtractionTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
 
-			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			// No explicit data type: the two values are whole hours apart, so each provider's own default for
+			// DateTime carries them, and DateTime2 is not a type Access ODBC or ClickHouse can be handed at all.
+			[Column(CanBeNull = false)]
 			public DateTime StartedOn { get; set; }
 
-			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			[Column(CanBeNull = true)]
 			public DateTime? FinishedOn { get; set; }
 
 			public static readonly NullableDateTimeSubtractionTable[] Data =
@@ -2012,7 +2168,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableDateTimeSubtractionProjectionTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
+		public void NullableDateTimeSubtractionProjectionTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2032,16 +2188,36 @@ namespace Tests.Linq
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
 
-			if (!context.IsRemote() && db is DataConnection dc)
-			{
-				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
-					.ShouldBeFalse("DateTime subtraction must not appear in SQL — it is evaluated client-side in .NET");
-			}
+			// Where the provider can express the elapsed interval it is free to compute it server-side, so the
+			// contract this test pins is the value. Where it cannot, the subtraction must still not leak into SQL -
+			// the value has to come from .NET - and that is what the guard below keeps honest.
+			AssertSubtractionStaysClientSide(context, db, "DateTime");
 		}
 
+		/// <summary>
+		/// Asserts the subtraction was not emitted, on a provider that has no lowering for it.
+		/// </summary>
+		/// <remarks>
+		/// Both column names appear in the SQL either way, since the client-side path still has to read them, so
+		/// what is looked for is a subtraction <em>between</em> them. The pattern only catches the operands in the
+		/// written order - which is the order the builder emits - and stops at a comma so a function call taking
+		/// both dates as arguments does not read as one.
+		/// </remarks>
+		static void AssertSubtractionStaysClientSide(string context, IDataContext db, string valueType)
+		{
+			if (context.IsRemote() || context.IsAnyOf(ElapsedDifferenceProviders) || db is not DataConnection dc)
+				return;
+
+			Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
+				.ShouldBeFalse($"{valueType} subtraction must not appear in SQL — it is evaluated client-side in .NET");
+		}
+
+		// Forced server-side on a provider that has no lowering for date subtraction. The excluded set is the
+		// providers that do have one - one name to move as each gains support, rather than a list of the rest.
 		[ThrowsCannotBeConverted]
 		[Test]
-		public void NullableDateTimeSubtractionProjectionSqlTest([DataSources(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse)] string context)
+		public void NullableDateTimeSubtractionProjectionSqlTest(
+			[DataSources(ElapsedDifferenceProviders)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
@@ -2055,6 +2231,31 @@ namespace Tests.Linq
 				};
 
 			_ = query.ToArray();
+		}
+
+		[Test]
+		public void NullableDateTimeSubtractionProjectionServerSideTest(
+			[IncludeDataSources(true, ElapsedDifferenceProviders)] string context)
+		{
+			// The same query on a provider that does translate it. Sql.AsSql forces the server side, so this
+			// fails outright rather than quietly falling back if the lowering ever stops working.
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
 		}
 
 		// Short name: Oracle 11 caps identifiers at 30 chars.
@@ -2098,11 +2299,33 @@ namespace Tests.Linq
 			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
 			result[1].Time.ShouldBeNull();
 
-			if (!context.IsRemote() && db is DataConnection dc)
-			{
-				Regex.IsMatch(dc.LastQuery!, @"FinishedOn[^,]*-[^,]*StartedOn", RegexOptions.IgnoreCase)
-					.ShouldBeFalse("DateTimeOffset subtraction must not appear in SQL — it is evaluated client-side in .NET");
-			}
+			AssertSubtractionStaysClientSide(context, db, "DateTimeOffset");
+		}
+
+		[Test]
+		public void NullableDateTimeOffsetSubtractionProjectionServerSideTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			// Sql.AsSql forces the server side, so this fails outright rather than quietly falling back if the
+			// lowering ever stops working. There is no Sql.AsSql counterpart for the providers that cannot express
+			// it, because the throw comes from the same builder method the DateTime overload already covers.
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(NullableDateTimeOffsetSubtractionTable.Data);
+
+			var result =
+				(
+					from t in tb
+					orderby t.Id
+					select new
+					{
+						Time = Sql.AsSql(t.FinishedOn - t.StartedOn),
+					})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Time.ShouldNotBeNull();
+			result[0].Time!.Value.TotalHours.ShouldBeInRange(1.9, 2.1);
+			result[1].Time.ShouldBeNull();
 		}
 	}
 }

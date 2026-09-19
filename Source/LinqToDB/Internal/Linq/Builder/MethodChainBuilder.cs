@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 
@@ -123,8 +125,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			var translatedToSql = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
+
 			var sqlExpression = finalFunction.GetExpression(
-				(builder, context: placeholderSequence, forselect: placeholderSelect),
+				(builder, context: placeholderSequence, forselect: placeholderSelect, translatedToSql),
 				builder.DataContext,
 				builder,
 				placeholderSelect,
@@ -133,13 +137,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var result = ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor, inline);
 					result = ctx.builder.UpdateNesting(ctx.forselect, result);
+
+					if (result is SqlPlaceholderExpression)
+						ctx.translatedToSql.Add(e);
+
 					return result;
 				});
 
 			if (sqlExpression is not SqlPlaceholderExpression placeholder)
 				return BuildSequenceResult.Error(methodCall);
 
-			builder.RegisterExtensionAccessors(methodCall);
+			builder.RegisterExtensionAccessors(methodCall, translatedToSql);
 
 			var context = new ChainContext(buildInfo.Parent, placeholderSequence, methodCall);
 

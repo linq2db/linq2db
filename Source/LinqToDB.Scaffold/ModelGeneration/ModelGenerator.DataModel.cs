@@ -322,6 +322,8 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public ISqlBuilder? SqlBuilder;
 
+		private protected string? DataProviderName;
+
 		protected Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
 		{
 			var dic     = new Dictionary<string,TR>(StringComparer.Ordinal);
@@ -473,7 +475,8 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 			DataContextObject ??= new Class<TTable>();
 
-			SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
+			SqlBuilder       = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
+			DataProviderName = dataConnection.DataProvider.Name;
 
 			var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);
 

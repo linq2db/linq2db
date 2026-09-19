@@ -23,6 +23,10 @@ internal sealed class OracleProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName) => [("Oracle.ManagedDataAccess.Core", NuGetPackageVersions.Oracle_ManagedDataAccess_Core)];
+#endif
+
 	public override void ClearAllPools(string providerName)
 	{
 		OracleConnection.ClearAllPools();

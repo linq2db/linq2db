@@ -1,7 +1,0 @@
-﻿{
-	"NET100.Azure": {
-		"Providers": [
-			"Oracle.12.Managed"
-		]
-	}
-}

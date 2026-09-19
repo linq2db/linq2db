@@ -17,12 +17,12 @@ using LinqToDB.SchemaProvider;
 namespace LinqToDB.Internal.DataProvider.MySql
 {
 #pragma warning disable MA0048 // File name must match type name
-	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
-	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }
-	sealed class MySql80DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql80MySqlData,        MySqlVersion.MySql80,   MySqlProvider.MySqlData     ) { }
-	sealed class MySql80DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql80MySqlConnector,   MySqlVersion.MySql80,   MySqlProvider.MySqlConnector) { }
-	sealed class MariaDB10DataProviderMySqlData()      : MySqlDataProvider(ProviderName.MariaDB10MySqlData,      MySqlVersion.MariaDB10, MySqlProvider.MySqlData     ) { }
-	sealed class MariaDB10DataProviderMySqlConnector() : MySqlDataProvider(ProviderName.MariaDB10MySqlConnector, MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector) { }
+	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     );
+	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector);
+	sealed class MySql80DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql80MySqlData,        MySqlVersion.MySql80,   MySqlProvider.MySqlData     );
+	sealed class MySql80DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql80MySqlConnector,   MySqlVersion.MySql80,   MySqlProvider.MySqlConnector);
+	sealed class MariaDB10DataProviderMySqlData()      : MySqlDataProvider(ProviderName.MariaDB10MySqlData,      MySqlVersion.MariaDB10, MySqlProvider.MySqlData     );
+	sealed class MariaDB10DataProviderMySqlConnector() : MySqlDataProvider(ProviderName.MariaDB10MySqlConnector, MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector);
 #pragma warning restore MA0048 // File name must match type name
 
 	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
@@ -71,7 +71,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// MySQL/MariaDB sort NULL as the smallest value (ascending => NULLS FIRST, descending => NULLS LAST).
 			SqlProviderFlags.DefaultNullsOrdering = NullsDefaultOrdering.Smallest;
 
-			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = version == MySqlVersion.MariaDB10
+				? new MariaDBSqlOptimizer(SqlProviderFlags)
+				: new MySqlSqlOptimizer(SqlProviderFlags);
 
 			// configure provider-specific data readers
 			if (Adapter.GetMySqlDecimalMethodName != null)

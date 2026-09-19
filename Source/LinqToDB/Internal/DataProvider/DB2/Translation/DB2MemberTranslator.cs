@@ -466,6 +466,10 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 			protected override bool IsFrameExclusionSupported       => false;
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
+			// DB2 requires a built-in numeric sort key for both ordered-set aggregates, PERCENTILE_CONT and
+			// PERCENTILE_DISC alike: "sort-key must be a built-in numeric data type (SQLSTATE 42822)". Having a
+			// native boolean type, DB2 never folds the key, so a boolean one reaches the driver as SQLSTATE 42822.
+			protected override bool IsPercentileDiscBooleanOrderBySupported => false;
 			protected override bool IsNthValueFromSupported         => true;
 			// DB2 supports the full statistical/regression window-function set. Bare STDDEV/VARIANCE are the
 			// *population* forms (DB2 docs), so map the sample-API Sql.Window.StdDev/Variance to the documented

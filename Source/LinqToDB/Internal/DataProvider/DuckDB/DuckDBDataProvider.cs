@@ -39,6 +39,7 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 			SqlProviderFlags.IsDistinctFromSupported           = true;
 			SqlProviderFlags.IsDistinctOnSupported             = true;
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
+			SqlProviderFlags.IsUpdateOutputRowsSupported       = true; // RETURNING
 
 			// DuckDB supports native PIVOT/UNPIVOT (SQL-standard form), including composite-FOR and multi-value unpivot.
 			SqlProviderFlags.IsPivotSupported                  = true;

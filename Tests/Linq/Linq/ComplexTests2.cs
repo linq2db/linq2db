@@ -91,13 +91,9 @@ namespace Tests.Linq
 			public Name? DogName { get; set; }
 		}
 
-		public class BadDog : Dog
-		{
-		}
+		public class BadDog : Dog;
 
-		public class SuperBadDog : BadDog
-		{
-		}
+		public class SuperBadDog : BadDog;
 
 		public class Test
 		{

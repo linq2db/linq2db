@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			var withTemporal        = CompatibilityLevel >= 130;
 			var temporalFilterStart = !withTemporal || !options.IgnoreSystemHistoryTables ? string.Empty : "(";
 			var temporalFilterEnd   = !withTemporal || !options.IgnoreSystemHistoryTables ? string.Empty : @"
-					) AND t.temporal_type <> 1
+					) AND (t.temporal_type IS NULL OR t.temporal_type <> 1)
 ";
 
 			return dataConnection.Query<TableInfo>(

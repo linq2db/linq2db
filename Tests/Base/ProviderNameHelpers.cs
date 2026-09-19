@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 
 namespace Tests
 {
@@ -26,11 +27,12 @@ namespace Tests
 		}
 
 		/// <summary>
-		/// Provider returns number of affected records from Execute methods
+		/// Provider returns number of affected records from Execute methods.
+		/// Reads the provider's own capability flag so tests and the library cannot drift apart.
 		/// </summary>
 		public static bool SupportsRowcount(this string context)
 		{
-			return !context.IsAnyOf(TestProvName.AllClickHouse, TestProvName.AllYdb);
+			return DataConnection.GetDataProvider(context.StripRemote()).SqlProviderFlags.IsAffectedRowsCountSupported;
 		}
 
 		public static bool IsUseParameters(this string context)

@@ -378,7 +378,12 @@ namespace LinqToDB.Internal.SqlProvider
 					var fields = result[i] = new ISqlExpression[keyset.Count];
 
 					for (var j = 0; j < keyset.Count; j++)
-						fields[j] = GetUnderlyingFieldOrColumn(keyset[j]) ?? throw new InvalidOperationException($"Cannot get field for {keyset[j]}");
+					{
+						// A keyset element is not always reducible to a field/column: DISTINCT projections and
+						// GROUP BY items may hold arbitrary expressions (e.g. GROUP BY Substring(Code, 1, 3)).
+						// Keep such an element as is - it still matches against the expression behind a column.
+						fields[j] = GetUnderlyingFieldOrColumn(keyset[j]) ?? keyset[j];
+					}
 				}
 
 				return result;

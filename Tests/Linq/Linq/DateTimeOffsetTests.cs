@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -181,7 +181,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -282,7 +282,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByLocalDateTimeTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -403,7 +403,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByAddDaysTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -424,7 +424,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByAddHoursTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -445,7 +445,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByAddMillisecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -466,7 +466,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByAddMinutesTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -487,7 +487,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByAddMonthsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -508,7 +508,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByAddSecondsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -529,7 +529,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorMessage = "Assert.That(actual, Is.EqualTo(expected))")]
 		[Test]
 		public void GroupByDateTimeOffsetByAddYearsTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
@@ -897,6 +897,12 @@ namespace Tests.Linq
 
 		#region DateDiff
 
+		// Every gate in this region carries the same reason: SQL Server before 2016 has no exact measure of elapsed
+		// time - DATEDIFF_BIG arrived there - and Sql.AsSql asks for the value in SQL, so there is no client-side
+		// answer to fall back to. These used to be answered from DATEDIFF, which counts boundary crossings rather
+		// than elapsed time and was therefore wrong for unaligned inputs. Declared rather than excluded so they go
+		// red the day the lowering reaches those versions.
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateDay(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -921,6 +927,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.TransactionDate, t.TransactionDate.AddHours(96))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateHour(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -945,6 +952,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Hour, t.TransactionDate, t.TransactionDate.AddHours(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMinute(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -969,6 +977,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Minute, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateSecond(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -993,6 +1002,7 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Second, t.TransactionDate, t.TransactionDate.AddMinutes(100))));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllSqlServer2014Minus)]
 		[Test]
 		public void SubDateMillisecond(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
@@ -1031,13 +1041,16 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 where Sql.AsSql(t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200))                  select t.TransactionId);
 		}
 
-		[ActiveIssue(Configurations =
-		[
-			// caused by difference in how DTO parameter stored into database by provider
-			TestProvName.AllSQLiteClassic,
-			// for FB we need to map DTO parameters to FbzonedDateTime : https://github.com/FirebirdSQL/NETProvider/issues/1189
-			TestProvName.AllFirebird
-		])]
+		// caused by difference in how DTO parameter stored into database by provider
+		[ActiveIssue(1855, Configuration = TestProvName.AllSQLiteClassic,
+			ErrorMessage = "Assert.That(result, Has.Length.EqualTo(testCase == 1? 1 : 2))",
+			Details = "Issue number taken from the test's own Description. SQLite Classic keeps the offset in a form the filter no longer matches, so the row count is wrong rather than the query being refused.")]
+		// for FB we need to map DTO parameters to FbzonedDateTime : https://github.com/FirebirdSQL/NETProvider/issues/1189
+		// One attribute for both transports - the Grpc wrapper carries the inner type name, which is what Matches
+		// looks for on a remote case. Only Firebird 4+ reaches this: the data source excludes the older ones.
+		[ActiveIssue("https://github.com/FirebirdSQL/NETProvider/issues/1189", Configuration = TestProvName.AllFirebird,
+			ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Incorrect time zone value.",
+			Details = "the client rejects the DateTimeOffset parameter outright rather than answering wrongly.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1855")]
 		public void Issue1855Test(
 			// DateTimeOffset not mapped

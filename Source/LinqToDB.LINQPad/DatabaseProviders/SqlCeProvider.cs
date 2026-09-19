@@ -20,6 +20,9 @@ internal sealed class SqlCeProvider : DatabaseProviderBase
 	{
 	}
 
+	// SQL CE engine is a Windows-only native component
+	public override bool IsPlatformSupported => Platform.IsWindows;
+
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
 		// no information in schema

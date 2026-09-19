@@ -1,0 +1,665 @@
+LICENSE INFORMATION
+
+The Programs listed below are licensed under the following License Information terms and conditions in addition to the Program license terms previously agreed to by Client and IBM. If Client does not have previously agreed to license terms in effect for the Program, the International Program License Agreement (i125-3301-15) applies.
+
+Program Name (Program Number):
+IBM Data Server Provider for .NET 9 (Tool)
+
+The following standard terms apply to Licensee's use of the Program.
+
+Modifiable Third Party Code
+
+To the extent, if any, in the NOTICES file IBM identifies third party code as "Modifiable Third Party Code," IBM authorizes Licensee to 1) modify the Modifiable Third Party Code and 2) reverse engineer the Program modules that directly interface with the Modifiable Third Party Code provided that it is only for the purpose of debugging Licensee's modifications to such third party code. IBM's service and support obligations, if any, apply only to the unmodified Program.
+
+Redistributables
+
+The Program includes components that are Redistributable and they are listed below. Redistributables may be distributed, in object-code form, only as part of Licensee's value-added application that was developed using the Program ("Licensee's Application") and only to support use of Licensee's Application. If the Redistributables include a Java Runtime Environment, Licensee must also include other non-Java Redistributables with Licensee's Application. Licensee may not remove any copyright or notice files contained in the Redistributables or use IBM's, it's suppliers' or distributors' names or trademarks in connection with the marketing of Licensee's Application without IBM's or that supplier's or distributor's prior written consent. Licensee's license agreement with the end user must be at least as protective of IBM as the terms of this Agreement.
+
+IBM, its suppliers and distributors provide the Redistributables and related documentation without obligation of support and "AS IS", WITH NO WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING THE WARRANTY OF TITLE, NON-INFRINGEMENT OR NON-INTERFERENCE AND THE IMPLIED WARRANTIES AND CONDITIONS OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. 
+
+The following are Redistributables:
+IBM Data Server Provider for .NET Redistributables:
+
+The following list includes files that are provided to Licensee pursuant to the Redistributables section of the IBM International Program License Agreements License Information that applies to this Program:
+
+List Redistributable files:
+
+Common list for all OS - Unix,Linux,MacOS,Windows,Linux PowerPC and Linux on IBM Z:
+
+04370923.cnv
+08500923.cnv
+08501252.cnv 
+08600923.cnv
+08630923.cnv
+09230437.cnv
+09230850.cnv
+09230860.cnv
+09231043.cnv
+09231051.cnv
+09231114.cnv
+09231208.cnv
+09231252.cnv
+09231275.cnv
+09241252.cnv
+09370950.cnv
+10430923.cnv
+10510923.cnv
+11140923.cnv
+12080923.cnv
+12520850.cnv
+12520923.cnv
+12750923.cnv
+1388ucs2.cnv
+1399ucs2.cnv
+0939ucs2.cnv
+0930ucs2.cnv
+1390ucs2.cnv
+ucs20943.cnv
+0954ucs2.cnv
+5039ucs2.cnv
+0943ucs2.cnv
+IBM00850.ucs
+IBM00923.ucs
+IBM01252.ucs
+db2dsdriver.cfg.sample 
+db2dsdriver.xsd
+DigiCertGlobalRootCA.arm
+db2level
+db2trc
+db2drdat
+db2cli
+db2diag
+db2support
+db2admh.mo
+db2adm.mo
+db2caem.mo
+db2supp.mo
+db2cklog.mo
+db2fodc.mo
+db2stt.mo
+db2clia1.lst
+db2clias.lst
+db2cli.mo
+db2clit.mo
+db2clp.mo
+db2clp2.mo
+db2diag.mo
+db2sqlh.mo
+db2sql.mo
+IBMIAMauth.so
+IBMkrb5.so
+IBMkrb5.so.1 
+libdb2clixml4c.so
+libdb2clixml4c.so.1
+libDB2xml4c.so
+libDB2xml4c.so.58
+libdb2.so
+libdb2.so.1
+libdb2o.so
+libdb2o.so.1
+db2cli.bnd
+db2clipk.bnd
+db2clist.bnd
+db2ajgrt.bnd
+db2spcdb.bnd
+db2cli.lst
+conlic.bin
+odbc_notices.txt
+odbc_REDIST.txt
+odbc_LI_en.txt
+ICCSIG.txt
+ibm.com_IBM_Data_Server_Driver_for_ODBC_and_CLI-11.5.0.swidtag
+IBM.Data.Db2.dll
+Readme.txt
+Lic_en.txt
+Readme.md
+TestConn.dll
+TestConn.exe
+TestConn.runtimeconfig
+
+
+For MacOS in addition to common files:
+libdb2.dylib
+libdb2o.dylib
+libdb2clixml4c.dylib
+libDB2xml4c.58.0.dylib
+libDB2xml4c.58.dylib
+libDB2xml4c.dylib
+IBMIAMauth.dylib
+
+
+For Windows in addition to common files:
+db2app64.dll
+db2cli64.dll
+db2cli.exe
+db2clixml4c64.dll
+db2diag.exe
+db2drdat.exe
+db2ldap64.dll
+db2ldapm64.dll
+db2level.exe
+db2osse64.dll
+db2support.exe
+db2trc.exe
+db2trcapi64.dll
+db2trcd64.exe
+DB2xml4c_cli64_5_8.dll
+DB2xml4c_cli64_5_8.dll.2.manifest
+IBM.DB2.APP64.manifest
+IBM.DB2.CLI64.manifest
+IBM.DB2.CLIXML4C64.manifest
+IBM.DB2.SEC64.manifest
+IBMIAMauth64.dll
+IBMkrb5TwoPart64.dll
+IBMkrb564.dll
+IBMLDAPauthclient64.dll
+IBMOSauthclient64.dll
+IBMOSauthclientTwoPart64.dll
+
+
+
+L/N: L-ZRDX-CGZHUA
+D/N: L-ZRDX-CGZHUA
+P/N: L-ZRDX-CGZHUA
+
+International Program License Agreement
+
+Part 1 - General Terms
+
+BY DOWNLOADING, INSTALLING, COPYING, ACCESSING, CLICKING ON AN "ACCEPT" BUTTON, OR OTHERWISE USING THE PROGRAM, LICENSEE AGREES TO THE TERMS OF THIS AGREEMENT. IF YOU ARE ACCEPTING THESE TERMS ON BEHALF OF LICENSEE, YOU REPRESENT THAT YOU HAVE FULL AUTHORITY TO BIND LICENSEE TO THESE TERMS.
+
+IF YOU DO NOT AGREE TO THESE TERMS OR DO NOT HAVE AUTHORITY: i) DO NOT DOWNLOAD, INSTALL, COPY, ACCESS, CLICK ON AN "ACCEPT" BUTTON, OR USE THE PROGRAM; AND ii) PROMPTLY RETURN THE UNUSED MEDIA, DOCUMENTATION, AND PROOF OF ENTITLEMENT TO THE PARTY FROM WHOM IT WAS OBTAINED FOR A REFUND OF THE AMOUNT PAID. IF THE PROGRAM WAS DOWNLOADED, DESTROY ALL COPIES OF THE PROGRAM.
+
+This International Program License Agreement (IPLA) and applicable Transaction Documents (together the "Agreement") are the complete agreement between Licensee and IBM regarding the use of a Program. The country required terms included in Part 2 of this IPLA replace or modify the terms of Part 1.
+
+Transaction Documents (TDs) provide a description, information, and terms regarding the Program and its authorized use. Examples of TDs for Programs include license information (LI), licensed program specifications (LPS), quote, proof of entitlement (PoE), or invoice. To the extent of any conflict a TD will prevail over the IPLA.
+
+1. Program License
+
+a. A Program is an executable IBM-branded computer program and its related material and includes whole and partial copies. Program details are described in a TD available at http://www.ibm.com/software/sla (for Passport Advantage Programs) or http://www.ibm.com/support/knowledgecenter (for other IBM Programs), in the Program's system command directory, or as otherwise specified by IBM. IBM software policies (such as backup, temporary use and IBM approved cloud environment) available at http://www.ibm.com/softwarepolicies apply to Licensee's use of Programs.
+
+b. Copies of Programs are copyrighted and licensed.
+
+c. Licensee is granted a nonexclusive license to:
+
+(1) use each copy of a Program, subject to the terms of the Agreement and up to the number of license entitlements Licensee acquires ("Authorized Use");
+
+(2) make and install copies to support such Authorized Use; and
+
+(3) make a backup copy.
+
+d. Programs may be used by Licensee, its employees and contractors. Licensee may not rent or lease a Program or provide commercial IT, hosting or timesharing services to any third party. Additional rights may be available for additional fees or under different terms.
+
+e. The license granted for a Program is subject to Licensee:
+
+(1) reproducing copyright notices and other markings on any copy;
+
+(2) ensuring anyone who uses the Program: i) does so only on Licensee's behalf within Licensee's Authorized Use; and ii) complies with this Agreement;
+
+(3) not reverse assembling, reverse compiling, translating, or reverse engineering the Program, except as expressly permitted by law without the possibility of contractual waiver; and
+
+(4) not using any of the elements of the Program or related licensed materials separately from the Program.
+
+f. If the TD for a Program ("Principal Program") states that a "Supporting Program" is included with the Principal Program, Licensee may use the Supporting Program subject to any license limitations of the Principal Program and only to support the Principal Program.
+
+g. This license applies to each copy of the Program that Licensee makes.
+
+h. An update, fix, or patch to a Program is subject to the terms governing the Program unless new terms are provided in an updated TD. Licensee accepts such new terms upon installation of the update, fix, or patch. If a Program is replaced by an update, Licensee agrees to promptly discontinue use of the replaced Program.
+
+i. If Licensee is dissatisfied with a Program for any reason, Licensee may terminate the license by returning the Program and proof of entitlement to IBM or the authorized IBM Business Partner within 30 days of the original acquisition date of such Program for a refund of the amount paid. For a downloaded Program, contact the party Licensee acquired the Program from for refund instructions.
+
+2. Warranties
+
+a. IBM warrants that a Program, when used in its specified operating environment conforms to its specifications. The warranty period for a Program is 12 months from acquisition, or the initial license term if less than 12 months, unless another warranty period is specified in the TD.
+
+b. During the warranty period Licensee will have access to IBM databases containing information on known Program defects, defect corrections, restrictions, and bypasses as described in the IBM Support Guide at http://www.ibm.com/support/pages/node/733923.
+
+c. If the Program does not function as warranted during its warranty period and the problem cannot be resolved with information available in the IBM databases, Licensee may return the Program and proof of entitlement to IBM or the IBM Business Partner for a refund of the amount Licensee paid and Licensee's license terminates.
+
+d. IBM does not warrant uninterrupted or error-free operation of an IBM Program or that IBM will correct all defects or prevent third party disruptions. These warranties are the exclusive warranties from IBM and replace all other warranties, including the implied warranties or conditions of satisfactory quality, merchantability, non-infringement, and fitness for a particular purpose. IBM warranties will not apply if there has been misuse, modification, damage not caused by IBM, or failure to comply with written instructions provided by IBM. Non-IBM Programs are provided as-is, without warranties of any kind. Third parties may provide their own warranties to Licensee.
+
+e. Additional support available during or after the warranty period may be available under separate agreement.
+
+3. Charges, Taxes, Payment, and Verification
+
+a. Licensee's right to use a Program is contingent on Licensee paying applicable charges as specified in the agreement under which Licensee acquired the license entitlements. Licensee is responsible to acquire additional license entitlements in advance of any increase of its use.
+
+b. Licensee agrees to pay all applicable charges for acquired entitlements and any charges for use in excess of authorizations. Charges are exclusive of any customs or other duty, tax, and similar levies imposed by any authority resulting from Licensee's acquisition of entitlements and will be invoiced in addition to such charges. Amounts are due upon receipt of the invoice from IBM and payable within 30 days of the invoice date to an account specified by IBM and late payment fees may apply. Licensee is responsible to properly acquire additional license entitlements in advance to increase its use. IBM does not give credits or refunds for charges already due or paid, except as specified elsewhere in this IPLA, the applicable TD, or terms of the agreement under which Licensee acquired license entitlements.
+
+c. Based on acquired entitlements, Licensee agrees to: i) pay any withholding tax directly to the appropriate government entity where required by law; ii) furnish a tax certificate evidencing such payment to IBM; iii) pay IBM only the net proceeds after tax; and iv) fully cooperate with IBM in seeking a waiver or reduction of such taxes and promptly complete and file all relevant documents.
+
+d. If Licensee imports, exports, transfers, accesses, or uses a Program across a border, Licensee agrees to be responsible for and pay authorities any custom, duty, tax, or similar levy assessed by the authorities. This excludes those taxes based on IBM's net income.
+
+3.1 Licensing Verification
+
+a. Licensee will, for all Programs at all sites and for all environments, create, retain, and each year provide to IBM upon request with 30 days' advance notice: i) a report, in a format requested by IBM using records, system tools output, and other system information; and ii) supporting documentation (collectively, "Deployment Data").
+
+b. Upon reasonable notice, IBM and its independent auditors may verify Licensee's compliance with this Agreement, at all sites and for all environments, in which Licensee uses (for any purposes) Programs. Verification will be conducted in a manner that minimizes disruption to Licensee's business and may be conducted on Licensee's premises, during normal business hours. IBM will have a written confidentiality agreement with the independent auditor. In addition to providing Deployment Data described above, Licensee agrees to provide to IBM and its auditors additional accurate information and Deployment Data upon request.
+
+c. Licensee will promptly order and pay charges at IBM's then current rates associated with: i) any deployments in excess of authorizations indicated on or by any annual report or verification; ii) applicable subscription & support services (S&S) for such excess deployments for the lesser of the duration of such excess use or two years; and iii) any additional charges and other liabilities determined as a result of such verification, including but not limited to taxes, duties, and regulatory fees.
+
+4. Liability and Intellectual Property Protection
+
+a. IBM's entire liability for all claims related to this Agreement will not exceed the amount of any actual direct damages incurred by Licensee up to the amounts paid (if recurring charges, up to 12 months' charges apply) for the entitlements to the Program that is the subject of the claim, regardless of the basis of the claim. IBM will not be liable for special, incidental, exemplary, indirect, or economic consequential damages, or for lost profits, business, value, revenue, goodwill, or anticipated savings. These limitations apply collectively to IBM, its affiliates, contractors, and suppliers.
+
+b. The following amounts are not subject to the above cap: i) third party payments related to infringement claims described in clause 4 c below; and ii) damages that cannot be limited under applicable law.
+
+c. If a third party asserts a claim against Licensee that an IBM Program infringes a patent or copyright, IBM will defend Licensee against that claim and pay amounts finally awarded by a court against Licensee or included in a settlement approved by IBM. To obtain IBM's defense against and payment of infringement claims, Licensee must promptly: i) notify IBM in writing of the claim; ii) supply information requested by IBM; and iii) allow IBM to control, and reasonably cooperate in, the defense and settlement, including mitigation efforts. IBM's defense and payment obligations for infringement claims extend to claims of infringement based on open source code that IBM selects and embeds in an IBM Program.
+
+d. IBM has no responsibility for claims based on non-IBM products, items not provided by IBM, or any violation of law or third party rights caused by Content, or any Licensee materials, designs, specifications, or use of a non-current version or release of an IBM Program when an infringement claim could have been avoided by using a current version or release. Content consists of all data, software, and information that Licensee or its authorized users provide, authorize access to, or inputs to a Program.
+
+5. Termination
+
+a. IBM may terminate Licensee's license to use a Program if Licensee fails to comply with the IPLA, TDs or acquisition agreements, such as the International Passport Advantage Agreement (IPAA). Licensee will promptly destroy all copies of the Program after license termination. Any terms that by their nature extend beyond the termination remain in effect until fulfilled and apply to successors and assignees.
+
+6. Governing Laws and Geographic Scope
+
+a. Both parties agree to the application of the laws of the country where the transaction for license entitlements is performed, without regard to conflict of law principles. The rights and obligations of each party are valid only in the country where the transaction to acquire license entitlements is performed or, if IBM agrees, the country where the Program is placed in productive use, except all licenses are valid as specifically granted.
+
+b. Each party is also responsible for complying with: i) laws and regulations applicable to its business and Content; and ii) import, export and economic sanction laws and regulations, including the defense trade control regime of the United States of America and any applicable jurisdictions, that prohibit or restrict the import, export, re-export, or transfer of products, technology, services or data, directly or indirectly, to or for certain countries, end uses or end users.
+
+c. If any provision of this Agreement for a Program, is invalid or unenforceable, the remaining provisions remain in full force and effect. Nothing in this Agreement affects statutory rights of consumers that cannot be waived or limited by contract. The United Nations Convention on Contracts for the International Sale of Goods does not apply to transactions under this Agreement.
+
+7. General
+
+a. IBM is an independent contractor, not Licensee's agent, joint venturer, partner, or fiduciary, and does not undertake to perform any of Licensee's regulatory obligations, or assume any responsibility for Licensee's business or operations. Licensee is responsible for its use of IBM Programs and Non-IBM Programs. IBM is acting as an information technology provider only. IBM's direction, suggested usage, or guidance or use of a Program does not constitute medical, clinical, legal, accounting, or other licensed professional advice. Licensee should obtain its own expert advice.
+
+b. For Programs IBM provides to Licensee in tangible form, IBM fulfills its shipping and delivery obligations upon the delivery of such Programs to the IBM-designated carrier, unless otherwise agreed to in writing by Licensee and IBM.
+
+c. Licensee may not use the Program if failure of the Program could lead to death, serious bodily injury, or property or environmental damage.
+
+d. IBM, its affiliates, and contractors of either require use of business contact information and certain account usage information. This information is not Content. Business contact information is used to communicate and manage business dealings with the Licensee. Examples of business contact information include name, business telephone, address, email, user ID, and tax registration information. Account usage information is required to enable, provide, manage, support, administer, and improve Programs. Examples of account usage information include reported errors and digital information gathered using tracking technologies, such as cookies and web beacons, during use of the Programs. The IBM Privacy Statement at http://www.ibm.com/privacy provides additional details with respect to IBM's collection, use, and handling of business contact and account usage information. When Licensee provides information to IBM and notice to, or consent by, the individuals is required for such processing, Licensee will notify individuals and obtain consent.
+
+e. IBM Business Partners who use or make available Programs are independent from IBM and unilaterally determine their prices and terms. IBM is not responsible for their actions, omissions, statements, or offerings.
+
+f. IBM may offer Non-IBM Programs, or an IBM Program may enable access to Non-IBM Programs, that may require acceptance of third party terms identified in a TD or presented to the Licensee. Linking to or use of Non-IBM Programs constitutes Licensee's agreement with such terms. IBM is not a party to any third party agreement and is not responsible for such Non-IBM Programs.
+
+g. License grants to Programs are provided by International Business Machines Corporation, a New York corporation ("IBM Corporation"). The IBM company from which the Licensee acquires entitlements ("IBM") is acting as a distributor and delivering Programs and is responsible for enforcing the terms of this Agreement. If entitlements are acquired from an IBM Business Partner, the IBM company for the country of acquisition is responsible for enforcing the terms of this Agreement. No right or cause of action is created in favor of Licensee against IBM Corporation. Licensee waives all claims and causes of action against IBM Corporation and agrees to look solely to IBM for any rights and remedies in connection with Programs.
+
+h. Licensee may not sublicense, assign, or transfer the license for any Program (except to the extent assignment or transfer may not be legally restricted or as is expressly permitted in a TD or as otherwise agreed by IBM). IBM may assign its rights and obligations under this Agreement in conjunction with the sale of the portion of IBM's business that includes a Program. IBM may share this Agreement and related documents in conjunction with any assignment.
+
+i. All notices under the Agreement must be in writing and sent to the business address specified in the agreement Licensee acquired the license entitlements unless a party designates in writing a different address. The parties consent to the use of electronic means and facsimile transmissions for communications as a signed writing. Any reproduction of the Agreement made by reliable means is considered an original. Agreement supersedes any course of dealing, discussions or representations, between the parties.
+
+j. No right or cause of action for any third party is created by the Agreement. Neither party will bring a legal action arising out of or related to the Agreement more than two years after the cause of action arose. Neither party is responsible for failure to fulfill its non-monetary obligations due to causes beyond its control. Each party will allow the other reasonable opportunity to comply before it claims the other has not met its obligations.
+
+k. IBM may use personnel and resources in locations worldwide, including third party contractors to support the delivery of Programs and Program support. Licensee's use of Programs may result in the transfer of Content, including personally identifiable information, across country borders to provide Program support as described in the IBM Software Support Guide.
+
+Part 2 - Country Required Terms
+
+For licenses acquired in the countries specified below, the following terms replace or modify the referenced terms of this IPLA. Terms not changed by these amendments remain unchanged and in effect.
+
+1. AMERICAS
+
+Section 3. Charges, Taxes, Payment, and Verification
+
+Replace the first and second sentence of paragraph b with the following:
+
+In Brazil: Licensee agrees to pay all applicable charges for acquired entitlements and any charges for use in excess of authorizations and any customs or other duty, tax, and similar levies imposed by any authority resulting from Licensee's acquisition of entitlements.
+
+In paragraph b:
+
+In Mexico: In the third sentence, delete the words "to an account specified by IBM".
+
+In Mexico: Add the following new sentence after the third sentence:
+
+Payments will be made through electronic transfer of funds to an account specified by IBM or in IBM's domicile which is located in Alfonso Napoles Gandara 3111, Santa Fe Peña Blanca, Alvaro Obregon, Mexico City, Zip Code 01210.
+
+Add at the end of paragraph c the following sentence:
+
+In Canada: Where taxes are based upon the location(s) receiving the benefit of the Program, Licensee has an ongoing obligation to notify IBM of such location(s) if different than Licensee's business address listed in the applicable TD.
+
+Add at the end of paragraph c the following sentence:
+
+In United States: The parties agree no tangible personal property (e.g. media or publications) shall transfer to Licensee if: i) IBM delivers Programs electronically to Licensee; or ii) Licensee claims a sales or use tax exemption for Programs IBM delivers electronically to Licensee. Where taxes are based upon the location(s) receiving the benefit of the Program, Licensee has an ongoing obligation to notify IBM of such location(s) if different than Licensee's business address listed in the applicable TD.
+
+Section 4. Liability and Intellectual Property Protection
+
+Insert the following disclaimer at the end of paragraph a:
+
+In Peru: In accordance with Article 1328 of the Peruvian Civil Code this limitations and exclusions will not apply in the cases of willful misconduct ("dolo") or gross negligence ("culpa inexcusable").
+
+Section 6. Governing Laws and Geographic Scope
+
+In paragraph a, replace the first sentence only with:
+
+In Argentina: Both parties agree to the application of the laws of the Republic of Argentina, without regard to the conflict of law principles. Any proceeding regarding the rights, duties, and obligations arising from this Agreement will be brought in the Ordinary Commercial Court of the City of "Ciudad Autónoma de Buenos Aires".
+
+In Chile: Both parties agree to the application of the laws of Chile, without regard to the conflict of law principles. Any conflict, interpretation or breach related to this Agreement that cannot be solved by the Parties should be remitted to the jurisdiction of the Ordinary Courts of the city and district of Santiago.
+
+In Colombia: Both parties agree to the application of the laws of the Republic of Colombia, without regard to the conflict of law principles. All rights, duties and obligations are subject to the judges of the Republic of Colombia.
+
+In Ecuador: Both parties agree to the application of the laws of the Republic of Ecuador, without regard to the conflict of law principles. Any dispute arising out or relating to this Agreement will be submitted to the civil judges of Quito and to the verbal summary proceeding.
+
+In Venezuela: Both parties agree to the application of the laws of Venezuela, without regard to the conflict of law principles. The parties agree to submit any conflict related to this Agreement, existing between them to the Courts of the Metropolitan Area of the City of Caracas.
+
+In Peru: Both parties agree to the application of the laws of Peru, without regard to the conflict of law principles. Any discrepancy that may arise between the parties in the execution, interpretation or compliance of this Agreement that may not be directly resolved shall be submitted to the Jurisdiction and Competence of the Judges and Tribunals of the 'Cercado de Lima' Judicial District.
+
+In Uruguay: Both parties agree to the application of the laws of Uruguay. Any discrepancy that may arise between the parties in the execution, interpretation or compliance of this Agreement that may not be directly resolved shall be submitted to the Montevideo Courts ("Tribunales Ordinarios de Montevideo").
+
+In paragraph a, first sentence only, replace the phrase, "the country where the transaction for license entitlements is performed" with:
+
+In United States, Anguilla, Antigua/Barbuda, Aruba, Bahamas, Barbados, Bermuda, Bonaire, British Virgin Islands, Cayman Islands, Curacao, Dominica, Grenada, Guyana, Jamaica, Montserrat, Saba, Saint Eustatius, Saint Kitts and Nevis, Saint Lucia, Saint Maarten, Saint Vincent and the Grenadines, Suriname, Tortola, Trinidad and Tobago, and Turk and Caicos: the State of New York, United States.
+
+In Canada: the Province of Ontario and the federal laws of Canada applicable therein.
+
+In paragraph a, second sentence, replace the phrase, "the country where the transaction to acquire license entitlements is performed" with:
+
+In Argentina: Argentina
+
+In Chile: Chile
+
+In Colombia: Colombia
+
+In Ecuador: Ecuador
+
+In Mexico: Mexico
+
+In Peru: Peru
+
+In Uruguay: Uruguay
+
+In Venezuela: Venezuela
+
+Add the following sentences at the end of paragraph b:
+
+In Brazil: All disputes arising out of or related to this Agreement, including summary proceedings, will be brought before and subject to the exclusive jurisdiction of the Forum of the City of São Paulo, State of São Paulo, Brazil and the parties irrevocably agree with this specific jurisdiction renouncing any other, however privileged it may be.
+
+In Mexico: The Parties agree to submit themselves to the exclusive jurisdiction of the courts of Mexico City to resolve any dispute arising from this Agreement. The Parties waive to any other jurisdiction that may correspond to them due to their current or future domiciles, or for any other reason.
+
+Section 7. General
+
+In paragraph g:
+
+In United States: delete the last 2 sentences.
+
+In paragraph i, add the following new sentence after the first sentence:
+
+In Mexico: Any change of address must be notified 10 (ten) days in advance, otherwise the notifications made at the last indicated address will have full legal effects.
+
+In paragraph j:
+
+In Brazil: delete the entire 2nd sentence of "Neither party will bring a legal action arising out of or related to the Agreement more than two years after the cause of action arose".
+
+Add as a new paragraph l to this section:
+
+In Canada: Both parties agree to write this document in English. Les parties ont convenu de rédiger le présent document en langue anglaise.
+
+2. ASIA PACIFIC
+
+Section 2. Warranties
+
+Add at the end of this section as a new paragraph f:
+
+In Australia: These warranties are in addition to any rights under, and only limited to the extent permitted by, the Competition and Consumer Act 2010.
+
+In Japan: IBM's liability is limited to this paragraph and the Liability and Intellectual Property Protection section, applicable TDs as Licensee's sole remedy for failure to meet the warranties specified in this section.
+
+In New Zealand: These warranties are in addition to any rights under the Consumer Guarantee Act 1993 or other legislation that cannot be limited by law.
+
+Section 3. Charges, Taxes, Payment, and Verification
+
+In paragraph b. replace the third sentence with the following 2 sentences:
+
+In Hong Kong, Indonesia, Korea, Macau, Malaysia, Philippines, Singapore, and Vietnam: Amounts are due upon receipt of the invoice from IBM and payable within 30 days of the invoice date to an account specified by IBM. If payment is not received within 30 days from the invoice date, IBM may charge a late payment fee on the amount outstanding, calculated on the number of days the payment is received late, at the lesser of: i) 2% for every 30 day period or portion thereof; or ii) the maximum amount permissible by applicable law.
+
+In Thailand: Amounts are due upon receipt of the invoice from IBM and payable within 30 days of the invoice date to an account specified by IBM. If payment is not received within 30 days from the invoice date, a late payment fee may be applied on the amount outstanding, at the rate of 1.25% per month, calculated on the number of days the payment is received late.
+
+In the first sentence of paragraph c, remove the word "and" before "(iv)", and add a semicolon and the following new item "(v)":
+
+In India: ; and (v) file accurate Taxes Deducted at Source (TDS) returns on a timely basis. If any tax, duty, levy or fee ("Taxes") are not charged on the basis of the exemption documentation provided by the Licensee and the taxation authority subsequently rules that such Taxes should have been charged, then the Licensee will be liable to pay such Taxes, including any interests, levies and/or penalties applicable thereon.
+
+In the first sentence of paragraph c, remove the word "and" before "(iv)", and replace item (iv) and add new item (v) with:
+
+In Singapore, Malaysia, Philippines, Thailand, Indonesia, and Vietnam: (iv) fully cooperate with IBM in seeking a waiver or reduction of withholding or other tax that Licensee requests a waiver or reduction; and v) promptly complete, file, and keep current all relevant documents for any such waiver, reductions, or exemptions.
+
+Section 4. Liability and Intellectual Property Protection
+
+In paragraph a, add at the end of the first sentence the following:
+
+In Australia: (for example, whether based in contract, tort, negligence, under statute or otherwise)
+
+In paragraph a, second sentence after the word "special" and before the word "incidental", add the following:
+
+In Philippines: (including nominal and exemplary damages), moral,
+
+Add as a new paragraph after the end of paragraph a (and ensure paragraphs properly reletter):
+
+In Australia: Where IBM is in breach of a guarantee implied by the Competition and Consumer Act 2010, IBM's liability is limited to the repair or replacement of goods or the supply of equivalent goods, or the payment of the cost of replacing the goods or having the good repaired. Where a guarantee relates to the right to sell, quiet possession, or clear title of a good under schedule 2 of the Competition and Consumer Act, then none of these limitations apply.
+
+Section 5. Termination
+
+Add at the end of the section as a new paragraph b:
+
+In Indonesia: The parties waive article 1266 of the Indonesian Civil Code to the extent it requires a court decree for the termination of an agreement creating mutual obligations.
+
+Section 6. Governing Laws and Geographic Scope
+
+In paragraph a, in the first sentence only, replace the phrase, "the country where the transaction for license entitlements is performed" with:
+
+In Cambodia, Laos: the State of New York, United States
+
+In Australia: the State or Territory in which the transaction is performed
+
+In Hong Kong: the Hong Kong Special Administrative Region of the People's Republic of China
+
+In Macau: the Hong Kong Special Administrative Region of the People's Republic of China
+
+In Korea: the Republic of Korea, and subject to the Seoul Central District Court of the Republic of Korea
+
+In Taiwan: Taiwan
+
+In India: India
+
+In paragraph a, in the second sentence, replace the phrase "the country where the transaction to acquire license entitlements is performed or, if IBM agrees, the country where the Program is placed in productive use" with:
+
+In Hong Kong: the Hong Kong Special Administrative Region of the People's Republic of China
+
+In Macau: the Macau Special Administrative Region of the People's Republic of China
+
+In Taiwan: Taiwan
+
+In paragraph b, in the first sentence, item ii), after the word "including" and before words "the defense", add:
+
+In Japan: those of Japan laws and
+
+Add at the end of the section as a new paragraph d:
+
+In Cambodia, Laos, Philippines, and Sri Lanka: Disputes will be finally settled by arbitration in Singapore under the Arbitration Rules of the Singapore International Arbitration Center ("SIAC Rules").
+
+In India: Disputes shall be finally settled in accordance with The Arbitration and Conciliation Act, 1996 then in effect, in English, with seat in Bangalore, India. There shall be one arbitrator if the amount in dispute is less than or equal to Indian Rupee five crores and three arbitrators if the amount is more. When an arbitrator is replaced, proceedings shall continue from the stage they were at when the vacancy occurred.
+
+In Indonesia: Disputes will be finally settled by arbitration in Jakarta, Indonesia, administered by the Indonesian National Board of Arbitration established in the year 1977 ("Badan Arbitrase Nasional Indonesia" or "BANI") in accordance with the rules of the Indonesian National Board of Arbitration The arbitration award shall be final and binding on the parties without appeal and shall be in writing and set forth the findings of fact and the conclusion of law.
+
+In People's Republic of China: Either party has the right to submit the dispute to the China International Economic and Trade Arbitration Commission in Beijing, the PRC, for arbitration. The parties agree three arbitrators will be used to resolve any dispute.
+
+In Vietnam: Disputes will be finally settled by arbitration in Vietnam under the Arbitration Rules of the Vietnam International Arbitration Centre ("VIAC Rules"). All proceedings and documents presented will be in the English language.
+
+Section 7. General
+
+In paragraph j, in the second sentence, replace the phrase "two years" with:
+
+In India: three years
+
+Add to the end of this section the following new paragraph l:
+
+In Indonesia: This agreement is made in the English and Bahasa Indonesian language versions. To the extent permitted by the applicable law, the English version will prevail in the event of conflict between such versions.
+
+3. EUROPE, MIDDLE EAST, AND AFRICA
+
+Section 2. Warranties
+
+In paragraph d, Replace the fourth sentence with the following two sentences:
+
+In Czech Republic, Estonia, and Lithuania: Non-IBM Programs are provided as-is, without warranties of any kind or liabilities for defects. The parties hereby exclude any liability of IBM for defects beyond the agreed warranties.
+
+Section 3. Charges, Taxes, Payment, and Verification
+
+In paragraph b, add the following to the end of the third sentence:
+
+In Italy: if IBM requests in a written notice to Licensee.
+
+In Ukraine: , on the overdue amount from the next day after the due date up to the date of actual payment, prorated for each day of delay, at the interest rate of double the discount rate determined by the National Bank of Ukraine (NBU) during the delay period (paragraph 6 of article 232 of Commercial Code of Ukraine does not apply).
+
+In paragraph b, replace the third sentence with the following:
+
+In France: Amounts are due and payable within 10 days of the invoice date to an account specified by IBM and late payment fees apply equal to the most recent European Central Bank rate plus 10 points, in addition to debt collection costs of forty (40) euros or, if these costs exceed forty euros, complementary indemnification subject to justification of the amount claimed).
+
+In Russia: Amounts are due upon receipt of the invoice and payable within 30 days of the invoice date through electronic transfer of funds to an account specified by IBM. Late payment fees at the rate of 24% per annum calculated for each day beyond the 30 days may apply.
+
+In paragraph b, add the following to the end of the last sentence:
+
+In Lithuania: , or except as provided by law
+
+At the end of paragraph b, add the following:
+
+In Italy: In the instance of no payment or partial payment, and also following a formal credit claim procedure or trial that IBM may initiate, in derogation of article 4 of Legislative Decree n. 231 dated October 9, 2002, and according to article 7 of the same Legislative Decree, IBM will notify Licensee in writing by registered, return receipt mail of late payment fees due.
+
+Section 4. Liability and Intellectual Property Protection
+
+In paragraph a, in the first sentence insert the following before the words "the amounts paid":
+
+In Belgium, France, Germany, Italy, Luxembourg, Malta, Portugal, and Spain: the greater of €500,000 (five hundred thousand euro) or
+
+In Ireland and United Kingdom: 125% of
+
+In paragraph a, in the first sentence, replace the phrase "direct damages incurred by Licensee" with:
+
+In Spain: and proven damages incurred by Licensee as a direct consequence of the IBM default
+
+In paragraph a, insert after the first sentence the following new sentence:
+
+In Slovakia: Referring to § 379 of the Commercial Code, Act No. 513/1991 Coll. as amended, and concerning all conditions related to the conclusion of the agreement, both parties state that the total foreseeable damage, which may accrue, shall not exceed the amount above, and it is the maximum for which IBM is responsible.
+
+In paragraph a, insert before the second sentence the following new sentence:
+
+In Russia: IBM will not be liable for the forgone benefit.
+
+In paragraph a, in the second sentence, delete the word:
+
+In Ireland and United Kingdom: economic
+
+In paragraph a, replace the second sentence with:
+
+In Belgium, Netherlands, and Luxembourg: IBM will not be liable for indirect or consequential damages, lost profits, business, value, revenue, goodwill, damage to reputation or anticipated savings, any third party claim against Licensee, and loss of (or damage to) data.
+
+In France: IBM will not be liable for damages to reputation, indirect damages, or lost profits, business, value, revenue, goodwill, or anticipated savings.
+
+In Portugal: IBM will not be liable for indirect damages, including loss of profit.
+
+In Spain: IBM will not be liable for damage to reputation, lost profits, business, value, revenue, goodwill, or anticipated savings.
+
+Add the following at the end of paragraph a:
+
+In France: The terms of the Agreement, including financial terms, were established in consideration of the present clause, which is an integral part of the general economy of the Agreement.
+
+In paragraph b, replace "and ii) damages that cannot be limited under applicable law" with the following:
+
+In Germany: ; ii) damages for body injury (including death); iii) loss or damage caused by a breach of guarantee assumed by IBM in connection with any transaction under this Agreement; and iv) caused intentionally or by gross negligence.
+
+Section 6. Governing Laws and Geographic Scope
+
+In paragraph a, first sentence only, replace the phrase "the country where the transaction for license entitlements is performed" with:
+
+In Albania, Armenia, Azerbaijan, Belarus, Bosnia-Herzegovina, Bulgaria, Croatia, Former Yugoslav Republic of Macedonia, Georgia, Kazakhstan, Kyrgyzstan, Moldova, Montenegro, Romania, Russia, Serbia, Tajikistan, Turkmenistan, Ukraine, and Uzbekistan: Austria
+
+In Estonia, Latvia, and Lithuania: Finland
+
+In Algeria, Andorra, Benin, Burkina Faso, Burundi, Cameroon, Cape Verde, Central African Republic, Chad, Comoros, Congo Republic, Djibouti, Democratic Republic of Congo, Equatorial Guinea, French Guiana, French Polynesia, Gabon, Guinea, Guinea-Bissau, Ivory Coast, Lebanon, Madagascar, Mali, Mauritania, Mauritius, Mayotte, Morocco, New Caledonia, Niger, Reunion, Senegal, Seychelles, Togo, Tunisia, Vanuatu, and Wallis and Futuna: France
+
+In Angola, Bahrain, Botswana, Egypt, Eritrea, Ethiopia, Gambia, Ghana, Iraq, Jordan, Kenya, Kuwait, Liberia, Malawi, Malta, Mozambique, Nigeria, Oman, Pakistan, Qatar, Rwanda, Sao Tome and Principe, Saudi Arabia, Sierra Leone, Somalia, Tanzania, Uganda, United Arab Emirates, West Bank/Gaza, Yemen, Zambia, and Zimbabwe: England
+
+In Liechtenstein: Switzerland
+
+In South Africa, Namibia, Lesotho, and Swaziland: the Republic of South Africa
+
+In United Kingdom: England
+
+In paragraph a, add the following at the end of the first sentence:
+
+In France: The Parties agree that articles 1222 and 1223 of the French Civil Code are not applicable.
+
+Add the following at the end of paragraph a:
+
+In Albania, Armenia, Azerbaijan, Belarus, Bosnia-Herzegovina, Bulgaria, Croatia, Former Yugoslav Republic of Macedonia, Georgia, Kazakhstan, Kosovo, Kyrgyzstan, Moldova, Montenegro, Romania, Russia, Serbia, Tajikistan, Turkmenistan, Ukraine, and Uzbekistan: All disputes arising out of this Agreement shall be finally settled by the International Arbitral Centre of the Austrian Federal Economic Chamber (Arbitration Body), under the Rules of Arbitration of that Arbitral Centre (Vienna Rules), in Vienna, Austria, with English as the official language, by three impartial arbitrators appointed in accordance with the Vienna Rules. Each party will nominate one arbitrator, who will jointly appoint an independent chairman within 30 days or else the chairman will be appointed by the Arbitration Body under the Vienna Rules. The arbitrators will have no authority to award injunctive relief or damages excluded by or exceeding limits in this Agreement. Nothing in this Agreement will prevent either party from resorting to judicial proceedings for (1) interim relief to prevent material prejudice or a breach of confidentiality provisions or intellectual property rights, or (2) determining the validity or ownership of any copyright, patent or trademark owned or asserted by a party or its Enterprise company, or (3) debt collection in amounts below USD 500,000.00.
+
+In Estonia, Latvia, and Lithuania: All disputes arising out of this Agreement shall be finally settled by the Arbitration Institute of the Finland Chamber of Commerce (FAI) (Arbitration Body), under the Arbitration Rules of the Finland Chamber of Commerce (Rules), in Helsinki, Finland, with English as the official language, by three impartial arbitrators appointed in accordance with those Rules. Each party will nominate one arbitrator, who will jointly appoint an independent chairman within 30 days or else the chairman will be appointed by the Arbitration Body under the Rules. The arbitrators will have no authority to award injunctive relief or damages excluded by or exceeding limits in this Agreement. Nothing in this Agreement will prevent either party from resorting to judicial proceedings for (1) interim relief to prevent material prejudice or a breach of confidentiality provisions or intellectual property rights, or (2) determining the validity or ownership of any copyright, patent or trademark owned or asserted by a party or its Enterprise company, or (3) debt collection in amounts below USD 500,000.00.
+
+In Afghanistan, Angola, Bahrain, Botswana, Burundi, Cape Verde, Djibouti, Egypt, Eritrea, Ethiopia, Gambia, Ghana, Iraq, Jordan, Kenya, Kuwait, Lebanon, Liberia, Libya, Madagascar, Malawi,, Mozambique, Nigeria, Oman, Pakistan, Palestinian Territory, Qatar, Rwanda, Sao Tome and Principe, Saudi Arabia, Seychelles, Sierra Leone, Somalia, South Sudan, Tanzania, Uganda, United Arab Emirates, Western Sahara, Yemen, Zambia, and Zimbabwe: All disputes arising out of this Agreement shall be finally settled by the London Court of International Arbitration (LCIA) (Arbitration Body), under the LCIA Arbitration Rules (the Rules), in London, UK, with English as the official language, by three impartial arbitrators appointed in accordance with the Rules. Each party will nominate one arbitrator, who will jointly appoint an independent chairman within 30 days or else the chairman will be appointed by the Arbitration Body under the Rules. The arbitrators will have no authority to award injunctive relief or damages excluded by or exceeding limits in this Agreement. Nothing in this Agreement will prevent either party from resorting to judicial proceedings for (1) interim relief to prevent material prejudice or a breach of confidentiality provisions or intellectual property rights, or (2) determining the validity or ownership of any copyright, patent or trademark owned or asserted by a party or its Enterprise company, or (3) debt collection in amounts below USD 500,000.00.
+
+In Algeria, Benin, Burkina Faso, Cameroon, Central African Republic, Chad, Congo Republic, Democratic Republic of Congo, Equatorial Guinea, French Guiana, French Polynesia, Gabon, Guinea, Guinea-Bissau, Ivory Coast, Mali, Mauritania, Mauritius, Morocco, Niger, Senegal, Togo, and Tunisia: All disputes arising out of this Agreement shall be finally settled by the ICC International Court of Arbitration, in Paris (Arbitration Body), under its arbitration rules (the Rules), in Paris, France, with French as the official language, by three impartial arbitrators appointed in accordance with the Rules. Each party will nominate one arbitrator, who will jointly appoint an independent chairman within 30 days or else the chairman will be appointed by the Arbitration Body under the Rules. The arbitrators will have no authority to award injunctive relief or damages excluded by or exceeding limits in this Agreement. Nothing in this Agreement will prevent either party from resorting to judicial proceedings for (1) interim relief to prevent material prejudice or a breach of confidentiality provisions or intellectual property rights, or (2) determining the validity or ownership of any copyright, patent or trademark owned or asserted by a party or its Enterprise company, or (3) debt collection in amounts below USD 250,000.00.
+
+In South Africa, Namibia, Lesotho, and Swaziland: All disputes arising out of this Agreement shall be finally settled by the Arbitration Foundation of Southern Africa (AFSA) (Arbitration Body), under the Rules of the Arbitration of the AFSA (the Rules), in Johannesburg, South Africa, with English as the official language, by three impartial arbitrators appointed in accordance with the Rules. Each party will nominate one arbitrator, who will jointly appoint an independent chairman within 30 days or else the chairman will be appointed by the Arbitration Body under the Rules. The arbitrators will have no authority to award injunctive relief or damages excluded by or exceeding limits in this Agreement. Nothing in this Agreement will prevent either party from resorting to judicial proceedings for (1) interim relief to prevent material prejudice or a breach of confidentiality provisions or intellectual property rights, or (2) determining the validity or ownership of any copyright, patent or trademark owned or asserted by a party or its Enterprise company, or (3) debt collection in amounts below USD 250,000.00.
+
+In Andorra, Austria, Cyprus, France, Germany, Greece, Israel, Italy, Portugal, Spain, Switzerland, and Turkey: All disputes will be brought before and subject to the exclusive jurisdiction of the following court of competent jurisdiction:
+
+In Andorra: the Commercial Court of Paris.
+
+In Austria: the court of Vienna, Austria (Inner City).
+
+In Cyprus: the competent court of Nicosia.
+
+In France: Commercial Court of Paris.
+
+In Germany: the courts of Stuttgart.
+
+In Greece: the competent court of Athens.
+
+In Israel: the courts of Tel Aviv Jaffa.
+
+In Italy: the courts of Milan.
+
+In Portugal: the courts of Lisbon.
+
+In Spain: the courts of Madrid.
+
+In Switzerland: the commercial court of the canton of Zurich.
+
+In Turkey: the Istanbul Central (Caglayan) Courts and Execution Directorates of Istanbul, the Republic of Turkey.
+
+In Netherlands: The Parties waive their rights under Title 7.1 ('Koop') and clause 7:401 and 402 of the Dutch Civil Code, and their rights to invoke a full or partial dissolution ('gehele of partiele ontbinding') of this Agreement under section 6:265 of the Dutch Civil Code.
+
+Section 7. General
+
+In paragraph d, insert the following at the end of the paragraph:
+
+In Spain: IBM will comply with requests to access, update or delete contact information if submitted to the following address: IBM, c/ Santa Hortensia 26-28, 28002 Madrid, Departamento de Privacidad de Datos.
+
+In paragraph j, add to the end the paragraph:
+
+In Czech Republic: Pursuant to Section 1801 of Act No. 89/2012 Coll. (the "Civil Code"), Section 1799 and Section 1800 of the Civil Code as amended, do not apply to transactions under this Agreement. Licensee accepts the risk of a change of circumstances under Section 1765 of the Civil Code.
+
+In paragraph j:
+
+In Bulgaria, Croatia, Russia, Serbia, and Slovenia: delete the 2nd sentence that says: "Neither party will bring a legal action arising out of or related to the Agreement more than two years after the cause of action arose".
+
+In paragraph j, add to the end of the second sentence:
+
+In Lithuania: , except as provided by law
+
+In paragraph j, replace the second sentence with:
+
+In Poland: Neither party will bring a legal action arising out of or related to the Agreement more than three years after the cause of action arose, except for an action of non-payment which will be brought no more than 2 years after payment is due.
+
+In paragraph j, second sentence, replace the word "two" with:
+
+In Latvia and Ukraine: three
+
+In Slovakia: four
+
+In paragraph j, add to the end of the third sentence that says: "Neither party is responsible for failure to fulfill its non-monetary obligations due to causes beyond its control":
+
+In Russia: , including but not limited to earthquakes, floods, fires, acts of God, strikes (excluding strikes of the parties' employees), acts of war, military actions, embargoes, blockades, international or governmental sanctions, and acts of authorities of the applicable jurisdiction.
+
+In paragraph j, third sentence, modify the sentence: "Neither party is responsible for failure to fulfill its non-monetary obligations due to causes beyond its control" as follows:
+
+In Ukraine: Neither party is responsible for failure to fulfill its non-monetary obligations due to causes or regulatory changes beyond its control, including but not limited to import, export and economic sanctions requirements of the United States.
+
+Add the following at the end of the section as new paragraph l:
+
+In Hungary: By entering into this Agreement, Licensee confirms that Licensee was sufficiently informed of all the provisions of this Agreement and had the opportunity to negotiate those terms. The following provisions may significantly deviate from the provisions generally applied by Hungarian law and both parties accept those provisions by signing the Agreement: Program License; Warranties; Charges, Taxes, Payment, and Verification; Liability and Intellectual Property Protection; Termination; Governing Laws and Geographic Scope; and General.
+
+In Czech Republic: Licensee expressly accepts the terms of this agreement which include the following important commercial terms: i) limitation and disclaimer of liability for defects (Warranties); ii) limitation of Licensee's entitlement to damages (Liability and Intellectual Property Protection); iii) binding nature of export and import regulations (Governing Laws and Geographic Scope); iv) shorter limitation periods (General); v) exclusion of applicability of provisions on adhesion contracts (General); and vi) acceptance of the risk of a change of circumstances (General).
+
+In Romania: The Licensee expressly accepts, the following standard clauses that may be deemed 'unusual clauses' as per the provisions of article 1203 Romanian Civil Code: clauses 2, 4, 5, 8j. The Licensee hereby acknowledges that it was sufficiently informed of all the provisions of this Agreement, including the clauses mentioned above, it properly analyzed and understood such provisions and had the opportunity to negotiate the terms of each clause.
+
+i125-3301-15 (10-2021)

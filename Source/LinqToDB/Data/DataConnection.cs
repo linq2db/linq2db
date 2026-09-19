@@ -1761,7 +1761,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <remarks><see cref="DataConnection"/> will share <see cref="Mapping.MappingSchema"/> instances that were created by combining same mapping schemas.</remarks>
 		/// <param name="mappingSchema">Mapping schema.</param>
-		/// <returns>Current connection object.</returns>
 		public void AddMappingSchema(MappingSchema mappingSchema)
 		{
 			CheckAndThrowOnDisposed();

@@ -556,7 +556,7 @@ namespace Tests.Linq
 		[ExpressionMethod("ChildCountExpression")]
 		private static int ChildCount(Parent parent)
 		{
-			throw new NotSupportedException();
+			throw new ServerSideOnlyException(nameof(ChildCount));
 		}
 
 		static Expression ChildCountExpression()
@@ -738,7 +738,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Sql.Function("COALESCE")]
+		[Sql.Function("COALESCE", ServerSideOnly = true)]
 		static int Coalesce(int? value, int defaultValue) => throw new ServerSideOnlyException(nameof(Coalesce));
 	}
 
@@ -764,7 +764,7 @@ namespace Tests.Linq
 		[Sql.Extension("{table_field} MATCH {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
 		public static bool MatchFts<TEntity>(TEntity src, [ExprParameter]string match)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(MatchFts));
 		}
 	}
 
@@ -778,7 +778,7 @@ namespace Tests.Linq
 		[Sql.Function("SUM", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[]{1})]
 		public static TItem MySum<TSource,TItem>(this IEnumerable<TSource> src, Expression<Func<TSource,TItem>> value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(MySum));
 		}
 
 	}

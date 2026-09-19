@@ -122,14 +122,11 @@ namespace Tests.xUpdate
 			Assert.Throws<ArgumentNullException>(action);
 		}
 
-		sealed class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
-		{ }
+		sealed class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>;
 
-		sealed class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
-		{ }
+		sealed class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>;
 
-		sealed class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
-		{ }
+		sealed class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>;
 
 		private sealed class FakeMergeQuery<TTarget, TSource> :
 			IMergeableUsing<TTarget>,

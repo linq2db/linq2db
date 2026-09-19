@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -237,9 +237,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		sealed class PersonEx : Person
-		{
-		}
+		sealed class PersonEx : Person;
 
 		[Test]
 		public void SimplTest()
@@ -288,9 +286,9 @@ namespace Tests.Linq
 			public int ChildID { get; set; }
 		}
 
-		public class MyChildBase_11_21 : MyChildBase { }
-		public class MyChild11 : MyChildBase_11_21 { }
-		public class MyChild21 : MyChildBase_11_21 { }
+		public class MyChildBase_11_21 : MyChildBase;
+		public class MyChild11 : MyChildBase_11_21;
+		public class MyChild21 : MyChildBase_11_21;
 
 		[Test]
 		public void InheritanceMappingIssue106Test([DataSources] string context)
@@ -471,9 +469,7 @@ namespace Tests.Linq
 			public override TypeCodeEnum TypeCode => TypeCodeEnum.A2;
 		}
 
-		public class InheritanceB : InheritanceBase
-		{
-		}
+		public class InheritanceB : InheritanceBase;
 
 		[Table(Name="LinqDataTypes")]
 		public class InheritanceAssociation
@@ -717,7 +713,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?) - the overridden column property #2429 describes. That issue is closed; this shape is the residue.")]
 		[Test]
 		public void Issue2429PropertiesTest2([DataSources] string context)
 		{
@@ -738,7 +735,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
+		[ActiveIssue(2429, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression could not be converted to SQL.",
+			Details = "as Issue2429PropertiesTest2, through the method form.")]
 		[Test]
 		public void Issue2429MethodsTest2([DataSources] string context)
 		{
@@ -1161,7 +1159,8 @@ namespace Tests.Linq
 		}
 
 		// also exists in efcore tests
-		[ActiveIssue]
+		[ActiveIssue(4666, ErrorTypeName = "System.InvalidOperationException", ErrorMessage = "Member 'System.String Type1EntityProp' not found in type",
+			Details = "merging into a TPH table cannot resolve the derived member - #4666's subject. The fragment stops before the type name.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
 		public void Issue4666Test([MergeDataContextSource] string context)
 		{
@@ -1355,7 +1354,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Partial mapping is not supported for now")]
+		// YDB splits off on the direct path only: it never reaches the mapping error because the connection is
+		// already gone by then. Over a remote context the statement runs in the service process, so it reports the
+		// mapping error like everyone else and falls back to the blanket declaration.
+		[ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '2'",
+			Details = "no-issue: Partial mapping is not supported for now")]
+		[ActiveIssue(Configuration = TestProvName.AllYdb, ErrorTypeName = "System.InvalidOperationException",
+			ErrorMessage = "Connection is closed", SkipForLinqService = true,
+			Details = "no-issue: Partial mapping is not supported for now - on YDB the failure arrives as a closed connection instead, which is consistent with its one-statement-per-connection behaviour rather than with the mapping error the other providers report.")]
 		[Test]
 		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)
 		{
@@ -1390,7 +1397,15 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// One cause, about twenty wordings: the discriminator column is never written, and every server rejects
+		// the NULL in its own phrasing - twelve distinct texts across the drivers, plus their remote wrappers.
+		// Declaring them individually would be a catalogue of vendor prose, so the blanket half declares nothing
+		// and only ClickHouse, which fails differently in kind, is declared.
+		[ActiveIssue(
+			Details = "no-declaration: the Code discriminator column is never written, so every server rejects the NULL - in about twenty different wordings, none of them shared. ClickHouse is the exception and has its own attribute.")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Inheritance mapping is not defined for discriminator value '0'",
+			Details = "no-issue: ClickHouse fails a stage earlier and in kind - linq2db refuses the mapping rather than the server refusing the row.")]
 		[Test]
 		public void TestInsertIssue1([DataSources] string context)
 		{
@@ -1412,7 +1427,12 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
+		// 104 of the cases share one assertion; four providers never reach it because their server rejects the
+		// NULL first, each in its own words, so that half declares nothing.
+		[ActiveIssue(ErrorMessage = "Assert.That(result, Has.Length.EqualTo(3))",
+			Details = "no-issue: the rows inserted through the base table are not read back through the derived one.")]
+		[ActiveIssue(Configurations = [TestProvName.AllMariaDB, TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllYdb],
+			Details = "no-declaration: these four reject the NULL discriminator at the server before the assertion is reached, and each words it differently.")]
 		[Test]
 		public void TestInsertIssue2([DataSources] string context)
 		{
@@ -1432,6 +1452,229 @@ namespace Tests.Linq
 				Assert.That(result[1].Id, Is.EqualTo(2));
 				Assert.That(result[2].Id, Is.EqualTo(3));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertDerivedThroughBaseTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			db.GetTable<BaseClass>().Insert(() => new Child1 { Id = 1, Code = 1, Child1Field = 11 });
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Does.Contain("Child1Field"));
+
+			var result = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(result.Child1Field, Is.EqualTo(11));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateDerivedThroughBaseTable_Setter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.Update(t => new Child1 { Code = t.Code, Child1Field = 99 });
+
+			var result = db.GetTable<BaseClass>().OfType<Child1>().Single(c => c.Id == 1);
+			Assert.That(result.Child1Field, Is.EqualTo(99));
+		}
+
+		[Obsolete("Exercises the obsolete ITable<TTarget> Update() overload on purpose - covers Issue 5729's explicit-target path")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateDerivedThroughBaseTable_ExplicitTarget([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 2)
+				.Update(db.GetTable<BaseClass>(), s => new Child2 { Code = s.Code, Child2Field = 88 });
+
+			var result = db.GetTable<BaseClass>().OfType<Child2>().Single(c => c.Id == 2);
+			Assert.That(result.Child2Field, Is.EqualTo(88));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertOrUpdateDerivedThroughBaseTable([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			db.GetTable<BaseClass>().InsertOrUpdate(
+				() => new Child1 { Id = 1, Code = 1, Child1Field = 55 },
+				_ => new Child1 { Child1Field = 66 },
+				() => new Child1 { Id = 1 });
+
+			var inserted = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(inserted.Child1Field, Is.EqualTo(55));
+
+			// The row now exists, so the second call takes the update branch and the derived column is
+			// exercised through the update setter as well as the insert one.
+			db.GetTable<BaseClass>().InsertOrUpdate(
+				() => new Child1 { Id = 1, Code = 1, Child1Field = 55 },
+				_ => new Child1 { Child1Field = 66 },
+				() => new Child1 { Id = 1 });
+
+			var updated = db.GetTable<BaseClass>().OfType<Child1>().Single();
+			Assert.That(updated.Child1Field, Is.EqualTo(66));
+		}
+
+		[Table("InheritanceFilterPositional")]
+		[InheritanceMapping(Code = 1, Type = typeof(PositionalChild))]
+		abstract class PositionalBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		// Constructor-parameter (positional/record-style) TPH subtype: BaseClass/Child1 above are
+		// property-only and can only exercise the Assignments arm of UpdateBuilder.ParseSetter's switch;
+		// this exercises the Parameters arm, since Value only ever arrives via the constructor.
+		class PositionalChild : PositionalBase
+		{
+			public PositionalChild(int id, int code, int value)
+			{
+				Id    = id;
+				Code  = code;
+				Value = value;
+			}
+
+			[Column(CanBeNull = true)] public int Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertPositionalDerivedThroughBaseTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<PositionalBase>();
+
+			db.GetTable<PositionalBase>().Insert(() => new PositionalChild(1, 1, 42));
+
+			var result = db.GetTable<PositionalBase>().OfType<PositionalChild>().Single();
+			Assert.That(result.Id,    Is.EqualTo(1));
+			Assert.That(result.Value, Is.EqualTo(42));
+		}
+
+		// FeatureUpdateOutputWithoutOldSingle from UpdateWithOutputTests, minus YDB: the default projection
+		// emits Deleted and Inserted, so every column appears twice in RETURNING and YDB rejects that with
+		// "Duplicated member".
+		const string FeatureUpdateOutput = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{TestProvName.AllDuckDB}";
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateWithOutputDefaultProjectionOverInheritanceRoot([IncludeDataSources(true, FeatureUpdateOutput)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable(BaseClass.Data);
+
+			// The setter names only Code, declared on BaseClass itself, so it reaches the guard nowhere. The
+			// projection does: UpdateWithOutput without an explicit output expression builds full entities
+			// for Deleted and Inserted, and over an inheritance root those carry every mapped subtype's
+			// merged columns against a BaseClass-typed target. Pre-fix that threw ArgumentException before
+			// any SQL was emitted. Asserting on Inserted only - the providers here do not supply the old
+			// row, per FeatureUpdateOutputWithoutOldSingle.
+			var output = db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.UpdateWithOutput(t => new Child1 { Code = t.Code })
+				.ToArray();
+
+			Assert.That(output, Has.Length.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output[0].Inserted, Is.InstanceOf<Child1>());
+				Assert.That(output[0].Inserted.Id, Is.EqualTo(1));
+				Assert.That(((Child1)output[0].Inserted).Child1Field, Is.EqualTo(11));
+			}
+		}
+
+		// OUTPUT ... INTO builds its target ref from the output table's object type rather than the
+		// updated table's, so it reaches EnsureDeclaringType by a route no other test covers. Unlike the
+		// row-returning form above it materializes nothing, so this one can assert success.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void UpdateWithOutputIntoDerivedThroughBaseTable([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db          = GetDataContext(context);
+			using var _           = db.CreateLocalTable(BaseClass.Data);
+			using var destination = db.CreateLocalTable<BaseClass>(tableName: "InheritanceFilterOutput");
+
+			db.GetTable<BaseClass>()
+				.Where(t => t.Id == 1)
+				.UpdateWithOutputInto(
+					t => new Child1 { Code = t.Code, Child1Field = 77 },
+					destination,
+					(deleted, inserted) => new Child1 { Id = inserted.Id, Code = inserted.Code, Child1Field = 88 });
+
+			var updated = db.GetTable<BaseClass>().OfType<Child1>().Single(c => c.Id == 1);
+			var written = destination.OfType<Child1>().Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(updated.Child1Field, Is.EqualTo(77));
+				Assert.That(written.Child1Field, Is.EqualTo(88));
+			}
+		}
+
+		[Table("InheritanceShadow")]
+		[InheritanceMapping(Code = 1, Type = typeof(ShadowChild))]
+		[InheritanceMapping(Code = 2, Type = typeof(ShadowGrandchild))]
+		abstract class ShadowBase
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		class ShadowChild : ShadowBase
+		{
+			[Column("ChildValue", CanBeNull = true)] public int Value { get; set; }
+		}
+
+		class ShadowGrandchild : ShadowChild
+		{
+			[Column("GrandchildValue", CanBeNull = true)] public new int Value { get; set; }
+		}
+
+		// Raw SQL below, so SQLite only.
+		// No ErrorTypeName: the two SQLite drivers raise their own exception types and only the message is shared.
+		[ActiveIssue(5852, ErrorMessage = "no such column: GrandchildValue",
+			Details = "the shadowing member is not mapped onto the base table at all, so the column the insert should have written is never created - #5852's subject.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5852")]
+		public void InsertShadowedMemberThroughBaseTable([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<ShadowBase>();
+
+			db.GetTable<ShadowBase>().Insert(() => new ShadowGrandchild { Id = 1, Code = 2, Value = 42 });
+
+			var dc = (DataConnection)db;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(dc.Execute<int?>("SELECT GrandchildValue FROM InheritanceShadow"), Is.EqualTo(42));
+				Assert.That(dc.Execute<int?>("SELECT ChildValue FROM InheritanceShadow"),      Is.Null);
+			}
+		}
+
+		// Derives from BaseClass but carries no [InheritanceMapping] entry, so UnmappedField maps to no
+		// column on the base entity descriptor. EnsureDeclaringType retypes the target for it just the
+		// same, so the guard must not turn the failure into a silently omitted column.
+		class UnmappedChild : BaseClass
+		{
+			[Column(CanBeNull = true)] public int UnmappedField { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5729")]
+		public void InsertUnmappedDerivedThroughBaseTable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _  = db.CreateLocalTable<BaseClass>();
+
+			Assert.Throws<LinqToDBException>(
+				() => db.GetTable<BaseClass>().Insert(() => new UnmappedChild { Id = 1, Code = 1, UnmappedField = 5 }));
+
+			Assert.That(db.GetTable<BaseClass>().Count(), Is.Zero);
 		}
 
 		#endregion

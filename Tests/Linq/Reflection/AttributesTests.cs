@@ -50,9 +50,7 @@ namespace Tests.Reflection
 		}
 
 		[AttributeUsage(AttributeTargets.All)]
-		public sealed class MyAttribute : Attribute
-		{
-		}
+		public sealed class MyAttribute : Attribute;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4079")]
 		public void DynamicColumnInfoAttributes()

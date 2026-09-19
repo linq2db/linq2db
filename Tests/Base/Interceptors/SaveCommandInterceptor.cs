@@ -10,7 +10,7 @@ namespace Tests
 	/// <summary>
 	/// Provides access to last command and parameters.
 	/// </summary>
-	public sealed class SaveCommandInterceptor : CommandInterceptor
+	public class SaveCommandInterceptor : CommandInterceptor
 	{
 		public DbParameter[] Parameters { get; private set; } = Array.Empty<DbParameter>();
 

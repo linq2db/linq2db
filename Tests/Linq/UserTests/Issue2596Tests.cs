@@ -63,14 +63,10 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		public class Contract : BaseEntity
-		{
-		}
+		public class Contract : BaseEntity;
 
 		[Table]
-		public class ProductUnit : BaseEntity
-		{
-		}
+		public class ProductUnit : BaseEntity;
 
 		[Table]
 		public class ServicePoint : BaseEntity
@@ -87,9 +83,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		public class StreetType : BaseEntity
-		{
-		}
+		public class StreetType : BaseEntity;
 
 		[Table]
 		public class TypeAMeasures : BaseEntity
@@ -111,9 +105,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		public class MeasureSource : BaseEntity
-		{
-		}
+		public class MeasureSource : BaseEntity;
 
 		[Table]
 		public class Invoice : BaseEntity
@@ -158,9 +150,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		public class AccountTax : BaseEntity
-		{
-		}
+		public class AccountTax : BaseEntity;
 
 		[Table]
 		public class InvoiceLine : BaseEntity
@@ -199,19 +189,13 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		public class AutonomousCommunity : BaseEntity
-		{
-		}
+		public class AutonomousCommunity : BaseEntity;
 
 		[Table]
-		public class Country : BaseEntity
-		{
-		}
+		public class Country : BaseEntity;
 
 		[Table]
-		public class InvoicePendingState : BaseEntity
-		{
-		}
+		public class InvoicePendingState : BaseEntity;
 
 		[Table]
 		public class TypeBMeasures : BaseEntity
@@ -220,19 +204,13 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		public class AccessTariff : BaseEntity
-		{
-		}
+		public class AccessTariff : BaseEntity;
 
 		[Table]
-		public class Product : BaseEntity
-		{
-		}
+		public class Product : BaseEntity;
 
 		[Table]
-		public class PriceList : BaseEntity
-		{
-		}
+		public class PriceList : BaseEntity;
 
 		[Test]
 		public void TestLoadWithInfiniteLoop([DataSources] string context)

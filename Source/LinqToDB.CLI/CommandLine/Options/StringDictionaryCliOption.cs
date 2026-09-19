@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Name-value string dictionary CLI option.
@@ -57,6 +60,7 @@ namespace LinqToDB.CommandLine
 			}
 
 			errorDetails = null;
+
 			return result;
 		}
 
@@ -84,10 +88,12 @@ namespace LinqToDB.CommandLine
 				}
 
 				errorDetails = null;
+
 				return result;
 			}
 
 			errorDetails = $"object expected but got '{rawValue.ValueKind}'";
+
 			return null;
 		}
 	}

@@ -385,7 +385,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
-			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression(builder.CanBeEvaluatedOnClient)!;
 
 			return definedQueryMethod;
 		}

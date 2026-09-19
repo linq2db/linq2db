@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -20,6 +21,73 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override bool SupportsNullInColumn             => false;
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		/// <summary>
+		/// <c>intDiv</c>, because ClickHouse's <c>/</c> produces a float even between two integers.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Function(longType, "intDiv", value, Factory.Value(longType, divisor));
+		}
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
+		/// </summary>
+		/// <remarks>
+		/// linq2db maps date/time values to <c>DateTime64(7)</c>, which is a tick exactly, so every nanosecond
+		/// value here is a whole multiple of a hundred and the division is exact. <c>date_diff</c> is not used
+		/// because its finest unit is the second.
+		/// <para>
+		/// Nanoseconds in an <see cref="long"/> reach from 1678 to 2262, narrower than what a
+		/// <c>DateTime64(7)</c> column itself holds. That is the same boundary the millisecond form of
+		/// <c>DateAdd</c> already works within on this provider.
+		/// </para>
+		/// <para>
+		/// The span between two of them is narrower still, because the subtraction is taken in nanoseconds as well:
+		/// two endpoints inside that window can differ by more than an <see cref="long"/> holds, so the usable span
+		/// is about 292 years rather than the 584 the endpoints cover. ClickHouse wraps instead of raising, so a
+		/// wider difference comes back as a plausible-looking wrong number.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			var nanoseconds = Factory.Sub(longType,
+				Factory.Function(longType, "toUnixTimestamp64Nano", element.End),
+				Factory.Function(longType, "toUnixTimestamp64Nano", element.Start));
+
+			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
+		}
+
+		/// <inheritdoc />
+		/// <remarks>Lowered below without going through <c>FinestDateUnit</c>, which the default reads.</remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by the interval expressed in nanoseconds, the unit that matches what a tick is.
+		/// </summary>
+		/// <remarks>
+		/// <c>toIntervalNanosecond</c> takes an expression, so the count needs no decomposition. Scaling ticks up
+		/// by a hundred caps the amount at <c>long.MaxValue / 100</c> - about 292 years, far short of what a
+		/// <c>TimeSpan</c> holds, but past any span these timestamps measure exactly: <see cref="ElapsedTicks"/>
+		/// above carries the same ceiling, and for the same reason.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+			var interval = Factory.Function(longType, "toIntervalNanosecond", Factory.Multiply(longType, element.Interval, 100L));
+			var type     = Factory.GetDbDataType(element.Temporal);
+
+			return element.IsSubtract
+				? Factory.Sub(type, element.Temporal, interval)
+				: Factory.Add(type, element.Temporal, interval);
+		}
 
 		#region LIKE
 
@@ -136,8 +204,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						rewrite = true;
 					}
 
+					// Precedence carried over from the operand being rebuilt. Left unstated it defaults to Unknown,
+					// which the renderer reads as binding loosest - bracketing this node wherever it sits, while
+					// wrapping nothing beneath it.
 					if (rewrite)
-						return PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
+						return PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right, element.Precedence), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
 
 					break;
 				}
@@ -436,5 +507,14 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					or DataType.IntervalQuarter
 					or DataType.IntervalYear;
 		}
+
+		/// <summary>
+		/// <c>NTILE</c> alone, and by way of the frame rather than the ordering: unordered, the window defaults to a
+		/// frame ClickHouse will not accept for it (<c>Unsupported window frame type for function 'NTILE'</c>).
+		/// Giving it a sort key restores the default frame it wants.
+		/// </summary>
+		protected override bool IsWindowOrderByRequired(SqlExtendedFunction func)
+			=> base.IsWindowOrderByRequired(func)
+				|| func.FunctionName is "NTILE";
 	}
 }
