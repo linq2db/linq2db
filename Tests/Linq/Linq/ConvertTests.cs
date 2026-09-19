@@ -609,6 +609,10 @@ namespace Tests.Linq
 				select t);
 		}
 
+#if NET11_0_OR_GREATER
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorMessage = "Expected list cannot be empty",
+			Details = "https://github.com/DataAction/AdoNetCore.AseClient/issues/240. AdoNetCore.AseClient returns DECIMAL through a double on .NET 11, so MoneyValue reads back as 4.5000000000000003 rather than 4.5 and the client-side `!Sql.Convert(Bit, MoneyValue - 4.5m)` filter selects nothing. A comparison tolerance cannot fix a predicate. The same driver and query return 4.5 on .NET 10.")]
+#endif
 		[Test]
 		public void ToBit2([DataSources] string context)
 		{
