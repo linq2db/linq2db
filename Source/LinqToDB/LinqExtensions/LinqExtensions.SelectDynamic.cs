@@ -101,6 +101,13 @@ namespace LinqToDB
 			string[]                           names,
 			Expression[]                       cells)
 		{
+			foreach (var name in names)
+			{
+				// A real member wins the lookup, so the generated column would be shadowed rather than reachable.
+				if (typeof(TResult).GetMember(name, BindingFlags.Public | BindingFlags.Instance).Length > 0)
+					throw new ArgumentException($"Dynamic column name '{name}' collides with a member of '{typeof(TResult).Name}', which would be resolved instead of the generated column.");
+			}
+
 			var expr = Expression.Call(
 				null,
 				_selectDynamicCoreMethodInfo.MakeGenericMethod(typeof(TSource), typeof(TResult)),
