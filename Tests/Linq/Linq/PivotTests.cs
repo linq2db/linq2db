@@ -81,6 +81,178 @@ namespace Tests.Linq
 			LastQuery!.ToUpperInvariant().ShouldContain("UNPIVOT");
 		}
 
+		/// <summary>
+		/// Whether the unpivoted columns can be named by value rather than by a compile-time member reference.
+		/// Sql.Property is rewritten to member access before UnpivotBuilder sees the selectors, so the
+		/// ergonomic overload may be the only thing missing. Run on the full provider set, so any discrepancy
+		/// between the name the native keyword reports and the one the lowering emits surfaces here.
+		/// </summary>
+		[Test]
+		public void UnpivotWithRuntimeColumnNames([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			string q1 = "Q1", q2 = "Q2", q3 = "Q3", q4 = "Q4";
+
+			var result = t
+				.Unpivot(
+					(row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount },
+					row => Sql.Property<decimal?>(row, q1),
+					row => Sql.Property<decimal?>(row, q2),
+					row => Sql.Property<decimal?>(row, q3),
+					row => Sql.Property<decimal?>(row, q4))
+				.OrderBy(r => r.Id)
+				.ThenBy(r => r.Quarter)
+				.ToArray();
+
+			result.Length.ShouldBe(6);
+			result.ShouldAllBe(r => r.Amount != null);
+			result.Select(r => r.Quarter).Distinct().OrderBy(q => q).ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
+		}
+
+		// The same table, mapped without its quarter columns - the shape a per-tenant or per-period table has.
+		[Table("QuarterlySales")]
+		sealed class QuarterlyKeys
+		{
+			[Column] public int    Id     { get; set; }
+			[Column] public string Region { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class AliasedSales
+		{
+			[Column]          public int      Id { get; set; }
+			[Column("Q_ONE")] public decimal? Q1 { get; set; }
+			[Column("Q_TWO")] public decimal? Q2 { get; set; }
+
+			public static readonly AliasedSales[] Data = { new() { Id = 1, Q1 = 10m, Q2 = 20m } };
+		}
+
+		/// <summary>
+		/// A column whose physical name differs from its member name reaches the native keyword and reports the
+		/// physical name: the lookup matches on the member name, which is what the source field carries. The
+		/// control for the unmapped case below, which is the one the lookup cannot see.
+		/// </summary>
+		[Test]
+		public void UnpivotAliasedColumnEmitsNativeKeyword([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(AliasedSales.Data);
+
+			var result = t
+				.Unpivot((row, name, amount) => new { row.Id, Name = name, Amount = amount }, x => x.Q1, x => x.Q2)
+				.OrderBy(r => r.Name)
+				.ToArray();
+
+			result.Select(r => r.Name).ShouldBe(new[] { "Q_ONE", "Q_TWO" });
+			LastQuery!.ToUpperInvariant().ShouldContain("UNPIVOT");
+		}
+
+		/// <summary>
+		/// The column set arrives as a <see cref="string"/> array, which the selector overload cannot take at
+		/// all - there is no way to spread N runtime names into N lambda arguments.
+		/// </summary>
+		[Test]
+		public void UnpivotByColumnNames([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var columns = new[] { "Q1", "Q2", "Q3", "Q4" };
+
+			var result = t
+				.Unpivot((QuarterlySales row, string quarter, decimal? amount) => new { row.Id, Quarter = quarter, Amount = amount }, columns)
+				.OrderBy(r => r.Id)
+				.ThenBy(r => r.Quarter)
+				.ToArray();
+
+			result.Length.ShouldBe(6);
+			result.ShouldAllBe(r => r.Amount != null);
+			result.Select(r => r.Quarter).Distinct().OrderBy(q => q).ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
+
+			var kept = t
+				.Unpivot(UnpivotNulls.IncludeNulls, (QuarterlySales row, string quarter, decimal? amount) => new { row.Id, Quarter = quarter, Amount = amount }, columns)
+				.ToArray();
+
+			kept.Length.ShouldBe(8);
+		}
+
+		/// <summary>A narrower name set is a different query, not a cache hit on the wider one.</summary>
+		[Test, QueryCacheTest]
+		public void UnpivotByColumnNamesDiscriminatesQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			IQueryable<int> Build(string[] columns) => t
+				.Unpivot((QuarterlySales row, string quarter, decimal? amount) => new { row.Id, Quarter = quarter, Amount = amount }, columns)
+				.Select(r => r.Id);
+
+			var probe = Build(new[] { "Q1" });
+
+			probe.ClearCache();
+
+			var start = probe.GetCacheMissCount();
+
+			_ = Build(new[] { "Q1" }).ToArray();
+			_ = Build(new[] { "Q1" }).ToArray();
+			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same column set must reuse the compiled query");
+
+			_ = Build(new[] { "Q2" }).ToArray();
+			(probe.GetCacheMissCount() - start).ShouldBe(2, "a different column must not reuse it");
+
+			_ = Build(new[] { "Q1", "Q2" }).ToArray();
+			(probe.GetCacheMissCount() - start).ShouldBe(3, "a wider column set must not reuse it");
+		}
+
+		/// <summary>The same gap for a column the mapping does not carry at all: its field is created lazily.</summary>
+		[Test]
+		public void UnpivotUnmappedColumnEmitsNativeKeyword([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			string q1 = "Q1", q2 = "Q2";
+
+			_ = db.GetTable<QuarterlyKeys>()
+				.Unpivot(
+					(row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount },
+					row => Sql.Property<decimal?>(row, q1),
+					row => Sql.Property<decimal?>(row, q2))
+				.ToArray();
+
+			LastQuery!.ToUpperInvariant().ShouldContain("UNPIVOT");
+		}
+
+		/// <summary>
+		/// The unpivoted columns are not members of the mapped type at all, so the fields do not exist until
+		/// the table context creates them lazily - which is where the native path looks them up by name.
+		/// </summary>
+		[Test]
+		public void UnpivotWithColumnsAbsentFromTheMapping([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			string q1 = "Q1", q2 = "Q2", q3 = "Q3", q4 = "Q4";
+
+			var result = db.GetTable<QuarterlyKeys>()
+				.Unpivot(
+					(row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount },
+					row => Sql.Property<decimal?>(row, q1),
+					row => Sql.Property<decimal?>(row, q2),
+					row => Sql.Property<decimal?>(row, q3),
+					row => Sql.Property<decimal?>(row, q4))
+				.OrderBy(r => r.Id)
+				.ThenBy(r => r.Quarter)
+				.ToArray();
+
+			result.Length.ShouldBe(6);
+			result.ShouldAllBe(r => r.Amount != null);
+			result.Select(r => r.Quarter).Distinct().OrderBy(q => q).ShouldBe(new[] { "Q1", "Q2", "Q3", "Q4" });
+		}
+
 		[Test]
 		public void UnpivotLowersToUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
