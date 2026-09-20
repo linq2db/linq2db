@@ -131,8 +131,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var cols = new ISqlExpression[columns.Length];
 				for (var i = 0; i < columns.Length; i++)
 				{
-					var colName = GetColumnName(columns[i]);
-					var field   = sourceTable.Fields.Find(f => string.Equals(f.Name, colName, StringComparison.Ordinal));
+					var field = ResolveSourceField(builder, sourceContext, sourceTable, columns[i]);
 					if (field == null)
 						return null;
 					cols[i] = field;
@@ -183,7 +182,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			foreach (var column in info.Columns)
 			{
 				var name  = GetColumnName(column);
-				var field = sourceTable.Fields.Find(f => string.Equals(f.Name, name, StringComparison.Ordinal));
+				var field = ResolveSourceField(builder, sourceContext, sourceTable, column);
 
 				// Column not resolvable to a physical source field → fall back to the portable lowering.
 				if (field == null)
@@ -306,6 +305,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			var memberName = GetColumnName(column);
 
 			return mappingSchema.GetEntityDescriptor(sourceType)[memberName]?.ColumnName ?? memberName;
+		}
+
+		// A column the mapping does not carry has no SqlField until the table context creates one on demand, so
+		// the name lookup misses it and the whole unpivot drops to the portable lowering. Build the selector
+		// through the source context to get that field created, and take it off the placeholder.
+		static SqlField? ResolveSourceField(ExpressionBuilder builder, IBuildContext sourceContext, SqlTable sourceTable, LambdaExpression column)
+		{
+			var name     = GetColumnName(column);
+			var declared = sourceTable.Fields.Find(f => string.Equals(f.Name, name, StringComparison.Ordinal));
+
+			if (declared != null)
+				return declared;
+
+			var body       = SequenceHelper.PrepareBody(column, sourceContext);
+			var translated = builder.BuildSqlExpression(sourceContext, body);
+
+			return translated is SqlPlaceholderExpression { Sql: SqlField field } && ReferenceEquals(field.Table, sourceTable)
+				? field
+				: null;
 		}
 
 		static string GetColumnName(LambdaExpression column)
