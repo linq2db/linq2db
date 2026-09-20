@@ -123,6 +123,69 @@ namespace LinqToDB
 			return Pivot(source, keySelector, forColumn, forValues, selector, cells);
 		}
 
+		/// <summary>
+		/// Rotates a runtime set of values into columns, with the cell templates supplied through a factory so
+		/// that <typeparamref name="TSource"/> never has to be written down - the shape a pivot over a join
+		/// projected into an anonymous type needs. Otherwise identical to
+		/// <see cref="Pivot{TSource,TKey,TFor,TResult}(IQueryable{TSource},Expression{Func{TSource,TKey}},Expression{Func{TSource,TFor}},IEnumerable{TFor},Expression{Func{IGrouping{TKey,TSource},TResult}},PivotCell{TSource,TFor}[])"/>.
+		/// </summary>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TKey">Grouping key type.</typeparam>
+		/// <typeparam name="TFor">Type of the pivoted column.</typeparam>
+		/// <typeparam name="TResult">Result record type; must expose a dynamic-columns store.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="keySelector">Grouping key.</param>
+		/// <param name="forColumn">The column whose values become columns.</param>
+		/// <param name="forValues">The runtime set of pivoted values.</param>
+		/// <param name="staticSelector">Projection for the statically known members, over the grouping.</param>
+		/// <param name="cells">Cell templates, each built from the supplied factory. More than one requires each to supply a name factory.</param>
+		/// <returns>Query with one row per key and one generated column per (cell, value) pair.</returns>
+		[Pure, LinqTunnel]
+		public static IQueryable<TResult> Pivot<TSource, TKey, TFor, TResult>(
+			this            IQueryable<TSource>                                                      source,
+			[InstantHandle] Expression<Func<TSource, TKey>>                                          keySelector,
+			[InstantHandle] Expression<Func<TSource, TFor>>                                          forColumn,
+			[InstantHandle] IEnumerable<TFor>                                                        forValues,
+			[InstantHandle] Expression<Func<IGrouping<TKey, TSource>, TResult>>                      staticSelector,
+			[InstantHandle] params Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
+			=> Pivot(source, keySelector, forColumn, forValues, staticSelector, InvokeCellFactories(cells));
+
+		/// <summary>
+		/// Rotates a runtime set of values into the cells of a <see cref="PivotRow{TKey}"/>, with the cell
+		/// templates supplied through a factory so that <typeparamref name="TSource"/> never has to be written
+		/// down - the shape a pivot over a join projected into an anonymous type needs.
+		/// </summary>
+		/// <typeparam name="TSource">Source record type.</typeparam>
+		/// <typeparam name="TKey">Grouping key type.</typeparam>
+		/// <typeparam name="TFor">Type of the pivoted column.</typeparam>
+		/// <param name="source">Source query.</param>
+		/// <param name="keySelector">Grouping key.</param>
+		/// <param name="forColumn">The column whose values become columns.</param>
+		/// <param name="forValues">The runtime set of pivoted values.</param>
+		/// <param name="cells">Cell templates, each built from the supplied factory. More than one requires each to supply a name factory.</param>
+		/// <returns>Query with one <see cref="PivotRow{TKey}"/> per key.</returns>
+		[Pure, LinqTunnel]
+		public static IQueryable<PivotRow<TKey>> Pivot<TSource, TKey, TFor>(
+			this            IQueryable<TSource>                                                      source,
+			[InstantHandle] Expression<Func<TSource, TKey>>                                          keySelector,
+			[InstantHandle] Expression<Func<TSource, TFor>>                                          forColumn,
+			[InstantHandle] IEnumerable<TFor>                                                        forValues,
+			[InstantHandle] params Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
+			=> Pivot(source, keySelector, forColumn, forValues, InvokeCellFactories(cells));
+
+		static PivotCell<TSource, TFor>[] InvokeCellFactories<TSource, TFor>(Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
+		{
+			ArgumentNullException.ThrowIfNull(cells);
+
+			var result = new PivotCell<TSource, TFor>[cells.Length];
+
+			for (var i = 0; i < cells.Length; i++)
+				result[i] = cells[i](PivotCellFactory<TSource, TFor>.Instance)
+					?? throw new ArgumentException($"Cell template at index {i.ToString(CultureInfo.InvariantCulture)} was not built.", nameof(cells));
+
+			return result;
+		}
+
 		// g => Aggregate(g, row => forColumn(row) == value ? (TCell?)cell(row) : null)
 		// The same conditional-aggregation shape a portable PIVOT lowers to, built per (cell, value) pair.
 		static LambdaExpression BuildCell<TSource, TFor>(PivotCell<TSource, TFor> cell, Expression<Func<TSource, TFor>> forColumn, TFor value, Type groupType)
