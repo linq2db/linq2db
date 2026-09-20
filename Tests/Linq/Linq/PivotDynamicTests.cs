@@ -135,6 +135,314 @@ namespace Tests.Linq
 			act.ShouldThrow<ArgumentException>();
 		}
 
+		#region Compile-time-known value sets
+
+		[Table]
+		sealed class CategorySales
+		{
+			[Column] public string   Category { get; set; } = null!;
+			[Column] public int      Year     { get; set; }
+			[Column] public decimal? Amount   { get; set; }
+
+			public static readonly CategorySales[] Data =
+			{
+				new() { Category = "A", Year = 2000, Amount = 10m },
+				new() { Category = "A", Year = 2010, Amount = 20m },
+				new() { Category = "B", Year = 2000, Amount = 5m  },
+				new() { Category = "B", Year = 2010, Amount = 15m },
+			};
+
+			// Two rows per cell, so AVG / MIN / MAX are distinguishable from SUM.
+			public static readonly CategorySales[] MultiRowData =
+			{
+				new() { Category = "A", Year = 2000, Amount = 10m },
+				new() { Category = "A", Year = 2000, Amount = 30m },
+				new() { Category = "B", Year = 2000, Amount = 5m  },
+			};
+
+			// A group whose distinct count differs from its row count, so a plain COUNT cannot pass by accident.
+			public static readonly CategorySales[] DuplicateData =
+			{
+				new() { Category = "A", Year = 2000, Amount = 10m },
+				new() { Category = "A", Year = 2000, Amount = 10m },
+				new() { Category = "A", Year = 2000, Amount = 30m },
+				new() { Category = "B", Year = 2000, Amount = 5m  },
+			};
+		}
+
+		[Test]
+		public void PivotsConstantValueSet([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					PivotCell<CategorySales, int>.Sum(x => x.Amount, Year))
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe("A");
+			result[0]["Y2000"].ShouldBe(10m);
+			result[0]["Y2010"].ShouldBe(20m);
+
+			result[1].Key.ShouldBe("B");
+			result[1]["Y2000"].ShouldBe(5m);
+			result[1]["Y2010"].ShouldBe(15m);
+		}
+
+		[Test]
+		public void PivotsMultipleAggregatesOfOneValue([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					PivotCell<CategorySales, int>.Sum(x => x.Amount, y => "Sum" + Year(y)),
+					PivotCell<CategorySales, int>.Count(y => "Cnt" + Year(y)))
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe("A");
+			result[0]["SumY2000"].ShouldBe(10m);
+			result[0]["CntY2000"].ShouldBe(1);
+
+			result[1]["SumY2000"].ShouldBe(5m);
+			result[1]["CntY2000"].ShouldBe(1);
+		}
+
+		[Test]
+		public void PivotsAvgMinMaxCells([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					PivotCell<CategorySales, int>.Avg(x => x.Amount, y => "Avg" + Year(y)),
+					PivotCell<CategorySales, int>.Min(x => x.Amount, y => "Min" + Year(y)),
+					PivotCell<CategorySales, int>.Max(x => x.Amount, y => "Max" + Year(y)))
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe("A");
+			result[0]["AvgY2000"].ShouldBe(20m);
+			result[0]["MinY2000"].ShouldBe(10m);
+			result[0]["MaxY2000"].ShouldBe(30m);
+
+			result[1].Key.ShouldBe("B");
+			result[1]["AvgY2000"].ShouldBe(5m);
+		}
+
+		[Table]
+		sealed class RegionSales
+		{
+			[Column] public string   Category { get; set; } = null!;
+			[Column] public string   Region   { get; set; } = null!;
+			[Column] public int      Year     { get; set; }
+			[Column] public decimal? Amount   { get; set; }
+
+			public static readonly RegionSales[] Data =
+			{
+				new() { Category = "A", Region = "EU", Year = 2000, Amount = 10m },
+				new() { Category = "A", Region = "EU", Year = 2010, Amount = 20m },
+				new() { Category = "A", Region = "US", Year = 2000, Amount = 3m  },
+				new() { Category = "B", Region = "EU", Year = 2000, Amount = 5m  },
+			};
+		}
+
+		[Test]
+		public void PivotsOnACompositeKey([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(RegionSales.Data);
+
+			var result = t
+				.Pivot(x => new { x.Category, x.Region }, x => x.Year, new[] { 2000, 2010 },
+					PivotCell<RegionSales, int>.Sum(x => x.Amount, Year))
+				.ToList()
+				.OrderBy(r => r.Key.Category, StringComparer.Ordinal)
+				.ThenBy(r => r.Key.Region, StringComparer.Ordinal)
+				.ToList();
+
+			// groups: (A,EU) Y2000=10 Y2010=20; (A,US) Y2000=3; (B,EU) Y2000=5
+			result.Count.ShouldBe(3);
+
+			result[0].Key.Category.ShouldBe("A");
+			result[0].Key.Region  .ShouldBe("EU");
+			result[0]["Y2000"]    .ShouldBe(10m);
+			result[0]["Y2010"]    .ShouldBe(20m);
+
+			result[1].Key.Region.ShouldBe("US");
+			result[1]["Y2000"]  .ShouldBe(3m);
+
+			result[2].Key.Category.ShouldBe("B");
+			result[2]["Y2000"]    .ShouldBe(5m);
+		}
+
+		[Table]
+		sealed class QuarterAmounts
+		{
+			[Column] public string   Category { get; set; } = null!;
+			[Column] public int      Year     { get; set; }
+			[Column] public int      Quarter  { get; set; }
+			[Column] public decimal? Amount   { get; set; }
+
+			public static readonly QuarterAmounts[] Data =
+			{
+				new() { Category = "A", Year = 2000, Quarter = 1, Amount = 10m },
+				new() { Category = "A", Year = 2000, Quarter = 2, Amount = 20m },
+				new() { Category = "A", Year = 2010, Quarter = 1, Amount = 30m },
+				new() { Category = "B", Year = 2000, Quarter = 1, Amount = 5m  },
+			};
+		}
+
+		[Test]
+		public void PivotsOnACompositeValue([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterAmounts.Data);
+
+			// The FOR side is a pair, so the cell predicate is an AND of the two member comparisons. The pair is an
+			// anonymous type, so the cell has to come from the factory - TFor cannot be written down.
+			var result = t
+				.Pivot(
+					x => x.Category,
+					x => new { x.Year, x.Quarter },
+					new[] { new { Year = 2000, Quarter = 1 }, new { Year = 2000, Quarter = 2 } },
+					c => c.Sum(x => x.Amount, v => Year(v.Year) + "Q" + v.Quarter.ToString(CultureInfo.InvariantCulture)))
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			// A: Q1=10, Q2=20; B: Q1=5, Q2=null
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe("A");
+			result[0]["Y2000Q1"].ShouldBe(10m);
+			result[0]["Y2000Q2"].ShouldBe(20m);
+
+			result[1].Key.ShouldBe("B");
+			result[1]["Y2000Q1"].ShouldBe(5m);
+			result[1]["Y2000Q2"].ShouldBeNull();
+		}
+
+		[Test]
+		public void ComposesAfterAConstantPivot([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.Data);
+
+			// Where on a generated column plus a projection that drops another one - stresses column pruning.
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					PivotCell<CategorySales, int>.Sum(x => x.Amount, Year))
+				.Where(r => Sql.Property<decimal?>(r, "Y2010") >= 15)
+				.Select(r => new { r.Key, Y2010 = Sql.Property<decimal?>(r, "Y2010") })
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+			result[0].Key.ShouldBe("A");
+			result[0].Y2010.ShouldBe(20m);
+			result[1].Key.ShouldBe("B");
+			result[1].Y2010.ShouldBe(15m);
+		}
+
+		#endregion
+
+		#region Custom aggregates and empty cells
+
+		/// <summary>
+		/// A cell can carry an aggregate outside the five named ones - here a distinct count, which the closed
+		/// enum the cells used to be could not express at all.
+		/// </summary>
+		[Test]
+		public void PivotsWithACustomAggregate([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.DuplicateData);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					PivotCell<CategorySales, int>.Custom(rows => rows.Select(x => x.Amount).Distinct().Count(), y => "Distinct" + Year(y)),
+					PivotCell<CategorySales, int>.Count(y => "Rows" + Year(y)))
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe("A");
+			result[0]["DistinctY2000"].ShouldBe(2);
+			result[0]["RowsY2000"]    .ShouldBe(3);
+
+			result[1].Key.ShouldBe("B");
+			result[1]["DistinctY2000"].ShouldBe(1);
+			result[1]["RowsY2000"]    .ShouldBe(1);
+		}
+
+		[Table]
+		sealed class StrictSales
+		{
+			[Column] public string   Category { get; set; } = null!;
+			[Column] public int      Year     { get; set; }
+			[Column] public int      Amount   { get; set; }
+			[Column] public DateTime At       { get; set; }
+
+			// No row for (A, 2010) or (B, 2000): those cells have nothing to aggregate.
+			public static readonly StrictSales[] Data =
+			{
+				new() { Category = "A", Year = 2000, Amount = 10, At = new DateTime(2000, 1, 1) },
+				new() { Category = "B", Year = 2010, Amount = 20, At = new DateTime(2010, 1, 1) },
+			};
+		}
+
+		/// <summary>
+		/// A cell no row matches reads null, not <c>default(TCell)</c> - asserted once per lift mechanism, since
+		/// a named cell can only lift the aggregated value and a custom one can only lift its result.
+		/// </summary>
+		[Test]
+		public void AnEmptyCellOverANonNullableColumnReadsNull([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(StrictSales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					PivotCell<StrictSales, int>.Sum(x => x.Amount, y => "Sum" + Year(y)),
+					PivotCell<StrictSales, int>.Custom(rows => rows.Max(x => x.At), y => "At" + Year(y)))
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe("A");
+			result[0]["SumY2000"].ShouldBe(10);
+			result[0]["AtY2000"] .ShouldBe(new DateTime(2000, 1, 1));
+			result[0]["SumY2010"].ShouldBeNull();
+			result[0]["AtY2010"] .ShouldBeNull();
+
+			result[1].Key.ShouldBe("B");
+			result[1]["SumY2000"].ShouldBeNull();
+			result[1]["AtY2000"] .ShouldBeNull();
+			result[1]["SumY2010"].ShouldBe(20);
+		}
+
+		#endregion
+
 		#region The production pivot from PR #5708
 
 		[Table]
@@ -363,9 +671,8 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// Joined, grouped and multi-cell rules the native <c>PIVOT</c> keyword out: the query lowers to one
-		/// conditional aggregate per generated column, and a filter over a generated column becomes a
-		/// <c>HAVING</c> over that same aggregate.
+		/// One conditional aggregate per generated column, and a filter over a generated column becomes a
+		/// <c>HAVING</c> over that same aggregate rather than falling back to the client.
 		/// </summary>
 		[Test]
 		public void ProductionShapeLowersToConditionalAggregates([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -398,8 +705,6 @@ namespace Tests.Linq
 				.ToList();
 
 			var sql = db.LastQuery!;
-
-			sql.ShouldNotContain("PIVOT");
 
 			// One conditional aggregate per generated column, plus the one the filter repeats in HAVING - where
 			// it stays server-side instead of falling back to the client.

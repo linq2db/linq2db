@@ -18,9 +18,7 @@ namespace LinqToDB
 	{
 		/// <summary>
 		/// Rotates a fixed set of columns into rows, producing one output row per (source-row, column).
-		/// Emits native <c>UNPIVOT</c> on providers that support it (SQL Server, Oracle, DuckDB); everywhere
-		/// else it is lowered to a <c>UNION ALL</c> derived table. NULL value cells are excluded (matching
-		/// native <c>UNPIVOT</c>); use the
+		/// Lowered to a <c>UNION ALL</c> derived table on every provider. NULL value cells are excluded; use the
 		/// <see cref="Unpivot{TSource,TValue,TResult}(IQueryable{TSource},UnpivotNulls,Expression{Func{TSource,string,TValue,TResult}},Expression{Func{TSource,TValue}},Expression{Func{TSource,TValue}}[])"/>
 		/// overload to keep them.
 		/// </summary>
@@ -89,8 +87,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Rotates a set of columns named at query-build time into rows, so the column set can be runtime data
 		/// rather than a list of member selectors. Equivalent to the selector overload with one
-		/// <see cref="Sql.Property{T}(object,string)"/> selector per name, and reaches the native
-		/// <c>UNPIVOT</c> keyword on the same providers.
+		/// <see cref="Sql.Property{T}(object,string)"/> selector per name.
 		/// </summary>
 		/// <remarks>
 		/// <typeparamref name="TValue"/> has nothing to be inferred from here, so write the result selector's
@@ -213,8 +210,7 @@ namespace LinqToDB
 		static readonly MethodInfo _unpivotMultiMethodInfo =
 			typeof(LinqExtensions).GetMethod(nameof(UnpivotMulti), BindingFlags.Static | BindingFlags.NonPublic)!;
 
-		// Emits the UnpivotMulti marker call; UnpivotBuilder rewrites it to native multi-value UNPIVOT
-		// (Oracle/DuckDB) or a portable UNION ALL derived table.
+		// Emits the UnpivotMulti marker call; UnpivotBuilder rewrites it to a UNION ALL derived table.
 		//
 		// The groups are split into a name array and a flat, quoted column array rather than passed as one
 		// constant: a constant holding an array is compared by reference in the query cache, so a single

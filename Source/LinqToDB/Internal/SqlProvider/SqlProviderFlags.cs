@@ -719,38 +719,6 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsDistinctOnSupported { get; set; }
 
 		/// <summary>
-		/// Provider supports the native <c>PIVOT</c> table operator (SQL Server 2005+, Oracle 11g+, DuckDB).
-		/// When <see langword="false"/> (the default), a <c>Pivot</c> query is lowered to <c>GROUP BY</c> +
-		/// conditional aggregation (<c>SUM(CASE WHEN …)</c>) by the SQL optimizer.
-		/// </summary>
-		[DataMember(Order = 80), DefaultValue(false)]
-		public bool IsPivotSupported { get; set; }
-
-		/// <summary>
-		/// Provider supports a composite (multi-column) <c>FOR</c> in native <c>PIVOT</c> — <c>FOR (c1, c2) IN ((v, v), …)</c>
-		/// (Oracle, DuckDB; <b>not</b> SQL Server). When <see langword="false"/>, a composite-key pivot is lowered to
-		/// conditional aggregation with a composite <c>CASE</c> predicate.
-		/// </summary>
-		[DataMember(Order = 81), DefaultValue(false)]
-		public bool IsMultiColumnPivotSupported { get; set; }
-
-		/// <summary>
-		/// Provider supports the native <c>UNPIVOT</c> table operator (SQL Server, Oracle, DuckDB).
-		/// When <see langword="false"/> (the default), an <c>Unpivot</c> query is lowered to a <c>UNION ALL</c> /
-		/// <c>CROSS APPLY (VALUES …)</c> derived table by the SQL optimizer.
-		/// </summary>
-		[DataMember(Order = 82), DefaultValue(false)]
-		public bool IsUnpivotSupported { get; set; }
-
-		/// <summary>
-		/// Provider supports a native multi-value-column <c>UNPIVOT</c> — <c>((v1, v2) FOR n IN ((c1, c2) AS 'x', …))</c>
-		/// (Oracle, DuckDB; <b>not</b> SQL Server). When <see langword="false"/>, a multi-value unpivot is lowered to
-		/// <c>UNION ALL</c>.
-		/// </summary>
-		[DataMember(Order = 83), DefaultValue(false)]
-		public bool IsMultiValueUnpivotSupported { get; set; }
-
-		/// <summary>
 		/// Provider's <c>UPDATE … OUTPUT</c> / <c>RETURNING</c> returns the new (post-update) values as a result set of
 		/// the rows the statement actually updated — so an <c>UPDATE</c> matching no row returns no rows.
 		/// <para>
@@ -881,10 +849,6 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsNullsOrderingSupported                             .GetHashCode()
 				^ DefaultNullsOrdering                                 .GetHashCode()
 				^ IsDistinctOnSupported                                .GetHashCode()
-				^ IsPivotSupported                                     .GetHashCode()
-				^ IsMultiColumnPivotSupported                          .GetHashCode()
-				^ IsUnpivotSupported                                   .GetHashCode()
-				^ IsMultiValueUnpivotSupported                         .GetHashCode()
 				^ IsUpdateOutputRowsSupported                          .GetHashCode()
 				^ IsAffectedRowsCountSupported                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
@@ -969,10 +933,6 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsNullsOrderingSupported                              == other.IsNullsOrderingSupported
 				&& DefaultNullsOrdering                                  == other.DefaultNullsOrdering
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
-				&& IsPivotSupported                                      == other.IsPivotSupported
-				&& IsMultiColumnPivotSupported                           == other.IsMultiColumnPivotSupported
-				&& IsUnpivotSupported                                    == other.IsUnpivotSupported
-				&& IsMultiValueUnpivotSupported                          == other.IsMultiValueUnpivotSupported
 				&& IsUpdateOutputRowsSupported                           == other.IsUpdateOutputRowsSupported
 				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);

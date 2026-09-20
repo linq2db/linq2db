@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB
@@ -18,6 +19,16 @@ namespace LinqToDB
 		PivotCellFactory()
 		{
 		}
+
+		/// <summary>
+		/// A cell computed by an arbitrary aggregate over the source rows carrying the pivoted value
+		/// (see <see cref="PivotCell{TSource,TFor}.Custom{TCell}"/>).
+		/// </summary>
+		/// <typeparam name="TCell">Aggregate result type.</typeparam>
+		/// <param name="aggregate">Aggregate over the matching rows.</param>
+		/// <param name="name">Names the generated column for a pivoted value. Required when a pivot declares more than one cell.</param>
+		public PivotCell<TSource, TFor> Custom<TCell>(Expression<Func<IEnumerable<TSource>, TCell>> aggregate, Func<TFor, string>? name = null)
+			=> PivotCell<TSource, TFor>.Custom(aggregate, name);
 
 		/// <summary>A <c>SUM</c> cell.</summary>
 		/// <typeparam name="TCell">Aggregated value type.</typeparam>
@@ -47,11 +58,9 @@ namespace LinqToDB
 		public PivotCell<TSource, TFor> Avg<TCell>(Expression<Func<TSource, TCell>> value, Func<TFor, string>? name = null)
 			=> PivotCell<TSource, TFor>.Avg(value, name);
 
-		/// <summary>A <c>COUNT</c> cell: counts the rows matching the pivoted value (see <see cref="Sum{TCell}"/>).</summary>
-		/// <typeparam name="TCell">Type of the referenced column; only the row match is counted.</typeparam>
-		/// <param name="value">Column the cell is associated with.</param>
+		/// <summary>A <c>COUNT</c> cell: counts the rows carrying the pivoted value (see <see cref="Sum{TCell}"/>).</summary>
 		/// <param name="name">Names the generated column for a pivoted value.</param>
-		public PivotCell<TSource, TFor> Count<TCell>(Expression<Func<TSource, TCell>> value, Func<TFor, string>? name = null)
-			=> PivotCell<TSource, TFor>.Count(value, name);
+		public PivotCell<TSource, TFor> Count(Func<TFor, string>? name = null)
+			=> PivotCell<TSource, TFor>.Count(name);
 	}
 }

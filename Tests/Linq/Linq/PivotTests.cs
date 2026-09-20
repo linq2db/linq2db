@@ -68,24 +68,9 @@ namespace Tests.Linq
 			result.Count(r => r.Amount == null).ShouldBe(2);
 		}
 
-		[Test]
-		public void UnpivotEmitsNativeKeyword([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(QuarterlySales.Data);
-
-			_ = t
-				.Unpivot((row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount }, x => x.Q1, x => x.Q2, x => x.Q3, x => x.Q4)
-				.ToArray();
-
-			LastQuery!.ToUpperInvariant().ShouldContain("UNPIVOT");
-		}
-
 		/// <summary>
-		/// Whether the unpivoted columns can be named by value rather than by a compile-time member reference.
-		/// Sql.Property is rewritten to member access before UnpivotBuilder sees the selectors, so the
-		/// ergonomic overload may be the only thing missing. Run on the full provider set, so any discrepancy
-		/// between the name the native keyword reports and the one the lowering emits surfaces here.
+		/// The unpivoted columns can be named by value rather than by a compile-time member reference:
+		/// Sql.Property is rewritten to member access before UnpivotBuilder sees the selectors.
 		/// </summary>
 		[Test]
 		public void UnpivotWithRuntimeColumnNames([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
@@ -117,36 +102,6 @@ namespace Tests.Linq
 		{
 			[Column] public int    Id     { get; set; }
 			[Column] public string Region { get; set; } = null!;
-		}
-
-		[Table]
-		sealed class AliasedSales
-		{
-			[Column]          public int      Id { get; set; }
-			[Column("Q_ONE")] public decimal? Q1 { get; set; }
-			[Column("Q_TWO")] public decimal? Q2 { get; set; }
-
-			public static readonly AliasedSales[] Data = { new() { Id = 1, Q1 = 10m, Q2 = 20m } };
-		}
-
-		/// <summary>
-		/// A column whose physical name differs from its member name reaches the native keyword and reports the
-		/// physical name: the lookup matches on the member name, which is what the source field carries. The
-		/// control for the unmapped case below, which is the one the lookup cannot see.
-		/// </summary>
-		[Test]
-		public void UnpivotAliasedColumnEmitsNativeKeyword([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(AliasedSales.Data);
-
-			var result = t
-				.Unpivot((row, name, amount) => new { row.Id, Name = name, Amount = amount }, x => x.Q1, x => x.Q2)
-				.OrderBy(r => r.Name)
-				.ToArray();
-
-			result.Select(r => r.Name).ShouldBe(new[] { "Q_ONE", "Q_TWO" });
-			LastQuery!.ToUpperInvariant().ShouldContain("UNPIVOT");
 		}
 
 		/// <summary>
@@ -206,28 +161,9 @@ namespace Tests.Linq
 			(probe.GetCacheMissCount() - start).ShouldBe(3, "a wider column set must not reuse it");
 		}
 
-		/// <summary>The same gap for a column the mapping does not carry at all: its field is created lazily.</summary>
-		[Test]
-		public void UnpivotUnmappedColumnEmitsNativeKeyword([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(QuarterlySales.Data);
-
-			string q1 = "Q1", q2 = "Q2";
-
-			_ = db.GetTable<QuarterlyKeys>()
-				.Unpivot(
-					(row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount },
-					row => Sql.Property<decimal?>(row, q1),
-					row => Sql.Property<decimal?>(row, q2))
-				.ToArray();
-
-			LastQuery!.ToUpperInvariant().ShouldContain("UNPIVOT");
-		}
-
 		/// <summary>
-		/// The unpivoted columns are not members of the mapped type at all, so the fields do not exist until
-		/// the table context creates them lazily - which is where the native path looks them up by name.
+		/// The unpivoted columns are not members of the mapped type at all, so the fields do not exist until the
+		/// table context creates them lazily.
 		/// </summary>
 		[Test]
 		public void UnpivotWithColumnsAbsentFromTheMapping([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
@@ -254,7 +190,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnpivotLowersToUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void UnpivotLowersToUnionAll([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -266,250 +202,6 @@ namespace Tests.Linq
 			var sql = LastQuery!.ToUpperInvariant();
 			sql.ShouldNotContain("UNPIVOT");
 			sql.ShouldContain("UNION ALL");
-		}
-
-		[Table]
-		sealed class CategorySales
-		{
-			[Column] public string   Category { get; set; } = null!;
-			[Column] public int      Year     { get; set; }
-			[Column] public decimal? Amount   { get; set; }
-
-			public static readonly CategorySales[] Data =
-			{
-				new() { Category = "A", Year = 2000, Amount = 10m },
-				new() { Category = "A", Year = 2010, Amount = 20m },
-				new() { Category = "B", Year = 2000, Amount = 5m  },
-				new() { Category = "B", Year = 2010, Amount = 15m },
-			};
-
-			// Two rows per cell, so AVG / MIN / MAX are distinguishable from SUM.
-			public static readonly CategorySales[] MultiRowData =
-			{
-				new() { Category = "A", Year = 2000, Amount = 10m },
-				new() { Category = "A", Year = 2000, Amount = 30m },
-				new() { Category = "B", Year = 2000, Amount = 5m  },
-			};
-		}
-
-		[Test]
-		public void Pivot([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(CategorySales.Data);
-
-			var result = t
-				.Pivot(p => new
-				{
-					p.Key.Category,
-					Y2000 = p.Sum(x => x.Amount, x => x.Year, 2000),
-					Y2010 = p.Sum(x => x.Amount, x => x.Year, 2010),
-				})
-				.OrderBy(r => r.Category)
-				.ToArray();
-
-			result.Length.ShouldBe(2);
-			result[0].Category.ShouldBe("A");
-			result[0].Y2000.ShouldBe(10m);
-			result[0].Y2010.ShouldBe(20m);
-			result[1].Category.ShouldBe("B");
-			result[1].Y2000.ShouldBe(5m);
-			result[1].Y2010.ShouldBe(15m);
-
-			// SQL-text assertion only for the direct (non-remote) context: DuckDB emits native PIVOT, SQLite lowers.
-			if (!context.Contains("LinqService", System.StringComparison.Ordinal))
-			{
-				var sql = LastQuery!.ToUpperInvariant();
-				if (context.Contains("SQLite", System.StringComparison.Ordinal))
-					sql.ShouldNotContain("PIVOT");
-				else
-					sql.ShouldContain("PIVOT");
-			}
-		}
-
-		[Test]
-		public void PivotMultiAggregate([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(CategorySales.Data);
-
-			var result = t
-				.Pivot(p => new
-				{
-					p.Key.Category,
-					Sum2000 = p.Sum  (x => x.Amount, x => x.Year, 2000),
-					Cnt2000 = p.Count(x => x.Amount, x => x.Year, 2000),
-				})
-				.OrderBy(r => r.Category)
-				.ToArray();
-
-			result.Length.ShouldBe(2);
-			result[0].Category.ShouldBe("A");
-			result[0].Sum2000.ShouldBe(10m);
-			result[0].Cnt2000.ShouldBe(1);
-		}
-
-		[Test]
-		public void PivotAvgMinMax([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
-
-			// Three aggregates - always the conditional-aggregation lowering.
-			var lowered = t
-				.Pivot(p => new
-				{
-					p.Key.Category,
-					Avg2000 = p.Avg(x => x.Amount, x => x.Year, 2000),
-					Min2000 = p.Min(x => x.Amount, x => x.Year, 2000),
-					Max2000 = p.Max(x => x.Amount, x => x.Year, 2000),
-				})
-				.OrderBy(r => r.Category)
-				.ToArray();
-
-			lowered.Length.ShouldBe(2);
-			lowered[0].Category.ShouldBe("A");
-			lowered[0].Avg2000.ShouldBe(20d);
-			lowered[0].Min2000.ShouldBe(10m);
-			lowered[0].Max2000.ShouldBe(30m);
-			lowered[1].Category.ShouldBe("B");
-			lowered[1].Avg2000.ShouldBe(5d);
-
-			// Single aggregate over a plain table - native PIVOT where the provider supports it.
-			var single = t
-				.Pivot(p => new
-				{
-					p.Key.Category,
-					Avg2000 = p.Avg(x => x.Amount, x => x.Year, 2000),
-				})
-				.OrderBy(r => r.Category)
-				.ToArray();
-
-			single[0].Avg2000.ShouldBe(20d);
-			single[1].Avg2000.ShouldBe(5d);
-		}
-
-		[Table]
-		sealed class RegionSales
-		{
-			[Column] public string   Category { get; set; } = null!;
-			[Column] public string   Region   { get; set; } = null!;
-			[Column] public int      Year     { get; set; }
-			[Column] public decimal? Amount   { get; set; }
-
-			public static readonly RegionSales[] Data =
-			{
-				new() { Category = "A", Region = "EU", Year = 2000, Amount = 10m },
-				new() { Category = "A", Region = "EU", Year = 2010, Amount = 20m },
-				new() { Category = "A", Region = "US", Year = 2000, Amount = 3m  },
-				new() { Category = "B", Region = "EU", Year = 2000, Amount = 5m  },
-			};
-		}
-
-		[Test]
-		public void PivotCompositeKey([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(RegionSales.Data);
-
-			var result = t
-				.Pivot(p => new
-				{
-					p.Key.Category,
-					p.Key.Region,
-					Y2000 = p.Sum(x => x.Amount, x => x.Year, 2000),
-					Y2010 = p.Sum(x => x.Amount, x => x.Year, 2010),
-				})
-				.OrderBy(r => r.Category)
-				.ThenBy(r => r.Region)
-				.ToArray();
-
-			// groups: (A,EU) Y2000=10 Y2010=20; (A,US) Y2000=3; (B,EU) Y2000=5
-			result.Length.ShouldBe(3);
-			result[0].Category.ShouldBe("A");
-			result[0].Region.ShouldBe("EU");
-			result[0].Y2000.ShouldBe(10m);
-			result[0].Y2010.ShouldBe(20m);
-			result[1].Region.ShouldBe("US");
-			result[1].Y2000.ShouldBe(3m);
-			result[2].Category.ShouldBe("B");
-			result[2].Y2000.ShouldBe(5m);
-		}
-
-		[Table]
-		sealed class QuarterAmounts
-		{
-			[Column] public string   Category { get; set; } = null!;
-			[Column] public int      Year     { get; set; }
-			[Column] public int      Quarter  { get; set; }
-			[Column] public decimal? Amount   { get; set; }
-
-			public static readonly QuarterAmounts[] Data =
-			{
-				new() { Category = "A", Year = 2000, Quarter = 1, Amount = 10m },
-				new() { Category = "A", Year = 2000, Quarter = 2, Amount = 20m },
-				new() { Category = "A", Year = 2010, Quarter = 1, Amount = 30m },
-				new() { Category = "B", Year = 2000, Quarter = 1, Amount = 5m  },
-			};
-		}
-
-		[Test]
-		public void PivotCompositeFor([IncludeDataSources(TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(QuarterAmounts.Data);
-
-			// Composite (multi-column) FOR: pivot on (Year, Quarter).
-			var result = t
-				.Pivot(p => new
-				{
-					p.Key.Category,
-					Y2000Q1 = p.Sum(x => x.Amount, x => new { x.Year, x.Quarter }, new { Year = 2000, Quarter = 1 }),
-					Y2000Q2 = p.Sum(x => x.Amount, x => new { x.Year, x.Quarter }, new { Year = 2000, Quarter = 2 }),
-				})
-				.OrderBy(r => r.Category)
-				.ToArray();
-
-			// A: Q1=10, Q2=20; B: Q1=5, Q2=null
-			result.Length.ShouldBe(2);
-			result[0].Category.ShouldBe("A");
-			result[0].Y2000Q1.ShouldBe(10m);
-			result[0].Y2000Q2.ShouldBe(20m);
-			result[1].Category.ShouldBe("B");
-			result[1].Y2000Q1.ShouldBe(5m);
-
-			// Oracle / DuckDB support a composite (multi-column) FOR natively; SQL Server / SQLite lower to CASE.
-			var sql = LastQuery!.ToUpperInvariant();
-			if (context.Contains("DuckDB", System.StringComparison.Ordinal) || context.Contains("Oracle", System.StringComparison.Ordinal))
-				sql.ShouldContain("PIVOT");
-			else
-				sql.ShouldNotContain("PIVOT");
-		}
-
-		[Test]
-		public void PivotThenWhereAndProject([IncludeDataSources(ProviderName.DuckDB, TestProvName.AllSqlServer)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(CategorySales.Data);
-
-			// Where on a pivoted column + a projection that drops another pivoted column — stresses column pruning.
-			var result = t
-				.Pivot(p => new
-				{
-					p.Key.Category,
-					Y2000 = p.Sum(x => x.Amount, x => x.Year, 2000),
-					Y2010 = p.Sum(x => x.Amount, x => x.Year, 2010),
-				})
-				.Where(r => r.Y2010 >= 15)
-				.Select(r => new { r.Category, r.Y2010 })
-				.OrderBy(r => r.Category)
-				.ToArray();
-
-			result.Length.ShouldBe(2);
-			result[0].Category.ShouldBe("A");
-			result[0].Y2010.ShouldBe(20m);
-			result[1].Category.ShouldBe("B");
-			result[1].Y2010.ShouldBe(15m);
 		}
 
 		[Table]
@@ -526,6 +218,12 @@ namespace Tests.Linq
 			public static readonly MonthlySales[] Data =
 			{
 				new() { Id = 1, Jan = 10m, Feb = 20m, Mar = 30m, Apr = 40m, May = 50m, Jun = 60m },
+			};
+
+			// A row whose second group is entirely NULL: the documented contract keeps it.
+			public static readonly MonthlySales[] WithEmptyGroup =
+			{
+				new() { Id = 1, Jan = 10m, Feb = 20m, Mar = 30m, Apr = null, May = null, Jun = null },
 			};
 		}
 
@@ -552,16 +250,31 @@ namespace Tests.Linq
 			result[1].Quarter.ShouldBe("Q2");
 			result[1].M1.ShouldBe(40m);
 			result[1].M3.ShouldBe(60m);
+		}
 
-			// Oracle / DuckDB support multi-value UNPIVOT natively; SQL Server / SQLite lower to UNION ALL.
-			if (!context.Contains("LinqService", System.StringComparison.Ordinal))
-			{
-				var sql = LastQuery!.ToUpperInvariant();
-				if (context.Contains("DuckDB", System.StringComparison.Ordinal) || context.Contains("Oracle", System.StringComparison.Ordinal))
-					sql.ShouldContain("UNPIVOT");
-				else
-					sql.ShouldNotContain("UNPIVOT");
-			}
+		/// <summary>
+		/// A group whose measures are all NULL is still a row - the overload filters nothing. Native UNPIVOT
+		/// dropped it, which contradicted the documented contract on the providers that had one.
+		/// </summary>
+		[Test]
+		public void UnpivotMultiValueKeepsAllNullGroup([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(MonthlySales.WithEmptyGroup);
+
+			var result = t
+				.Unpivot(
+					(row, quarter, m1, m2, m3) => new { row.Id, Quarter = quarter, M1 = m1, M2 = m2, M3 = m3 },
+					("Q1", x => x.Jan, x => x.Feb, x => x.Mar),
+					("Q2", x => x.Apr, x => x.May, x => x.Jun))
+				.OrderBy(r => r.Quarter)
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[1].Quarter.ShouldBe("Q2");
+			result[1].M1.ShouldBeNull();
+			result[1].M2.ShouldBeNull();
+			result[1].M3.ShouldBeNull();
 		}
 
 		[Table]
@@ -578,9 +291,8 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// The name column carries the physical column name on every provider. Native UNPIVOT takes it from the
-		/// database, so the portable lowering has to emit the same string - emitting the CLR member name made
-		/// the identical query return Q1/Q2 where it lowers and Q_ONE/Q_TWO where it does not.
+		/// The name column carries the physical column name, so a renamed member reads as its column name rather
+		/// than as the member it was written with.
 		/// </summary>
 		[Test]
 		public void UnpivotNameColumnUsesPhysicalName([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)

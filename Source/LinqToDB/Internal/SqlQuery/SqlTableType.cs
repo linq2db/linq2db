@@ -14,7 +14,5 @@ namespace LinqToDB.Internal.SqlQuery
 		RawSql,
 		MergeSource,
 		Values,
-		Pivot,
-		Unpivot,
 	}
 }

@@ -31,6 +31,11 @@ namespace LinqToDB
 		/// <param name="staticSelector">Projection for the statically known members, over the grouping.</param>
 		/// <param name="cells">Cell templates. More than one requires each to supply a name factory.</param>
 		/// <returns>Query with one row per key and one generated column per (cell, value) pair.</returns>
+		/// <remarks>
+		/// For a value set known at compile time, an ordinary
+		/// <c>GroupBy(...).Select(g =&gt; new { ..., V2000 = g.Where(x =&gt; x.Year == 2000).Sum(x =&gt; x.Amount) })</c>
+		/// expresses the same query with statically typed members and needs none of this.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IQueryable<TResult> Pivot<TSource, TKey, TFor, TResult>(
 			this            IQueryable<TSource>                                 source,
@@ -102,6 +107,11 @@ namespace LinqToDB
 		/// <param name="forValues">The runtime set of pivoted values.</param>
 		/// <param name="cells">Cell templates. More than one requires each to supply a name factory.</param>
 		/// <returns>Query with one <see cref="PivotRow{TKey}"/> per key.</returns>
+		/// <remarks>
+		/// For a value set known at compile time, an ordinary
+		/// <c>GroupBy(...).Select(g =&gt; new { ..., V2000 = g.Where(x =&gt; x.Year == 2000).Sum(x =&gt; x.Amount) })</c>
+		/// expresses the same query with statically typed members and needs none of this.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IQueryable<PivotRow<TKey>> Pivot<TSource, TKey, TFor>(
 			this            IQueryable<TSource>                source,
@@ -186,83 +196,31 @@ namespace LinqToDB
 			return result;
 		}
 
-		// g => Aggregate(g, row => forColumn(row) == value ? (TCell?)cell(row) : null)
-		// The same conditional-aggregation shape a portable PIVOT lowers to, built per (cell, value) pair.
+		// g => aggregate(g.Where(row => forColumn(row) == value))
+		// One filtered aggregate per (cell, value) pair - the shape the engine already models as a grouped
+		// aggregate with a filter, so a cell can carry any aggregate the provider can translate.
 		static LambdaExpression BuildCell<TSource, TFor>(PivotCell<TSource, TFor> cell, Expression<Func<TSource, TFor>> forColumn, TFor value, Type groupType)
 		{
-			var gParam    = Expression.Parameter(groupType, "g");
-			var rowParam  = Expression.Parameter(typeof(TSource), "row");
-			var predicate = Expression.Equal(forColumn.GetBody(rowParam), Expression.Constant(value, typeof(TFor)));
+			var gParam   = Expression.Parameter(groupType, "g");
+			var rowParam = Expression.Parameter(typeof(TSource), "row");
 
-			if (cell.Aggregate == PivotAggregate.Count)
-			{
-				var countMethod = typeof(Enumerable).GetMethods()
-					.First(m => string.Equals(m.Name, nameof(Enumerable.Count), StringComparison.Ordinal) && m.IsGenericMethodDefinition && m.GetParameters().Length == 2)
-					.MakeGenericMethod(typeof(TSource));
-
-				return Expression.Lambda(
-					Expression.Call(countMethod, gParam, Expression.Lambda(predicate, rowParam)),
-					gParam);
-			}
-
-			var valueBody   = cell.Value.GetBody(rowParam);
-			var cellType    = MakeNullable(valueBody.Type);
-			var nullableVal = valueBody.Type == cellType ? valueBody : Expression.Convert(valueBody, cellType);
-
-			var selector = Expression.Lambda(
-				Expression.Condition(predicate, nullableVal, Expression.Constant(null, cellType)),
+			var predicate = Expression.Lambda(
+				Expression.Equal(forColumn.GetBody(rowParam), Expression.Constant(value, typeof(TFor))),
 				rowParam);
 
-			return Expression.Lambda(
-				Expression.Call(GetAggregate(cell.Aggregate, typeof(TSource), cellType), gParam, selector),
-				gParam);
-		}
+			var whereMethod = typeof(Enumerable).GetMethods()
+				.First(m => string.Equals(m.Name, nameof(Enumerable.Where), StringComparison.Ordinal)
+					&& m.GetParameters().Length == 2
+					&& m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
+				.MakeGenericMethod(typeof(TSource));
 
-		static Type MakeNullable(Type type)
-			=> type.IsValueType && Nullable.GetUnderlyingType(type) == null
-				? typeof(Nullable<>).MakeGenericType(type)
-				: type;
+			var body = cell.Aggregate.GetBody(Expression.Call(whereMethod, gParam, predicate));
 
-		static MethodInfo GetAggregate(PivotAggregate aggregate, Type sourceType, Type cellType)
-		{
-			switch (aggregate)
-			{
-				case PivotAggregate.Sum:
-				case PivotAggregate.Avg:
-				{
-					// Sum and Average are overloaded per numeric type rather than generic in the result.
-					var name = aggregate == PivotAggregate.Avg ? nameof(Enumerable.Average) : nameof(Enumerable.Sum);
+			// A cell no row matches must read null, not default(TCell).
+			if (cell.LiftResult)
+				body = Expression.Convert(body, typeof(Nullable<>).MakeGenericType(body.Type));
 
-					var method = typeof(Enumerable).GetMethods()
-						.FirstOrDefault(m => string.Equals(m.Name, name, StringComparison.Ordinal)
-							&& m.IsGenericMethodDefinition
-							&& m.GetParameters().Length == 2
-							&& m.GetParameters()[1].ParameterType.IsGenericType
-							&& m.GetParameters()[1].ParameterType.GetGenericArguments()[1] == cellType);
-
-					if (method == null)
-						throw new LinqToDBException($"Pivot cannot {aggregate} a column of type '{cellType.Name}'.");
-
-					return method.MakeGenericMethod(sourceType);
-				}
-
-				case PivotAggregate.Min:
-				case PivotAggregate.Max:
-				{
-					var name = aggregate == PivotAggregate.Min ? nameof(Enumerable.Min) : nameof(Enumerable.Max);
-
-					var method = typeof(Enumerable).GetMethods()
-						.First(m => string.Equals(m.Name, name, StringComparison.Ordinal)
-							&& m.IsGenericMethodDefinition
-							&& m.GetGenericArguments().Length == 2
-							&& m.GetParameters().Length == 2);
-
-					return method.MakeGenericMethod(sourceType, cellType);
-				}
-
-				default:
-					throw new LinqToDBException($"Unsupported pivot aggregate '{aggregate}'.");
-			}
+			return Expression.Lambda(body, gParam);
 		}
 	}
 }
