@@ -308,7 +308,7 @@ namespace Tests.Linq
 			_ = Build(activityIds).ToList();
 			(probe.GetCacheMissCount() - start).ShouldBe(1);
 
-			var widened = Build(activityIds.Append(40).ToList()).ToList().OrderBy(r => r.Id).ToList();
+			var widened = Build(activityIds.Concat(new[] { 40 }).ToList()).ToList().OrderBy(r => r.Id).ToList();
 
 			(probe.GetCacheMissCount() - start).ShouldBe(2, "a wider value set is a different query");
 
