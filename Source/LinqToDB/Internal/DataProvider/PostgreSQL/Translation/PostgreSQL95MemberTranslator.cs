@@ -10,5 +10,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 		{
 			return new PostgreSQL95WindowFunctionsMemberTranslator();
 		}
+
+		protected override IMemberTranslator CreateAggregateFunctionsMemberTranslator()
+		{
+			return new PostgreSQL95AggregateFunctionsMemberTranslator();
+		}
 	}
 }

@@ -100,8 +100,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
-		public void Test([DataSources(false, TestProvName.AllSybase, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void Test([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(BooleanTable.Data);
