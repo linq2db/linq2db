@@ -21,7 +21,8 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// A cell computed by an arbitrary aggregate over the source rows carrying the pivoted value
+		/// A cell computed by an arbitrary aggregate over the source rows carrying the pivoted value - a distinct
+		/// count, or anything else the provider can translate over a grouping
 		/// (see <see cref="PivotCell{TSource,TFor}.Custom{TCell}"/>).
 		/// </summary>
 		/// <typeparam name="TCell">Aggregate result type.</typeparam>

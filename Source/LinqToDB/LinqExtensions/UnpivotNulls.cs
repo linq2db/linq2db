@@ -5,10 +5,10 @@ namespace LinqToDB
 	/// </summary>
 	public enum UnpivotNulls
 	{
-		/// <summary>Rows whose value cell is NULL are excluded (ANSI / native default).</summary>
+		/// <summary>Rows whose value cell is NULL are excluded (the SQL <c>UNPIVOT</c> default).</summary>
 		ExcludeNulls = 0,
 
-		/// <summary>Rows whose value cell is NULL are kept (native <c>INCLUDE NULLS</c>).</summary>
+		/// <summary>Rows whose value cell is NULL are kept (the SQL <c>INCLUDE NULLS</c> semantics).</summary>
 		IncludeNulls = 1,
 	}
 }

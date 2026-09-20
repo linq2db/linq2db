@@ -30,7 +30,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnpivotExcludeNulls([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotExcludeNulls([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -51,7 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnpivotIncludeNulls([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotIncludeNulls([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -73,7 +73,7 @@ namespace Tests.Linq
 		/// Sql.Property is rewritten to member access before UnpivotBuilder sees the selectors.
 		/// </summary>
 		[Test]
-		public void UnpivotWithRuntimeColumnNames([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotWithRuntimeColumnNames([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -109,7 +109,7 @@ namespace Tests.Linq
 		/// all - there is no way to spread N runtime names into N lambda arguments.
 		/// </summary>
 		[Test]
-		public void UnpivotByColumnNames([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotByColumnNames([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -166,7 +166,7 @@ namespace Tests.Linq
 		/// table context creates them lazily.
 		/// </summary>
 		[Test]
-		public void UnpivotWithColumnsAbsentFromTheMapping([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotWithColumnsAbsentFromTheMapping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterlySales.Data);
@@ -228,7 +228,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnpivotMultiValue([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotMultiValue([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(MonthlySales.Data);
@@ -253,11 +253,10 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// A group whose measures are all NULL is still a row - the overload filters nothing. Native UNPIVOT
-		/// dropped it, which contradicted the documented contract on the providers that had one.
+		/// A group whose measures are all NULL is still a row - the overload filters nothing.
 		/// </summary>
 		[Test]
-		public void UnpivotMultiValueKeepsAllNullGroup([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotMultiValueKeepsAllNullGroup([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(MonthlySales.WithEmptyGroup);
@@ -295,7 +294,7 @@ namespace Tests.Linq
 		/// than as the member it was written with.
 		/// </summary>
 		[Test]
-		public void UnpivotNameColumnUsesPhysicalName([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void UnpivotNameColumnUsesPhysicalName([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(AliasedQuarterly.Data);

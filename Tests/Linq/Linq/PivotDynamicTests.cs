@@ -44,7 +44,7 @@ namespace Tests.Linq
 		static string Year(int y) => "Y" + y.ToString(CultureInfo.InvariantCulture);
 
 		[Test]
-		public void PivotsRuntimeValuesIntoPivotRow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void PivotsRuntimeValuesIntoPivotRow([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Sales.Data);
@@ -75,7 +75,7 @@ namespace Tests.Linq
 		/// shape a real report needs, and the one the static projection API cannot express.
 		/// </summary>
 		[Test]
-		public void PivotsMultipleCellsIntoUserType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void PivotsMultipleCellsIntoUserType([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Sales.Data);
@@ -171,7 +171,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PivotsConstantValueSet([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsConstantValueSet([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.Data);
@@ -195,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PivotsMultipleAggregatesOfOneValue([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsMultipleAggregatesOfOneValue([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.Data);
@@ -219,7 +219,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PivotsAvgMinMaxCells([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsAvgMinMaxCells([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
@@ -262,7 +262,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PivotsOnACompositeKey([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsOnACompositeKey([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(RegionSales.Data);
@@ -308,7 +308,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PivotsOnACompositeValue([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsOnACompositeValue([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(QuarterAmounts.Data);
@@ -338,7 +338,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ComposesAfterAConstantPivot([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void ComposesAfterAConstantPivot([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.Data);
@@ -369,7 +369,7 @@ namespace Tests.Linq
 		/// enum the cells used to be could not express at all.
 		/// </summary>
 		[Test]
-		public void PivotsWithACustomAggregate([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsWithACustomAggregate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.DuplicateData);
@@ -414,7 +414,7 @@ namespace Tests.Linq
 		/// a named cell can only lift the aggregated value and a custom one can only lift its result.
 		/// </summary>
 		[Test]
-		public void AnEmptyCellOverANonNullableColumnReadsNull([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void AnEmptyCellOverANonNullableColumnReadsNull([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(StrictSales.Data);
@@ -422,7 +422,10 @@ namespace Tests.Linq
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
 					PivotCell<StrictSales, int>.Sum(x => x.Amount, y => "Sum" + Year(y)),
-					PivotCell<StrictSales, int>.Custom(rows => rows.Max(x => x.At), y => "At" + Year(y)))
+					PivotCell<StrictSales, int>.Custom(rows => rows.Max(x => x.At), y => "At" + Year(y)),
+					// SUM over a non-nullable column has its own null-handling path (a COALESCE rewriter), so it
+					// needs its own pin even though the result lift is the same one the Max cell proves.
+					PivotCell<StrictSales, int>.Custom(rows => rows.Sum(x => x.Amount), y => "CustomSum" + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -430,15 +433,18 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["SumY2000"].ShouldBe(10);
-			result[0]["AtY2000"] .ShouldBe(new DateTime(2000, 1, 1));
-			result[0]["SumY2010"].ShouldBeNull();
-			result[0]["AtY2010"] .ShouldBeNull();
+			result[0]["SumY2000"]      .ShouldBe(10);
+			result[0]["CustomSumY2000"].ShouldBe(10);
+			result[0]["AtY2000"]       .ShouldBe(new DateTime(2000, 1, 1));
+			result[0]["SumY2010"]      .ShouldBeNull();
+			result[0]["CustomSumY2010"].ShouldBeNull();
+			result[0]["AtY2010"]       .ShouldBeNull();
 
 			result[1].Key.ShouldBe("B");
-			result[1]["SumY2000"].ShouldBeNull();
-			result[1]["AtY2000"] .ShouldBeNull();
-			result[1]["SumY2010"].ShouldBe(20);
+			result[1]["SumY2000"]      .ShouldBeNull();
+			result[1]["CustomSumY2000"].ShouldBeNull();
+			result[1]["AtY2000"]       .ShouldBeNull();
+			result[1]["SumY2010"]      .ShouldBe(20);
 		}
 
 		#endregion
@@ -532,7 +538,7 @@ namespace Tests.Linq
 		/// <c>ToSqlQuery().Sql</c> regex splice and a re-entry through <c>FromSql</c> that destroyed composability.
 		/// </summary>
 		[Test, QueryCacheTest]
-		public void PivotsProductionShapeIntoUserType([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsProductionShapeIntoUserType([DataSources] string context)
 		{
 			using var db      = GetDataContext(context);
 			using var mods    = db.CreateLocalTable(ModTemplate.Data);
@@ -627,7 +633,7 @@ namespace Tests.Linq
 
 		/// <summary>The same production shape into the built-in row type, so no result type has to be declared.</summary>
 		[Test]
-		public void PivotsProductionShapeIntoPivotRow([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
+		public void PivotsProductionShapeIntoPivotRow([DataSources] string context)
 		{
 			using var db      = GetDataContext(context);
 			using var mods    = db.CreateLocalTable(ModTemplate.Data);

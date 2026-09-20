@@ -43,7 +43,7 @@ namespace Tests.Linq
 		];
 
 		[Test]
-		public void ProjectsRuntimeColumnSetIntoStore([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ProjectsRuntimeColumnSetIntoStore([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_data);
@@ -76,7 +76,7 @@ namespace Tests.Linq
 		/// with no DTO to declare. It has to work through the same store machinery as a user-supplied type.
 		/// </summary>
 		[Test]
-		public void ProjectsIntoBuiltInPivotRow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void ProjectsIntoBuiltInPivotRow([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(_data);
@@ -305,7 +305,7 @@ namespace Tests.Linq
 		/// single collection property, then filtered by the same test repeated across that runtime set.
 		/// </summary>
 		[Test]
-		public void SelectsRuntimeCurrencyColumns([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		public void SelectsRuntimeCurrencyColumns([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Balance.Data);
@@ -371,7 +371,7 @@ namespace Tests.Linq
 		/// because they are not known upfront.
 		/// </summary>
 		[Test]
-		public void SelectsColumnsMissingFromTheMapping([IncludeDataSources(true, TestProvName.AllSQLite, ProviderName.DuckDB)] string context)
+		public void SelectsColumnsMissingFromTheMapping([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(CustomValuesPrototype.Data);

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB
 {
@@ -31,7 +32,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// A cell computed by an arbitrary aggregate over the source rows carrying the pivoted value - a distinct
-		/// count, a string aggregate, or anything else the provider can translate over a grouping.
+		/// count, or anything else the provider can translate over a grouping.
 		/// </summary>
 		/// <typeparam name="TCell">Aggregate result type.</typeparam>
 		/// <param name="aggregate">Aggregate over the matching rows.</param>
@@ -78,10 +79,7 @@ namespace LinqToDB
 		public static PivotCell<TSource, TFor> Count(Func<TFor, string>? name = null)
 		{
 			var rowsParam = Expression.Parameter(typeof(IEnumerable<TSource>), "rows");
-
-			var method = typeof(Enumerable).GetMethods()
-				.First(m => string.Equals(m.Name, nameof(Enumerable.Count), StringComparison.Ordinal) && m.IsGenericMethodDefinition && m.GetParameters().Length == 1)
-				.MakeGenericMethod(typeof(TSource));
+			var method    = Methods.Enumerable.Count.MakeGenericMethod(typeof(TSource));
 
 			// COUNT returns 0 for an empty group on every provider, so it is the one cell that is not lifted.
 			return new PivotCell<TSource, TFor>(Expression.Lambda(Expression.Call(method, rowsParam), rowsParam), false, name);
@@ -118,7 +116,7 @@ namespace LinqToDB
 						&& m.GetParameters()[1].ParameterType.GetGenericArguments()[1] == cellType);
 
 				if (method == null)
-					throw new LinqToDBException($"Pivot cannot apply {methodName} to a column of type '{cellType.Name}'.");
+					throw new LinqToDBException($"Pivot cannot apply {methodName} to a column of type '{(Nullable.GetUnderlyingType(cellType) ?? cellType).Name}'.");
 
 				return method.MakeGenericMethod(typeof(TSource));
 			}

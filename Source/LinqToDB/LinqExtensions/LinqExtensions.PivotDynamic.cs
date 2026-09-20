@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB
 {
@@ -208,13 +209,8 @@ namespace LinqToDB
 				Expression.Equal(forColumn.GetBody(rowParam), Expression.Constant(value, typeof(TFor))),
 				rowParam);
 
-			var whereMethod = typeof(Enumerable).GetMethods()
-				.First(m => string.Equals(m.Name, nameof(Enumerable.Where), StringComparison.Ordinal)
-					&& m.GetParameters().Length == 2
-					&& m.GetParameters()[1].ParameterType.GetGenericArguments().Length == 2)
-				.MakeGenericMethod(typeof(TSource));
-
-			var body = cell.Aggregate.GetBody(Expression.Call(whereMethod, gParam, predicate));
+			var whereMethod = Methods.Enumerable.Where.MakeGenericMethod(typeof(TSource));
+			var body        = cell.Aggregate.GetBody(Expression.Call(whereMethod, gParam, predicate));
 
 			// A cell no row matches must read null, not default(TCell).
 			if (cell.LiftResult)
