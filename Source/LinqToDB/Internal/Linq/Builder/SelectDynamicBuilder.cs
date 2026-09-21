@@ -19,18 +19,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			var cellArray      = (NewArrayExpression)methodCall.Arguments[3];
 			var resultType     = methodCall.Method.GetGenericArguments()[1];
 
-			var entityDescriptor = builder.MappingSchema.GetEntityDescriptor(resultType);
-
-			if (entityDescriptor.DynamicColumnSetter == null)
-				throw new LinqToDBException(
-					$"Type '{resultType.Name}' cannot be used as a SelectDynamic result: it has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go.");
-
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			if (buildResult.BuildContext == null)
 				return buildResult;
 
 			var sequence = buildResult.BuildContext;
+
+			var entityDescriptor = sequence.MappingSchema.GetEntityDescriptor(resultType);
+
+			if (entityDescriptor.DynamicColumnSetter == null)
+				throw new LinqToDBException(
+					$"Type '{resultType.Name}' cannot be used as a SelectDynamic result: it has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go.");
 
 			// finalizing context
 			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence));
@@ -47,7 +47,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				_ => throw new LinqToDBException("SelectDynamic static selector must be an object construction expression (new T { ... })."),
 			};
 
-			generic = generic.WithMappingSchema(builder.MappingSchema);
+			generic = generic.WithMappingSchema(sequence.MappingSchema);
 
 			for (var i = 0; i < names.Length; i++)
 			{

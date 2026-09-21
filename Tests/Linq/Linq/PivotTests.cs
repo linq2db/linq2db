@@ -314,6 +314,36 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A table captured before a <c>UseMappingSchema</c> scope keeps the schema it was created with - the
+		/// contract <c>UseMappingSchemaTests.Test2</c> pins. The name column therefore has to be resolved through
+		/// the source sequence's schema: taking it from the context's labels the value with a column name the
+		/// query never reads.
+		/// </summary>
+		[Test]
+		public void UnpivotNameColumnUsesTheSourcesSchema([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			var renaming = new FluentMappingBuilder(new MappingSchema())
+				.Entity<QuarterlySales>()
+					.Property(e => e.Q1)
+						.HasColumnName("Q_RENAMED")
+				.Build()
+				.MappingSchema;
+
+			using (db.UseMappingSchema(renaming))
+			{
+				var result = t
+					.Unpivot((row, name, value) => new { row.Id, Name = name, Value = value }, x => x.Q1)
+					.ToArray();
+
+				result.Length.ShouldBe(2);
+				result.ShouldAllBe(r => r.Name == "Q1");
+			}
+		}
+
+		/// <summary>
 		/// The multi-value overload used to pass its groups as a single array constant, which the query cache
 		/// compares by reference - so every execution rebuilt the query. The groups now travel as a
 		/// query-dependent name array plus quoted column lambdas, both of which compare by value.

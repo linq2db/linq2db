@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -27,7 +28,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var info = UnpivotInfo.Parse(methodCall);
 
-			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, BuildLoweredExpression(info, builder.MappingSchema))));
+			// Resolve the name column through the source's own mapping schema rather than the context's: build it
+			// ahead of the lowering for that, with its own SelectQuery so the throwaway build stays out of ours.
+			var sourceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, info.Source, new SelectQuery()));
+
+			if (sourceResult.BuildContext == null)
+				return sourceResult;
+
+			var lowered = BuildLoweredExpression(info, sourceResult.BuildContext.MappingSchema);
+
+			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, lowered)));
 		}
 
 		#region Multi-value
