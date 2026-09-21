@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -228,8 +229,8 @@ namespace Tests.Linq
 		[Test]
 		// The Jet OLE DB driver cannot hand a computed DECIMAL back to System.Data.OleDb: MIN and MAX read the
 		// stored column and bind fine, AVG does not. Jet ODBC and ACE OLE DB both read the same query.
-		[ThrowsForProvider(typeof(InvalidOperationException), ProviderName.AccessJetOleDb,
-			ErrorMessage = "Conversion failed because the Int16 data value overflowed")]
+		[ThrowsForProvider(typeof(LinqToDBConvertException), ProviderName.AccessJetOleDb,
+			ErrorMessage = "The numerical value is too large to fit into a 96 bit decimal")]
 		public void PivotsAvgMinMaxCells([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
