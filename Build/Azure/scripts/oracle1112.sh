@@ -1,7 +1,6 @@
 #!/bin/bash
 
 . "$(dirname "$0")/ci-setvar.sh"
-. "$(dirname "$0")/oracle-tune.sh"
 ci_setvar TZ CET
 
 # Oracle 11g (host port 1521) and 12c (host port 1522) run as concurrent lanes in one job.
@@ -36,7 +35,6 @@ docker cp setup.sql oracle11:/setup.sql
 docker exec oracle11 sqlplus sys/oracle@localhost as sysdba @/setup.sql
 docker exec oracle11 mkdir /home/oracle
 docker cp bfile.txt oracle11:/home/oracle/bfile.txt
-oracle_tune oracle11
 
 # --- Oracle 12c ---
 retries=0
@@ -53,7 +51,6 @@ until docker logs oracle12 | grep -q 'DATABASE IS READY TO USE!'; do
 done
 
 docker cp bfile.txt oracle12:/home/oracle/bfile.txt
-oracle_tune oracle12
 
 docker logs oracle11
 docker logs oracle12
