@@ -337,6 +337,50 @@ namespace Tests.Linq
 			rows[1].Amounts!["Currency2Amount"].ShouldBe(20m);
 		}
 
+		/// <summary>
+		/// The shape above composes a predicate over the same runtime set that decides the column set, so both
+		/// halves have to take part in the query cache key. The predicate must be a hand-built tree: an
+		/// <c>Any</c> over the set throws, because <c>Sql.Property</c> is rewritten while the name is still a
+		/// bound lambda parameter.
+		/// </summary>
+		[Test, QueryCacheTest]
+		public void RuntimeCurrencySetDiscriminatesQueryCache([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Balance.Data);
+
+			IQueryable<BalanceDto> Build(int[] currencyIds) => t
+				.SelectDynamic(
+					x => new BalanceDto { Id = x.Id },
+					currencyIds,
+					(x, id) => Sql.Property<decimal?>(x, CurrencyColumn(id)),
+					CurrencyColumn)
+				.Where(AnyAmountSet(currencyIds));
+
+			var probe = Build(new[] { 1, 2 });
+			probe.ClearCache();
+			var start = probe.GetCacheMissCount();
+
+			_ = Build(new[] { 1, 2 }).ToSqlQuery();
+			_ = Build(new[] { 1, 2 }).ToSqlQuery();
+			(probe.GetCacheMissCount() - start).ShouldBe(1, "the same currency set must reuse the compiled query");
+
+			_ = Build(new[] { 1, 3 }).ToSqlQuery();
+			(probe.GetCacheMissCount() - start).ShouldBe(2, "a different currency set must not reuse it");
+
+			_ = Build(new[] { 1, 2, 3 }).ToSqlQuery();
+			(probe.GetCacheMissCount() - start).ShouldBe(3, "a wider currency set must not reuse it either");
+
+			_ = Build(new[] { 1, 2 }).ToSqlQuery();
+			(probe.GetCacheMissCount() - start).ShouldBe(3, "the first set's entry must survive the other two");
+
+			// Both halves track the set - the projected columns and the predicate.
+			var sql = Build(new[] { 1, 3 }).ToSqlQuery().Sql;
+
+			sql.ShouldContain("Currency3Amount");
+			sql.ShouldNotContain("Currency2Amount");
+		}
+
 		[Table("CustomerCustomValues")]
 		sealed class CustomValuesPrototype
 		{
