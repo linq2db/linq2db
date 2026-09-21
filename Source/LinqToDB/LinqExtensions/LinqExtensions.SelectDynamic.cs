@@ -130,6 +130,6 @@ namespace LinqToDB
 			Expression<Func<TSource, TResult>> staticSelector,
 			[SqlQueryDependent] string[]       names,
 			LambdaExpression[]                 cells)
-			=> throw new InvalidOperationException("SelectDynamicCore is a query marker and must not be invoked directly.");
+			=> throw new InvalidOperationException($"{nameof(SelectDynamicCore)} is a query marker and must not be invoked directly.");
 	}
 }

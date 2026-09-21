@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB
@@ -43,7 +44,7 @@ namespace LinqToDB
 
 			// A cell no row matches must read null rather than default(TCell), which is what a non-nullable
 			// result type would otherwise materialize.
-			return new PivotCell<TSource, TFor>(aggregate, IsNonNullableValueType(typeof(TCell)), name);
+			return new PivotCell<TSource, TFor>(aggregate, !typeof(TCell).IsNullableOrReferenceType, name);
 		}
 
 		/// <summary>A <c>SUM</c> cell.</summary>
@@ -92,7 +93,7 @@ namespace LinqToDB
 			var rowsParam = Expression.Parameter(typeof(IEnumerable<TSource>), "rows");
 			var rowParam  = Expression.Parameter(typeof(TSource), "row");
 
-			var cellType = MakeNullable(typeof(TCell));
+			var cellType = typeof(TCell).MakeNullable();
 			var body     = value.GetBody(rowParam);
 			var selector = Expression.Lambda(body.Type == cellType ? body : Expression.Convert(body, cellType), rowParam);
 
@@ -128,11 +129,5 @@ namespace LinqToDB
 					&& m.GetParameters().Length == 2)
 				.MakeGenericMethod(typeof(TSource), cellType);
 		}
-
-		static Type MakeNullable(Type type)
-			=> IsNonNullableValueType(type) ? typeof(Nullable<>).MakeGenericType(type) : type;
-
-		static bool IsNonNullableValueType(Type type)
-			=> type.IsValueType && Nullable.GetUnderlyingType(type) == null;
 	}
 }

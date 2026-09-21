@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -30,7 +31,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (entityDescriptor.DynamicColumnSetter == null)
 				throw new LinqToDBException(
-					$"Type '{resultType.Name}' cannot be used as a SelectDynamic result: it has no member marked with DynamicColumnsStoreAttribute, so the generated columns would have nowhere to go.");
+					$"Type '{resultType.Name}' cannot be used as a {nameof(LinqExtensions.SelectDynamic)} result: it has no member marked with {nameof(DynamicColumnsStoreAttribute)}, so the generated columns would have nowhere to go.");
 
 			// finalizing context
 			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence));
@@ -44,7 +45,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				MemberInitExpression memberInit => new SqlGenericConstructorExpression(memberInit),
 				NewExpression newExpression     => new SqlGenericConstructorExpression(newExpression),
-				_ => throw new LinqToDBException("SelectDynamic static selector must be an object construction expression (new T { ... })."),
+				_ => throw new LinqToDBException($"{nameof(LinqExtensions.SelectDynamic)} static selector must be an object construction expression (new T {{ ... }})."),
 			};
 
 			generic = generic.WithMappingSchema(sequence.MappingSchema);

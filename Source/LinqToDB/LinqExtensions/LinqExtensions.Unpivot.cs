@@ -240,10 +240,10 @@ namespace LinqToDB
 		// Query marker for multi-value UNPIVOT — never executed; recognized by UnpivotBuilder.
 		// Columns are flattened group-major; the group size is the result selector's arity minus two.
 		internal static IQueryable<TResult> UnpivotMulti<TSource, TValue, TResult>(
-			IQueryable<TSource>                source,
-			LambdaExpression                   resultSelector,
-			[SqlQueryDependent] string[]       names,
+			IQueryable<TSource>                 source,
+			LambdaExpression                    resultSelector,
+			[SqlQueryDependent] string[]        names,
 			Expression<Func<TSource, TValue>>[] columns)
-			=> throw new InvalidOperationException("UnpivotMulti is a query marker and must not be invoked directly.");
+			=> throw new InvalidOperationException($"{nameof(UnpivotMulti)} is a query marker and must not be invoked directly.");
 	}
 }

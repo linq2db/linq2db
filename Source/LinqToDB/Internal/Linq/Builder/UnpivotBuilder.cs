@@ -150,18 +150,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return body is MemberExpression member
 				? member.Member.Name
-				: throw new LinqToDBException("Unpivot column selector must be a simple member access (e.g. x => x.Jan).");
+				: throw new LinqToDBException($"{nameof(LinqExtensions.Unpivot)} column selector must be a simple member access (e.g. x => x.Jan).");
 		}
 
 		sealed class UnpivotInfo
 		{
-			public required Expression                     Source         { get; init; }
-			public required LambdaExpression               ResultSelector { get; init; }
+			public required Expression                      Source         { get; init; }
+			public required LambdaExpression                ResultSelector { get; init; }
 			public required IReadOnlyList<LambdaExpression> Columns        { get; init; }
-			public required bool                           IncludeNulls   { get; init; }
-			public required Type                           SourceType     { get; init; }
-			public required Type                           ValueType      { get; init; }
-			public required Type                           ResultType     { get; init; }
+			public required bool                            IncludeNulls   { get; init; }
+			public required Type                            SourceType     { get; init; }
+			public required Type                            ValueType      { get; init; }
+			public required Type                            ResultType     { get; init; }
 
 			public static UnpivotInfo Parse(MethodCallExpression methodCall)
 			{
