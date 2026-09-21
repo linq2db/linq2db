@@ -18,6 +18,8 @@ namespace Tests.Linq
 	{
 		sealed class Amounts
 		{
+			// YDB requires every table to have a primary key
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			public int     Id  { get; set; }
 			public decimal Usd { get; set; }
 			public decimal Eur { get; set; }
@@ -253,6 +255,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Balance
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int      Id              { get; set; }
 			[Column] public decimal? Currency1Amount { get; set; }
 			[Column] public decimal? Currency2Amount { get; set; }
@@ -337,6 +340,7 @@ namespace Tests.Linq
 		[Table("CustomerCustomValues")]
 		sealed class CustomValuesPrototype
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int     Id            { get; set; }
 			[Column] public int     CustomerId    { get; set; }
 			[Column] public string? WorkLocation  { get; set; }
@@ -398,6 +402,7 @@ namespace Tests.Linq
 		[Table("RawRows")]
 		sealed class RawRowPrototype
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int     Id   { get; set; }
 			[Column] public string? Name { get; set; }
 

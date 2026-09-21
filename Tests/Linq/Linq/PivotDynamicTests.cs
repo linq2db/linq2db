@@ -18,7 +18,10 @@ namespace Tests.Linq
 		[Table]
 		sealed class Sales
 		{
+			// YDB requires every table to have a primary key
+			[PrimaryKey(ProviderName.Ydb, 1)]
 			[Column] public string   Category { get; set; } = null!;
+			[PrimaryKey(ProviderName.Ydb, 2)]
 			[Column] public int      Year     { get; set; }
 			[Column] public decimal? Amount   { get; set; }
 			[Column] public string?  Note     { get; set; }
@@ -49,8 +52,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Sales.Data);
 
-			// Runtime, and built by a query so it cannot fold to a constant.
-			var years = t.Select(x => x.Year).Distinct().ToList();
+			// Runtime, and built by a query so it cannot fold to a constant. Ordered because the value set decides
+			// the generated cell order, and an unordered DISTINCT makes the emitted SQL differ run to run.
+			var years = t.Select(x => x.Year).Distinct().OrderBy(y => y).ToList();
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, years,
@@ -140,33 +144,36 @@ namespace Tests.Linq
 		[Table]
 		sealed class CategorySales
 		{
+			// Surrogate key: the rows are deliberately non-unique, so nothing else can serve as YDB's primary key.
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
+			[Column] public int      Id       { get; set; }
 			[Column] public string   Category { get; set; } = null!;
 			[Column] public int      Year     { get; set; }
 			[Column] public decimal? Amount   { get; set; }
 
 			public static readonly CategorySales[] Data =
 			{
-				new() { Category = "A", Year = 2000, Amount = 10m },
-				new() { Category = "A", Year = 2010, Amount = 20m },
-				new() { Category = "B", Year = 2000, Amount = 5m  },
-				new() { Category = "B", Year = 2010, Amount = 15m },
+				new() { Id = 1, Category = "A", Year = 2000, Amount = 10m },
+				new() { Id = 2, Category = "A", Year = 2010, Amount = 20m },
+				new() { Id = 3, Category = "B", Year = 2000, Amount = 5m  },
+				new() { Id = 4, Category = "B", Year = 2010, Amount = 15m },
 			};
 
 			// Two rows per cell, so AVG / MIN / MAX are distinguishable from SUM.
 			public static readonly CategorySales[] MultiRowData =
 			{
-				new() { Category = "A", Year = 2000, Amount = 10m },
-				new() { Category = "A", Year = 2000, Amount = 30m },
-				new() { Category = "B", Year = 2000, Amount = 5m  },
+				new() { Id = 1, Category = "A", Year = 2000, Amount = 10m },
+				new() { Id = 2, Category = "A", Year = 2000, Amount = 30m },
+				new() { Id = 3, Category = "B", Year = 2000, Amount = 5m  },
 			};
 
 			// A group whose distinct count differs from its row count, so a plain COUNT cannot pass by accident.
 			public static readonly CategorySales[] DuplicateData =
 			{
-				new() { Category = "A", Year = 2000, Amount = 10m },
-				new() { Category = "A", Year = 2000, Amount = 10m },
-				new() { Category = "A", Year = 2000, Amount = 30m },
-				new() { Category = "B", Year = 2000, Amount = 5m  },
+				new() { Id = 1, Category = "A", Year = 2000, Amount = 10m },
+				new() { Id = 2, Category = "A", Year = 2000, Amount = 10m },
+				new() { Id = 3, Category = "A", Year = 2000, Amount = 30m },
+				new() { Id = 4, Category = "B", Year = 2000, Amount = 5m  },
 			};
 		}
 
@@ -219,6 +226,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		// The Jet OLE DB driver cannot hand a computed DECIMAL back to System.Data.OleDb: MIN and MAX read the
+		// stored column and bind fine, AVG does not. Jet ODBC and ACE OLE DB both read the same query.
+		[ThrowsForProvider(typeof(InvalidOperationException), ProviderName.AccessJetOleDb,
+			ErrorMessage = "Conversion failed because the Int16 data value overflowed")]
 		public void PivotsAvgMinMaxCells([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -247,8 +258,11 @@ namespace Tests.Linq
 		[Table]
 		sealed class RegionSales
 		{
+			[PrimaryKey(ProviderName.Ydb, 1)]
 			[Column] public string   Category { get; set; } = null!;
+			[PrimaryKey(ProviderName.Ydb, 2)]
 			[Column] public string   Region   { get; set; } = null!;
+			[PrimaryKey(ProviderName.Ydb, 3)]
 			[Column] public int      Year     { get; set; }
 			[Column] public decimal? Amount   { get; set; }
 
@@ -293,8 +307,11 @@ namespace Tests.Linq
 		[Table]
 		sealed class QuarterAmounts
 		{
+			[PrimaryKey(ProviderName.Ydb, 1)]
 			[Column] public string   Category { get; set; } = null!;
+			[PrimaryKey(ProviderName.Ydb, 2)]
 			[Column] public int      Year     { get; set; }
+			[PrimaryKey(ProviderName.Ydb, 3)]
 			[Column] public int      Quarter  { get; set; }
 			[Column] public decimal? Amount   { get; set; }
 
@@ -369,6 +386,8 @@ namespace Tests.Linq
 		/// enum the cells used to be could not express at all.
 		/// </summary>
 		[Test]
+		// A custom aggregate over a distinct set lowers to a lateral subquery, which Access cannot join.
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess)]
 		public void PivotsWithACustomAggregate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -396,7 +415,9 @@ namespace Tests.Linq
 		[Table]
 		sealed class StrictSales
 		{
+			[PrimaryKey(ProviderName.Ydb, 1)]
 			[Column] public string   Category { get; set; } = null!;
+			[PrimaryKey(ProviderName.Ydb, 2)]
 			[Column] public int      Year     { get; set; }
 			[Column] public int      Amount   { get; set; }
 			[Column] public DateTime At       { get; set; }
@@ -454,7 +475,9 @@ namespace Tests.Linq
 		[Table]
 		sealed class ModTemplate
 		{
+			[PrimaryKey(ProviderName.Ydb, 1)]
 			[Column] public int      Id         { get; set; }
+			[PrimaryKey(ProviderName.Ydb, 2)]
 			[Column] public int      TheKey     { get; set; }
 			[Column] public int?     PosRubId   { get; set; }
 			[Column] public int?     RubId      { get; set; }
@@ -476,6 +499,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Activity
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int Id { get; set; }
 
 			public static readonly Activity[] Data = { new() { Id = 10 }, new() { Id = 20 }, new() { Id = 30 } };
@@ -484,6 +508,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class CoaMask
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int     Id   { get; set; }
 			[Column] public string? Name { get; set; }
 
@@ -493,6 +518,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class AtiRub
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int     Id     { get; set; }
 			[Column] public string? LibRub { get; set; }
 
@@ -502,6 +528,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class IasRub
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int     Id     { get; set; }
 			[Column] public string? IdeRub { get; set; }
 			[Column] public string? LibRub { get; set; }

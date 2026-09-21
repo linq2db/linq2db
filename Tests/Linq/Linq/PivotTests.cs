@@ -15,6 +15,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class QuarterlySales
 		{
+			// YDB requires every table to have a primary key
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int      Id     { get; set; }
 			[Column] public string   Region { get; set; } = null!;
 			[Column] public decimal? Q1     { get; set; }
@@ -207,6 +209,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class MonthlySales
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column] public int      Id  { get; set; }
 			[Column] public decimal? Jan { get; set; }
 			[Column] public decimal? Feb { get; set; }
@@ -279,6 +282,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class AliasedQuarterly
 		{
+			[PrimaryKey(Configuration = ProviderName.Ydb)]
 			[Column]            public int      Id { get; set; }
 			[Column("Q_ONE")]   public decimal? Q1 { get; set; }
 			[Column("Q_TWO")]   public decimal? Q2 { get; set; }
