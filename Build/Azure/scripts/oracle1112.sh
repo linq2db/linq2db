@@ -1,6 +1,7 @@
 #!/bin/bash
 
 . "$(dirname "$0")/ci-setvar.sh"
+. "$(dirname "$0")/docker-liveness.sh"
 ci_setvar TZ CET
 
 # Oracle 11g (host port 1521) and 12c (host port 1522) run as concurrent lanes in one job.
@@ -17,6 +18,7 @@ until docker logs oracle11 | grep -q 'Database ready to use'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for oracle11 to start
+    require_running oracle11
     if [ $retries -gt 200 ]; then
         echo oracle11 not started or takes too long to start
         docker logs oracle11
@@ -42,6 +44,7 @@ until docker logs oracle12 | grep -q 'DATABASE IS READY TO USE!'; do
     sleep 10
     retries=`expr $retries + 1`
     echo waiting for oracle12 to start
+    require_running oracle12
     # 300 retries, as oracle image is really slow to start
     if [ $retries -gt 300 ]; then
         echo oracle12 not started or takes too long to start
@@ -51,6 +54,10 @@ until docker logs oracle12 | grep -q 'DATABASE IS READY TO USE!'; do
 done
 
 docker cp bfile.txt oracle12:/home/oracle/bfile.txt
+
+# Both are ready, but the first can have died while the second was starting.
+require_running oracle11
+require_running oracle12
 
 docker logs oracle11
 docker logs oracle12
