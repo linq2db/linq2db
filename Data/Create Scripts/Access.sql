@@ -86,11 +86,11 @@ CREATE TABLE Patient
 GO
 
 ALTER TABLE Doctor
-	ADD CONSTRAINT PersonDoctor FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE;
+	ADD CONSTRAINT PersonDoctor FOREIGN KEY (PersonID) REFERENCES Person (PersonID) ON UPDATE CASCADE ON DELETE CASCADE;
 GO
 
 ALTER TABLE Patient
-	ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE;
+	ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person (PersonID) ON UPDATE CASCADE ON DELETE CASCADE;
 GO
 
 INSERT INTO Person (FirstName, LastName, Gender) VALUES ('John',   'Pupkin',    'M')
@@ -158,6 +158,10 @@ WHERE
 	FirstName like [@firstName] AND LastName like [@lastName];
 GO
 
+-- SKIP Access.LibRed.Mdb BEGIN
+-- SKIP Access.LibRed.Mdb.Data BEGIN
+-- SKIP Access.LibRed.Accdb BEGIN
+-- SKIP Access.LibRed.Accdb.Data BEGIN
 CREATE Procedure Person_Insert(
 	[@FirstName]  Text(50),
 	[@MiddleName] Text(50),
@@ -192,6 +196,10 @@ CREATE Procedure Person_Delete(
 	[@PersonID] Long)
 AS
 DELETE FROM Person WHERE PersonID = [@PersonID];
+-- SKIP Access.LibRed.Mdb END
+-- SKIP Access.LibRed.Mdb.Data END
+-- SKIP Access.LibRed.Accdb END
+-- SKIP Access.LibRed.Accdb.Data END
 GO
 
 CREATE Procedure Patient_SelectAll
@@ -217,9 +225,17 @@ WHERE
 	AND FirstName = [@firstName] AND LastName = [@lastName];
 GO
 
+-- SKIP Access.LibRed.Mdb BEGIN
+-- SKIP Access.LibRed.Mdb.Data BEGIN
+-- SKIP Access.LibRed.Accdb BEGIN
+-- SKIP Access.LibRed.Accdb.Data BEGIN
 CREATE Procedure Scalar_DataReader
 AS
 	SELECT 12345 AS intField, '54321' AS stringField;
+-- SKIP Access.LibRed.Mdb END
+-- SKIP Access.LibRed.Mdb.Data END
+-- SKIP Access.LibRed.Accdb END
+-- SKIP Access.LibRed.Accdb.Data END
 GO
 
 
@@ -351,9 +367,17 @@ CREATE TABLE TestMerge2
 	FieldEnumNumber INT               NULL
 )
 GO
+-- SKIP Access.LibRed.Mdb BEGIN
+-- SKIP Access.LibRed.Mdb.Data BEGIN
+-- SKIP Access.LibRed.Accdb BEGIN
+-- SKIP Access.LibRed.Accdb.Data BEGIN
 CREATE Procedure AddIssue792Record(@id INT)
 AS
 	INSERT INTO AllTypes(char20DataType) VALUES('issue792');
+-- SKIP Access.LibRed.Mdb END
+-- SKIP Access.LibRed.Mdb.Data END
+-- SKIP Access.LibRed.Accdb END
+-- SKIP Access.LibRed.Accdb.Data END
 GO
 CREATE Procedure ThisProcedureNotVisibleFromODBC
 AS

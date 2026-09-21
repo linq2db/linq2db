@@ -33,8 +33,8 @@ namespace Tests
 						"ALTER TABLE Doctor DROP CONSTRAINT PersonDoctor",
 						"ALTER TABLE Patient DROP CONSTRAINT PersonPatient",
 						$"ALTER TABLE Person ALTER COLUMN PersonID COUNTER({lastValue + 1}, 1)",
-						"ALTER TABLE Doctor ADD CONSTRAINT PersonDoctor FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE",
-						"ALTER TABLE Patient ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person ON UPDATE CASCADE ON DELETE CASCADE",
+						"ALTER TABLE Doctor ADD CONSTRAINT PersonDoctor FOREIGN KEY (PersonID) REFERENCES Person (PersonID) ON UPDATE CASCADE ON DELETE CASCADE",
+						"ALTER TABLE Patient ADD CONSTRAINT PersonPatient FOREIGN KEY (PersonID) REFERENCES Person (PersonID) ON UPDATE CASCADE ON DELETE CASCADE",
 					};
 						break;
 					case string prov when prov.IsAnyOf(ProviderName.DB2):
