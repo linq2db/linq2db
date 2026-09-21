@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -280,27 +281,24 @@ namespace Tests.Linq
 
 		static string CurrencyColumn(int currencyId) => "Currency" + currencyId.ToString(CultureInfo.InvariantCulture) + "Amount";
 
+		// The column name has to be a captured local rather than a lambda parameter: ExposeExpressionVisitor
+		// evaluates Sql.Property's name argument before any enclosing lambda is substituted, so a name computed
+		// from a lambda parameter throws before any builder runs.
+		static Expression<Func<BalanceDto, bool>> AmountSet(int currencyId)
+		{
+			var name = CurrencyColumn(currencyId);
+
+			return r => Sql.Property<decimal?>(r, name) != null;
+		}
+
 		// Currency1Amount != null || Currency2Amount != null || ... over whatever the runtime set holds.
 		static Expression<Func<BalanceDto, bool>> AnyAmountSet(IEnumerable<int> currencyIds)
-		{
-			var row      = Expression.Parameter(typeof(BalanceDto), "r");
-			var property = typeof(Sql).GetMethods()
-				.Single(m => string.Equals(m.Name, nameof(Sql.Property), StringComparison.Ordinal) && m.IsGenericMethodDefinition)
-				.MakeGenericMethod(typeof(decimal?));
+			=> currencyIds.Select(AmountSet).Aggregate(Or);
 
-			Expression? body = null;
-
-			foreach (var currencyId in currencyIds)
-			{
-				var set = Expression.NotEqual(
-					Expression.Call(property, row, Expression.Constant(CurrencyColumn(currencyId))),
-					Expression.Constant(null, typeof(decimal?)));
-
-				body = body == null ? set : Expression.OrElse(body, set);
-			}
-
-			return Expression.Lambda<Func<BalanceDto, bool>>(body!, row);
-		}
+		static Expression<Func<T, bool>> Or<T>(Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
+			=> Expression.Lambda<Func<T, bool>>(
+				Expression.OrElse(left.Body, right.Body.Replace(right.Parameters[0], left.Parameters[0])),
+				left.Parameters[0]);
 
 		/// <summary>
 		/// <a href="https://github.com/linq2db/linq2db/discussions/4992">Discussion #4992</a>: one column per
