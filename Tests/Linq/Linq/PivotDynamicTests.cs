@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -227,18 +226,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// The Jet OLE DB driver cannot hand a computed DECIMAL back to System.Data.OleDb: MIN and MAX read the
-		// stored column and bind fine, AVG does not. Jet ODBC and ACE OLE DB both read the same query.
-		[ThrowsForProvider(typeof(LinqToDBConvertException), ProviderName.AccessJetOleDb,
-			ErrorMessage = "The numerical value is too large to fit into a 96 bit decimal")]
-		public void PivotsAvgMinMaxCells([DataSources] string context)
+		public void PivotsMinMaxCells([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					PivotCell<CategorySales, int>.Avg(x => x.Amount, y => "Avg" + Year(y)),
 					PivotCell<CategorySales, int>.Min(x => x.Amount, y => "Min" + Year(y)),
 					PivotCell<CategorySales, int>.Max(x => x.Amount, y => "Max" + Year(y)))
 				.ToList()
@@ -248,9 +242,34 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["AvgY2000"].ShouldBe(20m);
 			result[0]["MinY2000"].ShouldBe(10m);
 			result[0]["MaxY2000"].ShouldBe(30m);
+
+			result[1].Key.ShouldBe("B");
+			result[1]["MinY2000"].ShouldBe(5m);
+			result[1]["MaxY2000"].ShouldBe(5m);
+		}
+
+		[Test]
+		// Excluded on Jet OLE DB: it returns a computed DECIMAL as a NUMERIC buffer System.Data.OleDb cannot decode,
+		// and the error varies run to run, so there is nothing stable to pin — linq2db#5954. MIN and MAX read the
+		// stored column and bind fine there, and Jet ODBC reads this query too.
+		public void PivotsAvgCell([DataSources(ProviderName.AccessJetOleDb)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(CategorySales.MultiRowData);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					PivotCell<CategorySales, int>.Avg(x => x.Amount, y => "Avg" + Year(y)))
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Key.ShouldBe("A");
+			result[0]["AvgY2000"].ShouldBe(20m);
 
 			result[1].Key.ShouldBe("B");
 			result[1]["AvgY2000"].ShouldBe(5m);
