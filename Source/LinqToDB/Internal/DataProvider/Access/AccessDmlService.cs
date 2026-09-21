@@ -23,6 +23,15 @@ namespace LinqToDB.Internal.DataProvider.Access
 					|| exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
 			}
 
+			// Access via LibRed — no error number, and the shape differs per statement:
+			// SELECT raises SqlBindException, DROP TABLE a plain InvalidOperationException.
+			if (TypeOrMessageContains(exception, "SqlBindException"))
+				return exception.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
+
+			if (TypeOrMessageContains(exception, "InvalidOperationException"))
+				return exception.Message.Contains("no such table", StringComparison.OrdinalIgnoreCase)
+					|| exception.Message.Contains("no such procedure", StringComparison.OrdinalIgnoreCase);
+
 			return false;
 		}
 	}

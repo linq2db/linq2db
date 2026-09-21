@@ -17,5 +17,9 @@
 		/// Access ODBC provider.
 		/// </summary>
 		ODBC,
+		/// <summary>
+		/// LibRed managed Access provider. Requires .NET 11 or greater.
+		/// </summary>
+		LibRed,
 	}
 }
