@@ -35,6 +35,8 @@ namespace Tests.UserTests
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
 		public void Test1([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			var harnessIds = new int[2];

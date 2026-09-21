@@ -520,6 +520,8 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed reads the Access zero date as DateTime.MinValue instead of the Jet epoch 1899-12-30, so the test fails its assertion rather than throwing.")]
 		public void TestZeroDate([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -668,8 +670,8 @@ namespace Tests.DataProvider
 
 		#region Issue 3893
 		// use characters from https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
-		// Split three ways by what Access actually does with each identifier: a gate cannot target a ValueSource
-		// argument, and one gate over all 33 marked the 21 that work as failing.
+		// Split four ways by what each engine actually does with each identifier: a gate cannot target a
+		// ValueSource argument, and one gate over all 33 marked the 21 that work as failing.
 		private static readonly string[] _identifiers =
 		[
 			"char >",
@@ -695,18 +697,25 @@ namespace Tests.DataProvider
 			"char |",
 		];
 
+		// Rejected by Microsoft's engine; LibRed accepts every one of these.
 		private static readonly string[] _identifiersRejected =
 		[
 			" leading_space",
-			"char `",
-			"char !",
-			"char .",
-			"char ]",
-			"char [",
 			"char \r",
 			"char \t",
 			"char \b",
 			"char \n",
+		];
+
+		// Rejected by every Access engine, LibRed included - it raises ArgumentException naming the column,
+		// except for the brackets, which its lexer refuses outright ("token recognition error at: ']'").
+		private static readonly string[] _identifiersRejectedByAll =
+		[
+			"char `",
+			"char !",
+			"char .",
+			"char [",
+			"char ]",
 		];
 
 		// These two divide the drivers: OleDb accepts both, ODBC rejects 'char ?' by name and reads 'char {'
@@ -723,9 +732,18 @@ namespace Tests.DataProvider
 			Issue3893TestCore(context, columName);
 		}
 
-		[ActiveIssue(3893, Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'.")]
+		[ActiveIssue(3893, Configuration = TestProvName.AllNativeAccess,
+			Details = "no-declaration: Access rejects these outright, but not uniformly enough to declare: most give \"'<name>' is not a valid name\" through both drivers, while the control characters produce 'Syntax error in field definition' and one an ODBC 'COUNT field incorrect'. LibRed accepts all of them, which is why this is scoped to the Microsoft drivers.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
 		public void Issue3893Test_Rejected([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejected))] string columName)
+		{
+			Issue3893TestCore(context, columName);
+		}
+
+		[ActiveIssue(3893,
+			Details = "no-declaration: rejected by every engine, but not uniformly: the Microsoft drivers give \"'<name>' is not a valid name\" while LibRed raises an ArgumentException naming the column.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
+		public void Issue3893Test_RejectedByAll([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiersRejectedByAll))] string columName)
 		{
 			Issue3893TestCore(context, columName);
 		}

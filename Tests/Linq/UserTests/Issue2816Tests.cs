@@ -78,7 +78,8 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void FullWhiteSpaceTest([DataSources] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
+		// LibRed does not trim CHAR padding on read, so a padded column matches more rows than the test expects
+		public void FullWhiteSpaceTest([DataSources(TestProvName.AllAccessLibRed)] string context, [ValueSource(nameof(WhiteSpaceChars))] int character)
 		{
 			if (!string.IsNullOrWhiteSpace(((char)character).ToString()))
 				Assert.Inconclusive($"Character {(char)character} not supported by runtime");

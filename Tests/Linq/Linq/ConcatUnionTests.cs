@@ -893,6 +893,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: LibRed returns a date-part expression as Int16 where Access returns Int32.")]
 		public void UnionGroupByTest1([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -930,6 +932,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: LibRed returns a date-part expression as Int16 where Access returns Int32.")]
 		public void UnionGroupByTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

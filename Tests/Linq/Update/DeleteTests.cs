@@ -612,6 +612,8 @@ namespace Tests.xUpdate
 			Details = "no-issue: the emulation deletes through a derived table Oracle will not accept as a DML target. Type-less because the managed and Devart drivers raise their own.")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
 		public void DeleteFromWithTake([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -658,6 +660,8 @@ namespace Tests.xUpdate
 			ErrorMessage = "ORA-01732: data manipulation operation not legal on this view",
 			Details = "no-issue: as DeleteFromWithTake.")]
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

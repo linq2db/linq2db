@@ -84,6 +84,8 @@ namespace Tests.xUpdate
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
 		public void UpdateTestWhereOld(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -134,6 +136,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
 		public void UpdateTestWhere(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -516,6 +520,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
 		public void UpdateParentTableFromChild(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)

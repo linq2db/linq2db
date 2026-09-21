@@ -12,11 +12,13 @@ using Tests.UserTests;
 
 namespace Tests.DataProvider
 {
+	// LibRed creates none of the procedures these tests call: the create script skips the five it rejects,
+	// and its schema provider reports no procedures at all
 	[TestFixture]
 	public class AccessProceduresTests : DataProviderTestBase
 	{
 		[Test]
-		public void Test_SelectProcedureSchema([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_SelectProcedureSchema([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			var isODBC = context.IsAnyOf(TestProvName.AllAccessOdbc);
 			using var db = GetDataConnection(context);
@@ -171,7 +173,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Person_Delete([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Person_Delete([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -196,7 +198,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Person_Update([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Person_Update([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -228,7 +230,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Person_Insert([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Person_Insert([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -251,7 +253,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_ThisProcedureNotVisibleFromODBC([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_ThisProcedureNotVisibleFromODBC([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -269,7 +271,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_AddIssue792Record([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_AddIssue792Record([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -287,7 +289,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Scalar_DataReader([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Scalar_DataReader([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -304,7 +306,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Person_SelectAll([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Person_SelectAll([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -316,7 +318,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Person_SelectByKey([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Person_SelectByKey([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -329,7 +331,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Person_SelectByName([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Person_SelectByName([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -345,7 +347,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Person_SelectListByName([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Person_SelectListByName([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -361,7 +363,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Patient_SelectAll([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Patient_SelectAll([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
@@ -384,7 +386,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Test_Patient_SelectByName([IncludeDataSources(TestProvName.AllAccess)] string context)
+		public void Test_Patient_SelectByName([IncludeDataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
