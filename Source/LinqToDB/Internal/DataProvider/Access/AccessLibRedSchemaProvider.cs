@@ -20,6 +20,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 		// tables, columns, keys and procedures together.
 		static string ID(DataRow row, string column) => row.Field<string>(column)!;
 
+		// For a PARAMETERS clause Access itself wrote, the reported name keeps its [ ] quoting - the
+		// declared [@id] comes back as "[@id]" where a query LibRed wrote reports "@id".
+		static string Unquote(string name)
+			=> name is ['[', .., ']'] ? name[1..^1] : name;
+
 		// GetSchema("DataTypes") carries no CreateFormat, so the scaffolder could not spell a column type
 		// back out; the rest of the row is already covered by AccessSchemaProviderBase.GetDataType.
 		static readonly List<DataTypeInfo> _dataTypes =
@@ -199,7 +204,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				select new ProcedureParameterInfo
 				{
 					ProcedureID   = ID(p, "PROCEDURE_NAME"),
-					ParameterName = p.Field<string>("PARAMETER_NAME")!,
+					ParameterName = Unquote(p.Field<string>("PARAMETER_NAME")!),
 					Ordinal       = Converter.ChangeTypeTo<int>(p["ORDINAL_POSITION"]),
 					DataType      = typeName,
 					IsIn          = true,

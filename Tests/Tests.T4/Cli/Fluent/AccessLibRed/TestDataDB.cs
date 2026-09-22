@@ -623,11 +623,11 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -639,11 +639,11 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -657,7 +657,7 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@PersonID]", personId, DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 			};
 			return dataConnection.ExecuteProc("[Person_Delete]", parameters);
 		}
@@ -666,7 +666,7 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@PersonID]", personId, DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 			};
 			return dataConnection.ExecuteProcAsync("[Person_Delete]", cancellationToken, parameters);
 		}
@@ -677,19 +677,19 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					Size = 1
 				}
@@ -701,19 +701,19 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					Size = 1
 				}
@@ -727,7 +727,7 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
 			};
 			return dataConnection.ExecuteProc("[Person_SelectByKey]", parameters);
 		}
@@ -736,7 +736,7 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
 			};
 			return dataConnection.ExecuteProcAsync("[Person_SelectByKey]", cancellationToken, parameters);
 		}
@@ -747,11 +747,11 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -763,11 +763,11 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -781,11 +781,11 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -797,11 +797,11 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -815,21 +815,21 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32),
-				new DataParameter("[@PersonID]", personId, DataType.Int32),
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@id", id, DataType.Int32),
+				new DataParameter("@PersonID", personId, DataType.Int32),
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					Size = 1
 				}
@@ -841,21 +841,21 @@ namespace Cli.Fluent.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32),
-				new DataParameter("[@PersonID]", personId, DataType.Int32),
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@id", id, DataType.Int32),
+				new DataParameter("@PersonID", personId, DataType.Int32),
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					Size = 1
 				}

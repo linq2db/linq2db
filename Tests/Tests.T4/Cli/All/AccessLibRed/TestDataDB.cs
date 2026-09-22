@@ -674,12 +674,12 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
@@ -692,12 +692,12 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
@@ -712,7 +712,7 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@PersonID]", personId, DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 				{
 					DbType = "Long"
 				}
@@ -724,7 +724,7 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@PersonID]", personId, DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 				{
 					DbType = "Long"
 				}
@@ -738,22 +738,22 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					DbType = "VarChar(1)",
 					Size = 1
@@ -766,22 +766,22 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					DbType = "VarChar(1)",
 					Size = 1
@@ -796,7 +796,7 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
 				{
 					DbType = "Long"
 				}
@@ -808,7 +808,7 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
 				{
 					DbType = "Long"
 				}
@@ -822,12 +822,12 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
@@ -840,12 +840,12 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
@@ -860,12 +860,12 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
@@ -878,12 +878,12 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@firstName]", firstName, DataType.VarChar)
+				new DataParameter("@firstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@lastName]", lastName, DataType.VarChar)
+				new DataParameter("@lastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
@@ -898,30 +898,30 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
 				{
 					DbType = "Long"
 				},
-				new DataParameter("[@PersonID]", personId, DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 				{
 					DbType = "Long"
 				},
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					DbType = "VarChar(1)",
 					Size = 1
@@ -934,30 +934,30 @@ namespace Cli.All.Access.LibRed
 		{
 			var parameters = new []
 			{
-				new DataParameter("[@id]", id, DataType.Int32)
+				new DataParameter("@id", id, DataType.Int32)
 				{
 					DbType = "Long"
 				},
-				new DataParameter("[@PersonID]", personId, DataType.Int32)
+				new DataParameter("@PersonID", personId, DataType.Int32)
 				{
 					DbType = "Long"
 				},
-				new DataParameter("[@FirstName]", firstName, DataType.VarChar)
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@MiddleName]", middleName, DataType.VarChar)
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@LastName]", lastName, DataType.VarChar)
+				new DataParameter("@LastName", lastName, DataType.VarChar)
 				{
 					DbType = "VarChar(50)",
 					Size = 50
 				},
-				new DataParameter("[@Gender]", gender, DataType.VarChar)
+				new DataParameter("@Gender", gender, DataType.VarChar)
 				{
 					DbType = "VarChar(1)",
 					Size = 1

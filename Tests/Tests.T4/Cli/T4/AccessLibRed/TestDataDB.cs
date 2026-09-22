@@ -183,6 +183,71 @@ namespace Cli.T4.Access.LibRed
 			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
 		#endregion
+
+		#region PersonDelete
+		public static int PersonDelete(this TestDataDB dataConnection, int? personId)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@PersonID", personId, DataType.Int32)
+			};
+			return dataConnection.ExecuteProc("[Person_Delete]", parameters);
+		}
+		#endregion
+
+		#region PersonInsert
+		public static int PersonInsert(this TestDataDB dataConnection, string? firstName, string? middleName, string? lastName, char? gender)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName", lastName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender", gender, DataType.VarChar)
+				{
+					Size = 1
+				}
+			};
+			return dataConnection.ExecuteProc("[Person_Insert]", parameters);
+		}
+		#endregion
+
+		#region PersonUpdate
+		public static int PersonUpdate(this TestDataDB dataConnection, int? id, int? personId, string? firstName, string? middleName, string? lastName, char? gender)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@id", id, DataType.Int32),
+				new DataParameter("@PersonID", personId, DataType.Int32),
+				new DataParameter("@FirstName", firstName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@MiddleName", middleName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@LastName", lastName, DataType.VarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("@Gender", gender, DataType.VarChar)
+				{
+					Size = 1
+				}
+			};
+			return dataConnection.ExecuteProc("[Person_Update]", parameters);
+		}
+		#endregion
 		#endregion
 	}
 
