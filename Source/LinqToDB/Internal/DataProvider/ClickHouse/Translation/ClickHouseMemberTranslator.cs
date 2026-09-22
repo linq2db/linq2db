@@ -92,7 +92,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					Sql.DateParts.Minute      => factory.Function(intDataType, "toMinute", dateTimeExpression),
 					Sql.DateParts.Second      => factory.Function(intDataType, "toSecond", dateTimeExpression),
 					Sql.DateParts.WeekDay     => factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1))),
-					Sql.DateParts.Millisecond => factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", dateTimeExpression), 1000),
+					// The remainder is brought back into range because the epoch is negative before 1970 and `%`
+					// truncates toward zero. `toMillisecond` answers this in one call; it needs ClickHouse 24.6.
+					Sql.DateParts.Millisecond => factory.Mod(factory.Add(intDataType, factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", ClickHouseDateTime.AsDateTime64(factory, dateTimeExpression)), 1000), factory.Value(intDataType, 1000)), 1000),
 					_                         => null,
 				};
 			}
@@ -126,7 +128,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 						var resultExpression = factory.Function(dateType, "fromUnixTimestamp64Nano",
 							factory.Add(
 								longDataType,
-								factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
+								factory.Function(longDataType, "toUnixTimestamp64Nano", ClickHouseDateTime.AsDateTime64(factory, dateTimeExpression)),
 								factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, 1000000), longDataType)
 							)
 						);
