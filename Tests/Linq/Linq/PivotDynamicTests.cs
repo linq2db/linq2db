@@ -58,7 +58,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, years,
-					PivotCell<Sales, int>.Sum(x => x.Amount, Year))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
 				.ToList()
 				.OrderBy(r => r.Key)
 				.ToList();
@@ -89,8 +89,8 @@ namespace Tests.Linq
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, years,
 					g => new SalesDto { Category = g.Key, Total = g.Sum(x => x.Amount) },
-					PivotCell<Sales, int>.Sum(x => x.Amount, y => "AMT_" + Year(y)),
-					PivotCell<Sales, int>.Max(x => x.Note,   y => "NOTE_" + Year(y)))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), y => "AMT_"  + Year(y)),
+					c => c.Cell(rows => rows.Max(x => x.Note),   y => "NOTE_" + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Category)
 				.ToList();
@@ -117,8 +117,8 @@ namespace Tests.Linq
 			// Two templates would otherwise generate two columns called "2000".
 			System.Action act = () => t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					PivotCell<Sales, int>.Sum(x => x.Amount),
-					PivotCell<Sales, int>.Max(x => x.Note))
+					c => c.Cell(rows => rows.Sum(x => x.Amount)),
+					c => c.Cell(rows => rows.Max(x => x.Note)))
 				.ToList();
 
 			act.ShouldThrow<System.ArgumentException>();
@@ -133,7 +133,7 @@ namespace Tests.Linq
 
 			Action act = () => t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					PivotCell<Sales, int>.Sum(x => x.Amount, _ => nameof(PivotRow<>.Key)))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), _ => nameof(PivotRow<>.Key)))
 				.ToList();
 
 			act.ShouldThrow<ArgumentException>();
@@ -185,7 +185,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
-					PivotCell<CategorySales, int>.Sum(x => x.Amount, Year))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -209,8 +209,8 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					PivotCell<CategorySales, int>.Sum(x => x.Amount, y => "Sum" + Year(y)),
-					PivotCell<CategorySales, int>.Count(y => "Cnt" + Year(y)))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), y => "Sum" + Year(y)),
+					c => c.Cell(rows => rows.Count(),           y => "Cnt" + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -233,8 +233,8 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					PivotCell<CategorySales, int>.Min(x => x.Amount, y => "Min" + Year(y)),
-					PivotCell<CategorySales, int>.Max(x => x.Amount, y => "Max" + Year(y)))
+					c => c.Cell(rows => rows.Min(x => x.Amount), y => "Min" + Year(y)),
+					c => c.Cell(rows => rows.Max(x => x.Amount), y => "Max" + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -251,9 +251,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// Excluded on Jet OLE DB: it returns a computed DECIMAL as a NUMERIC buffer System.Data.OleDb cannot decode,
-		// and the error varies run to run, so there is nothing stable to pin — linq2db#5954. MIN and MAX read the
-		// stored column and bind fine there, and Jet ODBC reads this query too.
+		// Excluded on Jet OLE DB: an AVG cell over a decimal column returns a computed DECIMAL as a NUMERIC buffer
+		// System.Data.OleDb cannot decode, and the error varies run to run, so there is nothing stable to pin —
+		// linq2db#5954. MIN and MAX read the stored column and bind fine there, and Jet ODBC reads this query too.
 		public void PivotsAvgCell([DataSources(ProviderName.AccessJetOleDb)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -261,7 +261,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					PivotCell<CategorySales, int>.Avg(x => x.Amount, y => "Avg" + Year(y)))
+					c => c.Cell(rows => rows.Average(x => x.Amount), y => "Avg" + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -303,7 +303,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => new { x.Category, x.Region }, x => x.Year, new[] { 2000, 2010 },
-					PivotCell<RegionSales, int>.Sum(x => x.Amount, Year))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
 				.ToList()
 				.OrderBy(r => r.Key.Category, StringComparer.Ordinal)
 				.ThenBy(r => r.Key.Region, StringComparer.Ordinal)
@@ -357,7 +357,7 @@ namespace Tests.Linq
 					x => x.Category,
 					x => new { x.Year, x.Quarter },
 					new[] { new { Year = 2000, Quarter = 1 }, new { Year = 2000, Quarter = 2 } },
-					c => c.Sum(x => x.Amount, v => Year(v.Year) + "Q" + v.Quarter.ToString(CultureInfo.InvariantCulture)))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), v => Year(v.Year) + "Q" + v.Quarter.ToString(CultureInfo.InvariantCulture)))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -383,7 +383,7 @@ namespace Tests.Linq
 			// Where on a generated column plus a projection that drops another one - stresses column pruning.
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
-					PivotCell<CategorySales, int>.Sum(x => x.Amount, Year))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
 				.Where(r => Sql.Property<decimal?>(r, "Y2010") >= 15)
 				.Select(r => new { r.Key, Y2010 = Sql.Property<decimal?>(r, "Y2010") })
 				.ToList()
@@ -399,24 +399,24 @@ namespace Tests.Linq
 
 		#endregion
 
-		#region Custom aggregates and empty cells
+		#region Aggregate vocabulary and empty cells
 
 		/// <summary>
-		/// A cell can carry an aggregate outside the five named ones - here a distinct count, which the closed
-		/// enum the cells used to be could not express at all.
+		/// A cell can carry any aggregate the provider can translate over a grouping, not just the ordinary
+		/// column aggregates - here a distinct count.
 		/// </summary>
 		[Test]
-		// A custom aggregate over a distinct set lowers to a lateral subquery, which Access cannot join.
+		// An aggregate over a distinct set lowers to a lateral subquery, which Access cannot join.
 		[ThrowsRequiredOuterJoins(TestProvName.AllAccess)]
-		public void PivotsWithACustomAggregate([DataSources] string context)
+		public void PivotsWithADistinctCountCell([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(CategorySales.DuplicateData);
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					PivotCell<CategorySales, int>.Custom(rows => rows.Select(x => x.Amount).Distinct().Count(), y => "Distinct" + Year(y)),
-					PivotCell<CategorySales, int>.Count(y => "Rows" + Year(y)))
+					c => c.Cell(rows => rows.Select(x => x.Amount).Distinct().Count(), y => "Distinct" + Year(y)),
+					c => c.Cell(rows => rows.Count(),                                  y => "Rows"     + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -451,8 +451,8 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// A cell no row matches reads null, not <c>default(TCell)</c> - asserted once per lift mechanism, since
-		/// a named cell can only lift the aggregated value and a custom one can only lift its result.
+		/// A cell no row matches reads null, not <c>default(TCell)</c>. Pinned for MAX and for SUM separately:
+		/// SUM over a non-nullable column takes its own null-handling path (a COALESCE rewriter).
 		/// </summary>
 		[Test]
 		public void AnEmptyCellOverANonNullableColumnReadsNull([DataSources] string context)
@@ -462,11 +462,8 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
-					PivotCell<StrictSales, int>.Sum(x => x.Amount, y => "Sum" + Year(y)),
-					PivotCell<StrictSales, int>.Custom(rows => rows.Max(x => x.At), y => "At" + Year(y)),
-					// SUM over a non-nullable column has its own null-handling path (a COALESCE rewriter), so it
-					// needs its own pin even though the result lift is the same one the Max cell proves.
-					PivotCell<StrictSales, int>.Custom(rows => rows.Sum(x => x.Amount), y => "CustomSum" + Year(y)))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), y => "Sum" + Year(y)),
+					c => c.Cell(rows => rows.Max(x => x.At),     y => "At"  + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -474,18 +471,15 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["SumY2000"]      .ShouldBe(10);
-			result[0]["CustomSumY2000"].ShouldBe(10);
-			result[0]["AtY2000"]       .ShouldBe(new DateTime(2000, 1, 1));
-			result[0]["SumY2010"]      .ShouldBeNull();
-			result[0]["CustomSumY2010"].ShouldBeNull();
-			result[0]["AtY2010"]       .ShouldBeNull();
+			result[0]["SumY2000"].ShouldBe(10);
+			result[0]["AtY2000"] .ShouldBe(new DateTime(2000, 1, 1));
+			result[0]["SumY2010"].ShouldBeNull();
+			result[0]["AtY2010"] .ShouldBeNull();
 
 			result[1].Key.ShouldBe("B");
-			result[1]["SumY2000"]      .ShouldBeNull();
-			result[1]["CustomSumY2000"].ShouldBeNull();
-			result[1]["AtY2000"]       .ShouldBeNull();
-			result[1]["SumY2010"]      .ShouldBe(20);
+			result[1]["SumY2000"].ShouldBeNull();
+			result[1]["AtY2000"] .ShouldBeNull();
+			result[1]["SumY2010"].ShouldBe(20);
 		}
 
 		#endregion
@@ -618,8 +612,8 @@ namespace Tests.Linq
 						PosLibRub  = g.Max(x => x.pos.LibRub),
 						ModifiedAt = g.Max(x => x.e.ModifiedAt),
 					},
-					c => c.Max(x => x.rub.IdeRub, Ide),
-					c => c.Max(x => x.rub.LibRub, Lib));
+					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide),
+					c => c.Cell(rows => rows.Max(x => x.rub.LibRub), Lib));
 
 			var rows = Build(activityIds).ToList().OrderBy(r => r.Id).ToList();
 
@@ -704,8 +698,8 @@ namespace Tests.Linq
 					x => x.e.Id,
 					x => x.e.TheKey,
 					activityIds,
-					c => c.Max(x => x.rub.IdeRub, Ide),
-					c => c.Max(x => x.rub.LibRub, Lib))
+					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide),
+					c => c.Cell(rows => rows.Max(x => x.rub.LibRub), Lib))
 				.ToList()
 				.OrderBy(r => r.Key)
 				.ToList();
@@ -752,8 +746,8 @@ namespace Tests.Linq
 					x => x.e.Id,
 					x => x.e.TheKey,
 					activityIds,
-					c => c.Max(x => x.rub.IdeRub, Ide),
-					c => c.Max(x => x.rub.LibRub, Lib))
+					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide),
+					c => c.Cell(rows => rows.Max(x => x.rub.LibRub), Lib))
 				.Where(r => Sql.Property<string>(r, "IDE_20") == "IDE-B")
 				.ToList();
 

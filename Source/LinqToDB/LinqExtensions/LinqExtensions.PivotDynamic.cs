@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -30,7 +29,7 @@ namespace LinqToDB
 		/// <param name="forColumn">The column whose values become columns.</param>
 		/// <param name="forValues">The runtime set of pivoted values.</param>
 		/// <param name="staticSelector">Projection for the statically known members, over the grouping.</param>
-		/// <param name="cells">Cell templates. More than one requires each to supply a name factory.</param>
+		/// <param name="cells">Cell templates, each built from the supplied factory. More than one requires each to supply a name factory.</param>
 		/// <returns>Query with one row per key and one generated column per (cell, value) pair.</returns>
 		/// <remarks>
 		/// For a value set known at compile time, an ordinary
@@ -39,26 +38,27 @@ namespace LinqToDB
 		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IQueryable<TResult> Pivot<TSource, TKey, TFor, TResult>(
-			this            IQueryable<TSource>                                 source,
-			[InstantHandle] Expression<Func<TSource, TKey>>                     keySelector,
-			[InstantHandle] Expression<Func<TSource, TFor>>                     forColumn,
-			[InstantHandle] IEnumerable<TFor>                                   forValues,
-			[InstantHandle] Expression<Func<IGrouping<TKey, TSource>, TResult>> staticSelector,
-			[InstantHandle] params PivotCell<TSource, TFor>[]                   cells)
+			this            IQueryable<TSource>                                                      source,
+			[InstantHandle] Expression<Func<TSource, TKey>>                                          keySelector,
+			[InstantHandle] Expression<Func<TSource, TFor>>                                          forColumn,
+			[InstantHandle] IEnumerable<TFor>                                                        forValues,
+			[InstantHandle] Expression<Func<IGrouping<TKey, TSource>, TResult>>                      staticSelector,
+			[InstantHandle] params Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
 		{
 			ArgumentNullException.ThrowIfNull(source);
 			ArgumentNullException.ThrowIfNull(keySelector);
 			ArgumentNullException.ThrowIfNull(forColumn);
 			ArgumentNullException.ThrowIfNull(forValues);
 			ArgumentNullException.ThrowIfNull(staticSelector);
-			ArgumentNullException.ThrowIfNull(cells);
 
-			if (cells.Length == 0)
+			var templates = InvokeCellFactories(cells);
+
+			if (templates.Length == 0)
 				throw new ArgumentException("A pivot needs at least one cell template.", nameof(cells));
 
 			var values = forValues as TFor[] ?? forValues.ToArray();
 
-			var names     = new string[values.Length * cells.Length];
+			var names     = new string[values.Length * templates.Length];
 			var cellExprs = new Expression[names.Length];
 			var seen      = new HashSet<string>(StringComparer.Ordinal);
 			var grouped   = source.GroupBy(keySelector);
@@ -66,9 +66,9 @@ namespace LinqToDB
 
 			var k = 0;
 
-			foreach (var cell in cells)
+			foreach (var cell in templates)
 			{
-				if (cell.Name == null && cells.Length > 1)
+				if (cell.Name == null && templates.Length > 1)
 					throw new ArgumentException("A pivot with more than one cell template needs a name factory on each, so the generated columns can be told apart.", nameof(cells));
 
 				foreach (var value in values)
@@ -95,9 +95,8 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Rotates a runtime set of values into the cells of a <see cref="PivotRow{TKey}"/>, so no result type
-		/// has to be declared. See
-		/// <see cref="Pivot{TSource,TKey,TFor,TResult}(IQueryable{TSource},Expression{Func{TSource,TKey}},Expression{Func{TSource,TFor}},IEnumerable{TFor},Expression{Func{IGrouping{TKey,TSource},TResult}},PivotCell{TSource,TFor}[])"/>
-		/// to project static members alongside the cells.
+		/// has to be declared. See <see cref="Pivot{TSource,TKey,TFor,TResult}"/> to project static members
+		/// alongside the cells.
 		/// </summary>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <typeparam name="TKey">Grouping key type.</typeparam>
@@ -106,7 +105,7 @@ namespace LinqToDB
 		/// <param name="keySelector">Grouping key.</param>
 		/// <param name="forColumn">The column whose values become columns.</param>
 		/// <param name="forValues">The runtime set of pivoted values.</param>
-		/// <param name="cells">Cell templates. More than one requires each to supply a name factory.</param>
+		/// <param name="cells">Cell templates, each built from the supplied factory. More than one requires each to supply a name factory.</param>
 		/// <returns>Query with one <see cref="PivotRow{TKey}"/> per key.</returns>
 		/// <remarks>
 		/// For a value set known at compile time, an ordinary
@@ -115,11 +114,11 @@ namespace LinqToDB
 		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IQueryable<PivotRow<TKey>> Pivot<TSource, TKey, TFor>(
-			this            IQueryable<TSource>                source,
-			[InstantHandle] Expression<Func<TSource, TKey>>    keySelector,
-			[InstantHandle] Expression<Func<TSource, TFor>>    forColumn,
-			[InstantHandle] IEnumerable<TFor>                  forValues,
-			[InstantHandle] params PivotCell<TSource, TFor>[]  cells)
+			this            IQueryable<TSource>                                                      source,
+			[InstantHandle] Expression<Func<TSource, TKey>>                                          keySelector,
+			[InstantHandle] Expression<Func<TSource, TFor>>                                          forColumn,
+			[InstantHandle] IEnumerable<TFor>                                                        forValues,
+			[InstantHandle] params Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
 		{
 			var gParam = Expression.Parameter(typeof(IGrouping<TKey, TSource>), "g");
 
@@ -133,56 +132,6 @@ namespace LinqToDB
 
 			return Pivot(source, keySelector, forColumn, forValues, selector, cells);
 		}
-
-		/// <summary>
-		/// Rotates a runtime set of values into columns, with the cell templates supplied through a factory so
-		/// that <typeparamref name="TSource"/> never has to be written down - the shape a pivot over a join
-		/// projected into an anonymous type needs. Otherwise identical to
-		/// <see cref="Pivot{TSource,TKey,TFor,TResult}(IQueryable{TSource},Expression{Func{TSource,TKey}},Expression{Func{TSource,TFor}},IEnumerable{TFor},Expression{Func{IGrouping{TKey,TSource},TResult}},PivotCell{TSource,TFor}[])"/>.
-		/// </summary>
-		/// <typeparam name="TSource">Source record type.</typeparam>
-		/// <typeparam name="TKey">Grouping key type.</typeparam>
-		/// <typeparam name="TFor">Type of the pivoted column.</typeparam>
-		/// <typeparam name="TResult">Result record type; must expose a dynamic-columns store.</typeparam>
-		/// <param name="source">Source query.</param>
-		/// <param name="keySelector">Grouping key.</param>
-		/// <param name="forColumn">The column whose values become columns.</param>
-		/// <param name="forValues">The runtime set of pivoted values.</param>
-		/// <param name="staticSelector">Projection for the statically known members, over the grouping.</param>
-		/// <param name="cells">Cell templates, each built from the supplied factory. More than one requires each to supply a name factory.</param>
-		/// <returns>Query with one row per key and one generated column per (cell, value) pair.</returns>
-		[Pure, LinqTunnel]
-		public static IQueryable<TResult> Pivot<TSource, TKey, TFor, TResult>(
-			this            IQueryable<TSource>                                                      source,
-			[InstantHandle] Expression<Func<TSource, TKey>>                                          keySelector,
-			[InstantHandle] Expression<Func<TSource, TFor>>                                          forColumn,
-			[InstantHandle] IEnumerable<TFor>                                                        forValues,
-			[InstantHandle] Expression<Func<IGrouping<TKey, TSource>, TResult>>                      staticSelector,
-			[InstantHandle] params Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
-			=> Pivot(source, keySelector, forColumn, forValues, staticSelector, InvokeCellFactories(cells));
-
-		/// <summary>
-		/// Rotates a runtime set of values into the cells of a <see cref="PivotRow{TKey}"/>, with the cell
-		/// templates supplied through a factory so that <typeparamref name="TSource"/> never has to be written
-		/// down - the shape a pivot over a join projected into an anonymous type needs.
-		/// </summary>
-		/// <typeparam name="TSource">Source record type.</typeparam>
-		/// <typeparam name="TKey">Grouping key type.</typeparam>
-		/// <typeparam name="TFor">Type of the pivoted column.</typeparam>
-		/// <param name="source">Source query.</param>
-		/// <param name="keySelector">Grouping key.</param>
-		/// <param name="forColumn">The column whose values become columns.</param>
-		/// <param name="forValues">The runtime set of pivoted values.</param>
-		/// <param name="cells">Cell templates, each built from the supplied factory. More than one requires each to supply a name factory.</param>
-		/// <returns>Query with one <see cref="PivotRow{TKey}"/> per key.</returns>
-		[Pure, LinqTunnel]
-		public static IQueryable<PivotRow<TKey>> Pivot<TSource, TKey, TFor>(
-			this            IQueryable<TSource>                                                      source,
-			[InstantHandle] Expression<Func<TSource, TKey>>                                          keySelector,
-			[InstantHandle] Expression<Func<TSource, TFor>>                                          forColumn,
-			[InstantHandle] IEnumerable<TFor>                                                        forValues,
-			[InstantHandle] params Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
-			=> Pivot(source, keySelector, forColumn, forValues, InvokeCellFactories(cells));
 
 		static PivotCell<TSource, TFor>[] InvokeCellFactories<TSource, TFor>(Func<PivotCellFactory<TSource, TFor>, PivotCell<TSource, TFor>>[] cells)
 		{
