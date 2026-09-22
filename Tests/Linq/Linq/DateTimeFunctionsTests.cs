@@ -944,6 +944,158 @@ namespace Tests.Linq
 						new CustomNullableDateTimeComparer());
 		}
 
+		/// <summary>
+		/// A ClickHouse column stored as a whole-second <c>DateTime</c> rather than the <c>DateTime64(7)</c> the
+		/// provider maps a <see cref="DateTime"/> to by default.
+		/// </summary>
+		/// <remarks>
+		/// The millisecond forms of <c>DateAdd</c> and <c>DatePart</c> both go through the
+		/// <c>toUnixTimestamp64*</c> family, which takes a <c>DateTime64</c> and refuses every other date type by
+		/// name. <see cref="Model.LinqDataTypes"/>, which the tests above run over, declares <c>DateTime64(3)</c>
+		/// here - so no existing test meets one of these functions with an operand it rejects.
+		/// </remarks>
+		/// <summary>
+		/// The three ClickHouse date shapes the millisecond functions have to answer over.
+		/// </summary>
+		/// <remarks>
+		/// <c>toUnixTimestamp64Milli</c> and <c>toUnixTimestamp64Nano</c> take a <c>DateTime64</c> and refuse a
+		/// whole-second <c>DateTime</c> and a <c>Date32</c> by name; <see cref="Model.LinqDataTypes"/>, which the
+		/// tests above run over, declares <c>DateTime64(3)</c> and so meets neither refusal.
+		/// </remarks>
+		[Table]
+		sealed class ClickHouseDateShapesRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateTime Value { get; set; }
+
+			[Column(DataType = DataType.Date32)] public DateTime Day { get; set; }
+
+			// Default-mapped, so DateTime64(7) - the only one of the three that reaches back before 1970.
+			[Column] public DateTime Wide { get; set; }
+		}
+
+		// June, because a whole-second column carries a wall-clock reading the server resolves in its own zone and
+		// no daylight-saving transition falls inside this month in either hemisphere.
+		static readonly DateTime ClickHouseCoarseValue = new(2026, 6, 1, 10, 0, 0);
+
+		static TempTable<ClickHouseDateShapesRow> SeedClickHouseCoarse(IDataContext db, DateTime? wide = null)
+		{
+			var t = db.CreateLocalTable<ClickHouseDateShapesRow>();
+
+			try
+			{
+				db.Insert(new ClickHouseDateShapesRow
+				{
+					Id    = 1,
+					Value = ClickHouseCoarseValue,
+					Day   = ClickHouseCoarseValue.Date,
+					Wide  = wide ?? ClickHouseCoarseValue,
+				});
+			}
+			catch
+			{
+				t.Dispose();
+				throw;
+			}
+
+			return t;
+		}
+
+		[Test]
+		public void DateAddMillisecondOverASecondPrecisionColumn([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			var value = ClickHouseCoarseValue;
+
+			using var db = GetDataContext(context);
+			using var t  = SeedClickHouseCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Value))).Single().ShouldBe(value.AddMilliseconds(226));
+			t.Select(r => Sql.AsSql(r.Value.AddMilliseconds(226))).Single().ShouldBe(value.AddMilliseconds(226));
+		}
+
+		/// <summary>
+		/// The same two calls over a column stored as a date, which the functions refuse separately from a
+		/// whole-second timestamp.
+		/// </summary>
+		[Test]
+		public void DateAddMillisecondOverADate32Column([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			var day = ClickHouseCoarseValue.Date;
+
+			using var db = GetDataContext(context);
+			using var t  = SeedClickHouseCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Day))).Single().ShouldBe(day.AddMilliseconds(226));
+			t.Select(r => Sql.AsSql(r.Day.AddMilliseconds(226))).Single().ShouldBe(day.AddMilliseconds(226));
+		}
+
+		[Test]
+		public void DatePartMillisecondOverADate32Column([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedClickHouseCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Day))).Single().ShouldBe(0);
+			t.Select(r => Sql.AsSql(r.Day.Millisecond)).Single().ShouldBe(0);
+		}
+
+		/// <summary>
+		/// The millisecond of a timestamp before 1970.
+		/// </summary>
+		/// <remarks>
+		/// The part is taken from the epoch, which is negative there, and a truncating <c>%</c> carries the sign
+		/// into the answer. Asked over the default-mapped column because it is the only one of the three that can
+		/// hold such a date at all - a ClickHouse <c>DateTime</c> starts at 1970.
+		/// </remarks>
+		[Test]
+		public void DatePartMillisecondBeforeTheEpoch([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			var wide = new DateTime(1969, 1, 1, 0, 0, 0, 500);
+
+			using var db = GetDataContext(context);
+			using var t  = SeedClickHouseCoarse(db, wide);
+
+			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Wide))).Single().ShouldBe(wide.Millisecond);
+			t.Select(r => Sql.AsSql(r.Wide.Millisecond)).Single().ShouldBe(wide.Millisecond);
+		}
+
+		/// <summary>
+		/// The millisecond part of a column that cannot hold one.
+		/// </summary>
+		/// <remarks>
+		/// The asserted value carries nothing - a whole-second column has no fractional part, so every wrong
+		/// coercion answers zero as well. What this pins is that the query runs: without one, the server refuses
+		/// <c>toUnixTimestamp64Milli</c> the same way it refuses its nanosecond sibling.
+		/// </remarks>
+		[Test]
+		public void DatePartMillisecondOverASecondPrecisionColumn([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedClickHouseCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Value))).Single().ShouldBe(0);
+			t.Select(r => Sql.AsSql(r.Value.Millisecond)).Single().ShouldBe(0);
+		}
+
+		/// <summary>
+		/// An explicit conversion applied to the result of a millisecond <c>DateAdd</c> is carried out.
+		/// </summary>
+		/// <remarks>
+		/// The addition is expressed through the nanosecond epoch and comes back as a <c>DateTime64</c> whatever the
+		/// operand was. Declaring the result as the operand's own type instead makes the requested conversion look
+		/// like a conversion to the type the value already has, and a redundant cast is removed - so the milliseconds
+		/// asked to be dropped would survive.
+		/// </remarks>
+		[Test]
+		public void ConvertedDateAddMillisecondHonoursTheRequestedType([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedClickHouseCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime, r.Value.AddMilliseconds(226)))).Single().ShouldBe(ClickHouseCoarseValue);
+		}
+
 		[Test]
 		public void AddYears([DataSources] string context)
 		{

@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
 		/// </summary>
 		/// <remarks>
-		/// linq2db maps date/time values to <c>DateTime64(7)</c>, which is a tick exactly, so every nanosecond
+		/// The operands are coerced to <c>DateTime64(7)</c> first, which is a tick exactly, so every nanosecond
 		/// value here is a whole multiple of a hundred and the division is exact. <c>date_diff</c> is not used
 		/// because its finest unit is the second.
 		/// <para>
@@ -59,8 +59,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var longType = Factory.GetDbDataType(typeof(long));
 
 			var nanoseconds = Factory.Sub(longType,
-				Factory.Function(longType, "toUnixTimestamp64Nano", element.End),
-				Factory.Function(longType, "toUnixTimestamp64Nano", element.Start));
+				Factory.Function(longType, "toUnixTimestamp64Nano", ClickHouseDateTime.AsDateTime64(Factory, element.End)),
+				Factory.Function(longType, "toUnixTimestamp64Nano", ClickHouseDateTime.AsDateTime64(Factory, element.Start)));
 
 			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
 		}
@@ -77,16 +77,21 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// by a hundred caps the amount at <c>long.MaxValue / 100</c> - about 292 years, far short of what a
 		/// <c>TimeSpan</c> holds, but past any span these timestamps measure exactly: <see cref="ElapsedTicks"/>
 		/// above carries the same ceiling, and for the same reason.
+		/// <para>
+		/// The date being shifted is coerced as well: a sub-second interval cannot be added to a <c>Date</c> or a
+		/// <c>Date32</c>, which ClickHouse refuses with <c>addNanoseconds cannot be used with Date32</c>.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
 			var longType = Factory.GetDbDataType(typeof(long));
 			var interval = Factory.Function(longType, "toIntervalNanosecond", Factory.Multiply(longType, element.Interval, 100L));
-			var type     = Factory.GetDbDataType(element.Temporal);
+			var temporal = ClickHouseDateTime.AsDateTime64(Factory, element.Temporal);
+			var type     = Factory.GetDbDataType(temporal);
 
 			return element.IsSubtract
-				? Factory.Sub(type, element.Temporal, interval)
-				: Factory.Add(type, element.Temporal, interval);
+				? Factory.Sub(type, temporal, interval)
+				: Factory.Add(type, temporal, interval);
 		}
 
 		#region LIKE
