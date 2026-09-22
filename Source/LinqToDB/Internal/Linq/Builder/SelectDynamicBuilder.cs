@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
@@ -27,12 +28,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sequence = buildResult.BuildContext;
 
-			var entityDescriptor = sequence.MappingSchema.GetEntityDescriptor(resultType);
-
-			if (entityDescriptor.DynamicColumnSetter == null)
-				throw new LinqToDBException(
-					$"Type '{resultType.Name}' cannot be used as a {nameof(LinqExtensions.SelectDynamic)} result: it has no member marked with {nameof(DynamicColumnsStoreAttribute)}, so the generated columns would have nowhere to go.");
-
 			// finalizing context
 			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence));
 
@@ -50,14 +45,56 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			generic = generic.WithMappingSchema(sequence.MappingSchema);
 
+			// A pivot that nests its cells leaves a PivotCells<,> placeholder at the member they belong to; with no
+			// placeholder the generated columns go into the result type's own dynamic-columns store.
+			var cellsIndex = FindCellsPlaceholder(generic, out var inParameters);
+			var storeType  = cellsIndex < 0
+				? resultType
+				: (inParameters ? generic.Parameters[cellsIndex].Expression.Type : generic.Assignments[cellsIndex].Expression.Type);
+
+			var entityDescriptor = sequence.MappingSchema.GetEntityDescriptor(storeType);
+
+			if (entityDescriptor.DynamicColumnSetter == null)
+				throw new LinqToDBException(
+					$"Type '{storeType.Name}' cannot be used as a {nameof(LinqExtensions.SelectDynamic)} result: it has no member marked with {nameof(DynamicColumnsStoreAttribute)}, so the generated columns would have nowhere to go.");
+
+			var cells = new SqlGenericConstructorExpression.Assignment[names.Length];
+
 			for (var i = 0; i < names.Length; i++)
 			{
 				var cellBody = SequenceHelper.PrepareBody(cellArray.Expressions[i].UnwrapLambda(), sequence);
 
-				generic = generic.AppendAssignment(
-					new SqlGenericConstructorExpression.Assignment(
-						new DynamicColumnInfo(resultType, cellBody.Type, names[i]),
-						cellBody, true, false));
+				cells[i] = new SqlGenericConstructorExpression.Assignment(
+					new DynamicColumnInfo(storeType, cellBody.Type, names[i]),
+					cellBody, true, false);
+			}
+
+			if (cellsIndex < 0)
+			{
+				foreach (var cell in cells)
+					generic = generic.AppendAssignment(cell);
+			}
+			else
+			{
+				var store = new SqlGenericConstructorExpression(Expression.New(storeType)).WithMappingSchema(sequence.MappingSchema);
+
+				foreach (var cell in cells)
+					store = store.AppendAssignment(cell);
+
+				if (inParameters)
+				{
+					var parameters = new List<SqlGenericConstructorExpression.Parameter>(generic.Parameters);
+
+					parameters[cellsIndex] = parameters[cellsIndex].WithExpression(store);
+					generic                = generic.ReplaceParameters(parameters.AsReadOnly());
+				}
+				else
+				{
+					var assignments = new List<SqlGenericConstructorExpression.Assignment>(generic.Assignments);
+
+					assignments[cellsIndex] = assignments[cellsIndex].WithExpression(store);
+					generic                 = generic.ReplaceAssignments(assignments.AsReadOnly());
+				}
 			}
 
 			var context = new SelectContext(buildInfo.Parent, generic, sequence, buildInfo.IsSubQuery);
@@ -68,5 +105,34 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return BuildSequenceResult.FromContext(context);
 		}
+
+		static int FindCellsPlaceholder(SqlGenericConstructorExpression generic, out bool inParameters)
+		{
+			for (var i = 0; i < generic.Assignments.Count; i++)
+			{
+				if (IsCellsPlaceholder(generic.Assignments[i].Expression))
+				{
+					inParameters = false;
+					return i;
+				}
+			}
+
+			for (var i = 0; i < generic.Parameters.Count; i++)
+			{
+				if (IsCellsPlaceholder(generic.Parameters[i].Expression))
+				{
+					inParameters = true;
+					return i;
+				}
+			}
+
+			inParameters = false;
+			return -1;
+		}
+
+		static bool IsCellsPlaceholder(Expression expression)
+			=> expression is ConstantExpression { Value: null }
+				&& expression.Type.IsGenericType
+				&& expression.Type.GetGenericTypeDefinition() == typeof(PivotCells<,>);
 	}
 }

@@ -2,24 +2,20 @@
 const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator
 LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator() -> void
-LinqToDB.PivotCell<TSource, TFor>
-LinqToDB.PivotCellFactory<TSource, TFor>
-LinqToDB.PivotCellFactory<TSource, TFor>.Cell<TCell>(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.IEnumerable<TSource>!, TCell>!>! aggregate, System.Func<TFor, string!>? name = null) -> LinqToDB.PivotCell<TSource, TFor>!
-LinqToDB.PivotRow<TKey>
-LinqToDB.PivotRow<TKey>.Get<T>(string! name) -> T?
-LinqToDB.PivotRow<TKey>.Key.get -> TKey
-LinqToDB.PivotRow<TKey>.Key.set -> void
-LinqToDB.PivotRow<TKey>.PivotRow() -> void
-LinqToDB.PivotRow<TKey>.this[string! name].get -> object?
-LinqToDB.PivotRow<TKey>.Values.get -> System.Collections.Generic.IDictionary<string!, object!>!
-LinqToDB.PivotRow<TKey>.Values.set -> void
+LinqToDB.PivotCells<TSource, TFor>
+LinqToDB.PivotCells<TSource, TFor>.Cell<TCell>(System.Linq.Expressions.Expression<System.Func<System.Collections.Generic.IEnumerable<TSource>!, TCell>!>! aggregate, System.Func<TFor, string!>? name = null) -> LinqToDB.PivotCells<TSource, TFor>!
+LinqToDB.PivotCells<TSource, TFor>.Get<T>(string! name) -> T?
+LinqToDB.PivotCells<TSource, TFor>.PivotCells() -> void
+LinqToDB.PivotCells<TSource, TFor>.this[string! name].get -> object?
+LinqToDB.PivotCells<TSource, TFor>.Values.get -> System.Collections.Generic.IDictionary<string!, object!>!
+LinqToDB.PivotCells<TSource, TFor>.Values.set -> void
 LinqToDB.UnpivotNulls
 LinqToDB.UnpivotNulls.ExcludeNulls = 0 -> LinqToDB.UnpivotNulls
 LinqToDB.UnpivotNulls.IncludeNulls = 1 -> LinqToDB.UnpivotNulls
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQL95MemberTranslator.CreateAggregateFunctionsMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 override LinqToDB.Internal.DataProvider.PostgreSQL.Translation.PostgreSQLMemberTranslator.PostgreSQL95AggregateFunctionsMemberTranslator.IsFilterSupported.get -> bool
-static LinqToDB.LinqExtensions.Pivot<TSource, TKey, TFor, TResult>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, System.Collections.Generic.IEnumerable<TFor>! forValues, System.Linq.Expressions.Expression<System.Func<System.Linq.IGrouping<TKey, TSource>!, TResult>!>! staticSelector, params System.Func<LinqToDB.PivotCellFactory<TSource, TFor>!, LinqToDB.PivotCell<TSource, TFor>!>![]! cells) -> System.Linq.IQueryable<TResult>!
-static LinqToDB.LinqExtensions.Pivot<TSource, TKey, TFor>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, System.Collections.Generic.IEnumerable<TFor>! forValues, params System.Func<LinqToDB.PivotCellFactory<TSource, TFor>!, LinqToDB.PivotCell<TSource, TFor>!>![]! cells) -> System.Linq.IQueryable<LinqToDB.PivotRow<TKey>!>!
+static LinqToDB.LinqExtensions.Pivot<TSource, TKey, TFor, TResult>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, System.Collections.Generic.IEnumerable<TFor>! forValues, System.Linq.Expressions.Expression<System.Func<System.Linq.IGrouping<TKey, TSource>!, LinqToDB.PivotCells<TSource, TFor>!, TResult>!>! selector) -> System.Linq.IQueryable<TResult>!
+static LinqToDB.LinqExtensions.Pivot<TSource, TKey, TFor, TResult>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TKey>!>! keySelector, System.Linq.Expressions.Expression<System.Func<TSource, TFor>!>! forColumn, System.Collections.Generic.IEnumerable<TFor>! forValues, System.Linq.Expressions.Expression<System.Func<System.Linq.IGrouping<TKey, TSource>!, TResult>!>! staticSelector, System.Func<LinqToDB.PivotCells<TSource, TFor>!, LinqToDB.PivotCells<TSource, TFor>!>! cells) -> System.Linq.IQueryable<TResult>!
 static LinqToDB.LinqExtensions.SelectDynamic<TSource, TKey, TCell, TResult>(this System.Linq.IQueryable<TSource>! source, System.Linq.Expressions.Expression<System.Func<TSource, TResult>!>! staticSelector, System.Collections.Generic.IEnumerable<TKey>! keys, System.Linq.Expressions.Expression<System.Func<TSource, TKey, TCell>!>! valueTemplate, System.Func<TKey, string!>? nameSelector = null) -> System.Linq.IQueryable<TResult>!
 static LinqToDB.LinqExtensions.Unpivot<TSource, TValue, TResult>(this System.Linq.IQueryable<TSource>! source, LinqToDB.UnpivotNulls nulls, System.Linq.Expressions.Expression<System.Func<TSource, string!, TValue, TResult>!>! resultSelector, params string![]! columnNames) -> System.Linq.IQueryable<TResult>!
 static LinqToDB.LinqExtensions.Unpivot<TSource, TValue, TResult>(this System.Linq.IQueryable<TSource>! source, LinqToDB.UnpivotNulls nulls, System.Linq.Expressions.Expression<System.Func<TSource, string!, TValue, TResult>!>! resultSelector, System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>! column, params System.Linq.Expressions.Expression<System.Func<TSource, TValue>!>![]! columns) -> System.Linq.IQueryable<TResult>!

@@ -47,7 +47,7 @@ namespace Tests.Linq
 		static string Year(int y) => "Y" + y.ToString(CultureInfo.InvariantCulture);
 
 		[Test]
-		public void PivotsRuntimeValuesIntoPivotRow([DataSources] string context)
+		public void PivotsRuntimeValues([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Sales.Data);
@@ -58,7 +58,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, years,
-					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) })
 				.ToList()
 				.OrderBy(r => r.Key)
 				.ToList();
@@ -66,12 +66,12 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["Y2000"].ShouldBe(10m);
-			result[0]["Y2010"].ShouldBe(20m);
+			result[0].Cells["Y2000"].ShouldBe(10m);
+			result[0].Cells["Y2010"].ShouldBe(20m);
 
 			result[1].Key.ShouldBe("B");
-			result[1]["Y2000"].ShouldBe(5m);
-			result[1]["Y2010"].ShouldBe(15m);
+			result[1].Cells["Y2000"].ShouldBe(5m);
+			result[1].Cells["Y2010"].ShouldBe(15m);
 		}
 
 		/// <summary>
@@ -89,8 +89,8 @@ namespace Tests.Linq
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, years,
 					g => new SalesDto { Category = g.Key, Total = g.Sum(x => x.Amount) },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), y => "AMT_"  + Year(y)),
-					c => c.Cell(rows => rows.Max(x => x.Note),   y => "NOTE_" + Year(y)))
+					c => c.Cell(rows => rows.Sum(x => x.Amount), y => "AMT_"  + Year(y))
+						.Cell(rows => rows.Max(x => x.Note),   y => "NOTE_" + Year(y)))
 				.ToList()
 				.OrderBy(r => r.Category)
 				.ToList();
@@ -117,26 +117,15 @@ namespace Tests.Linq
 			// Two templates would otherwise generate two columns called "2000".
 			System.Action act = () => t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					c => c.Cell(rows => rows.Sum(x => x.Amount)),
-					c => c.Cell(rows => rows.Max(x => x.Note)))
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Sum(x => x.Amount))
+							.Cell(rows => rows.Max(x => x.Note)),
+					})
 				.ToList();
 
 			act.ShouldThrow<System.ArgumentException>();
-		}
-
-		/// <summary>A cell named after <see cref="PivotRow{TKey}"/>'s own members would be shadowed by them.</summary>
-		[Test]
-		public void CellNamedAfterARowMemberThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(Sales.Data);
-
-			Action act = () => t
-				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), _ => nameof(PivotRow<>.Key)))
-				.ToList();
-
-			act.ShouldThrow<ArgumentException>();
 		}
 
 		#region Compile-time-known value sets
@@ -185,7 +174,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) })
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -193,12 +182,12 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["Y2000"].ShouldBe(10m);
-			result[0]["Y2010"].ShouldBe(20m);
+			result[0].Cells["Y2000"].ShouldBe(10m);
+			result[0].Cells["Y2010"].ShouldBe(20m);
 
 			result[1].Key.ShouldBe("B");
-			result[1]["Y2000"].ShouldBe(5m);
-			result[1]["Y2010"].ShouldBe(15m);
+			result[1].Cells["Y2000"].ShouldBe(5m);
+			result[1].Cells["Y2010"].ShouldBe(15m);
 		}
 
 		[Test]
@@ -209,8 +198,12 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), y => "Sum" + Year(y)),
-					c => c.Cell(rows => rows.Count(),           y => "Cnt" + Year(y)))
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Sum(x => x.Amount), y => "Sum" + Year(y))
+							.Cell(rows => rows.Count(),           y => "Cnt" + Year(y)),
+					})
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -218,11 +211,11 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["SumY2000"].ShouldBe(10m);
-			result[0]["CntY2000"].ShouldBe(1);
+			result[0].Cells["SumY2000"].ShouldBe(10m);
+			result[0].Cells["CntY2000"].ShouldBe(1);
 
-			result[1]["SumY2000"].ShouldBe(5m);
-			result[1]["CntY2000"].ShouldBe(1);
+			result[1].Cells["SumY2000"].ShouldBe(5m);
+			result[1].Cells["CntY2000"].ShouldBe(1);
 		}
 
 		[Test]
@@ -233,8 +226,12 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					c => c.Cell(rows => rows.Min(x => x.Amount), y => "Min" + Year(y)),
-					c => c.Cell(rows => rows.Max(x => x.Amount), y => "Max" + Year(y)))
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Min(x => x.Amount), y => "Min" + Year(y))
+							.Cell(rows => rows.Max(x => x.Amount), y => "Max" + Year(y)),
+					})
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -242,12 +239,12 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["MinY2000"].ShouldBe(10m);
-			result[0]["MaxY2000"].ShouldBe(30m);
+			result[0].Cells["MinY2000"].ShouldBe(10m);
+			result[0].Cells["MaxY2000"].ShouldBe(30m);
 
 			result[1].Key.ShouldBe("B");
-			result[1]["MinY2000"].ShouldBe(5m);
-			result[1]["MaxY2000"].ShouldBe(5m);
+			result[1].Cells["MinY2000"].ShouldBe(5m);
+			result[1].Cells["MaxY2000"].ShouldBe(5m);
 		}
 
 		[Test]
@@ -261,7 +258,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					c => c.Cell(rows => rows.Average(x => x.Amount), y => "Avg" + Year(y)))
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Average(x => x.Amount), y => "Avg" + Year(y)) })
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -269,10 +266,10 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["AvgY2000"].ShouldBe(20m);
+			result[0].Cells["AvgY2000"].ShouldBe(20m);
 
 			result[1].Key.ShouldBe("B");
-			result[1]["AvgY2000"].ShouldBe(5m);
+			result[1].Cells["AvgY2000"].ShouldBe(5m);
 		}
 
 		[Table]
@@ -303,7 +300,7 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => new { x.Category, x.Region }, x => x.Year, new[] { 2000, 2010 },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) })
 				.ToList()
 				.OrderBy(r => r.Key.Category, StringComparer.Ordinal)
 				.ThenBy(r => r.Key.Region, StringComparer.Ordinal)
@@ -312,16 +309,16 @@ namespace Tests.Linq
 			// groups: (A,EU) Y2000=10 Y2010=20; (A,US) Y2000=3; (B,EU) Y2000=5
 			result.Count.ShouldBe(3);
 
-			result[0].Key.Category.ShouldBe("A");
-			result[0].Key.Region  .ShouldBe("EU");
-			result[0]["Y2000"]    .ShouldBe(10m);
-			result[0]["Y2010"]    .ShouldBe(20m);
+			result[0].Key.Category  .ShouldBe("A");
+			result[0].Key.Region    .ShouldBe("EU");
+			result[0].Cells["Y2000"].ShouldBe(10m);
+			result[0].Cells["Y2010"].ShouldBe(20m);
 
-			result[1].Key.Region.ShouldBe("US");
-			result[1]["Y2000"]  .ShouldBe(3m);
+			result[1].Key.Region    .ShouldBe("US");
+			result[1].Cells["Y2000"].ShouldBe(3m);
 
-			result[2].Key.Category.ShouldBe("B");
-			result[2]["Y2000"]    .ShouldBe(5m);
+			result[2].Key.Category  .ShouldBe("B");
+			result[2].Cells["Y2000"].ShouldBe(5m);
 		}
 
 		[Table]
@@ -351,13 +348,17 @@ namespace Tests.Linq
 			using var t  = db.CreateLocalTable(QuarterAmounts.Data);
 
 			// The FOR side is a pair, so the cell predicate is an AND of the two member comparisons. The pair is an
-			// anonymous type, so the cell has to come from the factory - TFor cannot be written down.
+			// anonymous type, so the cell has to come from the cell set - TFor cannot be written down.
 			var result = t
 				.Pivot(
 					x => x.Category,
 					x => new { x.Year, x.Quarter },
 					new[] { new { Year = 2000, Quarter = 1 }, new { Year = 2000, Quarter = 2 } },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), v => Year(v.Year) + "Q" + v.Quarter.ToString(CultureInfo.InvariantCulture)))
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Sum(x => x.Amount), v => Year(v.Year) + "Q" + v.Quarter.ToString(CultureInfo.InvariantCulture)),
+					})
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -366,14 +367,18 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["Y2000Q1"].ShouldBe(10m);
-			result[0]["Y2000Q2"].ShouldBe(20m);
+			result[0].Cells["Y2000Q1"].ShouldBe(10m);
+			result[0].Cells["Y2000Q2"].ShouldBe(20m);
 
 			result[1].Key.ShouldBe("B");
-			result[1]["Y2000Q1"].ShouldBe(5m);
-			result[1]["Y2000Q2"].ShouldBeNull();
+			result[1].Cells["Y2000Q1"].ShouldBe(5m);
+			result[1].Cells["Y2000Q2"].ShouldBeNull();
 		}
 
+		/// <summary>
+		/// A generated cell is a server-side column: it can be filtered on and re-projected after the pivot, even
+		/// though it lives in a nested member the result type never declares.
+		/// </summary>
 		[Test]
 		public void ComposesAfterAConstantPivot([DataSources] string context)
 		{
@@ -383,9 +388,9 @@ namespace Tests.Linq
 			// Where on a generated column plus a projection that drops another one - stresses column pruning.
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), Year))
-				.Where(r => Sql.Property<decimal?>(r, "Y2010") >= 15)
-				.Select(r => new { r.Key, Y2010 = Sql.Property<decimal?>(r, "Y2010") })
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), Year) })
+				.Where(r => Sql.Property<decimal?>(r.Cells, "Y2010") >= 15)
+				.Select(r => new { r.Key, Y2010 = Sql.Property<decimal?>(r.Cells, "Y2010") })
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -395,6 +400,97 @@ namespace Tests.Linq
 			result[0].Y2010.ShouldBe(20m);
 			result[1].Key.ShouldBe("B");
 			result[1].Y2010.ShouldBe(15m);
+		}
+
+		#endregion
+
+		#region Cells nested in the projection
+
+		/// <summary>
+		/// The cells go into a member of the projected object, so the result type needs no dynamic-columns store
+		/// of its own - here an anonymous type, which cannot carry the attribute at all.
+		/// </summary>
+		[Test]
+		public void PivotsIntoAnAnonymousType([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			var years = new[] { 2000, 2010 };
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, years,
+					(g, p) => new
+					{
+						Category = g.Key,
+						Total    = g.Sum(x => x.Amount),
+						Cells    = p.Cell(rows => rows.Sum(x => x.Amount), y => "AMT_"  + Year(y))
+							.Cell(rows => rows.Max(x => x.Note),   y => "NOTE_" + Year(y)),
+					})
+				.ToList()
+				.OrderBy(r => r.Category, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Category.ShouldBe("A");
+			result[0].Total.ShouldBe(30m);
+			result[0].Cells["AMT_Y2000"].ShouldBe(10m);
+			result[0].Cells["NOTE_Y2010"].ShouldBe("a1");
+
+			result[1].Category.ShouldBe("B");
+			result[1].Total.ShouldBe(20m);
+			result[1].Cells["AMT_Y2010"].ShouldBe(15m);
+			result[1].Cells["NOTE_Y2000"].ShouldBe("b0");
+		}
+
+		/// <summary>A cell named after a <see cref="PivotCells{TSource,TFor}"/> member would be shadowed by it.</summary>
+		[Test]
+		public void NestedCellNamedAfterACellsMemberThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			Action act = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Sum(x => x.Amount), _ => nameof(PivotCells<,>.Values)) })
+				.ToList();
+
+			act.ShouldThrow<ArgumentException>();
+		}
+
+		[Test]
+		public void TwoNestedCellSetsThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			// One projection, one cell set: the second chain has nowhere to put its generated columns.
+			Action act = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					(g, p) => new
+					{
+						g.Key,
+						Amount = p.Cell(rows => rows.Sum(x => x.Amount), y => "AMT_"  + Year(y)),
+						Note   = p.Cell(rows => rows.Max(x => x.Note),   y => "NOTE_" + Year(y)),
+					})
+				.ToList();
+
+			act.ShouldThrow<ArgumentException>();
+		}
+
+		[Test]
+		public void AProjectionWithoutACellThrows([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			Action act = () => t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
+					(g, p) => new { g.Key, Cells = p })
+				.ToList();
+
+			act.ShouldThrow<ArgumentException>();
 		}
 
 		#endregion
@@ -415,8 +511,12 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000 },
-					c => c.Cell(rows => rows.Select(x => x.Amount).Distinct().Count(), y => "Distinct" + Year(y)),
-					c => c.Cell(rows => rows.Count(),                                  y => "Rows"     + Year(y)))
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Select(x => x.Amount).Distinct().Count(), y => "Distinct" + Year(y))
+							.Cell(rows => rows.Count(),                                  y => "Rows"     + Year(y)),
+					})
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -424,12 +524,12 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["DistinctY2000"].ShouldBe(2);
-			result[0]["RowsY2000"]    .ShouldBe(3);
+			result[0].Cells["DistinctY2000"].ShouldBe(2);
+			result[0].Cells["RowsY2000"]    .ShouldBe(3);
 
 			result[1].Key.ShouldBe("B");
-			result[1]["DistinctY2000"].ShouldBe(1);
-			result[1]["RowsY2000"]    .ShouldBe(1);
+			result[1].Cells["DistinctY2000"].ShouldBe(1);
+			result[1].Cells["RowsY2000"]    .ShouldBe(1);
 		}
 
 		[Table]
@@ -462,8 +562,12 @@ namespace Tests.Linq
 
 			var result = t
 				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
-					c => c.Cell(rows => rows.Sum(x => x.Amount), y => "Sum" + Year(y)),
-					c => c.Cell(rows => rows.Max(x => x.At),     y => "At"  + Year(y)))
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Sum(x => x.Amount), y => "Sum" + Year(y))
+							.Cell(rows => rows.Max(x => x.At),     y => "At"  + Year(y)),
+					})
 				.ToList()
 				.OrderBy(r => r.Key, StringComparer.Ordinal)
 				.ToList();
@@ -471,15 +575,15 @@ namespace Tests.Linq
 			result.Count.ShouldBe(2);
 
 			result[0].Key.ShouldBe("A");
-			result[0]["SumY2000"].ShouldBe(10);
-			result[0]["AtY2000"] .ShouldBe(new DateTime(2000, 1, 1));
-			result[0]["SumY2010"].ShouldBeNull();
-			result[0]["AtY2010"] .ShouldBeNull();
+			result[0].Cells["SumY2000"].ShouldBe(10);
+			result[0].Cells["AtY2000"] .ShouldBe(new DateTime(2000, 1, 1));
+			result[0].Cells["SumY2010"].ShouldBeNull();
+			result[0].Cells["AtY2010"] .ShouldBeNull();
 
 			result[1].Key.ShouldBe("B");
-			result[1]["SumY2000"].ShouldBeNull();
-			result[1]["AtY2000"] .ShouldBeNull();
-			result[1]["SumY2010"].ShouldBe(20);
+			result[1].Cells["SumY2000"].ShouldBeNull();
+			result[1].Cells["AtY2000"] .ShouldBeNull();
+			result[1].Cells["SumY2010"].ShouldBe(20);
 		}
 
 		#endregion
@@ -591,7 +695,7 @@ namespace Tests.Linq
 			var activityIds = acts.Select(a => a.Id).OrderBy(id => id).ToList();
 
 			// The source stays an anonymous projection, as it is in the original query: the cell templates come
-			// from the factory, so the row type never has to be named.
+			// from the cell set, so the row type never has to be named.
 			var source =
 				from e in mods
 				join act in acts  on e.TheKey equals act.Id
@@ -612,8 +716,8 @@ namespace Tests.Linq
 						PosLibRub  = g.Max(x => x.pos.LibRub),
 						ModifiedAt = g.Max(x => x.e.ModifiedAt),
 					},
-					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide),
-					c => c.Cell(rows => rows.Max(x => x.rub.LibRub), Lib));
+					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide)
+						.Cell(rows => rows.Max(x => x.rub.LibRub), Lib));
 
 			var rows = Build(activityIds).ToList().OrderBy(r => r.Id).ToList();
 
@@ -672,9 +776,9 @@ namespace Tests.Linq
 			widened[0].Cells["IDE_10"]    .ShouldBe("IDE-A");
 		}
 
-		/// <summary>The same production shape into the built-in row type, so no result type has to be declared.</summary>
+		/// <summary>The same production shape with no result type declared at all.</summary>
 		[Test]
-		public void PivotsProductionShapeIntoPivotRow([DataSources] string context)
+		public void PivotsProductionShapeWithoutAResultType([DataSources] string context)
 		{
 			using var db      = GetDataContext(context);
 			using var mods    = db.CreateLocalTable(ModTemplate.Data);
@@ -698,8 +802,12 @@ namespace Tests.Linq
 					x => x.e.Id,
 					x => x.e.TheKey,
 					activityIds,
-					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide),
-					c => c.Cell(rows => rows.Max(x => x.rub.LibRub), Lib))
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide)
+							.Cell(rows => rows.Max(x => x.rub.LibRub), Lib),
+					})
 				.ToList()
 				.OrderBy(r => r.Key)
 				.ToList();
@@ -707,14 +815,18 @@ namespace Tests.Linq
 			rows.Count.ShouldBe(2);
 
 			rows[0].Key.ShouldBe(1);
-			rows[0].Get<string>("IDE_10").ShouldBe("IDE-A");
-			rows[0]["LIB_20"]            .ShouldBe("LIB-B");
-			rows[0]["IDE_30"]            .ShouldBeNull();
+			rows[0].Cells.Get<string>("IDE_10").ShouldBe("IDE-A");
+			rows[0].Cells["LIB_20"]            .ShouldBe("LIB-B");
+			rows[0].Cells["IDE_30"]            .ShouldBeNull();
 
 			rows[1].Key.ShouldBe(2);
-			rows[1].Get<string>("IDE_10").ShouldBe("IDE-C");
-			rows[1]["LIB_30"]            .ShouldBe("LIB-D");
-			rows[1]["IDE_20"]            .ShouldBeNull();
+			rows[1].Cells.Get<string>("IDE_10").ShouldBe("IDE-C");
+			rows[1].Cells["LIB_30"]            .ShouldBe("LIB-D");
+			rows[1].Cells["IDE_20"]            .ShouldBeNull();
+
+			// A name that was never generated reads as absent rather than throwing.
+			rows[0].Cells["IDE_99"]            .ShouldBeNull();
+			rows[0].Cells.Get<string>("IDE_99").ShouldBeNull();
 		}
 
 		/// <summary>
@@ -746,9 +858,13 @@ namespace Tests.Linq
 					x => x.e.Id,
 					x => x.e.TheKey,
 					activityIds,
-					c => c.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide),
-					c => c.Cell(rows => rows.Max(x => x.rub.LibRub), Lib))
-				.Where(r => Sql.Property<string>(r, "IDE_20") == "IDE-B")
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(rows => rows.Max(x => x.rub.IdeRub), Ide)
+							.Cell(rows => rows.Max(x => x.rub.LibRub), Lib),
+					})
+				.Where(r => Sql.Property<string>(r.Cells, "IDE_20") == "IDE-B")
 				.ToList();
 
 			var sql = db.LastQuery!;

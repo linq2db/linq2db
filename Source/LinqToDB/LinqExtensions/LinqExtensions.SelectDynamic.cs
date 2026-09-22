@@ -95,17 +95,22 @@ namespace LinqToDB
 		// Shared tail for every operator that projects a runtime column set: emits the SelectDynamicCore marker.
 		// Cells are carried as LambdaExpression so each one keeps its own result type - a dynamic pivot mixes
 		// them (Sum yields decimal?, Count yields int) and the builder reads the type off each lambda's body.
+		// dynamicStoreType names the type the generated columns land in when that is not TResult itself - a
+		// pivot whose cells go into a nested PivotCells<,> member, so TResult needs no store of its own.
 		internal static IQueryable<TResult> BuildSelectDynamic<TSource, TResult>(
 			IQueryable<TSource>                source,
 			Expression<Func<TSource, TResult>> staticSelector,
 			string[]                           names,
-			Expression[]                       cells)
+			Expression[]                       cells,
+			Type?                              dynamicStoreType = null)
 		{
+			var storeType = dynamicStoreType ?? typeof(TResult);
+
 			foreach (var name in names)
 			{
 				// A real member wins the lookup, so the generated column would be shadowed rather than reachable.
-				if (typeof(TResult).GetMember(name, BindingFlags.Public | BindingFlags.Instance).Length > 0)
-					throw new ArgumentException($"Dynamic column name '{name}' collides with a member of '{typeof(TResult).Name}', which would be resolved instead of the generated column.");
+				if (storeType.GetMember(name, BindingFlags.Public | BindingFlags.Instance).Length > 0)
+					throw new ArgumentException($"Dynamic column name '{name}' collides with a member of '{storeType.Name}', which would be resolved instead of the generated column.");
 			}
 
 			var expr = Expression.Call(
