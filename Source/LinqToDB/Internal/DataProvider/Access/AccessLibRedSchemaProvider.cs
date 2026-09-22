@@ -3,303 +3,210 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
+using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SchemaProvider;
-using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	// LibRed implements neither GetSchema nor GetSchemaTable, so all metadata is read with SQL from the
-	// engine's own INFORMATION_SCHEMA pseudo-tables. The identifier has to be bracket-quoted as a whole —
-	// the dotted INFORMATION_SCHEMA.TABLES form does not parse.
 	public class AccessLibRedSchemaProvider : AccessSchemaProviderBase
 	{
 		public AccessLibRedSchemaProvider()
 		{
 		}
 
-		// [INFORMATION_SCHEMA.COLUMNS].DATA_TYPE carries the Access store type name, and the base class
-		// maps exactly these names in GetDataType. The base GetDataTypes reads GetSchema("DataTypes"),
-		// which LibRed does not implement.
+		// Access has no catalogs or schemas, so the unqualified object name is the identity that joins
+		// tables, columns, keys and procedures together.
+		static string ID(DataRow row, string column) => row.Field<string>(column)!;
+
+		// GetSchema("DataTypes") carries no CreateFormat, so the scaffolder could not spell a column type
+		// back out; the rest of the row is already covered by AccessSchemaProviderBase.GetDataType.
 		static readonly List<DataTypeInfo> _dataTypes =
 		[
-			new() { TypeName = "bit",        DataType = "System.Boolean"                                                              },
-			new() { TypeName = "byte",       DataType = "System.Byte"                                                                 },
-			new() { TypeName = "smallint",   DataType = "System.Int16"                                                                },
-			new() { TypeName = "short",      DataType = "System.Int16"                                                                },
-			new() { TypeName = "integer",    DataType = "System.Int32"                                                                },
-			new() { TypeName = "long",       DataType = "System.Int32"                                                                },
-			new() { TypeName = "counter",    DataType = "System.Int32"                                                                },
-			new() { TypeName = "single",     DataType = "System.Single"                                                               },
-			new() { TypeName = "real",       DataType = "System.Single"                                                               },
-			new() { TypeName = "double",     DataType = "System.Double"                                                               },
-			new() { TypeName = "currency",   DataType = "System.Decimal"                                                              },
-			new() { TypeName = "decimal",    DataType = "System.Decimal", CreateFormat = "DECIMAL({0}, {1})", CreateParameters = "precision,scale" },
-			new() { TypeName = "datetime",   DataType = "System.DateTime"                                                             },
-			new() { TypeName = "guid",       DataType = "System.Guid"                                                                 },
-			new() { TypeName = "char",       DataType = "System.String",  CreateFormat = "CHAR({0})",         CreateParameters = "length" },
-			new() { TypeName = "varchar",    DataType = "System.String",  CreateFormat = "VARCHAR({0})",      CreateParameters = "length" },
-			new() { TypeName = "text",       DataType = "System.String",  CreateFormat = "VARCHAR({0})",      CreateParameters = "length" },
-			new() { TypeName = "longchar",   DataType = "System.String"                                                               },
-			new() { TypeName = "longtext",   DataType = "System.String"                                                               },
-			new() { TypeName = "binary",     DataType = "System.Byte[]",  CreateFormat = "BINARY({0})",       CreateParameters = "length" },
-			new() { TypeName = "varbinary",  DataType = "System.Byte[]",  CreateFormat = "VARBINARY({0})",    CreateParameters = "length" },
-			new() { TypeName = "longbinary", DataType = "System.Byte[]"                                                               },
-			new() { TypeName = "bigbinary",  DataType = "System.Byte[]"                                                               },
+			new() { TypeName = "Bit",        DataType = "System.Boolean"                                                              },
+			new() { TypeName = "Byte",       DataType = "System.Byte"                                                                 },
+			new() { TypeName = "Short",      DataType = "System.Int16"                                                                },
+			new() { TypeName = "Long",       DataType = "System.Int32"                                                                },
+			new() { TypeName = "Single",     DataType = "System.Single"                                                               },
+			new() { TypeName = "Double",     DataType = "System.Double"                                                               },
+			new() { TypeName = "Currency",   DataType = "System.Decimal"                                                              },
+			new() { TypeName = "Decimal",    DataType = "System.Decimal", CreateFormat = "Decimal({0}, {1})", CreateParameters = "precision,scale" },
+			new() { TypeName = "DateTime",   DataType = "System.DateTime"                                                             },
+			new() { TypeName = "GUID",       DataType = "System.Guid"                                                                 },
+			// the CreateFormat casing follows the TypeName so a scaffolded column type reads as the OLE DB
+			// flavour spells it - Access itself is case-insensitive here
+			new() { TypeName = "Char",       DataType = "System.String",  CreateFormat = "Char({0})",         CreateParameters = "length" },
+			new() { TypeName = "VarChar",    DataType = "System.String",  CreateFormat = "VarChar({0})",      CreateParameters = "length" },
+			new() { TypeName = "LongText",   DataType = "System.String"                                                               },
+			new() { TypeName = "Binary",     DataType = "System.Byte[]",  CreateFormat = "Binary({0})",       CreateParameters = "length" },
+			new() { TypeName = "VarBinary",  DataType = "System.Byte[]",  CreateFormat = "VarBinary({0})",    CreateParameters = "length" },
+			new() { TypeName = "LongBinary", DataType = "System.Byte[]"                                                               },
+			new() { TypeName = "BigBinary",  DataType = "System.Byte[]"                                                               },
 		];
+
+		static readonly Dictionary<string,DataTypeInfo> _dataTypesByName =
+			_dataTypes.ToDictionary(dt => dt.TypeName!, StringComparer.OrdinalIgnoreCase);
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) => _dataTypes;
 
-		// A view's columns are discovered together with the view itself, because the only source for them
-		// is an empty-set read of the query and running that twice would double the cost of every schema load.
-		readonly List<ColumnInfo> _viewColumns = [];
-
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			// Access has no catalogs or schemas, so the unqualified table name is the identity used to
-			// join tables, columns, primary and foreign keys together.
-			var tables = dataConnection
-				.Query<TableRow>("SELECT TABLE_NAME, TABLE_TYPE FROM [INFORMATION_SCHEMA.TABLES]")
-				.Select(t => new TableInfo
+			return
+			(
+				from t in dataConnection.OpenDbConnection().GetSchema("Tables").AsEnumerable()
+				let type = t.Field<string>("TABLE_TYPE")
+				select new TableInfo
 				{
-					TableID            = t.Name,
-					CatalogName        = null,
-					SchemaName         = null,
-					TableName          = t.Name,
+					TableID            = ID(t, "TABLE_NAME"),
+					TableName          = ID(t, "TABLE_NAME"),
 					IsDefaultSchema    = true,
-					IsView             = false,
-					IsProviderSpecific = !string.Equals(t.Type, "BASE TABLE", StringComparison.Ordinal),
-				})
-				.ToList();
-
-			tables.AddRange(GetViews(dataConnection));
-
-			return tables;
-		}
-
-		// DAO query types, as MSysObjects.Flags carries them in its low byte
-		const int QueryKindMask    = 0xF0;
-		const int QuerySelect      = 0x00;
-		const int QueryCrosstab    = 0x10;
-		const int QuerySetOperaton = 0x80;
-
-		/// <summary>
-		/// Access stores queries rather than views and INFORMATION_SCHEMA does not list them, so they are
-		/// read from <c>MSysObjects</c>. Only the row-returning query kinds may be probed: an append or
-		/// delete query would be <b>executed</b> by the read that discovers its columns.
-		/// </summary>
-		List<TableInfo> GetViews(DataConnection dataConnection)
-		{
-			var views      = new List<TableInfo>();
-			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
-
-			var candidates = dataConnection
-				.Query<QueryRow>("SELECT Name, Flags FROM MSysObjects WHERE Type = 5")
-				.Where(q => (q.Flags & QueryKindMask) is QuerySelect or QueryCrosstab or QuerySetOperaton
-					&& !q.Name.StartsWith('~'))
-				.ToList();
-
-			foreach (var query in candidates)
-			{
-				var columns = ReadViewColumns(dataConnection, sqlBuilder, query.Name);
-
-				// a query LibRed cannot bind is not a view; a parameterised one is the usual case
-				if (columns == null)
-					continue;
-
-				views.Add(new TableInfo
-				{
-					TableID         = query.Name,
-					CatalogName     = null,
-					SchemaName      = null,
-					TableName       = query.Name,
-					IsDefaultSchema = true,
-					IsView          = true,
-				});
-
-				_viewColumns.AddRange(columns);
-			}
-
-			return views;
-		}
-
-		List<ColumnInfo>? ReadViewColumns(DataConnection dataConnection, ISqlBuilder sqlBuilder, string name)
-		{
-			using var sb   = Pools.StringBuilder.Allocate();
-			var viewName   = sqlBuilder.BuildObjectName(sb.Value, new SqlObjectName(name), ConvertType.NameToQueryTable).ToString();
-
-			try
-			{
-				// CommandBehavior.SchemaOnly is not honoured — LibRed executes the query anyway — so the
-				// empty result set has to be forced in SQL
-				using var rd = dataConnection.ExecuteReader($"SELECT * FROM {viewName} WHERE 1 = 0", CommandType.Text, CommandBehavior.Default);
-
-				var reader  = rd.Reader!;
-				var columns = new List<ColumnInfo>(reader.FieldCount);
-
-				for (var i = 0; i < reader.FieldCount; i++)
-				{
-					// the reader gives a name and a CLR type and nothing else, so neither the exact store
-					// type nor nullability is knowable for a view column
-					columns.Add(new ColumnInfo
-					{
-						TableID    = name,
-						Name       = reader.GetName(i),
-						Ordinal    = i,
-						DataType   = _viewColumnTypes.TryGetValue(reader.GetFieldType(i), out var dataType) ? dataType : null,
-						IsNullable = true,
-					});
+					IsView             = string.Equals(type, "VIEW", StringComparison.Ordinal),
+					IsProviderSpecific = string.Equals(type, "SYSTEM TABLE", StringComparison.Ordinal),
+					Description        = t.Field<string>("DESCRIPTION"),
 				}
-
-				return columns;
-			}
-#pragma warning disable CA1031 // Do not catch general exception types
-			catch
-#pragma warning restore CA1031 // Do not catch general exception types
-			{
-				return null;
-			}
+			).ToList();
 		}
-
-		static readonly Dictionary<Type, string> _viewColumnTypes = new()
-		{
-			{ typeof(bool),     "bit"        },
-			{ typeof(byte),     "byte"       },
-			{ typeof(short),    "smallint"   },
-			{ typeof(int),      "integer"    },
-			{ typeof(float),    "single"     },
-			{ typeof(double),   "double"     },
-			{ typeof(decimal),  "decimal"    },
-			{ typeof(DateTime), "datetime"   },
-			{ typeof(Guid),     "guid"       },
-			{ typeof(string),   "varchar"    },
-			{ typeof(byte[]),   "longbinary" },
-		};
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var columns = dataConnection
-				.Query<ColumnRow>(@"
-					SELECT TABLE_NAME, COLUMN_NAME, ORDINAL_POSITION, DATA_TYPE, IS_NULLABLE,
-						CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE
-					FROM [INFORMATION_SCHEMA.COLUMNS]")
-				.Select(c => new ColumnInfo
+			return
+			(
+				from c in dataConnection.OpenDbConnection().GetSchema("Columns").AsEnumerable()
+				let typeName = c.Field<string>("TYPE_NAME")
+				let dt       = typeName != null && _dataTypesByName.TryGetValue(typeName, out var info) ? info : null
+				let parms    = dt?.CreateParameters
+				select new ColumnInfo
 				{
-					TableID    = c.TableName,
-					Name       = c.Name,
-					Ordinal    = c.Ordinal,
-					DataType   = c.DataType,
-					IsNullable = c.IsNullable,
-					Length     = c.Length,
-					Precision  = c.Precision,
-					Scale      = c.Scale,
-					// COUNTER is the Access identity type; IDENTITY_SEED is set for the same columns
-					IsIdentity = string.Equals(c.DataType, "counter", StringComparison.OrdinalIgnoreCase),
-				})
-				.ToList();
-
-			columns.AddRange(_viewColumns);
-
-			return columns;
+					TableID     = ID(c, "TABLE_NAME"),
+					Name        = c.Field<string>("COLUMN_NAME")!,
+					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
+					DataType    = typeName,
+					IsNullable  = c.Field<bool>("IS_NULLABLE"),
+					IsIdentity  = c.Field<bool>("IS_AUTOINCREMENT"),
+					// a length of 0 is reported for the unbounded types, and a precision for every numeric;
+					// carrying either where the type cannot spell it would put it in the scaffolded type name
+					Length      = parms?.Contains("length",    StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = parms?.Contains("precision", StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
+					Scale       = parms?.Contains("scale",     StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
+					Description = c.Field<string>("DESCRIPTION"),
+				}
+			).ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var indexes = new HashSet<(string Table, string Index)>();
-
-			foreach (var i in dataConnection.Query<IndexRow>("SELECT TABLE_NAME, INDEX_NAME, INDEX_TYPE FROM [INFORMATION_SCHEMA.INDEXES]"))
-				if (string.Equals(i.Type, "PRIMARY", StringComparison.Ordinal))
-					indexes.Add((i.TableName, i.Name));
-
-			return dataConnection
-				.Query<IndexColumnRow>("SELECT TABLE_NAME, INDEX_NAME, ORDINAL_POSITION, COLUMN_NAME FROM [INFORMATION_SCHEMA.INDEX_COLUMNS]")
-				.Where(c => indexes.Contains((c.TableName, c.IndexName)))
-				.Select(c => new PrimaryKeyInfo
+			return
+			(
+				from pk in dataConnection.OpenDbConnection().GetSchema("PrimaryKeys").AsEnumerable()
+				select new PrimaryKeyInfo
 				{
-					TableID        = c.TableName,
-					PrimaryKeyName = c.IndexName,
-					ColumnName     = c.Name,
-					Ordinal        = c.Ordinal,
-				})
-				.ToList();
+					TableID        = ID(pk, "TABLE_NAME"),
+					PrimaryKeyName = pk.Field<string>("PK_NAME")!,
+					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
+					Ordinal        = Converter.ChangeTypeTo<int>(pk["ORDINAL"]),
+				}
+			).ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			// [INFORMATION_SCHEMA.RELATIONS] names both tables but carries no column pairs
-			return dataConnection
-				.Query<RelationshipRow>(@"
-					SELECT szRelationship, szObject, szColumn, szReferencedObject, szReferencedColumn, icolumn
-					FROM MSysRelationships")
-				.Select(r => new ForeignKeyInfo
+			return
+			(
+				from fk in dataConnection.OpenDbConnection().GetSchema("ForeignKeys").AsEnumerable()
+				select new ForeignKeyInfo
 				{
-					Name         = r.Name,
-					ThisTableID  = r.ThisTable,
-					ThisColumn   = r.ThisColumn,
-					OtherTableID = r.OtherTable,
-					OtherColumn  = r.OtherColumn,
-					Ordinal      = r.Ordinal,
-				})
-				.ToList();
+					Name         = fk.Field<string>("FK_NAME")!,
+					ThisTableID  = ID(fk, "FK_TABLE_NAME"),
+					ThisColumn   = fk.Field<string>("FK_COLUMN_NAME")!,
+					OtherTableID = ID(fk, "PK_TABLE_NAME"),
+					OtherColumn  = fk.Field<string>("PK_COLUMN_NAME")!,
+					Ordinal      = Converter.ChangeTypeTo<int>(fk["ORDINAL"]),
+				}
+			).ToList();
 		}
 
-		#region metadata rows
-
-		sealed class TableRow
+		// Access stores queries rather than procedures: a row-returning one is reported as a view, and
+		// everything else - parameterised selects included - arrives here.
+		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			[Column("TABLE_NAME")] public string  Name { get; set; } = null!;
-			[Column("TABLE_TYPE")] public string? Type { get; set; }
+			return
+			(
+				from p in dataConnection.OpenDbConnection().GetSchema("Procedures").AsEnumerable()
+				select new ProcedureInfo
+				{
+					ProcedureID         = ID(p, "PROCEDURE_NAME"),
+					ProcedureName       = ID(p, "PROCEDURE_NAME"),
+					IsDefaultSchema     = true,
+					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION"),
+				}
+			).ToList();
 		}
 
-		sealed class QueryRow
+		// Shaped after AccessOleDbSchemaProvider rather than the base, so the whole Access family reports a
+		// procedure's result columns alike: the member type comes from the reader's own DataType while the
+		// system type goes through GetSystemType. The base is also unusable here as-is - it reads an
+		// "IsIdentity" column, which is not an ADO standard schema-table name; LibRed carries the standard
+		// "IsAutoIncrement".
+		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
 		{
-			[Column("Name")]  public string Name  { get; set; } = null!;
-			[Column("Flags")] public int    Flags { get; set; }
+			return
+			(
+				from r in resultTable.AsEnumerable()
+
+				let columnName = r.Field<string>("ColumnName")
+				let columnType = r.Field<string>("DataTypeName")
+				let isNullable = r.Field<bool>  ("AllowDBNull")
+				let systemType = r.Field<Type>  ("DataType")
+				let length     = r.Field<int?>  ("ColumnSize")
+				let precision  = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
+				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
+				let dt         = GetDataType(columnType, null, options)
+
+				select new ColumnSchema
+				{
+					ColumnName           = columnName,
+					ColumnType           = GetDbType(options, columnType, dt, length, precision, scale, null, null, null),
+					IsNullable           = isNullable,
+					MemberName           = ToValidName(columnName),
+					MemberType           = ToTypeName(systemType, isNullable),
+					SystemType           = GetSystemType(columnType, null, dt, length, precision, scale, options) ?? systemType,
+					DataType             = GetDataType(columnType, null, length, precision, scale),
+					ProviderSpecificType = GetProviderSpecificType(columnType),
+					IsIdentity           = r.Field<bool>("IsAutoIncrement"),
+				}
+			).ToList();
 		}
 
-		sealed class ColumnRow
+		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection,
+			IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			[Column("TABLE_NAME")]               public string  TableName  { get; set; } = null!;
-			[Column("COLUMN_NAME")]              public string  Name       { get; set; } = null!;
-			[Column("ORDINAL_POSITION")]         public int     Ordinal    { get; set; }
-			[Column("DATA_TYPE")]                public string? DataType   { get; set; }
-			[Column("IS_NULLABLE")]              public bool    IsNullable { get; set; }
-			[Column("CHARACTER_MAXIMUM_LENGTH")] public int?    Length     { get; set; }
-			[Column("NUMERIC_PRECISION")]        public int?    Precision  { get; set; }
-			[Column("NUMERIC_SCALE")]            public int?    Scale      { get; set; }
+			return
+			(
+				from p in dataConnection.OpenDbConnection().GetSchema("ProcedureParameters").AsEnumerable()
+				let typeName = p.Field<string>("TYPE_NAME")
+				let dt       = typeName != null && _dataTypesByName.TryGetValue(typeName, out var info) ? info : null
+				let parms    = dt?.CreateParameters
+				// the collection is not ordered by position, and Access binds by name anyway
+				orderby ID(p, "PROCEDURE_NAME"), Converter.ChangeTypeTo<int>(p["ORDINAL_POSITION"])
+				select new ProcedureParameterInfo
+				{
+					ProcedureID   = ID(p, "PROCEDURE_NAME"),
+					ParameterName = p.Field<string>("PARAMETER_NAME")!,
+					Ordinal       = Converter.ChangeTypeTo<int>(p["ORDINAL_POSITION"]),
+					DataType      = typeName,
+					IsIn          = true,
+					IsOut         = false,
+					IsResult      = false,
+					IsNullable    = p.Field<bool>("IS_NULLABLE"),
+					Length        = parms?.Contains("length",    StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(p["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision     = parms?.Contains("precision", StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(p["NUMERIC_PRECISION"])        : null,
+					Scale         = parms?.Contains("scale",     StringComparison.Ordinal) == true ? Converter.ChangeTypeTo<int?>(p["NUMERIC_SCALE"])            : null,
+					Description   = p.Field<string>("DESCRIPTION"),
+				}
+			).ToList();
 		}
-
-		sealed class IndexRow
-		{
-			[Column("TABLE_NAME")] public string  TableName { get; set; } = null!;
-			[Column("INDEX_NAME")] public string  Name      { get; set; } = null!;
-			[Column("INDEX_TYPE")] public string? Type      { get; set; }
-		}
-
-		sealed class IndexColumnRow
-		{
-			[Column("TABLE_NAME")]       public string TableName { get; set; } = null!;
-			[Column("INDEX_NAME")]       public string IndexName { get; set; } = null!;
-			[Column("ORDINAL_POSITION")] public int    Ordinal   { get; set; }
-			[Column("COLUMN_NAME")]      public string Name      { get; set; } = null!;
-		}
-
-		sealed class RelationshipRow
-		{
-			[Column("szRelationship")]     public string Name        { get; set; } = null!;
-			[Column("szObject")]           public string ThisTable   { get; set; } = null!;
-			[Column("szColumn")]           public string ThisColumn  { get; set; } = null!;
-			[Column("szReferencedObject")] public string OtherTable  { get; set; } = null!;
-			[Column("szReferencedColumn")] public string OtherColumn { get; set; } = null!;
-			[Column("icolumn")]            public int    Ordinal     { get; set; }
-		}
-
-		#endregion
 	}
 }
