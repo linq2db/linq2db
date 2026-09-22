@@ -1445,6 +1445,8 @@ namespace Tests.Linq
 			Details = "The true arm of #2362, which ClickHouse gets wrong by reading the value back as false.")]
 		[ActiveIssue(2362, Configuration = TestProvName.AllOracle, ErrorMessage = "Assert.That(res, Has.Length.EqualTo(1))",
 			Details = "Oracle gets the same arm wrong a step earlier: the row is not matched at all, so nothing comes back to read.")]
+		[ActiveIssue(2362, Configuration = TestProvName.AllAccessLibRed, ErrorMessage = "Assert.That(res[0].Value, Is.True)",
+			Details = "no-issue: the same false read as ClickHouse, reached through D-13 instead - the raw column is CHAR(4), LibRed does not trim the padding, and the converter's db == \"+\" therefore misses. LibRed.Ado 11.0.0-alpha.2.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
 		public void Issue2362TestMatchingValue([DataSources] string context)
 		{

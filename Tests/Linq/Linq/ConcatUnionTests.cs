@@ -1738,6 +1738,8 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
 			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
 			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: LibRed narrows a scalar to the smallest type its value fits, so the Byte column comes back as System.Byte where Access returns Int32 and the mapper refuses the cast. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{
