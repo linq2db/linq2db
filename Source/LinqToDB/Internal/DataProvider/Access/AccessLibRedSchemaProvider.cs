@@ -55,14 +55,19 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return
 			(
 				from t in dataConnection.OpenDbConnection().GetSchema("Tables").AsEnumerable()
+				let name = ID(t, "TABLE_NAME")
 				let type = t.Field<string>("TABLE_TYPE")
 				select new TableInfo
 				{
-					TableID            = ID(t, "TABLE_NAME"),
-					TableName          = ID(t, "TABLE_NAME"),
+					TableID            = name,
+					TableName          = name,
 					IsDefaultSchema    = true,
 					IsView             = string.Equals(type, "VIEW", StringComparison.Ordinal),
-					IsProviderSpecific = string.Equals(type, "SYSTEM TABLE", StringComparison.Ordinal),
+					// TABLE_TYPE marks the four catalog tables as SYSTEM TABLE but reports MSysAccessStorage
+					// and the MSysNavPane* family as ordinary tables, where OLE DB calls them ACCESS TABLE.
+					// MSys is Access's reserved prefix for system objects, so the name is the reliable test.
+					IsProviderSpecific = string.Equals(type, "SYSTEM TABLE", StringComparison.Ordinal)
+						|| name.StartsWith("MSys", StringComparison.OrdinalIgnoreCase),
 					Description        = t.Field<string>("DESCRIPTION"),
 				}
 			).ToList();
