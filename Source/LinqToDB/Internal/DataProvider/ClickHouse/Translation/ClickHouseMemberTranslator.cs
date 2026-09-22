@@ -162,7 +162,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 				if (millisecond == null)
 				{
-					resultExpression = factory.Function(dateType, "makeDateTime", year, month, day,
+					// makeDateTime answers a DateTime, whatever the mapping schema makes of a CLR one - and an
+					// operand that claims DateTime64 here is one the epoch functions then refuse.
+					var makeType = dateType.WithDataType(DataType.DateTime).WithPrecision(null);
+
+					resultExpression = factory.Function(makeType, "makeDateTime", year, month, day,
 						hour        ?? factory.Value(intDataType, 0),
 						minute      ?? factory.Value(intDataType, 0),
 						second      ?? factory.Value(intDataType, 0)
@@ -240,31 +244,38 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				return TranslateNow(translationContext, translationFlags);
 			}
 
+			/// <summary>
+			/// Type of a <c>now(…)</c> result. The server answers a <c>DateTime</c> whatever the mapping schema
+			/// makes of the CLR type, and an operand that claims <c>DateTime64</c> here is one the epoch
+			/// functions then refuse.
+			/// </summary>
+			static DbDataType NowType(DbDataType dbDataType) => dbDataType.WithDataType(DataType.DateTime).WithPrecision(null);
+
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory     = translationContext.ExpressionFactory;
-				var nowFunction = factory.Function(factory.GetDbDataType(typeof(DateTime)), "now", ParametersNullabilityType.NotNullable);
+				var nowFunction = factory.Function(NowType(factory.GetDbDataType(typeof(DateTime))), "now", ParametersNullabilityType.NotNullable);
 				return nowFunction;
 			}
 
 			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				var dbDataType = factory.GetDbDataType(typeof(DateTime));
+				var dbDataType = NowType(factory.GetDbDataType(typeof(DateTime)));
 				return factory.Function(dbDataType, "now", factory.Value("UTC"));
 			}
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory     = translationContext.ExpressionFactory;
-				var nowFunction = factory.Function(dbDataType, "now", ParametersNullabilityType.NotNullable);
+				var nowFunction = factory.Function(NowType(dbDataType), "now", ParametersNullabilityType.NotNullable);
 				return nowFunction;
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(dbDataType, "now", factory.Value("UTC"));
+				return factory.Function(NowType(dbDataType), "now", factory.Value("UTC"));
 			}
 		}
 

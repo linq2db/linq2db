@@ -2,6 +2,8 @@
 
 using LinqToDB;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -52,6 +54,35 @@ namespace Tests.Linq
 			// passes for an unconditional wrap, which would put a spurious cast around every folded parameter
 			// on the providers that wrap parameter usages - visible only as a moved baseline.
 			QueryHelper.CreateSqlValue(42, dbDataType, parameter).ShouldBeOfType<SqlParameter>();
+		}
+
+		[Test]
+		public void MinMaxReportTheirArgumentsTypeRatherThanTheirOwn()
+		{
+			// MIN and MAX return a row's value unchanged, so the argument's column describes the result - the
+			// relation SqlArgumentDomain.Element states and GetColumnDescriptor already reads. Without the arm
+			// the node matched no case in GetDbDataTypeImpl and fell to the CLR-type catch-all, which the
+			// mapping-schema fallback then answered with the default for the system type: a MAX over a column
+			// declared DataType.DateTime reported the schema's DateTime64(7), which is the type ClickHouse's
+			// epoch functions are then told to expect. (#5960)
+			var argumentType = new DbDataType(typeof(string), DataType.VarChar, null, 50, null, null);
+			var declaredType = new DbDataType(typeof(string), DataType.NVarChar);
+			var argument     = new SqlValue(argumentType, "x");
+
+			foreach (var name in new[] { "MIN", "MAX" })
+			{
+				var aggregate = new SqlExtendedFunction(declaredType, name, [new SqlFunctionArgument(argument)], [true],
+					isAggregate: true, argumentDomain: SqlArgumentDomain.Element);
+
+				QueryHelper.GetDbDataType(aggregate, MappingSchema.Default).ShouldBe(argumentType);
+			}
+
+			// SUM answers in the argument's terms but can outgrow the width it is declared with, so it keeps its
+			// own type. This half fails for an arm that takes the argument's type for every aggregate.
+			var sum = new SqlExtendedFunction(declaredType, "SUM", [new SqlFunctionArgument(argument)], [true],
+				isAggregate: true, argumentDomain: SqlArgumentDomain.SameKind);
+
+			QueryHelper.GetDbDataType(sum, MappingSchema.Default).ShouldBe(declaredType);
 		}
 
 		[Test]

@@ -14,21 +14,24 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// refused by name.
 		/// </summary>
 		/// <remarks>
-		/// Unconditional, because an operand's declared type does not say what the server will make of it:
-		/// <c>now()</c>, <c>makeDateTime</c> and the date truncation are all typed from the mapping schema, which
-		/// maps a <see cref="DateTime"/> to <c>DateTime64(7)</c>. Never below a tick, never below what the operand
-		/// already carries, so an operand that is already <c>DateTime64</c> keeps every digit it had.
+		/// The operand's reported type has to be the one the server sees, which is why the
+		/// <see cref="DateTime"/>-producing translations here name the type their SQL actually produces rather
+		/// than the one the mapping schema gives a CLR <see cref="DateTime"/>.
 		/// </remarks>
 		public static ISqlExpression AsDateTime64(ISqlExpressionFactory factory, ISqlExpression expression)
 		{
-			var type      = factory.GetDbDataType(expression);
-			var precision = Math.Max(type.Precision ?? 0, ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION);
+			var type = factory.GetDbDataType(expression);
+
+			// Any DateTime64 precision is accepted, so an operand that already is one needs no conversion.
+			if (type.DataType == DataType.DateTime64)
+				return expression;
 
 			// Built from the system type alone: a DbType carried over from the operand names the operand's own
 			// ClickHouse type and would be rendered in preference to the DataType set here.
-			var resultType = new DbDataType(type.SystemType, DataType.DateTime64).WithPrecision(precision);
+			var resultType = new DbDataType(type.SystemType, DataType.DateTime64)
+				.WithPrecision(ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION);
 
-			return factory.Function(resultType, "toDateTime64", expression, factory.Value(factory.GetDbDataType(typeof(int)), precision));
+			return factory.Cast(expression, resultType);
 		}
 	}
 }
