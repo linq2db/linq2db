@@ -83,9 +83,9 @@ namespace Tests.Linq
 		/// </summary>
 		/// <remarks>
 		/// Kept close to what was reported rather than reduced to the smallest failing query, because the aggregate
-		/// is load-bearing. An aggregate carries the mapping schema's default type rather than the column's, so a
-		/// fix that asked the expression what it was would be told <c>DateTime64</c> here and would leave this
-		/// exact query broken.
+		/// is load-bearing: the coercion asks the operand what it is, and until #5960 an aggregate answered with the
+		/// mapping schema's default rather than its argument's type - <c>DateTime64</c> here, which is exactly the
+		/// answer that leaves this query broken.
 		/// </remarks>
 		[Test]
 		public void ReportedDayCountOverASecondPrecisionColumn([IncludeDataSources(TestProvName.AllClickHouse)] string context)
@@ -218,6 +218,40 @@ namespace Tests.Linq
 			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started });
 
 			t.Count(r => (Sql.CurrentTimestamp - r.StartedOn).TotalDays > 1).ShouldBe(1);
+		}
+
+		/// <summary>
+		/// The coercion is emitted only where the operand is not already a <c>DateTime64</c>.
+		/// </summary>
+		/// <remarks>
+		/// Both halves are needed and neither implies the other. Dropping the coercion where it is not needed is
+		/// what the operand types are read for, and it is invisible in a result assertion - every test in this
+		/// fixture passes with the conversion applied to everything. Keeping it where the server needs it is what
+		/// #5955 was; a type that stopped describing the SQL would silently take this branch too.
+		/// </remarks>
+		[Test]
+		public void TheCoercionIsEmittedOnlyWhereTheOperandNeedsIt([IncludeDataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			// EventRow declares nothing, so ClickHouse stores DateTime64(7) - already what the epoch functions take.
+			_ = t.Select(r => (r.FinishedOn - r.StartedOn).TotalHours).ToList();
+			db.LastQuery!.ShouldNotContain("toDateTime64");
+
+			// now() is a whole-second timestamp whatever the mapping schema makes of a CLR DateTime.
+			_ = t.Select(r => (Sql.CurrentTimestamp - r.StartedOn).TotalHours).ToList();
+			db.LastQuery!.ShouldContain("toDateTime64(now()");
+
+			// makeDateTime answers a whole-second timestamp too.
+			_ = t.Select(r => (r.FinishedOn - Sql.MakeDateTime(2026, 6, 1, 10, 0, 0)!.Value).TotalHours).ToList();
+			db.LastQuery!.ShouldContain("toDateTime64(makeDateTime(");
+
+			using var coarse = db.CreateLocalTable<CoarseEventRow>();
+
+			// A declared DataType.DateTime column is a 32-bit whole-second timestamp on the server.
+			_ = coarse.Select(r => (r.FinishedOn - r.StartedOn).TotalHours).ToList();
+			db.LastQuery!.ShouldContain("toDateTime64(");
 		}
 	}
 }
