@@ -346,7 +346,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
-			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void Update10Old(
 			[DataSources(
 				TestProvName.AllClickHouse,
@@ -379,7 +379,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
-			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void Update10(
 			[DataSources(
 				TestProvName.AllClickHouse,
@@ -469,7 +469,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void Update13(
 			[DataSources(
 				ProviderName.SqlCe,
@@ -761,7 +761,7 @@ namespace Tests.xUpdate
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateAssociation1Old([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -786,7 +786,7 @@ namespace Tests.xUpdate
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public async Task UpdateAssociation1AsyncOld([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -810,7 +810,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateAssociation1([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -834,7 +834,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -858,7 +858,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateAssociation2([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -882,7 +882,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateAssociation3([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -906,7 +906,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateAssociation4([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -991,7 +991,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateSimilarNames([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1117,7 +1117,7 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void TestUpdateTakeOrdered([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2053,7 +2053,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
-			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateByAssociationOptional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db   = GetDataContext(context))
@@ -2084,7 +2084,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
-			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateByAssociationRequired([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -2115,7 +2115,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2144,7 +2144,7 @@ namespace Tests.xUpdate
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);

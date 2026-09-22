@@ -521,7 +521,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
-			Details = "no-declaration: LibRed reads the Access zero date as DateTime.MinValue instead of the Jet epoch 1899-12-30, so the test fails its assertion rather than throwing.")]
+			Details = "no-declaration: LibRed reads the Access zero date as DateTime.MinValue instead of the Jet epoch 1899-12-30, so the test fails its assertion rather than throwing. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void TestZeroDate([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);

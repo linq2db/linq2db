@@ -613,7 +613,7 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
-			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void DeleteFromWithTake([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -661,7 +661,7 @@ namespace Tests.xUpdate
 			Details = "no-issue: as DeleteFromWithTake.")]
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
-			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target.")]
+			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

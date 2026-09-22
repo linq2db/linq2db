@@ -85,7 +85,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestWhereOld(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -137,7 +137,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestWhere(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -521,7 +521,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits.")]
+			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateParentTableFromChild(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
