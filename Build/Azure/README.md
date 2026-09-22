@@ -117,6 +117,7 @@ Legend:
 |Access><br>ACE 12 OLE DB|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|
 |Access<br>Jet ODBC|:heavy_check_mark:|:x:|:heavy_minus_sign:|
 |Access<br>ACE ODBC|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|
+|Access<br>[LibRed.Ado](https://www.nuget.org/packages/LibRed.Ado/) (managed, net11.0-only)|:heavy_minus_sign:|:x:|:heavy_check_mark:|
 |DB2 LUW 11.5<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) (core)|:x:|:x:|:heavy_check_mark:|
 |Informix 14.10<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) (core)|:x:|:x:|:heavy_check_mark:|
 |Oracle 11.2g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|
@@ -200,6 +201,8 @@ Legend:
 |`ProviderName.AccessAceOleDb`|Tests against Access using OLE DB ACE provider||
 |`ProviderName.AccessJetOdbc`|Tests against Access using ODBC JET provider||
 |`ProviderName.AccessAceOdbc`|Tests against Access using ODBC ACE provider||
+|`TestProvName.AccessLibRedMdb`|Tests against an `.mdb` file using the managed LibRed engine|net11.0 only|
+|`TestProvName.AccessLibRedAccdb`|Tests against an `.accdb` file using the managed LibRed engine|net11.0 only|
 |`ProviderName.DB2`|DB2 LUW 11.5||
 |`ProviderName.InformixDB2`|Informix 14.10 (IDS using IBM.Data.DB2)||
 |`TestProvName.Oracle11Native`|Oracle 11g using native provider||

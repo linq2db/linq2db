@@ -174,7 +174,7 @@ jobs:
 # also shared the agent pool with another test-all run, so it proved neither way. Hence letters.
 #
 # Sorting scatters the provider families, so: Access is r_Access_MDB, v_Access_ACE_Odbc,
-# x_Access_ACE_OleDb and y_Access_ACE_x64. SQL Server is a_SqlServer2014, d_SqlServer2012,
+# x_Access_ACE_OleDb, y_Access_ACE_x64 and z_Access_LibRed. SQL Server is a_SqlServer2014, d_SqlServer2012,
 # e_SqlServer2008, f_SqlServer2016, l_SqlServer2017_2019, m_SqlServer2022_2025, n_SqlServer2019Extras
 # and o_SqlServer2005. Oracle is j_Oracle1819, q_Oracle2123 and t_Oracle1112. PostgreSQL is
 # c_PostgreSQL2 and i_PostgreSQL1. The rest are one entry each: b_ClickHouse, g_SqlCE, h_SAPHANA2,
@@ -485,6 +485,18 @@ jobs:
           enable_os_ubuntu: false
           enable_fw_netfx: true
           retry: true # x64 provider could crash with AV
+          filters: '[all][access.all]'
+
+# The managed Access engine needs no driver install and no container, so it is the only Access leg that
+# can run on Linux - which is the capability it exists to add. net11.0-only, hence no netfx; the config
+# scopes its providers to that TFM, so a full_run's net10.0 pass on this leg resolves none.
+        - name: z_Access_LibRed
+          gh_linux: 'true'
+          title: Access LibRed (managed)
+          config_linux: access.libred
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_fw_netfx: false
           filters: '[all][access.all]'
 
 # DuckDB runs as part of the DB2 + Informix + DuckDB job above.

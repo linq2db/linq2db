@@ -53,6 +53,7 @@
     <File Path="Build/Azure/configs/access.ace.odbc.json" />
     <File Path="Build/Azure/configs/access.ace.oledb.json" />
     <File Path="Build/Azure/configs/access.ace.x64.json" />
+    <File Path="Build/Azure/configs/access.libred.json" />
     <File Path="Build/Azure/configs/access.mdb.json" />
     <File Path="Build/Azure/configs/clickhouse.json" />
     <File Path="Build/Azure/configs/db2informixduckdb.json" />
