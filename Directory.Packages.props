@@ -157,7 +157,7 @@
 		<PackageVersion Include="MySql.Data"                                            Version="26.7.0"                       />
 		<!--IBM ships no .NET 11 build; 10.0.0.200 is the newest and its net10.0 asset binds on net11 too-->
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-		<PackageVersion Include="LibRed.Ado"                                            Version="11.0.0-alpha.2"               />
+		<PackageVersion Include="LibRed.Ado"                                            Version="11.0.0-alpha.3"               />
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />

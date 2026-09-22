@@ -125,13 +125,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 		public sealed class AceOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessAceOleDb, OleDbInstance, Instance);
 		public sealed class AceOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessAceOdbc , Instance);
 
-		public sealed class LibRedMappingSchema : LockedMappingSchema
-		{
-			public LibRedMappingSchema() : base(ProviderName.AccessLibRed, Instance)
-			{
-				// LibRed parses the braced literal the base schema emits, but it matches no rows
-				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:D}'"));
-			}
-		}
+		public sealed class LibRedMappingSchema   () : LockedMappingSchema(ProviderName.AccessLibRed  , Instance);
 	}
 }

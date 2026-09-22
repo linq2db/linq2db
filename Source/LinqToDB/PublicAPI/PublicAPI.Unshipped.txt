@@ -6,10 +6,6 @@ LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder
 LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.AccessLibRedSqlBuilder(LinqToDB.DataProvider.IDataProvider? provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.Internal.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.Internal.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
 LinqToDB.Internal.DataProvider.Access.AccessMappingSchema.LibRedMappingSchema
 LinqToDB.Internal.DataProvider.Access.AccessMappingSchema.LibRedMappingSchema.LibRedMappingSchema() -> void
-LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator
-LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedGuidMemberTranslator
-LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedGuidMemberTranslator.AccessLibRedGuidMemberTranslator() -> void
-LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedMemberTranslator() -> void
 LinqToDB.Internal.DataProvider.LibRedProviderAdapter
 LinqToDB.Internal.DataProvider.LibRedProviderAdapter.ClearPool.get -> System.Action<System.Data.Common.DbConnection!>!
 LinqToDB.Internal.DataProvider.LibRedProviderAdapter.CommandType.get -> System.Type!
@@ -24,17 +20,11 @@ const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperand
 const LinqToDB.Internal.DataProvider.LibRedProviderAdapter.AssemblyName = "LibRed.Ado" -> string!
 const LinqToDB.Internal.DataProvider.LibRedProviderAdapter.ClientNamespace = "LibRed.Data" -> string!
 const LinqToDB.ProviderName.AccessLibRed = "Access.LibRed" -> string!
-override LinqToDB.Internal.DataProvider.Access.AccessDataProvider.IsDBNullAllowed(LinqToDB.DataOptions! options, System.Data.Common.DbDataReader! reader, int idx) -> bool?
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetColumns(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.Internal.SchemaProvider.ColumnInfo!>!
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetDataTypes(LinqToDB.Data.DataConnection! dataConnection) -> System.Collections.Generic.List<LinqToDB.Internal.SchemaProvider.DataTypeInfo!>!
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetForeignKeys(LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.IEnumerable<LinqToDB.SchemaProvider.TableSchema!>! tables, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Internal.SchemaProvider.ForeignKeyInfo!>!
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetPrimaryKeys(LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.IEnumerable<LinqToDB.SchemaProvider.TableSchema!>! tables, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Internal.SchemaProvider.PrimaryKeyInfo!>!
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetTables(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.SchemaProvider.TableInfo!>!
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.BuildObjectName(System.Text.StringBuilder! sb, LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.SqlQuery.ConvertType objectType = LinqToDB.SqlQuery.ConvertType.NameToQueryTable, bool escape = true, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet, bool withoutSuffix = false) -> System.Text.StringBuilder!
-override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.BuildCreateTableFieldType(LinqToDB.Internal.SqlQuery.SqlField! field) -> void
-override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.BuildCreateTableIdentityAttribute2(LinqToDB.Internal.SqlQuery.SqlField! field) -> void
-override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.BuildCreateTablePrimaryKey(LinqToDB.Internal.SqlQuery.SqlCreateTableStatement! createTable, string! pkName, System.Collections.Generic.IEnumerable<string!>! fieldNames) -> void
 override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.CreateSqlBuilder() -> LinqToDB.Internal.SqlProvider.ISqlBuilder!
-override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.AccessLibRedGuidMemberTranslator.TranslateGuildToString(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Internal.SqlQuery.ISqlExpression! guidExpr, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
-override LinqToDB.Internal.DataProvider.Access.Translation.AccessLibRedMemberTranslator.CreateGuidMemberTranslator() -> LinqToDB.Linq.Translation.IMemberTranslator!
 static LinqToDB.Internal.DataProvider.LibRedProviderAdapter.GetInstance() -> LinqToDB.Internal.DataProvider.LibRedProviderAdapter!

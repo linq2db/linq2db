@@ -135,15 +135,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestChar([AccessDataSources] string context)
 		{
-			// LibRed reports CLR type names from GetDataTypeName, so the fixed-width column cannot be told
-			// from a VARCHAR at read time and its padding is not trimmed - see the LibRed provider notes
-			var padded = context.IsAnyOf(TestProvName.AllAccessLibRed);
-
-			await TestType<string, string?>(context, new(typeof(string), DataType.Char, null, 10), "ab", "cd",
-				filterByValue           : !padded,
-				filterByNullableValue   : !padded,
-				getExpectedValue        : v => padded ? v.PadRight(10) : v,
-				getExpectedNullableValue: v => padded ? v?.PadRight(10) : v);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Char, null, 10), "ab", "cd");
 		}
 
 		[Test]

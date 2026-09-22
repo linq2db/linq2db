@@ -84,8 +84,6 @@ namespace Tests.xUpdate
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestWhereOld(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -136,8 +134,6 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestWhere(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -436,8 +432,6 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
-			Details = "no-declaration: LibRed evaluates a multi-column SET sequentially - Value2's right-hand side reads the Value1 the same statement just wrote - where Access evaluates every one against the pre-update row, so Value2 comes back 61 instead of 36. An assertion failure, not a throw. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestAssociationSimple(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -469,8 +463,6 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
-			Details = "no-declaration: same sequential multi-column SET as UpdateTestAssociationSimple, reached through AsUpdatable. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestAssociationSimpleAsUpdatable(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -524,8 +516,6 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LibRed.Sql.Parsing.SqlParseException",
-			Details = "no-issue: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateParentTableFromChild(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -720,8 +710,8 @@ namespace Tests.xUpdate
 		[ActiveIssue(2815, Configuration = TestProvName.AllClickHouse, ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "Feature not supported by database: Correlated UPDATE",
 			Details = "ClickHouse is refused by linq2db before any SQL is sent, so it is the one provider here with a stable message. Does not collide with the co-sited ThrowsRequiresCorrelatedSubquery(simple: true), which covers YDB only.")]
-		[ActiveIssue(2815, Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllAccess ],
-			Details = "no-declaration: one mechanism - the generated UPDATE references a table that is not in scope for it - reported eight ways: 'The multi-part identifier \"u.Id\" could not be bound', 'no such column: Issue2815Table1.Id', 'Unknown column u.Id in on clause', ORA-00904 invalid identifier, 42P01 invalid reference to FROM-clause entry, a SqlCe parse error, a DuckDB binder error, and Access splitting between an ODBC 42000 and an OleDb 'Syntax error in JOIN operation'.")]
+		[ActiveIssue(2815, Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllDuckDB, TestProvName.AllNativeAccess ],
+			Details = "no-declaration: one mechanism - the generated UPDATE references a table that is not in scope for it - reported eight ways: 'The multi-part identifier \"u.Id\" could not be bound', 'no such column: Issue2815Table1.Id', 'Unknown column u.Id in on clause', ORA-00904 invalid identifier, 42P01 invalid reference to FROM-clause entry, a SqlCe parse error, a DuckDB binder error, and Access splitting between an ODBC 42000 and an OleDb 'Syntax error in JOIN operation'. LibRed parses the form and is excluded.")]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]

@@ -67,10 +67,8 @@ namespace Tests.Linq
 		};
 
 		// CH: We don't perform trimming of FixedString type
-		// LibRed: its reader reports CLR type names, so a CHAR column cannot be told from a VARCHAR at read
-		// time and the padding is not trimmed
 		[Test]
-		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB, TestProvName.AllAccessLibRed)] string context)
+		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllDuckDB)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<StringTestTable>();

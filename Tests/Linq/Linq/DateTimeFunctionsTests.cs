@@ -1837,8 +1837,6 @@ namespace Tests.Linq
 			Details = "no-issue: the server rejects the addition. Type-less because the ODBC and native drivers raise their own.")]
 		[ActiveIssue(Configuration = ProviderName.SqlCe, ErrorTypeName = "System.ArgumentException",
 			ErrorMessage = "No mapping exists from DbType Time to a known", Details = "no-issue: SqlCe has no Time parameter type.")]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
-			Details = "no-issue: LibRed returns DATEADD as the raw OLE Automation serial, so the Double cannot be read as a DateTime. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
 		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTestNonNull))] TimeSpan? ts)
 		{

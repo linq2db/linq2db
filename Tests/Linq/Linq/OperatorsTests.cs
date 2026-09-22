@@ -573,7 +573,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
 			ErrorMessage = "Cannot encode GUID index key from String",
-			Details = "no-issue: an engine-internal encoder failure, not a dialect refusal - LibRed cannot build an index key when an indexed GUID column is compared to a string. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
+			Details = "no-issue: an engine-internal encoder failure, not a dialect refusal - LibRed cannot build an index key when an indexed GUID column is compared to a string. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		public void ClientConversion_UnmappedOperators([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();

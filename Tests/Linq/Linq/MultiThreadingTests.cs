@@ -33,8 +33,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		// LibRed does not trim CHAR padding on read, so the round-tripped values never compare equal
-		public void StartsWithTests([DataSources(false, TestProvName.AllSybase, TestProvName.AllAccessLibRed)] string context)
+		public void StartsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var d1 = new DisableBaseline("Multi-threading");
 			using var d2 = new DisableLogging();
@@ -62,7 +61,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EndsWithTests([DataSources(false, TestProvName.AllSybase, TestProvName.AllAccessLibRed)] string context)
+		public void EndsWithTests([DataSources(false, TestProvName.AllSybase)] string context)
 		{
 			var skipTrim = context.IsAnyOf(TestProvName.AllClickHouse);
 

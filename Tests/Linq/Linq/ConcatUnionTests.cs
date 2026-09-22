@@ -893,8 +893,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
-			Details = "no-issue: LibRed returns a date-part expression as Int16 where Access returns Int32. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UnionGroupByTest1([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -932,8 +930,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
-			Details = "no-issue: LibRed returns a date-part expression as Int16 where Access returns Int32. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UnionGroupByTest2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1738,8 +1734,9 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
 			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
 			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
-			Details = "no-issue: LibRed narrows a scalar to the smallest type its value fits, so the Byte column comes back as System.Byte where Access returns Int32 and the mapper refuses the cast. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "Byte array for Guid must be exactly 16 bytes long",
+			Details = "no-issue: a GUID column read through a set operation carrying null literals comes back as a byte array of the wrong length. Probably the same declared-type-vs-value family as the Decimal/Int32 regression in AggregatesKeepTheDeclaredUnit, but that is not proven - the raw-ADO set-operation reads all succeed. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{

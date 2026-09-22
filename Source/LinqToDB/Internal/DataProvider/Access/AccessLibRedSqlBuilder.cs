@@ -1,10 +1,7 @@
-using System.Collections.Generic;
 using System.Text;
 
 using LinqToDB.DataProvider;
-using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -39,29 +36,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 		)
 		{
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
-		}
-
-		// Access takes IDENTITY as a column attribute on top of the type; LibRed wants the COUNTER type
-		// instead ("extraneous input 'IDENTITY' expecting {')', ','}"), which is the form Access.sql uses
-		protected override void BuildCreateTableFieldType(SqlField field)
-		{
-			if (field.IsIdentity)
-				StringBuilder.Append("COUNTER");
-			else
-				base.BuildCreateTableFieldType(field);
-		}
-
-		protected override void BuildCreateTableIdentityAttribute2(SqlField field)
-		{
-		}
-
-		protected override void BuildCreateTablePrimaryKey(SqlCreateTableStatement createTable, string pkName, IEnumerable<string> fieldNames)
-		{
-			// LibRed's grammar has no CLUSTERED: "extraneous input 'CLUSTERED' expecting '('"
-			AppendIndent();
-			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
-			StringBuilder.Append(')');
 		}
 	}
 }

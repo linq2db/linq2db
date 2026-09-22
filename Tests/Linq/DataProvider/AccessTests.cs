@@ -59,8 +59,6 @@ namespace Tests.DataProvider
 		{
 			using var conn = GetDataConnection(context);
 			var isODBC = conn.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc);
-			// LibRed cannot tell a fixed-width column from a VARCHAR at read time, so CHAR padding survives (D-13).
-			var padded = context.IsAnyOf(TestProvName.AllAccessLibRed);
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(TestType<bool>(conn, "bitDataType", DataType.Boolean, skipDefaultNull: isODBC), Is.True);
@@ -77,7 +75,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<char?>(conn, "charDataType", DataType.Char, skipDefaultNull: isODBC), Is.EqualTo('1'));
 				Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar, skipDefaultNull: isODBC), Is.EqualTo("234"));
 				Assert.That(TestType<string>(conn, "textDataType", DataType.Text, skipDefaultNull: isODBC), Is.EqualTo("567"));
-				Assert.That(TestType<string>(conn, "ncharDataType", DataType.NChar, skipDefaultNull: isODBC), Is.EqualTo(padded ? "23233".PadRight(20) : "23233"));
+				Assert.That(TestType<string>(conn, "ncharDataType", DataType.NChar, skipDefaultNull: isODBC), Is.EqualTo("23233"));
 				Assert.That(TestType<string>(conn, "nvarcharDataType", DataType.NVarChar, skipDefaultNull: isODBC), Is.EqualTo("3323"));
 				Assert.That(TestType<string>(conn, "ntextDataType", DataType.NText, skipDefaultNull: isODBC), Is.EqualTo("111"));
 
@@ -134,8 +132,6 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
-			Details = "no-declaration: LibRed cannot parse a 64-bit minimum as a literal - SELECT cdbl(-9223372036854775808) raises OverflowException before evaluation, while the same value bound as a parameter round-trips exactly, so the digits are read as a positive Int64 before the sign is applied. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using var conn = GetDataConnection(context);
@@ -318,7 +314,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
-			Details = "no-declaration: CVar is a no-op on LibRed - CVar(1) returns a typed Int32 rather than a Variant that reads back as the string \"1\". LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
+			Details = "no-declaration: CVar is a no-op on LibRed - CVar(1) returns a typed Int32 rather than a Variant that reads back as the string \"1\". LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		public void TestSqlVariant([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			var isODBC = context.Contains("Odbc");
@@ -527,7 +523,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
-			Details = "no-declaration: LibRed reads the Access zero date as DateTime.MinValue instead of the Jet epoch 1899-12-30, so the test fails its assertion rather than throwing. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
+			Details = "no-declaration: LibRed's reader returns DateTime.MinValue from GetDateTime for the Jet zero date 1899-12-30, whose serial is 0.0 - GetValue on the same column returns it correctly, so the value survives the round trip and is lost only on the typed read. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		public void TestZeroDate([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);

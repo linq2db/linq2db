@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -87,8 +87,6 @@ namespace Tests.UserTests
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.NotSupportedException",
-			Details = "no-issue: LibRed refuses a derived table as an UPDATE/DELETE target. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateWhenTableSecond([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))

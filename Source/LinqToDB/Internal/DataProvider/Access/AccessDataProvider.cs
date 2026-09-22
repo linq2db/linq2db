@@ -79,10 +79,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 			}
 			else if (provider == AccessProvider.LibRed)
 			{
-				// LibRed reports CLR type names from GetDataTypeName, so CHAR, VARCHAR and MEMO columns all
-				// report "String" and the fixed-width column cannot be told from the others at read time.
-				// Registering the trim on "String" would strip significant trailing spaces from every text read.
-				SetCharFieldToType<char>("String", DataTools.GetCharExpression);
+				// LibRed names the store type as the engine spells it
+				SetCharField("Char", (r, i) => r.GetString(i).TrimEnd(' '));
+				SetCharFieldToType<char>("Char", DataTools.GetCharExpression);
 			}
 			else
 			{
@@ -107,9 +106,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Provider == AccessProvider.LibRed)
-				return new AccessLibRedMemberTranslator();
-
 			return Version == AccessVersion.Jet
 				? new AccessJetMemberTranslator()
 				: new AccessMemberTranslator();
@@ -150,15 +146,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return Provider == AccessProvider.ODBC
 				? NoopQueryParametersNormalizer.Instance
 				: base.GetQueryParameterNormalizer();
-		}
-
-		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
-		{
-			// LibRed implements neither GetSchemaTable nor IDbColumnSchemaGenerator
-			if (Provider == AccessProvider.LibRed)
-				return true;
-
-			return base.IsDBNullAllowed(options, reader, idx);
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
