@@ -47,6 +47,7 @@ namespace Tests.UserTests
 			TestProvName.AllClickHouse,
 			TestProvName.AllDuckDB,
 			TestProvName.AllYdb,
+			TestProvName.AllAccessLibRed,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix)]
 			string context)
@@ -90,6 +91,7 @@ namespace Tests.UserTests
 			TestProvName.AllClickHouse,
 			TestProvName.AllDuckDB,
 			TestProvName.AllYdb,
+			TestProvName.AllAccessLibRed,
 			// those providers miss procedure schema load implementation for now
 			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction

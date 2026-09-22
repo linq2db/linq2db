@@ -517,6 +517,8 @@ namespace Tests.Linq
 
 		[Obsolete("Remove test after API removed")]
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits (mismatched input ',' expecting SET), and the test asserts through Assert.DoesNotThrow, so the failure arrives as an assertion rather than a throw. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void TestUpdateWithTargetByAssociationPropertyOld([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationPropertyOld(context, true);
@@ -524,18 +526,24 @@ namespace Tests.Linq
 
 		[Obsolete("Remove test after API removed")]
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits (mismatched input ',' expecting SET), and the test asserts through Assert.DoesNotThrow, so the failure arrives as an assertion rather than a throw. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void TestSetUpdateWithoutTargetByAssociationPropertyOld([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationPropertyOld(context, false);
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits (mismatched input ',' expecting SET), and the test asserts through Assert.DoesNotThrow, so the failure arrives as an assertion rather than a throw. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void TestUpdateWithTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationProperty(context, true);
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed does not parse the comma-joined multi-table UPDATE the Access builder emits (mismatched input ',' expecting SET), and the test asserts through Assert.DoesNotThrow, so the failure arrives as an assertion rather than a throw. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void TestSetUpdateWithoutTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationProperty(context, false);

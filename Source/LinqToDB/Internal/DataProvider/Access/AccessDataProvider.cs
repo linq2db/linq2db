@@ -107,6 +107,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
+			if (Provider == AccessProvider.LibRed)
+				return new AccessLibRedMemberTranslator();
+
 			return Version == AccessVersion.Jet
 				? new AccessJetMemberTranslator()
 				: new AccessMemberTranslator();

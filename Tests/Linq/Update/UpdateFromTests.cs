@@ -436,6 +436,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed evaluates a multi-column SET sequentially - Value2's right-hand side reads the Value1 the same statement just wrote - where Access evaluates every one against the pre-update row, so Value2 comes back 61 instead of 36. An assertion failure, not a throw. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestAssociationSimple(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
@@ -467,6 +469,8 @@ namespace Tests.xUpdate
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: same sequential multi-column SET as UpdateTestAssociationSimple, reached through AsUpdatable. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		public void UpdateTestAssociationSimpleAsUpdatable(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)

@@ -319,7 +319,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		// Access: unsupported syntax for enumerable subquery
-		[ActiveIssue(4261, Configuration = TestProvName.AllAccess, ErrorMessage = "Query input must contain at least one table or query.")]
+		[ActiveIssue(4261, Configuration = TestProvName.AllNativeAccess, ErrorMessage = "Query input must contain at least one table or query.")]
 		[Test]
 		public void TestIssue4261([DataSources] string context)
 		{

@@ -1429,6 +1429,8 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Failed to convert type: Struct<'MoneyValue'",
 			Details = "YDB strict-decimal rejects the implicit narrowing of CAST(... AS Decimal(22,9)) to the column's Decimal(6,2).")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed evaluates a multi-column SET sequentially - each right-hand side reads what earlier assignments in the same UPDATE already wrote - where Access evaluates every one against the pre-update row, so a swap collapses. Measured: SET [A] = [B], [B] = [A] on (100, 200) yields (200, 200). An assertion failure, not a throw. LibRed.Ado 11.0.0-alpha.2; re-check when a newer LibRed ships.")]
 		[Test]
 		public void UpdateWithTypeConversion([DataSources] string context)
 		{

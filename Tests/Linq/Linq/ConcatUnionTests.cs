@@ -964,7 +964,7 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorMessage = "This operation is not allowed in subqueries.",
+		[ActiveIssue(Configuration = TestProvName.AllNativeAccess, ErrorMessage = "This operation is not allowed in subqueries.",
 			Details = "no-issue: UNION in a subquery is not supported by Access; supporting it means transforming the shape, and nothing tracks that.")]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
