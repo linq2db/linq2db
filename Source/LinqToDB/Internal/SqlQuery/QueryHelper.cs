@@ -718,6 +718,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 				SqlParameterizedExpressionBase { Type: var t } => t,
 
+				// MIN and MAX return a row's value unchanged, so the argument's column describes the result
+				// completely - the same relation GetColumnDescriptor reads off this node. SUM is excluded: it
+				// answers in the argument's terms but can outgrow the width the argument is declared with.
+				SqlExtendedFunction { ArgumentDomain: SqlArgumentDomain.Element, Arguments: [var argument] }
+				                                    => GetDbDataTypeImpl(argument.Expression, visited),
+				SqlExtendedFunction { Type: var t } => t,
+
 				SqlCteField cteField                  => GetCteFieldType(cteField, ref visited),
 				SqlCteTableField { CteField: { } cf } => GetCteFieldType(cf, ref visited),
 				SqlCteTableField                      => DbDataType.Undefined,
