@@ -61,10 +61,9 @@
 		<!--used by VersionOverride for the .NET (nuget) LINQPad driver only, never for its net472 lpx build.
 		    System.Collections.Immutable and System.Reflection.Metadata are part of the shared framework, so the copy
 		    loaded by the LINQPad host wins, and a driver requiring a HIGHER version than the host's in-box one fails
-		    to load ("manifest definition does not match", issue #5768). Roslyn 4.13.0 is the last version whose net8.0
-		    dependency group asks for 8.0.0 of both, which binds on .NET 8, 9 and 10 hosts alike; 4.14-5.3 require
-		    9.0.0 and 5.6 requires 10.0.1. The driver only parses and emits the generated model, so it doesn't need a
-		    newer compiler.
+		    to load ("manifest definition does not match", issue #5768). Roslyn 4.13.0 asks for 8.0.0 of both, below the
+		    .NET 10 floor of the driver's hosts; 4.14-5.3 require 9.0.0 and 5.6 requires 10.0.1. The driver only
+		    parses and emits the generated model, so it doesn't need a newer compiler.
 		    LINQPad 5 has no shared framework: the lpx carries its own copies and DriverHelper redirects to them, so
 		    the net472 build stays on the central Roslyn version. Applying this pin to it too would be a silent
 		    downgrade of the lpx compiler.
@@ -155,14 +154,11 @@
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.6.2"                        />
 		<PackageVersion Include="MySql.Data"                                            Version="26.7.0"                       />
-		<!--IBM ships no .NET 11 build; 10.0.0.200 is the newest and its net10.0 asset binds on net11 too-->
-		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="LibRed.Ado"                                            Version="11.0.0-alpha.3"               />
-		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
-		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
-		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="9.0.0.400"                    Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
-		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="10.0.0.200"                   Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))"  />
+		<!--IBM ships no .NET 11 build; 10.0.0.200 is the newest and its net10.0 asset binds on net11 too-->
+		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="10.0.0.200"                   />
+		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="10.0.0.200"                   />
+		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="10.0.0.200"                   />
 		<PackageVersion Include="Npgsql"                                                Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql"                                                Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />

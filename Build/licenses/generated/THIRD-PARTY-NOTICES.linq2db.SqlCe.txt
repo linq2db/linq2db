@@ -22,7 +22,7 @@ COMPONENTS
    License: MIT  see [1]
    Copyright (c) .NET Foundation and Contributors
 
-2. Microsoft.Bcl.AsyncInterfaces net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.0
+2. Microsoft.Bcl.AsyncInterfaces 10.0.3
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -33,7 +33,7 @@ COMPONENTS
    Copyright (c) Microsoft Corporation
    Shipped inside the SQL CE native folder. Its own README_ENU.txt states these are not SQL Server Compact files and refers to section 1b of the SQL Server Compact 4.0 licence terms, which is the document reproduced for the SQL CE component.
 
-4. Microsoft SQL Server Compact 4.0 4.0
+4. Microsoft SQL Server Compact 4.0 net10.0-windows7.0: 1.9.0, net462: 4.0
    https://www.microsoft.com/en-us/download/details.aspx?id=30709
    License: Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1  see [4]
    Copyright (c) Microsoft Corporation
