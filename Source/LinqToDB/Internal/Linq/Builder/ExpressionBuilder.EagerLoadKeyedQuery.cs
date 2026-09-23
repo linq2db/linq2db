@@ -187,9 +187,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Also require that every reference to the detail key inside the child sequence appears as an
 				// operand of an Equal binary — otherwise the Contains transform (which only rewrites Equal)
 				// would leave a non-equality reference unresolved in the rewritten child query.
+				// A chain Take/Skip is per parent; the Contains rewrite flattens all parents into one
+				// result set, so the limit has to stay on the SelectMany + VALUES JOIN path (#5936).
 				var canUseContains = false;
 				Expression? childFkExpr = null;
-				if (mainKeys.Length == 1)
+				if (mainKeys.Length == 1 && !HasChainLimit(correctedSequence))
 				{
 					childFkExpr = FindChildFkExpression(correctedSequence, detailKeys[0]);
 
@@ -450,6 +452,40 @@ namespace LinqToDB.Internal.Linq.Builder
 						ctx.found.Add(binary.Right);
 				}
 			});
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when the child's outer method chain carries a <c>Take</c> or
+		/// <c>Skip</c>. Such a limit is scoped to one parent, so it survives only on the correlated
+		/// SelectMany + VALUES JOIN path — the Contains rewrite flattens all parents into one result set.
+		/// A limit nested inside a lambda (e.g. <c>children.SelectMany(c =&gt; c.Sub.Take(2))</c>) is already
+		/// scoped to its own sequence and is deliberately not matched.
+		/// </summary>
+		static bool HasChainLimit(Expression sequence)
+		{
+			var current = sequence.UnwrapConvert();
+
+			while (true)
+			{
+				if (current is MethodCallExpression mce)
+				{
+					if (!mce.IsQueryable)
+						return false;
+
+					if (mce.Method.Name is nameof(Enumerable.Take) or nameof(Enumerable.Skip))
+						return true;
+
+					current = mce.Arguments[0].UnwrapConvert();
+				}
+				else if (current is SqlAdjustTypeExpression adjustType)
+				{
+					current = adjustType.Expression.UnwrapConvert();
+				}
+				else
+				{
+					return false;
+				}
+			}
 		}
 
 		/// <summary>
