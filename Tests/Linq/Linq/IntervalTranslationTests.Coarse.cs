@@ -92,6 +92,7 @@ namespace Tests.Linq
 		/// argument's, so a lowering that asks its operand what it is was told the wrong thing here.
 		/// </remarks>
 		[Test]
+		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void ReportedDayCountOverASecondPrecisionColumn([DataSources] string context)
 		{
 			var earlier = CoarseStart.AddDays(-7);
@@ -113,6 +114,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void TickCountOverASecondPrecisionColumnMatchesClr([DataSources] string context)
 		{
 			// Whole seconds, which is all the column can hold - a finer expectation would be testing the column type.
@@ -133,6 +136,8 @@ namespace Tests.Linq
 		/// too, and blaming the lowering for that would be wrong.
 		/// </remarks>
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void DifferenceOverADateColumnMatchesClr([DataSources] string context)
 		{
 			var finished = CoarseStart.AddDays(11);
@@ -192,6 +197,8 @@ namespace Tests.Linq
 		/// translated to a date-typed expression (<c>toDate32</c> on ClickHouse, <c>CAST(… AS DATE)</c> elsewhere).
 		/// </remarks>
 		[Test]
+		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
+		[ActiveIssue(5965, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}15d")]
 		public void DifferenceAgainstTheDatePartMatchesClr([DataSources] string context)
 		{
 			var finished = CoarseStart.AddHours(5);
@@ -215,6 +222,7 @@ namespace Tests.Linq
 		/// difference between this process and the server can move the answer and the SQL is the same on every run.
 		/// </remarks>
 		[Test]
+		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		[ActiveIssue(5965, Configuration = TestProvName.AllDuckDB, ErrorMessage = "No function matches the given name and argument types 'date_diff(")]
 		public void DifferenceAgainstServerNowAnswers([DataSources] string context)
 		{

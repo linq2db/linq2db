@@ -999,7 +999,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Value)")]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllOracle, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T10:00:00.2260000")]
 		public void DateAddMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var value = CoarseValue;
@@ -1017,7 +1017,8 @@ namespace Tests.Linq
 		/// </summary>
 		[Test]
 		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function dateadd for data type date")]
-		[ActiveIssue(5965, Configurations = [TestProvName.AllFirebird, TestProvName.AllOracle], ErrorMessage = "Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Day)")]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T00:00:00.2260000")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllDB2, ErrorMessage = "SQL0182N")]
 		public void DateAddMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var day = CoarseValue.Date;
@@ -1051,8 +1052,8 @@ namespace Tests.Linq
 		/// date everywhere - a ClickHouse <c>DateTime</c> starts at 1970.
 		/// </remarks>
 		[Test]
-		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "Sql.DatePart(Sql.DateParts.Millisecond, r.Wide)")]
-		public void DatePartMillisecondBeforeTheEpoch([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500")]
+		public void DatePartMillisecondBeforeTheEpoch([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql, TestProvName.AllYdb)] string context)
 		{
 			var wide = new DateTime(1969, 1, 1, 0, 0, 0, 500);
 
