@@ -185,6 +185,7 @@ internal static class NuGetPackageVersions
 	public const string dotMorten_Microsoft_SqlServer_Types = "$(DotMortenSqlServerTypesLinqPadVersion)"%3B
 	public const string DuckDB_NET_Data_Full                = "@(PackageVersion->WithMetadataValue('Identity', 'DuckDB.NET.Data.Full')->'%(Version)')"%3B
 	public const string FirebirdSql_Data_FirebirdClient     = "@(PackageVersion->WithMetadataValue('Identity', 'FirebirdSql.Data.FirebirdClient')->'%(Version)')"%3B
+	public const string LibRed_Ado                          = "@(PackageVersion->WithMetadataValue('Identity', 'LibRed.Ado')->'%(Version)')"%3B
 	public const string Microsoft_Data_SqlClient            = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.SqlClient')->'%(Version)')"%3B
 	public const string Microsoft_Data_Sqlite               = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Data.Sqlite')->'%(Version)')"%3B
 	public const string Microsoft_SqlServer_Types           = "@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.SqlServer.Types')->'%(Version)')"%3B

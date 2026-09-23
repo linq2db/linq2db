@@ -102,8 +102,13 @@ internal static class DatabaseProviders
 	public static IEnumerable<(string Id, string Version)> GetNuGetPackages(IDatabaseProvider provider)
 	{
 		foreach (var info in provider.Providers)
+		{
+			if (info.ProvisionOnlyWhenSelected)
+				continue;
+
 			foreach (var package in provider.GetNuGetPackages(info.Name))
 				yield return package;
+		}
 	}
 #endif
 

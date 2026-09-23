@@ -9,15 +9,26 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.DataProvider;
 
 namespace LinqToDB.LINQPad;
 
 internal sealed class AccessProvider : DatabaseProviderBase
 {
+#if !NETFRAMEWORK
+	private const string LibRedTroubleshoot = "LibRed is a managed Access engine that ships for .NET 11 only: the query must run on .NET 11 or newer.";
+#endif
+
+	// OLE DB is not implemented outside of Windows and there is no ODBC driver for Access on other systems;
+	// hidden rather than removed there, so existing connections still load. LibRed.Ado is net11.0-only, so it
+	// is never provisioned for a connection that has not selected it, and LINQPad 5 cannot use it at all.
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new (ProviderName.Access    , "OLE DB"),
-		new (ProviderName.AccessOdbc, "ODBC"  ),
+		new (ProviderName.Access      , "OLE DB"          , IsHidden: !Platform.IsWindows),
+		new (ProviderName.AccessOdbc  , "ODBC"            , IsHidden: !Platform.IsWindows),
+#if !NETFRAMEWORK
+		new (ProviderName.AccessLibRed, "LibRed (managed)", IsDefault: !Platform.IsWindows, Troubleshoot: LibRedTroubleshoot, ProvisionOnlyWhenSelected: true),
+#endif
 	];
 
 	public AccessProvider()
@@ -27,12 +38,13 @@ internal sealed class AccessProvider : DatabaseProviderBase
 
 	public override bool SupportsSecondaryConnection => true;
 	public override bool AutomaticProviderSelection  => true;
-	// OLE DB is not implemented outside of Windows and there is no ODBC driver for Access on other systems
-	public override bool IsPlatformSupported         => Platform.IsWindows;
 
 #if !NETFRAMEWORK
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
 	{
+		if (string.Equals(providerName, ProviderName.AccessLibRed, StringComparison.Ordinal))
+			return [("LibRed.Ado", NuGetPackageVersions.LibRed_Ado)];
+
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
 			return [("System.Data.Odbc", NuGetPackageVersions.System_Data_Odbc)];
 
@@ -42,6 +54,9 @@ internal sealed class AccessProvider : DatabaseProviderBase
 
 	public override string? GetProviderDownloadUrl(string? providerName)
 	{
+		if (string.Equals(providerName, ProviderName.AccessLibRed, StringComparison.Ordinal))
+			return null;
+
 		return "https://www.microsoft.com/en-us/download/details.aspx?id=54920";
 	}
 
@@ -97,19 +112,38 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	{
 		connectionString = PasswordManager.ResolvePasswordManagerFields(connectionString);
 
-		var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
-			|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
+		if (connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+			|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase))
+			return GetProviderInfo(ProviderName.Access);
 
-		// we don't check for ODBC provider marker - it will fail on connection test if wrong
-		return _providers[isOleDb ? 0 : 1];
+#if !NETFRAMEWORK
+		// an ODBC string names its driver or DSN (FILEDSN included); a LibRed one is a bare "Data Source=<file>"
+		if (!connectionString.Contains("Driver=", StringComparison.OrdinalIgnoreCase)
+			&& !connectionString.Contains("Dsn=", StringComparison.OrdinalIgnoreCase))
+			return GetProviderInfo(ProviderName.AccessLibRed);
+#endif
+
+		return GetProviderInfo(ProviderName.AccessOdbc);
 	}
+
+	private static ProviderInfo GetProviderInfo(string providerName) => _providers.First(p => string.Equals(p.Name, providerName, StringComparison.Ordinal));
 
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
+		if (string.Equals(providerName, ProviderName.AccessLibRed, StringComparison.Ordinal))
+			return GetLibRedFactory();
+
 		if (string.Equals(providerName, ProviderName.AccessOdbc, StringComparison.Ordinal))
 			return GetOdbcFactory();
 
 		return GetOleDbFactory();
+	}
+
+	// no compile-time reference: LibRed.Ado is net11.0-only, and linq2db already locates the assembly
+	private static DbProviderFactory GetLibRedFactory()
+	{
+		var factoryType = LibRedProviderAdapter.GetInstance().ConnectionType.Assembly.GetType($"{LibRedProviderAdapter.ClientNamespace}.LibRedFactory", true)!;
+		return (DbProviderFactory)factoryType.GetField("Instance")!.GetValue(null)!;
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
