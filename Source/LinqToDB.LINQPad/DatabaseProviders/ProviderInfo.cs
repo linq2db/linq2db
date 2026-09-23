@@ -8,5 +8,5 @@
 /// <param name="IsDefault">When set, specified provider dialect will be selected automatically.</param>
 /// <param name="IsHidden">When set, specified provider will not be shown in list of available dialects and used only to support old connections with provider names, existed in older releases.</param>
 /// <param name="Troubleshoot">Provider-specific troubleshoot notes.</param>
-/// <param name="ProvisionOnlyWhenSelected">When set, provider client packages are provisioned only for a connection that selects this provider, never when the client of a connection cannot be identified.</param>
-internal sealed record ProviderInfo(string Name, string DisplayName, bool IsDefault = false, bool IsHidden = false, string? Troubleshoot = null, bool ProvisionOnlyWhenSelected = false);
+/// <param name="MinimumRuntime">Lowest .NET major version the provider client runs on. Its packages are never provisioned for an older query runtime.</param>
+internal sealed record ProviderInfo(string Name, string DisplayName, bool IsDefault = false, bool IsHidden = false, string? Troubleshoot = null, int MinimumRuntime = 0);

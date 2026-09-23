@@ -228,7 +228,8 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 
 			Settings.Connection.SecondaryConnectionString = value;
 
-			if (Database != null && value != null && Database.AutomaticProviderSelection)
+			// the dialog has no selector for the secondary provider, so it is always detected
+			if (Database != null && value != null && Database.SupportsSecondaryConnection)
 				SecondaryProvider = Database.GetProviderByConnectionString(value);
 		}
 	}

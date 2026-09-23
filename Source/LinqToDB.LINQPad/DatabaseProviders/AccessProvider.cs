@@ -20,14 +20,14 @@ internal sealed class AccessProvider : DatabaseProviderBase
 #endif
 
 	// OLE DB is not implemented outside of Windows and there is no ODBC driver for Access on other systems;
-	// hidden rather than removed there, so existing connections still load. LibRed.Ado is net11.0-only, so it
-	// is never provisioned for a connection that has not selected it, and LINQPad 5 cannot use it at all.
+	// hidden rather than removed there, so existing connections still load. LibRed.Ado is net11.0-only, and
+	// LINQPad 5 cannot use it at all.
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new (ProviderName.Access      , "OLE DB"          , IsHidden: !Platform.IsWindows),
-		new (ProviderName.AccessOdbc  , "ODBC"            , IsHidden: !Platform.IsWindows),
+		new (ProviderName.Access      , "OLE DB"          , IsDefault: Platform.IsWindows, IsHidden: !Platform.IsWindows),
+		new (ProviderName.AccessOdbc  , "ODBC"                                           , IsHidden: !Platform.IsWindows),
 #if !NETFRAMEWORK
-		new (ProviderName.AccessLibRed, "LibRed (managed)", IsDefault: !Platform.IsWindows, Troubleshoot: LibRedTroubleshoot, ProvisionOnlyWhenSelected: true),
+		new (ProviderName.AccessLibRed, "LibRed (managed)", IsDefault: !Platform.IsWindows, Troubleshoot: LibRedTroubleshoot, MinimumRuntime: 11),
 #endif
 	];
 
@@ -37,7 +37,6 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	}
 
 	public override bool SupportsSecondaryConnection => true;
-	public override bool AutomaticProviderSelection  => true;
 
 #if !NETFRAMEWORK
 	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
@@ -112,21 +111,22 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	{
 		connectionString = PasswordManager.ResolvePasswordManagerFields(connectionString);
 
-		if (connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
-			|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase))
-			return GetProviderInfo(ProviderName.Access);
+		var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+			|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
 
-#if !NETFRAMEWORK
-		// an ODBC string names its driver or DSN (FILEDSN included); a LibRed one is a bare "Data Source=<file>"
-		if (!connectionString.Contains("Driver=", StringComparison.OrdinalIgnoreCase)
-			&& !connectionString.Contains("Dsn=", StringComparison.OrdinalIgnoreCase))
-			return GetProviderInfo(ProviderName.AccessLibRed);
-#endif
-
-		return GetProviderInfo(ProviderName.AccessOdbc);
+		// we don't check for ODBC provider marker - it will fail on connection test if wrong
+		return _providers[isOleDb ? 0 : 1];
 	}
 
-	private static ProviderInfo GetProviderInfo(string providerName) => _providers.First(p => string.Equals(p.Name, providerName, StringComparison.Ordinal));
+#if !NETFRAMEWORK
+	public override IDataProvider GetDataProvider(string providerName, string connectionString)
+	{
+		if (string.Equals(providerName, ProviderName.AccessLibRed, StringComparison.Ordinal) && Environment.Version.Major < 11)
+			throw new LinqToDBLinqPadException($"{LibRedTroubleshoot} This query runs on .NET {Environment.Version}.");
+
+		return base.GetDataProvider(providerName, connectionString);
+	}
+#endif
 
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
