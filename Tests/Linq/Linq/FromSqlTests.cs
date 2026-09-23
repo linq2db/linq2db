@@ -1018,7 +1018,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestBasicScalarQuery([DataSources(TestProvName.AllAccess)] string context)
+		public void TestBasicScalarQuery([DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1043,7 +1043,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestBasicScalarQueryWithoutExplicitAlias([DataSources(
-			TestProvName.AllAccess, 
+			TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, 
 			TestProvName.AllMySql57,
 			TestProvName.AllMariaDB,
 			ProviderName.SqlCe,

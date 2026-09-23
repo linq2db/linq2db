@@ -58,7 +58,7 @@ namespace Tests.Linq
 		// as true whichever side holds the majority — so it has to be refused at translation time too.
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL95Plus, TestProvName.AllDuckDB, TestProvName.AllDB2, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL95Plus, TestProvName.AllDuckDB, TestProvName.AllDB2, TestProvName.AllOracle, TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy)]
 		public void PercentileContWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -205,7 +205,7 @@ namespace Tests.Linq
 			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllPostgreSQL, TestProvName.AllMySql80, TestProvName.AllClickHouse,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllInformix, ProviderName.Ydb,
 			TestProvName.AllDB2, TestProvName.AllDuckDB,
-			ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
+			TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
 		public void PercentileContWindowed([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();

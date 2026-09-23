@@ -36,7 +36,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Index([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -50,7 +50,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IndexWithWhere([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -65,7 +65,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IndexWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -79,7 +79,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IndexWithNavigationOffset([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IndexWithJoin([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

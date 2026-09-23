@@ -434,7 +434,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -443,7 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTimeSql([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void ToSqlTimeSql([DataSources(TestProvName.AllSQLite, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

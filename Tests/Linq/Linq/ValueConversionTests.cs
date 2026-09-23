@@ -885,7 +885,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConditionNullTest([DataSources(TestProvName.AllAccess)] string context)
+		public void ConditionNullTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

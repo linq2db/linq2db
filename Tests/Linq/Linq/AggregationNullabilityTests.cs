@@ -147,6 +147,8 @@ namespace Tests.Linq
 			query.First().ShouldBe(1000L);
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: LibRed types IIF by the branch it takes - over an empty group IIF([Sum] IS NULL, 0, [Sum]) hands back the literal's Int32 where the column is the aggregate's floating/decimal type, so the materializer fails the cast. ACE unifies the branches. LibRed.Ado 11.0.0-alpha.3.")]
 		[Test]
 		public void SumFloatSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
@@ -162,6 +164,8 @@ namespace Tests.Linq
 			query.First().ShouldBe(1000f);
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: LibRed types IIF by the branch it takes - over an empty group IIF([Sum] IS NULL, 0, [Sum]) hands back the literal's Int32 where the column is the aggregate's floating/decimal type, so the materializer fails the cast. ACE unifies the branches. LibRed.Ado 11.0.0-alpha.3.")]
 		[Test]
 		public void SumDoubleSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{
@@ -177,6 +181,8 @@ namespace Tests.Linq
 			query.First().ShouldBe(1000d);
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: LibRed types IIF by the branch it takes - over an empty group IIF([Sum] IS NULL, 0, [Sum]) hands back the literal's Int32 where the column is the aggregate's floating/decimal type, so the materializer fails the cast. ACE unifies the branches. LibRed.Ado 11.0.0-alpha.3.")]
 		[Test]
 		public void SumDecimalSubqueryEmpty([DataSources(TestProvName.AllClickHouse, TestProvName.AllYdb)] string context)
 		{

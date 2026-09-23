@@ -49,7 +49,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
+		public void TestHavingCount([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataConnection(context);
 			var actual = db.GetTable<Person>()
@@ -69,7 +69,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingLongCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
+		public void TestHavingLongCount([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataConnection(context);
 			var actual = db.GetTable<Person>()
@@ -129,7 +129,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestHavingCountWithSelect([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
+		public void TestHavingCountWithSelect([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataConnection(context);
 			var actual = db.GetTable<Person>()
@@ -152,7 +152,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public void TestHavingLongCountWithSelect([DataSources(false,
-				TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase,
+				TestProvName.AllNativeAccess, TestProvName.AllOracle, TestProvName.AllSybase,
 				TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{

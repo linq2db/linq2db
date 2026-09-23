@@ -25,7 +25,7 @@ namespace Tests.Linq
 			ErrorMessage = "Non-numeric character in datetime or interval.",
 			Details = "no-issue: Informix interval cannot be created from non-literal value")]
 		[Test]
-		public void UnionTest([DataSources(TestProvName.AllAccess)] string context)
+		public void UnionTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<SampleClass>();
@@ -54,7 +54,7 @@ namespace Tests.Linq
 			Details = "no-issue: Informix interval cannot be created from non-literal value")]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void SubQueryTest([DataSources(TestProvName.AllAccess)] string context)
+		public void SubQueryTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
@@ -88,7 +88,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
+		public void SubQueryAggregate([DataSources(TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -104,7 +104,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinTest([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
@@ -136,7 +136,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinScalarTest([DataSources(TestProvName.AllAccess)] string context)
+		public void JoinScalarTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			var data = GenerateData();
 			using (var db = GetDataContext(context))
@@ -195,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4284")]
-		public void Select_GroupBy_SelectAgain([DataSources(ProviderName.Firebird25, TestProvName.AllAccess, TestProvName.AllSqlServer2017, ProviderName.SqlCe, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
+		public void Select_GroupBy_SelectAgain([DataSources(ProviderName.Firebird25, TestProvName.AllNativeAccess, TestProvName.AllSqlServer2017, ProviderName.SqlCe, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			var query = db.Person
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		#region Issue 2779
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
 		public void Issue2779Test1([DataSources(false,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllFirebird,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,
@@ -281,7 +281,7 @@ namespace Tests.Linq
 			Details = "All three drivers surface the same server text under three different exception types, so the message alone is the portable declaration.")]
 		[ActiveIssue(2779, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "Column value is not in source column set")]
-		[ActiveIssue(2779, Configurations = [TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllOracle,
+		[ActiveIssue(2779, Configurations = [TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllSapHana, TestProvName.AllOracle,
 			TestProvName.AllFirebird, TestProvName.AllMySql57, ProviderName.DB2],
 			Details = "no-declaration: these still fail. Sybase, Informix and the 8.0/MariaDB MySQL servers were dropped once CI exercised them - only 5.7 is left of the MySQL family.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
@@ -308,7 +308,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
 		public void Issue2779Test4([DataSources(false,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllFirebird,
 			TestProvName.AllOracle,
 			TestProvName.AllSapHana,

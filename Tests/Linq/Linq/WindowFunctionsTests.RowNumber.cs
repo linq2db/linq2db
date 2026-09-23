@@ -163,7 +163,7 @@ namespace Tests.Linq
 		// A boolean column in ORDER BY / PARTITION BY is a storable value and is left unfolded; the equivalent
 		// predicate is folded. Both must produce identical numbering.
 		[Test]
-		public void RowNumberWithBooleanColumn([SupportsAnalyticFunctionsContext] string context)
+		public void RowNumberWithBooleanColumn([SupportsAnalyticFunctionsContext(TestProvName.AllAccessLibRed)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());

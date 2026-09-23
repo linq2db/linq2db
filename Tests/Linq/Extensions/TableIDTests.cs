@@ -17,7 +17,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void TableTest([DataSources(TestProvName.AllAccess)] string context)
+		public void TableTest([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

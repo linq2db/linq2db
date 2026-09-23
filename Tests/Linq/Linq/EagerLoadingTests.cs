@@ -1234,7 +1234,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregate([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -1267,7 +1267,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregateAverage([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -3307,7 +3307,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4588
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
 		public void Issue4588Test([DataSources(false)] string context)

@@ -441,6 +441,8 @@ namespace Tests.Linq
 			Details = "no-declaration: " + ContainsSkipsIntervalTranslation + " Measured five ways: an IConvertible cast on SQLite, 'Operand type clash: time is incompatible with bigint' on SQL Server, a DuckDB INTERVAL-vs-BIGINT binder error, a Sybase VARCHAR-to-BIGINT conversion refusal, and 'No mapping exists from DbType Time' on SqlCe.")]
 		[ActiveIssue(5776, Configurations = [TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllYdb, TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana],
 			Details = "no-declaration: unvalidated: " + ContainsSkipsIntervalTranslation + " Not measured - these have no container running here.")]
+		[ActiveIssue(5776, Configuration = TestProvName.AllAccessLibRed, ErrorMessage = "present",
+			Details = "no-declaration: " + ContainsSkipsIntervalTranslation + " Measured on LibRed as a silent miss: the candidate binds as DbType.Time against a tick count, so IN matches nothing.")]
 		[Test]
 		// Access refuses this one through the conversion rather than by member name: unlike its siblings it never
 		// gets as far as asking the difference for a tick total. The difference-unsupported providers land in the
@@ -494,7 +496,7 @@ namespace Tests.Linq
 			ErrorMessage = "Uncompatible member Duration_1 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
 		[ActiveIssue(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
-		[ActiveIssue(5796, Configuration = TestProvName.AllMySql, ErrorTypeName = "System.OverflowException",
+		[ActiveIssue(5796, Configurations = [TestProvName.AllMySql, TestProvName.AllAccessLibRed], ErrorTypeName = "System.OverflowException",
 			ErrorMessage = "The TimeSpan string '36000000000' could not be parsed", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatSurroundsADifferenceWithColumns([DataSources(false)] string context)
@@ -543,6 +545,8 @@ namespace Tests.Linq
 			ErrorMessage = "Uncompatible member First_2 types: Optional<Interval> and Int64", Details = MixedStorageInASetOperation)]
 		[ActiveIssue(5796, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
 			ErrorMessage = "SQL0415N{0}The data types of corresponding columns are not compatible", Details = MixedStorageInASetOperation)]
+		[ActiveIssue(5796, Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.OverflowException",
+			ErrorMessage = "The TimeSpan string '36000000000' could not be parsed", Details = MixedStorageInASetOperation)]
 		[Test]
 		public void ConcatMixesTwoDurationsPerRow([DataSources(false)] string context)
 		{
@@ -1028,8 +1032,6 @@ namespace Tests.Linq
 		/// member rather than the column - there is no numeric sum of a <see cref="TimeSpan"/> - which makes it the
 		/// case where the unit has to be applied before the addition rather than after.
 		/// </remarks>
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
-			Details = "no-issue: an alpha.2 -> alpha.3 regression, measured against both packages - the reader declares Int32 for a computed column (GetFieldType and GetSchemaTable agree) and then returns a Decimal, so the materializer compiled from the declared type fails the cast. alpha.2 declared Decimal and was consistent. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		[Test]
 		public void AggregatesKeepTheDeclaredUnit([DataSources] string context)
 		{
@@ -1184,7 +1186,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void ContainsAcrossTwoCoarseUnitsMeetsInTheFiner([DataSources(false, TestProvName.AllAccess)] string context)
+		public void ContainsAcrossTwoCoarseUnitsMeetsInTheFiner([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var duration = TimeSpan.FromDays(2);
 
@@ -1228,7 +1230,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void ContainsAcrossASubTickUnitIsRefused([DataSources(false, TestProvName.AllAccess)] string context)
+		public void ContainsAcrossASubTickUnitIsRefused([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AccessLibRedMdb)] string context)
 		{
 			var duration = TimeSpan.FromSeconds(7);
 

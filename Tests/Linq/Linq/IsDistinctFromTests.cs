@@ -70,7 +70,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void OptimizeConstants(
-			[DataSources(TestProvName.AllAccess, ProviderName.SqlCe)] string context,
+			[DataSources(TestProvName.AllNativeAccess, ProviderName.SqlCe)] string context,
 			[Values(5, 6, null)] int? value)
 		{
 			using var db = GetDataContext(context);

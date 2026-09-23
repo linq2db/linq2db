@@ -68,7 +68,7 @@ namespace Tests.UserTests
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsRequiredOuterJoins(TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllAccess, TestProvName.AllDB2)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllNativeAccess, TestProvName.AllDB2)]
 		[Test]
 		public void NestedSubqueryWithGroupedAggregationsFilteredSumOfSums([DataSources(TestProvName.AllOracle11, TestProvName.AllSybase)] string context)
 		{
