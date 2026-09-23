@@ -20,10 +20,15 @@ Legend: **✓** native · **~** emulated · **✗** rejected at translate time (
 ## 1. Provider / dialect coverage
 
 Providers with **no window-function support at all** (`IsWindowFunctionsSupported => false`):
-**SQL Server 2005/2008**, **MySQL 5.7**, **Firebird 2.5**, **Sybase ASE**, **Access**, **SQL CE**.
+**SQL Server 2005/2008**, **MySQL 5.7**, **Firebird 2.5**, **Sybase ASE**, **Access** (OLE DB / ODBC), **SQL CE**.
 (SQL Server 2005/2008 supports the four ranking functions natively, but only with an `ORDER BY`
 inside `OVER`, which those versions do not allow for aggregate windows — so aggregate windows are
 rejected and the whole feature is gated off conservatively.)
+
+**Access over LibRed** is the exception within Access: the managed engine implements window functions,
+frames, `FILTER`, `IGNORE NULLS`, `NTH_VALUE … FROM LAST`, `DISTINCT` in window aggregates and the
+variance / correlation / `REGR_*` families. It has no `KEEP`, hypothetical-set aggregates, `MEDIAN` or
+windowed `PERCENTILE_CONT/DISC`.
 
 Dialect splits that matter:
 
