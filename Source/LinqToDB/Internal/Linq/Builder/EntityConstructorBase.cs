@@ -605,9 +605,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 			}
 
+			// Referencing a dynamic column in a query needs no store; materializing one does.
+			if (dynamicProperties != null && ed.DynamicColumnSetter == null)
+			{
+				throw new LinqToDBException(
+					$"Type '{typeAccessor.Type.Name}' is materialized with dynamic column(s) {string.Join(", ", dynamicProperties.Select(static d => d.MemberInfo.Name))}, but has no member marked with {nameof(DynamicColumnsStoreAttribute)}.");
+			}
+
 			Expression result = Expression.MemberInit(newExpression, bindings);
 
-			if (additionalSteps != null || (dynamicProperties?.Count > 0 && ed.DynamicColumnSetter != null))
+			if (additionalSteps != null || dynamicProperties?.Count > 0)
 			{
 				var generator   = new ExpressionGenerator();
 				var objVariable = generator.AssignToVariable(result, "obj");
