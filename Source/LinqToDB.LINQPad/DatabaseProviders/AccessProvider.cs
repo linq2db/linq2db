@@ -22,12 +22,16 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	// OLE DB is not implemented outside of Windows and there is no ODBC driver for Access on other systems;
 	// hidden rather than removed there, so existing connections still load. LibRed.Ado is net11.0-only, and
 	// LINQPad 5 cannot use it at all.
+	// Each of OLE DB and ODBC reports a schema defect the other does not (see MergedAccessSchemaProvider), so
+	// the paired entries read schema from both while queries run on the first.
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new (ProviderName.Access      , "OLE DB"          , IsDefault: Platform.IsWindows, IsHidden: !Platform.IsWindows),
-		new (ProviderName.AccessOdbc  , "ODBC"                                           , IsHidden: !Platform.IsWindows),
+		new (ProviderName.Access      , "OLE DB"                        , IsDefault: Platform.IsWindows, IsHidden: !Platform.IsWindows),
+		new (ProviderName.AccessOdbc  , "ODBC"                                                         , IsHidden: !Platform.IsWindows),
+		new (ProviderName.Access      , "OLE DB, with ODBC schema merged"                              , IsHidden: !Platform.IsWindows, SecondaryName: ProviderName.AccessOdbc),
+		new (ProviderName.AccessOdbc  , "ODBC, with OLE DB schema merged"                              , IsHidden: !Platform.IsWindows, SecondaryName: ProviderName.Access),
 #if !NETFRAMEWORK
-		new (ProviderName.AccessLibRed, "LibRed (managed)", IsDefault: !Platform.IsWindows, Troubleshoot: LibRedTroubleshoot, MinimumRuntime: 11),
+		new (ProviderName.AccessLibRed, "LibRed (managed)"              , IsDefault: !Platform.IsWindows, Troubleshoot: LibRedTroubleshoot, MinimumRuntime: 11),
 #endif
 	];
 
@@ -105,17 +109,6 @@ internal sealed class AccessProvider : DatabaseProviderBase
 		var dt1 = cn.GetSchema("Tables"    ).Rows.Cast<DataRow>().Select(static r => (DateTime)r["DATE_MODIFIED"]).Concat([default]).Max();
 		var dt2 = cn.GetSchema("Procedures").Rows.Cast<DataRow>().Select(static r => (DateTime)r["DATE_MODIFIED"]).Concat([default]).Max();
 		return dt1 > dt2 ? dt1 : dt2;
-	}
-
-	public override ProviderInfo? GetProviderByConnectionString(string connectionString)
-	{
-		connectionString = PasswordManager.ResolvePasswordManagerFields(connectionString);
-
-		var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
-			|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
-
-		// we don't check for ODBC provider marker - it will fail on connection test if wrong
-		return _providers[isOleDb ? 0 : 1];
 	}
 
 #if !NETFRAMEWORK

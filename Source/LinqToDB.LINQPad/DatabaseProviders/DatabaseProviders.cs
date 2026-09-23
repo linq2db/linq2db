@@ -54,8 +54,10 @@ internal static class DatabaseProviders
 		{
 			providers.Add(provider.Database, provider);
 
+			// a paired entry (ProviderInfo.SecondaryName) repeats a name its database already registered
 			foreach (var info in provider.Providers)
-				providersByName.Add(info.Name, provider);
+				if (info.SecondaryName == null)
+					providersByName.Add(info.Name, provider);
 		}
 	}
 

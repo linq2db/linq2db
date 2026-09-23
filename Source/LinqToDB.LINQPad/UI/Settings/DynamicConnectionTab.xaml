@@ -44,14 +44,14 @@
 				</DockPanel>
 
 				<StackPanel Margin="0 5 0 0" ToolTip="Specify database connection string. Connection string could reference values from LINPad Password Manager (see File -> Password Manager) using following format: {pm:name}, e.g. &quot;Server=.;Database=DB;User Id=user;Password={pm:my-password}&quot;">
-					<Label>Connection string</Label>
+					<Label Content="{Binding ConnectionStringLabel}" />
 					<TextBox Padding="5" Text="{Binding ConnectionString}" TextWrapping="Wrap" Height="60" VerticalScrollBarVisibility="Auto" />
 				</StackPanel>
 
 				<StackPanel Margin="0 5 0 0"
 				Visibility="{Binding SecondaryConnectionStringVisibility}"
-				ToolTip="Specify secondary connection string for MS Access to improve generated schema. This connection string is used for database schema fetching only and must be ODBC connection string when primary connection string use OLE DB and vice versa.">
-					<Label>Additional connection string</Label>
+				ToolTip="Second connection to the same database, used for schema fetching only: OLE DB and ODBC each report schema details the other gets wrong, and the two are merged.">
+					<Label Content="{Binding SecondaryConnectionStringLabel}" />
 					<TextBox Padding="5" Text="{Binding SecondaryConnectionString}" TextWrapping="Wrap" Height="60" VerticalScrollBarVisibility="Auto" />
 				</StackPanel>
 
