@@ -77,7 +77,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void CheckExistenceTest([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
 			ProviderName.SqlCe,
 			TestProvName.AllSapHana)] string context)
 		{

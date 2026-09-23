@@ -286,7 +286,7 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, ErrorMessage = ErrorHelper.MySql.Error_SkipInUpdate)]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -335,7 +335,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestJoinTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -564,7 +564,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
-		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
+		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -592,7 +592,7 @@ namespace Tests.xUpdate
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
+		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -746,7 +746,7 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
+		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Issue2815Table1.Data);

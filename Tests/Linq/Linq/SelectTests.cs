@@ -302,7 +302,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MutiplySelect12([DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
+		public void MutiplySelect12([DataSources(false, TestProvName.AllNativeAccess, TestProvName.AllDB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -1393,7 +1393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexer([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1407,7 +1407,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1423,7 +1423,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
-		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1435,7 +1435,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
 		public void SelectWithIndexerOrderByNulls(
 			[DataSources] string context,
 			[Values(Sql.NullsPosition.First, Sql.NullsPosition.Last)] Sql.NullsPosition nulls,

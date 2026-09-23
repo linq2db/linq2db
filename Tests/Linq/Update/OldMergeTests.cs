@@ -36,7 +36,7 @@ namespace Tests.xUpdate
 		public void MergeWithEmptySource(
 			[DataSources(
 				false,
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
 				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,

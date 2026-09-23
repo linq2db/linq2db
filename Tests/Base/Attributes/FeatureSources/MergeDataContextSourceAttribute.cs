@@ -11,7 +11,8 @@ namespace Tests
 	{
 		public static List<string> Unsupported = new[]
 			{
-				TestProvName.AllAccess,
+				TestProvName.AllNativeAccess,
+				TestProvName.AllAccessLibRed,
 				ProviderName.SqlCe,
 				TestProvName.AllYdb,
 				TestProvName.AllSQLite,

@@ -20,7 +20,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Queryable_Upsert([InsertOrUpdateDataSources] string context)
 		{
@@ -45,7 +45,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Queryable_Update_Set_UsesBothTargetAndSource([InsertOrUpdateDataSources] string context)
 		{
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public async Task Queryable_Async_Upsert([InsertOrUpdateDataSources] string context)
 		{

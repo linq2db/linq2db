@@ -530,7 +530,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DatePartMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
+		public void DatePartMillisecond([DataSources(TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

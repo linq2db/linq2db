@@ -239,7 +239,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith8([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void LoadWith8([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -254,7 +254,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith9([DataSources(TestProvName.AllAccess)] string context)
+		public void LoadWith9([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -306,7 +306,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith12([DataSources(TestProvName.AllAccess)] string context)
+		public void LoadWith12([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q1 =

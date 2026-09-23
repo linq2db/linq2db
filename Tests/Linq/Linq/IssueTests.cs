@@ -836,7 +836,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -868,7 +868,7 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting_Merged([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

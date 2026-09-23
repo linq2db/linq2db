@@ -252,7 +252,7 @@ namespace Tests.Linq
 		// YDB cannot update a primary-key column (the client-side identity update targets the PK Id).
 		[Test]
 		public void ToSqlQuery_IUpdatable_ClientIdentiy(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllYdb)] string context,
+			[DataSources(ProviderName.SqlCe, TestProvName.AllNativeAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllYdb)] string context,
 			[Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
