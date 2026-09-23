@@ -29,12 +29,12 @@ COMPONENTS
    Copyright IBM Corporation
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source. Note on scope: IBM ships its own enumeration at clidriver/license/odbc_REDIST.txt, reproduced below. Of the 86 distinct clidriver binaries shipped here, 34 do not appear on that list - 30 GSKit crypto libraries (gsk8*.dll), 2 ICC crypto libraries (icclib084/085.dll) and Microsoft Visual C++ 12.0 runtime (msvcp120.dll, msvcr120.dll). All of them are delivered inside IBM own NuGet package as runtime dependencies of the driver (GSKit provides its TLS support), so the list reads as incomplete rather than exclusive.
 
-3. Microsoft.Bcl.AsyncInterfaces net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.0
+3. Microsoft.Bcl.AsyncInterfaces 10.0.3
    https://dot.net/
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-4. Net.IBM.Data.Db2 9.0.0.400
+4. Net.IBM.Data.Db2 10.0.0.200
    License: IBM International Program License Agreement - Redistributables  see [4]
    Copyright(c) 2025 IBM Corporation. All rights reserved
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.

@@ -84,7 +84,7 @@ Custom debugging symbols:
 
 Tests targets: `net462`, `net10.0`, `net11.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
 
-The target-framework lists live in `Build/TargetFrameworks.props` - `SupportedNetVersions` and `LatestNetVersion` there are the only lines a new .NET release has to touch; every project's `TargetFrameworks` derives from them.
+The target-framework lists live in `Build/TargetFrameworks.props` - `ModernTargetFrameworks` and `LatestTargetFramework` there, plus one band row in `Directory.Packages.props`, are the only lines a new .NET release has to touch; every project's `TargetFrameworks` derives from them.
 
 Custom symbols:
 

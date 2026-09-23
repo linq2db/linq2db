@@ -22,12 +22,12 @@ COMPONENTS
    License: MIT  see [1]
    Copyright (c) .NET Foundation and Contributors
 
-2. Microsoft.Bcl.AsyncInterfaces net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.0
+2. Microsoft.Bcl.AsyncInterfaces 10.0.3
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-3. SAP HANA .NET Data Provider v4.5
+3. SAP HANA .NET Data Provider net10.0-windows7.0: 1.9.0, net462: v4.5
    https://help.sap.com/docs/SAP_HANA_CLIENT
    License: SAP Developer License Agreement 3.2 (see notes - provenance is not certain for this build)  see [3]
    Copyright (c) SAP SE

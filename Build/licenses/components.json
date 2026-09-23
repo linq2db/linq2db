@@ -200,10 +200,10 @@
       "packageId": "AdoNetCore.AseClient",
       "versions": {
         "net10.0": "0.19.2",
+        "net10.0-windows7.0": "0.19.2",
         "net11.0": "0.19.2",
         "net462": "0.19.2",
-        "net472": "0.19.2",
-        "net8.0-windows7.0": "0.19.2"
+        "net472": "0.19.2"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -228,8 +228,8 @@
       "packageId": "Apache.Arrow",
       "versions": {
         "net10.0": "23.0.0",
-        "net11.0": "23.0.0",
-        "net8.0-windows7.0": "23.0.0"
+        "net10.0-windows7.0": "23.0.0",
+        "net11.0": "23.0.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -251,8 +251,8 @@
       "packageId": "Apache.Arrow.Scalars",
       "versions": {
         "net10.0": "23.0.0",
-        "net11.0": "23.0.0",
-        "net8.0-windows7.0": "23.0.0"
+        "net10.0-windows7.0": "23.0.0",
+        "net11.0": "23.0.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -274,10 +274,10 @@
       "packageId": "ClickHouse.Driver",
       "versions": {
         "net10.0": "1.4.0",
+        "net10.0-windows7.0": "1.4.0",
         "net11.0": "1.4.0",
         "net462": "0.9.0",
-        "net472": "0.9.0",
-        "net8.0-windows7.0": "1.4.0"
+        "net472": "0.9.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -303,8 +303,8 @@
       "packageId": "DuckDB.NET.Bindings.Full",
       "versions": {
         "net10.0": "1.5.5",
-        "net11.0": "1.5.5",
-        "net8.0-windows7.0": "1.5.5"
+        "net10.0-windows7.0": "1.5.5",
+        "net11.0": "1.5.5"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -329,8 +329,8 @@
       "packageId": "DuckDB.NET.Data.Full",
       "versions": {
         "net10.0": "1.5.5",
-        "net11.0": "1.5.5",
-        "net8.0-windows7.0": "1.5.5"
+        "net10.0-windows7.0": "1.5.5",
+        "net11.0": "1.5.5"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -352,10 +352,10 @@
       "packageId": "FirebirdSql.Data.FirebirdClient",
       "versions": {
         "net10.0": "10.3.4",
+        "net10.0-windows7.0": "10.3.4",
         "net11.0": "10.3.4",
         "net462": "10.3.4",
-        "net472": "10.3.4",
-        "net8.0-windows7.0": "10.3.4"
+        "net472": "10.3.4"
       },
       "license": "Initial Developer's Public License 1.0",
       "licenseTexts": [
@@ -380,8 +380,8 @@
       "packageId": "Google.Protobuf",
       "versions": {
         "net10.0": "3.18.0",
-        "net11.0": "3.18.0",
-        "net8.0-windows7.0": "3.18.0"
+        "net10.0-windows7.0": "3.18.0",
+        "net11.0": "3.18.0"
       },
       "license": "BSD-3-Clause",
       "licenseTexts": [
@@ -403,8 +403,8 @@
       "packageId": "Grpc.Core.Api",
       "versions": {
         "net10.0": "2.67.0",
-        "net11.0": "2.67.0",
-        "net8.0-windows7.0": "2.67.0"
+        "net10.0-windows7.0": "2.67.0",
+        "net11.0": "2.67.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -426,8 +426,8 @@
       "packageId": "Grpc.Net.Client",
       "versions": {
         "net10.0": "2.67.0",
-        "net11.0": "2.67.0",
-        "net8.0-windows7.0": "2.67.0"
+        "net10.0-windows7.0": "2.67.0",
+        "net11.0": "2.67.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -449,8 +449,8 @@
       "packageId": "Grpc.Net.Common",
       "versions": {
         "net10.0": "2.67.0",
-        "net11.0": "2.67.0",
-        "net8.0-windows7.0": "2.67.0"
+        "net10.0-windows7.0": "2.67.0",
+        "net11.0": "2.67.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -472,10 +472,10 @@
       "packageId": "Humanizer.Core",
       "versions": {
         "net10.0": "3.0.10",
+        "net10.0-windows7.0": "3.0.10",
         "net11.0": "3.0.10",
         "net462": "3.0.10",
-        "net472": "3.0.10",
-        "net8.0-windows7.0": "3.0.10"
+        "net472": "3.0.10"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -539,8 +539,8 @@
       "packageId": "K4os.Compression.LZ4",
       "versions": {
         "net10.0": "1.3.8",
-        "net11.0": "1.3.8",
-        "net8.0-windows7.0": "1.3.8"
+        "net10.0-windows7.0": "1.3.8",
+        "net11.0": "1.3.8"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -561,8 +561,8 @@
       "displayName": "linq2db4iSeries",
       "packageId": "linq2db4iSeries",
       "versions": {
-        "net472": "6.3.0",
-        "net8.0-windows7.0": "6.3.0"
+        "net10.0-windows7.0": "6.3.0",
+        "net472": "6.3.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -584,8 +584,7 @@
       "packageId": "Microsoft.Bcl.AsyncInterfaces",
       "versions": {
         "net462": "10.0.3",
-        "net472": "10.0.3",
-        "net8.0-windows7.0": "10.0.0"
+        "net472": "10.0.3"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -621,10 +620,10 @@
       "packageId": "Microsoft.Bcl.Cryptography",
       "versions": {
         "net10.0": "9.0.13",
+        "net10.0-windows7.0": "9.0.13",
         "net11.0": "9.0.13",
         "net462": "8.0.0",
-        "net472": "8.0.0",
-        "net8.0-windows7.0": "8.0.0"
+        "net472": "8.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -693,9 +692,9 @@
       "packageId": "Microsoft.CodeAnalysis.Common",
       "versions": {
         "net10.0": "5.9.0",
+        "net10.0-windows7.0": "4.13.0",
         "net11.0": "5.9.0",
-        "net472": "5.9.0",
-        "net8.0-windows7.0": "4.13.0"
+        "net472": "5.9.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -718,9 +717,9 @@
       "packageId": "Microsoft.CodeAnalysis.CSharp",
       "versions": {
         "net10.0": "5.9.0",
+        "net10.0-windows7.0": "4.13.0",
         "net11.0": "5.9.0",
-        "net472": "5.9.0",
-        "net8.0-windows7.0": "4.13.0"
+        "net472": "5.9.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -743,10 +742,10 @@
       "packageId": "Microsoft.Data.SqlClient",
       "versions": {
         "net10.0": "7.0.2",
+        "net10.0-windows7.0": "7.0.2",
         "net11.0": "7.0.2",
         "net462": "7.0.2",
-        "net472": "7.0.2",
-        "net8.0-windows7.0": "7.0.2"
+        "net472": "7.0.2"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -769,10 +768,10 @@
       "packageId": "Microsoft.Data.SqlClient.Extensions.Abstractions",
       "versions": {
         "net10.0": "7.0.2",
+        "net10.0-windows7.0": "7.0.2",
         "net11.0": "7.0.2",
         "net462": "7.0.2",
-        "net472": "7.0.2",
-        "net8.0-windows7.0": "7.0.2"
+        "net472": "7.0.2"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -795,10 +794,10 @@
       "packageId": "Microsoft.Data.SqlClient.Internal.Logging",
       "versions": {
         "net10.0": "7.0.2",
+        "net10.0-windows7.0": "7.0.2",
         "net11.0": "7.0.2",
         "net462": "7.0.2",
-        "net472": "7.0.2",
-        "net8.0-windows7.0": "7.0.2"
+        "net472": "7.0.2"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -821,8 +820,8 @@
       "packageId": "Microsoft.Data.SqlClient.SNI.runtime",
       "versions": {
         "net10.0": "6.0.2",
-        "net11.0": "6.0.2",
-        "net8.0-windows7.0": "6.0.2"
+        "net10.0-windows7.0": "6.0.2",
+        "net11.0": "6.0.2"
       },
       "license": "Microsoft Software License Terms (Distributable Code)",
       "licenseTexts": [
@@ -848,9 +847,9 @@
       "packageId": "Microsoft.Data.Sqlite.Core",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.12",
         "net11.0": "10.0.12",
-        "net472": "10.0.12",
-        "net8.0-windows7.0": "10.0.12"
+        "net472": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -895,9 +894,9 @@
       "packageId": "Microsoft.Extensions.Caching.Abstractions",
       "versions": {
         "net10.0": "10.0.10",
+        "net10.0-windows7.0": "9.0.13",
         "net462": "8.0.0",
-        "net472": "8.0.0",
-        "net8.0-windows7.0": "8.0.0"
+        "net472": "8.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -920,10 +919,10 @@
       "packageId": "Microsoft.Extensions.Caching.Memory",
       "versions": {
         "net10.0": "9.0.13",
+        "net10.0-windows7.0": "9.0.13",
         "net11.0": "9.0.13",
         "net462": "8.0.1",
-        "net472": "8.0.1",
-        "net8.0-windows7.0": "8.0.1"
+        "net472": "8.0.1"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -946,8 +945,8 @@
       "packageId": "Microsoft.Extensions.Configuration",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "11.0.0-rc.1.26425.128",
-        "net8.0-windows7.0": "10.0.8"
+        "net10.0-windows7.0": "10.0.8",
+        "net11.0": "11.0.0-rc.1.26425.128"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -969,9 +968,9 @@
       "packageId": "Microsoft.Extensions.Configuration.Abstractions",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.8",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -994,8 +993,8 @@
       "packageId": "Microsoft.Extensions.Configuration.Binder",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "11.0.0-rc.1.26425.128",
-        "net8.0-windows7.0": "10.0.8"
+        "net10.0-windows7.0": "10.0.8",
+        "net11.0": "11.0.0-rc.1.26425.128"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1127,10 +1126,10 @@
       "packageId": "Microsoft.Extensions.DependencyInjection",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.8",
         "net11.0": "11.0.0-rc.1.26425.128",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1153,9 +1152,9 @@
       "packageId": "Microsoft.Extensions.DependencyInjection.Abstractions",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.8",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1200,8 +1199,8 @@
       "packageId": "Microsoft.Extensions.Diagnostics",
       "versions": {
         "net10.0": "10.0.8",
-        "net11.0": "11.0.0-rc.1.26425.128",
-        "net8.0-windows7.0": "10.0.8"
+        "net10.0-windows7.0": "10.0.8",
+        "net11.0": "11.0.0-rc.1.26425.128"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1223,7 +1222,7 @@
       "packageId": "Microsoft.Extensions.Diagnostics.Abstractions",
       "versions": {
         "net10.0": "10.0.10",
-        "net8.0-windows7.0": "10.0.8"
+        "net10.0-windows7.0": "10.0.8"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1353,10 +1352,10 @@
       "packageId": "Microsoft.Extensions.Http",
       "versions": {
         "net10.0": "10.0.8",
+        "net10.0-windows7.0": "10.0.8",
         "net11.0": "10.0.8",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1381,10 +1380,10 @@
       "packageId": "Microsoft.Extensions.Logging",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.8",
         "net11.0": "11.0.0-rc.1.26425.128",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1407,9 +1406,9 @@
       "packageId": "Microsoft.Extensions.Logging.Abstractions",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.8",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1546,9 +1545,9 @@
       "packageId": "Microsoft.Extensions.Options",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.8",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1571,8 +1570,8 @@
       "packageId": "Microsoft.Extensions.Options.ConfigurationExtensions",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "11.0.0-rc.1.26425.128",
-        "net8.0-windows7.0": "10.0.8"
+        "net10.0-windows7.0": "10.0.8",
+        "net11.0": "11.0.0-rc.1.26425.128"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1594,9 +1593,9 @@
       "packageId": "Microsoft.Extensions.Primitives",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.8",
         "net462": "10.0.0",
-        "net472": "10.0.0",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1619,10 +1618,10 @@
       "packageId": "Microsoft.IdentityModel.Abstractions",
       "versions": {
         "net10.0": "8.16.0",
+        "net10.0-windows7.0": "8.16.0",
         "net11.0": "8.16.0",
         "net462": "8.16.0",
-        "net472": "8.16.0",
-        "net8.0-windows7.0": "8.16.0"
+        "net472": "8.16.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1645,10 +1644,10 @@
       "packageId": "Microsoft.IdentityModel.JsonWebTokens",
       "versions": {
         "net10.0": "8.16.0",
+        "net10.0-windows7.0": "8.16.0",
         "net11.0": "8.16.0",
         "net462": "8.16.0",
-        "net472": "8.16.0",
-        "net8.0-windows7.0": "8.16.0"
+        "net472": "8.16.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1671,10 +1670,10 @@
       "packageId": "Microsoft.IdentityModel.Logging",
       "versions": {
         "net10.0": "8.16.0",
+        "net10.0-windows7.0": "8.16.0",
         "net11.0": "8.16.0",
         "net462": "8.16.0",
-        "net472": "8.16.0",
-        "net8.0-windows7.0": "8.16.0"
+        "net472": "8.16.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1697,10 +1696,10 @@
       "packageId": "Microsoft.IdentityModel.Protocols",
       "versions": {
         "net10.0": "8.16.0",
+        "net10.0-windows7.0": "8.16.0",
         "net11.0": "8.16.0",
         "net462": "8.16.0",
-        "net472": "8.16.0",
-        "net8.0-windows7.0": "8.16.0"
+        "net472": "8.16.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1723,10 +1722,10 @@
       "packageId": "Microsoft.IdentityModel.Protocols.OpenIdConnect",
       "versions": {
         "net10.0": "8.16.0",
+        "net10.0-windows7.0": "8.16.0",
         "net11.0": "8.16.0",
         "net462": "8.16.0",
-        "net472": "8.16.0",
-        "net8.0-windows7.0": "8.16.0"
+        "net472": "8.16.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1749,10 +1748,10 @@
       "packageId": "Microsoft.IdentityModel.Tokens",
       "versions": {
         "net10.0": "8.16.0",
+        "net10.0-windows7.0": "8.16.0",
         "net11.0": "8.16.0",
         "net462": "8.16.0",
-        "net472": "8.16.0",
-        "net8.0-windows7.0": "8.16.0"
+        "net472": "8.16.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1775,10 +1774,10 @@
       "packageId": "Microsoft.IO.RecyclableMemoryStream",
       "versions": {
         "net10.0": "3.0.1",
+        "net10.0-windows7.0": "3.0.1",
         "net11.0": "3.0.1",
         "net462": "3.0.1",
-        "net472": "3.0.1",
-        "net8.0-windows7.0": "3.0.1"
+        "net472": "3.0.1"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1801,10 +1800,10 @@
       "packageId": "Microsoft.SqlServer.Server",
       "versions": {
         "net10.0": "1.0.0",
+        "net10.0-windows7.0": "1.0.0",
         "net11.0": "1.0.0",
         "net462": "1.0.0",
-        "net472": "1.0.0",
-        "net8.0-windows7.0": "1.0.0"
+        "net472": "1.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -1973,10 +1972,10 @@
       "packageId": "MySqlConnector",
       "versions": {
         "net10.0": "2.6.2",
+        "net10.0-windows7.0": "2.6.2",
         "net11.0": "2.6.2",
         "net462": "2.6.2",
-        "net472": "2.6.2",
-        "net8.0-windows7.0": "2.6.2"
+        "net472": "2.6.2"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2001,7 +2000,7 @@
       "displayName": "Net.IBM.Data.Db2",
       "packageId": "Net.IBM.Data.Db2",
       "versions": {
-        "net8.0-windows7.0": "9.0.0.400"
+        "net10.0-windows7.0": "10.0.0.200"
       },
       "license": "IBM International Program License Agreement - Redistributables",
       "licenseTexts": [
@@ -2028,10 +2027,10 @@
       "packageId": "NodaTime",
       "versions": {
         "net10.0": "3.2.3",
+        "net10.0-windows7.0": "3.2.3",
         "net11.0": "3.2.3",
         "net462": "3.2.2",
-        "net472": "3.2.2",
-        "net8.0-windows7.0": "3.2.3"
+        "net472": "3.2.2"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -2056,10 +2055,10 @@
       "packageId": "Npgsql",
       "versions": {
         "net10.0": "10.0.3",
+        "net10.0-windows7.0": "10.0.3",
         "net11.0": "10.0.3",
         "net462": "8.0.9",
-        "net472": "8.0.9",
-        "net8.0-windows7.0": "10.0.3"
+        "net472": "8.0.9"
       },
       "license": "PostgreSQL",
       "licenseTexts": [
@@ -2084,8 +2083,8 @@
       "packageId": "Octonica.ClickHouseClient",
       "versions": {
         "net10.0": "4.1.6",
-        "net11.0": "4.1.6",
-        "net8.0-windows7.0": "4.1.6"
+        "net10.0-windows7.0": "4.1.6",
+        "net11.0": "4.1.6"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -2107,8 +2106,8 @@
       "packageId": "Oracle.ManagedDataAccess.Core",
       "versions": {
         "net10.0": "23.26.301",
-        "net11.0": "23.26.301",
-        "net8.0-windows7.0": "23.26.301"
+        "net10.0-windows7.0": "23.26.301",
+        "net11.0": "23.26.301"
       },
       "license": "Oracle Free Distribution, Hosting, and Use Terms and Conditions",
       "licenseTexts": [
@@ -2133,8 +2132,8 @@
       "packageId": "Portable.BouncyCastle",
       "versions": {
         "net10.0": "1.9.0",
-        "net11.0": "1.9.0",
-        "net8.0-windows7.0": "1.9.0"
+        "net10.0-windows7.0": "1.9.0",
+        "net11.0": "1.9.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2155,6 +2154,7 @@
       "displayName": "SAP HANA .NET Data Provider",
       "packageId": "",
       "versions": {
+        "net10.0-windows7.0": "1.9.0",
         "net462": "v4.5"
       },
       "license": "SAP Developer License Agreement 3.2 (see notes - provenance is not certain for this build)",
@@ -2179,6 +2179,7 @@
       "displayName": "Microsoft SQL Server Compact 4.0",
       "packageId": "",
       "versions": {
+        "net10.0-windows7.0": "1.9.0",
         "net462": "4.0"
       },
       "license": "Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1",
@@ -2206,9 +2207,9 @@
       "packageId": "SQLitePCLRaw.bundle_e_sqlite3",
       "versions": {
         "net10.0": "2.1.12",
+        "net10.0-windows7.0": "2.1.12",
         "net11.0": "2.1.12",
-        "net472": "2.1.12",
-        "net8.0-windows7.0": "2.1.12"
+        "net472": "2.1.12"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -2231,9 +2232,9 @@
       "packageId": "SQLitePCLRaw.core",
       "versions": {
         "net10.0": "2.1.12",
+        "net10.0-windows7.0": "2.1.12",
         "net11.0": "2.1.12",
-        "net472": "2.1.12",
-        "net8.0-windows7.0": "2.1.12"
+        "net472": "2.1.12"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -2256,10 +2257,10 @@
       "packageId": "SQLitePCLRaw.lib.e_sqlite3",
       "versions": {
         "net10.0": "2.1.12",
+        "net10.0-windows7.0": "3.53.3",
         "net11.0": "2.1.12",
         "net462": "3.53.3",
-        "net472": "3.53.3",
-        "net8.0-windows7.0": "3.53.3"
+        "net472": "3.53.3"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -2307,8 +2308,8 @@
       "packageId": "SQLitePCLRaw.provider.e_sqlite3",
       "versions": {
         "net10.0": "2.1.12",
-        "net11.0": "2.1.12",
-        "net8.0-windows7.0": "2.1.12"
+        "net10.0-windows7.0": "2.1.12",
+        "net11.0": "2.1.12"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -2377,8 +2378,7 @@
       "packageId": "System.Collections.Immutable",
       "versions": {
         "net462": "9.0.10",
-        "net472": "10.0.3",
-        "net8.0-windows7.0": "10.0.12"
+        "net472": "10.0.3"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2403,8 +2403,7 @@
       "packageId": "System.ComponentModel.Annotations",
       "versions": {
         "net462": "5.0.0",
-        "net472": "5.0.0",
-        "net8.0-windows7.0": "5.0.0"
+        "net472": "5.0.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2426,8 +2425,7 @@
       "packageId": "System.Configuration.ConfigurationManager",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "10.0.12",
-        "net8.0-windows7.0": "10.0.12"
+        "net11.0": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2449,9 +2447,9 @@
       "packageId": "System.Data.Odbc",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.12",
         "net11.0": "10.0.12",
-        "net462": "10.0.12",
-        "net8.0-windows7.0": "10.0.12"
+        "net462": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2475,9 +2473,9 @@
       "packageId": "System.Data.OleDb",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.12",
         "net11.0": "10.0.12",
-        "net462": "10.0.12",
-        "net8.0-windows7.0": "10.0.12"
+        "net462": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2498,9 +2496,9 @@
       "displayName": "System.Data.SQLite",
       "packageId": "System.Data.SQLite",
       "versions": {
+        "net10.0-windows7.0": "2.0.4",
         "net462": "2.0.4",
-        "net472": "2.0.4",
-        "net8.0-windows7.0": "2.0.4"
+        "net472": "2.0.4"
       },
       "license": "Public Domain",
       "licenseTexts": [],
@@ -2522,8 +2520,7 @@
       "packageId": "System.Diagnostics.DiagnosticSource",
       "versions": {
         "net462": "10.0.3",
-        "net472": "10.0.3",
-        "net8.0-windows7.0": "10.0.8"
+        "net472": "10.0.3"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2550,8 +2547,7 @@
       "packageId": "System.Diagnostics.EventLog",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "11.0.0-rc.1.26425.128",
-        "net8.0-windows7.0": "10.0.12"
+        "net11.0": "11.0.0-rc.1.26425.128"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2574,8 +2570,7 @@
       "packageId": "System.Diagnostics.PerformanceCounter",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "10.0.12",
-        "net8.0-windows7.0": "10.0.12"
+        "net11.0": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2597,8 +2592,8 @@
       "packageId": "System.DirectoryServices.Protocols",
       "versions": {
         "net10.0": "8.0.2",
-        "net11.0": "8.0.2",
-        "net8.0-windows7.0": "8.0.2"
+        "net10.0-windows7.0": "8.0.2",
+        "net11.0": "8.0.2"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2620,8 +2615,7 @@
       "packageId": "System.Formats.Asn1",
       "versions": {
         "net462": "8.0.1",
-        "net472": "8.0.1",
-        "net8.0-windows7.0": "8.0.1"
+        "net472": "8.0.1"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2643,10 +2637,10 @@
       "packageId": "System.IdentityModel.Tokens.Jwt",
       "versions": {
         "net10.0": "8.16.0",
+        "net10.0-windows7.0": "8.16.0",
         "net11.0": "8.16.0",
         "net462": "8.16.0",
-        "net472": "8.16.0",
-        "net8.0-windows7.0": "8.16.0"
+        "net472": "8.16.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2669,9 +2663,9 @@
       "packageId": "System.IO.Hashing",
       "versions": {
         "net10.0": "10.0.12",
+        "net10.0-windows7.0": "10.0.12",
         "net11.0": "10.0.12",
-        "net472": "10.0.12",
-        "net8.0-windows7.0": "10.0.12"
+        "net472": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2693,8 +2687,7 @@
       "packageId": "System.IO.Pipelines",
       "versions": {
         "net462": "10.0.3",
-        "net472": "10.0.3",
-        "net8.0-windows7.0": "10.0.5"
+        "net472": "10.0.3"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2763,8 +2756,7 @@
       "displayName": "System.Reflection.Metadata",
       "packageId": "System.Reflection.Metadata",
       "versions": {
-        "net472": "10.0.1",
-        "net8.0-windows7.0": "8.0.0"
+        "net472": "10.0.1"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2813,8 +2805,7 @@
         "net10.0": "9.0.13",
         "net11.0": "9.0.13",
         "net462": "8.0.1",
-        "net472": "8.0.1",
-        "net8.0-windows7.0": "8.0.1"
+        "net472": "8.0.1"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2837,8 +2828,7 @@
       "packageId": "System.Security.Cryptography.ProtectedData",
       "versions": {
         "net10.0": "10.0.12",
-        "net11.0": "10.0.12",
-        "net8.0-windows7.0": "10.0.12"
+        "net11.0": "10.0.12"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2860,8 +2850,7 @@
       "packageId": "System.Security.Permissions",
       "versions": {
         "net10.0": "4.5.0",
-        "net11.0": "4.5.0",
-        "net8.0-windows7.0": "4.5.0"
+        "net11.0": "4.5.0"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2905,8 +2894,7 @@
       "packageId": "System.Text.Encodings.Web",
       "versions": {
         "net462": "10.0.3",
-        "net472": "10.0.3",
-        "net8.0-windows7.0": "10.0.5"
+        "net472": "10.0.3"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2929,8 +2917,7 @@
       "packageId": "System.Text.Json",
       "versions": {
         "net462": "10.0.3",
-        "net472": "10.0.3",
-        "net8.0-windows7.0": "10.0.5"
+        "net472": "10.0.3"
       },
       "license": "MIT",
       "licenseTexts": [
@@ -2948,27 +2935,6 @@
         "linq2db.LINQPad.lpx",
         "linq2db.PostgreSQL",
         "linq2db.t4models"
-      ]
-    },
-    {
-      "id": "system.threading.accesscontrol",
-      "displayName": "System.Threading.AccessControl",
-      "packageId": "System.Threading.AccessControl",
-      "versions": {
-        "net8.0-windows7.0": "10.0.12"
-      },
-      "license": "MIT",
-      "licenseTexts": [
-        "notices-6d15e10a.txt"
-      ],
-      "copyright": "© Microsoft Corporation. All rights reserved.",
-      "projectUrl": "https://dot.net/",
-      "redistribution": "permitted",
-      "files": [
-        "System.Threading.AccessControl.dll"
-      ],
-      "artifacts": [
-        "linq2db.cli"
       ]
     },
     {
@@ -3026,8 +2992,8 @@
       "packageId": "Ydb.Protos",
       "versions": {
         "net10.0": "1.2.0",
-        "net11.0": "1.2.0",
-        "net8.0-windows7.0": "1.2.0"
+        "net10.0-windows7.0": "1.2.0",
+        "net11.0": "1.2.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [
@@ -3049,8 +3015,8 @@
       "packageId": "Ydb.Sdk",
       "versions": {
         "net10.0": "0.35.0",
-        "net11.0": "0.35.0",
-        "net8.0-windows7.0": "0.35.0"
+        "net10.0-windows7.0": "0.35.0",
+        "net11.0": "0.35.0"
       },
       "license": "Apache-2.0",
       "licenseTexts": [

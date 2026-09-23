@@ -26,7 +26,7 @@ COMPONENTS
    License: MIT  see [2]
    Copyright (c) .NET Foundation and Contributors
 
-3. Microsoft.Bcl.AsyncInterfaces net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.0
+3. Microsoft.Bcl.AsyncInterfaces 10.0.3
    https://dot.net/
    License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
