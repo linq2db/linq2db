@@ -59,10 +59,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var longType = Factory.GetDbDataType(typeof(long));
 
 			var nanoseconds = Factory.Sub(longType,
-				Factory.Function(longType, "toUnixTimestamp64Nano", ClickHouseDateTime.AsDateTime64(Factory, element.End)),
-				Factory.Function(longType, "toUnixTimestamp64Nano", ClickHouseDateTime.AsDateTime64(Factory, element.Start)));
+				Factory.ToUnixTimestamp64Nano(element.End),
+				Factory.ToUnixTimestamp64Nano(element.Start));
 
-			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
+			return TruncateDivide(nanoseconds, 100L);
 		}
 
 		/// <inheritdoc />
@@ -86,7 +86,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			var longType = Factory.GetDbDataType(typeof(long));
 			var interval = Factory.Function(longType, "toIntervalNanosecond", Factory.Multiply(longType, element.Interval, 100L));
-			var temporal = ClickHouseDateTime.AsDateTime64(Factory, element.Temporal);
+			var temporal = Factory.AsDateTime64(element.Temporal);
 			var type     = Factory.GetDbDataType(temporal);
 
 			return element.IsSubtract
