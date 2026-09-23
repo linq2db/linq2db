@@ -275,6 +275,7 @@ jobs:
           filters: '[all][postgresql.all]'
 
         - name: j_Oracle1819
+          gh_linux: 'true'
           title: Oracle 18c + 19c
           config_linux: oracle1819
           script_linux_global: oracle1819.sh
@@ -360,6 +361,7 @@ jobs:
           filters: '[all][mysql.all]'
 
         - name: q_Oracle2123
+          gh_linux: 'true'
           title: Oracle 21c + 23c
           config_linux: oracle2123
           script_linux_global: oracle2123.sh
@@ -399,6 +401,7 @@ jobs:
           filters: '[all][sqlite.all]'
 
         - name: t_Oracle1112
+          gh_linux: 'true'
           title: Oracle 11g + 12c
           config_linux: oracle1112
           script_linux_global: oracle1112.sh

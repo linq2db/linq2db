@@ -122,8 +122,8 @@ jobs:
           linux, windows = [], []
           # Counted before the gh_linux / gh_windows filters, to tell "this surface selects nothing at
           # all" - the silent-empty-matrix that took build 23192 green with zero tests - apart from
-          # "every leg for this surface stays on Azure", which is a normal outcome for e.g.
-          # [oracle.all] and for every win-mssql surface.
+          # "every leg for this surface stays on Azure", which is a normal outcome for every
+          # win-mssql surface.
           matched = 0
           for e in entries:
               if surface not in e['filters']:
@@ -148,8 +148,8 @@ jobs:
               if e.get('enable_os_ubuntu') is True:
                   matched += 1
                   # The other half of the split in test-jobs.yml: Azure skips entries marked gh_linux,
-                  # so only those run here. An entry without it stays on Azure - today the three Oracle
-                  # legs, which Azure passes and this environment fails.
+                  # so only those run here. An entry without it stays on Azure - today every ubuntu entry
+                  # carries the flag, so the branch exists for a future entry that has to stay behind.
                   if e.get('gh_linux') == 'true':
                       linux.append({
                           'name':          e['name'],
@@ -431,8 +431,8 @@ jobs:
     needs: [prepare, build]
     # An empty matrix is not "no jobs" - it fails the RUN, with no failed job to point at and no
     # annotation on any check run, so `gh run view` shows every job green under a red run. Surfaces
-    # whose linux legs all stay on Azure ([oracle.all], and every windows-only surface) hit it, so the
-    # job is skipped explicitly rather than instantiated with nothing in it.
+    # whose linux legs all stay on Azure - every windows-only surface - hit it, so the job is skipped
+    # explicitly rather than instantiated with nothing in it.
     if: needs.prepare.outputs.any == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 180
