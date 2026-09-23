@@ -35,6 +35,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
+			statement = (SqlStatement)new AccessBooleanSortKeyLoweringVisitor().LowerBooleanSortKeys(statement);
+
 			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 			statement = WrapParameters(statement);
@@ -151,7 +153,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return statement;
 		}
 
-		SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		protected virtual SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = statement.Convert(1, (_, e) =>
 			{

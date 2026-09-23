@@ -72,6 +72,19 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported          = false;
 			SqlProviderFlags.IsSubqueryJoinOnOuterReferenceSupported               = false;
 
+			// LibRed's engine accepts a superset of Jet SQL
+			if (provider == AccessProvider.LibRed)
+			{
+				SqlProviderFlags.IsWindowFunctionsSupported       = true;
+				SqlProviderFlags.IsSkipSupported                  = true;
+				SqlProviderFlags.IsSubQuerySkipSupported          = true;
+				SqlProviderFlags.AcceptsTakeAsParameter           = true;
+				SqlProviderFlags.IsApplyJoinSupported             = true;
+				SqlProviderFlags.IsCrossJoinSupported             = true;
+				SqlProviderFlags.IsSupportsJoinWithoutCondition   = true;
+				SqlProviderFlags.IsDistinctSetOperationsSupported = true;
+			}
+
 			if (provider == AccessProvider.OleDb)
 			{
 				SetCharField("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -96,7 +109,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			SetProviderField<DbDataReader, TimeSpan, DateTime>((r, i) => r.GetDateTime(i) - new DateTime(1899, 12, 30));
 
-			_sqlOptimizer = new AccessSqlOptimizer(SqlProviderFlags);
+			_sqlOptimizer = provider == AccessProvider.LibRed
+				? new AccessLibRedSqlOptimizer(SqlProviderFlags)
+				: new AccessSqlOptimizer(SqlProviderFlags);
 		}
 
 		private  AccessVersion  Version  { get; }
@@ -106,6 +121,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
+			if (Provider == AccessProvider.LibRed)
+				return new AccessLibRedMemberTranslator();
+
 			return Version == AccessVersion.Jet
 				? new AccessJetMemberTranslator()
 				: new AccessMemberTranslator();

@@ -380,7 +380,10 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderAccess : IExtensionCallBuilder
 		{
-			public void Build(ISqlExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder) => BuildAccess(builder, millisecondPart: null);
+
+			// LibRed extends Access DateDiff with an 'ms' interval
+			internal static void BuildAccess(ISqlExtensionBuilder builder, string? millisecondPart)
 			{
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1);
@@ -407,7 +410,7 @@ namespace LinqToDB
 					DateParts.Hour        => "h",
 					DateParts.Minute      => "n",
 					DateParts.Second      => "s",
-					DateParts.Millisecond => throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
+					DateParts.Millisecond => millisecondPart ?? throw new ArgumentOutOfRangeException(nameof(part), part, "Access doesn't support milliseconds interval."),
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
@@ -416,6 +419,11 @@ namespace LinqToDB
 
 				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(int)), expStr, startDate, endDate);
 			}
+		}
+
+		sealed class DateDiffBuilderAccessLibRed : IExtensionCallBuilder
+		{
+			public void Build(ISqlExtensionBuilder builder) => DateDiffBuilderAccess.BuildAccess(builder, millisecondPart: "ms");
 		}
 
 		sealed class DateDiffBuilderOracle : IExtensionCallBuilder
@@ -557,6 +565,7 @@ namespace LinqToDB
 		[Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		[Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
 		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Extension(PN.AccessLibRed, "",            BuilderType = typeof(DateDiffBuilderAccessLibRed))]
 		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
 		[Extension(PN.ClickHouse, "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
 		[Extension(PN.Ydb,        "",              BuilderType = typeof(DateDiffBuilderYdb))]

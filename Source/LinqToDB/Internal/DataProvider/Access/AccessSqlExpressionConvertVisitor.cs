@@ -77,8 +77,14 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
-			return null;
+			return IsTickArithmeticSupported ? base.ElapsedTicks(element) : null;
 		}
+
+		/// <summary>
+		/// Whether this engine can count and shift in a unit fine enough, and wide enough, to carry a tick count - which
+		/// Jet and ACE cannot, for the reasons <see cref="ElapsedTicks"/> and <see cref="LowerTemporalArithmetic"/> give.
+		/// </summary>
+		protected virtual bool IsTickArithmeticSupported => false;
 
 		/// <inheritdoc />
 		/// <remarks>
@@ -101,7 +107,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			return null;
+			return IsTickArithmeticSupported ? base.LowerTemporalArithmetic(element) : null;
 		}
 
 		const string DateDiffFunction = "DateDiff";
@@ -149,7 +155,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return base.LowerIntervalPart(element);
 		}
 
-		static string? DatePartName(SqlIntervalUnit unit)
+		protected virtual string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch
 			{

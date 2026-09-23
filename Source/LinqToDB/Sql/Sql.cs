@@ -567,6 +567,7 @@ namespace LinqToDB
 		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "reverseUTF8", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.Ydb,   "Unicode::Reverse", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.AccessLibRed, "StrReverse", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Reverse(string? str)
 		{
 			if (string.IsNullOrEmpty(str)) return str;
