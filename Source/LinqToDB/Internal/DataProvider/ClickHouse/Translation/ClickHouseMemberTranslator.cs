@@ -76,9 +76,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
-				var factory      = translationContext.ExpressionFactory;
-				var intDataType  = factory.GetDbDataType(typeof(int));
-				var longDataType = factory.GetDbDataType(typeof(long));
+				var factory     = translationContext.ExpressionFactory;
+				var intDataType = factory.GetDbDataType(typeof(int));
 
 				return datepart switch
 				{
@@ -87,14 +86,14 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					Sql.DateParts.Month       => factory.Function(intDataType, "toMonth", dateTimeExpression),
 					Sql.DateParts.DayOfYear   => factory.Function(intDataType, "toDayOfYear", dateTimeExpression),
 					Sql.DateParts.Day         => factory.Function(intDataType, "toDayOfMonth", dateTimeExpression),
-					Sql.DateParts.Week        => factory.Function(intDataType, "toISOWeek", factory.Function(longDataType, "toDateTime64", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1))),
+					Sql.DateParts.Week        => factory.Function(intDataType, "toISOWeek", factory.AsDateTime64(dateTimeExpression)),
 					Sql.DateParts.Hour        => factory.Function(intDataType, "toHour", dateTimeExpression),
 					Sql.DateParts.Minute      => factory.Function(intDataType, "toMinute", dateTimeExpression),
 					Sql.DateParts.Second      => factory.Function(intDataType, "toSecond", dateTimeExpression),
 					Sql.DateParts.WeekDay     => factory.Function(intDataType, "toDayOfWeek", factory.Function(intDataType, "addDays", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(intDataType, 1))),
 					// The remainder is brought back into range because the epoch is negative before 1970 and `%`
 					// truncates toward zero. `toMillisecond` answers this in one call; it needs ClickHouse 24.6.
-					Sql.DateParts.Millisecond => factory.Mod(factory.Add(intDataType, factory.Mod(factory.Function(intDataType, "toUnixTimestamp64Milli", ClickHouseDateTime.AsDateTime64(factory, dateTimeExpression)), 1000), factory.Value(intDataType, 1000)), 1000),
+					Sql.DateParts.Millisecond => factory.Mod(factory.Add(intDataType, factory.Mod(factory.ToUnixTimestamp64Milli(dateTimeExpression), 1000), factory.Value(intDataType, 1000)), 1000),
 					_                         => null,
 				};
 			}
@@ -128,7 +127,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 						var resultExpression = factory.Function(dateType, "fromUnixTimestamp64Nano",
 							factory.Add(
 								longDataType,
-								factory.Function(longDataType, "toUnixTimestamp64Nano", ClickHouseDateTime.AsDateTime64(factory, dateTimeExpression)),
+								factory.ToUnixTimestamp64Nano(dateTimeExpression),
 								factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, 1000000), longDataType)
 							)
 						);
@@ -162,11 +161,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 				if (millisecond == null)
 				{
-					// makeDateTime answers a DateTime, whatever the mapping schema makes of a CLR one - and an
-					// operand that claims DateTime64 here is one the epoch functions then refuse.
-					var makeType = dateType.WithDataType(DataType.DateTime).WithPrecision(null);
-
-					resultExpression = factory.Function(makeType, "makeDateTime", year, month, day,
+					resultExpression = factory.Function(ClickHouseExpressionExtensions.DateTimeType(dateType), "makeDateTime", year, month, day,
 						hour        ?? factory.Value(intDataType, 0),
 						minute      ?? factory.Value(intDataType, 0),
 						second      ?? factory.Value(intDataType, 0)
@@ -190,36 +185,30 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var cast = translationContext.ExpressionFactory.Cast(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), true);
-				return cast;
+				return translationContext.ExpressionFactory.AsDate32(dateExpression);
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var cast = translationContext.ExpressionFactory.Cast(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), true);
-				return cast;
+				return translationContext.ExpressionFactory.AsDate32(dateExpression);
 			}
 
 			static ISqlExpression? CommonTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression)
 			{
-				//toInt64((toUnixTimestamp64Nano(toDateTime64(t.DateTimeValue, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32(t.DateTimeValue), 7))) / 100)
+				//toInt64((toUnixTimestamp64Nano(t.DateTimeValue) - toUnixTimestamp64Nano(toDateTime64(toDate32(t.DateTimeValue), 7))) / 100)
 				var factory        = translationContext.ExpressionFactory;
 				var longDataType   = factory.GetDbDataType(typeof(long));
 				var intDataType    = factory.GetDbDataType(typeof(int));
 				var resultDataType = longDataType.WithSystemType(typeof(TimeSpan));
 				var doubleDataType = factory.GetDbDataType(typeof(double));
-				var dateTime64     = factory.GetDbDataType(dateExpression).WithDataType(DataType.DateTime64);
-				var dateTime32     = factory.GetDbDataType(dateExpression).WithDataType(DataType.DateTime);
-
-				var precision = factory.Value(intDataType, 7);
 
 				var resultExpression = factory.Cast(
 					factory.Div(
 						doubleDataType,
 						factory.Sub(
 							longDataType,
-							factory.Function(longDataType, "toUnixTimestamp64Nano", factory.Function(dateTime64, "toDateTime64", dateExpression, precision)),
-							factory.Function(longDataType, "toUnixTimestamp64Nano", factory.Function(dateTime64, "toDateTime64", factory.Function(dateTime32, "toDate32", dateExpression), precision))
+							factory.ToUnixTimestamp64Nano(dateExpression),
+							factory.ToUnixTimestamp64Nano(factory.AsDate32(dateExpression))
 						),
 						factory.Value(intDataType, 100)),
 					resultDataType);
@@ -244,38 +233,26 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				return TranslateNow(translationContext, translationFlags);
 			}
 
-			/// <summary>
-			/// Type of a <c>now(…)</c> result. The server answers a <c>DateTime</c> whatever the mapping schema
-			/// makes of the CLR type, and an operand that claims <c>DateTime64</c> here is one the epoch
-			/// functions then refuse.
-			/// </summary>
-			static DbDataType NowType(DbDataType dbDataType) => dbDataType.WithDataType(DataType.DateTime).WithPrecision(null);
-
 			protected override ISqlExpression? TranslateNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var factory     = translationContext.ExpressionFactory;
-				var nowFunction = factory.Function(NowType(factory.GetDbDataType(typeof(DateTime))), "now", ParametersNullabilityType.NotNullable);
-				return nowFunction;
+				var factory = translationContext.ExpressionFactory;
+				return factory.Now(factory.GetDbDataType(typeof(DateTime)), utc: false);
 			}
 
 			protected override ISqlExpression? TranslateUtcNow(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				var dbDataType = NowType(factory.GetDbDataType(typeof(DateTime)));
-				return factory.Function(dbDataType, "now", factory.Value("UTC"));
+				return factory.Now(factory.GetDbDataType(typeof(DateTime)), utc: true);
 			}
 
 			protected override ISqlExpression? TranslateZonedNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				var factory     = translationContext.ExpressionFactory;
-				var nowFunction = factory.Function(NowType(dbDataType), "now", ParametersNullabilityType.NotNullable);
-				return nowFunction;
+				return translationContext.ExpressionFactory.Now(dbDataType, utc: false);
 			}
 
 			protected override ISqlExpression? TranslateZonedUtcNow(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
-				var factory = translationContext.ExpressionFactory;
-				return factory.Function(NowType(dbDataType), "now", factory.Value("UTC"));
+				return translationContext.ExpressionFactory.Now(dbDataType, utc: true);
 			}
 		}
 
