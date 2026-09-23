@@ -41,6 +41,9 @@ env:
   SOLUTION: linq2db.slnx
   RELEASE_CONFIGURATION: Release
   TEST_CONFIGURATION: Azure
+  # The .NET 11 SDK is still prerelease, so setup-dotnet needs the exact build global.json pins.
+  # Collapse to 11.x once .NET 11 ships.
+  DOTNET_SDK_11: 11.0.100-rc.1.26425.128
   # Per-test retry for the MTP runner, as build-vars.yml:24.
   TEST_RETRY_ARGS: --retry-failed-tests 2 --retry-failed-tests-max-tests 5
 
@@ -59,9 +62,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            8.x
-            9.x
             10.x
+            ${{ env.DOTNET_SDK_11 }}
 
       # Same shape as build-job.yml:49-55: a dev suffix everywhere except the release branch.
       - name: Resolve version suffix
@@ -156,7 +158,7 @@ jobs:
           path: .build/lpx
           if-no-files-found: error
 
-  # Windows because Examples has net462 projects (Examples/**/*.csproj: net462, net9.0, net10.0).
+  # Windows because Examples has net462 projects (Examples/**/*.csproj: net462 and the latest TFM).
   examples:
     name: Examples build
     runs-on: windows-2025
@@ -168,8 +170,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            9.x
             10.x
+            ${{ env.DOTNET_SDK_11 }}
 
       - run: dotnet build Examples/Examples.slnx --configuration Debug
 
@@ -187,8 +189,8 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            8.x
             10.x
+            ${{ env.DOTNET_SDK_11 }}
 
       # --project, not a positional path: global.json selects the Microsoft.Testing.Platform runner,
       # whose CLI rejects a bare project argument with "Specifying a project for 'dotnet test' should
@@ -209,9 +211,9 @@ jobs:
 
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
-          dotnet-version: 10.x
+          dotnet-version: ${{ env.DOTNET_SDK_11 }}
 
-      - run: dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net10.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
+      - run: dotnet publish Tests/Tests.SingleFile/Tests.SingleFile.csproj -c Release -f net11.0 -r win-x64 --self-contained true -p:PublishSingleFile=true -o .build/publish/singlefile
 
       - run: .build/publish/singlefile/linq2db.Tests.SingleFile.exe
 
@@ -235,16 +237,15 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: |
-            8.x
-            9.x
             10.x
+            ${{ env.DOTNET_SDK_11 }}
 
       - run: dotnet build Tests/LinqToDB.CLI/Tests.LinqToDB.CLI.csproj --configuration ${{ env.TEST_CONFIGURATION }}
 
       - name: Run CLI tests
         shell: pwsh
         run: |
-          foreach ($tfm in @('net8.0', 'net9.0', 'net10.0')) {
+          foreach ($tfm in @('net10.0', 'net11.0')) {
             $exe = Join-Path ".build/bin/Tests.LinqToDB.CLI/${{ env.TEST_CONFIGURATION }}/$tfm" '${{ matrix.exe }}'
             & $exe --filter "TestCategory != SkipCI" --settings .runsettings --report-trx --report-trx-filename "cli-$tfm.trx" --results-directory CliTestResults --hangdump --hangdump-timeout 5m $env:TEST_RETRY_ARGS.Split(' ')
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

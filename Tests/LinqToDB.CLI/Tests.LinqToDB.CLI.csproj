@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<AssemblyName>linq2db.CLI.Tests</AssemblyName>
-		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<TargetFrameworks>$(ToolTargetFrameworks)</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">$(LatestTargetFramework)</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<EnableNUnitRunner>true</EnableNUnitRunner>
 	</PropertyGroup>

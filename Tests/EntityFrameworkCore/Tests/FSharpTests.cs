@@ -1,4 +1,4 @@
-#if EF8
+#if EF_FSHARP
 using System;
 using System.Linq;
 
@@ -52,10 +52,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			public int? ValueN { get; set; }
 		}
 
-		// No declared expectation: this whole file is behind #if EF8, and EF8 is defined only in
-		// Source/LinqToDB.EntityFrameworkCore.EF8.csproj - DefineConstants do not cross a ProjectReference, so it
-		// compiles into no test assembly and has never been observed running. Any failure counts until it can be.
-		[ActiveIssue(4646, Details = "no-declaration: dead behind #if EF8, never observed running")]
+		// Both cases below put an option-typed member through the query pipeline, where EntityFrameworkCore
+		// .FSharp's own IMemberTranslator runs. That package's last release is 6.0.7 (2022) and it has not
+		// followed EF Core since; TestLeftJoin above stays live because it never reaches a member translator.
+		const string OptionTranslatorBroken = "EntityFrameworkCore.FSharp 6.0.7 calls ISqlExpressionFactory.Convert(SqlExpression, Type, RelationalTypeMapping), removed in EF Core 10";
+
+		[ActiveIssue(4646, Details = OptionTranslatorBroken)]
 		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/260")]
 		public void Issue4646TestLinqToDB([EFDataSources] string provider)
 		{
@@ -72,6 +74,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			}
 		}
 
+		[ActiveIssue(4646, Details = OptionTranslatorBroken)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
 		public void Issue4646TestEF([EFDataSources] string provider)
 		{

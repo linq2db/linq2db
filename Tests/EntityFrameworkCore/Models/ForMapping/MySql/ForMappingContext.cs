@@ -17,8 +17,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.MySql.Models.ForMapping
 			modelBuilder.Entity<WithIdentity>(b =>
 			{
 				b.HasKey(e => e.Id);
+#if EF_MYSQL
 				b.Property(e => e.Id)
 					.UseMySqlIdentityColumn();
+#endif
 			});
 
 			modelBuilder.Entity<NoIdentity>(b =>

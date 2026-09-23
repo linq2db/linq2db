@@ -1,5 +1,8 @@
 <Project>
 
+	<!--Each EF project defines its own EFnn symbol plus every EFnn_OR_GREATER it satisfies. Source uses the
+	    _OR_GREATER form for a capability that arrived in a version and stayed, so a new EF version is a token
+	    here rather than an edit to every #if. Same convention in Tests.EntityFrameworkCore.props.-->
 	<PropertyGroup>
 		<AssemblyName>linq2db.EntityFrameworkCore</AssemblyName>
 		<RootNamespace>LinqToDB.EntityFrameworkCore</RootNamespace>

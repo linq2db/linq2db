@@ -1,9 +1,10 @@
 {
 	"sdk": {
-		"//": "latestFeature, not minor: 'minor' prefers the highest patch of the requested feature band (10.0.2xx) over rolling forward, so on a machine that has 10.0.2xx and 10.0.4xx side by side it picks the 2xx - whose Roslyn is 5.3, while CodeGenerators is built against 5.6 and fails to load with CS9057. latestFeature takes the newest 10.0.x installed instead.",
-		"version": "10.0.100",
+		"//": "latestFeature, not minor: 'minor' prefers the highest patch of the requested feature band (11.0.2xx) over rolling forward, so on a machine that has 11.0.2xx and 11.0.4xx side by side it picks the 2xx - whose Roslyn is older than the one CodeGenerators is built against, and it fails to load with CS9057. latestFeature takes the newest 11.0.x installed instead.",
+		"//prerelease": "The exact rc build, not 11.0.100: a prerelease sorts below the release it precedes, so asking for 11.0.100 does not resolve 11.0.100-rc.1. Drop allowPrerelease and pin 11.0.100 at RTM.",
+		"version": "11.0.100-rc.1.26425.128",
 		"rollForward": "latestFeature",
-		"allowPrerelease": false
+		"allowPrerelease": true
 	},
 	"test": {
 		"runner": "Microsoft.Testing.Platform"

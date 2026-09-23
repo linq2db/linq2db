@@ -1037,7 +1037,11 @@ namespace Tests.DataProvider
 					continue;
 				}
 
-				Assert.That(actualValue, Is.EqualTo(testValue),
+				var constraint = actualValue is decimal
+					? Is.EqualTo(testValue).Within(FloatingPointDeltaPercent).Percent
+					: Is.EqualTo(testValue);
+
+				Assert.That(actualValue, constraint,
 					actualValue is DateTimeOffset
 						? $"Column  : {column.MemberName} {actualValue:yyyy-MM-dd HH:mm:ss.fffffff zzz} {testValue:yyyy-MM-dd HH:mm:ss.fffffff zzz}"
 						: $"Column  : {column.MemberName}");

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	
 	<Import Project="LinqToDB.EntityFrameworkCore.props" />
 
@@ -7,7 +7,7 @@
 		<Version>$(EF10Version)</Version>
 		<!--don't remove it! WPF doesn't work with non-4-component versions-->
 		<AssemblyVersion>$(EF10Version).0</AssemblyVersion>
-		<DefineConstants>EF10;$(DefineConstants)</DefineConstants>
+		<DefineConstants>EF10;EF10_OR_GREATER;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
