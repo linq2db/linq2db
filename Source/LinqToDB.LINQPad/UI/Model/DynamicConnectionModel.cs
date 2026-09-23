@@ -91,8 +91,33 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 
 	private void UpdateSecondaryConnection()
 	{
-		SecondaryConnectionStringVisibility = Database?.SupportsSecondaryConnection == true ? Visibility.Visible : Visibility.Collapsed;
+		var provider = Provider;
+
+		if (provider?.SecondaryName != null)
+		{
+			SecondaryConnectionStringVisibility = Visibility.Visible;
+			ConnectionStringLabel               = $"{GetProviderDisplayName(provider.Name)} connection string";
+			SecondaryConnectionStringLabel      = $"{GetProviderDisplayName(provider.SecondaryName)} connection string (schema only)";
+		}
+		else
+		{
+			SecondaryConnectionStringVisibility = Visibility.Collapsed;
+			ConnectionStringLabel               = "Connection string";
+			SecondaryConnectionStringLabel      = null;
+		}
+
 		OnPropertyChanged(_secondaryConnectionStringVisibilityChangedEventArgs);
+		OnPropertyChanged(_connectionStringLabelChangedEventArgs);
+		OnPropertyChanged(_secondaryConnectionStringLabelChangedEventArgs);
+	}
+
+	private string GetProviderDisplayName(string providerName)
+	{
+		foreach (var provider in Database!.Providers)
+			if (provider.SecondaryName == null && string.Equals(provider.Name, providerName, System.StringComparison.Ordinal))
+				return provider.DisplayName;
+
+		return providerName;
 	}
 
 	public ObservableCollection<IDatabaseProvider> Databases { get; } = new();
@@ -129,10 +154,17 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 		get => GetCurrentProvider();
 		set
 		{
-			Settings.Connection.Provider = value?.Name;
+			Settings.Connection.Provider          = value?.Name;
+			Settings.Connection.SecondaryProvider = value?.SecondaryName;
+
+			if (value?.SecondaryName == null)
+				Settings.Connection.SecondaryConnectionString = null;
+
 			UpdateProviderPathVisibility();
 			UpdateProviderDownloadUrl();
+			UpdateSecondaryConnection();
 			OnPropertyChanged(_providerChangedEventArgs);
+			OnPropertyChanged(_secondaryConnectionStringChangedEventArgs);
 		}
 	}
 
@@ -143,8 +175,11 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 
 		if (!string.IsNullOrWhiteSpace(Settings.Connection.Provider))
 		{
+			var secondary = string.IsNullOrWhiteSpace(Settings.Connection.SecondaryProvider) ? null : Settings.Connection.SecondaryProvider;
+
 			foreach (var provider in Database.Providers)
-				if (string.Equals(provider.Name, Settings.Connection.Provider, System.StringComparison.Ordinal))
+				if (string.Equals(provider.Name, Settings.Connection.Provider, System.StringComparison.Ordinal)
+					&& string.Equals(provider.SecondaryName, secondary, System.StringComparison.Ordinal))
 					return provider;
 		}
 
@@ -209,9 +244,16 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 		}
 	}
 
+	private static readonly PropertyChangedEventArgs _connectionStringLabelChangedEventArgs = new (nameof(ConnectionStringLabel));
+	public string ConnectionStringLabel { get; set; } = "Connection string";
+
 	private static readonly PropertyChangedEventArgs _secondaryConnectionStringVisibilityChangedEventArgs = new (nameof(SecondaryConnectionStringVisibility));
 	public Visibility SecondaryConnectionStringVisibility { get; set; }
 
+	private static readonly PropertyChangedEventArgs _secondaryConnectionStringLabelChangedEventArgs = new (nameof(SecondaryConnectionStringLabel));
+	public string? SecondaryConnectionStringLabel { get; set; }
+
+	private static readonly PropertyChangedEventArgs _secondaryConnectionStringChangedEventArgs = new (nameof(SecondaryConnectionString));
 	public string? SecondaryConnectionString
 	{
 		get
@@ -227,26 +269,7 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 				value = null;
 
 			Settings.Connection.SecondaryConnectionString = value;
-
-			if (Database != null && value != null && Database.AutomaticProviderSelection)
-				SecondaryProvider = Database.GetProviderByConnectionString(value);
 		}
-	}
-
-	public ProviderInfo? SecondaryProvider
-	{
-		get
-		{
-			if (Database == null || string.IsNullOrWhiteSpace(Settings.Connection.SecondaryProvider))
-				return null;
-
-			foreach (var provider in Database.Providers)
-				if (string.Equals(provider.Name, Settings.Connection.SecondaryProvider, System.StringComparison.Ordinal))
-					return provider;
-
-			return null;
-		}
-		set => Settings.Connection.SecondaryProvider = value?.Name;
 	}
 
 	public bool EncryptConnectionString

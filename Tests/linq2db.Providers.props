@@ -61,6 +61,12 @@
 		</Reference>
 	</ItemGroup>
 
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net11.0' ">
+		<!--the managed Access engine; net11.0-only, which is why the Access.LibRed.* test configs are
+		    listed in the NET110 provider list alone-->
+		<PackageReference Include="LibRed.Ado" />
+	</ItemGroup>
+
 	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
 	<Choose>
 		<When Condition=" $(X86STUBS) != 'True' ">

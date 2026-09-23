@@ -669,6 +669,8 @@ namespace Tests.Linq
 		[ActiveIssue(5591, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
 			ErrorMessage = "uncompatible coalesce types, first type: Optional<Decimal(35,2)>, second type: Decimal(22,9)",
 			Details = "YDB strict-decimal rejects COALESCE of mismatched decimal facets.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: the same alpha.2 -> alpha.3 regression as AggregatesKeepTheDeclaredUnit - [x] + [x] over a CURRENCY SUM is declared Int32 by both GetFieldType and GetSchemaTable and returned as a Decimal. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		[Test]
 		public void Issue1601([DataSources(false)] string context)
 		{

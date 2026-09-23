@@ -960,7 +960,7 @@ namespace Tests.Linq
 			AreEqual(expected, actual);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllAccess, ErrorMessage = "This operation is not allowed in subqueries.",
+		[ActiveIssue(Configuration = TestProvName.AllNativeAccess, ErrorMessage = "This operation is not allowed in subqueries.",
 			Details = "no-issue: UNION in a subquery is not supported by Access; supporting it means transforming the shape, and nothing tracks that.")]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
@@ -1734,6 +1734,9 @@ namespace Tests.Linq
 		[ActiveIssue(Configuration = TestProvName.AllSybase, SkipForLinqService = true,
 			ErrorTypeName = "AdoNetCore.AseClient.AseException", ErrorMessage = "does not allow null values.",
 			Details = "no-issue: a Sybase BIT column cannot hold NULL, so the seed row with a null bool? cannot be inserted. Update BoolN handling for sybase.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.ArgumentException",
+			ErrorMessage = "Byte array for Guid must be exactly 16 bytes long",
+			Details = "no-issue: a GUID column read through a set operation carrying null literals comes back as a byte array of the wrong length. Probably the same declared-type-vs-value family as the Decimal/Int32 regression in AggregatesKeepTheDeclaredUnit, but that is not proven - the raw-ADO set-operation reads all succeed. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{

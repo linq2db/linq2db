@@ -54,7 +54,8 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void DatabaseSpecificTest([DataSources] string context)
+		// LibRed's parser rejects WITH OWNERACCESS OPTION, which the Access arm of these queries applies
+		public void DatabaseSpecificTest([DataSources(TestProvName.AllAccessLibRed)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -123,7 +124,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void UnionTest([DataSources(TestProvName.AllPostgreSQL)] string context)
+		public void UnionTest([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllAccessLibRed)] string context)
 		{
 			using var db = GetDataContext(context);
 

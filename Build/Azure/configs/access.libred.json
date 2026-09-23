@@ -1,0 +1,11 @@
+{
+	// The providers are declared under the TFM-scoped section rather than the shared Azure.TestJob one
+	// every other job uses: LibRed.Ado is net11.0-only, and a full_run also runs this leg's net10.0 pass,
+	// where the assembly is not referenced and both configs would fail to load.
+	"NET110.Azure": {
+		"Providers": [
+			"Access.LibRed.Mdb",
+			"Access.LibRed.Accdb"
+		]
+	}
+}

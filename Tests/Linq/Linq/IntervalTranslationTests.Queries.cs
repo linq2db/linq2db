@@ -1028,6 +1028,8 @@ namespace Tests.Linq
 		/// member rather than the column - there is no numeric sum of a <see cref="TimeSpan"/> - which makes it the
 		/// case where the unit has to be applied before the addition rather than after.
 		/// </remarks>
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException",
+			Details = "no-issue: an alpha.2 -> alpha.3 regression, measured against both packages - the reader declares Int32 for a computed column (GetFieldType and GetSchemaTable agree) and then returns a Decimal, so the materializer compiled from the declared type fails the cast. alpha.2 declared Decimal and was consistent. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		[Test]
 		public void AggregatesKeepTheDeclaredUnit([DataSources] string context)
 		{
