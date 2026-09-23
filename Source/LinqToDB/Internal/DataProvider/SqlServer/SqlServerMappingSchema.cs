@@ -335,8 +335,31 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversionAction, value);
 		}
 
+		static readonly DateTime DateTimeMinDate      = new(1753, 1, 1);
+		static readonly DateTime SmallDateTimeMinDate = new(1900, 1, 1);
+
+		/// <summary>
+		/// The earliest date the type being written has. Below it the value has no literal there - the server refuses the
+		/// conversion as out of range - so what is written where a lower date is asked for is the least date the type does
+		/// have, which answers a comparison the way the value itself would. DATE and DATETIME2 start at 0001-01-01 and need
+		/// nothing, but a server older than 2008 has neither and writes both as DATETIME.
+		/// </summary>
+		static DateTime ClampToTypeRange(SqlDataType dt, DateTime value, bool v2008plus)
+		{
+			return dt.Type.DataType switch
+			{
+				DataType.Text or DataType.Char or DataType.VarChar
+					or DataType.NText or DataType.NChar or DataType.NVarChar => value,
+				DataType.SmallDateTime                                       => value < SmallDateTimeMinDate ? SmallDateTimeMinDate : value,
+				DataType.Date or DataType.DateTime2 when v2008plus           => value,
+				_                                                            => value < DateTimeMinDate ? DateTimeMinDate : value,
+			};
+		}
+
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dt, DateTime value, bool v2008plus, bool supportsFromParts)
 		{
+			value = ClampToTypeRange(dt, value, v2008plus);
+
 			switch (dt.Type.DataType, v2008plus, supportsFromParts)
 			{
 				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _)

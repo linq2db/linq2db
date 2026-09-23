@@ -36,7 +36,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (objExpression == null)
 				return null;
 
-			var obj = translationContext.Translate(objExpression, translationFlags);
+			// The member is read off this value, so the value is read the way .NET reads it: a column of a row a LEFT JOIN
+			// did not match is its default, and the member then answers what C# answers for that default.
+			var obj = translationContext.ReadAsValue(translationContext.Translate(objExpression, translationFlags), objExpression.Type);
 
 			if (obj is not SqlPlaceholderExpression objPlaceholder)
 				return null;

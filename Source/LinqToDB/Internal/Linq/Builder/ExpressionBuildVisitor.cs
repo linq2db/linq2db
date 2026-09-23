@@ -764,6 +764,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
+			// The argument of Sql.ToNullable / Sql.AsNullable asks for the NULL (BuildFlags.InsideNullableCast).
+			if (IsSqlNullabilityMarker(node.Method) && !_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+			{
+				using (CombineBuildFlags(BuildFlags.InsideNullableCast))
+				{
+					return VisitMethodCall(node);
+				}
+			}
+
 			LogVisit(node);
 
 			if (_buildPurpose is BuildPurpose.Traverse)
@@ -875,6 +884,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
+				// The call is about to be translated, so its arguments are read as the values it calculates with
+				// (ReadArgumentsAsValues).
+				if (_buildPurpose is BuildPurpose.Expression && (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method)))
+				{
+					var withValues = ReadArgumentsAsValues(node);
+					if (!ReferenceEquals(withValues, node))
+						return Visit(withValues);
+				}
+
 				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
 				// (MappedFunctionAllowsClientCalculation). Functions like Sql.ToNullable deliberately carry no attribute and
 				// are translated server-side by SqlFunctionsMemberTranslatorBase, so they fail the check and keep translating;
@@ -898,7 +916,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 				}
 
-				if (HandleStringFormat(node, out var translatedFormat))
+				// An interpolated string reaches here as string.Format, which is translated inline rather than by a member
+				// translator, so the option is applied at the call site.
+				if (!PreferClientCalculation(node) && HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
 				if (node.Type == typeof(bool) && TryConvertPredicate(node, out var translatedPredicate))
@@ -1443,6 +1463,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (!HasContextReferenceOrSql(node))
 					return node;
+			}
+
+			// A member read off a value (j.Date.Year) is a calculation over that value, so it is read as default(T) when the
+			// LEFT JOIN row is missed (ReadAsValue).
+			if (_buildPurpose is BuildPurpose.Expression && node.Expression is MemberExpression { Type.IsValueType: true } obj)
+			{
+				var value = ReadAsValue(obj, true);
+				if (!ReferenceEquals(value, obj))
+					return Visit(node.Update(value));
 			}
 
 			FoundRoot = null;
@@ -2278,13 +2307,22 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// When <see cref="LinqOptions.PreferClientCalculation"/> is enabled, computed expressions in the final
 		/// projection are left client-side instead of being forced into SQL columns. Anything that prefers or
-		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
-		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
+		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>), set projections
+		/// (<see cref="BuildFlags.ForSetProjection"/>), the arguments a member translator translates for itself
+		/// (<see cref="BuildFlags.InsideTranslation"/>) and the operand of a conversion to a nullable type
+		/// (<see cref="BuildFlags.InsideNullableCast"/>) still go to SQL.
 		/// </summary>
+		/// <remarks>
+		/// A running translator has already claimed its node. Were one of its arguments left client-side, the translator
+		/// would receive a non-SQL argument and decline, and the whole call would be calculated on the client.
+		/// A conversion to a nullable type asks for the NULL, which a calculation left client-side reads as default(T).
+		/// </remarks>
 		bool PreferClientCalculation(Expression node)
 		{
 			return _buildPurpose is BuildPurpose.Expression
 				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideTranslation)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideNullableCast)
 				&& BuildContext != null
 				&& DataOptions.LinqOptions.PreferClientCalculation
 				&& !Builder.PreferServerSide(node, false)
@@ -2299,6 +2337,178 @@ namespace LinqToDB.Internal.Linq.Builder
 		bool MappedFunctionAllowsClientCalculation(MethodInfo method)
 		{
 			return method.GetExpressionAttribute(MappingSchema) != null;
+		}
+
+		static bool IsSqlNullabilityMarker(MethodInfo method)
+		{
+			return method.DeclaringType == typeof(Sql) && method.Name is nameof(Sql.ToNullable) or nameof(Sql.AsNullable);
+		}
+
+		// A calculation reads its values the way .NET reads them: a non-nullable member of a missed LEFT JOIN row is read as
+		// default(T), so the calculation answers the same whether it is translated or run on the client. The value is followed
+		// through the operators it is calculated by and nowhere else - a call reads its own arguments when it is visited
+		// (ReadArgumentsAsValues), and what a lambda or a query method reads is a value of another query. A conversion to a
+		// nullable type, Sql.ToNullable and Sql.AsNullable ask for the NULL instead (BuildFlags.InsideNullableCast).
+		Expression ReadAsValue(Expression node, bool isOperand = false)
+		{
+			if (BuildContext == null || _buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+				return node;
+
+			return node switch
+			{
+				UnaryExpression unary =>
+					IsConversionToNullable(unary) ? unary : unary.Update(ReadAsValue(unary.Operand, isOperand)),
+
+				BinaryExpression binary =>
+					binary.Update(ReadAsValue(binary.Left, true), binary.Conversion, ReadAsValue(binary.Right, true)),
+
+				// The test decides, so it calculates; the branches are the value the whole expression returns, and they
+				// calculate only where the expression around them does.
+				ConditionalExpression conditional =>
+					conditional.Update(ReadAsValue(conditional.Test, true), ReadAsValue(conditional.IfTrue, isOperand), ReadAsValue(conditional.IfFalse, isOperand)),
+
+				// A member read off a value (j.Date.Year) is read by its translator, which asks for the value through
+				// ITranslationContext.Translate and gets it as default(T) there (ReadTranslatedAsValue).
+				MemberExpression { Expression.Type.IsValueType: false } member when isOperand =>
+					ReadColumnAsValue(member),
+
+				_ => node,
+			};
+		}
+
+		/// <summary>
+		/// Whether the member reads a column that a row a LEFT JOIN did not match does not have.
+		/// </summary>
+		bool IsMissedRowColumn(MemberExpression member)
+		{
+			// Only what is read off the query's row can be a column of a missed one: a captured variable is a constant, and
+			// building it would make a parameter of it.
+			if (member.Expression == null || member.Expression.Type.IsValueType || !HasContextReferenceOrSql(member))
+				return false;
+
+			// The member is translated here to learn two things the expression alone does not say: that it is one column at
+			// all, and that the column can be NULL - which is what says the row can be missing, since j.Value1 is declared
+			// NOT NULL and only the LEFT JOIN makes it nullable. Asking is a probe, so its caches are rolled back; what it
+			// cannot roll back is the column it registers in a subquery's or a CTE's select list, which is why four
+			// baselines answer with the same columns in a different order.
+			//
+			// Wrapping unconditionally and leaving both answers to the optimizer was measured instead, and 13 tests fail:
+			// a composite struct member is not a column and Coalesce cannot be built over it, Sql.FieldName is given an
+			// expression where it needs a field, and a duration translator stops refusing an undeclared duration because
+			// the wrap hides the operand it inspects.
+			using var probe = CreateSnapshot();
+
+			// Only a column is what a missed row does not have; anything computed is a value already calculated from the
+			// columns it reads, and Length(NULL) is not a zero-length name.
+			return BuildSqlExpression(member) is SqlPlaceholderExpression { Sql: SqlField or SqlColumn } placeholder
+				&& placeholder.Sql.CanBeNullable(GetNullabilityContext())
+				&& QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter == null;
+		}
+
+		/// <summary>
+		/// A value a translator calculates with is read the way .NET reads it: a column of a row the LEFT JOIN did not match
+		/// is its default. The translation has already happened here, so the column's nullability is known without asking for
+		/// it again, and the default goes around the SQL rather than around the expression - which leaves a placeholder for
+		/// the translator to keep working with.
+		/// </summary>
+		Expression ReadTranslatedAsValue(Expression translated, Type valueType)
+		{
+			// The rule is about what a projection answers. A predicate reads a missed row as NULL and filters it out, which
+			// is what LEFT JOIN means, so a WHERE is left alone. An expression of the projection converted as a whole is
+			// built with BuildPurpose.Sql, and says so with BuildFlags.InsideProjection.
+			if (_buildPurpose is not BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.InsideProjection))
+				return translated;
+
+			// Sql.ToNullable and Sql.AsNullable ask for the NULL, so what they are given keeps it.
+			if (_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+				return translated;
+
+			if (translated is not SqlPlaceholderExpression { Sql: SqlField or SqlColumn } placeholder)
+				return translated;
+
+			// An aggregate reads NULL as "no value" - AVG and COUNT answer differently once it is a zero - and what it has
+			// already counted is not a column of any one row. A column of a subquery is one of a chain, so the chain is
+			// followed to what it finally selects.
+			var selected = placeholder.Sql;
+
+			while (selected is SqlColumn { Expression: { } columnExpression })
+				selected = columnExpression;
+
+			if (QueryHelper.IsAggregationFunction(selected) || QueryHelper.IsWindowFunction(selected))
+				return translated;
+
+			if (!valueType.IsValueType || valueType.IsNullableType || valueType.IsEnum)
+				return translated;
+
+			var defaultValue = MappingSchema.GetDefaultValue(valueType);
+
+			if (defaultValue.IsNullValue)
+				return translated;
+
+			if (!placeholder.Sql.CanBeNullable(GetNullabilityContext())
+				|| QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter != null)
+			{
+				return translated;
+			}
+
+			return placeholder.WithSql(new SqlCoalesceExpression(placeholder.Sql, new SqlValue(MappingSchema.GetDbDataType(valueType), defaultValue)));
+		}
+
+		Expression ReadColumnAsValue(MemberExpression member)
+		{
+			var type = member.Type;
+
+			if (!type.IsValueType || type.IsNullableType || type.IsEnum)
+				return member;
+
+			// A type whose own default is NULL in the database is read as NULL already, so reading it as that default says
+			// nothing: the wrap would be Coalesce(column, NULL). SQL Server's hierarchyid is one - a struct whose default
+			// value is its Null.
+			if (MappingSchema.GetDefaultValue(type).IsNullValue)
+				return member;
+
+			if (!IsMissedRowColumn(member))
+				return member;
+
+			return Expression.Coalesce(Expression.Convert(member, type.AsNullable()), Expression.Default(type));
+		}
+
+		/// <summary>
+		/// A call calculates with the values it is given, so its arguments are read the way .NET reads them
+		/// (<see cref="ReadAsValue"/>). An aggregate is the exception: NULL is what tells it the row has no value, and AVG and
+		/// COUNT answer differently once it is a zero. <see cref="Sql.ToNullable"/> and <see cref="Sql.AsNullable"/> ask for the
+		/// NULL outright.
+		/// </summary>
+		Expression ReadArgumentsAsValues(MethodCallExpression node)
+		{
+			if (IsSqlNullabilityMarker(node.Method)
+				|| node.Method.GetExpressionAttribute(MappingSchema) is { IsAggregate: true } or { IsWindowFunction: true })
+			{
+				return node;
+			}
+
+			var               obj       = node.Object == null ? null : ReadAsValue(node.Object, true);
+			List<Expression>? arguments = null;
+
+			for (var i = 0; i < node.Arguments.Count; i++)
+			{
+				var argument = ReadAsValue(node.Arguments[i], true);
+
+				if (arguments == null && !ReferenceEquals(argument, node.Arguments[i]))
+				{
+					arguments = new List<Expression>(node.Arguments.Count);
+
+					for (var j = 0; j < i; j++)
+						arguments.Add(node.Arguments[j]);
+				}
+
+				arguments?.Add(argument);
+			}
+
+			if (arguments == null && ReferenceEquals(obj, node.Object))
+				return node;
+
+			return node.Update(obj, (IEnumerable<Expression>?)arguments ?? node.Arguments);
 		}
 
 		bool TryConvertToSql(Expression node, out Expression translated)
@@ -2319,7 +2529,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Trying to convert whole expression
 			if (_buildPurpose is not BuildPurpose.Sql && node is BinaryExpression or UnaryExpression or ConditionalExpression)
 			{
-				translated = BuildSqlExpression(node);
+				// The whole expression of the projection is converted at once: the operators read their operands the way
+				// .NET reads them (ReadAsValue), and what a translator is given is read the same way while the conversion
+				// runs (BuildFlags.InsideProjection, ReadTranslatedAsValue).
+				using (CombineBuildFlags(BuildFlags.InsideProjection))
+					translated = BuildSqlExpression(ReadAsValue(node));
 				//if (!SequenceHelper.HasError(translated))
 				if (translated is SqlPlaceholderExpression)
 				{
@@ -2341,8 +2555,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			return node;
 		}
 
+		static bool IsConversionToNullable(UnaryExpression node)
+		{
+			return node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
+				&& node.Type.IsNullableType
+				&& !node.Operand.Type.IsNullableOrReferenceType;
+		}
+
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			// A conversion to a nullable type asks for the NULL: its operand is neither calculated on the client under the
+			// option nor given default(T) for a column of a missed LEFT JOIN row (BuildFlags.InsideNullableCast).
+			if (IsConversionToNullable(node) && !_buildFlags.HasFlag(BuildFlags.InsideNullableCast))
+			{
+				using (CombineBuildFlags(BuildFlags.InsideNullableCast))
+				{
+					return VisitUnary(node);
+				}
+			}
+
 			if (PreferClientCalculation(node))
 				return base.VisitUnary(node);
 
@@ -3036,6 +3267,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			// The operands of an operator are the values it calculates with, so they are read as default(T) when the LEFT JOIN
+			// row is missed (ReadAsValue). They are read before the translators are offered the node.
+			if (_buildPurpose is BuildPurpose.Expression && BuildContext != null && !PreferClientCalculation(node))
+			{
+				var withValues = ReadAsValue(node);
+				if (!ReferenceEquals(withValues, node))
+					return Visit(withValues);
+			}
+
 			if (IsSqlOrExpression() && BuildContext != null && !PreferClientCalculation(node))
 			{
 				// Offered to the translators whether or not the operator is a method: a comparison between numbers
@@ -5404,7 +5644,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#endregion
 
-		sealed class TranslationContext : ITranslationContext
+		sealed class TranslationContext : ITranslationContext, ITranslationValueReader
 		{
 			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
@@ -5480,7 +5720,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
 
-				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
+				// A translator translating its own arguments: PreferClientCalculation must not leave them client-side.
+				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.InsideTranslation, alias: CurrentAlias);
+			}
+
+			public Expression ReadAsValue(Expression translated, Type valueType)
+			{
+				return Visitor.ReadTranslatedAsValue(translated, valueType);
 			}
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
