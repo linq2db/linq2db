@@ -17,7 +17,7 @@ Components: 12
 COMPONENTS
 --------------------------------------------------------------------------------------------------
 
-1. ClickHouse.Driver net10.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0-windows7.0: 1.4.0
+1. ClickHouse.Driver net10.0: 1.4.0, net10.0-windows7.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [1]
 
@@ -26,17 +26,17 @@ COMPONENTS
    License: MIT  see [1]
    Copyright (c) .NET Foundation and Contributors
 
-3. Microsoft.Bcl.AsyncInterfaces net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.0
+3. Microsoft.Bcl.AsyncInterfaces 10.0.3
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-4. Microsoft.Extensions.Http net10.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+4. Microsoft.Extensions.Http net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-5. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+5. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -46,7 +46,7 @@ COMPONENTS
    License: MIT  see [1]
    Copyright 2016–2026 Bradley Grainger
 
-7. NodaTime net10.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0-windows7.0: 3.2.3
+7. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
    https://nodatime.org/
    License: Apache-2.0  see [3]
 
@@ -55,7 +55,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-9. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.8
+9. System.Diagnostics.DiagnosticSource 10.0.3
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
@@ -65,7 +65,7 @@ COMPONENTS
    License: MIT  see [1]
    © Microsoft Corporation. All rights reserved.
 
-11. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
+11. System.Text.Json 10.0.3
    https://dot.net/
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
