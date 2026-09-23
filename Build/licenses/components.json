@@ -223,6 +223,27 @@
       ]
     },
     {
+      "id": "antlr4.runtime.standard",
+      "displayName": "ANTLR 4 Standard Runtime",
+      "packageId": "Antlr4.Runtime.Standard",
+      "versions": {
+        "net11.0": "4.13.1"
+      },
+      "license": "BSD-3-Clause",
+      "licenseTexts": [
+        "antlr4-bsd3.txt"
+      ],
+      "copyright": "Copyright (c) 2012-2020 The ANTLR Project. All rights reserved.",
+      "projectUrl": "https://github.com/antlr/antlr4",
+      "redistribution": "permitted",
+      "files": [
+        "Antlr4.Runtime.Standard.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
       "id": "apache.arrow",
       "displayName": "Apache.Arrow",
       "packageId": "Apache.Arrow",
@@ -551,6 +572,90 @@
       "redistribution": "permitted",
       "files": [
         "K4os.Compression.LZ4.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "libred.ado",
+      "displayName": "LibRed.Ado",
+      "packageId": "LibRed.Ado",
+      "versions": {
+        "net11.0": "11.0.0-alpha.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright © 2017-2026 CirrusRed",
+      "projectUrl": "https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet",
+      "redistribution": "permitted",
+      "files": [
+        "LibRed.Ado.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "libred.core",
+      "displayName": "LibRed.Core",
+      "packageId": "LibRed.Core",
+      "versions": {
+        "net11.0": "11.0.0-alpha.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright © 2017-2026 CirrusRed",
+      "projectUrl": "https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet",
+      "redistribution": "permitted",
+      "files": [
+        "LibRed.Core.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "libred.engine",
+      "displayName": "LibRed.Engine",
+      "packageId": "LibRed.Engine",
+      "versions": {
+        "net11.0": "11.0.0-alpha.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright © 2017-2026 CirrusRed",
+      "projectUrl": "https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet",
+      "redistribution": "permitted",
+      "files": [
+        "LibRed.Engine.dll"
+      ],
+      "artifacts": [
+        "linq2db.cli"
+      ]
+    },
+    {
+      "id": "libred.sql",
+      "displayName": "LibRed.Sql",
+      "packageId": "LibRed.Sql",
+      "versions": {
+        "net11.0": "11.0.0-alpha.3"
+      },
+      "license": "MIT",
+      "licenseTexts": [
+        "mit.txt"
+      ],
+      "copyright": "Copyright © 2017-2026 CirrusRed",
+      "projectUrl": "https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet",
+      "redistribution": "permitted",
+      "files": [
+        "LibRed.Sql.dll"
       ],
       "artifacts": [
         "linq2db.cli"

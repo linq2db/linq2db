@@ -11,7 +11,7 @@ redistributed inside this artifact; they are NOT covered by that MIT license and
 subject to their own terms, reproduced in full below.
 
 Artifact:   linq2db.cli
-Components: 96
+Components: 101
 
 --------------------------------------------------------------------------------------------------
 COMPONENTS
@@ -21,470 +21,496 @@ COMPONENTS
    https://github.com/DataAction/AdoNetCore.AseClient
    License: Apache-2.0  see [1]
 
-2. Apache.Arrow 23.0.0
+2. ANTLR 4 Standard Runtime 4.13.1
+   NuGet package: Antlr4.Runtime.Standard
+   https://github.com/antlr/antlr4
+   License: BSD-3-Clause  see [2]
+   Copyright (c) 2012-2020 The ANTLR Project. All rights reserved.
+
+3. Apache.Arrow 23.0.0
    https://arrow.apache.org/
    License: Apache-2.0  see [1]
    Copyright 2016-2025 The Apache Software Foundation
 
-3. Apache.Arrow.Scalars 23.0.0
+4. Apache.Arrow.Scalars 23.0.0
    https://arrow.apache.org/
    License: Apache-2.0  see [1]
    Copyright 2016-2025 The Apache Software Foundation
 
-4. ClickHouse.Driver net10.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0-windows7.0: 1.4.0
+5. ClickHouse.Driver net10.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0-windows7.0: 1.4.0
    https://github.com/ClickHouse/clickhouse-cs
-   License: MIT  see [2]
+   License: MIT  see [3]
 
-5. DuckDB.NET.Bindings.Full 1.5.5
+6. DuckDB.NET.Bindings.Full 1.5.5
    https://github.com/Giorgi/DuckDB.NET
-   License: MIT  see [2]
+   License: MIT  see [3]
    Copyright © 2020 - 2026 Giorgi Dalakishvili
 
-6. DuckDB.NET.Data.Full 1.5.5
+7. DuckDB.NET.Data.Full 1.5.5
    https://github.com/Giorgi/DuckDB.NET
-   License: MIT  see [2]
+   License: MIT  see [3]
    Copyright © 2020 - 2026 Giorgi Dalakishvili
 
-7. FirebirdSql.Data.FirebirdClient 10.3.4
+8. FirebirdSql.Data.FirebirdClient 10.3.4
    http://www.firebirdsql.org/en/net-provider/
-   License: Initial Developer's Public License 1.0  see [3]
+   License: Initial Developer's Public License 1.0  see [4]
    (c) 2002-2025
 
-8. Google.Protobuf 3.18.0
+9. Google.Protobuf 3.18.0
    https://github.com/protocolbuffers/protobuf
-   License: BSD-3-Clause  see [4]
+   License: BSD-3-Clause  see [5]
    Copyright 2015, Google Inc.
 
-9. Grpc.Core.Api 2.67.0
+10. Grpc.Core.Api 2.67.0
    https://github.com/grpc/grpc-dotnet
    License: Apache-2.0  see [1]
    Copyright 2019 The gRPC Authors
 
-10. Grpc.Net.Client 2.67.0
+11. Grpc.Net.Client 2.67.0
    https://github.com/grpc/grpc-dotnet
    License: Apache-2.0  see [1]
    Copyright 2019 The gRPC Authors
 
-11. Grpc.Net.Common 2.67.0
+12. Grpc.Net.Common 2.67.0
    https://github.com/grpc/grpc-dotnet
    License: Apache-2.0  see [1]
    Copyright 2019 The gRPC Authors
 
-12. Humanizer.Core 3.0.10
+13. Humanizer.Core 3.0.10
    https://github.com/Humanizr/Humanizer
-   License: MIT  see [2]
+   License: MIT  see [3]
    Copyright (c) .NET Foundation and Contributors
 
-13. K4os.Compression.LZ4 1.3.8
+14. K4os.Compression.LZ4 1.3.8
    https://github.com/MiloszKrajewski/K4os.Compression.LZ4
-   License: MIT  see [5]
+   License: MIT  see [6]
    Milosz Krajewski
 
-14. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
+15. LibRed.Ado 11.0.0-alpha.3
+   https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet
+   License: MIT  see [3]
+   Copyright © 2017-2026 CirrusRed
+
+16. LibRed.Core 11.0.0-alpha.3
+   https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet
+   License: MIT  see [3]
+   Copyright © 2017-2026 CirrusRed
+
+17. LibRed.Engine 11.0.0-alpha.3
+   https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet
+   License: MIT  see [3]
+   Copyright © 2017-2026 CirrusRed
+
+18. LibRed.Sql 11.0.0-alpha.3
+   https://github.com/CirrusRedOrg/EntityFrameworkCore.Jet
+   License: MIT  see [3]
+   Copyright © 2017-2026 CirrusRed
+
+19. Microsoft.Bcl.Cryptography net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
    https://dot.net/
-   License: MIT  see [6]
+   License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-15. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
+20. Microsoft.CodeAnalysis.Common net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
    https://github.com/dotnet/roslyn
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-16. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
+21. Microsoft.CodeAnalysis.CSharp net10.0: 5.9.0, net11.0: 5.9.0, net472: 5.9.0, net8.0-windows7.0: 4.13.0
    https://github.com/dotnet/roslyn
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-17. Microsoft.Data.SqlClient 7.0.2
+22. Microsoft.Data.SqlClient 7.0.2
    https://aka.ms/sqlclientproject
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-18. Microsoft.Data.SqlClient.Extensions.Abstractions 7.0.2
+23. Microsoft.Data.SqlClient.Extensions.Abstractions 7.0.2
    https://aka.ms/sqlclientproject
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-19. Microsoft.Data.SqlClient.Internal.Logging 7.0.2
+24. Microsoft.Data.SqlClient.Internal.Logging 7.0.2
    https://aka.ms/sqlclientproject
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-20. Microsoft.Data.SqlClient.SNI.runtime 6.0.2
+25. Microsoft.Data.SqlClient.SNI.runtime 6.0.2
    https://aka.ms/sqlclientproject
-   License: Microsoft Software License Terms (Distributable Code)  see [7]
+   License: Microsoft Software License Terms (Distributable Code)  see [8]
    © Microsoft Corporation. All rights reserved.
 
-21. Microsoft.Data.Sqlite.Core 10.0.12
+26. Microsoft.Data.Sqlite.Core 10.0.12
    https://docs.microsoft.com/dotnet/standard/data/sqlite/
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-22. Microsoft.Extensions.AI.Abstractions 10.8.3
+27. Microsoft.Extensions.AI.Abstractions 10.8.3
    https://dot.net/
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-23. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.10, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
+28. Microsoft.Extensions.Caching.Abstractions net10.0: 10.0.10, net462: 8.0.0, net472: 8.0.0, net8.0-windows7.0: 8.0.0
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-24. Microsoft.Extensions.Caching.Memory net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
+29. Microsoft.Extensions.Caching.Memory net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
    https://dot.net/
-   License: MIT  see [6]
+   License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-25. Microsoft.Extensions.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
+30. Microsoft.Extensions.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-26. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+31. Microsoft.Extensions.Configuration.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-27. Microsoft.Extensions.Configuration.Binder net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
+32. Microsoft.Extensions.Configuration.Binder net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-28. Microsoft.Extensions.Configuration.CommandLine net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+33. Microsoft.Extensions.Configuration.CommandLine net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-29. Microsoft.Extensions.Configuration.EnvironmentVariables net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+34. Microsoft.Extensions.Configuration.EnvironmentVariables net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-30. Microsoft.Extensions.Configuration.FileExtensions net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+35. Microsoft.Extensions.Configuration.FileExtensions net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-31. Microsoft.Extensions.Configuration.Json net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+36. Microsoft.Extensions.Configuration.Json net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-32. Microsoft.Extensions.Configuration.UserSecrets net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+37. Microsoft.Extensions.Configuration.UserSecrets net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-33. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+38. Microsoft.Extensions.DependencyInjection net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-34. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+39. Microsoft.Extensions.DependencyInjection.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-35. Microsoft.Extensions.DependencyModel 10.0.12
+40. Microsoft.Extensions.DependencyModel 10.0.12
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-36. Microsoft.Extensions.Diagnostics net10.0: 10.0.8, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
+41. Microsoft.Extensions.Diagnostics net10.0: 10.0.8, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-37. Microsoft.Extensions.Diagnostics.Abstractions net10.0: 10.0.10, net8.0-windows7.0: 10.0.8
+42. Microsoft.Extensions.Diagnostics.Abstractions net10.0: 10.0.10, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-38. Microsoft.Extensions.FileProviders.Abstractions 10.0.10
+43. Microsoft.Extensions.FileProviders.Abstractions 10.0.10
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-39. Microsoft.Extensions.FileProviders.Physical net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+44. Microsoft.Extensions.FileProviders.Physical net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-40. Microsoft.Extensions.FileSystemGlobbing net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+45. Microsoft.Extensions.FileSystemGlobbing net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-41. Microsoft.Extensions.Hosting net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+46. Microsoft.Extensions.Hosting net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-42. Microsoft.Extensions.Hosting.Abstractions 10.0.10
+47. Microsoft.Extensions.Hosting.Abstractions 10.0.10
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-43. Microsoft.Extensions.Http net10.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+48. Microsoft.Extensions.Http net10.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-44. Microsoft.Extensions.Logging net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+49. Microsoft.Extensions.Logging net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-45. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+50. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-46. Microsoft.Extensions.Logging.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128
+51. Microsoft.Extensions.Logging.Configuration net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-47. Microsoft.Extensions.Logging.Console net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128
+52. Microsoft.Extensions.Logging.Console net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-48. Microsoft.Extensions.Logging.Debug net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+53. Microsoft.Extensions.Logging.Debug net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-49. Microsoft.Extensions.Logging.EventLog net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+54. Microsoft.Extensions.Logging.EventLog net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-50. Microsoft.Extensions.Logging.EventSource net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
+55. Microsoft.Extensions.Logging.EventSource net10.0: 10.0.0, net11.0: 11.0.0-rc.1.26425.128
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-51. Microsoft.Extensions.Options net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+56. Microsoft.Extensions.Options net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-52. Microsoft.Extensions.Options.ConfigurationExtensions net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
+57. Microsoft.Extensions.Options.ConfigurationExtensions net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-53. Microsoft.Extensions.Primitives net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
+58. Microsoft.Extensions.Primitives net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0-windows7.0: 10.0.8
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-54. Microsoft.IdentityModel.Abstractions 8.16.0
+59. Microsoft.IdentityModel.Abstractions 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-55. Microsoft.IdentityModel.JsonWebTokens 8.16.0
+60. Microsoft.IdentityModel.JsonWebTokens 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-56. Microsoft.IdentityModel.Logging 8.16.0
+61. Microsoft.IdentityModel.Logging 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-57. Microsoft.IdentityModel.Protocols 8.16.0
+62. Microsoft.IdentityModel.Protocols 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-58. Microsoft.IdentityModel.Protocols.OpenIdConnect 8.16.0
+63. Microsoft.IdentityModel.Protocols.OpenIdConnect 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-59. Microsoft.IdentityModel.Tokens 8.16.0
+64. Microsoft.IdentityModel.Tokens 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-60. Microsoft.IO.RecyclableMemoryStream 3.0.1
+65. Microsoft.IO.RecyclableMemoryStream 3.0.1
    https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-61. Microsoft.SqlServer.Server 1.0.0
+66. Microsoft.SqlServer.Server 1.0.0
    https://aka.ms/sqlclientproject
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-62. Microsoft.SqlServer.TransactSql.ScriptDom 180.102.0
+67. Microsoft.SqlServer.TransactSql.ScriptDom 180.102.0
    https://github.com/microsoft/SqlScriptDOM
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-63. Microsoft.SqlServer.Types 170.1000.7
+68. Microsoft.SqlServer.Types 170.1000.7
    https://learn.microsoft.com/dotnet/api/microsoft.sqlserver.types
-   License: Microsoft Software License Terms - Microsoft System CLR Types for Microsoft SQL Server 2022  see [9]
+   License: Microsoft Software License Terms - Microsoft System CLR Types for Microsoft SQL Server 2022  see [10]
    Copyright (c) Microsoft Corporation.
    The bundled binary is version 170.1000.7, whose embedded license.md is the MICROSOFT SQL SERVER VNEXT COMMUNITY PREVIEW pre-release text: its term ended 09/30/2022, it grants installation "solely to internally evaluate it and provide feedback to Microsoft", and it contains no DISTRIBUTABLE CODE section or any distribution grant. That appears to be a packaging error on a stable release - 160.1000.6 of the same package carries ordinary MICROSOFT SOFTWARE LICENSE TERMS for MICROSOFT SYSTEM CLR TYPES FOR MICROSOFT SQL SERVER 2022, with an explicit DISTRIBUTABLE CODE grant covering third-party distribution. Reported to Microsoft. The terms reproduced here are the 160.1000.6 ones, which is what we understand to have been intended for this package; the text Microsoft actually attached to 170.1000.7 is the pre-release one described above.
 
-64. ModelContextProtocol 2.2.0
+69. ModelContextProtocol 2.2.0
    https://csharp.sdk.modelcontextprotocol.io/
    License: Apache-2.0  see [1]
    © Model Context Protocol a Series of LF Projects, LLC.
 
-65. ModelContextProtocol.Core 2.2.0
+70. ModelContextProtocol.Core 2.2.0
    https://csharp.sdk.modelcontextprotocol.io/
    License: Apache-2.0  see [1]
    © Model Context Protocol a Series of LF Projects, LLC.
 
-66. Mono.TextTemplating 3.0.0
+71. Mono.TextTemplating 3.0.0
    https://github.com/mono/t4
-   License: MIT  see [2]
+   License: MIT  see [3]
 
-67. MySqlConnector 2.6.2
+72. MySqlConnector 2.6.2
    https://mysqlconnector.net/
-   License: MIT  see [2]
+   License: MIT  see [3]
    Copyright 2016–2026 Bradley Grainger
 
-68. NodaTime net10.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0-windows7.0: 3.2.3
+73. NodaTime net10.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0-windows7.0: 3.2.3
    https://nodatime.org/
    License: Apache-2.0  see [1]
 
-69. Npgsql net10.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0-windows7.0: 10.0.3
+74. Npgsql net10.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0-windows7.0: 10.0.3
    https://github.com/npgsql/npgsql
-   License: PostgreSQL  see [10]
+   License: PostgreSQL  see [11]
    Copyright 2025 © The Npgsql Development Team
 
-70. Octonica.ClickHouseClient 4.1.6
+75. Octonica.ClickHouseClient 4.1.6
    https://github.com/Octonica/ClickHouseClient
    License: Apache-2.0  see [1]
    © 2019 – 2026 Octonica
 
-71. Oracle.ManagedDataAccess.Core 23.26.301
+76. Oracle.ManagedDataAccess.Core 23.26.301
    https://www.oracle.com/database/technologies/appdev/dotnet.html
-   License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [11]
+   License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [12]
    Copyright © 2026, Oracle and/or its affiliates
 
-72. Portable.BouncyCastle 1.9.0
+77. Portable.BouncyCastle 1.9.0
    https://www.bouncycastle.org/csharp/
-   License: MIT  see [12]
+   License: MIT  see [13]
    © 2000-2021 Legion of the Bouncy Castle Inc.
 
-73. SQLitePCLRaw.bundle_e_sqlite3 2.1.12
+78. SQLitePCLRaw.bundle_e_sqlite3 2.1.12
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-74. SQLitePCLRaw.core 2.1.12
+79. SQLitePCLRaw.core 2.1.12
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-75. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net11.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0-windows7.0: 3.53.3
+80. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net11.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0-windows7.0: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-76. SQLitePCLRaw.provider.e_sqlite3 2.1.12
+81. SQLitePCLRaw.provider.e_sqlite3 2.1.12
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
-77. System.CodeDom 6.0.0
-   https://dot.net/
-   License: MIT  see [13]
-   © Microsoft Corporation. All rights reserved.
-
-78. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 10.0.12
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-79. System.Configuration.ConfigurationManager 10.0.12
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-80. System.Data.Odbc 10.0.12
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-81. System.Data.OleDb 10.0.12
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-82. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.8
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-83. System.Diagnostics.EventLog net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.12
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-84. System.Diagnostics.PerformanceCounter 10.0.12
-   https://dot.net/
-   License: MIT  see [8]
-   © Microsoft Corporation. All rights reserved.
-
-85. System.DirectoryServices.Protocols 8.0.2
+82. System.CodeDom 6.0.0
    https://dot.net/
    License: MIT  see [14]
    © Microsoft Corporation. All rights reserved.
 
-86. System.IdentityModel.Tokens.Jwt 8.16.0
+83. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0-windows7.0: 10.0.12
+   https://dot.net/
+   License: MIT  see [9]
+   © Microsoft Corporation. All rights reserved.
+
+84. System.Configuration.ConfigurationManager 10.0.12
+   https://dot.net/
+   License: MIT  see [9]
+   © Microsoft Corporation. All rights reserved.
+
+85. System.Data.Odbc 10.0.12
+   https://dot.net/
+   License: MIT  see [9]
+   © Microsoft Corporation. All rights reserved.
+
+86. System.Data.OleDb 10.0.12
+   https://dot.net/
+   License: MIT  see [9]
+   © Microsoft Corporation. All rights reserved.
+
+87. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.8
+   https://dot.net/
+   License: MIT  see [9]
+   © Microsoft Corporation. All rights reserved.
+
+88. System.Diagnostics.EventLog net10.0: 10.0.12, net11.0: 11.0.0-rc.1.26425.128, net8.0-windows7.0: 10.0.12
+   https://dot.net/
+   License: MIT  see [9]
+   © Microsoft Corporation. All rights reserved.
+
+89. System.Diagnostics.PerformanceCounter 10.0.12
+   https://dot.net/
+   License: MIT  see [9]
+   © Microsoft Corporation. All rights reserved.
+
+90. System.DirectoryServices.Protocols 8.0.2
+   https://dot.net/
+   License: MIT  see [15]
+   © Microsoft Corporation. All rights reserved.
+
+91. System.IdentityModel.Tokens.Jwt 8.16.0
    https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet
-   License: MIT  see [2]
+   License: MIT  see [3]
    © Microsoft Corporation. All rights reserved.
 
-87. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
+92. System.IO.Pipelines net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-88. System.Reflection.Metadata net472: 10.0.1, net8.0-windows7.0: 8.0.0
+93. System.Reflection.Metadata net472: 10.0.1, net8.0-windows7.0: 8.0.0
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-89. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
+94. System.Security.Cryptography.Pkcs net10.0: 9.0.13, net11.0: 9.0.13, net462: 8.0.1, net472: 8.0.1, net8.0-windows7.0: 8.0.1
    https://dot.net/
-   License: MIT  see [6]
+   License: MIT  see [7]
    © Microsoft Corporation. All rights reserved.
 
-90. System.Security.Cryptography.ProtectedData 10.0.12
+95. System.Security.Cryptography.ProtectedData 10.0.12
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-91. System.Security.Permissions 4.5.0
+96. System.Security.Permissions 4.5.0
    https://dot.net/
-   License: MIT  see [2] [15]
+   License: MIT  see [3] [16]
    © Microsoft Corporation.  All rights reserved.
 
-92. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
+97. System.Text.Encodings.Web net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-93. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
+98. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0-windows7.0: 10.0.5
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-94. System.Threading.AccessControl 10.0.12
+99. System.Threading.AccessControl 10.0.12
    https://dot.net/
-   License: MIT  see [8]
+   License: MIT  see [9]
    © Microsoft Corporation. All rights reserved.
 
-95. Ydb.Protos 1.2.0
+100. Ydb.Protos 1.2.0
    https://github.com/ydb-platform/ydb-dotnet-genproto
    License: Apache-2.0  see [1]
 
-96. Ydb.Sdk 0.35.0
+101. Ydb.Sdk 0.35.0
    https://github.com/ydb-platform/ydb-dotnet-sdk
    License: Apache-2.0  see [1]
 
@@ -710,8 +736,40 @@ License: https://www.apache.org/licenses/LICENSE-2.0
 
 --------------------------------------------------------------------------------------------------
 
-[2] mit.txt
-    Applies to: ClickHouse.Driver, DuckDB.NET.Bindings.Full, DuckDB.NET.Data.Full, Humanizer.Core, Microsoft.CodeAnalysis.CSharp, Microsoft.CodeAnalysis.Common, Microsoft.Data.SqlClient, Microsoft.Data.SqlClient.Extensions.Abstractions, Microsoft.Data.SqlClient.Internal.Logging, Microsoft.Data.Sqlite.Core, Microsoft.Extensions.AI.Abstractions, Microsoft.IO.RecyclableMemoryStream, Microsoft.IdentityModel.Abstractions, Microsoft.IdentityModel.JsonWebTokens, Microsoft.IdentityModel.Logging, Microsoft.IdentityModel.Protocols, Microsoft.IdentityModel.Protocols.OpenIdConnect, Microsoft.IdentityModel.Tokens, Microsoft.SqlServer.Server, Microsoft.SqlServer.TransactSql.ScriptDom, Mono.TextTemplating, MySqlConnector, System.IdentityModel.Tokens.Jwt, System.Security.Permissions
+[2] antlr4-bsd3.txt
+    Applies to: ANTLR 4 Standard Runtime
+
+Copyright (c) 2012-2020 The ANTLR Project. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither name of copyright holders nor the names of its contributors may be
+   used to endorse or promote products derived from this software without
+   specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+--------------------------------------------------------------------------------------------------
+
+[3] mit.txt
+    Applies to: ClickHouse.Driver, DuckDB.NET.Bindings.Full, DuckDB.NET.Data.Full, Humanizer.Core, LibRed.Ado, LibRed.Core, LibRed.Engine, LibRed.Sql, Microsoft.CodeAnalysis.CSharp, Microsoft.CodeAnalysis.Common, Microsoft.Data.SqlClient, Microsoft.Data.SqlClient.Extensions.Abstractions, Microsoft.Data.SqlClient.Internal.Logging, Microsoft.Data.Sqlite.Core, Microsoft.Extensions.AI.Abstractions, Microsoft.IO.RecyclableMemoryStream, Microsoft.IdentityModel.Abstractions, Microsoft.IdentityModel.JsonWebTokens, Microsoft.IdentityModel.Logging, Microsoft.IdentityModel.Protocols, Microsoft.IdentityModel.Protocols.OpenIdConnect, Microsoft.IdentityModel.Tokens, Microsoft.SqlServer.Server, Microsoft.SqlServer.TransactSql.ScriptDom, Mono.TextTemplating, MySqlConnector, System.IdentityModel.Tokens.Jwt, System.Security.Permissions
 
 MIT License
 
@@ -735,7 +793,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------------------------
 
-[3] firebirdsql-data-firebirdclient-license.txt
+[4] firebirdsql-data-firebirdclient-license.txt
     Applies to: FirebirdSql.Data.FirebirdClient
 
 Initial Developer's Public License Version 1.0
@@ -945,7 +1003,7 @@ Contributor(s): ______________________________________.
 
 --------------------------------------------------------------------------------------------------
 
-[4] google-protobuf-bsd3.txt
+[5] google-protobuf-bsd3.txt
     Applies to: Google.Protobuf
 
 Copyright 2008 Google Inc.  All rights reserved.
@@ -983,7 +1041,7 @@ support library is itself covered by the above license.
 
 --------------------------------------------------------------------------------------------------
 
-[5] k4os-lz4-mit.txt
+[6] k4os-lz4-mit.txt
     Applies to: K4os.Compression.LZ4
 
 MIT License
@@ -1010,7 +1068,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------------------------
 
-[6] notices-40686c64.txt
+[7] notices-40686c64.txt
     Applies to: Microsoft.Bcl.Cryptography, Microsoft.Extensions.Caching.Memory, System.Security.Cryptography.Pkcs
 
 .NET Runtime uses third-party libraries or other resources that may be
@@ -2412,7 +2470,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------------------------
 
-[7] microsoft-data-sqlclient-sni-runtime-license.txt
+[8] microsoft-data-sqlclient-sni-runtime-license.txt
     Applies to: Microsoft.Data.SqlClient.SNI.runtime
 
 MICROSOFT SOFTWARE LICENSE TERMS
@@ -2464,7 +2522,7 @@ IF YOU COMPLY WITH THESE LICENSE TERMS, YOU HAVE THE RIGHTS BELOW.
 
 --------------------------------------------------------------------------------------------------
 
-[8] notices-6d15e10a.txt
+[9] notices-6d15e10a.txt
     Applies to: Microsoft.Extensions.Caching.Abstractions, Microsoft.Extensions.Configuration, Microsoft.Extensions.Configuration.Abstractions, Microsoft.Extensions.Configuration.Binder, Microsoft.Extensions.Configuration.CommandLine, Microsoft.Extensions.Configuration.EnvironmentVariables, Microsoft.Extensions.Configuration.FileExtensions, Microsoft.Extensions.Configuration.Json, Microsoft.Extensions.Configuration.UserSecrets, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.DependencyInjection.Abstractions, Microsoft.Extensions.DependencyModel, Microsoft.Extensions.Diagnostics, Microsoft.Extensions.Diagnostics.Abstractions, Microsoft.Extensions.FileProviders.Abstractions, Microsoft.Extensions.FileProviders.Physical, Microsoft.Extensions.FileSystemGlobbing, Microsoft.Extensions.Hosting, Microsoft.Extensions.Hosting.Abstractions, Microsoft.Extensions.Http, Microsoft.Extensions.Logging, Microsoft.Extensions.Logging.Abstractions, Microsoft.Extensions.Logging.Configuration, Microsoft.Extensions.Logging.Console, Microsoft.Extensions.Logging.Debug, Microsoft.Extensions.Logging.EventLog, Microsoft.Extensions.Logging.EventSource, Microsoft.Extensions.Options, Microsoft.Extensions.Options.ConfigurationExtensions, Microsoft.Extensions.Primitives, System.Collections.Immutable, System.Configuration.ConfigurationManager, System.Data.Odbc, System.Data.OleDb, System.Diagnostics.DiagnosticSource, System.Diagnostics.EventLog, System.Diagnostics.PerformanceCounter, System.IO.Pipelines, System.Reflection.Metadata, System.Security.Cryptography.ProtectedData, System.Text.Encodings.Web, System.Text.Json, System.Threading.AccessControl
 
 .NET Runtime uses third-party libraries or other resources that may be
@@ -3887,7 +3945,7 @@ You are solely responsible for determining the appropriateness of using and dist
 
 --------------------------------------------------------------------------------------------------
 
-[9] microsoft-sqlserver-types-license.md
+[10] microsoft-sqlserver-types-license.md
     Applies to: Microsoft.SqlServer.Types
 
 ## **MICROSOFT SOFTWARE LICENSE TERMS**
@@ -3939,7 +3997,7 @@ These license terms are an agreement between you and Microsoft Corporation (or o
 
 --------------------------------------------------------------------------------------------------
 
-[10] npgsql-postgresql.txt
+[11] npgsql-postgresql.txt
     Applies to: Npgsql
 
 Copyright (c) 2002-2026, Npgsql
@@ -3962,7 +4020,7 @@ OR MODIFICATIONS.
 
 --------------------------------------------------------------------------------------------------
 
-[11] oracle-manageddataaccess-core-license.txt
+[12] oracle-manageddataaccess-core-license.txt
     Applies to: Oracle.ManagedDataAccess.Core
 
 Your use of this Program is governed by the Oracle Free Distribution, Hosting, and Use Terms and Conditions set forth below, unless you have received this Program (alone or as part of another Oracle product) under an Oracle license agreement (including but not limited to the Oracle Master Agreement), in which case your use of this Program is governed solely by such license agreement with Oracle.
@@ -4010,7 +4068,7 @@ Last updated:  28 June 2022
 
 --------------------------------------------------------------------------------------------------
 
-[12] bouncycastle-mit.txt
+[13] bouncycastle-mit.txt
     Applies to: Portable.BouncyCastle
 
 MIT License (https://opensource.org/licenses/MIT)
@@ -4031,7 +4089,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 --------------------------------------------------------------------------------------------------
 
-[13] notices-a6344bfb.txt
+[14] notices-a6344bfb.txt
     Applies to: System.CodeDom
 
 .NET Runtime uses third-party libraries or other resources that may be
@@ -4976,7 +5034,7 @@ SOFTWARE.
 
 --------------------------------------------------------------------------------------------------
 
-[14] notices-b60b2912.txt
+[15] notices-b60b2912.txt
     Applies to: System.DirectoryServices.Protocols
 
 .NET Runtime uses third-party libraries or other resources that may be
@@ -6254,7 +6312,7 @@ https://github.com/SixLabors/ImageSharp/blob/f4f689ce67ecbcc35cebddba5aacb603e6d
 
 --------------------------------------------------------------------------------------------------
 
-[15] notices-7864a01e.txt
+[16] notices-7864a01e.txt
     Applies to: System.Security.Permissions
 
 .NET Core uses third-party libraries or other resources that may be
