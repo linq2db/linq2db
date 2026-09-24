@@ -15,7 +15,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TagTests : TestBase
 	{
-		public const string NOT_SUPPORTED = TestProvName.AllAccess;
+		public const string NOT_SUPPORTED = TestProvName.AllNativeAccess;
 
 		[Test]
 		public void Test_OneLineComment([DataSources(NOT_SUPPORTED)] string context)

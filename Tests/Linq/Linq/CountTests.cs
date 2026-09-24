@@ -212,7 +212,7 @@ namespace Tests.Linq
 
 		[Test]
 		// PostgreSQL 9.4+ (FILTER clause)
-		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
+		public void GroupBy23([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL93Minus)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

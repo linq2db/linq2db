@@ -31,7 +31,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
@@ -70,7 +70,7 @@ namespace Tests.xUpdate
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllYdb) ? new DisableBaseline("Client-side Guid generation") : null;
@@ -1443,7 +1443,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Insert14([DataSources(
 			ProviderName.SqlCe,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllClickHouse,
 			TestProvName.AllSqlServer2005,
 			TestProvName.AllSybase)]
@@ -1537,7 +1537,7 @@ namespace Tests.xUpdate
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
@@ -2513,7 +2513,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void InsertFromWithSubqueryColumn_Same([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
+		public void InsertFromWithSubqueryColumn_Same([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2536,7 +2536,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void InsertFromWithSubqueryColumn_Different([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		public void InsertFromWithSubqueryColumn_Different([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2560,7 +2560,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();

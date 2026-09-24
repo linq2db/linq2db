@@ -421,7 +421,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -436,7 +436,7 @@ namespace Tests.Linq
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllSQLite,
-				TestProvName.AllAccess)]
+				TestProvName.AllNativeAccess)]
 			string context)
 		{
 			using var db = GetDataContext(context);

@@ -366,6 +366,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADateShiftsByAComputedDuration([DataSources(false)] string context)
 		{
 			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
@@ -406,6 +407,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedShiftProviders, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders + "," + UnsupportedDifferenceProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADateShiftsByAComputedDurationInSql([DataSources(false)] string context)
 		{
 			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
@@ -470,6 +472,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void DurationsInDifferentUnitsCombineAsDurations([DataSources] string context, [Values] bool inSql)
 		{
 			// Direct and remote fold the operand casts differently - remote folds them into the enclosing cast,
@@ -582,6 +585,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADifferenceAndADeclaredDurationCombineAsDurations([DataSources(false)] string context)
 		{
 			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
@@ -624,6 +628,7 @@ namespace Tests.Linq
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
+		[ThrowsForProvider(typeof(LinqToDBException), DeclaredMoneyDurationProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADifferenceAndADeclaredDurationCombineInSql([DataSources(false)] string context)
 		{
 			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");

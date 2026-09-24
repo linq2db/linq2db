@@ -25,7 +25,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void UnionByDefaultNullsPosition([DataSources] string context)
 		{
 			var left = new[]
@@ -60,7 +60,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void UnionByBasic([DataSources] string context)
 		{
 			var left = new[]
@@ -89,7 +89,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void UnionByWithFilter([DataSources] string context)
 		{
 			var left = new[]
@@ -118,7 +118,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		[ThrowsCannotBeConverted([TestProvName.AllNativeAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void UnionBySameTable([DataSources] string context)
 		{
 			var data = new[]

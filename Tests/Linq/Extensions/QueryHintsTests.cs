@@ -14,7 +14,7 @@ namespace Tests.Extensions
 	public class QueryHintsTests : TestBase
 	{
 		[Test]
-		public void Comment([DataSources(TestProvName.AllAccess, TestProvName.AllMySql)] string context)
+		public void Comment([DataSources(TestProvName.AllNativeAccess, TestProvName.AllMySql)] string context)
 		{
 			using var db = GetDataContext(context);
 			db.QueryHints.Add("---");

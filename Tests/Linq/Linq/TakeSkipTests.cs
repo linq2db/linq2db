@@ -289,7 +289,7 @@ namespace Tests.Linq
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
 			TestProvName.AllYdb,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{
@@ -478,7 +478,7 @@ namespace Tests.Linq
 		public void SkipTake4([DataSources(
 			TestProvName.AllSQLite,
 			TestProvName.AllSybase,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{
@@ -532,7 +532,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{
@@ -549,7 +549,7 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
-			TestProvName.AllAccess)]
+			TestProvName.AllNativeAccess)]
 			string context,
 			[Values] bool withParameters)
 		{

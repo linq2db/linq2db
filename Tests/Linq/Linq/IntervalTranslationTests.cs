@@ -182,7 +182,7 @@ namespace Tests.Linq
 		/// </remarks>
 		const string UnsupportedDeclaredShiftProviders =
 			UnsupportedShiftProviders         + "," +
-			TestProvName.AllAccess            + "," +
+			TestProvName.AllNativeAccess      + "," +
 			TestProvName.AllInformix;
 
 		/// <summary>
@@ -194,7 +194,7 @@ namespace Tests.Linq
 		/// refusals and both are correct - they are listed apart because the message differs, and a test that
 		/// accepted either would stop proving which one happened.
 		/// </remarks>
-		const string ShiftRefusedWhileBuildingProviders = TestProvName.AllAccess;
+		const string ShiftRefusedWhileBuildingProviders = TestProvName.AllNativeAccess;
 
 		/// <summary>
 		/// Providers that cannot express an elapsed difference as a value at all, so any member or comparison taken
@@ -231,7 +231,13 @@ namespace Tests.Linq
 		/// and Access answers them; comparing one against a duration that came from somewhere else needs a unit both
 		/// sides share, and ticks are the only one - so those are refused instead of answered approximately.
 		/// </remarks>
-		const string NoTickTotalProviders = TestProvName.AllAccess;
+		const string NoTickTotalProviders = TestProvName.AllNativeAccess;
+
+		/// <summary>
+		/// Providers that measure ticks but keep a declared duration as CURRENCY, through the shared <c>Access</c>
+		/// column configuration above, so combining one with a computed difference is refused by name.
+		/// </summary>
+		const string DeclaredMoneyDurationProviders = TestProvName.AllAccessLibRed;
 
 		/// <summary>
 		/// The base is deliberately not the difference's own start: that form cancels in the optimizer and no
