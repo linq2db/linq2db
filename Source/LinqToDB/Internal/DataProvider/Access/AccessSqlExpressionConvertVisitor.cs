@@ -459,5 +459,45 @@ namespace LinqToDB.Internal.DataProvider.Access
 				_ => base.ConvertSqlBinaryExpression(element),
 			};
 		}
+
+		// True is -1, so a boolean key sorts True first. A non-nullable key flips its direction instead of becoming an
+		// expression DISTINCT would reject (Jet accepts it parenthesized); a nullable one is negated, keeping NULL first.
+		// Either way the key leaves as an int, so the second convert pass of the remote path leaves it alone.
+		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		{
+			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
+
+			if (newElement.IsPositioned || !IsBooleanSortKey(newElement.Expression))
+				return newElement;
+
+			var flip = !newElement.Expression.CanBeNullable(NullabilityContext);
+
+			return new SqlOrderByItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, false, newElement.NullsPosition);
+		}
+
+		protected internal override IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		{
+			var newElement = (SqlWindowOrderItem)base.VisitSqlWindowOrderItem(element);
+
+			if (!IsBooleanSortKey(newElement.Expression))
+				return newElement;
+
+			var flip = !newElement.Expression.CanBeNullable(NullabilityContext);
+
+			return new SqlWindowOrderItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, newElement.NullsPosition);
+		}
+
+		static bool IsBooleanSortKey(ISqlExpression expr)
+		{
+			return (expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
+				&& QueryHelper.UnwrapNullablity(expr) is not (SqlValue or SqlParameter);
+		}
+
+		ISqlExpression ToSortKey(ISqlExpression expr, bool flip)
+		{
+			return flip
+				? new SqlExpression(Factory.GetDbDataType(typeof(int)), "({0})", Precedence.Unknown, expr)
+				: Factory.Negate(Factory.GetDbDataType(typeof(int?)), expr);
+		}
 	}
 }
