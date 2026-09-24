@@ -160,7 +160,8 @@ namespace Tests.Linq
 			byId[2].ByPartition.ShouldBe(1); // a dropped/constant partition key would make this 2
 		}
 
-		// Nullable boolean ORDER BY key: NULL (Id 9) first, then false (Ids 1-4), then true (Ids 5-8).
+		// Nullable boolean ORDER BY key: false (Ids 1-4) before true (Ids 5-8). Where the NULL (Id 9) lands is the
+		// provider's default null ordering, so it is not asserted.
 		[Test]
 		public void RowNumberWithNullableBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
 		{
@@ -178,9 +179,8 @@ namespace Tests.Linq
 
 			var byId = result.ToDictionary(r => r.Id, r => r.ByOrder);
 
-			byId[9].ShouldBe(1);
-			byId[1].ShouldBe(2);
-			byId[5].ShouldBe(6);
+			byId[4].ShouldBeLessThan(byId[5]);
+			(byId[5] - byId[1]).ShouldBe(4);
 		}
 
 		// A boolean column in ORDER BY / PARTITION BY is a storable value and is left unfolded; the equivalent
