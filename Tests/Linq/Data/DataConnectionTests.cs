@@ -1101,7 +1101,7 @@ namespace Tests.Data
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_NoDispose_NotSupported(
 			[DataSources(false,
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 			ProviderName.ClickHouseDriver,
 				ProviderName.DB2,
 				TestProvName.AllFirebird,
@@ -1227,7 +1227,7 @@ namespace Tests.Data
 		[Test]
 		public void MARS_ProviderSupportsMultipleDataReadersOnNewCommand_Dispose_NotSupported(
 			[DataSources(false,
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				ProviderName.ClickHouseDriver,
 				ProviderName.DB2,
 				TestProvName.AllInformix,

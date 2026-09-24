@@ -231,7 +231,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void BinaryLength([DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed)] string context)
+		public void BinaryLength([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -385,7 +385,7 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
@@ -419,7 +419,7 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
@@ -456,7 +456,7 @@ namespace Tests.Linq
 			[DataSources(
 				TestProvName.AllSQLite,
 				ProviderName.SqlCe,
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
@@ -810,7 +810,7 @@ namespace Tests.Linq
 		public void TestSpecialValues(
 			[DataSources(
 				TestProvName.AllSQLite,
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllInformix,
 				TestProvName.AllSybase,
 				TestProvName.AllSqlServer,

@@ -266,7 +266,7 @@ namespace Tests.Linq
 		[ActiveIssue(1918, Configurations = [TestProvName.AllSQLite, TestProvName.AllDuckDB, TestProvName.AllYdb], SkipForNonLinqService = true,
 			ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Cannot convert value 'System.IO.MemoryStream: System.String' to type 'System.IO.MemoryStream'",
 			Details = "Remote fails earlier than direct and identically across these three: serializing the Stream parameter for the wire is what breaks, before any provider-specific handling runs.")]
-		[ActiveIssue(1918, Configurations = [TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllOracle,
+		[ActiveIssue(1918, Configurations = [TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllOracle,
 			TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllMySql, ProviderName.DB2],
 			Details = "no-declaration: unvalidated: not reachable from this workstation - no container for most, and Informix/DB2 evidence is inadmissible here because the IBM CLI driver replaces the server text with a codepage-conversion message.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1918")]

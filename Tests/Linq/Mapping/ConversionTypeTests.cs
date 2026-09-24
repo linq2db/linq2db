@@ -62,7 +62,7 @@ namespace Tests.Mapping
 
 		[Test]
 		public void InsertWithOutputTest([DataSources([
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllInformix,

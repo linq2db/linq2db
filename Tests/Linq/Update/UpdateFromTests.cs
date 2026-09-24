@@ -286,7 +286,7 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, ErrorMessage = ErrorHelper.MySql.Error_SkipInUpdate)]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -335,7 +335,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
 		public void UpdateTestJoinTake(
-			[DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
