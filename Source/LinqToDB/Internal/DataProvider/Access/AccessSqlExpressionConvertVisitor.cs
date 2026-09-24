@@ -460,17 +460,34 @@ namespace LinqToDB.Internal.DataProvider.Access
 			};
 		}
 
+		bool _isDistinctOrderBy;
+
 		// True is -1, so a boolean key sorts True first. A non-nullable key flips its direction instead of becoming an
-		// expression DISTINCT would reject (Jet accepts it parenthesized); a nullable one is negated, keeping NULL first.
+		// expression DISTINCT would reject (Jet accepts it parenthesized); a nullable one is negated, keeping NULL first,
+		// except under DISTINCT, where only the flip is accepted.
 		// Either way the key leaves as an int, so the second convert pass of the remote path leaves it alone.
+		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		{
+			var saved = _isDistinctOrderBy;
+
+			_isDistinctOrderBy = element.SelectQuery?.Select.IsDistinct == true;
+
+			var result = base.VisitSqlOrderByClause(element);
+
+			_isDistinctOrderBy = saved;
+
+			return result;
+		}
+
 		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 		{
+			var isDistinct = _isDistinctOrderBy;
 			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
 
 			if (newElement.IsPositioned || !IsBooleanSortKey(newElement.Expression))
 				return newElement;
 
-			var flip = !newElement.Expression.CanBeNullable(NullabilityContext);
+			var flip = isDistinct || !newElement.Expression.CanBeNullable(NullabilityContext);
 
 			return new SqlOrderByItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, false, newElement.NullsPosition);
 		}
@@ -487,10 +504,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return new SqlWindowOrderItem(ToSortKey(newElement.Expression, flip), newElement.IsDescending != flip, newElement.NullsPosition);
 		}
 
-		static bool IsBooleanSortKey(ISqlExpression expr)
+		// Only a Yes/No value stores True as -1; a converted or differently typed column already sorts in CLR order.
+		bool IsBooleanSortKey(ISqlExpression expr)
 		{
 			return (expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
-				&& QueryHelper.UnwrapNullablity(expr) is not (SqlValue or SqlParameter);
+				&& QueryHelper.UnwrapNullablity(expr) is not (SqlValue or SqlParameter)
+				&& QueryHelper.GetColumnDescriptor(expr)?.ValueConverter == null
+				&& QueryHelper.GetDbDataType(expr, MappingSchema).DataType is DataType.Boolean or DataType.Undefined;
 		}
 
 		ISqlExpression ToSortKey(ISqlExpression expr, bool flip)
