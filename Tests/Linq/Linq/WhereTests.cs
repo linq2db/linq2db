@@ -1480,7 +1480,7 @@ namespace Tests.Linq
 			AreEqualLocal(local, table, t => !(t.NullableBoolValue != true) && t.Id > 0);
 			AreEqualLocal(local, table, t => t.NullableBoolValue == true && t.Id > 0);
 
-			if (!context.IsAnyOf(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed))
+			if (!context.IsAnyOf(TestProvName.AllAccess))
 			{
 				AreEqualLocal(local, table, t => t.NullableBoolValue == null && t.Id > 0);
 				AreEqualLocal(local, table, t => t.NullableBoolValue != null && t.Id > 0);

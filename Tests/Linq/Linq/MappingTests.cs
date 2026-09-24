@@ -1432,7 +1432,7 @@ namespace Tests.Linq
 		// Split by the [Values] argument, because the two arms are not equally broken: filtering on false fails
 		// everywhere, filtering on true fails only on ClickHouse. One gate over both marked ~50 working cases as
 		// failing.
-		[ActiveIssue(2362, Configurations = [TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllDuckDB, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllYdb],
+		[ActiveIssue(2362, Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllDuckDB, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllYdb],
 			ErrorMessage = "Assert.That(res, Has.Length.EqualTo(2))",
 			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The empty string the converter writes for false is not matched back - #2362's 'Query skips rows with empty string'. Spelled out rather than left unconditional because Oracle matches the empty string back and passes.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]

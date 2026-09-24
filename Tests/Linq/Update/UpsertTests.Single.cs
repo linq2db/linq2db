@@ -297,7 +297,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_UpdateIfExists_SkipInsert_EmptyTable([InsertOrUpdateDataSources] string context)
 		{
@@ -313,7 +313,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_UpdateIfExists_SkipInsert_Existing([InsertOrUpdateDataSources] string context)
 		{
@@ -329,7 +329,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		[ThrowsForProvider(typeof(LinqToDBException), ProviderName.Firebird25, TestProvName.AllInformix,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeWithPredicate_NotSupported)]
@@ -354,7 +354,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_Match_OnNonPKColumn([InsertOrUpdateDataSources] string context)
 		{
@@ -375,7 +375,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_Insert_DoNothing([InsertOrUpdateDataSources] string context)
 		{
@@ -488,7 +488,7 @@ namespace Tests.xUpdate
 		[Test, QueryCacheTest]
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSapHana, TestProvName.AllSqlServer2005, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus,
-			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+			TestProvName.AllMySql, TestProvName.AllSqlCe, TestProvName.AllAccess,
 			ErrorMessage = ErrorHelper.Error_Upsert_MergeLowering_NotSupported)]
 		public void Single_QueryCache_Parameterises_ItemValues_MergePath([InsertOrUpdateDataSources] string context)
 		{

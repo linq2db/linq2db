@@ -924,7 +924,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ReferenceJoin1([DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse)] string context)
+		public void ReferenceJoin1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -954,7 +954,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinByAnonymousTest([DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse)] string context)
+		public void JoinByAnonymousTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -3269,7 +3269,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
-		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed)] string context, [Values] CompareNulls compareNulls)
+		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllAccess)] string context, [Values] CompareNulls compareNulls)
 		{
 			// Access excluded: it has no native Coalesce. AccessSqlExpressionConvertVisitor
 			// lowers `Coalesce(x, '')` to `IIF(x IS NULL, '', x)`, which contains a literal

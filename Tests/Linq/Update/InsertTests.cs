@@ -2418,7 +2418,7 @@ namespace Tests.xUpdate
 		// Every named provider does fail, in two groups. Access, Firebird and HANA never reach the database -
 		// linq2db refuses KeepIdentity up front, by mode for Access and HANA and by provider name for Firebird.
 		// The rest do reach it and the identity value collides, each server saying so in its own words.
-		[ActiveIssue(4702, Configurations = [TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllSapHana],
+		[ActiveIssue(4702, Configurations = [TestProvName.AllAccess, TestProvName.AllSapHana],
 			ErrorTypeName = "LinqToDB.LinqToDBException",
 			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode",
 			Details = "no-issue: Update test to test different RetrieveIdentity modes for all providers with sequences")]

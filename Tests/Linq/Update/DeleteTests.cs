@@ -250,7 +250,7 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2549")]
 		public void DeleteTakeNotOrdered(
 			[DataSources(
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
@@ -286,7 +286,7 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2549")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithTopOrderBy)]
 		public void DeleteTakeOrdered([DataSources(
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
@@ -331,7 +331,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithTopOrderBy)]
 		public void DeleteSkipTakeOrdered([DataSources(
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,
@@ -378,7 +378,7 @@ namespace Tests.xUpdate
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithSkip)]
 		public void DeleteSkipTakeNotOrdered([DataSources(
-				TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed,
+				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				ProviderName.SqlCe,

@@ -768,7 +768,7 @@ namespace Tests.Linq
 		}
 
 		[Test, QueryCacheTest]
-		public void EmptyValues([DataSources(TestProvName.AllClickHouse, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		public void EmptyValues([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = Array.Empty<TableToInsert>();
 
@@ -788,7 +788,7 @@ namespace Tests.Linq
 		}
 		
 		[Test]
-		public void EmptyValuesWithTypeSpecificUsage([DataSources(TestProvName.AllClickHouse, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		public void EmptyValuesWithTypeSpecificUsage([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
 			var records = Array.Empty<TableToInsert>().AsQueryable(db);
@@ -834,7 +834,7 @@ namespace Tests.Linq
 
 		[Test, QueryCacheTest]
 		[ThrowsRequiresCorrelatedSubquery(simple: true)]
-		public void EmptySubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		public void EmptySubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
 			var records = Array.Empty<TableToInsert>();
 

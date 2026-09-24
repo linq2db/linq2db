@@ -115,7 +115,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany3([DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse)] string context)
+		public void SelectMany3([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -130,7 +130,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany4([DataSources(TestProvName.AllNativeAccess, TestProvName.AllAccessLibRed, TestProvName.AllClickHouse)] string context)
+		public void SelectMany4([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
