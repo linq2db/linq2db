@@ -35,8 +35,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			statement = (SqlStatement)new AccessBooleanSortKeyLoweringVisitor().LowerBooleanSortKeys(statement);
-
 			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 			statement = WrapParameters(statement);
