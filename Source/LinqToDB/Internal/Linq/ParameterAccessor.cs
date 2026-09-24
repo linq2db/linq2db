@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 #if DEBUG
@@ -14,7 +15,7 @@ namespace LinqToDB.Internal.Linq
 	{
 		public ParameterAccessor(
 			int                                                       accessorId,
-			Func<IQueryExpressions, IDataContext?,object?[]?,object?> clientValueAccessor,
+			Func<IQueryExpressions, IDataContext?,object?[]?,SqlCommandExecutionContext?,object?> clientValueAccessor,
 			Func<object?,object?>?                                    clientToProviderConverter,
 			Func<object?,object?>?                                    itemAccessor,
 			Func<object?,DbDataType>?                                 dbDataTypeAccessor,
@@ -29,13 +30,13 @@ namespace LinqToDB.Internal.Linq
 		}
 
 		public readonly int                                                      AccessorId;
-		public readonly Func<IQueryExpressions,IDataContext?,object?[]?,object?> ClientValueAccessor;
+		public readonly Func<IQueryExpressions,IDataContext?,object?[]?,SqlCommandExecutionContext?,object?> ClientValueAccessor;
 		public readonly Func<object?,object?>?                                   ClientToProviderConverter;
 		public readonly Func<object?,object?>?                                   ItemAccessor;
 		public readonly Func<object?,DbDataType>?                                DbDataTypeAccessor;
 		public readonly SqlParameter                                             SqlParameter;
 #if DEBUG
-		public Expression<Func<IQueryExpressions,IDataContext?,object?[]?,object?>>? AccessorExpr;
+		public Expression<Func<IQueryExpressions,IDataContext?,object?[]?,SqlCommandExecutionContext?,object?>>? AccessorExpr;
 #endif
 	}
 }

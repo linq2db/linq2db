@@ -50,6 +50,8 @@ namespace LinqToDB.Internal.DataProvider
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
+				MaxCombinedCommandLength             = 60_000,
+				MaxStatementsPerCombinedGroup        = 32,
 				IsCrossJoinSupported                 = true,
 				IsDistinctSetOperationsSupported     = true,
 				AcceptsOuterExpressionInAggregate    = true,
@@ -509,22 +511,19 @@ namespace LinqToDB.Internal.DataProvider
 		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
 
 		/// <summary>
-		/// Override to opt-in to provider-specific DML mechanics (currently: "is this exception a
-		/// table-not-found" detection used by <c>DropTable(throwExceptionIfNotExists: false)</c>).
-		/// Providers whose DROP TABLE already expresses "if exists" in SQL don't need this —
-		/// leave it returning <see langword="null"/> and no suppression will be attempted.
+		/// Creates the provider's <see cref="IDmlService"/> (command-scenario construction, physical grouping, and
+		/// "table not found" detection used by <c>DropTable(throwExceptionIfNotExists: false)</c>). The default
+		/// <see cref="BasicDmlService"/> supplies standard single-step scenarios and no table-not-found detection;
+		/// providers override to add identity/truncate/batching behavior and/or table-not-found detection.
 		/// </summary>
-		protected virtual IDmlService? CreateDmlService() => null;
+		protected virtual IDmlService CreateDmlService() => new BasicDmlService();
 
 		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(CreateMemberTranslator());
 			serviceProvider.AddService(CreateIdentifierService());
 			serviceProvider.AddService(CreateMemberConverter());
-
-			var dmlService = CreateDmlService();
-			if (dmlService != null)
-				serviceProvider.AddService(dmlService);
+			serviceProvider.AddService(CreateDmlService());
 		}
 
 		readonly Lock _guard = new();

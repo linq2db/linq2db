@@ -716,11 +716,13 @@ namespace LinqToDB
 
 			public IDataContext      DataContext      => _dataContext!;
 			public IQueryExpressions Expressions      => _queryRunner!.Expressions;
-			public object?[]?        Parameters       => _queryRunner!.Parameters;
 			public object?[]?        Preambles        => _queryRunner!.Preambles;
+			public SqlCommandExecutionContext? ExecutionContext => _queryRunner!.ExecutionContext;
 			public Expression?       MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
 			public int               RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
+#pragma warning disable CS0618 // obsolete QueryNumber forwarder must still satisfy IQueryRunner
 			public int               QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
+#pragma warning restore CS0618
 		}
 
 		internal static class ConfigurationApplier

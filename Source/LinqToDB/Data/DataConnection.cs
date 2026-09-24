@@ -5,6 +5,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -18,6 +19,7 @@ using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Interceptors;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
@@ -992,6 +994,132 @@ namespace LinqToDB.Data
 			LastQuery = _command!.CommandText;
 		}
 
+#if SUPPORTS_DBBATCH
+		/// <summary>
+		/// Gets whether the underlying provider connection supports the ADO.NET <see cref="DbBatch"/> structural batching API.
+		/// </summary>
+		internal bool CanCreateBatch => GetOrCreateConnection().Connection.CanCreateBatch;
+
+		/// <summary>
+		/// Builds a <see cref="DbBatch"/> from the given per-statement command texts and parameters. Each statement becomes a
+		/// <see cref="DbBatchCommand"/> with its own parameter scope, so parameter names are NOT uniquified across statements
+		/// (unlike the semicolon-concatenated combined command). The caller owns the returned batch and must dispose it.
+		/// </summary>
+		internal DbBatch CreateBatch(IReadOnlyList<RenderedStatement> statements)
+		{
+			CheckAndThrowOnDisposed();
+
+			var batch     = GetOrCreateConnection().Connection.CreateBatch();
+			var lastQuery = "";
+
+			if (_commandTimeout.HasValue)
+				batch.Timeout = _commandTimeout.Value;
+
+			if (TransactionAsync != null)
+				batch.Transaction = Transaction;
+
+			foreach (var (sql, parameters) in statements)
+			{
+				var command = batch.CreateBatchCommand();
+
+				command.CommandText = sql;
+
+				if (parameters != null)
+					foreach (var parameter in parameters)
+						command.Parameters.Add(parameter);
+
+				batch.BatchCommands.Add(command);
+
+				lastQuery = lastQuery.Length == 0 ? sql : lastQuery + ";\n" + sql;
+			}
+
+			LastQuery = lastQuery;
+
+			return batch;
+		}
+
+		// DbBatch execution shares the ExecuteReader tracing scaffold (TraceExecuteReader) with the single-command path, but
+		// carries no command interceptor: interceptors are DbCommand-typed and a DbBatch is not a DbCommand, so the
+		// CanUseDbBatch gate excludes a registered ICommandInterceptor. Tracing IS supported (the batch's combined text is
+		// traced) and the exception interceptor DOES run (see RunBatchReader).
+		// TODO: route through a DbBatch-aware interceptor surface (e.g. IDbBatchInterceptor) once one exists.
+		internal DataReaderWrapper ExecuteBatchDataReader(DbBatch batch, CommandBehavior commandBehavior)
+		{
+			return TraceExecuteReader(null, () => GetBatchTraceText(batch, isAsync: false), () => RunBatchReader(batch, GetCommandBehavior(commandBehavior)));
+		}
+
+		// The DbBatch execution delegate for TraceExecuteReader. A DbBatch is not a DbCommand, so no command interceptor runs
+		// here (the CanUseDbBatch gate already excludes a registered ICommandInterceptor); the exception interceptor DOES run.
+		DataReaderWrapper RunBatchReader(DbBatch batch, CommandBehavior commandBehavior)
+		{
+			CheckAndThrowOnDisposed();
+
+			try
+			{
+				return new DataReaderWrapper(this, batch.ExecuteReader(commandBehavior), null);
+			}
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
+		}
+
+		// The batch's SQL for tracing/baselines: ONE "-- <config> <provider>" header for the whole DbBatch
+		// submission, then each DbBatchCommand under a "-- Batch N" marker with its own parameters dumped
+		// (each command has an independent parameter scope) followed by its SQL text.
+		string GetBatchTraceText(DbBatch batch, bool isAsync)
+		{
+			var sb = new StringBuilder();
+
+			// One comment header for the whole DbBatch submission. The command SQL is already prepared, so we do
+			// NOT create a SqlBuilder here — the header comes from the connection and each command's text/parameters
+			// are taken as-is from the DbBatchCommand.
+			TraceInfo.AppendCommandComment(sb, this, sqlBuilderName: null, isAsync);
+
+			var batchNumber = 0;
+
+			foreach (DbBatchCommand command in batch.BatchCommands)
+			{
+				sb.Append("-- Batch ").Append(++batchNumber).AppendLine();
+
+				// Each command has its own parameter scope; emit its parameters as comment lines.
+				foreach (DbParameter parameter in command.Parameters)
+				{
+					var value = parameter.Value is null or DBNull
+						? "NULL"
+						: Convert.ToString(parameter.Value, CultureInfo.InvariantCulture);
+
+					sb.Append("-- ").Append(parameter.ParameterName).Append(" = ").AppendLine(value);
+				}
+
+				sb.AppendLine(command.CommandText);
+			}
+
+			while (sb.Length > 0 && sb[^1] is '\n' or '\r')
+				sb.Length--;
+
+			return sb.ToString();
+		}
+#endif
+
+		/// <summary>
+		/// Whether a combined multi-statement group should run via the ADO.NET <c>DbBatch</c> API rather than as one
+		/// semicolon-concatenated command. Requires the <see cref="LinqToDB.LinqOptions.UseDbBatch"/> option, a provider
+		/// connection that supports batching, and no registered <see cref="ICommandInterceptor"/> (interceptors are
+		/// <see cref="DbCommand"/>-typed, so they cannot observe a batch). Tracing is supported. Always
+		/// <see langword="false"/> on target frameworks without the <c>DbBatch</c> API.
+		/// </summary>
+		internal bool CanUseDbBatch =>
+#if SUPPORTS_DBBATCH
+			Options.LinqOptions.UseDbBatch
+			&& ((IInterceptable<ICommandInterceptor>)this).Interceptor == null
+			&& CanCreateBatch;
+#else
+			false;
+#endif
+
 		private int? _commandTimeout;
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
@@ -1392,7 +1520,14 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
+		// One tracing scaffold shared by the single-command (ExecuteDataReader) and DbBatch (ExecuteBatchDataReader) reader
+		// lifecycles: it opens the connection, honors the trace-Off short-circuit + execute scope, and emits the
+		// Before/After/Error trace events. The `run` delegate owns the actual execution and its interceptor semantics
+		// (ExecuteReader carries the command interceptor; RunBatchReader carries the exception interceptor). `command` traces
+		// the single-command path; `commandTextFactory` lazily builds the batch's combined text only when tracing is on.
+		// TraceInfo.SqlText prefers a non-null CommandText and otherwise formats Command, so the single path (command set,
+		// commandText null) and the batch path (command null, commandText set) each trace exactly as before.
+		DataReaderWrapper TraceExecuteReader(DbCommand? command, Func<string>? commandTextFactory, Func<DataReaderWrapper> run)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -1400,18 +1535,20 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				using (DataProvider.ExecuteScope(this))
-					return ExecuteReader(GetCommandBehavior(commandBehavior));
+					return run();
 
-			var now = DateTime.UtcNow;
-			var sw  = Stopwatch.StartNew();
+			var now         = DateTime.UtcNow;
+			var sw          = Stopwatch.StartNew();
+			var commandText = commandTextFactory?.Invoke();
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, false)
 				{
-					TraceLevel = TraceLevel.Info,
-					Command    = CurrentCommand,
-					StartTime  = now,
+					TraceLevel  = TraceLevel.Info,
+					Command     = command,
+					CommandText = commandText,
+					StartTime   = now,
 				});
 			}
 
@@ -1420,14 +1557,15 @@ namespace LinqToDB.Data
 				DataReaderWrapper ret;
 
 				using (DataProvider.ExecuteScope(this))
-					ret = ExecuteReader(GetCommandBehavior(commandBehavior));
+					ret = run();
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel    = TraceLevel.Info,
-						Command       = ret.Command,
+						Command       = ret.Command ?? command,
+						CommandText   = commandText,
 						StartTime     = now,
 						ExecutionTime = sw.Elapsed,
 					});
@@ -1442,7 +1580,8 @@ namespace LinqToDB.Data
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel    = TraceLevel.Error,
-						Command       = CurrentCommand,
+						Command       = command,
+						CommandText   = commandText,
 						StartTime     = now,
 						ExecutionTime = sw.Elapsed,
 						Exception     = ex,
@@ -1451,6 +1590,11 @@ namespace LinqToDB.Data
 
 				throw;
 			}
+		}
+
+		internal DataReaderWrapper ExecuteDataReader(CommandBehavior commandBehavior)
+		{
+			return TraceExecuteReader(CurrentCommand, null, () => ExecuteReader(GetCommandBehavior(commandBehavior)));
 		}
 
 		#endregion

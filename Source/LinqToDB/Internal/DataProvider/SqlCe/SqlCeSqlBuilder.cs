@@ -56,33 +56,6 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		// reference over it.
 		protected override bool RequiresUniqueRootColumnNames => true;
 
-		public override int CommandCount(SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlTruncateTableStatement trun => trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1,
-				_ => statement.NeedsIdentity ? 2 : 1,
-			};
-		}
-
-		protected override void BuildCommand(SqlStatement statement, int commandNumber)
-		{
-			if (statement is SqlTruncateTableStatement trun)
-			{
-				var field = trun.Table!.IdentityFields[commandNumber - 1];
-
-				StringBuilder.Append("ALTER TABLE ");
-				BuildObjectName(StringBuilder, trun.Table.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
-				StringBuilder.Append(" ALTER COLUMN ");
-				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-				StringBuilder.AppendLine(" IDENTITY(1, 1)");
-			}
-			else
-			{
-				StringBuilder.AppendLine("SELECT @@IDENTITY");
-			}
-		}
-
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms172424(v=sql.90)

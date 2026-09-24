@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		sealed class EagerLoadState
 		{
 			/// <summary>Set by ProcessEagerLoadingKeyedQuery to signal BuildQuery that buffer materialization is needed.</summary>
-			public bool HasKeyedQueryPreambles;
+			public bool HasKeyedQueryHarvesters;
 
 			/// <summary>True when <see cref="CteUnionInfo"/> holds a single-query CteUnion setup.</summary>
 			public bool HasCteUnionQuery;

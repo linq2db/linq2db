@@ -12,5 +12,6 @@
 		TruncateTable,
 		Merge,
 		MultiInsert,
+		Fragment,
 	}
 }
