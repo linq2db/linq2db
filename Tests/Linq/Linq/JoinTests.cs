@@ -828,6 +828,7 @@ namespace Tests.Linq
 			AssertQuery(q2);
 		}
 
+		[ActiveIssue("Oracle 11g bug: merged outer-joined view returns COALESCE constant for null-extended row", Configurations = [TestProvName.AllOracle11])]
 		[Test]
 		public void Issue5970Test([DataSources(TestProvName.AllAccess)] string context, [Values] bool parameterDependent)
 		{
