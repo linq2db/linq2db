@@ -299,7 +299,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
+			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfoConvert, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
 		}
 
 		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
