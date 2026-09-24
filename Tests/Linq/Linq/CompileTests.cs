@@ -764,11 +764,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		// Sybase excluded by https://github.com/linq2db/linq2db/issues/5865 - the element-form eager-load
-		// preamble joins a derived table carrying TOP, which SybaseDataProvider already declares invalid
-		// through IsJoinDerivedTableWithTakeInvalid, but the preamble reaches the provider without that
-		// check running, so only the first detail row comes back.
-		public void ElementFormLoadWithTest([DataSources(TestProvName.AllSybase)] string context)
+		public void ElementFormLoadWithTest([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,Parent>(static (db, id) =>
 				db.Parent
@@ -791,8 +787,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5842")]
-		// Sybase excluded by https://github.com/linq2db/linq2db/issues/5865 - see ElementFormLoadWithTest.
-		public void ElementFormLoadWithThenLoadTest([DataSources(TestProvName.AllSybase)] string context)
+		public void ElementFormLoadWithThenLoadTest([DataSources] string context)
 		{
 			var query = CompiledQuery.Compile<ITestDataContext,int,Parent>(static (db, id) =>
 				db.Parent
