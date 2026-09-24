@@ -1578,8 +1578,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorMessage = "Assert.That(res[0].Id, Is.Null)",
-			Details = "no-issue: LibRed evaluates NTH_VALUE over the whole partition instead of the default frame (RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), so the first row gets the second value rather than NULL. LibRed.Ado 11.0.0-alpha.3.")]
 		[Test]
 		public void Issue1732NthValue([DataSources(
 			TestProvName.AllSqlServer,
@@ -1604,6 +1602,7 @@ namespace Tests.Linq
 			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
+					orderby p.Order descending
 					select new
 					{
 						Id         = p.Id,
