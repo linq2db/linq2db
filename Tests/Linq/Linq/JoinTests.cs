@@ -856,7 +856,7 @@ namespace Tests.Linq
 			if (parameterDependent)
 				q2 = q2.Where(r => ids.Contains(r.ID));
 
-			AssertQuery(q2);
+			AssertQuery(q2.OrderBy(r => r.ID));
 		}
 
 		[Table("Child")]
