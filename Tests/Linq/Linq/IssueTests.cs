@@ -998,5 +998,247 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Issue 5972 - PostgreSQL typed literal for integer MinValue/MaxValue
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_SByte([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = sbyte.MinValue;
+			var max = sbyte.MaxValue;
+
+			db.Select(() => Sql.AsSql(sbyte.MinValue)).ShouldBe(sbyte.MinValue);
+			db.Select(() => Sql.AsSql(sbyte.MaxValue)).ShouldBe(sbyte.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2,   ErrorMessage = "Unable to cast object of type 'System.SByte' to type 'System.Byte[]'")]
+		[ActiveIssue(5973, Configuration = ProviderName.SapHanaNative, ErrorMessage = "No mapping exists from DbType SByte to a known HanaDbType")]
+		public void Issue5972_SByteParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = sbyte.MinValue;
+			var max = sbyte.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_Byte([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = byte.MinValue;
+			var max = byte.MaxValue;
+
+			db.Select(() => Sql.AsSql(byte.MinValue)).ShouldBe(byte.MinValue);
+			db.Select(() => Sql.AsSql(byte.MaxValue)).ShouldBe(byte.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_ByteParameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = byte.MinValue;
+			var max = byte.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_Int16([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = short.MinValue;
+			var max = short.MaxValue;
+
+			db.Select(() => Sql.AsSql(short.MinValue)).ShouldBe(short.MinValue);
+			db.Select(() => Sql.AsSql(short.MaxValue)).ShouldBe(short.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
+		public void Issue5972_Int16Parameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = short.MinValue;
+			var max = short.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_UInt16([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = ushort.MinValue;
+			var max = ushort.MaxValue;
+
+			db.Select(() => Sql.AsSql(ushort.MinValue)).ShouldBe(ushort.MinValue);
+			db.Select(() => Sql.AsSql(ushort.MaxValue)).ShouldBe(ushort.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = ProviderName.SapHanaNative, ErrorMessage = "Index was outside the bounds of the array")]
+		public void Issue5972_UInt16Parameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = ushort.MinValue;
+			var max = ushort.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_Int32([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = int.MinValue;
+			var max = int.MaxValue;
+
+			db.Select(() => Sql.AsSql(int.MinValue)).ShouldBe(int.MinValue);
+			db.Select(() => Sql.AsSql(int.MaxValue)).ShouldBe(int.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
+		public void Issue5972_Int32Parameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = int.MinValue;
+			var max = int.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_UInt32([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = uint.MinValue;
+			var max = uint.MaxValue;
+
+			db.Select(() => Sql.AsSql(uint.MinValue)).ShouldBe(uint.MinValue);
+			db.Select(() => Sql.AsSql(uint.MaxValue)).ShouldBe(uint.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_UInt32Parameter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = uint.MinValue;
+			var max = uint.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		public void Issue5972_Int64([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = long.MinValue;
+			var max = long.MaxValue;
+
+			db.Select(() => Sql.AsSql(long.MinValue)).ShouldBe(long.MinValue);
+			db.Select(() => Sql.AsSql(long.MaxValue)).ShouldBe(long.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
+		public void Issue5972_Int64Parameter([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = long.MinValue;
+			var max = long.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllSQLite,     ErrorMessage = "Arithmetic operation resulted in an overflow")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllSqlServer,  ErrorMessage = "Arithmetic overflow error converting numeric to data type numeric")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllSybase,     ErrorMessage = "Arithmetic overflow during explicit conversion")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird,   ErrorMessage = "numeric overflow")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllPostgreSQL, SkipForNonLinqService = true, ErrorMessage = "Baselines for remote context doesn't match direct access baselines")]
+		public void Issue5972_UInt64([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.InlineParameters = true;
+
+			var min = ulong.MinValue;
+			var max = ulong.MaxValue;
+
+			db.Select(() => Sql.AsSql(ulong.MinValue)).ShouldBe(ulong.MinValue);
+			db.Select(() => Sql.AsSql(ulong.MaxValue)).ShouldBe(ulong.MaxValue);
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
+		[ActiveIssue(5973, Configuration = ProviderName.Firebird5, ErrorMessage = "Value was either too large or too small for an Int64")]
+		[ActiveIssue(5973, Configuration = ProviderName.SQLiteMS,  ErrorMessage = "Arithmetic operation resulted in an overflow")]
+		public void Issue5972_UInt64Parameter([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var min = ulong.MinValue;
+			var max = ulong.MaxValue;
+
+			db.Select(() => Sql.AsSql(min)).ShouldBe(min);
+			db.Select(() => Sql.AsSql(max)).ShouldBe(max);
+		}
+
+		#endregion
 	}
 }
