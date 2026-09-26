@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Numerics;
 using System.Text;
 
 using LinqToDB.DataProvider;
@@ -457,9 +458,38 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
+			// `::` binds tighter than unary minus: -9223372036854775808::bigint is -(9223372036854775808::bigint)
+			var wrap = IsNegativeLiteral(value);
+
+			if (wrap) StringBuilder.Append('(');
 			BuildExpression(Precedence.Primary, value);
+			if (wrap) StringBuilder.Append(')');
+
 			StringBuilder.Append("::");
 			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
+		}
+
+		bool IsNegativeLiteral(ISqlExpression value)
+		{
+			var literal = value switch
+			{
+				SqlValue sqlValue                                  => sqlValue.Value,
+				SqlParameter { IsQueryParameter: false } parameter => parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues).ProviderValue,
+				_                                                  => null,
+			};
+
+			return literal switch
+			{
+				sbyte      v => v < 0,
+				short      v => v < 0,
+				int        v => v < 0,
+				long       v => v < 0,
+				decimal    v => v < 0,
+				float      v => v < 0,
+				double     v => v < 0,
+				BigInteger v => v.Sign < 0,
+				_            => false,
+			};
 		}
 
 		protected override void BuildSql()
