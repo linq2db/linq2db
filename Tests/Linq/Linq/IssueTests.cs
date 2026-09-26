@@ -1019,7 +1019,8 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
 		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2,   ErrorMessage = "Unable to cast object of type 'System.SByte' to type 'System.Byte[]'")]
-		[ActiveIssue(5973, Configuration = ProviderName.SapHanaNative, ErrorMessage = "No mapping exists from DbType SByte to a known HanaDbType")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllSapHana,    ErrorMessage = "No mapping exists from DbType SByte to a known")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllAccessOdbc, ErrorMessage = "Value was either too large or too small")]
 		public void Issue5972_SByteParameter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1106,6 +1107,8 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
 		[ActiveIssue(5973, Configuration = ProviderName.SapHanaNative, ErrorMessage = "Index was outside the bounds of the array")]
+		[ActiveIssue(5973, Configuration = ProviderName.SapHanaOdbc,   ErrorMessage = "No mapping exists from DbType UInt16 to a known OdbcType")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllAccessOdbc, ErrorMessage = "Value was either too large or too small")]
 		public void Issue5972_UInt16Parameter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1163,6 +1166,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllAccessOdbc, ErrorMessage = "Value was either too large or too small")]
 		public void Issue5972_UInt32Parameter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1204,11 +1208,12 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
-		[ActiveIssue(5973, Configuration = TestProvName.AllSQLite,     ErrorMessage = "Arithmetic operation resulted in an overflow")]
-		[ActiveIssue(5973, Configuration = TestProvName.AllSqlServer,  ErrorMessage = "Arithmetic overflow error converting numeric to data type numeric")]
-		[ActiveIssue(5973, Configuration = TestProvName.AllSybase,     ErrorMessage = "Arithmetic overflow during explicit conversion")]
-		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird,   ErrorMessage = "numeric overflow")]
-		[ActiveIssue(5973, Configuration = TestProvName.AllPostgreSQL, SkipForNonLinqService = true, ErrorMessage = "Baselines for remote context doesn't match direct access baselines")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllSQLite,        ErrorMessage = "Arithmetic operation resulted in an overflow")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllSqlServer,     ErrorMessage = "Arithmetic overflow error converting numeric to data type numeric")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllSybase,        ErrorMessage = "Arithmetic overflow during explicit conversion")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird4Plus, ErrorMessage = "numeric overflow")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllFirebirdLess4, ErrorMessage = "Token unknown")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllPostgreSQL,    SkipForNonLinqService = true, ErrorMessage = "Baselines for remote context doesn't match direct access baselines")]
 		public void Issue5972_UInt64([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1226,8 +1231,8 @@ namespace Tests.Linq
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5972")]
 		[ActiveIssue(5973, Configuration = ProviderName.InformixDB2)]
-		[ActiveIssue(5973, Configuration = ProviderName.Firebird5, ErrorMessage = "Value was either too large or too small for an Int64")]
-		[ActiveIssue(5973, Configuration = ProviderName.SQLiteMS,  ErrorMessage = "Arithmetic operation resulted in an overflow")]
+		[ActiveIssue(5973, Configuration = TestProvName.AllFirebird, ErrorMessage = "Value was either too large or too small for an Int64")]
+		[ActiveIssue(5973, Configuration = ProviderName.SQLiteMS,    ErrorMessage = "Arithmetic operation resulted in an overflow")]
 		public void Issue5972_UInt64Parameter([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
