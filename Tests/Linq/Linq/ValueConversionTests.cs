@@ -1596,7 +1596,7 @@ namespace Tests.Linq
 				new Issue5975Row { Id = 2, Plain = stored, Date = null   },
 			]);
 
-			t.Update(x => new Issue5975Row { Date = x.Date != null ? test : DateTime.Now });
+			t.Update(x => new Issue5975Row { Date = x.Date != null ? test : Sql.DateAdd(Sql.DateParts.Day, 1, x.Plain) });
 
 			var rows = t.OrderBy(r => r.Id).ToArray();
 

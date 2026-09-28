@@ -1339,7 +1339,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
 		public void Issue5976_ConcatConvertedDates([EFDataSources] string provider)
 		{
-			using var ctx = CreateContext(provider);
+			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue5975Seed(ctx);
 
 			var query1 =
@@ -1366,6 +1366,19 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			results.Select(r => r.ToDate).OrderBy(d => d).ShouldBe([Issue5975Stored.AddDays(2), Issue5975Stored.AddDays(3)]);
 			results.Select(r => r.FromDate).OrderBy(d => d).ShouldBe([null, Issue5975Stored]);
+		}
+
+		[ActiveIssue(5981)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5981")]
+		public void Issue5981_ReadConvertedDateWithNodaTime([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			Issue5975Seed(ctx);
+
+			var rows = ctx.Issue5975TableOnes.ToLinqToDB().OrderBy(r => r.Id).ToList();
+
+			rows[0].FromDate.ShouldBe(Issue5975Stored);
+			rows[1].FromDate.ShouldBeNull();
 		}
 
 		#endregion

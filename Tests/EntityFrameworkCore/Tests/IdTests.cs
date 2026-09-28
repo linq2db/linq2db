@@ -24,9 +24,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return new IdTestContext(options);
 		}
 
-		protected override DbContextOptionsBuilder<IdTestContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<IdTestContext> optionsBuilder)
+		protected override DbContextOptionsBuilder<IdTestContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<IdTestContext> optionsBuilder, bool useNodaTime)
 		{
-			return base.ProviderSetup(provider, connectionString, optionsBuilder)
+			return base.ProviderSetup(provider, connectionString, optionsBuilder, useNodaTime)
 				.EnableSensitiveDataLogging()
 				.ReplaceService<IValueConverterSelector, IdValueConverterSelector>();
 		}
