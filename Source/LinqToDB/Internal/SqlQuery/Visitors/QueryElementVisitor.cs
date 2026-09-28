@@ -172,6 +172,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				case VisitMode.ReadOnly:
 				{
+					Visit(element.DataModification);
 					Visit(element.Body);
 					// TODO: currently needed for linq serializer and should be removed after serializer refactoring
 					VisitElements(element.Fields, VisitMode.ReadOnly);
@@ -180,23 +181,28 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				case VisitMode.Modify:
 				{
-					element.Body = (SelectQuery?)Visit(element.Body);
+					element.DataModification = (SqlStatementWithQueryBase?)Visit(element.DataModification);
+					element.Body             = (SelectQuery?)Visit(element.Body);
 					break;
 				}
 
 				case VisitMode.Transform:
 				{
-					var body      = (SelectQuery?)Visit(element.Body);
-					var newFields = VisitElements(element.Fields, VisitMode.Transform);
+					var dataModification = (SqlStatementWithQueryBase?)Visit(element.DataModification);
+					var body             = (SelectQuery?)Visit(element.Body);
+					var newFields        = VisitElements(element.Fields, VisitMode.Transform);
 
-					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body) || !ReferenceEquals(element.Fields, newFields))
+					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body) || !ReferenceEquals(element.Fields, newFields) || !ReferenceEquals(element.DataModification, dataModification))
 					{
 						var newCte = new CteClause(
 							body,
 							newFields,
 							element.ObjectType,
 							element.IsRecursive,
-							element.Name);
+							element.Name)
+						{
+							DataModification = dataModification,
+						};
 
 						foreach (var ann in element.Annotations.GetAnnotations())
 							newCte.Annotations.SetAnnotation(ann.Name, ann.Value);

@@ -573,6 +573,75 @@ namespace LinqToDB.Internal.SqlProvider
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
+		/// <summary>
+		/// Builds the body of a data-modifying CTE (<see cref="CteClause.DataModification"/> is set).
+		/// Default implementation emits the data-modifying statement with an output clause (<see cref="OutputKeyword"/>)
+		/// built from <see cref="CteClause.Body"/> columns — the PostgreSQL <c>WITH t AS (INSERT ... RETURNING ...)</c> form.
+		/// </summary>
+		protected virtual void BuildDataModificationCteBody(CteClause cte)
+		{
+			var statement = CreateDataModificationOutputStatement(cte);
+
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			sqlBuilder.BuildSql(0, statement, StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
+			MergeSqlBuilderData(sqlBuilder);
+		}
+
+		/// <summary>
+		/// Creates a render-only copy of <see cref="CteClause.DataModification"/> whose output clause returns
+		/// <see cref="CteClause.Body"/> columns. <see cref="CteClause.Body"/> selects from a stand-in copy of the modified
+		/// table; its fields are re-targeted to the modified table. The cached AST is not changed.
+		/// </summary>
+		protected SqlStatementWithQueryBase CreateDataModificationOutputStatement(CteClause cte)
+		{
+			if (cte.DataModification is not SqlInsertStatement { Insert.Into: { } target } insertStatement
+				|| cte.Body is not { } body
+				|| body.From.Tables is not [{ Joins.Count: 0, Source: SqlTable standIn }]
+				|| !body.Where.IsEmpty
+				|| !body.GroupBy.IsEmpty
+				|| !body.Having.IsEmpty
+				|| !body.OrderBy.IsEmpty
+				|| body.HasSetOperators
+				|| body.Select.IsDistinct
+				|| body.Select.TakeValue != null
+				|| body.Select.SkipValue != null)
+			{
+				throw new LinqToDBException(ErrorHelper.Error_OutputAsSource_Projection);
+			}
+
+			var outputColumns = new List<ISqlExpression>(Math.Max(body.Select.Columns.Count, 1));
+
+			foreach (var column in body.Select.Columns)
+			{
+				var expression = column.Expression.Convert((standIn, target), static (v, e) =>
+				{
+					if (e is SqlField field && ReferenceEquals(field.Table, v.Context.standIn))
+					{
+						if (ReferenceEquals(field, v.Context.standIn.All))
+							return v.Context.target.All;
+
+						return v.Context.target.Fields.Find(f => string.Equals(f.PhysicalName, field.PhysicalName, StringComparison.Ordinal))
+							?? throw new LinqToDBException(ErrorHelper.Error_OutputAsSource_Projection);
+					}
+
+					return e;
+				});
+
+				outputColumns.Add(expression);
+			}
+
+			// A data-modifying CTE without output columns cannot be referenced (PostgreSQL requires RETURNING).
+			if (outputColumns.Count == 0)
+				outputColumns.Add(new SqlValue(1));
+
+			return new SqlInsertStatement(insertStatement.SelectQuery)
+			{
+				Insert          = insertStatement.Insert,
+				Output          = new SqlOutputClause { OutputColumns = outputColumns },
+				ParentStatement = Statement,
+			};
+		}
+
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
 			if (!CteFirst && statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
@@ -824,7 +893,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 				Indent++;
 
-				BuildCteBody(cte.Body!);
+				if (cte.DataModification != null)
+					BuildDataModificationCteBody(cte);
+				else
+					BuildCteBody(cte.Body!);
 
 				Indent--;
 

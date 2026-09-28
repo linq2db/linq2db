@@ -16,7 +16,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(LinqExtensions.Insert), 
 		nameof(LinqExtensions.InsertWithIdentity), 
 		nameof(LinqExtensions.InsertWithOutput), 
-		nameof(LinqExtensions.InsertWithOutputInto))]
+		nameof(LinqExtensions.InsertWithOutputInto),
+		nameof(LinqExtensions.InsertWithOutputQuery))]
 	sealed class InsertBuilder : MethodCallBuilder
 	{
 		#region InsertBuilder
@@ -69,7 +70,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				nameof(LinqExtensions.Insert)               => InsertContext.InsertTypeEnum.Insert,
 				nameof(LinqExtensions.InsertWithIdentity)   => InsertContext.InsertTypeEnum.InsertWithIdentity,
 				nameof(LinqExtensions.InsertWithOutput)     => InsertContext.InsertTypeEnum.InsertOutput,
-				nameof(LinqExtensions.InsertWithOutputInto) => InsertContext.InsertTypeEnum.InsertOutputInto,
+				nameof(LinqExtensions.InsertWithOutputInto)  => InsertContext.InsertTypeEnum.InsertOutputInto,
+				nameof(LinqExtensions.InsertWithOutputQuery) => InsertContext.InsertTypeEnum.InsertOutputSource,
 				_ => InsertContext.InsertTypeEnum.Insert,
 			};
 
@@ -193,7 +195,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						insertContext.SetExpressions);
 				}
 
-				if (insertType is InsertContext.InsertTypeEnum.InsertOutput or InsertContext.InsertTypeEnum.InsertOutputInto)
+				if (insertType is InsertContext.InsertTypeEnum.InsertOutputSource)
+				{
+					// Output rows are consumed as a query source (data-modifying CTE): no output clause on the statement.
+					// The SQL builder renders the CTE body projection as the RETURNING/OUTPUT list (see CteClause.DataModification).
+					outputExpression =
+						methodCall.GetArgumentByName("outputExpression")?.UnwrapLambda()
+						?? BuildDefaultOutputExpression(genericArguments[^1]);
+				}
+				else if (insertType is InsertContext.InsertTypeEnum.InsertOutput or InsertContext.InsertTypeEnum.InsertOutputInto)
 				{
 					outputExpression =
 						methodCall.GetArgumentByName("outputExpression")?.UnwrapLambda()
@@ -249,6 +259,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			insertStatement.Insert.WithIdentity = insertType is InsertContext.InsertTypeEnum.InsertWithIdentity;
 
+			if (insertType is InsertContext.InsertTypeEnum.InsertOutputSource)
+			{
+				var insertedTable = (insertContext.Into == null ? null : SequenceHelper.GetTableContext(insertContext.Into)?.SqlTable)
+					?? throw new InvalidOperationException("Cannot find target table for INSERT statement");
+
+				// Stand-in for the inserted rows. The SQL builder re-targets its fields to the INSERT target table
+				// when rendering the RETURNING/OUTPUT list.
+				var standInContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), new SqlTable(insertedTable), false);
+				var outputContext  = new SelectContext(buildInfo.Parent, outputExpression!, false, standInContext);
+
+				return BuildSequenceResult.FromContext(new DataModificationOutputContext(outputContext, insertStatement));
+			}
+
 			return BuildSequenceResult.FromContext(insertContext);
 		}
 
@@ -266,6 +289,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				InsertWithIdentity,
 				InsertOutput,
 				InsertOutputInto,
+				InsertOutputSource,
 			}
 
 			public InsertContext(IBuildContext querySequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
@@ -414,6 +438,36 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new InsertContext(context.CloneContext(QuerySequence), InsertType, context.CloneElement(InsertStatement), context.CloneExpression(OutputExpression));
+			}
+		}
+
+		#endregion
+
+		#region DataModificationOutputContext
+
+		/// <summary>
+		/// Output rows of a data-modifying statement used as a query source.
+		/// Built only as a CTE body (see <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>);
+		/// <see cref="CteContext"/> attaches <see cref="Statement"/> to <see cref="CteClause.DataModification"/>.
+		/// </summary>
+		internal sealed class DataModificationOutputContext : PassThroughContext
+		{
+			public DataModificationOutputContext(IBuildContext outputContext, SqlStatementWithQueryBase statement)
+				: base(outputContext)
+			{
+				Statement = statement;
+			}
+
+			public SqlStatementWithQueryBase Statement { get; }
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				throw new InvalidOperationException("Output of a data-modifying statement can be executed only as a CTE source.");
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new DataModificationOutputContext(context.CloneContext(Context), context.CloneElement(Statement));
 			}
 		}
 

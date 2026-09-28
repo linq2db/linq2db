@@ -1460,6 +1460,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.ObjectType);
 							Append(elem.Fields);
 							Append(elem.IsRecursive);
+							Append(elem.DataModification);
 
 							// Annotations bag: count, then (name, type?, value) triples.
 							// Type is null when value is null. Values are serialized via
@@ -2688,13 +2689,17 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.CteClause:
 						{
-							var name        = ReadString()!;
-							var body        = Read<SelectQuery>();
-							var objectType  = ReadType()!;
-							var fields      = ReadArray<SqlCteField>()!;
-							var isRecursive = ReadBool();
+							var name             = ReadString()!;
+							var body             = Read<SelectQuery>();
+							var objectType       = ReadType()!;
+							var fields           = ReadArray<SqlCteField>()!;
+							var isRecursive      = ReadBool();
+							var dataModification = Read<SqlStatementWithQueryBase>();
 
-							var c = new CteClause(body, fields, objectType, isRecursive, name);
+							var c = new CteClause(body, fields, objectType, isRecursive, name)
+							{
+								DataModification = dataModification,
+							};
 
 							var annotationCount = ReadInt();
 							for (var i = 0; i < annotationCount; i++)
