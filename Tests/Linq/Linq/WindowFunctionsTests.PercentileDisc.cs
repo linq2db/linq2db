@@ -75,8 +75,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException),
 			TestProvName.AllSQLite, TestProvName.AllSqlServer2008Minus, TestProvName.AllPostgreSQL, TestProvName.AllMySql80, TestProvName.AllClickHouse,
 			ProviderName.Firebird3, ProviderName.Firebird4, TestProvName.AllFirebird5Plus, TestProvName.AllInformix, ProviderName.Ydb,
-			TestProvName.AllDB2, TestProvName.AllDuckDB,
-			TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
+			TestProvName.AllDB2, TestProvName.AllDuckDB, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
 		public void PercentileDiscWindowed([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();

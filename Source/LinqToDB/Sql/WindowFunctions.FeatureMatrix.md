@@ -27,8 +27,8 @@ rejected and the whole feature is gated off conservatively.)
 
 **Access over LibRed** is the exception within Access: the managed engine implements window functions,
 frames, `FILTER`, `IGNORE NULLS`, `NTH_VALUE … FROM LAST`, `DISTINCT` in window aggregates and the
-variance / correlation / `REGR_*` families. It has no `KEEP`, hypothetical-set aggregates, `MEDIAN` or
-windowed `PERCENTILE_CONT/DISC`.
+variance / correlation / `REGR_*` families and `PERCENTILE_CONT/DISC` in both group and windowed forms. It
+has no `KEEP`, hypothetical-set aggregates or `MEDIAN`.
 
 Dialect splits that matter:
 

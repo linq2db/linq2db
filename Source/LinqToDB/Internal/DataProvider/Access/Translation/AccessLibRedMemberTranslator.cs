@@ -179,6 +179,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 			protected override bool IsLinearRegressionSupported     => true;
 			protected override bool IsWindowFilterSupported         => true;
 			protected override bool IsOrderedSetFilterSupported     => true;
+			protected override bool IsOrderedSetWindowedSupported   => true;
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
 			protected override bool IsNthValueFromSupported         => true;
