@@ -297,6 +297,16 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		protected internal override IQueryElement VisitSqlDefaultValueExpression(SqlDefaultValueExpression element)
+		{
+			var newElement = ConvertDefaultValue(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(newElement));
+
+			return element;
+		}
+
 		protected IQueryElement Optimize(IQueryElement element)
 		{
 			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
@@ -2038,6 +2048,36 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			return func;
+		}
+
+		/// <summary>
+		/// Writes the default a reader substitutes for a NULL: as its value here, and as the least value of the column's type where a
+		/// provider's type cannot hold it.
+		/// </summary>
+		/// <param name="expression">The default to write.</param>
+		/// <returns>The expression the default is written as.</returns>
+		public virtual ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return new SqlValue(expression.Type, expression.Value);
+		}
+
+		/// <summary>
+		/// The default's value raised to <paramref name="least"/> when it is an earlier date, otherwise <see langword="null"/>.
+		/// </summary>
+		private protected static SqlValue? RaiseDefaultDate(SqlDefaultValueExpression expression, DateTime least)
+		{
+			// At offset zero a DateTimeOffset reads the same through DateTime and UtcDateTime, whichever one a provider writes.
+			object? raised = expression.Value switch
+			{
+				DateTime       dateTime       when dateTime                < least => least,
+				DateTimeOffset dateTimeOffset when dateTimeOffset.DateTime < least => new DateTimeOffset(least, TimeSpan.Zero),
+#if SUPPORTS_DATEONLY
+				DateOnly       dateOnly       when dateOnly < DateOnly.FromDateTime(least) => DateOnly.FromDateTime(least),
+#endif
+				_ => null,
+			};
+
+			return raised == null ? null : new SqlValue(expression.Type, raised);
 		}
 
 		public virtual ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)

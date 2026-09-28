@@ -1,2 +1,25 @@
 ﻿#nullable enable
+LinqToDB.Internal.SqlQuery.QueryElementType.SqlDefaultValueExpression = 89 -> LinqToDB.Internal.SqlQuery.QueryElementType
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.SqlDefaultValueExpression(LinqToDB.DbDataType type, object? value) -> void
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Type.get -> LinqToDB.DbDataType
+LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Value.get -> object?
 const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
+override LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlDefaultValueExpression(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Accept(LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor! visitor) -> LinqToDB.Internal.SqlQuery.IQueryElement!
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.ElementType.get -> LinqToDB.Internal.SqlQuery.QueryElementType
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Equals(LinqToDB.Internal.SqlQuery.ISqlExpression! other, System.Func<LinqToDB.Internal.SqlQuery.ISqlExpression!, LinqToDB.Internal.SqlQuery.ISqlExpression!, bool>! comparer) -> bool
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.GetElementHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.GetHashCode() -> int
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.Precedence.get -> int
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.SystemType.get -> System.Type?
+override LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.ToString(LinqToDB.Internal.SqlQuery.QueryElementTextWriter! writer) -> LinqToDB.Internal.SqlQuery.QueryElementTextWriter!
+virtual LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConvertDefaultValue(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! expression) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+virtual LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlDefaultValueExpression(LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!

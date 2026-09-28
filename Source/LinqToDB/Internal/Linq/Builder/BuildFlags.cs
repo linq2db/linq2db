@@ -22,5 +22,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		// set while the operand of a conversion to a nullable type is built: the conversion asks for the NULL, so
 		// PreferClientCalculation must not leave the operand client-side
 		InsideNullableCast  = 1 << 10,
+		// set while a value of the query's projection is built, cleared where the build turns to query structure: a
+		// calculation there reads a non-nullable member of an unmatched row as default(T), as the reader does
+		ValueOfProjection   = 1 << 11,
 	}
 }
