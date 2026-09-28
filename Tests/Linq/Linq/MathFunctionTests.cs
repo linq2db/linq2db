@@ -369,6 +369,20 @@ namespace Tests.Linq
 				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5)));
 		}
 
+		// The widened intermediate must not leak into the result type: YQL arithmetic and IF reject
+		// Decimal operands of different types.
+		[Test]
+		public void Round14([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5) + p.MoneyValue));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue));
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{

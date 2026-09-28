@@ -769,7 +769,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				// back to the scaled type (Double->Decimal becomes the string round-trip)
 				var back = isDecimal || !scaleType.EqualsDbOnly(doubleType) ? factory.Cast(rounded, scaleType) : rounded;
 
-				return hasPrecision ? factory.Div(scaleType, back, Pow10(factory, scaleType, precision!)) : back;
+				var result = hasPrecision ? factory.Div(scaleType, back, Pow10(factory, scaleType, precision!)) : back;
+
+				// narrow back to the value's type: YQL arithmetic and IF demand identical Decimal types
+				return scaleType.EqualsDbOnly(valueType) ? result : factory.Cast(result, valueType);
 			}
 
 			// valueType widened by the rounding digits, clamped to what YQL accepts. Mirrors
