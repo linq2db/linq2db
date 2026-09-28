@@ -1536,9 +1536,9 @@ namespace Tests.Linq
 
 		#region Detail-side Take/Skip — scoped per parent (#5936)
 
-		// Gated for now: HANA's LATERAL only correlates to a base-table field and the key set's columns are
-		// literals — linq2db#5940 tracks the ROW_NUMBER fallback. Only KeyedQuery trips it; CteUnion cannot
-		// batch a single association and falls through to Default, which correlates nothing.
+		// Gated for now: HANA's LATERAL only correlates to a base-table field, and KeyedQuery's correlates to the
+		// literal VALUES key set — linq2db#5940 tracks the ROW_NUMBER fallback. Default (correlated to Company.Id)
+		// and CteUnion (correlated to its key CTE) are unaffected.
 		[Test]
 		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL",
 			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
