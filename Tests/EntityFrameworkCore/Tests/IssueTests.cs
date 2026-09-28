@@ -1276,6 +1276,100 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.Count.ShouldBe(1);
 		}
 
+		#region Issue 5975
+
+		static readonly DateTime Issue5975Stored = new(2020, 1, 1, 10, 0, 0, DateTimeKind.Utc);
+
+		static void Issue5975Seed(IssueContextBase ctx)
+		{
+			ctx.Issue5975TableTwos.ToLinqToDBTable().Delete();
+			ctx.Issue5975TableOnes.ToLinqToDBTable().Delete();
+
+			var one = new Issue5975TableOne { Id = 1, Name = "ONE", FromDate = Issue5975Stored, ToDate = Issue5975Stored.AddDays(2) };
+
+			ctx.AddRange(
+				one,
+				new Issue5975TableOne { Id = 2, Name = "EMPTY" },
+				new Issue5975TableTwo { Id = 1, Code = "TWO", ToDate = Issue5975Stored.AddDays(3), TableOne = one });
+
+			ctx.SaveChanges();
+			ResetChangeTracker(ctx);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
+		public void Issue5975_InsertServerSideDate([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			Issue5975Seed(ctx);
+
+			ctx.Issue5975TableOnes.ToLinqToDBTable().Insert(() => new Issue5975TableOne
+			{
+				Id       = 3,
+				FromDate = DateTime.UtcNow,
+				Name     = "test",
+			});
+
+			var row = ctx.Issue5975TableOnes.AsNoTracking().Where(r => r.Id == 3).ToArray().Single();
+
+			row.Name.ShouldBe("test");
+			row.FromDate.ShouldNotBeNull();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
+		public void Issue5975_UpdateServerSideDate([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			Issue5975Seed(ctx);
+
+			var test = new DateTime(2026, 6, 6, 1, 1, 1, DateTimeKind.Utc);
+
+			ctx.Issue5975TableOnes
+				.ToLinqToDB()
+				.Update(x => new Issue5975TableOne
+				{
+					FromDate = x.FromDate.HasValue ? test : DateTime.UtcNow
+				});
+
+			var rows = ctx.Issue5975TableOnes.AsNoTracking().OrderBy(r => r.Id).ToArray();
+
+			rows[0].FromDate.ShouldBe(test);
+			rows[1].FromDate.ShouldNotBeNull();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
+		public void Issue5976_ConcatConvertedDates([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			Issue5975Seed(ctx);
+
+			var query1 =
+				from t2 in ctx.Issue5975TableTwos
+				join t1 in ctx.Issue5975TableOnes on t2.TableOneId equals t1.Id into t1j
+				from t1 in t1j.DefaultIfEmpty()
+				select new
+				{
+					t2.Code,
+					FromDate = t1!.FromDate,
+					ToDate   = t1.ToDate,
+				};
+
+			var query2 =
+				from t2 in ctx.Issue5975TableTwos
+				select new
+				{
+					t2.Code,
+					FromDate = t2.FromDate,
+					ToDate   = t2.ToDate,
+				};
+
+			var results = query1.Concat(query2).ToLinqToDB().ToList();
+
+			results.Select(r => r.ToDate).OrderBy(d => d).ShouldBe([Issue5975Stored.AddDays(2), Issue5975Stored.AddDays(3)]);
+			results.Select(r => r.FromDate).OrderBy(d => d).ShouldBe([null, Issue5975Stored]);
+		}
+
+		#endregion
+
 #if !NETFRAMEWORK
 		[Test(Description = "user-reported")]
 		public void BulkCopy_Sequence_AsIdentity([EFIncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string provider)

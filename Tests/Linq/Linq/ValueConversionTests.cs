@@ -1541,6 +1541,156 @@ namespace Tests.Linq
 			matched.ShouldBe([1]);
 		}
 
+		#region Issue 5975 / 5976
+
+		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
+		static DateTime Issue5975FromStore(DateTime v) => v.AddHours(-1);
+
+		[Table]
+		sealed class Issue5975Row
+		{
+			[PrimaryKey] public int       Id    { get; set; }
+			[Column]     public DateTime  Plain { get; set; }
+			[Column]     public DateTime? Date  { get; set; }
+		}
+
+		static MappingSchema Issue5975MappingSchema()
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5975Row>()
+					.Property(e => e.Plain)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Build();
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
+		public void InsertServerSideValueIntoClientConvertedColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable<Issue5975Row>();
+
+			t.Insert(() => new Issue5975Row { Id = 1, Plain = Sql.CurrentTimestamp, Date = Sql.CurrentTimestamp });
+
+			var row = t.Single();
+			row.Date.ShouldNotBeNull();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5975")]
+		public void UpdateServerSideValueIntoClientConvertedColumn([DataSources] string context)
+		{
+			var stored = new DateTime(2020, 1, 1, 10, 0, 0);
+			var test   = new DateTime(2026, 6, 6, 1, 1, 1);
+
+			using var db = GetDataContext(context, Issue5975MappingSchema());
+			using var t  = db.CreateLocalTable(
+			[
+				new Issue5975Row { Id = 1, Plain = stored, Date = stored },
+				new Issue5975Row { Id = 2, Plain = stored, Date = null   },
+			]);
+
+			t.Update(x => new Issue5975Row { Date = x.Date != null ? test : DateTime.Now });
+
+			var rows = t.OrderBy(r => r.Id).ToArray();
+
+			rows[0].Date.ShouldBe(test);
+			rows[1].Date.ShouldNotBeNull();
+		}
+
+		[Table]
+		sealed class Issue5976RowA
+		{
+			[PrimaryKey] public int       Id   { get; set; }
+			[Column]     public DateTime? Date { get; set; }
+		}
+
+		[Table]
+		sealed class Issue5976RowB
+		{
+			[PrimaryKey] public int       Id   { get; set; }
+			[Column]     public DateTime? Date { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
+		public void SetOperationOverNullableConversionsWithLiftedComparison([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5976RowA>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Entity<Issue5976RowB>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable([new Issue5976RowA { Id = 1, Date = value }]);
+			using var b  = db.CreateLocalTable([new Issue5976RowB { Id = 2, Date = value }]);
+
+			var rows = a
+				.Select(r => new { r.Id, r.Date })
+				.Concat(b.Select(r => new { r.Id, r.Date }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Date).ShouldBe([value, value]);
+		}
+
+		[Table]
+		sealed class Issue5976RowC
+		{
+			[PrimaryKey] public int      Id   { get; set; }
+			[Column]     public DateTime Date { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
+		public void SetOperationOverNullableAndPlainConversions([DataSources] string context)
+		{
+			var value = new DateTime(2020, 1, 1, 10, 0, 0);
+			var ms    = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Issue5976RowA>()
+					.Property(e => e.Date)
+						.HasConversion(
+							v => v != null ? (DateTime?)Issue5975ToStore(v.Value) : null,
+							v => v != null ? (DateTime?)Issue5975FromStore(v.Value) : null)
+				.Entity<Issue5976RowC>()
+					.Property(e => e.Date)
+						.HasConversion(v => Issue5975ToStore(v), v => Issue5975FromStore(v))
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var a  = db.CreateLocalTable([new Issue5976RowA { Id = 1, Date = value }]);
+			using var c  = db.CreateLocalTable([new Issue5976RowC { Id = 2, Date = value }]);
+
+			var rows = a
+				.Select(r => new { r.Id, r.Date })
+				.Concat(c.Select(r => new { r.Id, Date = (DateTime?)r.Date }))
+				.OrderBy(r => r.Id)
+				.ToList();
+
+			rows.Count.ShouldBe(2);
+			rows.Select(r => r.Date).ShouldBe([value, value]);
+		}
+
+		#endregion
+
 		[Table]
 		sealed class DivergentConversionRow
 		{
