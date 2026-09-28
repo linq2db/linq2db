@@ -115,8 +115,8 @@ namespace Tests
 		/// <summary>
 		/// Whether this instance expects the case <paramref name="test"/> is about to run to throw — the same
 		/// question <see cref="ThrowsWhenCommand"/> answers for itself, exposed so another wrapper can see that
-		/// this one owns the outcome. Read-only, and a query rather than an assertion: an unresolvable parameter
-		/// name answers "no" here and is still reported by the command.
+		/// this one owns the outcome. Read-only, and a query rather than an assertion: an unresolvable
+		/// <see cref="ParameterName"/> or <see cref="AlsoWhenParameter"/> answers "no" here and is still reported by the command.
 		/// </summary>
 		internal bool GovernsCurrentCase(ITest test)
 		{
@@ -196,6 +196,9 @@ namespace Tests
 					var idx        = GetParameterIndex(parameters, _attribute.ParameterName);
 
 					Assert.That(idx, Is.GreaterThanOrEqualTo(0), $"Invalid parameter name '{_attribute.ParameterName}' for '{nameof(ThrowsWhenAttribute)}'.");
+
+					if (_attribute.AlsoWhenParameter is { Length: > 0 } alsoWhen)
+						Assert.That(GetParameterIndex(parameters, alsoWhen), Is.GreaterThanOrEqualTo(0), $"Invalid parameter name '{alsoWhen}' for '{nameof(ThrowsWhenAttribute)}.{nameof(AlsoWhenParameter)}'.");
 
 					var parameterValue = context.CurrentTest.Arguments[idx];
 					if (parameterValue != null)
