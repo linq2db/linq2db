@@ -37,7 +37,14 @@ function Read-Utf8File([string] $Path) {
 }
 
 function Get-FileSha256([string] $Path) {
-	return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+	# Hash with CRLF line endings regardless of how the file was checked out (`* text=auto` gives LF on
+	# Linux/macOS and CRLF on Windows), so source_hashes do not depend on the machine that ran the script.
+	# Latin1 maps bytes 1:1, so only line endings change.
+	$latin1 = [System.Text.Encoding]::Latin1
+	$text   = $latin1.GetString([System.IO.File]::ReadAllBytes($Path))
+	$text   = [System.Text.RegularExpressions.Regex]::Replace($text, '(?<!\r)\n', "`r`n")
+	$hash   = [System.Security.Cryptography.SHA256]::HashData($latin1.GetBytes($text))
+	return [System.Convert]::ToHexString($hash).ToLowerInvariant()
 }
 
 function Clean-Text([string] $Text) {
