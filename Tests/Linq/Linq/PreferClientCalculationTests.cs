@@ -1756,6 +1756,33 @@ namespace Tests.Linq
 			rows.ShouldAllBe(r => r.Min == r.Value1 && r.Joined == "," + r.Name);
 		}
 
+		// An inline array passed to a params parameter is a list of row values, not a set: the string functions read its items
+		// as the reader reads them.
+		[Test]
+		public void InlineParamsListOverMissedLeftJoinReadsDefault([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var rows =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 e.Value1,
+					 e.Name,
+					 Calculated = string.Join(",", new[] { (j.Value1 + 1).ToString(), e.Name }),
+					 Joined     = string.Join(",", new object[] { j.Value1, e.Value1 }),
+					 Concat     = string.Concat(new object[] { "<", j.Value1, ",", e.Value1, ">" }),
+				 })
+				.ToArray();
+
+			rows.Length.ShouldBe(MissedJoinEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Calculated == "1," + r.Name);
+			rows.ShouldAllBe(r => r.Joined     == "0," + r.Value1);
+			rows.ShouldAllBe(r => r.Concat     == "<0," + r.Value1 + ">");
+		}
+
 		// Sql.ToNullable / Sql.AsNullable translate their own argument through ITranslationContext.Translate. The option
 		// must not apply to that argument: kept client-side it is not SQL, the widener declines, the whole call is
 		// calculated on the client and the missed LEFT JOIN row reads default(int) instead of null (linq2db#5923).
