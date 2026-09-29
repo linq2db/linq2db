@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Threading;
 
 using NUnit.Framework;
 
@@ -6,20 +7,28 @@ namespace Tests
 {
 	public static class BaselinesManager
 	{
+		// The trace sink calls LogQuery on whatever thread ran the query, so two concurrent queries in
+		// one test race over the shared builder: unguarded, both can see null and each create one, and
+		// ctx.Set's last-writer-wins then drops a whole capture rather than tearing a single line.
+		static readonly Lock _sync = new();
+
 		public static void LogQuery(string message)
 		{
 			var ctx = CustomTestContext.Get();
 
 			if (!ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED))
 			{
-				var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
-				if (baseline == null)
+				lock (_sync)
 				{
-					baseline = new StringBuilder();
-					ctx.Set(CustomTestContext.BASELINE, baseline);
-				}
+					var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
+					if (baseline == null)
+					{
+						baseline = new StringBuilder();
+						ctx.Set(CustomTestContext.BASELINE, baseline);
+					}
 
-				baseline.AppendLine(message);
+					baseline.AppendLine(message);
+				}
 			}
 		}
 

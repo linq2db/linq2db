@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -374,9 +374,7 @@ namespace Tests.Linq
 			#endregion
 		}
 
-		public class TestEntity2 : TestEntityBase
-		{
-		}
+		public class TestEntity2 : TestEntityBase;
 
 		public enum SuperAccountType { Client, Organization }
 
@@ -819,7 +817,11 @@ namespace Tests.Linq
 		}
 
 		#region Issue 4139
-		[ActiveIssue]
+		// The message opens with a TableContext id that changes every run, so the fragment starts after it. One
+		// cause across all 112 cases, direct and remote.
+		[ActiveIssue(4139, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "Issue4139Table).Parent.Parent' is not an association.",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. A nested association reached through a complex column is not recognised as one.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4139")]
 		public void Issue4139Test([DataSources] string context)
 		{
@@ -1082,9 +1084,7 @@ namespace Tests.Linq
 			sealed class ComplexTypeConverter() : ValueConverter<ComplexType, string>(
 				obj => JsonSerializer.Serialize(obj, JsonSerializerOptions.Default),
 				json => JsonSerializer.Deserialize<ComplexType>(json, JsonSerializerOptions.Default)!,
-				false)
-			{
-			}
+				false);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]

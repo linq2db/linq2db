@@ -84,6 +84,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
+			// Expand hands a member's defining expression to the caller, and a value bound to this subquery's row set
+			// is then evaluated at the caller's level - a window function referenced from the parent lands inside
+			// whatever the parent computes. Materialize such a value as a column instead. Everything else keeps
+			// expanding below: a member arriving as a placeholder rather than as its own expression is not what the
+			// other Expand callers read - the keyed eager-load strategy stops recognizing its dependencies (#5867).
+			if (flags.IsExpand()
+				&& Builder.BuildSqlExpression(SubQuery, corrected) is SqlPlaceholderExpression sqlValue
+				&& QueryHelper.ContainsAggregationOrWindowFunction(sqlValue.Sql))
+			{
+				return Builder.UpdateNesting(this, sqlValue);
+			}
+
 			var result = Builder.BuildExpression(SubQuery, corrected);
 
 			if (flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot() || flags.IsSubquery())
@@ -103,11 +115,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			result = Builder.UpdateNesting(this, result);
 			result = SequenceHelper.CorrectSelectQuery(result, SelectQuery);
 
-			if (!flags.HasFlag(ProjectFlags.AssociationRoot))
-			{
-				// remap back, especially for Recursive CTE
-				result = SequenceHelper.ReplaceContext(result, SubQuery, this);
-			}
+			// remap back, especially for Recursive CTE. AssociationRoot already returned above, so the guard
+			// this used to carry could never be false.
+			result = SequenceHelper.ReplaceContext(result, SubQuery, this);
 
 			return result;
 		}

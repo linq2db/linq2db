@@ -85,6 +85,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 				//
 				var type = sqlValue.ValueType.SystemType.UnwrapNullableType();
 
+				// A converted column carries its model type here while the database only ever sees the stored one,
+				// and what goes into the statement has to be something the provider can bind. A duration declared
+				// in seconds is a number to Access, and default(TimeSpan) is not a value its driver can take - so
+				// the type that decides the default is the stored one whenever the declaration names it.
+				if (sqlValue.ValueType.DataType != DataType.Undefined)
+				{
+					var storedType = SqlDataType.GetDataType(sqlValue.ValueType.DataType).Type.SystemType;
+
+					if (storedType != typeof(object))
+						type = storedType.UnwrapNullableType();
+				}
+
 				object? defaultValue;
 				if (type == typeof(string))
 					defaultValue = "";

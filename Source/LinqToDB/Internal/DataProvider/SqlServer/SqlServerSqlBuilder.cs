@@ -430,6 +430,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					if (type == provider.Adapter.VectorDbType && provider.Adapter.SqlVectorType is not null)
 						return $"VECTOR({param.Size.ToString(NumberFormatInfo.InvariantInfo)})";
+					if (type == provider.Adapter.JsonDbType && provider.Adapter.SqlJsonType is not null)
+						return "Json";
 					return type.ToString();
 				}
 			}

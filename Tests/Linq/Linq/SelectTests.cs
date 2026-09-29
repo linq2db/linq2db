@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -958,9 +958,7 @@ namespace Tests.Linq
 			Assert.That(result[0].InternalStr, Is.EqualTo(Types.First().StringValue));
 		}
 
-		sealed class LocalClass
-		{
-		}
+		sealed class LocalClass;
 
 		[Test]
 		public void SelectLocalTest([DataSources] string context)
@@ -1088,7 +1086,7 @@ namespace Tests.Linq
 			public Child? Child    { get; set; }
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
 			[Values] bool includeChild,
@@ -1594,7 +1592,8 @@ namespace Tests.Linq
 		[Test]
 		public void OuterApplyTest(
 			[IncludeDataSources(
-				TestProvName.AllPostgreSQL95Plus,
+				// PostgreSQL 9.5 fails with "unknown to text" conversion on this projection
+				TestProvName.AllPostgreSQL10Plus,
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllOracle12Plus,
 				TestProvName.AllMySqlWithApply,
@@ -1695,13 +1694,17 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		private static T Wrap1<T>(T value) => throw new InvalidOperationException();
+		private static T Wrap1<T>(T value) => throw new ServerSideOnlyException(nameof(Wrap1));
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static T Wrap2<T>(T value) => value;
 
+		// SelectExpression4 asserts the query-time failure this combination causes, so the L2DB1003
+		// violation is the fixture. Suppressed rather than fixed, so a code-fix sweep cannot re-apply it.
+#pragma warning disable L2DB1003 // Declare a server-side-only stub, or implement it
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap3<T>(T value) => throw new InvalidOperationException();
+#pragma warning restore L2DB1003
 
 		[Sql.Expression("{0}", ServerSideOnly = false)]
 		private static T Wrap4<T>(T value) => value;
@@ -1837,7 +1840,7 @@ namespace Tests.Linq
 
 		#region Caching Tests
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116"), QueryCacheTest]
 		public void CachedObjectRefence([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2003,7 +2006,11 @@ namespace Tests.Linq
 		}
 
 		#region 4199
-		[ActiveIssue]
+		// One kind of failure, twenty wordings. Every provider reports that UserAccount does not exist - the
+		// interface-typed table has no backing table - and each says so in its own phrasing, with no text shared
+		// even between the two SQLite drivers. Declaring them would pin vendor prose rather than a contract.
+		[ActiveIssue(4199,
+			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Every provider fails identically in kind and differently in wording - twenty phrasings across the matrix, sharing no fragment.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test1([DataSources] string context)
 		{
@@ -2017,7 +2024,8 @@ namespace Tests.Linq
 			var r = q.Count();
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4199,
+			Details = "no-declaration: as Issue4199Test1.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test2([DataSources] string context)
 		{

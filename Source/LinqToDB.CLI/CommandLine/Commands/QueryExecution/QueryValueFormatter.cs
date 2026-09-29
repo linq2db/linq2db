@@ -375,9 +375,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				?? throw new InvalidOperationException($"Provider-specific type '{value.GetType().FullName}' method '{methodName}' returned null.");
 		}
 
-		sealed class DefaultValueFormatter : QueryValueFormatter
-		{
-		}
+		sealed class DefaultValueFormatter : QueryValueFormatter;
 
 		sealed class SqlServerValueFormatter : QueryValueFormatter
 		{

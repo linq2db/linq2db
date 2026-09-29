@@ -14,9 +14,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 {
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		protected class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-		}
+		protected class SqlTypesTranslation : SqlTypesTranslationDefault;
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{

@@ -13,6 +13,72 @@ namespace Tests.Linq
 {
 	partial class WindowFunctionsTests
 	{
+		// PERCENTILE_DISC selects a stored value instead of interpolating, so unlike PERCENTILE_CONT a boolean sort
+		// key is meaningful and stays allowed: providers that fold it return the folded 1/0, and PostgreSQL
+		// (percentile_disc is declared over anyelement) and DuckDB accept a native boolean directly. DB2 is the one
+		// provider that refuses, requiring a built-in numeric sort key for both ordered-set aggregates
+		// (SQLSTATE 42822), so it reports that at translation time rather than surfacing the driver error.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDisc)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileDiscBooleanOrderBy)]
+		public void PercentileDiscWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var result =
+				(from t in table
+				group t by t.CategoryId into g
+				select new
+				{
+					CategoryId = g.Key,
+					// IntValue % 20 == 0 is true for Ids 2/4/6/8, so category 1 (Ids 1,2,5,8,9) sorts to
+					// [false, false, false, true, true] and categories 2 (Ids 3,4) and 3 (Ids 6,7) to [false, true].
+					Low        = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.IntValue % 20 == 0)),
+					High       = g.PercentileDisc(0.9, (e, f) => f.OrderBy(e.IntValue % 20 == 0)),
+				})
+				.OrderBy(r => r.CategoryId)
+				.ToList();
+
+			// Discrete selection, so the two fractions must land on different stored values: an inverted fold
+			// would swap both columns, and a constant one would make them equal.
+			result.ShouldAllBe(r => r.Low  == false);
+			result.ShouldAllBe(r => r.High == true);
+		}
+
+		// WITHIN GROUP (ORDER BY ...) items are SqlWindowOrderItem, same as OVER (ORDER BY): a boolean sort key
+		// is a value position and has to be folded.
+		//
+		// PERCENTILE_CONT interpolates, so a boolean sort key is refused on every provider, not only the ones that
+		// reject it themselves. PostgreSQL, DuckDB and DB2 have a native boolean type and error out on their own
+		// (percentile_cont(numeric, boolean), quantile_cont(BOOLEAN, ...), DB2's SQL0214N). Oracle folds the key to
+		// 1/0, which Oracle accepts and then interpolates — an evenly split partition yields 0.5, which reads back
+		// as true whichever side holds the majority — so it has to be refused at translation time too.
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL95Plus, TestProvName.AllDuckDB, TestProvName.AllDB2, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileContBooleanOrderBy)]
+		public void PercentileContWithBooleanOrderBy([SupportsAnalyticFunctionsContext] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				group t by t.CategoryId into g
+				select new
+				{
+					CategoryId = g.Key,
+					Boolean    = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.IntValue == 20)),
+					NullCheck  = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.NullableIntValue != null)),
+				};
+
+			_ = query.ToList();
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllPostgreSQL93Minus, TestProvName.AllSqlServer2008Minus, TestProvName.AllClickHouse, TestProvName.AllSqlServer2012Plus, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllSQLite, TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, ErrorMessage = ErrorHelper.Error_WindowFunction_PercentileCont)]
 		public void PercentileContGrouping([SupportsAnalyticFunctionsContext] string context)

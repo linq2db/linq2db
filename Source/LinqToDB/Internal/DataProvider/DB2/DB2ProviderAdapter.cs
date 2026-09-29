@@ -434,9 +434,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		}
 
 		[Wrapper]
-		internal sealed class DB2Transaction
-		{
-		}
+		internal sealed class DB2Transaction;
 
 		#region BulkCopy
 		[Wrapper]

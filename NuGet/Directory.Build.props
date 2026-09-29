@@ -5,4 +5,25 @@
 		<!-- Suppress MSB3270: NuGet.dll is built as x64 but referencing projects target AnyCPU (MSIL) -->
 		<ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 	</PropertyGroup>
+
+	<!--
+	Every T4 package copies third-party provider assemblies into tools/ (see each project's
+	<None Include="$(ToolsPath)/..."> block), so each one redistributes binaries that the package's
+	MIT license expression does not cover. The matching notices file is generated from
+	Build/licenses/components.json and validated against the packed output by
+	Build/Azure/scripts/third-party-notices.ps1; see Build/licenses/README.md.
+
+	Keyed on $(MSBuildProjectName), not $(PackageId): props are evaluated before the project body, so
+	PackageId is not set yet. The two are equal for every project here - none of them sets PackageId or
+	AssemblyName - which is not true elsewhere in the repo.
+
+	NuGet.csproj is the shared build project rather than a package; it sets IsPackable=false in its own
+	body, which is likewise too late to condition on here.
+	-->
+	<ItemGroup Condition="'$(MSBuildProjectName)' != 'NuGet'">
+		<None Include="$(MSBuildThisFileDirectory)..\Build\licenses\generated\THIRD-PARTY-NOTICES.$(MSBuildProjectName).txt"
+		      Pack="true" PackagePath="THIRD-PARTY-NOTICES.txt"       Visible="false" />
+		<None Include="$(MSBuildThisFileDirectory)..\Build\licenses\generated\THIRD-PARTY-NOTICES.$(MSBuildProjectName).txt"
+		      Pack="true" PackagePath="tools\THIRD-PARTY-NOTICES.txt" Visible="false" />
+	</ItemGroup>
 </Project>

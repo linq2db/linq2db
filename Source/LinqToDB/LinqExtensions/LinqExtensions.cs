@@ -1956,9 +1956,6 @@ namespace LinqToDB
 		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.GeneratedSql)]
 		public static QuerySql ToSqlQuery<T>(this IQueryable<T> query, SqlGenerationOptions? options = null)
 		{
-			if (query is LoadWithQueryableBase<T> loadWith)
-				query = loadWith.Query;
-
 			var expressionQuery = (IExpressionQuery)query.GetLinqToDBSource();
 
 			// currently we have only non-linq APIs that could generate multiple commands like

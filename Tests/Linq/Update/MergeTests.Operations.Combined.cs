@@ -123,7 +123,7 @@ namespace Tests.xUpdate
 
 			var rows = table
 					.Merge()
-					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }))
+					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }).OrderBy(r => r.Id))
 					.OnTargetKey()
 					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
 					.DeleteWhenMatchedAnd((t, s) => s.Id == 1)

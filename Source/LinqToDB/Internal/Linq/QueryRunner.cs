@@ -44,7 +44,11 @@ namespace LinqToDB.Internal.Linq
 				QueryCache.Clear();
 			}
 
-			internal static MemoryCache<IStructuralEquatable,Query<T>> QueryCache { get; } = new(new());
+			// Bounded because CompiledTable keys this on the runtime values of a query's [SqlQueryDependent]
+			// arguments, so the entry count follows what callers pass rather than the shape of their code -
+			// a hint or table name taken from a compiled-query argument adds one entry per distinct value.
+			// The cache is static per closed T, so the limit is per element type rather than process-wide.
+			internal static MemoryCache<IStructuralEquatable,Query<T>> QueryCache { get; } = new(new() { SizeLimit = 1000 });
 		}
 
 		public static class Cache<T,TR>

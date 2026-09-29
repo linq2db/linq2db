@@ -99,7 +99,7 @@ namespace LinqToDB
 	/// </remarks>
 	[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Composable, Affects = AiAffects.DdlStatement | AiAffects.Data, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
-	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
+	public class TempTable<T> : ITable<T>, ITableMutable<T>, IQueryableWrapper<T>, IDisposable, IAsyncDisposable
 		where T : notnull
 	{
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -891,6 +891,9 @@ namespace LinqToDB
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		IQueryProvider IQueryable.Provider    => _table.Provider;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		IQueryable<T> IQueryableWrapper<T>.WrappedQuery => _table;
 
 		#endregion
 

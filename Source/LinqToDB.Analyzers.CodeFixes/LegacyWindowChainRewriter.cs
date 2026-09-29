@@ -304,7 +304,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 				}
 			}
 
-			var valueArgs = valueArgsByOrdinal.OrderBy(t => t.Ordinal).Select(t => t.Arg).ToList();
+			var valueArgs = valueArgsByOrdinal.OrderBy(static t => t.Ordinal).Select(static t => t.Arg).ToList();
 
 			// Assemble the ordered builder steps for whichever function shape this is.
 			var steps = new List<Step>();
@@ -443,7 +443,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 			var lastToken  = toValueInvocation.GetLastToken();
 
 			var interiorComments = toValueInvocation.DescendantTokens()
-				.SelectMany(t => t.LeadingTrivia.Concat(t.TrailingTrivia))
+				.SelectMany(static t => t.LeadingTrivia.Concat(t.TrailingTrivia))
 				.Where(t => (t.IsKind(SyntaxKind.SingleLineCommentTrivia) || t.IsKind(SyntaxKind.MultiLineCommentTrivia))
 					&& !firstToken.LeadingTrivia.Contains(t)
 					&& !lastToken.TrailingTrivia.Contains(t)

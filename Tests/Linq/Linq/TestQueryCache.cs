@@ -49,7 +49,7 @@ namespace Tests.Linq
 			[ExpressionMethod(nameof(GetFieldImpl))]
 			public static int? GetField(ManyFields entity, [SqlQueryDependent] int i)
 			{
-				throw new InvalidOperationException();
+				throw new ServerSideOnlyException(nameof(GetField));
 			}
 
 			private static Expression<Func<ManyFields, int, int?>> GetFieldImpl()
@@ -164,7 +164,7 @@ namespace Tests.Linq
 			return ms;
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
