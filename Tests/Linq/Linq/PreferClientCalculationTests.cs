@@ -884,7 +884,9 @@ namespace Tests.Linq
 			sqlServer.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTime>().ShouldBe(new DateTime(1753, 1, 1));
 
 			AssertAtZeroOffset(LowerDefault(ClickHouseTools.GetDataProvider(ClickHouseProvider.ClickHouseDriver), typeof(DateTimeOffset), DataType.DateTime64), new DateTime(1900, 1, 1));
+#if !NETFRAMEWORK
 			AssertAtZeroOffset(LowerDefault(YdbTools.GetDataProvider(), typeof(DateTimeOffset), DataType.DateTime2), new DateTime(1970, 1, 1));
+#endif
 
 			// Sybase writes the default as a cast to the mapped type.
 			var sybase = LowerDefault(SybaseTools.GetDataProvider(SybaseProvider.DataAction), typeof(DateTimeOffset), DataType.DateTime);
@@ -919,6 +921,7 @@ namespace Tests.Linq
 
 			LoweredYear(LowerDefault(sqlServer2005, typeof(DateTimeOffset), DataType.DateTimeOffset)).ShouldBe(1753);
 
+#if !NETFRAMEWORK
 			var ydb = YdbTools.GetDataProvider();
 
 			LoweredYear(LowerDefault(ydb, typeof(DateTime), DataType.SmallDateTime)).ShouldBe(1970);
@@ -926,6 +929,7 @@ namespace Tests.Linq
 			LoweredYear(LowerDefault(ydb, typeof(DateTime), DataType.DateTimeTz   )).ShouldBe(1970);
 			LoweredYear(LowerDefault(ydb, typeof(DateTime), DataType.DateTime64   )).ShouldBe(1);
 			LoweredYear(LowerDefault(ydb, typeof(DateTime), DataType.Timestamp64  )).ShouldBe(1);
+#endif
 
 			var clickHouse = ClickHouseTools.GetDataProvider(ClickHouseProvider.ClickHouseDriver);
 
