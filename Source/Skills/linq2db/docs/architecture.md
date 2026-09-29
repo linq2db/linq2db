@@ -193,17 +193,18 @@ Helper API for SQL constructs.
 
 # Machine-Readable Documentation (AI-Tags)
 
-Some XML documentation comments contain compact machine-readable metadata in custom XML-doc
-elements.
+Some public APIs carry compact machine-readable metadata authored as internal attributes
+(`[AiTags]` / `[AiTagsDefaults]` in `LinqToDB.Internal.Metadata`).
 
 Format:
 
-```xml
-<ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" />
+```cs
+[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable)]
 ```
 
-Generated docs render these attributes as `AI-Tags` metadata. Multiple values within a single key
-are comma-separated (e.g. `affects="DdlStatement,Data"`).
+Generated docs render these attributes as `AI metadata`
+(e.g. `AI metadata: Groups=Hints; HintType=Query; Execution=Deferred; Composability=Composable;`).
+Multiple values within a single key are comma-separated (e.g. `Affects=DdlStatement,Data`).
 
 These tags describe:
 
@@ -235,7 +236,7 @@ not as a completeness claim for every linq2db feature.
 | `docs/api.md` | Generated public API search/discovery index. |
 | `docs/architecture.md` | This architecture overview. |
 | `docs/agent-antipatterns.md` | Operational anti-patterns with code examples. |
-| `docs/ai-tags.md` | `<ai-tags />` schema and generated AI metadata semantics. |
+| `docs/ai-tags.md` | `[AiTags]` vocabulary and generated AI metadata semantics. |
 | `docs/configuration.md` | `DataOptions`, tracing/logging, retry policies, interceptors, member translators. |
 | `docs/mapping.md` | Mapping attributes, fluent mapping, generated DDL metadata, value converters. |
 | `docs/provider-setup.md` | Provider setup methods, `ProviderName` constants, driver packages. |

@@ -535,7 +535,7 @@ concrete map hit.
 
 ## Maintenance
 
-- Keep this map aligned with XML-doc, especially `<c>...</c>` SQL hint text and generated AI metadata such as `Group=Hints; HintType=...`.
+- Keep this map aligned with XML-doc, especially `<c>...</c>` SQL hint text and generated AI metadata such as `Groups=Hints; HintType=...`.
 - For generated provider hint files, update the `.tt` template first and regenerate/check in the matching `.generated.cs` file.
 - For handwritten provider hint files, update XML comments directly and then refresh this map.
 - Do not add examples for only one tested hint as proof that the entire provider surface works. The map is an API discovery aid, not a behavioral test suite.

@@ -164,7 +164,7 @@ For SQL hint questions, use this mandatory lookup order before answering:
    `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
    concatenation; verify the exact API in the map and XML-doc.
 8. Search the provider `*Hints` API entries by SQL hint text, candidate helper names,
-   receiver types, and AI metadata such as `Group=Hints`.
+   receiver types, and AI metadata such as `Groups=Hints`.
 9. Prefer typed/provider-specific helpers found in the map or XML-doc.
 10. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
    map, generated API lookup, and raw XML-doc confirmation fail to find a typed helper for the
@@ -182,7 +182,7 @@ interceptors.
 Do not answer a provider-specific hint question from the generic hints model alone.
 Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
 provider and exact SQL/database term, then searched `docs/api.md` and raw XML-doc, when needed, for the provider
-`*Hints` type, SQL term, likely helper fragments, and AI metadata such as `Group=Hints`.
+`*Hints` type, SQL term, likely helper fragments, and AI metadata such as `Groups=Hints`.
 Do not skip this lookup because the database feature is a table modifier, lock clause, query
 directive, or provider-specific SQL extension rather than a classic optimizer hint.
 

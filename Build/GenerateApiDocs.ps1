@@ -5,10 +5,9 @@ param(
 	[Parameter(Mandatory = $true)]
 	[string] $ApiDocPath,
 
-	# Compiled assembly matching $XmlDocPath. Used to read <ai-tags />/<ai-tags-defaults />
-	# from AiTagsAttribute/AiTagsDefaultsAttribute (Source/LinqToDB/Internal/Metadata/AiTagsAttribute.cs).
-	# Members not yet migrated to the attribute still carry XML-doc <ai-tags /> elements; those are
-	# read via the legacy XML path below. Both paths are supported until the migration is complete.
+	# Compiled assembly matching $XmlDocPath. AI metadata is read from AiTagsAttribute/AiTagsDefaultsAttribute
+	# (Source/LinqToDB/Internal/Metadata) via CustomAttributeData. The retired XML-doc <ai-tags /> /
+	# <ai-tags-defaults /> form is no longer read; AssertNoLegacyAiTagXml fails the run if it reappears.
 	[Parameter(Mandatory = $true)]
 	[string] $AssemblyPath
 )
@@ -169,7 +168,7 @@ function AssertNoLegacyAiTagXml($member, [string] $memberId) {
 
 #region Attribute-based AI-Tags (AiTagsAttribute / AiTagsDefaultsAttribute)
 #
-# Reads <ai-tags /> / <ai-tags-defaults /> from AiTagsAttribute/AiTagsDefaultsAttribute
+# Reads AI metadata from AiTagsAttribute/AiTagsDefaultsAttribute
 # (Source/LinqToDB/Internal/Metadata) via CustomAttributeData off the compiled assembly. See
 # .agents/ai-tags-attribute-design.md.
 
@@ -243,7 +242,7 @@ function GetCustomAttributeDataByName($provider, [string] $attributeTypeName) {
 # plain/nested/generic types, generic methods and method-level generic-parameter back-references,
 # arrays, by-ref parameters, and generic type instantiations. Deliberately does not attempt pointers
 # or multi-dimensional non-zero-lower-bound arrays - if id computation fails for a member, that
-# member is simply skipped for attribute-based lookup (falls back to XML, or has no AI metadata),
+# member is simply skipped for attribute-based lookup (it gets no AI metadata),
 # never mismatched to the wrong member.
 
 function GetParamTypeDocName([Type] $type) {

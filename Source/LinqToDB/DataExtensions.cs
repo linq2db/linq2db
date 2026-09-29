@@ -29,7 +29,7 @@ namespace LinqToDB
 	/// </summary>
 	/// <remarks>
 	/// Common metadata defaults for this API surface:
-	/// method-level <c>ai-tags</c> elements should specify only behavior-specific fields and override
+	/// method-level <c>AiTags</c> attributes should specify only behavior-specific fields and override
 	/// defaults only when needed.
 	/// </remarks>
 	[AiTagsDefaults(Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]

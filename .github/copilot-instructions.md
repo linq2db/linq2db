@@ -57,8 +57,8 @@ The `Source/Skills/linq2db/docs/` directory contains machine-readable references
 
 **AI metadata**
 
-- **`<ai-tags />` or `<ai-tags-defaults />` XML-doc element added or modified**: every attribute and value must match the vocabulary defined in `Source/Skills/linq2db/docs/ai-tags.md` - flag unknown attributes or values for known attributes. Multi-value fields are comma-separated (`affects="DdlStatement,Data"`), not semicolon-separated.
+- **`[AiTags(...)]` or `[AiTagsDefaults(...)]` attribute added or modified** (`LinqToDB.Internal.Metadata`, including in `.tt` templates): the compiler validates enum values, so check that `Source/Skills/linq2db/docs/ai-tags.md` still lists every value of the `Ai*` enums, and flag a value added to an enum without a matching entry there. Multi-value fields combine `[Flags]` values with `|` (`Affects = AiAffects.DdlStatement | AiAffects.Data`). Flag any reintroduced XML-doc `<ai-tags />` / `<ai-tags-defaults />` element - that form is retired and `Build/GenerateApiDocs.ps1` rejects it.
 
-- **Behaviour of an already-tagged API changes**: if `execution`, `composability`, `affects`, or `pipeline` semantics change in this PR (e.g., a deferred query becomes immediate, or DDL is added or removed), flag that the corresponding `<ai-tags />` metadata needs updating.
+- **Behaviour of an already-tagged API changes**: if `execution`, `composability`, `affects`, or `pipeline` semantics change in this PR (e.g., a deferred query becomes immediate, or DDL is added or removed), flag that the corresponding `[AiTags]` metadata needs updating.
 
-- **New public API added** that issues SQL directly or implements `IQueryable<T>` / `ITable<T>`: flag if no appropriate `<ai-tags />` metadata is present next to the XML documentation.
+- **New public API added** that issues SQL directly or implements `IQueryable<T>` / `ITable<T>`: flag if no appropriate `[AiTags]` attribute (or type-level `[AiTagsDefaults]`) is present.
