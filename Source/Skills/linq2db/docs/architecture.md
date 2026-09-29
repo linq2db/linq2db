@@ -165,12 +165,14 @@ Note: for explicit transaction control with `BeginTransaction`, use `DataConnect
 (see anti-pattern #7 in `docs/agent-antipatterns.md`).
 
 Session-bound features
-Features that depend on a stable physical connection - temp tables (`CreateTempTable`),
-session variables, provider-level `SET` statements, and explicit transactions - require `DataConnection`.
-`DataContext` opens and closes the connection per command; any session state created in one command
-is gone before the next command executes.
+Features that depend on a stable physical connection - session-scoped temp tables (`CreateTempTable`),
+session variables, provider-level `SET` statements, and explicit transactions - need a connection that
+stays open across commands. By default `DataContext` opens and closes the connection per command; any
+session state created in one command is gone before the next command executes. `CreateTempTable` is an
+`IDataContext` extension and compiles against `DataContext`; the problem is session visibility, which
+`DataContext.SetKeepConnectionAlive(true)` also solves.
 Rule: if your code calls `CreateTempTable`, `BeginTransaction`, or relies on connection-scoped state,
-use `DataConnection`.
+prefer `DataConnection`.
 
 DataOptions
 Configuration object used to construct connections.

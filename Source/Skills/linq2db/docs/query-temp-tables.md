@@ -18,7 +18,7 @@
 > - If rows are already available in C# memory, prefer `CreateTempTable(items)` / `CreateTempTableAsync(items)`. Do not create an empty table and call `BulkCopy` separately unless rows are loaded later or copy behavior must be controlled separately.
 > - If rows come from an `IQueryable<T>` query, prefer `CreateTempTable(query)` / `CreateTempTableAsync(query)`. LinqToDB populates the temp table server-side with `INSERT ... SELECT`.
 > - Do not introduce `setTable`, `CreateTempTableOptions`, or explicit `TableOptions` unless the task requires them.
-> - Temporary tables require a `DataConnection`, not a `DataContext`. `DataContext` opens and closes a physical connection per command; a temporary table's lifetime is tied to the session, so the table would be invisible across commands.
+> - `CreateTempTable` is an `IDataContext` extension and works with any context, but a session-scoped temporary table is visible only on the connection that created it. `DataContext` by default opens and closes a physical connection per command, so such a table would be invisible across commands. Use a `DataConnection`, or a `DataContext` with `SetKeepConnectionAlive(true)` for the table's lifetime.
 > - Always use `await using` / `using` to ensure the backing table is dropped even on exception.
 > - Do not use temporary tables as a general substitute for subqueries or CTEs - they carry DDL overhead. Use them when server-side staging is genuinely needed or when the collection originates in C# memory.
 > - `CreateTempTable(items)` loads in-memory data through provider default `BulkCopy`; use the overload with `BulkCopyOptions` when copy behavior must be controlled.
@@ -197,10 +197,15 @@ The `CreateTempTable` extension methods default to `TableOptions.IsTemporary`.
 | `TableOptions.NotSet` | Does not override mapped table options. It does not ask the provider to choose a temporary-table kind. |
 | `TableOptions.IsTemporary` *(default)* | Requests a database-native local (session-scoped) temporary table when supported by the provider; exact SQL and behavior are provider-defined |
 | `TableOptions.None` | Regular physical table - **not** session-scoped; visible to other sessions depending on the provider; lifecycle still managed by `TempTable<T>` (auto-dropped on dispose) |
-| `TableOptions.CheckExistence` | `CREATE IF NOT EXISTS` + `DROP IF EXISTS` |
+| `TableOptions.CreateIfNotExists` | `CREATE ... IF NOT EXISTS` when supported by the provider |
+| `TableOptions.DropIfExists` | `DROP ... IF EXISTS` when supported by the provider |
+| `TableOptions.CheckExistence` | Convenience combination: `CreateIfNotExists \| DropIfExists` |
 | `TableOptions.IsLocalTemporaryStructure` | Session-scoped DDL visibility |
 | `TableOptions.IsGlobalTemporaryStructure` | Globally visible DDL (e.g., Oracle `GLOBAL TEMPORARY TABLE`) |
+| `TableOptions.IsLocalTemporaryData` | Session-scoped data visibility (data not visible to other sessions) |
+| `TableOptions.IsGlobalTemporaryData` | Data visibility defined as "global" by the provider abstraction; exact meaning is provider-specific (e.g., Oracle global temporary table data is still session- or transaction-scoped) |
 | `TableOptions.IsTransactionTemporaryData` | Transaction-scoped data (Firebird, Oracle, PostgreSQL) |
+| `TableOptions.IsTemporaryOptionSet` | Convenience mask of all temporary-related flags, for checking whether any is set; not a table kind by itself |
 
 > **`TableOptions.None`** creates a regular physical table, not a database-native temporary table.
 > It is still automatically dropped when `TempTable<T>` is disposed, but it is not session-scoped

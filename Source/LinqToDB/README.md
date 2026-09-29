@@ -183,9 +183,10 @@ await tr.CommitAsync();  // or tr.RollbackAsync() on error
 
 `DataContext` supports `TransactionScope` as well - open the connection inside the scope for it to enlist automatically.
 
-> **Note:** Temp tables, session variables, and other session-scoped state require `DataConnection`.
-> `DataContext` opens a new connection per command; session state created in one command does not
-> survive to the next. See the decision table above.
+> **Note:** Temp tables, session variables, and other session-scoped state need a connection that stays
+> open across commands. By default `DataContext` opens a new connection per command, so session state
+> created in one command does not survive to the next; use `DataConnection`, or call
+> `SetKeepConnectionAlive(true)` on the `DataContext`. See the decision table above.
 
 ## Bulk copy
 
