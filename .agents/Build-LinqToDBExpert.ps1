@@ -255,13 +255,14 @@ function Join-RelativePath([string] $BaseFile, [string] $Target) {
 }
 
 function Get-RepoRelativePath([string] $Path) {
-	$root = (Resolve-Path -LiteralPath $RepoRoot).Path.TrimEnd('\')
-	$resolved = (Resolve-Path -LiteralPath $Path).Path
-	if ($resolved.StartsWith($root + '\', [System.StringComparison]::OrdinalIgnoreCase)) {
-		return $resolved.Substring($root.Length + 1).Replace('\', '/')
+	# Compare with '/' separators so the result is repo-relative on Windows and on Linux/macOS alike.
+	$root = (Resolve-Path -LiteralPath $RepoRoot).Path.Replace('\', '/').TrimEnd('/')
+	$resolved = (Resolve-Path -LiteralPath $Path).Path.Replace('\', '/')
+	if ($resolved.StartsWith($root + '/', [System.StringComparison]::OrdinalIgnoreCase)) {
+		return $resolved.Substring($root.Length + 1)
 	}
 
-	return $resolved.Replace('\', '/')
+	return $resolved
 }
 
 $sourceToOutput = @{
