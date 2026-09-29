@@ -18,9 +18,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 		/// <param name="SchemaName">The schema name of the table. </param>
 		/// <param name="TableName">The table name. The table name is not unique in the database.</param>
 		/// <param name="RowCount">The number of rows in the table. The value is not exact, but it is close to the actual number of rows.</param>
-		public record TableRowCountInfo(int ObjectID, string SchemaName, string TableName, long RowCount)
-		{
-		}
+		public record TableRowCountInfo(int ObjectID, string SchemaName, string TableName, long RowCount);
 
 		/// <summary>
 		/// Returns the row count for all user tables in the database.

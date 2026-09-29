@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,6 +8,8 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -177,13 +179,17 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EqualTo("123"));
 		}
 
-		[Test]
+		// NonParallelizable, with ConvertTest3 and ConvertTest4: under #5810 the three share one query-cache entry
+		// and whichever executes first defines the CONVERT target type for all of them. Serialising pins the winner
+		// here, so the two gates below declare a stable failure instead of racing against it.
+		[Test, NonParallelizable]
 		public void ConvertTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(4),");
 		}
 
 		[Test]
@@ -193,24 +199,32 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal,");
 		}
 
-		[Test]
+		// Declared on the wrong CONVERT that gets emitted - ConvertTest1's, the winner of the shared cache entry:
+		// that is a whole line of the message, whereas the first line is only the opening quote of the rendered
+		// SQL and matches nothing useful.
+		[ActiveIssue(5810, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "CONVERT(varchar(4), 123)")]
+		[Test, NonParallelizable]
 		public void ConvertTest3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), 123));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
-		[Test]
+		[ActiveIssue(5810, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "CONVERT(varchar(4), 123)")]
+		[Test, NonParallelizable]
 		public void ConvertTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(max),");
 		}
 
 		[Test]
@@ -220,6 +234,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal(30, 0),");
 		}
 
 		[Test]
@@ -240,13 +255,17 @@ namespace Tests.DataProvider
 			Assert.That(result, Is.EquivalentTo([1f, 2f, 3f]));
 		}
 
-		[Test]
+		// NonParallelizable, with ConvertWithStyleTest4: the three-argument overload has its own #5810 cache entry,
+		// and this test is the winner ConvertWithStyleTest4's gate declares. ConvertWithStyleTest3 converts a
+		// DateTime, so it keys separately and is unaffected.
+		[Test, NonParallelizable]
 		public void ConvertWithStyleTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarChar(4), 123, 1));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(4),");
 		}
 
 		[Test]
@@ -256,6 +275,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal, 123, 1));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal,");
 		}
 
 		[Test]
@@ -265,15 +285,18 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.NVarChar(10), new DateTime(2022, 02, 22), 105));
 
 			Assert.That(result, Is.EqualTo("22-02-2022"));
+			db.LastQuery!.ShouldContain("CONVERT(nvarchar(10),");
 		}
 
-		[Test]
+		[ActiveIssue(5810, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "CONVERT(varchar(4), 123, 1)")]
+		[Test, NonParallelizable]
 		public void ConvertWithStyleTest4([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.VarCharMax, 123, 1));
 
 			Assert.That(result, Is.EqualTo("123"));
+			db.LastQuery!.ShouldContain("CONVERT(varchar(max),");
 		}
 
 		[Test]
@@ -283,6 +306,7 @@ namespace Tests.DataProvider
 			var result = db.Select(() => SqlFn.Convert(SqlType.Decimal(30, 0), 123, 1));
 
 			Assert.That(result, Is.EqualTo(123m));
+			db.LastQuery!.ShouldContain("CONVERT(decimal(30, 0),");
 		}
 
 		[Test]

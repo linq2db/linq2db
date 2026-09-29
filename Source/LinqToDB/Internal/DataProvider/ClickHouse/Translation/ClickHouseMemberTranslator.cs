@@ -46,6 +46,17 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			return new ClickHouseWindowFunctionsMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateAggregateFunctionsMemberTranslator()
+		{
+			return new ClickHouseAggregateFunctionsMemberTranslator();
+		}
+
+		protected class ClickHouseAggregateFunctionsMemberTranslator : AggregateFunctionsMemberTranslatorBase
+		{
+			// ClickHouse's Bool is UInt8, so min/max apply to a comparison directly and need no 1/0 fold.
+			protected override bool IsMinMaxOverBooleanSupported => true;
+		}
+
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)

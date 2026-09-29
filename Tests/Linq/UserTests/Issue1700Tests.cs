@@ -69,7 +69,7 @@ namespace Tests.UserTests
 		[ExpressionMethod(nameof(SubFunctionImpl))]
 		static TSome SubFunction(IQueryable<ItemAppType> itemTypes, IQueryable<AppType> types, IQueryable<AppSubType> subTypes, Item item)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(SubFunction));
 		}
 
 		public class TSome

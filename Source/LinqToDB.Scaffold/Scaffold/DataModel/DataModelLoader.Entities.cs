@@ -144,10 +144,11 @@ namespace LinqToDB.Scaffold
 				if (_options.DataModel.GenerateDataType)
 					columnMetadata.DataType = typeMapping.DataType;
 
-				columnMetadata.CanBeNull    = column.Nullable;
-				columnMetadata.SkipOnInsert = !column.Insertable;
-				columnMetadata.SkipOnUpdate = !column.Updatable;
-				columnMetadata.IsIdentity   = table.Identity != null && string.Equals(table.Identity.Column, column.Name, StringComparison.Ordinal);
+				columnMetadata.CanBeNull        = column.Nullable;
+				columnMetadata.SkipOnInsert     = !column.Insertable;
+				columnMetadata.SkipOnUpdate     = !column.Updatable;
+				columnMetadata.IsIdentity       = table.Identity != null && string.Equals(table.Identity.Column, column.Name, StringComparison.Ordinal);
+				columnMetadata.UseGetSqlDecimal = ShouldUseGetSqlDecimal(column, typeMapping);
 
 				if (table.PrimaryKey != null)
 				{
@@ -157,6 +158,20 @@ namespace LinqToDB.Scaffold
 						columnMetadata.PrimaryKeyOrder = table.PrimaryKey.GetColumnPositionInKey(column);
 				}
 			}
+		}
+
+		bool ShouldUseGetSqlDecimal(Column column, TypeMapping typeMapping)
+		{
+			if (!_options.DataModel.GenerateSqlServerDecimalOverflowProtection)
+				return false;
+
+			if (_schemaProvider.DatabaseOptions is not SqlServerDatabaseOptions)
+				return false;
+
+			if (!_languageProvider.TypeEqualityComparerWithoutNRT.Equals(typeMapping.CLRType, WellKnownTypes.System.Decimal))
+				return false;
+
+			return SqlServerDecimalOverflow.ExceedsClrLimits(column.Type.Precision, column.Type.Scale);
 		}
 
 		/// <summary>
@@ -204,7 +219,7 @@ namespace LinqToDB.Scaffold
 			var sourceMetadata      = new AssociationMetadata() { CanBeNull = fromOptional   };
 			// back-reference is always optional
 			var targetMetadata      = new AssociationMetadata() { CanBeNull = true           };
-			
+
 			var association         = new AssociationModel(sourceMetadata, targetMetadata, source.Entity, target.Entity, manyToOne)
 			{
 				ForeignKeyName = fk.Name,
@@ -296,7 +311,7 @@ namespace LinqToDB.Scaffold
 			ISet<string>         defaultSchemas)
 		{
 			// name generation logic moved to separate class to cover it with unittests
-			
+
 			var name = NameGenerationServices.GenerateAssociationName(
 				(tableName, columnName) =>
 					_entities.TryGetValue(tableName, out var table)

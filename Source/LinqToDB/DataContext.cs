@@ -513,9 +513,9 @@ namespace LinqToDB
 			_disposed = true;
 		}
 
-		public async ValueTask DisposeAsync()
+		public ValueTask DisposeAsync()
 		{
-			await DisposeAsync(disposing: true).ConfigureAwait(false);
+			return DisposeAsync(disposing: true);
 		}
 
 		/// <summary>

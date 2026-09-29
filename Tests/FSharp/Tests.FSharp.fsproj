@@ -26,6 +26,8 @@
 		<Compile Include="Issue4646.fs" />
 		<Compile Include="OptionMappingPrecedence.fs" />
 		<Compile Include="OptionTypes.fs" />
+		<Compile Include="OptionQueryTests.fs" />
+		<Compile Include="DuQueryTests.fs" />
 	</ItemGroup>
 
 	<ItemGroup>

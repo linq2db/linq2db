@@ -1,9 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands
 {
 	/// <summary>
 	/// Base class for CLI commands.
@@ -26,14 +30,15 @@ namespace LinqToDB.CommandLine
 		/// <param name="template">Command template.</param>
 		/// <param name="help">Command help text.</param>
 		/// <param name="examples">Command examples.</param>
-		protected CliCommand(string name, bool hasOptions, bool supportsJson, string template, string help, IReadOnlyCollection<CommandExample> examples)
+		protected CliCommand(string name, bool hasOptions, bool supportsJson, string template, string help, IReadOnlyCollection<CommandExample> examples, bool acceptsArguments = false)
 		{
-			Name         = name;
-			HasOptions   = hasOptions;
-			SupportsJSON = supportsJson;
-			Template     = template;
-			Help         = help;
-			Examples     = examples;
+			Name             = name;
+			HasOptions       = hasOptions;
+			SupportsJSON     = supportsJson;
+			Template         = template;
+			Help             = help;
+			Examples         = examples;
+			AcceptsArguments = acceptsArguments;
 		}
 
 		/// <summary>
@@ -62,6 +67,11 @@ namespace LinqToDB.CommandLine
 		/// Gets flag, indicating wether command supports options import from JSON.
 		/// </summary>
 		public bool                                SupportsJSON { get; }
+
+		/// <summary>
+		/// Gets flag indicating whether positional arguments are passed to the command.
+		/// </summary>
+		public bool                                AcceptsArguments { get; }
 
 		/// <summary>
 		/// Gets command option categories in rendering (in help) order.
@@ -177,14 +187,18 @@ namespace LinqToDB.CommandLine
 		/// Execute command with provided parameters.
 		/// </summary>
 		/// <param name="controller">CLI controller instance.</param>
+		/// <param name="environment">CLI runtime environment.</param>
 		/// <param name="rawArgs">Raw list of CLI arguments.</param>
 		/// <param name="options">Parsed command options with values. Command allowed to modify dictionary (e.g. remove processed options to detect options without handler).</param>
 		/// <param name="unknownArgs">List of unrecognized arguments.</param>
+		/// <param name="cancellationToken">Command cancellation token.</param>
 		/// <returns>Command execution status code.</returns>
 		public abstract ValueTask<int> Execute(
 			CliController                  controller,
+			ICliEnvironment                environment,
 			string[]                       rawArgs,
 			Dictionary<CliOption, object?> options,
-			IReadOnlyCollection<string>    unknownArgs);
+			IReadOnlyCollection<string>    unknownArgs,
+			CancellationToken              cancellationToken);
 	}
 }

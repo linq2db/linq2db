@@ -588,7 +588,7 @@ namespace Tests.xUpdate
 
 			var rows = table
 					.Merge()
-					.Using(GetSource1(db).ToList().Select(_ => new { _.Id, Val = (TimeSpan?)param }))
+					.Using(GetSource1(db).ToList().OrderBy(_ => _.Id).Select(_ => new { _.Id, Val = (TimeSpan?)param }))
 					.On((t, s) => t.Id == s.Id && s.Val != null)
 					.UpdateWhenMatched((t, s) => new TestMapping1()
 					{

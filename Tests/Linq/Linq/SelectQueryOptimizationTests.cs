@@ -31,6 +31,30 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CreateSqlValueKeepsParameterizationWhenUsageIsCastWrapped()
+		{
+			// A parameter usage wrapped for a per-position cast (SqlParameterCastExpression) must still be
+			// recognised as parameter-based by the constant-fold factory. Otherwise folding drops the parameter
+			// and inlines its value as a SQL literal - the regression that dropped a bound parameter from 47
+			// DB2/Firebird/Informix baselines while this PR was in review.
+			var dbDataType  = new DbDataType(typeof(int));
+			var parameter   = new SqlParameter(dbDataType, "p", 1) { IsQueryParameter = true };
+			var castWrapped = new SqlParameterCastExpression(parameter);
+
+			var folded = QueryHelper.CreateSqlValue(42, dbDataType, castWrapped);
+
+			// The cast-wrapped usage must fold to a cast-wrapped parameter - the parameter is preserved (not
+			// inlined as a literal) and keeps its explicit type (CAST(@p AS T)), which Firebird/Informix require.
+			var cast = folded.ShouldBeOfType<SqlParameterCastExpression>();
+			cast.Parameter.IsQueryParameter.ShouldBeTrue();
+
+			// The re-wrap has to stay conditional on the source usage. Without this assertion the test also
+			// passes for an unconditional wrap, which would put a spurious cast around every folded parameter
+			// on the providers that wrap parameter usages - visible only as a moved baseline.
+			QueryHelper.CreateSqlValue(42, dbDataType, parameter).ShouldBeOfType<SqlParameter>();
+		}
+
+		[Test]
 		public void CountFromUnionAllShouldKeepOnlyOneColumn()
 		{
 			using var db = GetDataConnection();

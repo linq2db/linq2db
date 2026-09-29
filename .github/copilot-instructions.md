@@ -1,6 +1,14 @@
 # GitHub Copilot Instructions
 
-**Canonical contributor rules live in [`AGENTS.md`](../AGENTS.md) at the repository root** — read it for build, test, conventions, branching, commit/publish discipline, GitHub authoring etiquette, and security rules. The notes below are Copilot-specific additions for pull-request review.
+This file is **self-contained on purpose.** The full contributor ruleset lives in `.claude/AGENTS.md`, inside the [linq2db/agents](https://github.com/linq2db/agents) submodule — which is *not* checked out for GitHub-side review, so anything a reviewer must honour is stated here rather than linked. A local agent (Copilot in an IDE, with the submodule populated) should also read `.claude/AGENTS.md` for the complete rules.
+
+## Repository invariants worth flagging in review
+
+- **Generated files are never hand-edited:** `Source/**/CompatibilitySuppressions.xml` (ApiCompat baselines) and `linq2db.baselines` test baselines are tool output. A hand-written change to them is a finding.
+- **New or changed public API** needs the matching `PublicAPI.Unshipped.txt` entry and XML doc comments on the new public types/members (`TreatWarningsAsErrors` is on, so a dangling `<see cref="…"/>` is a build error, not doc rot).
+- **Never interpolate a value into a SQL string.** linq2db generates SQL: a concatenated value is SQL injection by construction. Values go through a parameter or a `Sql.*` / AST builder.
+- **Tabs for C#/VB; spaces for F#, YAML, shell, markdown.** Target frameworks include `net462` and `netstandard2.0`, so a BCL API newer than .NET Standard 2.0 needs a polyfill rather than an unguarded call.
+- **Don't propose reformatting, renaming, or cleanup of lines the PR doesn't already touch** — the column-aligned formatting in this codebase is deliberate (see below).
 
 ## Pull request review — formatting
 
@@ -16,6 +24,10 @@ When performing a code review, **comment on formatting only when it is clearly p
 - trailing whitespace repeated across multiple lines,
 - indentation that is clearly broken (e.g., half-indented blocks or accidental deep indentation),
 - mixed tabs and spaces *when it creates visibly misaligned code*.
+
+## Using directives
+
+- `using System;` is always the first using directive in every `.cs` file, even when that file's code doesn't reference any `System` type. This is an intentional, deliberate repo convention, not dead code — do not flag it for removal or suggest removing it as an "unused using" cleanup.
 
 ## Indentation
 

@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		[Sql.Expression("jsonb_set({0}, ARRAY[{1}], {2}::jsonb)", ServerSideOnly = true, InlineParameters = true)]
 		static T? JsonbSet<T>(T? jsonb, string key, string value)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(JsonbSet));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5505")]

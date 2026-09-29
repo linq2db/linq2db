@@ -1252,10 +1252,14 @@ namespace Tests.Linq
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestTable5>();
+			// MA0192 wants HasFlag here, but this is an expression tree translated to SQL and the bitwise
+			// form is exactly what this test covers — HasFlag would exercise a different translation path.
+#pragma warning disable MA0192 // Use HasFlag instead of bitwise checks
 			var result =
 					from t in table
 					where (t.IntValue & TestFlag.Value1) != 0
 					select t;
+#pragma warning restore MA0192
 
 			result.ToArray();
 
@@ -1794,7 +1798,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
-		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new InvalidOperationException();
+		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new ServerSideOnlyException(nameof(SomeComparison));
 
 		[Test]
 		public void Issue1622Test([DataSources] string context)

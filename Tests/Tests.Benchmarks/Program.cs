@@ -29,6 +29,36 @@ namespace LinqToDB.Benchmarks
 				return;
 			}
 
+			// Same fallback for the parameter-reuse benchmarks.
+			//
+			// Usage: manual-paramreuse [iterations] [warmups]
+			if (args.Length > 0 && args[0] == "manual-paramreuse")
+			{
+				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 2000;
+				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 200;
+				ParameterReuseBenchmark.RunManually(warmups, iters);
+				return;
+			}
+
+			// Usage: manual-weakjoin [iterations] [warmups]
+			if (args.Length > 0 && args[0] == "manual-weakjoin")
+			{
+				var iters   = args.Length > 1 && int.TryParse(args[1], out var n) ? n : 8;
+				var warmups = args.Length > 2 && int.TryParse(args[2], out var w) ? w : 2;
+				WeakJoinScanBenchmark.RunManually(warmups, iters);
+				return;
+			}
+
+			// Usage: manual-deepjoin [iterations] [warmups] [onlyDepth]
+			if (args.Length > 0 && args[0] == "manual-deepjoin")
+			{
+				var iters   = args.Length > 1 && int.TryParse(args[1], out var dn) ? dn : 3;
+				var warmups = args.Length > 2 && int.TryParse(args[2], out var dw) ? dw : 1;
+				var depth   = args.Length > 3 && int.TryParse(args[3], out var dd) ? dd : 0;
+				DeepJoinChainBenchmark.RunManually(warmups, iters, depth);
+				return;
+			}
+
 			//if (args.Length == 0)
 			//{
 			//	//	var b1 = new FetchGraphBenchmark();

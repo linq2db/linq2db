@@ -568,9 +568,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			if (ClickHouseSqlExpressionConvertVisitor.ClickHouseConvertFunctions.TryGetValue(dataType.DataType, out var name))
 			{
-				var saveStep = BuildStep;
-				BuildStep    = Step.TypedExpression;
-
 				StringBuilder
 					.Append(name)
 					.Append('(');
@@ -588,8 +585,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				}
 
 				StringBuilder.Append(')');
-
-				BuildStep = saveStep;
 			}
 		}
 	}
