@@ -167,12 +167,14 @@ Note: for explicit transaction control with `BeginTransaction`, use `DataConnect
 (see anti-pattern #7 in `docs/agent-antipatterns.md`).
 
 Session-bound features
-Features that depend on a stable physical connection - temp tables (`CreateTempTable`),
-session variables, provider-level `SET` statements, and explicit transactions - require `DataConnection`.
-`DataContext` opens and closes the connection per command; any session state created in one command
-is gone before the next command executes.
+Features that depend on a stable physical connection - session-scoped temp tables (`CreateTempTable`),
+session variables, provider-level `SET` statements, and explicit transactions - need a connection that
+stays open across commands. By default `DataContext` opens and closes the connection per command; any
+session state created in one command is gone before the next command executes. `CreateTempTable` is an
+`IDataContext` extension and compiles against `DataContext`; the problem is session visibility, which
+`DataContext.SetKeepConnectionAlive(true)` also solves.
 Rule: if your code calls `CreateTempTable`, `BeginTransaction`, or relies on connection-scoped state,
-use `DataConnection`.
+prefer `DataConnection`.
 
 DataOptions
 Configuration object used to construct connections.
@@ -195,17 +197,18 @@ Helper API for SQL constructs.
 
 # Machine-Readable Documentation (AI-Tags)
 
-Some XML documentation comments contain compact machine-readable metadata in custom XML-doc
-elements.
+Some public APIs carry compact machine-readable metadata authored as internal attributes
+(`[AiTags]` / `[AiTagsDefaults]` in `LinqToDB.Internal.Metadata`).
 
 Format:
 
-```xml
-<ai-tags group="Hints" hint-type="Query" execution="Deferred" composability="Composable" />
+```cs
+[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable)]
 ```
 
-Generated docs render these attributes as `AI-Tags` metadata. Multiple values within a single key
-are comma-separated (e.g. `affects="DdlStatement,Data"`).
+Generated docs render these attributes as `AI metadata`
+(e.g. `AI metadata: Groups=Hints; HintType=Query; Execution=Deferred; Composability=Composable;`).
+Multiple values within a single key are comma-separated (e.g. `Affects=DdlStatement,Data`).
 
 These tags describe:
 
@@ -237,7 +240,7 @@ not as a completeness claim for every linq2db feature.
 | `docs/api.md` | Generated public API search/discovery index. |
 | `docs/architecture.md` | This architecture overview. |
 | `docs/agent-antipatterns.md` | Operational anti-patterns with code examples. |
-| `docs/ai-tags.md` | `<ai-tags />` schema and generated AI metadata semantics. |
+| `docs/ai-tags.md` | `[AiTags]` vocabulary and generated AI metadata semantics. |
 | `docs/configuration.md` | `DataOptions`, tracing/logging, retry policies, interceptors, member translators. |
 | `docs/mapping.md` | Mapping attributes, fluent mapping, generated DDL metadata, value converters. |
 | `docs/provider-setup.md` | Provider setup methods, `ProviderName` constants, driver packages. |

@@ -149,7 +149,7 @@ provider-specific SQL extensions that the user describes as hints, use this exac
    forms, and the correct answer depends on whether the user needs one table source or all table
    references in a query scope.
 6. In `docs/api.md` and, when needed, raw XML-doc, verify the helper signature, receiver type,
-   namespace, overloads, XML summary, and AI metadata such as `Group=Hints; HintType=...`.
+   namespace, overloads, XML summary, and AI metadata such as `Groups=Hints; HintType=...`.
 7. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
    SQL hint text, provider namespace, receiver type, and likely helper-name fragments.
 8. Prefer the concrete typed/provider-specific helper when it exists.

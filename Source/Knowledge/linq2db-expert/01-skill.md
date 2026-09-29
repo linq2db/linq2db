@@ -166,7 +166,7 @@ For SQL hint questions, use this mandatory lookup order before answering:
    `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
    concatenation; verify the exact API in the map and XML-doc.
 8. Search the provider `*Hints` API entries by SQL hint text, candidate helper names,
-   receiver types, and AI metadata such as `Group=Hints`.
+   receiver types, and AI metadata such as `Groups=Hints`.
 9. Prefer typed/provider-specific helpers found in the map or XML-doc.
 10. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
    map, generated API lookup, and raw XML-doc confirmation fail to find a typed helper for the
@@ -184,7 +184,7 @@ interceptors.
 Do not answer a provider-specific hint question from the generic hints model alone.
 Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
 provider and exact SQL/database term, then searched `docs/api.md` and raw XML-doc, when needed, for the provider
-`*Hints` type, SQL term, likely helper fragments, and AI metadata such as `Group=Hints`.
+`*Hints` type, SQL term, likely helper fragments, and AI metadata such as `Groups=Hints`.
 Do not skip this lookup because the database feature is a table modifier, lock clause, query
 directive, or provider-specific SQL extension rather than a classic optimizer hint.
 
@@ -225,7 +225,7 @@ Key rules that are easy to miss:
 - `DataOptions` - create once (`static readonly`), pass to every `DataConnection` constructor
 - `MappingSchema` - only create when custom mapping is needed; then create once at startup and attach to `DataOptions` via `.UseMappingSchema(...)`
 - `DataConnection` - create per operation (scoped); dispose after use
-- Temp tables, explicit transactions, session state - require `DataConnection`, not `DataContext`
+- Temp tables, explicit transactions, session state - need a connection kept open across commands: prefer `DataConnection` (a `DataContext` keeps temp tables and session state only with `SetKeepConnectionAlive(true)`)
 - Entity columns used with any LinqToDB API or option that generates a `CREATE TABLE` statement - specify `Length`, `Precision`, `Scale` explicitly for every provider-sensitive type (`string`, `decimal`, etc.).
   If the task does not state exact limits, **both steps are required - not optional**:
   1. choose a bounded value guided by field semantics;
@@ -276,7 +276,7 @@ They may not match this package version. Always use the bundled files below:
 | `docs/concurrency.md` | Optimistic concurrency for entity update/delete - `UpdateOptimistic`, `DeleteOptimistic`, `WhereKeyOptimistic`, `OptimisticLockPropertyAttribute` |
 | `docs/query-cte.md` | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
 | `docs/query-joins.md` | Fluent `InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin`, association-driven joins, join translation failures, `RightJoin`/`FullJoin`/`APPLY` provider limitations |
-| `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; requires `DataConnection` |
+| `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; session-scoped tables need a kept-open connection |
 | `docs/null-semantics.md` | Why generated SQL for a null comparison looks more complex than expected - `CompareNulls`, `Sql.AsNotNull`, `IsDistinctFrom`, `Sql.ToNullable`/`Sql.AsNullable` |
 | `docs/parameters.md` | `DataParameter` construction, output/input-output procedure parameters, and forcing a value to be a bound parameter vs a SQL literal - `Sql.Parameter`, `Sql.Constant`, `InlineParameters` |
 | `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and generated provider `*Hints` API entries |
