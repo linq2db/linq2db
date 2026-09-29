@@ -274,9 +274,9 @@ Use `Search anchors` lines as the primary discovery surface, then use `lib/<TFM>
 Missing from this compact section is not proof that an API or overload is absent. Search XML-doc before falling back to generic APIs.
 
 Generated from: `linq2db.xml`.
-XML members scanned: 5142. Included consumer LinqToDB members: 3881. API families: 2885.
-Excluded members: 1145 `LinqToDB.Internal.*`; 116 external/non-LinqToDB.
-Included members with AI metadata: 742. Included members without summary: 127.
+XML members scanned: 5434. Included consumer LinqToDB members: 3916. API families: 2915.
+Excluded members: 1402 `LinqToDB.Internal.*`; 116 external/non-LinqToDB.
+Included members with AI metadata: 742. Included members without summary: 130.
 
 ### LinqToDB.AnalyticFunctions.FunctionToken
 
@@ -1238,6 +1238,26 @@ Search anchors: UpdateOptimisticAsync, Update, Optimistic, Async.
 | `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticAsync``1(LinqToDB.IDataContext,``0,System.Threading.CancellationToken)` | Performs record update using optimistic lock strategy asynchronously. Entity should have column annotated with `LinqToDB.Mapping.OptimisticLockPropertyBaseAttribute`, otherwise regular update operation will be performed. |
 | `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticAsync``1(System.Linq.IQueryable{``0},``0,System.Threading.CancellationToken)` | Performs record update using optimistic lock strategy asynchronously. Entity should have column annotated with `LinqToDB.Mapping.OptimisticLockPropertyBaseAttribute`, otherwise regular update operation will be performed. |
 
+### LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh
+
+Kind: Method.
+Search anchors: UpdateOptimisticWithRefresh, Update, Optimistic, With, Refresh, OUTPUT, RETURNING, SELECT, SQL, UPDATE, INTO.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh``1(LinqToDB.IDataContext,``0)` | Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on `obj` with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up `SELECT` instead. That follow-up `SELECT` is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because `OUTPUT` without `INTO` is rejected there; that also rules out the database-trigger variant of `LinqToDB.Mapping.VersionBehavior.Auto`. |
+| `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh``1(System.Linq.IQueryable{``0},``0)` | Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on `obj` with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up `SELECT` instead. That follow-up `SELECT` is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because `OUTPUT` without `INTO` is rejected there; that also rules out the database-trigger variant of `LinqToDB.Mapping.VersionBehavior.Auto`. |
+
+### LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync
+
+Kind: Method.
+Search anchors: UpdateOptimisticWithRefreshAsync, Update, Optimistic, With, Refresh, Async, OUTPUT, RETURNING, SELECT, SQL, UPDATE, INTO.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync``1(LinqToDB.IDataContext,``0,System.Threading.CancellationToken)` | Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s) on `obj` with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up `SELECT` instead. That follow-up `SELECT` is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because `OUTPUT` without `INTO` is rejected there; that also rules out the database-trigger variant of `LinqToDB.Mapping.VersionBehavior.Auto`. |
+| `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync``1(System.Linq.IQueryable{``0},``0,System.Threading.CancellationToken)` | Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s) on `obj` with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up `SELECT` instead. That follow-up `SELECT` is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because `OUTPUT` without `INTO` is rejected there; that also rules out the database-trigger variant of `LinqToDB.Mapping.VersionBehavior.Auto`. |
+
 ### LinqToDB.Concurrency.ConcurrencyExtensions.WhereKeyOptimistic
 
 Kind: Method.
@@ -1611,7 +1631,7 @@ Search anchors: Constructor.
 
 | XML member | Summary |
 |---|---|
-| `M:LinqToDB.Data.BulkCopyOptions.#ctor(System.Nullable{System.Int32},System.Nullable{System.Int32},LinqToDB.Data.BulkCopyType,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String,System.String,System.String,System.String,LinqToDB.TableOptions,System.Int32,System.Action{LinqToDB.Data.BulkCopyRowsCopied},System.Boolean,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,LinqToDB.Data.ConflictAction)` | Defines behavior of `LinqToDB.Data.DataContextExtensions.BulkCopy` method. |
+| `M:LinqToDB.Data.BulkCopyOptions.#ctor(System.Nullable{System.Int32},System.Nullable{System.Int32},LinqToDB.Data.BulkCopyType,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String,System.String,System.String,System.String,LinqToDB.TableOptions,System.Int32,System.Action{LinqToDB.Data.BulkCopyRowsCopied},System.Boolean,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,LinqToDB.Data.ConflictAction,System.Nullable{System.Int32})` | Defines behavior of `LinqToDB.Data.DataContextExtensions.BulkCopy` method. |
 
 ### LinqToDB.Data.BulkCopyOptions.DatabaseName
 
@@ -1692,7 +1712,16 @@ Search anchors: MaxParametersForBatch, Max, Parameters, For, Batch.
 
 | XML member | Summary |
 |---|---|
-| `P:LinqToDB.Data.BulkCopyOptions.MaxParametersForBatch` | If set, will set the maximum parameters per batch statement. Also see `LinqToDB.Data.BulkCopyOptions.UseParameters`. |
+| `P:LinqToDB.Data.BulkCopyOptions.MaxParametersForBatch` | If set, will set the maximum parameters per batch statement. Also see `LinqToDB.Data.BulkCopyOptions.UseParameters`. Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped. |
+
+### LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch
+
+Kind: Property.
+Search anchors: MaxSqlLengthForBatch, Max, Sql, Length, For, Batch, SQL, SAP, HANA.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch` | If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When `null` (the default), the provider's own limit is used. Honored by the MultipleRows copy path — `LinqToDB.Data.BulkCopyType.MultipleRows`, and also `LinqToDB.Data.BulkCopyType.Default` / `LinqToDB.Data.BulkCopyType.ProviderSpecific` on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's `AlternativeBulkCopy.InsertInto` mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose `LinqToDB.Data.BulkCopyType.MultipleRows` mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at `LinqToDB.Data.BulkCopyOptions.MaxBatchSize` rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp. |
 
 ### LinqToDB.Data.BulkCopyOptions.NotifyAfter
 
@@ -5576,7 +5605,16 @@ Search anchors: UseBulkCopyMaxParametersForBatch, Use, Bulk, Copy, Max, Paramete
 
 | XML member | Summary |
 |---|---|
-| `M:LinqToDB.DataOptionsExtensions.UseBulkCopyMaxParametersForBatch(LinqToDB.DataOptions,System.Nullable{System.Int32})` | If set, will set the maximum parameters per batch statement. Also see `LinqToDB.DataOptionsExtensions.UseBulkCopyUseParameters`. |
+| `M:LinqToDB.DataOptionsExtensions.UseBulkCopyMaxParametersForBatch(LinqToDB.DataOptions,System.Nullable{System.Int32})` | If set, will set the maximum parameters per batch statement. Also see `LinqToDB.DataOptionsExtensions.UseBulkCopyUseParameters`. Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped. |
+
+### LinqToDB.DataOptionsExtensions.UseBulkCopyMaxSqlLengthForBatch
+
+Kind: Method.
+Search anchors: UseBulkCopyMaxSqlLengthForBatch, Use, Bulk, Copy, Max, Sql, Length, For, Batch, SQL, SAP, HANA.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.DataOptionsExtensions.UseBulkCopyMaxSqlLengthForBatch(LinqToDB.DataOptions,System.Nullable{System.Int32})` | If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When `null` (the default), the provider's own limit is used. Honored by the MultipleRows copy path — `LinqToDB.Data.BulkCopyType.MultipleRows`, and also `LinqToDB.Data.BulkCopyType.Default` / `LinqToDB.Data.BulkCopyType.ProviderSpecific` on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's `AlternativeBulkCopy.InsertInto` mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose `LinqToDB.Data.BulkCopyType.MultipleRows` mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at `LinqToDB.Data.BulkCopyOptions.MaxBatchSize` rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp. |
 
 ### LinqToDB.DataOptionsExtensions.UseBulkCopyNotifyAfter
 
@@ -6672,7 +6710,7 @@ Search anchors: WithMaxParametersForBatch, With, Max, Parameters, For, Batch.
 
 | XML member | Summary |
 |---|---|
-| `M:LinqToDB.DataOptionsExtensions.WithMaxParametersForBatch(LinqToDB.Data.BulkCopyOptions,System.Nullable{System.Int32})` | If set, will set the maximum parameters per batch statement. Also see `LinqToDB.DataOptionsExtensions.WithUseParameters`. |
+| `M:LinqToDB.DataOptionsExtensions.WithMaxParametersForBatch(LinqToDB.Data.BulkCopyOptions,System.Nullable{System.Int32})` | If set, will set the maximum parameters per batch statement. Also see `LinqToDB.DataOptionsExtensions.WithUseParameters`. Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped. |
 
 ### LinqToDB.DataOptionsExtensions.WithMaxRetryCount
 
@@ -6682,6 +6720,15 @@ Search anchors: WithMaxRetryCount, With, Max, Retry, Count.
 | XML member | Summary |
 |---|---|
 | `M:LinqToDB.DataOptionsExtensions.WithMaxRetryCount(LinqToDB.Data.RetryPolicy.RetryPolicyOptions,System.Int32)` | The number of retry attempts. Default value: `5`. |
+
+### LinqToDB.DataOptionsExtensions.WithMaxSqlLengthForBatch
+
+Kind: Method.
+Search anchors: WithMaxSqlLengthForBatch, With, Max, Sql, Length, For, Batch, SQL, SAP, HANA.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.DataOptionsExtensions.WithMaxSqlLengthForBatch(LinqToDB.Data.BulkCopyOptions,System.Nullable{System.Int32})` | If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When `null` (the default), the provider's own limit is used. Honored by the MultipleRows copy path — `LinqToDB.Data.BulkCopyType.MultipleRows`, and also `LinqToDB.Data.BulkCopyType.Default` / `LinqToDB.Data.BulkCopyType.ProviderSpecific` on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's `AlternativeBulkCopy.InsertInto` mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose `LinqToDB.Data.BulkCopyType.MultipleRows` mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at `LinqToDB.Data.BulkCopyOptions.MaxBatchSize` rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp. |
 
 ### LinqToDB.DataOptionsExtensions.WithNotifyAfter
 
@@ -9727,7 +9774,7 @@ Search anchors: AlternativeBulkCopy, Alternative, Bulk, Copy, INSERT.
 
 | XML member | Summary |
 |---|---|
-| `T:LinqToDB.DataProvider.Oracle.AlternativeBulkCopy` | Defines type of multi-row INSERT operation to generate for `LinqToDB.Data.BulkCopyType.RowByRow` bulk copy mode. |
+| `T:LinqToDB.DataProvider.Oracle.AlternativeBulkCopy` | Defines type of multi-row INSERT operation to generate for `LinqToDB.Data.BulkCopyType.MultipleRows` bulk copy mode. |
 
 ### LinqToDB.DataProvider.Oracle.AlternativeBulkCopy.InsertAll
 
@@ -9754,7 +9801,7 @@ Search anchors: InsertInto, Insert, Into, INSERT, INTO, VALUES.
 
 | XML member | Summary |
 |---|---|
-| `F:LinqToDB.DataProvider.Oracle.AlternativeBulkCopy.InsertInto` | This mode performs regular INSERT INTO query with array of values for each column. ` INSERT INTO target_table(/*columns*/) VALUES(:column1ArrayParameter,...,:columnXArrayParameter) ` |
+| `F:LinqToDB.DataProvider.Oracle.AlternativeBulkCopy.InsertInto` | This mode performs regular INSERT INTO query with array of values for each column. ` INSERT INTO target_table(/*columns*/) VALUES(:column1ArrayParameter,...,:columnXArrayParameter) ` Because the statement is a single fixed row template, this mode is bounded only by `LinqToDB.Data.BulkCopyOptions.MaxBatchSize` — it does not consult `LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch` or `LinqToDB.Data.BulkCopyOptions.MaxParametersForBatch`. |
 
 ### LinqToDB.DataProvider.Oracle.OracleHints.AllRowsHint
 
@@ -19934,6 +19981,42 @@ Search anchors: TranslationProviderFlags, Translation, Provider, Flags.
 |---|---|
 | `T:LinqToDB.Linq.Translation.TranslationProviderFlags` | Read-only, translation-relevant subset of the provider's `SqlProviderFlags`, exposed to member translators via `LinqToDB.Linq.Translation.ITranslationContext.ProviderFlags`. Only the flags member translators need are surfaced here, rather than the whole `SqlProviderFlags`. |
 
+### LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference
+
+Kind: Property.
+Search anchors: CanLowerIntervalDifference, Can, Lower, Interval, Difference.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference` | Whether an elapsed date difference can be lowered to a value. Answered by the provider's `SqlExpressionConvertVisitor`, which owns the lowering and documents the contract. |
+
+### LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart
+
+Kind: Property.
+Search anchors: CanLowerIntervalPart, Can, Lower, Interval, Part.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart` | Whether a member of an elapsed date difference can be lowered. Separate from `LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference` because a provider may have only this half. |
+
+### LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift
+
+Kind: Property.
+Search anchors: CanLowerIntervalShift, Can, Lower, Interval, Shift, NET.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift` | Whether a date shifted by an interval can be lowered. Read for a shift by a declared duration only: that amount is real and nothing later removes it, so a provider that cannot spend one says so while the expression is still being built and leaves a projection free to fall back to.NET. A shift by a computed difference is built regardless, because it may cancel against the difference it came from and ask the provider for nothing at all. |
+
+### LinqToDB.Linq.Translation.TranslationProviderFlags.CanMeasureDifferenceInTicks
+
+Kind: Property.
+Search anchors: CanMeasureDifferenceInTicks, Can, Measure, Difference, Ticks, NET, SQL.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanMeasureDifferenceInTicks` | Whether an elapsed date difference can become a tick count. Where it cannot, a total asked for in a unit finer than `LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution` has nowhere to come from, so the translator declines to build it and leaves the member to.NET rather than letting the SQL builder fail the whole query. A total is otherwise built: a coarser measurement quantises one without making it meaningless. |
+
 ### LinqToDB.Linq.Translation.TranslationProviderFlags.Constructor
 
 Kind: Method.
@@ -19941,6 +20024,7 @@ Search anchors: Constructor.
 
 | XML member | Summary |
 |---|---|
+| `M:LinqToDB.Linq.Translation.TranslationProviderFlags.#ctor(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Boolean)` | Initializes a new `LinqToDB.Linq.Translation.TranslationProviderFlags`. |
 | `M:LinqToDB.Linq.Translation.TranslationProviderFlags.#ctor(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering,System.Boolean)` | Initializes a new `LinqToDB.Linq.Translation.TranslationProviderFlags`. |
 
 ### LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering
@@ -19951,6 +20035,15 @@ Search anchors: DefaultNullsOrdering, Default, Nulls, Ordering, NULL, NULLS, FIR
 | XML member | Summary |
 |---|---|
 | `P:LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering` | The provider's natural NULL placement when no `NULLS FIRST` / `NULLS LAST` is specified. |
+
+### LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution
+
+Kind: Property.
+Search anchors: IntervalResolution, Interval, Resolution, NET.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution` | The finest unit the provider can resolve when measuring elapsed time. A component asked for in a finer unit is identically zero rather than merely imprecise, so the translator declines to build it and leaves the member to.NET. |
 
 ### LinqToDB.Linq.Translation.TranslationProviderFlags.IsNullsOrderingSupported
 
@@ -22879,6 +22972,15 @@ Search anchors: Constructor.
 |---|---|
 | `M:LinqToDB.Mapping.ColumnDescriptor.#ctor(LinqToDB.Mapping.MappingSchema,LinqToDB.Mapping.EntityDescriptor,LinqToDB.Mapping.ColumnAttribute,LinqToDB.Reflection.MemberAccessor,System.Boolean)` | Creates descriptor instance. |
 
+### LinqToDB.Mapping.ColumnDescriptor.CreateDurationConverter
+
+Kind: Method.
+Search anchors: CreateDurationConverter, Create, Duration, Converter.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Mapping.ColumnDescriptor.CreateDurationConverter(System.Type,LinqToDB.Mapping.DurationUnit)` | Builds the `System.TimeSpan` to integral conversion implied by a declared duration unit. |
+
 ### LinqToDB.Mapping.ColumnDescriptor.CreateFormat
 
 Kind: Property.
@@ -22905,6 +23007,15 @@ Search anchors: DbType, Type.
 | XML member | Summary |
 |---|---|
 | `P:LinqToDB.Mapping.ColumnDescriptor.DbType` | Gets the name of the database column type. |
+
+### LinqToDB.Mapping.ColumnDescriptor.DurationUnit
+
+Kind: Property.
+Search anchors: DurationUnit, Duration, Unit.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Mapping.ColumnDescriptor.DurationUnit` | Gets the unit in which this column stores a duration, or `null` when the column was not declared as a duration. See `LinqToDB.Mapping.DurationAttribute`. |
 
 ### LinqToDB.Mapping.ColumnDescriptor.EntityDescriptor
 
@@ -23341,6 +23452,114 @@ Search anchors: Value.
 | XML member | Summary |
 |---|---|
 | `P:LinqToDB.Mapping.DefaultValue`1.Value` | Gets or sets default value for specific type. |
+
+### LinqToDB.Mapping.DurationAttribute
+
+Kind: Type.
+Search anchors: DurationAttribute, Duration, Attribute.
+
+| XML member | Summary |
+|---|---|
+| `T:LinqToDB.Mapping.DurationAttribute` | Declares that a `System.TimeSpan` column stores a duration, and in which unit. |
+
+### LinqToDB.Mapping.DurationAttribute.Constructor
+
+Kind: Method.
+Search anchors: Constructor.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Mapping.DurationAttribute.#ctor(LinqToDB.Mapping.DurationUnit)` | Creates attribute instance. |
+
+### LinqToDB.Mapping.DurationAttribute.Unit
+
+Kind: Property.
+Search anchors: Unit.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Mapping.DurationAttribute.Unit` | Gets or sets the unit in which the duration is stored in the column. |
+
+### LinqToDB.Mapping.DurationUnit
+
+Kind: Type.
+Search anchors: DurationUnit, Duration, Unit.
+
+| XML member | Summary |
+|---|---|
+| `T:LinqToDB.Mapping.DurationUnit` | Unit in which a `System.TimeSpan` duration is stored in a database column. |
+
+### LinqToDB.Mapping.DurationUnit.Day
+
+Kind: Field.
+Search anchors: Day.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Day` | Days, always exactly 24 hours. |
+
+### LinqToDB.Mapping.DurationUnit.Hour
+
+Kind: Field.
+Search anchors: Hour.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Hour` | Hours. |
+
+### LinqToDB.Mapping.DurationUnit.Microsecond
+
+Kind: Field.
+Search anchors: Microsecond.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Microsecond` | Microseconds. |
+
+### LinqToDB.Mapping.DurationUnit.Millisecond
+
+Kind: Field.
+Search anchors: Millisecond.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Millisecond` | Milliseconds. |
+
+### LinqToDB.Mapping.DurationUnit.Minute
+
+Kind: Field.
+Search anchors: Minute.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Minute` | Minutes. |
+
+### LinqToDB.Mapping.DurationUnit.Nanosecond
+
+Kind: Field.
+Search anchors: Nanosecond.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Nanosecond` | Nanoseconds. Note that `System.TimeSpan` resolution is 100 nanoseconds, so stored values are always multiples of 100 and reading a finer value cannot be represented exactly. |
+
+### LinqToDB.Mapping.DurationUnit.Second
+
+Kind: Field.
+Search anchors: Second.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Second` | Seconds. |
+
+### LinqToDB.Mapping.DurationUnit.Tick
+
+Kind: Field.
+Search anchors: Tick.
+
+| XML member | Summary |
+|---|---|
+| `F:LinqToDB.Mapping.DurationUnit.Tick` | 100-nanosecond units, matching `System.TimeSpan.Ticks`. This is the only unit that can represent every `System.TimeSpan` value exactly. |
 
 ### LinqToDB.Mapping.DynamicColumnAccessorAttribute
 
@@ -25081,6 +25300,15 @@ Search anchors: HasDbType, Has, Type.
 | XML member | Summary |
 |---|---|
 | `M:LinqToDB.Mapping.PropertyMappingBuilder`2.HasDbType(System.String)` | Sets database type for current column. |
+
+### LinqToDB.Mapping.PropertyMappingBuilder.HasDuration
+
+Kind: Method.
+Search anchors: HasDuration, Has, Duration.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Mapping.PropertyMappingBuilder`2.HasDuration(LinqToDB.Mapping.DurationUnit)` | Declares that current column stores a duration, and in which unit. |
 
 ### LinqToDB.Mapping.PropertyMappingBuilder.HasLength
 
@@ -27075,6 +27303,15 @@ Search anchors: Options, LINQ.
 |---|---|
 | `P:LinqToDB.Remote.RemoteDataContextBase.Options` | Current DataContext LINQ options |
 
+### LinqToDB.Remote.RemoteDataContextBase.OwnsClient
+
+Kind: Property.
+Search anchors: OwnsClient, Owns, Client.
+
+| XML member | Summary |
+|---|---|
+| `P:LinqToDB.Remote.RemoteDataContextBase.OwnsClient` | Whether an instance returned by `LinqToDB.Remote.RemoteDataContextBase.GetClient` belongs to its caller, which disposes it when done with it. Override to return `false` when `LinqToDB.Remote.RemoteDataContextBase.GetClient` hands out an instance whose lifetime is managed elsewhere - a client shared by every query cannot be disposed after one of them. |
+
 ### LinqToDB.Remote.RemoteDataContextBase.RemoveInterceptor
 
 Kind: Method.
@@ -28154,6 +28391,15 @@ Search anchors: Expression, SQL.
 |---|---|
 | `P:LinqToDB.Sql.ExpressionAttribute.Expression` | The expression to be used in building the SQL. |
 
+### LinqToDB.Sql.ExpressionAttribute.GetExpression
+
+Kind: Method.
+Search anchors: GetExpression, Get, Expression, SQL.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Sql.ExpressionAttribute.GetExpression``1(``0,LinqToDB.IDataContext,LinqToDB.Expressions.IExpressionEvaluator,LinqToDB.Internal.SqlQuery.SelectQuery,System.Linq.Expressions.Expression,LinqToDB.Sql.ExpressionAttribute.ConvertFunc{``0})` | Builds SQL for the extension member or method call. |
+
 ### LinqToDB.Sql.ExpressionAttribute.IgnoreGenericParameters
 
 Kind: Property.
@@ -28261,6 +28507,15 @@ Search anchors: ChainPrecedence, Chain, Precedence.
 | XML member | Summary |
 |---|---|
 | `P:LinqToDB.Sql.ExtensionAttribute.ChainPrecedence` | Defines in which order process extensions. Items will be ordered Descending. |
+
+### LinqToDB.Sql.ExtensionAttribute.GetExpression
+
+Kind: Method.
+Search anchors: GetExpression, Get, Expression.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Sql.ExtensionAttribute.GetExpression``1(``0,LinqToDB.IDataContext,LinqToDB.Expressions.IExpressionEvaluator,LinqToDB.Internal.SqlQuery.SelectQuery,System.Linq.Expressions.Expression,LinqToDB.Sql.ExpressionAttribute.ConvertFunc{``0})` |  |
 
 ### LinqToDB.Sql.FunctionAttribute
 
@@ -28400,6 +28655,26 @@ Search anchors: Undefined.
 | XML member | Summary |
 |---|---|
 | `F:LinqToDB.Sql.IsNullableType.Undefined` | Nullability not specified, and other sources (like `LinqToDB.Sql.ExpressionAttribute.CanBeNull` or return type) will be used to identify nullability. |
+
+### LinqToDB.Sql.ISqlExtensionBuilder.GetExpression
+
+Kind: Method.
+Search anchors: GetExpression, Get, Expression, SQL.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Sql.ISqlExtensionBuilder.GetExpression(System.Int32,System.Boolean,System.Nullable{System.Boolean})` | Translates extension method argument to SQL. |
+| `M:LinqToDB.Sql.ISqlExtensionBuilder.GetExpression(System.String,System.Boolean,System.Nullable{System.Boolean})` | Translates extension method argument to SQL. |
+
+### LinqToDB.Sql.ISqlExtensionBuilder.GetValue
+
+Kind: Method.
+Search anchors: GetValue, Get, Value.
+
+| XML member | Summary |
+|---|---|
+| `M:LinqToDB.Sql.ISqlExtensionBuilder.GetValue``1(System.Int32)` |  |
+| `M:LinqToDB.Sql.ISqlExtensionBuilder.GetValue``1(System.String)` |  |
 
 ### LinqToDB.Sql.NamedCollationBuilder.CollationValidationRegex
 
