@@ -1012,6 +1012,40 @@ namespace Tests.Linq
 			row.Backward.ShouldBe(late - (finished - started));
 		}
 
+		/// <summary>
+		/// A shift by a computed difference of three thousand years, in both directions.
+		/// </summary>
+		/// <remarks>
+		/// Far past what an amount of ticks can be widened by before it overflows a fixed-point type of eighteen
+		/// digits. YDB is not asked: its timestamp covers 1970 to 2105 only. The dates stay after 1582, before which
+		/// Oracle counts in the Julian calendar and .NET does not.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftSpansMillennia(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllFirebird, TestProvName.AllOracle)] string context)
+		{
+			var started  = new DateTime(1600, 1, 1);
+			var finished = new DateTime(4700, 1, 1, 12, 0, 0);
+			var early    = new DateTime(1650, 1, 1);
+			var late     = new DateTime(8000, 1, 1);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			var row = t
+				.Select(r => new
+				{
+					Forward  = Sql.AsSql(early + (r.FinishedOn - r.StartedOn)),
+					Backward = Sql.AsSql(late  - (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			row.Forward.ShouldBe(early + (finished - started));
+			row.Backward.ShouldBe(late - (finished - started));
+		}
+
 		[Table]
 		sealed class ShiftTargetRow
 		{
@@ -1091,6 +1125,14 @@ namespace Tests.Linq
 				.Select(r => Sql.AsSql(r.Day + (r.FinishedOn - r.StartedOn)))
 				.Single()
 				.ShouldBe(day + amount);
+
+			// Compared, the shifted value has to keep the time as well: read back as a date on either side, it
+			// equals the date it started from and the row is dropped.
+			t
+				.Where(r => r.Day + (r.FinishedOn - r.StartedOn) > r.Day)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
 		}
 
 		/// <summary>

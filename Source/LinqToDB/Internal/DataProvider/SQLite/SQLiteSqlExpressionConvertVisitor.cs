@@ -89,8 +89,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			var days          = Factory.Multiply(doubleType, milliseconds, 1.0 / 86_400_000.0);
 			var shiftedJulian = Factory.Add(doubleType, JulianDay(element.Temporal), days);
 
-			return Factory.Function(Factory.GetDbDataType(element.Temporal), "Strftime",
-				Factory.Value(stringType, "%Y-%m-%d %H:%M:%f"), shiftedJulian);
+			// The result carries a time of day even when the date it started from did not, so it is not typed as a
+			// date: a comparison would read both sides through Date() and drop the time the shift added.
+			var resultType = Factory.GetDbDataType(element.Temporal);
+
+			if (resultType.DataType == DataType.Date)
+				resultType = resultType.WithDataType(DataType.DateTime);
+
+			return Factory.Function(resultType, "Strftime", Factory.Value(stringType, "%Y-%m-%d %H:%M:%f"), shiftedJulian);
 		}
 
 		ISqlExpression JulianDay(ISqlExpression date)

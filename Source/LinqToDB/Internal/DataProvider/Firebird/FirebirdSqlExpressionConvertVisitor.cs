@@ -54,10 +54,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		/// Shifts through <c>DATEADD(millisecond, amount, date)</c>.
 		/// </summary>
 		/// <remarks>
-		/// From 3 on the amount keeps a tenth of a millisecond, what a <c>TIMESTAMP</c> stores: the ticks are divided
-		/// as <c>decimal(18,1)</c>, the type <see cref="ElapsedTicks"/> counts in, since an integer division would
-		/// drop the fraction. 2.5 measures whole milliseconds only (<see cref="IntervalResolution"/>), and its
-		/// amount is divided as an integer.
+		/// From 3 on the amount keeps a tenth of a millisecond, what a <c>TIMESTAMP</c> stores, as a
+		/// <c>decimal(18,1)</c> - the type <see cref="ElapsedTicks"/> counts in - since an integer division would drop
+		/// the fraction. The ticks are brought down to whole tenths before the cast rather than after it: cast as they
+		/// are, a tick count of more than about 2,900 years overflows the eighteen digits once the decimal place is
+		/// added. 2.5 measures whole milliseconds only (<see cref="IntervalResolution"/>), and its amount is divided
+		/// as an integer.
 		/// <para>
 		/// A <c>DATE</c> is cast to <c>TIMESTAMP</c> first: it has no time of day, and shifting it by milliseconds
 		/// keeps none.
@@ -71,7 +73,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
 			var milliseconds = IntervalResolution == SqlIntervalUnit.Millisecond
 				? Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond)
-				: Factory.Div(tenthsType, Factory.Cast(ticks, tenthsType, true), TimeSpan.TicksPerMillisecond);
+				: Factory.Div(tenthsType,
+					Factory.Cast(Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond / 10), tenthsType, true),
+					10);
 
 			var temporal     = element.Temporal;
 			var temporalType = Factory.GetDbDataType(temporal);
