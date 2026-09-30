@@ -228,6 +228,10 @@ namespace Tests.Linq
 		[Test]
 		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
+			// Firebird and YDB, among others, write the client's clock into the statement as a literal, so no two
+			// runs - and not the direct and the remote one - produce the same SQL.
+			using var noBaseline = new DisableBaseline("Current datetime parameters used");
+
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Issue5777Data);
 
