@@ -214,6 +214,44 @@ namespace Tests.Linq
 		}
 #endif
 
+		/// <summary>
+		/// A difference measured from a fixed date that reaches the query as a parameter - a variable or an
+		/// argument - on either side of the subtraction.
+		/// </summary>
+		/// <remarks>
+		/// A filter and an ordering have nowhere to fall back to, so an operand refused for being a parameter
+		/// fails them outright rather than moving the work to .NET.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameter([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = new DateTime(2026, 1, 1, 10, 0, 0), FinishedOn = new DateTime(2026, 1, 5,  0, 0, 0) });
+			db.Insert(new EventRow { Id = 2, StartedOn = new DateTime(2026, 1, 3,  0, 0, 0), FinishedOn = new DateTime(2026, 1, 3, 20, 0, 0) });
+
+			t.Where(r => (asOf - r.StartedOn).TotalHours > 24).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.FinishedOn - asOf).TotalHours > 24).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (asOf - r.StartedOn).TotalMinutes).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays = Sql.AsSql((asOf - r.StartedOn).TotalDays),
+					Hours     = Sql.AsSql((asOf - r.StartedOn).Hours),
+				})
+				.Single();
+
+			var expected = asOf - new DateTime(2026, 1, 1, 10, 0, 0);
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.Hours.ShouldBe(expected.Hours);
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceComponentsMatchClr(

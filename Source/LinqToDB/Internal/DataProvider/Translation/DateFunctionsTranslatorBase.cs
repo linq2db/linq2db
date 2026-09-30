@@ -1213,11 +1213,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		SqlIntervalDifferenceExpression? MakeDateDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
-			var left = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags);
+			// Parameters are taken, as for a shift: measuring from a fixed date - a variable, an argument - is the
+			// ordinary case, and skipping it leaves the member with nothing to lower, so a filter or an ordering on
+			// it is refused outright.
+			var left = TranslateNoRequiredExpression(translationContext, binaryExpression.Left, translationFlags, skipIfParameter: false);
 			if (left == null)
 				return null;
 
-			var right = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags);
+			var right = TranslateNoRequiredExpression(translationContext, binaryExpression.Right, translationFlags, skipIfParameter: false);
 			if (right == null)
 				return null;
 
