@@ -982,6 +982,35 @@ namespace Tests.Linq
 			row.Hours.ShouldBe(expected.Hours);
 		}
 
+		/// <summary>
+		/// A member of a difference with a nullable operand, read through <c>.Value</c> or a cast back to
+		/// <see cref="TimeSpan"/>, answers wherever the member of a non-nullable difference does.
+		/// </summary>
+		/// <remarks>
+		/// The subtraction is lifted to a nullable <see cref="TimeSpan"/>, so the member is taken from the value
+		/// access rather than from the subtraction itself. Access lowers a member of a difference but not the bare
+		/// difference, so recognising the subtraction under the access is its only route to the member.
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5988")]
+		public void Issue5988_MemberThroughNullableValue([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Issue5777Data);
+
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => ((TimeSpan)(r.ClosedOnNullable - r.OpenedOn)!).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			var totalHours = t
+				.Where(r => r.Id == 1)
+				.Select(r => Sql.AsSql((r.ClosedOnNullable - r.OpenedOn)!.Value.TotalHours))
+				.Single();
+
+			var expected = Issue5777Data[0].ClosedOn - Issue5777Data[0].OpenedOn;
+
+			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+		}
+
 		[Table]
 		sealed class Issue5777SqlServerRow
 		{

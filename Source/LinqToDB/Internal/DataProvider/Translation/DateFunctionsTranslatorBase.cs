@@ -1200,8 +1200,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		/// <summary>
 		/// The expression as a subtraction of two date/time values of the same type, or <see langword="null"/>.
 		/// </summary>
+		/// <remarks>
+		/// A subtraction with a nullable operand is lifted to <see cref="Nullable{T}"/> of <see cref="TimeSpan"/>, and
+		/// a member of it is read through <c>.Value</c> or a cast back to <see cref="TimeSpan"/>. Either is looked
+		/// through: it is the same difference, and a provider that lowers only a member of one has no other route to
+		/// it.
+		/// </remarks>
 		static BinaryExpression? AsDateDifference(Expression? expression)
 		{
+			if (expression is MemberExpression { Expression: { } lifted } valueAccess && valueAccess.Member.IsNullableValueMember())
+				expression = lifted;
+			else if (expression is UnaryExpression { NodeType: ExpressionType.Convert, Operand: var operand } convert && operand.Type.IsNullableType && operand.Type.ToUnderlying() == convert.Type)
+				expression = operand;
+
 			if (expression is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction)
 				return null;
 
