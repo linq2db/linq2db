@@ -138,9 +138,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 						return null;
 				}
 
-				var resultExpression = factory.Function(dateType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);
-
-				return resultExpression;
+				return SQLiteDateTimeHelper.ShiftDate(factory, dateType, dateTimeExpression, dateExpr);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(
