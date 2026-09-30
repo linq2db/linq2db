@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Text;
 
 using LinqToDB;
@@ -16,6 +17,7 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
+using LinqToDB.Remote;
 
 using NUnit.Framework;
 
@@ -1027,6 +1029,78 @@ namespace Tests.Linq
 		{
 			public PassingVisitor(VisitMode visitMode) : base(visitMode)
 			{
+			}
+		}
+
+		// A remote query carries the default through the serializer unchanged: the column's type, and the value of its own type.
+		[Test]
+		public void DefaultSurvivesRemoteSerialization()
+		{
+			// The serializer is internal and the test assembly sees no internals, so it is reached by reflection.
+			var assembly            = typeof(DataOptions).Assembly;
+			var serializer          = assembly.GetType("LinqToDB.Internal.Remote.LinqServiceSerializer", throwOnError: true)!;
+			var serializationSchema = (MappingSchema)assembly.GetType("LinqToDB.Internal.Remote.SerializationMappingSchema", throwOnError: true)!.GetField("Instance")!.GetValue(null)!;
+			var serialize           = serializer.GetMethod("Serialize",   [typeof(MappingSchema), typeof(SqlStatement), typeof(IReadOnlyParameterValues), typeof(IReadOnlyCollection<string>), typeof(DataOptions)])!;
+			var deserialize         = serializer.GetMethod("Deserialize", [typeof(MappingSchema), typeof(MappingSchema), typeof(DataOptions), typeof(string)])!;
+
+			var defaults = new List<SqlDefaultValueExpression>
+			{
+				new(new DbDataType(typeof(bool)),                                         false),
+				new(new DbDataType(typeof(byte)),                                         (byte)0),
+				new(new DbDataType(typeof(sbyte)),                                        (sbyte)0),
+				new(new DbDataType(typeof(short)),                                        (short)0),
+				new(new DbDataType(typeof(ushort)),                                       (ushort)0),
+				new(new DbDataType(typeof(int), DataType.Int32, "int"),                   0),
+				new(new DbDataType(typeof(uint)),                                         0u),
+				new(new DbDataType(typeof(long)),                                         0L),
+				new(new DbDataType(typeof(ulong)),                                        0UL),
+				new(new DbDataType(typeof(float)),                                        0f),
+				new(new DbDataType(typeof(double)),                                       0d),
+				new(new DbDataType(typeof(decimal), DataType.Decimal, null, null, 18, 4), 0m),
+				new(new DbDataType(typeof(decimal)),                                      1.25m),
+				new(new DbDataType(typeof(DateTime), DataType.DateTime),                  DateTime.MinValue),
+				new(new DbDataType(typeof(DateTime), DataType.DateTime2),                 DateTime.MinValue),
+				new(new DbDataType(typeof(DateTime), DataType.Date),                      new DateTime(2020, 5, 6, 7, 8, 9, DateTimeKind.Utc)),
+				new(new DbDataType(typeof(DateTimeOffset), DataType.DateTimeOffset),      DateTimeOffset.MinValue),
+				new(new DbDataType(typeof(DateTimeOffset)),                               new DateTimeOffset(2020, 5, 6, 7, 8, 9, TimeSpan.FromHours(2))),
+				new(new DbDataType(typeof(TimeSpan)),                                     TimeSpan.Zero),
+				new(new DbDataType(typeof(Guid)),                                         Guid.Empty),
+				new(new DbDataType(typeof(BigInteger)),                                   BigInteger.Zero),
+#if SUPPORTS_DATEONLY
+				new(new DbDataType(typeof(DateOnly), DataType.Date),                      DateOnly.MinValue),
+				new(new DbDataType(typeof(TimeOnly), DataType.Time),                      TimeOnly.MinValue),
+#endif
+			};
+
+			var query = new SelectQuery();
+
+			foreach (var defaultValue in defaults)
+			{
+				query.Select.AddNew(new SqlCoalesceExpression(new SqlValue(defaultValue.Type, null), defaultValue));
+			}
+
+			var dataOptions = new DataOptions();
+			var text        = (string)serialize.Invoke(null, [serializationSchema, new SqlSelectStatement(query), null, null, dataOptions])!;
+			var statement   = ((LinqServiceQuery)deserialize.Invoke(null, [serializationSchema, MappingSchema.Default, dataOptions, text])!).Statement;
+			var columns     = statement.SelectQuery!.Select.Columns;
+
+			columns.Count.ShouldBe(defaults.Count);
+
+			for (var i = 0; i < defaults.Count; i++)
+			{
+				var expected = defaults[i];
+				var actual   = ((SqlCoalesceExpression)columns[i].Expression).Expressions[1].ShouldBeOfType<SqlDefaultValueExpression>();
+
+				actual.Type.ShouldBe(expected.Type);
+				actual.Value.ShouldNotBeNull().GetType().ShouldBe(expected.Value!.GetType());
+				actual.Value.ShouldBe(expected.Value);
+
+				// Equality ignores a DateTime's kind and a DateTimeOffset's offset.
+				if (expected.Value is DateTime dateTime)
+					((DateTime)actual.Value).Kind.ShouldBe(dateTime.Kind);
+
+				if (expected.Value is DateTimeOffset dateTimeOffset)
+					((DateTimeOffset)actual.Value).Offset.ShouldBe(dateTimeOffset.Offset);
 			}
 		}
 
