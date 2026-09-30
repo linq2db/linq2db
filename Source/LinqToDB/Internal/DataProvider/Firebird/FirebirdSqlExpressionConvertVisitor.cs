@@ -46,22 +46,43 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		/// <inheritdoc />
 		/// <remarks>
 		/// Lowered below without going through <c>FinestDateUnit</c>: <c>DATEADD</c> takes a millisecond amount
-		/// directly, the same resolution <see cref="ElapsedTicks"/> already measures a difference at.
+		/// directly.
 		/// </remarks>
 		public override bool CanLowerIntervalShift => true;
 
 		/// <summary>
 		/// Shifts through <c>DATEADD(millisecond, amount, date)</c>.
 		/// </summary>
+		/// <remarks>
+		/// From 3 on the amount keeps a tenth of a millisecond, what a <c>TIMESTAMP</c> stores: the ticks are divided
+		/// as <c>decimal(18,1)</c>, the type <see cref="ElapsedTicks"/> counts in, since an integer division would
+		/// drop the fraction. 2.5 measures whole milliseconds only (<see cref="IntervalResolution"/>), and its
+		/// amount is divided as an integer.
+		/// <para>
+		/// A <c>DATE</c> is cast to <c>TIMESTAMP</c> first: it has no time of day, and shifting it by milliseconds
+		/// keeps none.
+		/// </para>
+		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var tenthsType = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
 
 			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
-			var milliseconds = Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond);
+			var milliseconds = IntervalResolution == SqlIntervalUnit.Millisecond
+				? Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond)
+				: Factory.Div(tenthsType, Factory.Cast(ticks, tenthsType, true), TimeSpan.TicksPerMillisecond);
 
-			return Factory.Function(Factory.GetDbDataType(element.Temporal), "DateAdd",
-				Factory.Fragment("millisecond"), milliseconds, element.Temporal);
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.DataType == DataType.Date)
+			{
+				temporalType = temporalType.WithDataType(DataType.DateTime);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			return Factory.Function(temporalType, "DateAdd", Factory.Fragment("millisecond"), milliseconds, temporal);
 		}
 
 		/// <summary>

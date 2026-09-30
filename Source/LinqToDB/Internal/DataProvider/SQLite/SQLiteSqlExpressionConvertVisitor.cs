@@ -68,16 +68,25 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		/// difference/part node - either way it is spent as a number of ticks here, and the recursive <c>Visit</c>
 		/// this method's result goes through lowers whatever of that remains, exactly as <see cref="ElapsedTicks"/>
 		/// does for the read direction.
+		/// <para>
+		/// A <see cref="DateTimeOffset"/> is not shifted. <c>julianday</c> reads it as UTC and <c>strftime</c> writes
+		/// the result back with no offset, which one SQLite provider reads as local time and the other cannot read
+		/// at all, so it is left to be refused by name.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
+			if (Factory.GetDbDataType(element.Temporal).SystemType.ToUnderlying() == typeof(DateTimeOffset))
+				return null;
+
 			var doubleType = Factory.GetDbDataType(typeof(double));
 			var longType   = Factory.GetDbDataType(typeof(long));
 			var stringType = Factory.GetDbDataType(typeof(string));
 
-			var ticks = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
-			var milliseconds = Factory.Function(doubleType, "Round", Factory.Multiply(doubleType, Factory.Cast(ticks, doubleType, true), 1.0 / TimeSpan.TicksPerMillisecond));
-			var days = Factory.Multiply(doubleType, milliseconds, 1.0 / 86_400_000.0);
+			var ticks         = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var milliseconds  = Factory.Function(doubleType, "Round",
+				Factory.Multiply(doubleType, Factory.Cast(ticks, doubleType, true), 1.0 / TimeSpan.TicksPerMillisecond));
+			var days          = Factory.Multiply(doubleType, milliseconds, 1.0 / 86_400_000.0);
 			var shiftedJulian = Factory.Add(doubleType, JulianDay(element.Temporal), days);
 
 			return Factory.Function(Factory.GetDbDataType(element.Temporal), "Strftime",

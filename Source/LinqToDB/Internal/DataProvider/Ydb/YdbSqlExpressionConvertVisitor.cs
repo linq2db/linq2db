@@ -49,17 +49,34 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// Shifts by building a YQL <c>Interval</c> from the tick count (microsecond resolution - YDB's own) and
 		/// adding it natively.
 		/// </summary>
+		/// <remarks>
+		/// A <c>Date</c> or a <c>Datetime</c> is cast to <c>Timestamp</c> first: adding an interval keeps the type of
+		/// the date, and those two hold no time of day and no fraction of a second respectively.
+		/// <para>
+		/// The sum is optional in YQL, even over two values that cannot be absent, and an optional cannot be written
+		/// to a column that is not nullable. So it is cast to its own type, which the builder unwraps wherever the
+		/// value cannot be null.
+		/// </para>
+		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
 			var longType     = Factory.GetDbDataType(typeof(long));
 			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
-			var temporalType = Factory.GetDbDataType(element.Temporal);
 
-			var ticks         = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
-			var microseconds  = Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond / 1000);
-			var interval      = Factory.Function(intervalType, "DateTime::IntervalFromMicroseconds", microseconds);
+			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var microseconds = Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond / 1000);
+			var interval     = Factory.Function(intervalType, "DateTime::IntervalFromMicroseconds", microseconds);
 
-			return Factory.Add(temporalType, element.Temporal, interval);
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.DataType is DataType.Date or DataType.DateTime)
+			{
+				temporalType = temporalType.WithDataType(DataType.DateTime2);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			return Factory.Cast(Factory.Add(temporalType, temporal, interval), temporalType, true);
 		}
 
 		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB

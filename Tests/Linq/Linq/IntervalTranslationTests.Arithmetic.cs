@@ -937,6 +937,190 @@ namespace Tests.Linq
 				.ShouldBe([1]);
 		}
 
+		/// <summary>
+		/// The providers whose own lowering spends a computed difference on a date, pinned by the cases below.
+		/// </summary>
+		const string ComputedShiftProviders =
+			TestProvName.AllSQLite   + "," +
+			TestProvName.AllFirebird + "," +
+			TestProvName.AllOracle   + "," +
+			TestProvName.AllYdb;
+
+		/// <summary>
+		/// A shift by a computed difference keeps an amount below a millisecond wherever the storage holds one.
+		/// </summary>
+		/// <remarks>
+		/// Firebird stores a tenth of a millisecond, Oracle and YDB a microsecond, so a millisecond and a half has to
+		/// arrive intact. Truncated to a whole millisecond it lands on the bound of the predicate and drops the row.
+		/// SQLite and Firebird 2.5 measure the difference in whole milliseconds to begin with and are not asked.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftKeepsASubMillisecondAmount(
+			[IncludeDataSources(TestProvName.AllFirebird3Plus, TestProvName.AllOracle, TestProvName.AllYdb)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = TimeSpan.FromTicks(15_000);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started + amount });
+
+			t
+				.Select(r => Sql.AsSql(ShiftOrigin + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(ShiftOrigin + amount);
+
+			t
+				.Where(r => ShiftOrigin + (r.FinishedOn - r.StartedOn) > ShiftOrigin.AddMilliseconds(1))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		/// <summary>
+		/// A shift by a computed difference longer than 2<sup>31</sup> seconds, a little over 68 years, in both
+		/// directions.
+		/// </summary>
+		/// <remarks>
+		/// A second count of that size no longer fits a 32-bit amount, which is what an interval built from seconds
+		/// alone runs into. The dates stay inside every provider's range: YDB's timestamp starts in 1970 and ends
+		/// before 2106.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftSpansMoreThanSixtyEightYears([IncludeDataSources(ComputedShiftProviders)] string context)
+		{
+			var started  = new DateTime(1980, 1, 1,  0, 0, 0);
+			var finished = new DateTime(2060, 1, 1, 12, 0, 0);
+			var early    = new DateTime(1971, 1, 1);
+			var late     = new DateTime(2100, 1, 1);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			var row = t
+				.Select(r => new
+				{
+					Forward  = Sql.AsSql(early + (r.FinishedOn - r.StartedOn)),
+					Backward = Sql.AsSql(late  - (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			row.Forward.ShouldBe(early + (finished - started));
+			row.Backward.ShouldBe(late - (finished - started));
+		}
+
+		[Table]
+		sealed class ShiftTargetRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime Due        { get; set; }
+		}
+
+		/// <summary>
+		/// A shift by a computed difference written to a column that cannot be null.
+		/// </summary>
+		/// <remarks>
+		/// YQL types the sum of a timestamp and an interval as optional whatever its operands, and refuses to write an
+		/// optional to a column declared not null, so the value has to arrive in the column's own type.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftIsWrittenByAnUpdate([IncludeDataSources(ComputedShiftProviders)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ShiftTargetRow>();
+
+			db.Insert(new ShiftTargetRow { Id = 1, StartedOn = started, FinishedOn = started + amount, Due = started });
+
+			t
+				.Where(r => r.Id == 1)
+				.Set(r => r.Due, r => ShiftOrigin + (r.FinishedOn - r.StartedOn))
+				.Update();
+
+			t.Select(r => r.Due).Single().ShouldBe(ShiftOrigin + amount);
+		}
+
+		[Table]
+		sealed class DatedEventRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			public DateTime Day { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A date column shifted by a computed difference keeps the time of day the difference adds.
+		/// </summary>
+		/// <remarks>
+		/// A date type has no time part, so a shift that stays in it drops the hours - and, where it keeps seconds
+		/// but no fraction of one, the milliseconds. The amount carries both.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfADateColumnKeepsTheTime([IncludeDataSources(ComputedShiftProviders)] string context)
+		{
+			var day     = new DateTime(2026, 3, 1);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<DatedEventRow>();
+
+			db.Insert(new DatedEventRow { Id = 1, Day = day, StartedOn = started, FinishedOn = started + amount });
+
+			t
+				.Select(r => Sql.AsSql(r.Day + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(day + amount);
+		}
+
+		/// <summary>
+		/// A <see cref="DateTimeOffset"/> shifted by a computed difference, answered as the same instant or refused.
+		/// </summary>
+		/// <remarks>
+		/// SQLite refuses: its date functions work in UTC and write the result back without an offset, which one of
+		/// its providers reads as local time and the other cannot read at all. Both offsets are the same here, so the
+		/// difference itself is not what is being asked. Firebird is not asked, for the reason
+		/// <see cref="SupportsDateTimeOffsetContextAttribute"/> gives: its client refuses the offset on write.
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
+		public void AComputedShiftOfADateTimeOffset(
+			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllYdb)] string context)
+		{
+			var started  = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.FromHours(2));
+			var finished = started + new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ZonedEventRow>();
+
+			db.Insert(new ZonedEventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			t
+				.Select(r => Sql.AsSql(r.FinishedOn + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(finished + (finished - started));
+		}
+
 		[Test]
 		public void ArithmeticHappensOnTheServer([DataSources] string context)
 		{
