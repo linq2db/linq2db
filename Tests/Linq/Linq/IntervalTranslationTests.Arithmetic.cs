@@ -320,8 +320,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void ADurationCombinesWithAPlainValue([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 			var extra  = TimeSpan.FromMinutes(5);
@@ -368,8 +366,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders)]
 		public void ADateShiftsByAComputedDuration([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
@@ -408,8 +404,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(ShiftRefusedWhileBuildingProviders + "," + UnsupportedDifferenceProviders)]
 		public void ADateShiftsByAComputedDurationInSql([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
@@ -472,11 +466,6 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void DurationsInDifferentUnitsCombineAsDurations([DataSources] string context, [Values] bool inSql)
 		{
-			// Direct and remote fold the operand casts differently - remote folds them into the enclosing cast,
-			// direct keeps them - so the two traces differ by cast placement alone while denoting the same
-			// arithmetic. The values are asserted in both contexts, which is what this case is here to hold.
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var value = TimeSpan.FromMinutes(90);
 
 			using var db = GetDataContext(context, BuildSchema());
@@ -584,8 +573,6 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Operation)]
 		public void ADifferenceAndADeclaredDurationCombineAsDurations([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
@@ -626,8 +613,6 @@ namespace Tests.Linq
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
 		public void ADifferenceAndADeclaredDurationCombineInSql([DataSources(false)] string context)
 		{
-			using var noBaseline = new DisableBaseline("Direct and remote differ by redundant cast placement only.");
-
 			var taken  = TimeSpan.FromHours(1);
 			var budget = TimeSpan.FromHours(3);
 
