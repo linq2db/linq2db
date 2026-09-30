@@ -44,11 +44,22 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			var longType = Factory.GetDbDataType(typeof(long));
 			var intType  = Factory.GetDbDataType(typeof(int));
 
+			// DAYS, MIDNIGHT_SECONDS and MICROSECOND are overloaded over several date/time types, and a bare
+			// parameter marker gives DB2 nothing to choose between them by: it refuses the call as ambiguous
+			// (SQL0245N). A column is typed by its declaration, so only a parameter is cast.
+			ISqlExpression Typed(ISqlExpression operand)
+			{
+				if (operand is SqlParameter)
+					return Factory.Cast(operand, Factory.GetDbDataType(typeof(DateTime)), true);
+
+				return operand;
+			}
+
 			ISqlExpression FieldDifference(string function)
 			{
 				return Factory.Sub(longType,
-					Factory.Cast(Factory.Function(intType, function, element.End),   longType, true),
-					Factory.Cast(Factory.Function(intType, function, element.Start), longType, true));
+					Factory.Cast(Factory.Function(intType, function, Typed(element.End)),   longType, true),
+					Factory.Cast(Factory.Function(intType, function, Typed(element.Start)), longType, true));
 			}
 
 			return Factory.Add(longType, Factory.Multiply(longType, FieldDifference("Days"), TimeSpan.TicksPerDay),
