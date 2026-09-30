@@ -194,6 +194,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// to name, and a cast to a floating type renders as nothing here.
 		/// </para>
 		/// <para>
+		/// An operand that can be <see langword="null"/> is replaced by a fixed date before it reaches either function,
+		/// and the result is made <see langword="null"/> from the operands themselves. Access refuses a null that
+		/// <c>DateAdd</c> or <c>DateDiff</c> derived with "Data type mismatch in criteria expression" as soon as it
+		/// is passed on, even to <c>IS NULL</c>, while a null read from a column passes.
+		/// </para>
+		/// <para>
 		/// This provider is the only one that gets here - it is the only override of
 		/// <see cref="SqlExpressionConvertVisitor.ElapsedTicksResolveMembers"/> to <see langword="false"/>, and
 		/// everywhere else a member is taken from the tick count instead.
@@ -216,15 +222,46 @@ namespace LinqToDB.Internal.DataProvider.Access
 					longType, true);
 			}
 
-			var days   = Factory.Function(intType, DateDiffFunction, Factory.Value("d"), start, end);
-			var anchor = Factory.Function(Factory.GetDbDataType(start), DateAddFunction, Factory.Value("d"), days, start);
+			var dateType      = Factory.GetDbDataType(start);
+			var startNullable = start.CanBeNullable(NullabilityContext);
+			var endNullable   = end.CanBeNullable(NullabilityContext);
 
-			var remainder  = Factory.Function(intType, DateDiffFunction, Factory.Value(part), anchor, end);
+			// Any date would do: a result from it is discarded below.
+			ISqlExpression NotNull(ISqlExpression operand, bool nullable)
+			{
+				if (!nullable)
+					return operand;
+
+				return Factory.Condition(Factory.IsNullPredicate(operand),
+					Factory.Value(dateType, new DateTime(1899, 12, 30)),
+					operand);
+			}
+
+			var fromDate = NotNull(start, startNullable);
+			var toDate   = NotNull(end,   endNullable);
+
+			var days   = Factory.Function(intType, DateDiffFunction, Factory.Value("d"), fromDate, toDate);
+			var anchor = Factory.Function(dateType, DateAddFunction, Factory.Value("d"), days, fromDate);
+
+			var remainder  = Factory.Function(intType, DateDiffFunction, Factory.Value(part), anchor, toDate);
 			var doubleType = Factory.GetDbDataType(typeof(double));
 
-			return Factory.Add(doubleType,
+			var seconds = Factory.Add(doubleType,
 				Factory.Multiply(doubleType, Factory.Function(doubleType, ToDoubleFunction, days), SecondsPerDay),
 				remainder);
+
+			if (!startNullable && !endNullable)
+				return seconds;
+
+			var eitherNull = new SqlSearchCondition(isOr: true);
+
+			if (startNullable)
+				eitherNull.Add(Factory.IsNullPredicate(start));
+
+			if (endNullable)
+				eitherNull.Add(Factory.IsNullPredicate(end));
+
+			return Factory.Condition(eitherNull, Factory.Value<double?>(doubleType, null), seconds);
 		}
 
 		static readonly string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
