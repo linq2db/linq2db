@@ -933,8 +933,15 @@ namespace Tests.Linq
 		/// whole seconds in between - which <c>DATEADD</c> refuses on a <c>date</c> and rounds to the minute on a
 		/// <c>smalldatetime</c>. The end has seconds and a sub-second part, so neither can pass by luck.
 		/// </summary>
+		/// <remarks>
+		/// Restricted to 2008-2014: the widening this test pins - <c>date</c> and <c>smalldatetime</c> cast up to
+		/// <c>datetime2</c> before the second shift - is a detail of the pre-2016 three-step decomposition. 2016 and
+		/// later count the whole difference through <c>DATEDIFF_BIG</c> in one step and never reach that widening,
+		/// so running them here would only repeat <see cref="DateDifferenceComponentsMatchClr"/> for those versions.
+		/// </remarks>
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
-		public void Issue5777_DifferenceFromCoarseSqlServerTypes([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void Issue5777_DifferenceFromCoarseSqlServerTypes(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2014)] string context)
 		{
 			var start = new DateTime(2020, 1, 1, 3, 0, 0);
 			var end   = new DateTime(2026, 9, 29, 10, 20, 30).AddTicks(1234567);
@@ -952,6 +959,48 @@ namespace Tests.Linq
 
 			row.FromDate.ShouldBe((end - start.Date).Ticks);
 			row.FromSmall.ShouldBe((end - start).Ticks);
+		}
+
+		/// <summary>
+		/// A negative difference with a sub-second remainder, on the pre-2016 dialects that decompose it in three
+		/// steps - whole days, then whole seconds within the remainder, then nanoseconds within the last second.
+		/// </summary>
+		/// <remarks>
+		/// <paramref name="context"/> covers 2008-2014 through <see cref="TestProvName.AllSqlServer2008Plus"/> and
+		/// also runs on 2016 and later, which take the single-step <c>DATEDIFF_BIG</c> path - answering the same
+		/// question a different way is a legitimate check, not redundant, since the three-step path is what this
+		/// test exists to exercise and the newer one is what every other difference test already covers.
+		/// <para>
+		/// The end is earlier than the start by a little over an hour and both carry a sub-second part, so the
+		/// overall difference is negative and its remainder below the second is too - the shape that would go wrong
+		/// first if a sign were dropped or a boundary count were assumed non-negative anywhere in the decomposition.
+		/// </para>
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/5987")]
+		public void NegativeDifferenceWithSubSecondRemainder([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var start = new DateTime(2026, 3, 1, 10, 20, 30).AddTicks(1234567);
+			var end   = new DateTime(2026, 3, 1,  9, 19, 28).AddTicks(7654321);
+
+			var expected = end - start;
+
+			expected.ShouldBeLessThan(TimeSpan.Zero);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new EventRow { Id = 1, StartedOn = start, FinishedOn = end }]);
+
+			var row = t
+				.Select(r => new
+				{
+					Ticks        = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+					TotalSeconds = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds),
+					Milliseconds = Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds),
+				})
+				.Single();
+
+			row.Ticks.ShouldBe(expected.Ticks);
+			row.TotalSeconds.ShouldBe(expected.TotalSeconds, Tolerance(expected.TotalSeconds));
+			row.Milliseconds.ShouldBe(expected.Milliseconds);
 		}
 	}
 }
