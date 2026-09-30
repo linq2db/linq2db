@@ -215,6 +215,38 @@ namespace Tests.Linq
 #endif
 
 		/// <summary>
+		/// A difference measured from the server's own clock, rather than from a literal or a parameter.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="DateTime.Now"/> inside a query translates to a server-side call - <c>now()</c> on ClickHouse,
+		/// for instance - which is a distinct operand shape from a literal or a parameter: some providers give it a
+		/// coarser or otherwise different declared type than the one a mapped column or a client value carries, and
+		/// the elapsed-time lowering has to cope with that mismatch rather than assuming every operand shares one
+		/// type. The rows sit years away from the run date on both sides, so the sign and rough size of each member
+		/// stay stable regardless of clock skew between the test host and the server.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Issue5777Data);
+
+			t.Where(r => (DateTime.Now - r.ClosedOn).TotalDays > 300).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (DateTime.Now - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays = Sql.AsSql((DateTime.Now - r.ClosedOn).TotalDays),
+					Hours     = Sql.AsSql((DateTime.Now - r.ClosedOn).Hours),
+				})
+				.Single();
+
+			row.TotalDays.ShouldBeGreaterThan(300);
+		}
+
+		/// <summary>
 		/// A difference measured from a fixed date that reaches the query as a parameter - a variable or an
 		/// argument - on either side of the subtraction.
 		/// </summary>

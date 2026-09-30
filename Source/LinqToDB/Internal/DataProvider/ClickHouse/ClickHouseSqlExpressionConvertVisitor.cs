@@ -53,16 +53,31 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// is about 292 years rather than the 584 the endpoints cover. ClickHouse wraps instead of raising, so a
 		/// wider difference comes back as a plausible-looking wrong number.
 		/// </para>
+		/// <para>
+		/// Each operand is cast through <c>toDateTime64</c> first: <c>toUnixTimestamp64Nano</c> requires a
+		/// <c>DateTime64</c> argument, but an operand can arrive as plain <c>DateTime</c> - <c>now()</c>, the
+		/// translation of <see cref="DateTime.Now"/>, is one. The cast is a no-op for an operand that is already
+		/// <c>DateTime64(7)</c>, which every mapped column and literal is.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
-			var longType = Factory.GetDbDataType(typeof(long));
+			var longType  = Factory.GetDbDataType(typeof(long));
+			var intType   = Factory.GetDbDataType(typeof(int));
+			var precision = Factory.Value(intType, ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION);
 
 			var nanoseconds = Factory.Sub(longType,
-				Factory.Function(longType, "toUnixTimestamp64Nano", element.End),
-				Factory.Function(longType, "toUnixTimestamp64Nano", element.Start));
+				Factory.Function(longType, "toUnixTimestamp64Nano", AsDateTime64(element.End, precision)),
+				Factory.Function(longType, "toUnixTimestamp64Nano", AsDateTime64(element.Start, precision)));
 
 			return Factory.Function(longType, "intDiv", nanoseconds, Factory.Value(longType, 100L));
+		}
+
+		ISqlExpression AsDateTime64(ISqlExpression value, ISqlExpression precision)
+		{
+			var dateTime64 = Factory.GetDbDataType(value).WithDataType(DataType.DateTime64);
+
+			return Factory.Function(dateTime64, "toDateTime64", value, precision);
 		}
 
 		/// <inheritdoc />
