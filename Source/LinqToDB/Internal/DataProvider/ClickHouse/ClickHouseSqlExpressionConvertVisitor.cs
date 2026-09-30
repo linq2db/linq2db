@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// <para>
 		/// Each operand is cast through <c>toDateTime64</c> first: <c>toUnixTimestamp64Nano</c> requires a
 		/// <c>DateTime64</c> argument, but an operand can arrive as plain <c>DateTime</c> - <c>now()</c>, the
-		/// translation of <see cref="DateTime.Now"/>, is one. The cast is a no-op for an operand that is already
+		/// translation of <c>DateTime.Now</c>, is one. The cast is a no-op for an operand that is already
 		/// <c>DateTime64(7)</c>, which every mapped column and literal is.
 		/// </para>
 		/// </remarks>
