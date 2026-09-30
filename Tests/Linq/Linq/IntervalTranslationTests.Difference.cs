@@ -165,9 +165,10 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		// Oracle joins SQLite here rather than carrying a gate: it measures to the microsecond, so the nanosecond
-		// member is refused by design and never reaches #5797's zone question at all. The message's placeholders
-		// absorb the two providers' differing resolutions.
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllOracle, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
+		// member is refused by design and never reaches #5797's zone question at all. SQL Server 2005 counts no finer
+		// than the millisecond, so it refuses the same way. The message's placeholders absorb the differing
+		// resolutions.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void ZonedDifferenceSubMillisecondMembersMatchClr(
@@ -811,6 +812,108 @@ namespace Tests.Linq
 
 			row.Seconds.ShouldBe(expected.Seconds);
 			row.Milliseconds.ShouldBe(expected.Milliseconds);
+		}
+
+		[Table]
+		sealed class Issue5777Row
+		{
+			[PrimaryKey] public int       Id               { get; set; }
+			[Column]     public DateTime  OpenedOn         { get; set; }
+			[Column]     public DateTime  ClosedOn         { get; set; }
+			[Column]     public DateTime? ClosedOnNullable { get; set; }
+		}
+
+		// One row well in the past and one well in the future, whole hours from any midnight, so the answers below
+		// do not move with the clock, the storage precision or the day the test runs.
+		static readonly Issue5777Row[] Issue5777Data =
+		[
+			new() { Id = 1, OpenedOn = new DateTime(2019, 12, 20, 15, 30, 0), ClosedOn = new DateTime(2020, 1, 1, 3, 0, 0), ClosedOnNullable = new DateTime(2020, 1, 1, 3, 0, 0) },
+			new() { Id = 2, OpenedOn = new DateTime(2099, 5, 1),              ClosedOn = new DateTime(2099, 6, 1),          ClosedOnNullable = null                            },
+		];
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void Issue5777_TodayMinusColumn([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Issue5777Data);
+
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalMinutes > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).Days > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			t.OrderBy(r => (DateTime.Today - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var totals = t.OrderBy(r => r.Id).Select(r => (DateTime.Today - r.ClosedOn).TotalDays).ToList();
+
+			totals[0].ShouldBeGreaterThan(0);
+			totals[1].ShouldBeLessThan(0);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void Issue5777_ColumnMinusColumn([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Issue5777Data);
+
+			t.Where(r => (r.ClosedOn - r.OpenedOn).TotalDays < 12).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (r.ClosedOn - r.OpenedOn).TotalHours).Select(r => r.Id).ToList().ShouldBe([1, 2]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays    = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalDays),
+					TotalHours   = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalHours),
+					TotalMinutes = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalMinutes),
+					Days         = Sql.AsSql((r.ClosedOn - r.OpenedOn).Days),
+					Hours        = Sql.AsSql((r.ClosedOn - r.OpenedOn).Hours),
+				})
+				.Single();
+
+			var expected = Issue5777Data[0].ClosedOn - Issue5777Data[0].OpenedOn;
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.TotalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+			row.TotalMinutes.ShouldBe(expected.TotalMinutes, Tolerance(expected.TotalMinutes));
+			row.Days.ShouldBe(expected.Days);
+			row.Hours.ShouldBe(expected.Hours);
+		}
+
+		[Table]
+		sealed class Issue5777SqlServerRow
+		{
+			[PrimaryKey]                                           public int      Id      { get; set; }
+			[Column(DataType = DataType.Date)]                     public DateTime OnDate  { get; set; }
+			[Column(DataType = DataType.SmallDateTime)]            public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime End     { get; set; }
+		}
+
+		/// <summary>
+		/// SQL Server before 2016 counts the part of a difference below a day in two steps, shifting the start by
+		/// whole seconds in between - which <c>DATEADD</c> refuses on a <c>date</c> and rounds to the minute on a
+		/// <c>smalldatetime</c>. The end has seconds and a sub-second part, so neither can pass by luck.
+		/// </summary>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void Issue5777_DifferenceFromCoarseSqlServerTypes([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var start = new DateTime(2020, 1, 1, 3, 0, 0);
+			var end   = new DateTime(2026, 9, 29, 10, 20, 30).AddTicks(1234567);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new Issue5777SqlServerRow { Id = 1, OnDate = start.Date, OnSmall = start, End = end }]);
+
+			var row = t
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			row.FromDate.ShouldBe((end - start.Date).Ticks);
+			row.FromSmall.ShouldBe((end - start).Ticks);
 		}
 	}
 }
