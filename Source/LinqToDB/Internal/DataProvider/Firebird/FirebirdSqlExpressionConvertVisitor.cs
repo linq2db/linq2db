@@ -43,6 +43,27 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return Factory.Cast(Factory.Multiply(longType, milliseconds, TimeSpan.TicksPerMillisecond), longType, true);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: <c>DATEADD</c> takes a millisecond amount
+		/// directly, the same resolution <see cref="ElapsedTicks"/> already measures a difference at.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>DATEADD(millisecond, amount, date)</c>.
+		/// </summary>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var milliseconds = Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond);
+
+			return Factory.Function(Factory.GetDbDataType(element.Temporal), "DateAdd",
+				Factory.Fragment("millisecond"), milliseconds, element.Temporal);
+		}
+
 		/// <summary>
 		/// 2.5 truncates the count to a whole millisecond, so a component asked for below one is identically zero
 		/// rather than merely imprecise, and is declined here instead. Overridden back to

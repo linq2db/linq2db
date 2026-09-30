@@ -75,6 +75,31 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					Factory.Add(longType, WholeField(elapsed, "Minute", TimeSpan.TicksPerMinute), seconds)));
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: Oracle adds a native <c>INTERVAL DAY TO
+		/// SECOND</c> to a date/timestamp directly, built from the tick count through <c>NUMTODSINTERVAL</c> at
+		/// the same microsecond resolution <see cref="ElapsedTicks"/> already measures a difference at.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>NUMTODSINTERVAL(seconds, 'SECOND')</c>, added natively.
+		/// </summary>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var doubleType   = Factory.GetDbDataType(typeof(double));
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var stringType   = Factory.GetDbDataType(typeof(string));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan));
+
+			var ticks    = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var seconds  = Factory.Div(doubleType, Factory.Cast(ticks, doubleType, true), (double)TimeSpan.TicksPerSecond);
+			var interval = Factory.Function(intervalType, "NumToDSInterval", seconds, Factory.Value(stringType, "SECOND"));
+
+			return Factory.Add(Factory.GetDbDataType(element.Temporal), element.Temporal, interval);
+		}
+
 		ISqlExpression WholeField(ISqlExpression elapsed, string part, long ticksPerUnit)
 		{
 			var longType = Factory.GetDbDataType(typeof(long));

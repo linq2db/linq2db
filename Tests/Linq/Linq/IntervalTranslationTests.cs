@@ -161,12 +161,8 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		const string UnsupportedShiftProviders =
-			TestProvName.AllSQLite            + "," +
-			TestProvName.AllOracle            + "," +
-			TestProvName.AllFirebird          + "," +
 			TestProvName.AllSapHana           + "," +
-			TestProvName.AllDB2               + "," +
-			TestProvName.AllYdb;
+			TestProvName.AllDB2;
 
 		/// <summary>
 		/// Providers that refuse a date shifted by a <em>declared</em> duration.

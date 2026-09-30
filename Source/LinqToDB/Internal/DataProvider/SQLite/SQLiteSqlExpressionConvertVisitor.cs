@@ -51,6 +51,39 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return Factory.Multiply(longType, Factory.Cast(milliseconds, longType, true), TimeSpan.TicksPerMillisecond);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: the shift spends the same Julian-day
+		/// arithmetic as <see cref="ElapsedTicks"/>, in reverse, so it needs no day/second/sub-second
+		/// decomposition of its own.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>julianday</c> arithmetic at millisecond resolution, then back through <c>strftime</c>
+		/// in the same text format this provider writes a <see cref="DateTime"/> literal in.
+		/// </summary>
+		/// <remarks>
+		/// <paramref name="element"/>'s interval is either an already-known tick count or a still-unlowered
+		/// difference/part node - either way it is spent as a number of ticks here, and the recursive <c>Visit</c>
+		/// this method's result goes through lowers whatever of that remains, exactly as <see cref="ElapsedTicks"/>
+		/// does for the read direction.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var stringType = Factory.GetDbDataType(typeof(string));
+
+			var ticks = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var milliseconds = Factory.Function(doubleType, "Round", Factory.Multiply(doubleType, Factory.Cast(ticks, doubleType, true), 1.0 / TimeSpan.TicksPerMillisecond));
+			var days = Factory.Multiply(doubleType, milliseconds, 1.0 / 86_400_000.0);
+			var shiftedJulian = Factory.Add(doubleType, JulianDay(element.Temporal), days);
+
+			return Factory.Function(Factory.GetDbDataType(element.Temporal), "Strftime",
+				Factory.Value(stringType, "%Y-%m-%d %H:%M:%f"), shiftedJulian);
+		}
+
 		ISqlExpression JulianDay(ISqlExpression date)
 		{
 			return Factory.Function(Factory.GetDbDataType(typeof(double)), "JulianDay", date);

@@ -37,6 +37,31 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: YQL adds a native <c>Interval</c> to a
+		/// <c>Timestamp</c>/<c>Datetime</c> directly, the same interval type <see cref="ElapsedTicks"/> already
+		/// reads a difference through.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by building a YQL <c>Interval</c> from the tick count (microsecond resolution - YDB's own) and
+		/// adding it natively.
+		/// </summary>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+			var temporalType = Factory.GetDbDataType(element.Temporal);
+
+			var ticks         = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var microseconds  = Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond / 1000);
+			var interval      = Factory.Function(intervalType, "DateTime::IntervalFromMicroseconds", microseconds);
+
+			return Factory.Add(temporalType, element.Temporal, interval);
+		}
+
 		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB
 		// supports) instead of folding it to NULLIF.
 		protected override bool SupportsNullIf => false;
