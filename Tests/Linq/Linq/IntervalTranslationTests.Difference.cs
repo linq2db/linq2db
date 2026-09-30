@@ -284,6 +284,37 @@ namespace Tests.Linq
 			row.Hours.ShouldBe(expected.Hours);
 		}
 
+		/// <summary>
+		/// A parameter operand against a column mapped with the default date/time type rather than a tick-precise one.
+		/// </summary>
+		/// <remarks>
+		/// A provider that types a parameter from the call it appears in can settle on something else against a
+		/// coarser column. DuckDB left it undecided against a <c>TIMESTAMP</c> column, where the <c>TIMESTAMP_NS</c>
+		/// column of <see cref="DateDifferenceFromParameter"/> settled it, and the value then reached the server as
+		/// text formatted in the client's culture, which it refused to read as a timestamp.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameterOverDefaultMapping([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf = new DateTime(2026, 1, 10, 8, 15, 30);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Issue5777Data);
+
+			t.Where(r => (asOf - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.ClosedOn - asOf).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([2]);
+			t.OrderBy(r => (asOf - r.ClosedOn).TotalMinutes).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var totalHours = t
+				.Where(r => r.Id == 1)
+				.Select(r => Sql.AsSql((r.ClosedOn - asOf).TotalHours))
+				.Single();
+
+			var expected = Issue5777Data[0].ClosedOn - asOf;
+
+			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceComponentsMatchClr(
