@@ -384,6 +384,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void Round15([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Sql.Round(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.Round(p.MoneyValue, 5) + p.MoneyValue));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue));
+		}
+
+		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
