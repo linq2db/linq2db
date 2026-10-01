@@ -58,6 +58,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// <c>DateTime64</c> argument, but an operand can arrive as plain <c>DateTime</c> - <c>now()</c>, the
 		/// translation of <c>DateTime.Now</c>, is one. The cast is a no-op for an operand that is already
 		/// <c>DateTime64(7)</c>, which every mapped column and literal is.
+		/// <para>
+		/// It is applied to every operand on purpose rather than only to one whose declared type is not
+		/// <c>DateTime64(7)</c>: the declared type says what the mapping asked for, not what the server sees - a
+		/// parameter's type is the driver's to choose, and a column may be declared differently from how it was
+		/// created - while the cast of an operand that needs none costs nothing.
+		/// </para>
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)

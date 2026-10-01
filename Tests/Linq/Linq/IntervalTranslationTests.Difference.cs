@@ -228,9 +228,21 @@ namespace Tests.Linq
 		[Test]
 		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
-			// Firebird and YDB, among others, write the client's clock into the statement as a literal, so no two
-			// runs - and not the direct and the remote one - produce the same SQL.
-			using var noBaseline = new DisableBaseline("Current datetime parameters used");
+			// These providers read DateTime.Now on the client and send it as a parameter or, on Firebird and YDB, as
+			// a literal, so no two runs - and not the direct and the remote one - record the same statement. The
+			// rest call the server's clock and keep their baselines.
+			using var noBaseline = context.IsAnyOf(
+				TestProvName.AllFirebird,
+				TestProvName.AllYdb,
+				TestProvName.AllSqlServer,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllDB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase,
+				TestProvName.AllSapHana)
+				? new DisableBaseline("Current datetime parameters used")
+				: null;
 
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(Issue5777Data);
@@ -248,6 +260,9 @@ namespace Tests.Linq
 				.Single();
 
 			row.TotalDays.ShouldBeGreaterThan(300);
+
+			// Both members come from one reading of the clock, so the component has to agree with the total.
+			row.Hours.ShouldBe(TimeSpan.FromDays(row.TotalDays).Hours);
 		}
 
 		/// <summary>
@@ -1062,21 +1077,24 @@ namespace Tests.Linq
 		/// steps - whole days, then whole seconds within the remainder, then nanoseconds within the last second.
 		/// </summary>
 		/// <remarks>
-		/// <paramref name="context"/> covers 2008-2014 through <see cref="TestProvName.AllSqlServer2008Plus"/> and
-		/// also runs on 2016 and later, which take the single-step <c>DATEDIFF_BIG</c> path - answering the same
-		/// question a different way is a legitimate check, not redundant, since the three-step path is what this
-		/// test exists to exercise and the newer one is what every other difference test already covers.
+		/// 2016 and later take the single-step <c>DATEDIFF_BIG</c> path instead and answer the same question.
 		/// <para>
 		/// The end is earlier than the start by a little over an hour and both carry a sub-second part, so the
-		/// overall difference is negative and its remainder below the second is too - the shape that would go wrong
-		/// first if a sign were dropped or a boundary count were assumed non-negative anywhere in the decomposition.
+		/// difference and its remainder below the second are both negative. Asked once within a day and once across
+		/// midnight, where the whole-day step counts a day boundary backwards and the remainder has to make up for it.
 		/// </para>
 		/// </remarks>
-		[Test(Description = "https://github.com/linq2db/linq2db/pull/5987")]
-		public void NegativeDifferenceWithSubSecondRemainder([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void NegativeDifferenceWithSubSecondRemainder(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context,
+			[Values] bool acrossMidnight)
 		{
-			var start = new DateTime(2026, 3, 1, 10, 20, 30).AddTicks(1234567);
-			var end   = new DateTime(2026, 3, 1,  9, 19, 28).AddTicks(7654321);
+			var start = acrossMidnight
+				? new DateTime(2026, 3, 2,  0, 20, 30).AddTicks(1234567)
+				: new DateTime(2026, 3, 1, 10, 20, 30).AddTicks(1234567);
+			var end   = acrossMidnight
+				? new DateTime(2026, 3, 1, 23, 19, 28).AddTicks(7654321)
+				: new DateTime(2026, 3, 1,  9, 19, 28).AddTicks(7654321);
 
 			var expected = end - start;
 
