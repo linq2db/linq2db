@@ -395,6 +395,16 @@ namespace Tests.Linq
 				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue));
 		}
 
+		// A non-constant precision must not cost the value its fractional digits.
+		[Test]
+		public void Round16([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 2),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2)));
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{

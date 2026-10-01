@@ -777,19 +777,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 			// valueType widened by the rounding digits, clamped to what YQL accepts. Mirrors
 			// YdbMappingSchema.GetCommonDecimalType: keep every integer digit, drop only scale digits that
-			// no longer fit the budget. A non-constant precision cannot be measured, so it gets the widest
-			// headroom the scale allows.
+			// no longer fit the budget. A non-constant precision cannot be measured, so it keeps the source
+			// scale and gets every remaining digit as headroom.
 			static DbDataType ScaledDecimalType(DbDataType valueType, ISqlExpression precision)
 			{
 				var scale     = valueType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
-				var digits    = precision switch
+				var intDigits = precision switch
 				{
-					SqlValue { Value: int p }   => p,
-					SqlValue { Value: long pl } => (int)pl,
-					_                           => YdbMappingSchema.MAX_DECIMAL_PRECISION,
+					SqlValue { Value: int p }   => (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale + p,
+					SqlValue { Value: long pl } => (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale + (int)pl,
+					_                           => YdbMappingSchema.MAX_DECIMAL_PRECISION - scale,
 				};
 
-				var intDigits = Math.Min((valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale + digits, YdbMappingSchema.MAX_DECIMAL_PRECISION);
+				intDigits     = Math.Min(intDigits, YdbMappingSchema.MAX_DECIMAL_PRECISION);
 				scale         = Math.Min(scale, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
 
 				return valueType.WithPrecisionScale(intDigits + scale, scale);
