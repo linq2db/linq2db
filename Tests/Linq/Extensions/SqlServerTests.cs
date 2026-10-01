@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 using LinqToDB;
@@ -1019,7 +1019,8 @@ namespace Tests.Extensions
 			_ = q.ToList();
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(4321, ErrorMessage = "Assert.That(test, Contains.Substring(\"[Parent] [a_Parent] WITH (NoLock)\"))",
+			Details = "TablesInScopeHint does not reach the referenced table, so the hint is missing from its alias - #4321's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4321")]
 		public void TablesInScopeHintWithTReferenceTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)

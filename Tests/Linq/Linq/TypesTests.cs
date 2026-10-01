@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Globalization;
@@ -915,7 +915,8 @@ namespace Tests.Linq
 		}
 
 		#region Issue 4469
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. The decimal division loses its scale on SQLite - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
 		public void Issue4469Test1([DataSources] string context, [Values] bool inline)
 		{
@@ -941,9 +942,26 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		// Split by the inline argument, because the two arms are not equally broken: inlined, the division loses
+		// its scale on every SQLite driver; as a parameter, only the Classic ones still get it wrong. A gate cannot
+		// target a [Values] argument, so one gate over both marked the working cases as failing.
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLite], ErrorMessage = "Math.Round(result.Integer, 5)",
+			Details = "the division loses its scale, so the result rounds to 3 where 3.0303 is due - the constant-versus-variable datatype difference #4469 reports.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
-		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
+		public void Issue4469Test2Inlined([DataSources] string context)
+		{
+			Issue4469Test2Core(context, inline: true);
+		}
+
+		[ActiveIssue(4469, Configurations = [TestProvName.AllSQLiteClassic], ErrorMessage = "Math.Round(result.Integer, 5)",
+			Details = "as Issue4469Test2Inlined, but Microsoft.Data.Sqlite keeps the scale when the divisor travels as a parameter.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
+		public void Issue4469Test2([DataSources] string context)
+		{
+			Issue4469Test2Core(context, inline: false);
+		}
+
+		void Issue4469Test2Core(string context, bool inline)
 		{
 			if (context.IsAnyOf(TestProvName.AllFirebirdLess4) && !inline)
 				Assert.Ignore("Hard-to-workaround overflow bug");

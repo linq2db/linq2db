@@ -163,7 +163,7 @@
 		<PackageVersion Include="Npgsql"                                                Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.9"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.3"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="4.1.4"                        />
+		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="4.1.6"                        />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.23.0"                      />
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.301"                    />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />

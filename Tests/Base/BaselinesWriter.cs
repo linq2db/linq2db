@@ -101,7 +101,7 @@ namespace Tests
 		private static string NormalizeFileName(string name)
 		{
 			// " used in each test name, for now we just remove it
-			return name
+			var normalized = name
 				.Replace("\"", string.Empty)
 				.Replace("\\" , $"0x{(ushort)'\\':X4}")
 				.Replace(">" , $"0x{(ushort)'>':X4}")
@@ -110,7 +110,22 @@ namespace Tests
 				.Replace(":" , $"0x{(ushort)':':X4}")
 				.Replace("*" , $"0x{(ushort)'*':X4}")
 				.Replace("?" , $"0x{(ushort)'?':X4}")
+				.Replace("|" , $"0x{(ushort)'|':X4}")
 				;
+
+			// Control characters are path-illegal too, and arrive here whenever a test puts one in an identifier.
+			// Escaped in a loop rather than by name because spelling all thirty-two would dwarf the method.
+			var sb = new StringBuilder(normalized.Length);
+
+			foreach (var chr in normalized)
+			{
+				if (char.IsControl(chr))
+					sb.Append($"0x{(ushort)chr:X4}");
+				else
+					sb.Append(chr);
+			}
+
+			return sb.ToString();
 		}
 
 		private static string? GetTestContextName(Test test)

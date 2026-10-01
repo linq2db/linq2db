@@ -1,4 +1,4 @@
-﻿extern alias MySqlConnector;
+extern alias MySqlConnector;
 extern alias MySqlData;
 
 using System;
@@ -2134,7 +2134,8 @@ namespace Tests.DataProvider
 			[Column(DbType = "tinyint(1) unsigned")] public sbyte SByte { get; set; }
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(86, ErrorMessage = "Assert.That(byteColumn!.SystemType, Is.EqualTo(typeof(byte)))",
+			Details = "Issue number taken from the test's own Description, which the bare attribute did not carry. MySQL's tinyint(1) is read as bool where byte is expected - #86's subject.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/86")]
 		public void TinyInt1IsByte([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
@@ -2324,14 +2325,71 @@ END");
 		#endregion
 
 		#region issue 4354
-		[ActiveIssue]
+		// Split four ways by what BulkCopy actually does with the configured width, because a gate cannot target a
+		// [Values] argument and one gate over all 112 cases marked the 60 that work as failing. Char36 is the width
+		// the server already stores, so it round-trips in every mode; the narrower formats only survive the paths
+		// that hand the value to the driver rather than writing it into the statement. None and Default stay in the
+		// non-Char36 source because the test declares them Inconclusive, which no gate touches either way.
+		static readonly MySqlConnectorGuidFormat[] _issue4354NonChar36Formats =
+		[
+			MySqlConnectorGuidFormat.None,
+			MySqlConnectorGuidFormat.Default,
+			MySqlConnectorGuidFormat.Char32,
+			MySqlConnectorGuidFormat.Binary16,
+			MySqlConnectorGuidFormat.TimeSwapBinary16,
+			MySqlConnectorGuidFormat.LittleEndianBinary16,
+		];
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
-		public void Issue4354Test(
+		public void Issue4354TestChar36(
 			// MySql.Data has enum, but it is not configurable
 			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
-			[Values] MySqlConnectorGuidFormat format,
 			[Values] BulkCopyType copyType,
 			[Values] bool inline)
+		{
+			Issue4354TestCore(context, MySqlConnectorGuidFormat.Char36, copyType, inline);
+		}
+
+		[ActiveIssue(4354, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "Data too long for column 'Value' at row 1",
+			Details = "BulkCopy ignores the configured GuidFormat, so the value arrives in the wrong width - #4354's subject.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
+		public void Issue4354Test(
+			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
+			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format,
+			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows)] BulkCopyType copyType,
+			[Values] bool inline)
+		{
+			Issue4354TestCore(context, format, copyType, inline);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
+		public void Issue4354TestProviderSpecific(
+			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
+			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format,
+			[Values] bool inline)
+		{
+			Issue4354TestCore(context, format, BulkCopyType.ProviderSpecific, inline);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
+		public void Issue4354TestRowByRow(
+			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
+			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format)
+		{
+			Issue4354TestCore(context, format, BulkCopyType.RowByRow, inline: false);
+		}
+
+		[ActiveIssue(4354, ErrorTypeName = "MySqlConnector.MySqlException", ErrorMessage = "Data too long for column 'Value' at row 1",
+			Details = "as Issue4354Test: inlined, the row-by-row path writes the value into the statement at the default width instead of handing it to the driver.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
+		public void Issue4354TestRowByRowInlined(
+			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
+			[ValueSource(nameof(_issue4354NonChar36Formats))] MySqlConnectorGuidFormat format)
+		{
+			Issue4354TestCore(context, format, BulkCopyType.RowByRow, inline: true);
+		}
+
+		void Issue4354TestCore(string context, MySqlConnectorGuidFormat format, BulkCopyType copyType, bool inline)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);

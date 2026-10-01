@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,9 +24,6 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
-#if AZURE
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
-#endif
 		[Test]
 		public void DistinctInsert1(
 			[DataSources(
@@ -66,9 +63,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if AZURE
-		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
-#endif
 		[Test]
 		public void DistinctInsert2(
 			[DataSources(
@@ -1511,7 +1505,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
+		[ActiveIssue(5595, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Failed to convert type: Struct<'FirstName'",
+			Details = "C# non-nullable string semantics aren't carried through translation: the computed (GetLength + idx).ToString() value is inferred nullable (Optional<Utf8>) and YDB rejects it into the non-null LastName column.")]
 		public void Insert16([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2420,9 +2415,27 @@ namespace Tests.xUpdate
 			[Column] public string? Text { get; set; }
 		}
 
-		[ActiveIssue(
-			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllYdb, TestProvName.AllDuckDB])]
+		// Every named provider does fail, in two groups. Access, Firebird and HANA never reach the database -
+		// linq2db refuses KeepIdentity up front, by mode for Access and HANA and by provider name for Firebird.
+		// The rest do reach it and the identity value collides, each server saying so in its own words.
+		[ActiveIssue(4702, Configurations = [TestProvName.AllAccess, TestProvName.AllSapHana],
+			ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode",
+			Details = "no-issue: Update test to test different RetrieveIdentity modes for all providers with sequences")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllFirebird, ErrorTypeName = "LinqToDB.LinqToDBException",
+			ErrorMessage = "BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider",
+			Details = "no-issue: as above, but Firebird is refused by name before the RowByRow check is reached.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllPostgreSQL, ErrorTypeName = "Npgsql.PostgresException",
+			ErrorMessage = "23505: duplicate key value violates unique constraint \"PK_Issue4702Table\"",
+			Details = "no-issue: as above; the identity value is written rather than generated, so the key collides.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllDuckDB, ErrorTypeName = "DuckDB.NET.Data.DuckDBException",
+			ErrorMessage = "Constraint Error: Duplicate key", Details = "no-issue: as the PostgreSQL half.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllDB2, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "SQL0798N{0}A value cannot be specified for column", Details = "no-issue: as the PostgreSQL half; DB2 rejects the explicit value outright.")]
+		[ActiveIssue(4702, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+			ErrorMessage = "A duplicate value cannot be inserted into a unique index.", Details = "no-issue: as the PostgreSQL half.")]
+		[ActiveIssue(4702, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Status: PreconditionFailed", Details = "no-issue: as the PostgreSQL half.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{

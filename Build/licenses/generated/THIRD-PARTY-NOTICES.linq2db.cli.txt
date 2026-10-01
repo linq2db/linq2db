@@ -359,7 +359,7 @@ COMPONENTS
    License: PostgreSQL  see [10]
    Copyright 2025 © The Npgsql Development Team
 
-70. Octonica.ClickHouseClient 4.1.4
+70. Octonica.ClickHouseClient 4.1.6
    https://github.com/Octonica/ClickHouseClient
    License: Apache-2.0  see [1]
    © 2019 – 2026 Octonica
