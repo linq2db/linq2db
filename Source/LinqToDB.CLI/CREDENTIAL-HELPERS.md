@@ -194,8 +194,12 @@ target=linq2db/project-a     password=s3cret value
   not start that helper again for 60 seconds and fails fast with a message asking to unlock the credential store; this
   matters mostly for the long-running MCP server. (A keyring prompter or `pinentry` is not the helper's child;
   it survives the stop, and starting the helper again would stack prompts.)
-- After the helper exits, the client waits at most 5 seconds for its output pipes to close; a helper must not leave a
-  background process holding them.
+- After the helper exits, the client waits at most 5 seconds for its output pipes to close and for its request to be
+  read; a helper must not leave a background process holding its standard input, output or error. Such a process is no
+  longer part of the helper's process tree, so the client cannot stop it: it reports the failure and, as after a
+  timeout, does not start that helper again for 60 seconds in the same process.
+- Standard error is read to the end, but only its first 4 KB are kept for the error message; a password the client sent
+  is removed from that text, including a part of it cut off at the 4 KB boundary.
 
 ## 8. Environment
 

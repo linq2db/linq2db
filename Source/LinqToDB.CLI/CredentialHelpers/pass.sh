@@ -50,7 +50,7 @@ case ${1-} in
 		[ -f "$store_dir/$prefix/$target.gpg" ] || exit 0
 		show "$prefix/$target"
 		secret=$(printf '%s\n' "$entry_text" | LC_ALL=C sed -n '1p')
-		user=$(printf '%s\n' "$entry_text" | LC_ALL=C sed -n 's/^user: //p')
+		user=$(printf '%s\n' "$entry_text" | LC_ALL=C sed -n '2s/^user: //p')
 		printf 'username=%s\npassword=%s\n' "$user" "$secret"
 		;;
 	store)
@@ -75,7 +75,7 @@ case ${1-} in
 			entry=${file#"$store_dir/"}
 			entry=${entry%.gpg}
 			show "$entry"
-			user=$(printf '%s\n' "$entry_text" | LC_ALL=C sed -n 's/^user: //p')
+			user=$(printf '%s\n' "$entry_text" | LC_ALL=C sed -n '2s/^user: //p')
 			printf 'target=%s\nusername=%s\n\n' "${entry#"$prefix/"}" "$user"
 		done
 		;;

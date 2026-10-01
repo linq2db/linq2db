@@ -32,6 +32,7 @@ namespace Tests.LinqToDB.CLI
 		[TearDown]
 		public void TearDown()
 		{
+			KillChildren();
 			CredentialHelperTestSupport.DeleteDirectory(_directory);
 		}
 
@@ -109,6 +110,125 @@ namespace Tests.LinqToDB.CLI
 			store.TryStore("a", "u", Secret, out var error).ShouldBeFalse();
 
 			error.ShouldBe($"Credential helper '{helper}' failed with exit code 1: password=***");
+		}
+
+		[Test]
+		public void PasswordCrossingTheErrorCapIsRedacted()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX sh helper.");
+
+			// 4090 newlines, then the password: the 4096-byte cap cuts it after "TOPSEC".
+			var helper = Script("cut-helper", "i=0\nwhile [ $i -lt 4090 ]; do printf '\\n' >&2; i=$((i + 1)); done\nsed -n 's/^password=//p' >&2\nexit 1\n", string.Empty);
+			var store  = new HelperCredentialStore(CredentialHelperTestSupport.CreateRunner(helper), CredentialHelperProtocol.Linq2Db);
+
+			store.TryStore("a", "u", "TOPSECRETVALUE", out var error).ShouldBeFalse();
+
+			error.ShouldBe($"Credential helper '{helper}' failed with exit code 1: ***");
+		}
+
+		[Test]
+		public void PasswordInLongFirstErrorLineIsRedacted()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX sh helper.");
+
+			// A 5 KB password echoed after a short prefix: the kept 4 KB hold only its start, and the message shows the
+			// beginning of that line.
+			var helper = Script("wide-helper", "printf 'echo: ' >&2\nsed -n 's/^password=//p' >&2\nexit 1\n", string.Empty);
+			var store  = new HelperCredentialStore(CredentialHelperTestSupport.CreateRunner(helper), CredentialHelperProtocol.Linq2Db);
+
+			store.TryStore("a", "u", "TOPSECRET" + new string('v', 5000), out var error).ShouldBeFalse();
+
+			error.ShouldBe($"Credential helper '{helper}' failed with exit code 1: echo: ***");
+		}
+
+		[Test]
+		public void BackgroundProcessHoldingInputDoesNotHang()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX sh helper.");
+
+			// The helper starts a child that keeps standard input open without reading it (an asynchronous command gets
+			// /dev/null as standard input unless it is handed a copy, hence fd 3), answers, and exits; the request
+			// is larger than a pipe buffer, so writing it can never complete.
+			var pidFile = Path.Combine(_directory, "child.pid");
+			var helper  = Script(
+				"stdin-holder",
+				$"exec 3<&0\nsleep 60 <&3 >/dev/null 2>&1 &\nexec 3<&-\necho $! > '{pidFile}'\nprintf 'username=u\\npassword=p\\n'\n",
+				string.Empty);
+
+			try
+			{
+				var stopwatch = Stopwatch.StartNew();
+				var result    = new CredentialHelperProcessRunner(new CredentialHelperSettings(helper, CredentialHelperProtocol.Linq2Db, null), false)
+				{
+					Timeout = TimeSpan.FromSeconds(30),
+				}.Run("store", CredentialHelperTestSupport.Request("protocol=1", "target=linq2db/a", "username=u", "password=" + new string('p', 1024 * 1024)));
+
+				stopwatch.Stop();
+
+				result.Failure.ShouldNotBeNull().ShouldContain("without reading its whole request");
+				stopwatch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(20));
+			}
+			finally
+			{
+				RecordChild(pidFile);
+			}
+		}
+
+		[Test]
+		public void BackgroundProcessHoldingOutputTripsTheFailFastWindow()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX sh helper.");
+
+			var pidFile = Path.Combine(_directory, "child.pid");
+			var helper  = Script("stdout-holder", $"sleep 60 </dev/null 2>/dev/null &\necho $! > '{pidFile}'\nprintf 'username=u\\npassword=p\\n'\n", string.Empty);
+			var runner  = CredentialHelperTestSupport.CreateRunner(helper);
+
+			try
+			{
+				runner.Run("get", CredentialHelperTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("left a background process holding its output open");
+				RecordChild(pidFile);
+				File.Delete(pidFile);
+
+				runner.Run("get", CredentialHelperTestSupport.Request("protocol=1")).Failure.ShouldNotBeNull().ShouldContain("did not answer recently");
+				File.Exists(pidFile).ShouldBeFalse();
+			}
+			finally
+			{
+				RecordChild(pidFile);
+			}
+		}
+
+		/// <summary>Background processes a test helper left behind (no longer in the helper's process tree).</summary>
+		readonly List<int> _children = [];
+
+		void RecordChild(string pidFile)
+		{
+			if (File.Exists(pidFile) && int.TryParse(File.ReadAllText(pidFile).Trim(), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var pid))
+				_children.Add(pid);
+		}
+
+		void KillChildren()
+		{
+			foreach (var child in _children)
+			{
+				try
+				{
+					using var process = Process.GetProcessById(child);
+					process.Kill();
+				}
+				catch (ArgumentException)
+				{
+				}
+				catch (InvalidOperationException)
+				{
+				}
+			}
+
+			_children.Clear();
 		}
 
 		[Test]

@@ -11,6 +11,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 	/// </summary>
 	internal sealed record CredentialHelperRunResult(string? Failure, int ExitCode, byte[] Output, string ErrorOutput)
 	{
+		/// <summary>Whether standard error was longer than the part kept in <see cref="ErrorOutput"/>.</summary>
+		public bool ErrorOutputTruncated { get; init; }
+
 		public static CredentialHelperRunResult Failed(string failure)
 		{
 			return new CredentialHelperRunResult(failure, -1, [], string.Empty);

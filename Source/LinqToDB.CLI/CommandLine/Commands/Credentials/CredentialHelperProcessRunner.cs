@@ -129,7 +129,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 #pragma warning disable LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 				var outputTask = ReadCappedAsync(process.StandardOutput.BaseStream, MaxOutputBytes, stopAtLimit: true,  cancellation.Token);
 				var errorTask  = ReadCappedAsync(process.StandardError .BaseStream, MaxErrorBytes,  stopAtLimit: false, cancellation.Token);
-				var inputTask  = WriteInputAsync(process.StandardInput .BaseStream, request);
+				var inputTask  = WriteInputAsync(process.StandardInput .BaseStream, request, cancellation.Token);
 				var exitTask   = process.WaitForExitAsync(cancellation.Token);
 				var delayTask  = Task.Delay(timeout, cancellation.Token);
 #pragma warning restore LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
@@ -144,8 +144,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 					if (first != exitTask && await Task.WhenAny(exitTask, delayTask).ConfigureAwait(false) != exitTask)
 					{
-						if (!_interactive)
-							_breaker[breakerKey] = TimeProvider.GetUtcNow() + _breakerDuration;
+						TripBreaker(breakerKey);
 
 						return Abandon(process, null, $"Credential helper '{DisplayName}' did not answer within {timeout.TotalSeconds.ToString("0", CultureInfo.InvariantCulture)} seconds (a locked keyring or a prompt waiting for input?); the helper process was stopped.");
 					}
@@ -157,24 +156,46 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 #pragma warning restore LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 
 					if (await Task.WhenAny(drained, Task.Delay(_drainTimeout, cancellation.Token)).ConfigureAwait(false) != drained)
+					{
+						// A process that outlived the helper cannot be stopped from here (it is no longer in the helper's
+						// process tree); fail fast for a while instead of piling more of them up.
+						TripBreaker(breakerKey);
 						return Abandon(process, null, $"Credential helper '{DisplayName}' exited but left a background process holding its output open.");
+					}
 
 					var output = await outputTask.ConfigureAwait(false);
 
 					if (output.Overflow)
 						return Abandon(process, output, $"Credential helper '{DisplayName}' wrote more than {MaxOutputBytes.ToString(CultureInfo.InvariantCulture)} bytes to standard output.");
 
-					await inputTask.ConfigureAwait(false);
+					// The request must have been read; a background process holding standard input without reading it would
+					// otherwise block the write forever.
+					if (await Task.WhenAny(inputTask, Task.Delay(_drainTimeout, cancellation.Token)).ConfigureAwait(false) != inputTask)
+					{
+						TripBreaker(breakerKey);
+						return Abandon(process, output, $"Credential helper '{DisplayName}' exited without reading its whole request, and a background process still holds its input.");
+					}
+
+					var errors = await errorTask.ConfigureAwait(false);
 
 					_breaker.TryRemove(breakerKey, out _);
 
-					return new CredentialHelperRunResult(null, process.ExitCode, output.Data, Encoding.UTF8.GetString((await errorTask.ConfigureAwait(false)).Data));
+					return new CredentialHelperRunResult(null, process.ExitCode, output.Data, Encoding.UTF8.GetString(errors.Data))
+					{
+						ErrorOutputTruncated = errors.Overflow,
+					};
 				}
 				finally
 				{
 					await cancellation.CancelAsync().ConfigureAwait(false);
 				}
 			}
+		}
+
+		void TripBreaker(string breakerKey)
+		{
+			if (!_interactive)
+				_breaker[breakerKey] = TimeProvider.GetUtcNow() + _breakerDuration;
 		}
 
 		static CredentialHelperRunResult Abandon(Process process, (byte[] Data, bool Overflow)? output, string message)
@@ -212,19 +233,19 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return Directory.Exists(home) ? home : Path.GetTempPath();
 		}
 
-		static async Task WriteInputAsync(Stream input, byte[] request)
+		static async Task WriteInputAsync(Stream input, byte[] request, CancellationToken cancellationToken)
 		{
-			await using (input.ConfigureAwait(false))
+			try
 			{
-				try
+				await using (input.ConfigureAwait(false))
 				{
-					await input.WriteAsync(request).ConfigureAwait(false);
-					await input.FlushAsync().ConfigureAwait(false);
+					await input.WriteAsync(request, cancellationToken).ConfigureAwait(false);
+					await input.FlushAsync(cancellationToken).ConfigureAwait(false);
 				}
-				catch (IOException)
-				{
-					// The helper exited or closed its input without reading the whole request.
-				}
+			}
+			catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException)
+			{
+				// The helper exited or closed its input without reading the whole request, or the run was abandoned.
 			}
 		}
 

@@ -247,6 +247,24 @@ namespace Tests.LinqToDB.CLI
 			count.ShouldBe(0);
 		}
 
+		[TestCase("secret-tool")]
+		[TestCase("pass")]
+		public void PasswordLookingLikeUserMetadataStaysThePassword(string backend)
+		{
+			// pass keeps the password on line 1 and "user: <name>" on line 2; a password of that shape must not be read as
+			// the user name.
+			var store = CreateStore(backend);
+
+			store.TryStore("a", "app=reader", "user: TOPSECRET", out var error).ShouldBeTrue(error);
+
+			store.TryRead("linq2db/a", out var user, out var password, out error).ShouldBeTrue(error);
+			user.    ShouldBe("app=reader");
+			password.ShouldBe("user: TOPSECRET");
+
+			store.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			profiles.ShouldBe([new CredentialProfile("a", "app=reader")]);
+		}
+
 		[Test]
 		public void SecretToolLockedKeyringIsAFailureNotNotFound()
 		{

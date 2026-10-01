@@ -326,7 +326,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				if (result.ExitCode != 0)
 				{
-					error = FailedMessage(result.ExitCode, CredentialHelperProcessRunner.GetFirstLine(Redact(result.ErrorOutput, password)));
+					error = FailedMessage(result.ExitCode, ErrorLine(result, password));
 					return false;
 				}
 
@@ -446,20 +446,56 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
+		/// The first line of a helper's standard error for an error message, with a secret the client sent removed before
+		/// the line is trimmed or shortened.
+		/// </summary>
+		static string? ErrorLine(CredentialHelperRunResult result, string? secret)
+		{
+			return CredentialHelperProcessRunner.GetFirstLine(Redact(result.ErrorOutput, secret, result.ErrorOutputTruncated));
+		}
+
+		/// <summary>
 		/// Removes a secret the client sent from a helper's error output: a helper that echoes its input on failure (a shell
 		/// trace, a debug print) must not turn the error message into a password leak. The JSON-escaped form is removed too,
 		/// since the docker adapter sends the secret inside JSON.
 		/// </summary>
-		internal static string Redact(string text, string? secret)
+		/// <param name="text">Helper output.</param>
+		/// <param name="secret">Secret to remove.</param>
+		/// <param name="truncated">
+		/// <see langword="true"/> when <paramref name="text"/> was cut at a length limit: a secret crossing the cut is only
+		/// partly present, so a tail that is a prefix of the secret is removed as well.
+		/// </param>
+		internal static string Redact(string text, string? secret, bool truncated = false)
 		{
 			if (string.IsNullOrEmpty(secret))
 				return text;
 
-			text = text.Replace(secret, "***", StringComparison.Ordinal);
-
 			var escaped = JsonEncodedText.Encode(secret).ToString();
+			var forms   = string.Equals(escaped, secret, StringComparison.Ordinal) ? new[] { secret } : new[] { secret, escaped };
 
-			return string.Equals(escaped, secret, StringComparison.Ordinal) ? text : text.Replace(escaped, "***", StringComparison.Ordinal);
+			foreach (var form in forms)
+				text = text.Replace(form, "***", StringComparison.Ordinal);
+
+			if (truncated)
+			{
+				// The cut can also split a multi-byte character, which decodes as U+FFFD.
+				var end = text.TrimEnd('\uFFFD');
+
+				foreach (var form in forms)
+				{
+					for (var length = Math.Min(form.Length - 1, end.Length); length > 0; length--)
+					{
+						if (end.AsSpan().EndsWith(form.AsSpan(0, length), StringComparison.Ordinal))
+						{
+							text = string.Concat(end.AsSpan(0, end.Length - length), "***");
+							end  = text;
+							break;
+						}
+					}
+				}
+			}
+
+			return text;
 		}
 
 		string FailedMessage(int exitCode, string? errorLine)
@@ -708,7 +744,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			// line is shown when standard error is empty.
 			return FailedMessage(
 				result.ExitCode,
-				CredentialHelperProcessRunner.GetFirstLine(Redact(result.ErrorOutput, sentSecret))
+				ErrorLine(result, sentSecret)
 				?? CredentialHelperProcessRunner.GetFirstLine(Redact(Encoding.UTF8.GetString(result.Output), sentSecret)));
 		}
 	}

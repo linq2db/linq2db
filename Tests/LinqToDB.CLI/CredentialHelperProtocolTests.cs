@@ -44,6 +44,12 @@ namespace Tests.LinqToDB.CLI
 				return this;
 			}
 
+			public FakeRunner AnswerWithTruncatedErrors(int exitCode, string errorOutput)
+			{
+				_results.Enqueue(new CredentialHelperRunResult(null, exitCode, [], errorOutput) { ErrorOutputTruncated = true });
+				return this;
+			}
+
 			public FakeRunner Fail(string failure)
 			{
 				_results.Enqueue(CredentialHelperRunResult.Failed(failure));
@@ -285,6 +291,49 @@ namespace Tests.LinqToDB.CLI
 
 			error.ShouldNotBeNull().ShouldNotContain("ssss");
 			error.ShouldNotBeNull().ShouldContain(new string('x', 190) + "***");
+		}
+
+		[TestCase("TOPSEC",          TestName = "TruncatedErrorRedactsPasswordPrefixAtTheCut")]
+		[TestCase("TOPSEC\uFFFD",    TestName = "TruncatedErrorRedactsPasswordPrefixBeforeSplitCharacter")]
+		public void TruncatedErrorRedactsPasswordPrefix(string tail)
+		{
+			// Standard error was cut at its length limit in the middle of the echoed password.
+			var runner = new FakeRunner().AnswerWithTruncatedErrors(1, new string('\n', 4090) + tail);
+
+			Linq2Db(runner).TryStore("a", "u", "TOPSECRETVALUE", out var error).ShouldBeFalse();
+
+			error.ShouldBe("Credential helper 'fake-helper' failed with exit code 1: ***");
+		}
+
+		[Test]
+		public void TruncatedLongFirstLineRedactsPasswordPrefix()
+		{
+			var runner = new FakeRunner().AnswerWithTruncatedErrors(1, "password=TOPSEC");
+
+			Linq2Db(runner).TryStore("a", "u", "TOPSECRETVALUE", out var error).ShouldBeFalse();
+
+			error.ShouldBe("Credential helper 'fake-helper' failed with exit code 1: password=***");
+		}
+
+		[Test]
+		public void TruncatedErrorRedactsJsonEscapedPasswordPrefix()
+		{
+			// The docker adapter sends "pa ss=w\u00F6rd"; the cut falls inside the escape sequence.
+			var runner = new FakeRunner().AnswerWithTruncatedErrors(1, "echo {\"Secret\":\"pa ss=w\\u00");
+
+			Docker(runner).TryStore("a", "u", Secret, out var error).ShouldBeFalse();
+
+			error.ShouldBe("Credential helper 'fake-helper' failed with exit code 1: echo {\"Secret\":\"***");
+		}
+
+		[Test]
+		public void UntruncatedErrorKeepsOrdinaryTail()
+		{
+			var runner = new FakeRunner().Answer(string.Empty, 1, "failed at T");
+
+			Linq2Db(runner).TryStore("a", "u", "TOPSECRETVALUE", out var error).ShouldBeFalse();
+
+			error.ShouldBe("Credential helper 'fake-helper' failed with exit code 1: failed at T");
 		}
 
 		[Test]
