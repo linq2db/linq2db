@@ -749,6 +749,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var doubleType = factory.GetDbDataType(typeof(double));
 				var isDecimal  = valueType.SystemType.UnwrappedNullableType == typeof(decimal);
 
+				// rounding a Decimal to at least its own scale is a no-op
+				if (isDecimal
+					&& precision is SqlValue { Value: int or long } constant
+					&& Convert.ToInt64(constant.Value, CultureInfo.InvariantCulture) >= (valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE))
+					return value;
+
 				var hasPrecision = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
 
 				// The scaled value needs p more integer digits than the source declares, and so does 10^p
@@ -775,22 +781,21 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return scaleType.EqualsDbOnly(valueType) ? result : factory.Cast(result, valueType);
 			}
 
-			// valueType widened by the rounding digits, clamped to what YQL accepts. Mirrors
-			// YdbMappingSchema.GetCommonDecimalType: keep every integer digit, drop only scale digits that
-			// no longer fit the budget. A non-constant precision cannot be measured, so it keeps the source
-			// scale and gets every remaining digit as headroom.
+			// valueType widened by the rounding digits, clamped to what YQL accepts. The source scale is never
+			// cut: dropping fractional digits corrupts every row, while running out of integer digits only
+			// fails values near the type's limit. A non-constant precision cannot be measured, so it gets
+			// every remaining digit as headroom.
 			static DbDataType ScaledDecimalType(DbDataType valueType, ISqlExpression precision)
 			{
-				var scale     = valueType.Scale     ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
+				var scale     = valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
 				var intDigits = precision switch
 				{
 					SqlValue { Value: int p }   => (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale + p,
 					SqlValue { Value: long pl } => (valueType.Precision ?? YdbMappingSchema.DEFAULT_DECIMAL_PRECISION) - scale + (int)pl,
-					_                           => YdbMappingSchema.MAX_DECIMAL_PRECISION - scale,
+					_                           => YdbMappingSchema.MAX_DECIMAL_PRECISION,
 				};
 
-				intDigits     = Math.Min(intDigits, YdbMappingSchema.MAX_DECIMAL_PRECISION);
-				scale         = Math.Min(scale, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
+				intDigits     = Math.Min(intDigits, YdbMappingSchema.MAX_DECIMAL_PRECISION - scale);
 
 				return valueType.WithPrecisionScale(intDigits + scale, scale);
 			}
