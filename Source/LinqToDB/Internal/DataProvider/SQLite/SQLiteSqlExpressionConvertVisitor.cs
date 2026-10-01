@@ -272,8 +272,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (IsDateDataType(dbDataType, "Date"))
 						return new SqlFunction(dbDataType, "Date", expression) { DoNotOptimize = true };
 
-					if (expression is SqlFunction { Parameters: [SqlValue { Value: "%Y-%m-%d %H:%M:%f" }, var expr] })
-						expression = expr;
+					// Timestamp formatting is already complete, including any date modifiers. Date-only
+					// comparisons still need the Date() normalization above, regardless of the source type.
+					if (expression is SqlFunction { Name: "strftime", Parameters: [SqlValue { Value: "%Y-%m-%d %H:%M:%f" }, _, ..] } function)
+						return new SqlFunction(dbDataType, function.Name, function.Flags, function.NullabilityType,
+							function.CanBeNullNullable, function.Parameters) { DoNotOptimize = true };
 
 					return new SqlFunction(dbDataType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
 				}

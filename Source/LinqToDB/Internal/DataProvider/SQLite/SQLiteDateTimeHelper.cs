@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			var format = factory.Value("%Y-%m-%d %H:%M:%f");
 			SqlFunction Shift(DbDataType resultType, ISqlExpression value) => new SqlFunction(resultType, "strftime",
-				ParametersNullabilityType.IfAnyParameterNullable, format, value, modifier) { DoNotOptimize = true };
+				ParametersNullabilityType.IfAnyParameterNullable, format, value, modifier);
 
 			if (type.SystemType.ToUnderlying() != typeof(DateTimeOffset))
 				return Shift(type, date);

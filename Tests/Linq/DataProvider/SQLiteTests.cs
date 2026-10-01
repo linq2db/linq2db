@@ -856,10 +856,6 @@ namespace Tests.DataProvider
 			Issue3766Test2(context, inline: true);
 		}
 
-		// Split from the inlined case: only the parameterized path fails, and the gate can target a provider but
-		// not one value of a [Values] axis - marking the whole method would report its passing half as "test
-		// passed but is marked".
-		[ActiveIssue(3766, Configuration = TestProvName.AllSQLiteClassic, ErrorMessage = "Assert.That(cnt, Is.EqualTo(1))")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
 		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{

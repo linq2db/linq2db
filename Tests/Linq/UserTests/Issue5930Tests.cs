@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -24,6 +25,70 @@ namespace Tests.UserTests
 		}
 
 		static readonly DateTime Start = new DateTime(2026, 9, 15, 12, 0, 0);
+
+		[Table]
+		sealed class DateTypedRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime Date   { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime Target { get; set; }
+			[Column] public double? Amount { get; set; }
+			[Column(DataType = DataType.Int64), Duration(DurationUnit.Tick)]
+			public TimeSpan? Duration { get; set; }
+		}
+
+		sealed class DateShiftResult
+		{
+			public int       Id      { get; set; }
+			public DateTime  Target  { get; set; }
+			public DateTime? Shifted { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5930")]
+		public void DateTypedShiftComparisons(
+			[IncludeDataSources(false, TestProvName.AllSQLite)] string context,
+			[Values(0, 1, 2, 3)] int shiftKind,
+			[Values(ExpressionType.Equal, ExpressionType.NotEqual, ExpressionType.LessThan, ExpressionType.LessThanOrEqual,
+				ExpressionType.GreaterThan, ExpressionType.GreaterThanOrEqual)] ExpressionType comparison,
+			[Values] bool reverse,
+			[Values] bool parameter)
+		{
+			var target = new DateTime(2026, 1, 2);
+			var duration = TimeSpan.FromDays(shiftKind == 3 ? -1 : 1);
+			var data = new[]
+			{
+				new DateTypedRow { Id = 1, Date = target.AddDays(-2), Target = target, Amount = 1, Duration = duration },
+				new DateTypedRow { Id = 2, Date = target.AddDays(-1), Target = target, Amount = 1, Duration = duration },
+				new DateTypedRow { Id = 3, Date = target,             Target = target, Amount = 1, Duration = duration },
+				new DateTypedRow { Id = 4, Date = target,             Target = target, Amount = null, Duration = null },
+			};
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			Expression<Func<DateTypedRow, DateShiftResult>> projection = shiftKind switch
+			{
+				0 => r => new DateShiftResult { Id = r.Id, Target = r.Target, Shifted = Sql.DateAdd(Sql.DateParts.Day, r.Amount, r.Date) },
+				1 => r => new DateShiftResult { Id = r.Id, Target = r.Target, Shifted = r.Date.AddDays(r.Amount!.Value) },
+				2 => r => new DateShiftResult { Id = r.Id, Target = r.Target, Shifted = r.Date + r.Duration },
+				_ => r => new DateShiftResult { Id = r.Id, Target = r.Target, Shifted = r.Date - r.Duration },
+			};
+			var row = Expression.Parameter(typeof(DateShiftResult), "r");
+			Expression shifted = Expression.Property(row, nameof(DateShiftResult.Shifted));
+			Expression<Func<DateTime?>> bound = () => target;
+			Expression other = parameter
+				? bound.Body
+				: Expression.Convert(Expression.Property(row, nameof(DateShiftResult.Target)), typeof(DateTime?));
+			var predicate = Expression.Lambda<Func<DateShiftResult, bool>>(
+				Expression.MakeBinary(comparison, reverse ? other : shifted, reverse ? shifted : other), row);
+
+			// AddDays is non-nullable in the CLR; exercise its null SQL operand separately below.
+			var expected = data.Where(r => shiftKind != 1 || r.Amount.HasValue)
+				.Select(projection.Compile()).Where(predicate.Compile()).Select(r => r.Id).ToArray();
+			var query = table.Select(projection);
+			if (shiftKind == 1)
+				query = query.Where(r => r.Id != 4);
+			query.Where(predicate).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(expected);
+			table.Select(projection).Where(r => r.Shifted == null).Select(r => r.Id).ToArray().ShouldBe(new[] { 4 });
+		}
 
 		static TaskRow[] CreateData() =>
 		[
