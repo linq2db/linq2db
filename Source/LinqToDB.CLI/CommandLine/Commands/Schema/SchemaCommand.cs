@@ -44,6 +44,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Password);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.PasswordEnv);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Credentials);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CredentialHelper);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.Impersonate);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.ImpersonateMode);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions,    QueryExecutionCliOptions.CommandTimeout);
@@ -122,6 +123,7 @@ namespace LinqToDB.CommandLine.Commands.Schema
 			options.Remove(QueryExecutionCliOptions.  Password,                    out var password);
 			options.Remove(QueryExecutionCliOptions.  PasswordEnv,                 out var passwordEnv);
 			options.Remove(QueryExecutionCliOptions.  Credentials,          out var credentials);
+			options.Remove(QueryExecutionCliOptions.  CredentialHelper,            out var credentialHelper);
 			options.Remove(QueryExecutionCliOptions.  Impersonate,                 out var impersonate);
 			options.Remove(QueryExecutionCliOptions.  ImpersonateMode,             out var impersonateMode);
 			options.Remove(QueryExecutionCliOptions.  CommandTimeout,              out var commandTimeout);
@@ -155,7 +157,10 @@ namespace LinqToDB.CommandLine.Commands.Schema
 				(bool?)  impersonate,
 				(string?)impersonateMode,
 				(string?)commandTimeout,
-				null));
+				null)
+			{
+				CredentialHelper = (string?)credentialHelper,
+			});
 
 			if (connection == null)
 			{

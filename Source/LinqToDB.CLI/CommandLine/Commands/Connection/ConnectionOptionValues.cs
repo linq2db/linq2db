@@ -20,5 +20,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		bool?   Impersonate,
 		string? ImpersonateMode,
 		string? CommandTimeout,
-		string? LockTimeout);
+		string? LockTimeout)
+	{
+		/// <summary>Credential helper command from the command line; overrides the profile's <c>credentialHelper</c>.</summary>
+		public string? CredentialHelper { get; init; }
+	}
 }

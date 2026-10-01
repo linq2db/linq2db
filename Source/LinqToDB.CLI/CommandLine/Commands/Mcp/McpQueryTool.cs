@@ -222,7 +222,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				QueryExecutionMode.Query,
 				sql,
 				null,
-				"json-table");
+				"json-table")
+			{
+				CredentialHelper = _startupOptions.CredentialHelper,
+			};
 		}
 
 		ConnectionOptionValues CreateConnectionOptionValues(string? profile)
@@ -242,7 +245,10 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				_startupOptions.Impersonate,
 				_startupOptions.ImpersonateMode,
 				_startupOptions.CommandTimeout,
-				_startupOptions.LockTimeout);
+				_startupOptions.LockTimeout)
+			{
+				CredentialHelper = _startupOptions.CredentialHelper,
+			};
 		}
 
 		static bool IsMcpOutputFormat(string output)

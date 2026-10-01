@@ -36,7 +36,10 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 				values.Impersonate,
 				values.ImpersonateMode,
 				values.CommandTimeout,
-				values.LockTimeout));
+				values.LockTimeout)
+			{
+				CredentialHelper = values.CredentialHelper,
+			});
 
 			ErrorStatusCode = connectionResolver.ErrorStatusCode;
 

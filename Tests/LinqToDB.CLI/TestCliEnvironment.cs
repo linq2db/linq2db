@@ -30,6 +30,16 @@ namespace Tests.LinqToDB.CLI
 		public Dictionary<string, (string User, string Password)> Credentials => ((TestCredentialStore)CredentialStore).Credentials;
 		public HashSet<string> UnreadableCredentialTargets => ((TestCredentialStore)CredentialStore).UnreadableTargets;
 
+		/// <summary>Extra environment for credential helper processes (store file, fake backends on PATH).</summary>
+		public Dictionary<string, string?> HelperEnvironment { get; } = new(StringComparer.Ordinal);
+		/// <summary>Whether helper runs are interactive (LINQ2DB_CREDENTIAL_INTERACTIVE=1).</summary>
+		public bool InteractiveHelpers { get; set; }
+
+		public ICredentialStore CreateHelperCredentialStore(CredentialHelperSettings helper)
+		{
+			return new HelperCredentialStore(new CredentialHelperProcessRunner(helper, InteractiveHelpers, HelperEnvironment), helper.Protocol);
+		}
+
 		public string Output      => _output.ToString();
 		public string ErrorOutput => _error .ToString();
 

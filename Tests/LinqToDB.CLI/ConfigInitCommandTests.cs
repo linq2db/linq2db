@@ -111,6 +111,29 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ConfigInitWritesCredentialHelper()
+		{
+			var environment = new TestCliEnvironment();
+
+			var result = await RunCli(
+				environment,
+				"config-init",
+				"--provider",
+				"PostgreSQL",
+				"--connection-string-env",
+				"PG_CONNECTION",
+				"--credentials",
+				"linq2db/project-a/read",
+				"--credential-helper",
+				"${HOME}/.config/linq2db/helpers/pass.sh");
+
+			result.ExitCode.ShouldBe(0);
+
+			using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
+			json.RootElement.GetProperty("default").GetProperty("credentialHelper").GetString().ShouldBe("${HOME}/.config/linq2db/helpers/pass.sh");
+		}
+
+		[Test]
 		public async Task ConfigInitAddsProfileToExistingConfig()
 		{
 			var environment = new TestCliEnvironment();
