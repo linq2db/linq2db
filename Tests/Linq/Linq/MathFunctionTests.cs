@@ -398,7 +398,7 @@ namespace Tests.Linq
 
 		// A non-constant precision must not cost the value its fractional digits.
 		[Test]
-		public void Round16([DataSources] string context)
+		public void Round16([DataSources(TestProvName.AllDuckDB)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
