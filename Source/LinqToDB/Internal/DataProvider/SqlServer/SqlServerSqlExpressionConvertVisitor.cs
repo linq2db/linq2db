@@ -143,27 +143,37 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		/// <summary>
 		/// Shifts as the base does - days, then seconds, then the rest in the finest unit - over the value widened to
-		/// <c>datetime2</c> first.
+		/// <c>datetime2</c> first, or to <c>datetime</c> on 2005.
 		/// </summary>
 		/// <remarks>
 		/// <c>DATEADD</c> refuses the nanosecond the last step adds on a <c>date</c>, a <c>smalldatetime</c> and a
 		/// <c>datetime</c> - the common type before 2008, and what <c>GETDATE()</c> returns - and the first two would
 		/// not hold the time of day it adds anyway. The widening is applied whatever the mapping declares, for the
-		/// reason <see cref="ElapsedTicks"/> gives. 2005 has no <c>datetime2</c>, but counts in milliseconds there,
-		/// which <c>DATEADD</c> takes on a <c>datetime</c>.
+		/// reason <see cref="ElapsedTicks"/> gives. 2005 has no <c>datetime2</c> and counts in milliseconds, which
+		/// <c>DATEADD</c> takes on a <c>datetime</c>; a <c>smalldatetime</c> is still widened there, since it keeps
+		/// no seconds and would round the result to the minute.
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
 		{
-			if (_sqlServerVersion < SqlServerVersion.v2008)
-				return base.LowerTemporalArithmetic(element);
+			var widened = _sqlServerVersion >= SqlServerVersion.v2008
+				? AsDateTime2(element.Temporal)
+				: Widened(element.Temporal, DataType.DateTime);
 
 			return base.LowerTemporalArithmetic(
-				new SqlTemporalArithmeticExpression(AsDateTime2(element.Temporal), element.Interval, element.IsSubtract, element.Type));
+				new SqlTemporalArithmeticExpression(widened, element.Interval, element.IsSubtract, element.Type));
 		}
 
 		/// <summary>
 		/// A date/time value cast to <c>datetime2</c>, which holds every other SQL Server date/time type exactly; a
 		/// zoned one as it is.
+		/// </summary>
+		ISqlExpression AsDateTime2(ISqlExpression value)
+		{
+			return Widened(value, DataType.DateTime2);
+		}
+
+		/// <summary>
+		/// A date/time value cast to <paramref name="target"/>; a zoned one as it is.
 		/// </summary>
 		/// <remarks>
 		/// The target is built from the CLR type alone, so no <c>DbType</c> of the mapping rides along and renders the
@@ -171,14 +181,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// stores, and the optimizer would drop a cast it believes is a no-op. A <c>datetimeoffset</c> is not cast,
 		/// because <c>DATEADD</c> is exact on it and a cast would lose the offset.
 		/// </remarks>
-		ISqlExpression AsDateTime2(ISqlExpression value)
+		ISqlExpression Widened(ISqlExpression value, DataType target)
 		{
 			var type = QueryHelper.GetDbDataType(value, MappingSchema);
 
 			if (type.DataType == DataType.DateTimeOffset || type.SystemType.ToUnderlying() != typeof(DateTime))
 				return value;
 
-			return Factory.Cast(value, new DbDataType(type.SystemType, DataType.DateTime2), true);
+			return Factory.Cast(value, new DbDataType(type.SystemType, target), true);
 		}
 
 		/// <summary>

@@ -54,8 +54,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// interval keeps the type of the date, and a <c>Date</c> or a <c>Datetime</c> hold no time of day and no
 		/// fraction of a second respectively, while a column of either mapped as a plain <see cref="DateTime"/> is not
 		/// declared as one. The target is built from the CLR type, so a mapped <c>DbType</c> does not render the cast
-		/// as the type it was meant to leave. The wide types are left as they are, since a <c>Timestamp</c> would not
-		/// hold their range.
+		/// as the type it was meant to leave. The wide types go to <c>Timestamp64</c> instead: a <c>Timestamp</c> would
+		/// not hold their range, while a <c>Date32</c> or a <c>Datetime64</c> would drop the time as the narrow ones do.
 		/// <para>
 		/// The sum is optional in YQL, even over two values that cannot be absent, and an optional cannot be written
 		/// to a column that is not nullable. So it is cast to its own type, which the builder unwraps wherever the
@@ -74,9 +74,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var temporal     = element.Temporal;
 			var temporalType = Factory.GetDbDataType(temporal);
 
-			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime) && !IsWideDateType(temporalType))
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
 			{
-				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime2);
+				temporalType = new DbDataType(temporalType.SystemType, IsWideDateType(temporalType) ? DataType.Timestamp64 : DataType.DateTime2);
 				temporal     = Factory.Cast(temporal, temporalType, true);
 			}
 
@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		/// <summary>
-		/// Whether the type is one of the 64-bit date types, whose range a <c>Timestamp</c> does not hold.
+		/// Whether the type is one of the 64-bit date types, whose range only a <c>Timestamp64</c> holds with a time of day.
 		/// </summary>
 		/// <remarks>
 		/// Asked of the <c>DbType</c> too: a <see cref="DateTime"/> declared through it alone -

@@ -1314,6 +1314,12 @@ namespace Tests.Linq
 			[Column(DataType = DataType.Timestamp64)]
 			public DateTime On { get; set; }
 
+			[Column(DataType = DataType.Date32)]
+			public DateTime Day32 { get; set; }
+
+			[Column(DataType = DataType.DateTime64)]
+			public DateTime On64 { get; set; }
+
 			[Column(DataType = DataType.DateTime2, Precision = 7)]
 			public DateTime StartedOn  { get; set; }
 
@@ -1329,6 +1335,12 @@ namespace Tests.Linq
 			[Column(DbType = "Timestamp64")]
 			public DateTime On { get; set; }
 
+			[Column(DbType = "Date32")]
+			public DateTime Day32 { get; set; }
+
+			[Column(DbType = "Datetime64")]
+			public DateTime On64 { get; set; }
+
 			[Column(DataType = DataType.DateTime2, Precision = 7)]
 			public DateTime StartedOn  { get; set; }
 
@@ -1337,11 +1349,13 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
-		/// A YDB <c>Timestamp64</c> declared through its <c>DbType</c> alone, shifted by a computed difference.
+		/// YDB's 64-bit date types declared through their <c>DbType</c> alone, shifted by a computed difference.
 		/// </summary>
 		/// <remarks>
 		/// Such a column is typed as a plain timestamp, and widening it like one would cast it to a
-		/// <c>Timestamp</c>, which starts in 1970 and cannot hold the value. The row is written through a mapping that
+		/// <c>Timestamp</c>, which starts in 1970 and cannot hold the value. Left as it is, a <c>Date32</c> or a
+		/// <c>Datetime64</c> would drop the time of day or the fraction of a second the shift adds; all three go to
+		/// <c>Timestamp64</c>. The row is written through a mapping that
 		/// declares the data type: the DbType-only one would bind the 1960 parameter as a <c>Timestamp</c> too.
 		/// </remarks>
 		[Test]
@@ -1354,13 +1368,68 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var declared = db.CreateLocalTable<WideTimestampDeclaredRow>();
 
-			db.Insert(new WideTimestampDeclaredRow { Id = 1, On = on, StartedOn = started, FinishedOn = started + amount });
+			db.Insert(new WideTimestampDeclaredRow { Id = 1, On = on, Day32 = on.Date, On64 = on, StartedOn = started, FinishedOn = started + amount });
 
 			var t = db.GetTable<WideTimestampRow>().TableName(declared.TableName);
 
-			t.Select(r => Sql.AsSql(r.On + (r.FinishedOn - r.StartedOn))).Single().ShouldBe(on + amount);
+			var row = t
+				.Select(r => new
+				{
+					On    = Sql.AsSql(r.On    + (r.FinishedOn - r.StartedOn)),
+					Day32 = Sql.AsSql(r.Day32 + (r.FinishedOn - r.StartedOn)),
+					On64  = Sql.AsSql(r.On64  + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
 
-			t.Where(r => r.On + (r.FinishedOn - r.StartedOn) > r.On).Select(r => r.Id).ToArray().ShouldBe([1]);
+			row.On.ShouldBe(on + amount);
+			row.Day32.ShouldBe(on.Date + amount);
+			row.On64.ShouldBe(on + amount);
+
+			t.Where(r => r.On    + (r.FinishedOn - r.StartedOn) > r.On).Select(r => r.Id).ToArray().ShouldBe([1]);
+			t.Where(r => r.Day32 + (r.FinishedOn - r.StartedOn) > r.Day32).Select(r => r.Id).ToArray().ShouldBe([1]);
+			t.Where(r => r.On64  + (r.FinishedOn - r.StartedOn) > r.On64.AddHours(5).AddMinutes(30)).Select(r => r.Id).ToArray().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class SmallDateTimeShiftRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.SmallDateTime)]
+			public DateTime OnSmall { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A SQL Server <c>smalldatetime</c> shifted by a computed difference keeps the seconds the shift adds, on every
+		/// version.
+		/// </summary>
+		/// <remarks>
+		/// <c>DATEADD</c> returns a <c>smalldatetime</c> for one, which keeps no seconds. 2005 has no <c>datetime2</c>
+		/// to widen to, so it widens to <c>datetime</c>; every value here is one a <c>datetime</c> stores exactly.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfASmallDateTimeKeepsItsSeconds([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var on      = new DateTime(2020, 1, 1, 3, 0, 0);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 15, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<SmallDateTimeShiftRow>();
+
+			db.Insert(new SmallDateTimeShiftRow { Id = 1, OnSmall = on, StartedOn = started, FinishedOn = started + amount });
+
+			t.Select(r => Sql.AsSql(r.OnSmall + (r.FinishedOn - r.StartedOn))).Single().ShouldBe(on + amount);
+
+			var bound = on + amount - TimeSpan.FromSeconds(1);
+
+			t.Where(r => r.OnSmall + (r.FinishedOn - r.StartedOn) > bound).Select(r => r.Id).ToArray().ShouldBe([1]);
 		}
 
 		/// <summary>
