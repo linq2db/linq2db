@@ -1490,15 +1490,44 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable<OptionalDueRow>();
 
-			db.Insert(new OptionalDueRow { Id = 1, DueOn = started, StartedOn = started });
+			db.Insert(new OptionalDueRow { Id = 1, DueOn = started,             StartedOn = started });
+			db.Insert(new OptionalDueRow { Id = 2, DueOn = null,                StartedOn = started });
+			db.Insert(new OptionalDueRow { Id = 3, DueOn = started.AddHours(2), StartedOn = started });
 
-			t.Select(r => Sql.AsSql(r.DueOn + (later - earlier))).Single().ShouldBe(started + (later - earlier));
-			t.Select(r => Sql.AsSql(r.StartedOn + (laterN - earlierN))).Single().ShouldBe(started + (later - earlier));
-			t.Select(r => Sql.AsSql(r.DueOn - (laterN - earlierN))).Single().ShouldBe(started - (later - earlier));
-			t.Select(r => Sql.AsSql(r.StartedOn + (laterN - absent))).Single().ShouldBeNull();
+			var one = t.Where(r => r.Id == 1);
+			var amount = later - earlier;
 
-			t.Where(r => r.DueOn + (later - earlier) > r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBe([1]);
-			t.Where(r => r.StartedOn + (laterN - earlierN) < r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBeEmpty();
+			one.Select(r => Sql.AsSql(r.DueOn + (later - earlier))).Single().ShouldBe(started + amount);
+			one.Select(r => Sql.AsSql(r.StartedOn + (laterN - earlierN))).Single().ShouldBe(started + amount);
+			one.Select(r => Sql.AsSql(r.DueOn - (laterN - earlierN))).Single().ShouldBe(started - amount);
+			one.Select(r => Sql.AsSql(r.StartedOn + (laterN - absent))).Single().ShouldBeNull();
+
+			// An absent column makes the shift absent as well.
+			t.OrderBy(r => r.Id).Select(r => Sql.AsSql(r.DueOn + (later - earlier))).ToArray()
+				.ShouldBe([started + amount, null, started.AddHours(2) + amount]);
+
+			t.Where(r => r.DueOn + (later - earlier) > r.StartedOn.AddHours(1)).OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe([1, 3]);
+			one.Where(r => r.StartedOn + (laterN - earlierN) < r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBeEmpty();
+
+			// The same query, run as the captured endpoint goes from present to absent and back: the amount is a
+			// parameter computed from it on every run, not a value fixed when the query was first built.
+			DateTime? endpoint = later;
+
+			DateTime? Shifted()
+			{
+				return one.Select(r => Sql.AsSql(r.StartedOn + (endpoint - earlierN))).Single();
+			}
+
+			Shifted().ShouldBe(started + amount);
+			endpoint = null;
+			Shifted().ShouldBeNull();
+			endpoint = later.AddHours(1);
+			Shifted().ShouldBe(started + amount + TimeSpan.FromHours(1));
+
+			// Not a difference of client values: the difference of a column, which is a computed shift. (A captured
+			// TimeSpan? is not one either, and keeps the handling of a bare duration, which is not asked here.)
+			t.OrderBy(r => r.Id).Select(r => Sql.AsSql(r.DueOn + (r.DueOn - r.StartedOn))).ToArray()
+				.ShouldBe([started, null, started.AddHours(4)]);
 		}
 
 		/// <summary>

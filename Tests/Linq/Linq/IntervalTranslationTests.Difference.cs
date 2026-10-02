@@ -1158,7 +1158,7 @@ namespace Tests.Linq
 		public void DateDifferenceAcrossAnOuterJoin([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
 			var started = new DateTime(2026, 1, 1, 10, 0, 0);
-			var amount  = new TimeSpan(2, 3, 0, 0);
+			var amount  = new TimeSpan(2, 3, 15, 0);
 
 			using var db    = GetDataContext(context);
 			using var left  = db.CreateLocalTable("OuterJoinLeft",  [new EventRow { Id = 1, StartedOn = started, FinishedOn = started }, new EventRow { Id = 2, StartedOn = started, FinishedOn = started }]);
@@ -1175,15 +1175,32 @@ namespace Tests.Linq
 				{
 					TotalDays = Sql.AsSql((double?)(x.b!.FinishedOn - x.a.StartedOn).TotalDays),
 					Days      = Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Days),
+					Hours     = Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Hours),
+					Minutes   = Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Minutes),
+					Reversed  = Sql.AsSql((double?)(x.a.StartedOn - x.b!.FinishedOn).TotalHours),
+					RevHours  = Sql.AsSql((int?)(x.a.StartedOn - x.b!.FinishedOn).Hours),
 				})
 				.ToList();
 
 			rows[0].TotalDays!.Value.ShouldBe(amount.TotalDays, Tolerance(amount.TotalDays));
 			rows[0].Days.ShouldBe(amount.Days);
+			rows[0].Hours.ShouldBe(amount.Hours);
+			rows[0].Minutes.ShouldBe(amount.Minutes);
+			rows[0].Reversed!.Value.ShouldBe(-amount.TotalHours, Tolerance(amount.TotalHours));
+			rows[0].RevHours.ShouldBe(-amount.Hours);
+
 			rows[1].TotalDays.ShouldBeNull();
 			rows[1].Days.ShouldBeNull();
+			rows[1].Hours.ShouldBeNull();
+			rows[1].Minutes.ShouldBeNull();
+			rows[1].Reversed.ShouldBeNull();
+			rows[1].RevHours.ShouldBeNull();
 
 			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).TotalDays > 1).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).Hours == amount.Hours).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).Minutes == amount.Minutes).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.a.StartedOn - x.b!.FinishedOn).TotalHours < -1).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.a.StartedOn - x.b!.FinishedOn).Hours == -amount.Hours).Select(x => x.a.Id).ToList().ShouldBe([1]);
 		}
 
 		[Table]
