@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
@@ -24,8 +23,8 @@ namespace Tests.LinqToDB.CLI
 
 		public Exception? WriteAllTextException { get; init; }
 
-		/// <summary>Impersonation scopes entered by commands, in order.</summary>
-		public List<ImpersonatedRun> ImpersonatedRuns { get; } = new();
+		/// <summary>Impersonation sessions started by commands, in order.</summary>
+		public List<RecordingImpersonationSession> ImpersonationSessions { get; } = new();
 
 		public TextWriter Out   => _output;
 		public TextWriter Error => _error;
@@ -116,46 +115,16 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		/// <summary>
-		/// Records what had already happened when the scope was entered and which assemblies were loaded
-		/// inside it, then runs the work without changing identity.
+		/// Returns a session that records what each impersonated run saw, without changing identity.
 		/// </summary>
-		public async Task<T> RunImpersonatedAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
 		{
-			var run = new ImpersonatedRun(
-				user,
-				password,
-				mode,
-				_error.ToString(),
-				AppDomain.CurrentDomain.GetAssemblies().Select(static a => a.GetName().Name!).ToHashSet(StringComparer.Ordinal));
+			var session = new RecordingImpersonationSession(user, password, mode, _error.ToString);
 
-			ImpersonatedRuns.Add(run);
+			lock (ImpersonationSessions)
+				ImpersonationSessions.Add(session);
 
-			AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
-
-			try
-			{
-				return await action();
-			}
-			finally
-			{
-				AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
-			}
-
-			void OnAssemblyLoad(object? sender, AssemblyLoadEventArgs args)
-			{
-				lock (run.LoadedInside)
-					run.LoadedInside.Add(args.LoadedAssembly.GetName().Name!);
-			}
-		}
-
-		internal sealed record ImpersonatedRun(
-			string                   User,
-			string                   Password,
-			WindowsImpersonationMode Mode,
-			string                   ErrorOutputAtEntry,
-			HashSet<string>          LoadedAtEntry)
-		{
-			public HashSet<string> LoadedInside { get; } = new(StringComparer.Ordinal);
+			return session;
 		}
 
 		private sealed class TestFileWriter(Action<string> save) : StringWriter

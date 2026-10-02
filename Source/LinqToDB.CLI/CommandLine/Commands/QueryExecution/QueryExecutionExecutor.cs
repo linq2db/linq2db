@@ -395,24 +395,21 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					_settings.ImpersonateMode,
 					null);
 
-				var connection = ConnectionExecution.Prepare(connectionSettings);
+				var connection = await ConnectionExecution.OpenAsync(_environment, connectionSettings);
 
 				if (connection.Error != null)
 					return new QueryExecutionResult(connection.StatusCode, connection.Error, false);
 
-				var (dataOptions, dataProvider) = connection.Value!;
+				using var scope = connection.Value!;
 
-				// SQL validation loads parsers from local files, so it runs before the optional impersonation scope.
+				// SQL validation loads parsers from local files, so it runs outside the optional impersonation scope.
 				//
-				var validationError = await ValidateSql(dataProvider, sql);
+				var validationError = await ValidateSql(scope.DataProvider, sql);
 
 				if (validationError != null)
 					return validationError;
 
-				return await ConnectionExecution.RunDatabaseWorkAsync(
-					_environment,
-					connectionSettings,
-					() => ExecuteDatabaseLoop(dataOptions, dataProvider, sql, outputWriter, cancellationToken));
+				return await scope.RunAsync(() => ExecuteDatabaseLoop(scope.DataOptions, scope.DataProvider, sql, outputWriter, cancellationToken));
 			}
 			catch (OperationCanceledException)
 			{

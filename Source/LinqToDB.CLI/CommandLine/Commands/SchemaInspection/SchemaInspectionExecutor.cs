@@ -78,22 +78,19 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 
-				var connection = ConnectionExecution.Prepare(_settings.Connection);
+				var connection = await ConnectionExecution.OpenAsync(_environment, _settings.Connection);
 
 				if (connection.Error != null)
 					return new SchemaInspectionResult(connection.StatusCode, $"Schema inspection failed: {connection.Error}");
 
-				var (dataOptions, dataProvider) = connection.Value!;
+				using var scope = connection.Value!;
 
 				// Only the database read runs in the optional impersonation scope; option and filter setup
 				// and result mapping run under the original process account.
 				//
 				var schemaOptions  = CreateSchemaOptions(_settings.Options);
-				var schemaProvider = dataProvider.GetSchemaProvider();
-				var schema         = await ConnectionExecution.RunDatabaseWorkAsync(
-					_environment,
-					_settings.Connection,
-					() => ReadSchema(dataOptions, schemaProvider, schemaOptions, cancellationToken));
+				var schemaProvider = scope.DataProvider.GetSchemaProvider();
+				var schema         = await scope.RunAsync(() => ReadSchema(scope.DataOptions, schemaProvider, schemaOptions, cancellationToken));
 				var result         = MapSchema(schema);
 
 				if (_settings.MaxOutputBytes is { } maxOutputBytes)

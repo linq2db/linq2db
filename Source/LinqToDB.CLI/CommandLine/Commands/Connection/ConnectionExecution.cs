@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.DataProvider;
 
 namespace LinqToDB.CommandLine.Commands.Connection
@@ -15,68 +19,153 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	internal static class ConnectionExecution
 	{
 		/// <summary>
-		/// Loads the provider and creates <see cref="DataOptions"/> for the connection.
-		/// Runs under the original process account: provider assemblies are loaded from local files.
+		/// Loads the provider, creates <see cref="DataOptions"/> and, when impersonation is enabled, logs on as the
+		/// resolved Windows user.
 		/// </summary>
-		public static ConnectionExecutionResult<PreparedConnection> Prepare(ConnectionSettings settings)
+		/// <remarks>
+		/// <para>
+		/// The impersonated identity usually cannot read the tool's own files, so everything that loads code runs
+		/// first, under the original process account: external provider assemblies, the tool's own assemblies and the
+		/// client library's static initialization and native libraries.
+		/// </para>
+		/// <para>
+		/// Resolving the provider can open a connection to detect the server version. That is database work, so with
+		/// impersonation it runs as the impersonated identity.
+		/// That detection connection is then the client library's first use, so its initialization also happens in the
+		/// session; with a versioned provider name nothing connects before <see cref="WarmUpClient"/>.
+		/// </para>
+		/// </remarks>
+		public static async Task<ConnectionExecutionResult<ConnectionScope>> OpenAsync(ICliEnvironment environment, ConnectionSettings settings)
 		{
 			if (!ExternalProviderLoader.LoadExternalProvider(settings.Provider, settings.ProviderLocation, out var error))
-				return new ConnectionExecutionResult<PreparedConnection>(StatusCodes.EXPECTED_ERROR, error, null);
+				return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.EXPECTED_ERROR, error, null);
 
-			var dataProvider = DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString);
+			if (!settings.Impersonate)
+				return CreateScope(settings, DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString), null);
 
+			LoadApplicationAssemblies();
+
+			var session = environment.StartImpersonation(settings.User!, settings.Password!, settings.ImpersonateMode);
+
+			try
+			{
+				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
+
+				if (dataProvider != null)
+					WarmUpClient(dataProvider, settings.ConnectionString);
+
+				var result = CreateScope(settings, dataProvider, session);
+
+				if (result.Value == null)
+					session.Dispose();
+
+				return result;
+			}
+			catch
+			{
+				session.Dispose();
+				throw;
+			}
+		}
+
+		static ConnectionExecutionResult<ConnectionScope> CreateScope(ConnectionSettings settings, IDataProvider? dataProvider, IImpersonationSession? session)
+		{
 			if (dataProvider == null)
-				return new ConnectionExecutionResult<PreparedConnection>(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(settings.Provider), null);
+				return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(settings.Provider), null);
 
 			var dataOptions = new DataOptions().UseConnectionString(dataProvider, settings.ConnectionString);
 
 			if (settings.CommandTimeout > 0)
 				dataOptions = dataOptions.UseCommandTimeout(settings.CommandTimeout);
 
-			return new ConnectionExecutionResult<PreparedConnection>(StatusCodes.SUCCESS, null, new PreparedConnection(dataOptions, dataProvider));
+			return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.SUCCESS, null, new ConnectionScope(dataOptions, dataProvider, session));
 		}
+
+		static bool _applicationAssembliesLoaded;
 
 		/// <summary>
-		/// Runs database work, under the resolved Windows identity when impersonation is enabled.
+		/// Loads every assembly shipped with the tool, so that nothing the database work needs (provider adapters,
+		/// provider value types, output formatting) is loaded from disk later under the impersonated identity.
 		/// </summary>
-		/// <remarks>
-		/// The impersonated identity usually cannot read the tool's own files, so <paramref name="action"/> must
-		/// contain only connection opening and SQL execution. Configuration, credentials, provider loading and
-		/// SQL validation run before this call under the original process account.
-		/// </remarks>
-		public static Task<T> RunDatabaseWorkAsync<T>(ICliEnvironment environment, ConnectionSettings settings, Func<Task<T>> action)
+		static void LoadApplicationAssemblies()
 		{
-			if (!settings.Impersonate)
-				return action();
-
-			// Code the database work needs (provider value types, output formatting) is loaded on first use.
-			// Load it now, while file access still uses the original process account.
-			//
-			LoadReferencedAssemblies();
-
-			return environment.RunImpersonatedAsync(settings.User!, settings.Password!, settings.ImpersonateMode, action);
-		}
-
-		static bool _referencedAssembliesLoaded;
-
-		static void LoadReferencedAssemblies()
-		{
-			if (_referencedAssembliesLoaded)
+			if (_applicationAssembliesLoaded)
 				return;
 
-			foreach (var assemblyName in typeof(ConnectionExecution).Assembly.GetReferencedAssemblies())
+			var baseDirectory = Path.GetFullPath(AppContext.BaseDirectory);
+
+			if (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") is string trustedAssemblies)
 			{
-				try
+				foreach (var path in trustedAssemblies.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
 				{
-					Assembly.Load(assemblyName);
-				}
-				catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
-				{
-					// Not loadable as the process account either; code that needs it fails the same way later.
+					if (!Path.GetFullPath(path).StartsWith(baseDirectory, StringComparison.OrdinalIgnoreCase))
+						continue;
+
+					try
+					{
+						Assembly.Load(new AssemblyName(Path.GetFileNameWithoutExtension(path)));
+					}
+					catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
+					{
+						// Not loadable as the process account either; code that needs it fails the same way later.
+					}
 				}
 			}
 
-			_referencedAssembliesLoaded = true;
+			_applicationAssembliesLoaded = true;
+		}
+
+		static readonly ConcurrentDictionary<Assembly, bool> _nativeLibrariesLoaded = new();
+
+		/// <summary>
+		/// Runs the client library's first-use initialization: creating (not opening) a connection runs its static
+		/// constructors, and loading the native libraries it imports covers those loaded on first open
+		/// (e.g. the SQL Server network interface on Windows).
+		/// </summary>
+		static void WarmUpClient(IDataProvider dataProvider, string connectionString)
+		{
+			using var connection = dataProvider.CreateConnection(connectionString);
+
+			var clientAssembly = connection.GetType().Assembly;
+
+			if (!_nativeLibrariesLoaded.TryAdd(clientAssembly, true))
+				return;
+
+			foreach (var library in GetImportedLibraries(clientAssembly))
+				NativeLibrary.TryLoad(library, clientAssembly, null, out _);
+
+			static HashSet<string> GetImportedLibraries(Assembly assembly)
+			{
+				Type?[] types;
+
+				try
+				{
+					types = assembly.GetTypes();
+				}
+				catch (ReflectionTypeLoadException ex)
+				{
+					types = ex.Types;
+				}
+
+				var libraries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+				foreach (var type in types)
+				{
+					if (type == null)
+						continue;
+
+					foreach (var method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+					{
+						if (!method.Attributes.HasFlag(MethodAttributes.PinvokeImpl))
+							continue;
+
+						foreach (var import in method.GetAttributes<DllImportAttribute>(inherit: false))
+							libraries.Add(import.Value);
+					}
+				}
+
+				return libraries;
+			}
 		}
 
 		static string CreateProviderCreationError(string provider)

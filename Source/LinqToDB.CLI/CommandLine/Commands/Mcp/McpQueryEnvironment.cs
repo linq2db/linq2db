@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Credentials;
@@ -76,9 +75,9 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 			throw new NotSupportedException("MCP query execution does not support interactive input.");
 		}
 
-		public Task<T> RunImpersonatedAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
 		{
-			return _inner.RunImpersonatedAsync(user, password, mode, action);
+			return _inner.StartImpersonation(user, password, mode);
 		}
 	}
 }

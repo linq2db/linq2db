@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.Credentials;
 using LinqToDB.CommandLine.Commands.QueryExecution;
@@ -103,9 +102,9 @@ namespace LinqToDB.CommandLine
 			return Console.ReadLine();
 		}
 
-		public Task<T> RunImpersonatedAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
 		{
-			return WindowsImpersonation.RunAsync(user, password, mode, action);
+			return WindowsImpersonation.Logon(user, password, mode);
 		}
 	}
 }
