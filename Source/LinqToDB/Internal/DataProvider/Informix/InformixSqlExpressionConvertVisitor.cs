@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
@@ -165,56 +166,62 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		// IFX rejects a temporal parameter, cast or not, next to a non-parameter value in CASE results
 		static void InlineTemporalParameters(ISqlExpression?[] results)
 		{
-			var hasTemporalParameter = false;
-			var hasOtherValue        = false;
+			List<SqlParameter>? parameters    = null;
+			var                 hasOtherValue = false;
 
 			foreach (var result in results)
 			{
-				switch (result == null ? null : QueryHelper.UnwrapNullablity(result))
+				if (result == null)
+					continue;
+
+				var expr = QueryHelper.UnwrapNullablity(result);
+
+				if (expr is SqlValue { Value: null })
+					continue;
+
+				var parameter = expr switch
 				{
-					case null or SqlValue { Value: null }:
-						break;
-					case SqlParameter { IsQueryParameter: true } p when IsTemporal(p.Type.SystemType):
-					case SqlParameterCastExpression { Parameter: { IsQueryParameter: true } cp } when IsTemporal(cp.Type.SystemType):
-					case SqlCastExpression { Expression: SqlParameter { IsQueryParameter: true } } c when IsTemporal(c.SystemType):
-						hasTemporalParameter = true;
-						break;
-					default:
-						hasOtherValue = true;
-						break;
-				}
+					SqlParameter               p                              => p,
+					SqlParameterCastExpression { Parameter : var p }          => p,
+					SqlCastExpression          { Expression: SqlParameter p } => p,
+					_                                                         => null,
+				};
+
+				if (parameter is { IsQueryParameter: true } && IsTemporal(parameter.Type.SystemType))
+					(parameters ??= new()).Add(parameter);
+				else
+					hasOtherValue = true;
 			}
 
-			if (!hasTemporalParameter || !hasOtherValue)
+			if (parameters == null || !hasOtherValue)
 				return;
 
-			foreach (var result in results)
-			{
-				switch (result == null ? null : QueryHelper.UnwrapNullablity(result))
-				{
-					case SqlParameter p                                  : p.IsQueryParameter = false; break;
-					case SqlParameterCastExpression { Parameter: var p } : p.IsQueryParameter = false; break;
-					case SqlCastExpression { Expression: SqlParameter p }: p.IsQueryParameter = false; break;
-				}
-			}
+			foreach (var parameter in parameters)
+				parameter.IsQueryParameter = false;
 
 			static bool IsTemporal(Type? type)
 			{
 				type = type?.ToUnderlying();
 
-				return type == typeof(DateTime) || type == typeof(DateTimeOffset)
+				if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
+					return true;
+
 #if SUPPORTS_DATEONLY
-					|| type == typeof(DateOnly)
+				if (type == typeof(DateOnly))
+					return true;
 #endif
-					;
+
+				return false;
 			}
 		}
 
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
 			var results = new ISqlExpression?[element.Cases.Count + 1];
+
 			for (var i = 0; i < element.Cases.Count; i++)
 				results[i] = element.Cases[i].ResultExpression;
+
 			results[^1] = element.ElseExpression;
 
 			InlineTemporalParameters(results);
