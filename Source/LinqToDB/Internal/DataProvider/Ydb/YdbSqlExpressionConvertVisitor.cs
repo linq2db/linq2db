@@ -76,11 +76,27 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
 			{
-				temporalType = new DbDataType(temporalType.SystemType, IsWideDateType(temporalType) ? DataType.Timestamp64 : DataType.DateTime2);
+				temporalType = new DbDataType(temporalType.SystemType, IsWide(temporal) ? DataType.Timestamp64 : DataType.DateTime2);
 				temporal     = Factory.Cast(temporal, temporalType, true);
 			}
 
 			return Factory.Cast(Factory.Add(temporalType, temporal, interval), temporalType, true);
+		}
+
+		/// <summary>
+		/// Whether a shifted value is one of the 64-bit date types.
+		/// </summary>
+		/// <remarks>
+		/// A shift is lowered before its operand, so in a chain the operand may still be a shift node, typed by the
+		/// CLR mapping alone. Its wideness is that of the value it shifts in turn: the inner shift lowers to a
+		/// <c>Timestamp64</c> for a wide value, which a cast to <c>Timestamp</c> here would not hold.
+		/// </remarks>
+		bool IsWide(ISqlExpression temporal)
+		{
+			if (QueryHelper.UnwrapNullablity(temporal) is SqlTemporalArithmeticExpression inner)
+				return IsWide(inner.Temporal);
+
+			return IsWideDateType(Factory.GetDbDataType(temporal));
 		}
 
 		/// <summary>

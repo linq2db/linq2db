@@ -1388,6 +1388,28 @@ namespace Tests.Linq
 			t.Where(r => r.On    + (r.FinishedOn - r.StartedOn) > r.On).Select(r => r.Id).ToArray().ShouldBe([1]);
 			t.Where(r => r.Day32 + (r.FinishedOn - r.StartedOn) > r.Day32).Select(r => r.Id).ToArray().ShouldBe([1]);
 			t.Where(r => r.On64  + (r.FinishedOn - r.StartedOn) > r.On64.AddHours(5).AddMinutes(30)).Select(r => r.Id).ToArray().ShouldBe([1]);
+
+			// Chained, the outer shift is lowered while the inner one is still a node typed by the CLR mapping alone;
+			// it has to keep the wide type all the same. Once by a computed difference, once by client values.
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier + amount;
+
+			var chained = t
+				.Select(r => new
+				{
+					On    = Sql.AsSql(r.On    + (r.FinishedOn - r.StartedOn) + (r.FinishedOn - r.StartedOn)),
+					Day32 = Sql.AsSql(r.Day32 + (r.FinishedOn - r.StartedOn) + (later - earlier)),
+					On64  = Sql.AsSql(r.On64  + (later - earlier) + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			chained.On.ShouldBe(on + amount + amount);
+			chained.Day32.ShouldBe(on.Date + amount + amount);
+			chained.On64.ShouldBe(on + amount + amount);
+
+			// Against the Timestamp64 column three hours on: 08:00 + 3 h is 11:00, which only the half second the two
+			// shifts add puts the Date32 past.
+			t.Where(r => r.Day32 + (later - earlier) + (later - earlier) > r.On.AddHours(3)).Select(r => r.Id).ToArray().ShouldBe([1]);
 		}
 
 		[Table]
