@@ -1135,6 +1135,148 @@ namespace Tests.Linq
 				.ShouldBe([1]);
 		}
 
+		[Table]
+		sealed class DatedEventAsDateTimeRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column]
+			public DateTime Day { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		[Table]
+		sealed class DatedEventWithDbTypeRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Date, DbType = "Date")]
+			public DateTime Day { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// The date column of <see cref="AComputedShiftOfADateColumnKeepsTheTime"/>, read through the two mappings
+		/// that do not declare it as a date alone.
+		/// </summary>
+		/// <remarks>
+		/// A plain <see cref="DateTime"/> - what a scaffolder writes - declares nothing, so a widening keyed on the
+		/// declared type never sees a date; and a declared <c>DbType</c>, carried into a cast built from the declared
+		/// type, renders that cast as the date it was meant to leave. Either way the shift stays in the date type and
+		/// drops the time it adds.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfADateColumnKeepsTheTimeWhateverTheMapping(
+			[IncludeDataSources(ComputedShiftProviders + "," + TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var day     = new DateTime(2026, 3, 1);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<DatedEventRow>();
+
+			db.Insert(new DatedEventRow { Id = 1, Day = day, StartedOn = started, FinishedOn = started + amount });
+
+			var plain = db.GetTable<DatedEventAsDateTimeRow>().TableName(t.TableName);
+
+			plain
+				.Select(r => Sql.AsSql(r.Day + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(day + amount);
+
+			plain
+				.Where(r => r.Day + (r.FinishedOn - r.StartedOn) > r.Day)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+
+			var withDbType = db.GetTable<DatedEventWithDbTypeRow>().TableName(t.TableName);
+
+			withDbType
+				.Select(r => Sql.AsSql(r.Day + (r.FinishedOn - r.StartedOn)))
+				.Single()
+				.ShouldBe(day + amount);
+
+			withDbType
+				.Where(r => r.Day + (r.FinishedOn - r.StartedOn) > r.Day)
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class CoarseShiftRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)]
+			public DateTime OnDateTime { get; set; }
+
+			[Column(DataType = DataType.SmallDateTime)]
+			public DateTime OnSmall { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			public DateTime OnDate { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A SQL Server <c>datetime</c>, <c>smalldatetime</c> and <c>date</c> shifted by a computed difference with a
+		/// part below the millisecond.
+		/// </summary>
+		/// <remarks>
+		/// The shift spends the part below a second through <c>DATEADD(nanosecond, ...)</c>, which SQL Server refuses
+		/// on all three types, and the last two could not hold the time of day it adds anyway. Each starting value is
+		/// one the type stores exactly, so the answer is the CLR one to the tick.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfACoarseSqlServerType([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var on      = new DateTime(2026, 3, 1, 10, 0, 0);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250) + TimeSpan.FromTicks(1234);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<CoarseShiftRow>();
+
+			db.Insert(new CoarseShiftRow { Id = 1, OnDateTime = on, OnSmall = on, OnDate = on.Date, StartedOn = started, FinishedOn = started + amount });
+
+			var row = t
+				.Select(r => new
+				{
+					FromDateTime = Sql.AsSql(r.OnDateTime + (r.FinishedOn - r.StartedOn)),
+					FromSmall    = Sql.AsSql(r.OnSmall    + (r.FinishedOn - r.StartedOn)),
+					FromDate     = Sql.AsSql(r.OnDate     + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			row.FromDateTime.ShouldBe(on + amount);
+			row.FromSmall.ShouldBe(on + amount);
+			row.FromDate.ShouldBe(on.Date + amount);
+
+			t
+				.Where(r => r.OnDateTime + (r.FinishedOn - r.StartedOn) > r.OnDateTime.AddHours(5))
+				.Select(r => r.Id)
+				.ToArray()
+				.ShouldBe([1]);
+		}
+
 		/// <summary>
 		/// A <see cref="DateTimeOffset"/> shifted by a computed difference, answered as the same instant or refused.
 		/// </summary>

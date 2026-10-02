@@ -90,11 +90,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			var shiftedJulian = Factory.Add(doubleType, JulianDay(element.Temporal), days);
 
 			// The result carries a time of day even when the date it started from did not, so it is not typed as a
-			// date: a comparison would read both sides through Date() and drop the time the shift added.
-			var resultType = Factory.GetDbDataType(element.Temporal);
-
-			if (resultType.DataType == DataType.Date)
-				resultType = resultType.WithDataType(DataType.DateTime);
+			// date: a comparison would read both sides through Date() and drop the time the shift added. Built from
+			// the CLR type, because a mapped DbType of Date marks it as a date just as well.
+			var resultType = new DbDataType(Factory.GetDbDataType(element.Temporal).SystemType, DataType.DateTime);
 
 			return Factory.Function(resultType, "Strftime", Factory.Value(stringType, "%Y-%m-%d %H:%M:%f"), shiftedJulian);
 		}

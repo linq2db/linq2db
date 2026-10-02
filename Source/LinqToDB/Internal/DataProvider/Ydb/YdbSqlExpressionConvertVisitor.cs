@@ -50,8 +50,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// adding it natively.
 		/// </summary>
 		/// <remarks>
-		/// A <c>Date</c> or a <c>Datetime</c> is cast to <c>Timestamp</c> first: adding an interval keeps the type of
-		/// the date, and those two hold no time of day and no fraction of a second respectively.
+		/// A <see cref="DateTime"/> is cast to <c>Timestamp</c> first, whatever its mapping declares: adding an
+		/// interval keeps the type of the date, and a <c>Date</c> or a <c>Datetime</c> hold no time of day and no
+		/// fraction of a second respectively, while a column of either mapped as a plain <see cref="DateTime"/> is not
+		/// declared as one. The target is built from the CLR type, so a mapped <c>DbType</c> does not render the cast
+		/// as the type it was meant to leave. The wide types are left as they are, since a <c>Timestamp</c> would not
+		/// hold their range.
 		/// <para>
 		/// The sum is optional in YQL, even over two values that cannot be absent, and an optional cannot be written
 		/// to a column that is not nullable. So it is cast to its own type, which the builder unwraps wherever the
@@ -70,9 +74,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var temporal     = element.Temporal;
 			var temporalType = Factory.GetDbDataType(temporal);
 
-			if (temporalType.DataType is DataType.Date or DataType.DateTime)
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime)
+				&& temporalType.DataType is not (DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64))
 			{
-				temporalType = temporalType.WithDataType(DataType.DateTime2);
+				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime2);
 				temporal     = Factory.Cast(temporal, temporalType, true);
 			}
 

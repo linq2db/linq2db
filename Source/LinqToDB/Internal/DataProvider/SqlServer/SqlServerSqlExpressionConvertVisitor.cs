@@ -94,8 +94,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// Each count is the raw boundary count, measured from exactly where the previous shift landed, so an
 		/// overshoot at one step returns as a negative remainder at the next and the parts telescope, as in the base.
 		/// That needs the second shift to be exact, which two storage types do not give: <c>DATEADD</c> refuses a
-		/// second on a <c>date</c>, and rounds a <c>smalldatetime</c> to the minute. Both are widened to
-		/// <c>datetime2</c> first, which holds either of them exactly.
+		/// second on a <c>date</c>, and rounds a <c>smalldatetime</c> to the minute. So the anchor is widened to
+		/// <c>datetime2</c> first, which holds either of them exactly - whatever the mapping declares, since that is
+		/// not what the column stores: a <c>date</c> column mapped as a plain <see cref="DateTime"/> is typed
+		/// <c>datetime2</c> here.
 		/// </remarks>
 		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
 		{
@@ -110,9 +112,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (dayAnchor == null)
 				return null;
 
-			var anchorType = QueryHelper.GetDbDataType(dayAnchor, MappingSchema);
-			if (anchorType.DataType is DataType.Date or DataType.SmallDateTime)
-				dayAnchor = Factory.Cast(dayAnchor, anchorType.WithDataType(DataType.DateTime2));
+			dayAnchor = AsDateTime2(dayAnchor);
 
 			var seconds = CountDateBoundaries(SqlIntervalUnit.Second, dayAnchor, element.End);
 			if (seconds == null)
@@ -139,6 +139,46 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			var remainderTicks = Factory.Div(longType, nanoseconds, Factory.Value(longType, 100L));
 
 			return Factory.Add(longType, Factory.Add(longType, dayTicks, secondTicks), remainderTicks);
+		}
+
+		/// <summary>
+		/// Shifts as the base does - days, then seconds, then the rest in the finest unit - over the value widened to
+		/// <c>datetime2</c> first.
+		/// </summary>
+		/// <remarks>
+		/// <c>DATEADD</c> refuses the nanosecond the last step adds on a <c>date</c>, a <c>smalldatetime</c> and a
+		/// <c>datetime</c> - the common type before 2008, and what <c>GETDATE()</c> returns - and the first two would
+		/// not hold the time of day it adds anyway. The widening is applied whatever the mapping declares, for the
+		/// reason <see cref="ElapsedTicks"/> gives. 2005 has no <c>datetime2</c>, but counts in milliseconds there,
+		/// which <c>DATEADD</c> takes on a <c>datetime</c>.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			if (_sqlServerVersion < SqlServerVersion.v2008)
+				return base.LowerTemporalArithmetic(element);
+
+			return base.LowerTemporalArithmetic(
+				new SqlTemporalArithmeticExpression(AsDateTime2(element.Temporal), element.Interval, element.IsSubtract, element.Type));
+		}
+
+		/// <summary>
+		/// A date/time value cast to <c>datetime2</c>, which holds every other SQL Server date/time type exactly; a
+		/// zoned one as it is.
+		/// </summary>
+		/// <remarks>
+		/// The target is built from the CLR type alone, so no <c>DbType</c> of the mapping rides along and renders the
+		/// cast as the type it was meant to leave. The cast is mandatory: the declared type is not what the column
+		/// stores, and the optimizer would drop a cast it believes is a no-op. A <c>datetimeoffset</c> is not cast,
+		/// because <c>DATEADD</c> is exact on it and a cast would lose the offset.
+		/// </remarks>
+		ISqlExpression AsDateTime2(ISqlExpression value)
+		{
+			var type = QueryHelper.GetDbDataType(value, MappingSchema);
+
+			if (type.DataType == DataType.DateTimeOffset || type.SystemType.ToUnderlying() != typeof(DateTime))
+				return value;
+
+			return Factory.Cast(value, new DbDataType(type.SystemType, DataType.DateTime2), true);
 		}
 
 		/// <summary>

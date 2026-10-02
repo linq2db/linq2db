@@ -1124,14 +1124,20 @@ namespace Tests.Linq
 		/// <c>smalldatetime</c>. The end has seconds and a sub-second part, so neither can pass by luck.
 		/// </summary>
 		/// <remarks>
-		/// Restricted to 2008-2014: the widening this test pins - <c>date</c> and <c>smalldatetime</c> cast up to
-		/// <c>datetime2</c> before the second shift - is a detail of the pre-2016 three-step decomposition. 2016 and
-		/// later count the whole difference through <c>DATEDIFF_BIG</c> in one step and never reach that widening,
-		/// so running them here would only repeat <see cref="DateDifferenceComponentsMatchClr"/> for those versions.
+		/// The widening this test pins - <c>date</c> and <c>smalldatetime</c> cast up to <c>datetime2</c> before the
+		/// second shift - is a detail of the pre-2016 three-step decomposition. 2016 and later anchor on whole days too
+		/// but count the rest in a single <c>DATEDIFF_BIG</c>, so they never reach the widening; they run here because
+		/// no other test measures a difference from a <c>date</c> or a <c>smalldatetime</c> on them. 2005 is not
+		/// asked: its <c>datetime</c> cannot hold the end's 100ns part.
+		/// <para>
+		/// The same columns are read through two more mappings, because the widening cannot trust the type a mapping
+		/// declares: a plain <see cref="DateTime"/> - the scaffolder's default - which declares neither, and one that
+		/// declares a <c>DbType</c> as well, which the cast must not take over.
+		/// </para>
 		/// </remarks>
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
 		public void DateDifferenceFromCoarseSqlServerTypes(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2014)] string context)
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var start = new DateTime(2020, 1, 1, 3, 0, 0);
 			var end   = new DateTime(2026, 9, 29, 10, 20, 30).AddTicks(1234567);
@@ -1149,6 +1155,46 @@ namespace Tests.Linq
 
 			row.FromDate.ShouldBe((end - start.Date).Ticks);
 			row.FromSmall.ShouldBe((end - start).Ticks);
+
+			var plain = db.GetTable<CoarseDateAsDateTimeRow>().TableName(t.TableName)
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			plain.FromDate.ShouldBe((end - start.Date).Ticks);
+			plain.FromSmall.ShouldBe((end - start).Ticks);
+
+			var withDbType = db.GetTable<CoarseDateWithDbTypeRow>().TableName(t.TableName)
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			withDbType.FromDate.ShouldBe((end - start.Date).Ticks);
+			withDbType.FromSmall.ShouldBe((end - start).Ticks);
+		}
+
+		[Table]
+		sealed class CoarseDateAsDateTimeRow
+		{
+			[PrimaryKey]                                           public int      Id      { get; set; }
+			[Column]                                               public DateTime OnDate  { get; set; }
+			[Column]                                               public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime End     { get; set; }
+		}
+
+		[Table]
+		sealed class CoarseDateWithDbTypeRow
+		{
+			[PrimaryKey]                                                          public int      Id      { get; set; }
+			[Column(DataType = DataType.Date,          DbType = "date")]          public DateTime OnDate  { get; set; }
+			[Column(DataType = DataType.SmallDateTime, DbType = "smalldatetime")] public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)]                public DateTime End     { get; set; }
 		}
 
 		/// <summary>
@@ -1156,7 +1202,7 @@ namespace Tests.Linq
 		/// steps - whole days, then whole seconds within the remainder, then nanoseconds within the last second.
 		/// </summary>
 		/// <remarks>
-		/// 2016 and later take the single-step <c>DATEDIFF_BIG</c> path instead and answer the same question.
+		/// 2016 and later count the sub-day remainder in one <c>DATEDIFF_BIG</c> instead and answer the same question.
 		/// <para>
 		/// The end is earlier than the start by a little over an hour and both carry a sub-second part, so the
 		/// difference and its remainder below the second are both negative. Asked once within a day and once across

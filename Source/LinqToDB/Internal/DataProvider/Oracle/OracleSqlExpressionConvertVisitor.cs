@@ -91,8 +91,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		/// <c>NUMBER</c> arithmetic on the tick count and carry its sign, so the seconds keep their fraction down to
 		/// the tick.
 		/// <para>
-		/// A <c>date</c> is cast to <c>timestamp</c> first. The result of adding an interval to a <c>date</c> is a
-		/// <c>date</c>, which has no fraction of a second to keep.
+		/// A <see cref="DateTime"/> is cast to <c>timestamp(7)</c> first, whatever its mapping declares. The result of
+		/// adding an interval to a <c>date</c> is a <c>date</c>, which has no fraction of a second to keep, and a
+		/// <c>date</c> column mapped as a plain <see cref="DateTime"/> is not declared as one. The cast is mandatory,
+		/// so it is not dropped as a no-op for a value already believed to be a timestamp, and seven digits keep the
+		/// tick of a value that already is one.
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
@@ -109,12 +112,16 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				Factory.Function(intervalType, "NumToDSInterval", days,    Factory.Value(stringType, "DAY")),
 				Factory.Function(intervalType, "NumToDSInterval", seconds, Factory.Value(stringType, "SECOND")));
 
-			var temporal = element.Temporal;
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
 
-			if (Factory.GetDbDataType(temporal).DataType is DataType.Date or DataType.DateTime)
-				temporal = AsTimestamp(temporal);
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
+			{
+				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime2, null, null, 7, null);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
 
-			return Factory.Add(Factory.GetDbDataType(temporal), temporal, interval);
+			return Factory.Add(temporalType, temporal, interval);
 		}
 
 		ISqlExpression WholeField(ISqlExpression elapsed, string part, long ticksPerUnit)

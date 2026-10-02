@@ -69,8 +69,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		/// divided as an integer.
 		/// </para>
 		/// <para>
-		/// A <c>DATE</c> is cast to <c>TIMESTAMP</c> first: it has no time of day, and shifting it by milliseconds
-		/// keeps none.
+		/// A <see cref="DateTime"/> is cast to <c>TIMESTAMP</c> first, whatever its mapping declares: a <c>DATE</c>
+		/// has no time of day, and shifting it by milliseconds keeps none, while a <c>DATE</c> column mapped as a
+		/// plain <see cref="DateTime"/> is not declared as one. The target is built from the CLR type, so a mapped
+		/// <c>DbType</c> does not render the cast as the type it was meant to leave; over a <c>TIMESTAMP</c> the
+		/// cast changes nothing.
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
@@ -90,9 +93,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			var temporal     = element.Temporal;
 			var temporalType = Factory.GetDbDataType(temporal);
 
-			if (temporalType.DataType == DataType.Date)
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
 			{
-				temporalType = temporalType.WithDataType(DataType.DateTime);
+				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime);
 				temporal     = Factory.Cast(temporal, temporalType, true);
 			}
 
