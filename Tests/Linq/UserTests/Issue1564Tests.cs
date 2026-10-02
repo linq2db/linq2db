@@ -38,7 +38,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		// PostgreSQL 9.4+ (FILTER clause)
+		// PostgreSQL 9.4+ (FILTER clause) - via string.Join, which routes through the ungated TranslateStringJoin
 		public void CteTest1564([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
