@@ -14,6 +14,8 @@ using IBM.Data.Informix;
 #endif
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 using LinqToDB.Internal.DataProvider.Informix;
@@ -510,5 +512,53 @@ namespace Tests.DataProvider
 			db.DropTable<AllType>();
 		}
 		#endregion
+
+		[Table]
+		sealed class DateParameterInCaseRow
+		{
+			[PrimaryKey] public int       Id    { get; set; }
+			[Column]     public DateTime  Plain { get; set; }
+			[Column]     public DateTime? Date  { get; set; }
+		}
+
+		static readonly DateTime DateParameterInCaseStored = new(2020, 1, 1, 10, 0, 0);
+		static readonly DateTime DateParameterInCaseValue  = new(2026, 6, 6, 1, 1, 1);
+
+		static DateParameterInCaseRow[] DateParameterInCaseData =>
+		[
+			new() { Id = 1, Plain = DateParameterInCaseStored, Date = DateParameterInCaseStored },
+			new() { Id = 2, Plain = DateParameterInCaseStored },
+		];
+
+		[Test]
+		public void DateParameterNextToColumnInCaseSelect([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+
+			t.OrderBy(x => x.Id).Select(x => x.Date != null ? value : x.Plain).ToArray()
+				.ShouldBe([DateParameterInCaseValue, DateParameterInCaseStored]);
+
+			value = DateParameterInCaseValue.AddDays(1);
+
+			t.OrderBy(x => x.Id).Select(x => x.Date != null ? value : x.Plain).ToArray()
+				.ShouldBe([DateParameterInCaseValue.AddDays(1), DateParameterInCaseStored]);
+		}
+
+		[Test]
+		public void DateParameterNextToColumnInCaseUpdate([IncludeDataSources(true, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+
+			t.Update(x => new DateParameterInCaseRow { Date = x.Date != null ? value : Sql.DateAdd(Sql.DateParts.Day, 1, x.Plain) });
+
+			t.OrderBy(x => x.Id).Select(x => x.Date).ToArray()
+				.ShouldBe([DateParameterInCaseValue, DateParameterInCaseStored.AddDays(1)]);
+		}
 	}
 }

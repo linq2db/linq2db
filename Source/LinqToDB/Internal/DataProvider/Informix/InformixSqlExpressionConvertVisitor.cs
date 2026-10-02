@@ -162,8 +162,63 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return base.ConvertConversion(cast);
 		}
 
+		// IFX rejects a temporal parameter, cast or not, next to a non-parameter value in CASE results
+		static void InlineTemporalParameters(ISqlExpression?[] results)
+		{
+			var hasTemporalParameter = false;
+			var hasOtherValue        = false;
+
+			foreach (var result in results)
+			{
+				switch (result == null ? null : QueryHelper.UnwrapNullablity(result))
+				{
+					case null or SqlValue { Value: null }:
+						break;
+					case SqlParameter { IsQueryParameter: true } p when IsTemporal(p.Type.SystemType):
+					case SqlParameterCastExpression { Parameter: { IsQueryParameter: true } cp } when IsTemporal(cp.Type.SystemType):
+					case SqlCastExpression { Expression: SqlParameter { IsQueryParameter: true } } c when IsTemporal(c.SystemType):
+						hasTemporalParameter = true;
+						break;
+					default:
+						hasOtherValue = true;
+						break;
+				}
+			}
+
+			if (!hasTemporalParameter || !hasOtherValue)
+				return;
+
+			foreach (var result in results)
+			{
+				switch (result == null ? null : QueryHelper.UnwrapNullablity(result))
+				{
+					case SqlParameter p                                  : p.IsQueryParameter = false; break;
+					case SqlParameterCastExpression { Parameter: var p } : p.IsQueryParameter = false; break;
+					case SqlCastExpression { Expression: SqlParameter p }: p.IsQueryParameter = false; break;
+				}
+			}
+
+			static bool IsTemporal(Type? type)
+			{
+				type = type?.ToUnderlying();
+
+				return type == typeof(DateTime) || type == typeof(DateTimeOffset)
+#if SUPPORTS_DATEONLY
+					|| type == typeof(DateOnly)
+#endif
+					;
+			}
+		}
+
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
+			var results = new ISqlExpression?[element.Cases.Count + 1];
+			for (var i = 0; i < element.Cases.Count; i++)
+				results[i] = element.Cases[i].ResultExpression;
+			results[^1] = element.ElseExpression;
+
+			InlineTemporalParameters(results);
+
 			if (element.ElseExpression != null)
 			{
 				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true, forceConvert: true);
@@ -191,6 +246,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
+			InlineTemporalParameters([element.TrueValue, element.FalseValue]);
+
 			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false, forceConvert: true);
 			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false, forceConvert: true);
 
