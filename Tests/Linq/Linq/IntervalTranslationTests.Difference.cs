@@ -1037,6 +1037,9 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
 		public void DateDifferenceFromToday([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
+			// DateTime.Today is read on the client, so the statement carries the run date and changes every day.
+			using var noBaseline = new DisableBaseline("Current datetime parameters used");
+
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(ClosedPeriods);
 
@@ -1048,10 +1051,17 @@ namespace Tests.Linq
 
 			t.OrderBy(r => (DateTime.Today - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
 
-			var totals = t.OrderBy(r => r.Id).Select(r => (DateTime.Today - r.ClosedOn).TotalDays).ToList();
+			// YDB writes a local DateTime - which DateTime.Today is - as the UTC instant it stands for, and an
+			// unspecified one, as every value in the table is, as UTC already, so it measures from today's UTC reading.
+			var today  = context.IsAnyOf(TestProvName.AllYdb) ? DateTime.Today.ToUniversalTime() : DateTime.Today;
+			var totals = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((DateTime.Today - r.ClosedOn).TotalDays)).ToList();
 
-			totals[0].ShouldBeGreaterThan(0);
-			totals[1].ShouldBeLessThan(0);
+			for (var i = 0; i < ClosedPeriods.Length; i++)
+			{
+				var expected = (today - ClosedPeriods[i].ClosedOn).TotalDays;
+
+				totals[i].ShouldBe(expected, Tolerance(expected));
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
@@ -1101,7 +1111,10 @@ namespace Tests.Linq
 
 			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
 			t.Where(r => ((TimeSpan)(r.ClosedOnNullable - r.OpenedOn)!).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
-			t.Where(r => (DateTime.Today - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			// A fixed date rather than DateTime.Today, which would put the run date into the statement.
+			var asOf = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			t.Where(r => (asOf - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
 
 			var totalHours = t
 				.Where(r => r.Id == 1)

@@ -173,7 +173,7 @@ namespace Tests.Linq
 		/// column hands the amount over directly, and then the refusal is the shift's own.
 		/// <para>
 		/// SQL Server is absent at every version: <c>DATEADD</c> is as old as the product, so a declared duration
-		/// shifts a date there even where the difference between two dates cannot be measured.
+		/// shifts a date there.
 		/// </para>
 		/// </remarks>
 		const string UnsupportedDeclaredShiftProviders =

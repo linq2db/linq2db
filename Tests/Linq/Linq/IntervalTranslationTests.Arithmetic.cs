@@ -603,7 +603,7 @@ namespace Tests.Linq
 		/// <remarks>
 		/// The forced half of the case above, and the reason it is worth its own method: plain, a difference the
 		/// provider cannot measure is computed in .NET and the values still come out right, so the case would pass on
-		/// a provider that translated none of it. Informix reaches exactly that, and so does SQL Server before 2016.
+		/// a provider that translated none of it. Informix reaches exactly that.
 		/// <para>
 		/// The subtraction is lopsided and one case is negative, for the reason the sibling above gives.
 		/// </para>
@@ -923,7 +923,9 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		public void AShiftTravelsToARemoteContext(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllDuckDB)] string context)
+			[IncludeDataSources(true,
+				TestProvName.AllSqlServer, TestProvName.AllPostgreSQL, TestProvName.AllMySql, TestProvName.AllDuckDB,
+				TestProvName.AllSQLite, TestProvName.AllFirebird, TestProvName.AllYdb, TestProvName.AllOracle)] string context)
 		{
 			var started = new DateTime(2026, 1, 1, 10, 0, 0);
 
