@@ -310,7 +310,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void ATickTotalTheProviderCannotReachStaysReadable([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		public void ATickTotalTheProviderCannotReachStaysReadable([IncludeDataSources(false, TestProvName.AllNativeAccess)] string context)
 		{
 			var start = new DateTime(2026, 1, 1, 10, 0, 0);
 			var end   = new DateTime(2026, 1, 1, 11, 0, 0);
@@ -343,7 +343,7 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		[Test]
-		public void AComponentBelowTheResolutionStaysReadable([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		public void AComponentBelowTheResolutionStaysReadable([IncludeDataSources(false, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable<EventRow>();
@@ -783,7 +783,7 @@ namespace Tests.Linq
 		[Test]
 		// PostgreSQL is absent here although EXTRACT names no field below the second: the components are reached
 		// from its own exact tick count instead, so it answers them like everyone else.
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllNativeAccess, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceSubSecondComponentsAgreeWithStorage([DataSources] string context)
 		{

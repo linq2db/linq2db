@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	{
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void Test([DataSources(ProviderName.SqlCe, TestProvName.AllAccess)] string context)
+		public void Test([DataSources(ProviderName.SqlCe, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q = db.Child;

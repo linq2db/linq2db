@@ -1248,7 +1248,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFlagEnum([DataSources(TestProvName.AllAccess)] string context)
+		public void TestFlagEnum([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestTable5>();

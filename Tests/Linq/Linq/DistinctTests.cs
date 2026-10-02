@@ -174,6 +174,74 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctOrderByBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct()
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctOrderByNullableBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types2
+				.Select(t => new { t.ID, t.BoolValue })
+				.Distinct()
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByNullableBooleanOrderByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types2
+				.GroupBy(t => t.BoolValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(g => g.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatOrderByBoolean([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.Select(t => new { t.ID, t.BoolValue })
+				.Concat(db.Types.Where(t => t.ID > 5).Select(t => new { t.ID, t.BoolValue }))
+				.OrderBy(t => t.BoolValue)
+				.ThenBy(t => t.ID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupByBooleanOrderByKey([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Types
+				.GroupBy(t => t.BoolValue)
+				.Select(g => new { g.Key, Count = g.Count() })
+				.OrderBy(g => g.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void OrderByExpressionDistinct([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -342,7 +410,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationAfterDistinctWithGroupBy([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void AssociationAfterDistinctWithGroupBy([DataSources(TestProvName.AllNativeAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -389,7 +457,7 @@ namespace Tests.Linq
 			AssertQuery(query2);
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllNativeAccess)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void DistinctWithAssociationInSubquery([DataSources] string context)
@@ -611,7 +679,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllNativeAccess], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipTakeFirst([DataSources] string context)
 		{
@@ -649,7 +717,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllYdb, TestProvName.AllAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllYdb, TestProvName.AllNativeAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipFirst([DataSources] string context)
 		{

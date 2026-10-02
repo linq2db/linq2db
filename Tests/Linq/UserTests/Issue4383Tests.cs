@@ -61,7 +61,7 @@ namespace Tests.UserTests
 		public class SewerPumpLineTest : PumpLineTest<SewerChainTest, SewerPumpLineChainTest>;
 
 		[Test]
-		public void Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Test([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
