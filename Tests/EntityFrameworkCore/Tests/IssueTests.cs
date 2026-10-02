@@ -1337,7 +1337,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5976")]
-		public void Issue5976_ConcatConvertedDates([EFDataSources] string provider)
+		public void Issue5976_ConcatConvertedDates(
+#if NET8_0
+			// EF8 registers the NodaTime plugin process-wide, so useNodaTime: false cannot keep #5981 out
+			[EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+#else
+			[EFDataSources] string provider)
+#endif
 		{
 			using var ctx = CreateContext(provider, useNodaTime: false);
 			Issue5975Seed(ctx);
