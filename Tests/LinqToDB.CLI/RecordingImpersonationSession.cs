@@ -52,6 +52,11 @@ namespace Tests.LinqToDB.CLI
 			finally
 			{
 				AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+
+				// Process-wide, so this can include modules another thread loaded meanwhile; tests that check it
+				// run one command at a time.
+				//
+				run.NativeModulesLoadedInside.UnionWith(GetNativeModules().Except(run.NativeModulesAtEntry, StringComparer.OrdinalIgnoreCase));
 			}
 
 			void OnAssemblyLoad(object? sender, AssemblyLoadEventArgs args)
@@ -78,7 +83,8 @@ namespace Tests.LinqToDB.CLI
 
 		internal sealed record ImpersonatedRun(string ErrorOutputAtEntry, HashSet<string> LoadedAtEntry, HashSet<string> NativeModulesAtEntry)
 		{
-			public HashSet<string> LoadedInside { get; } = new(StringComparer.Ordinal);
+			public HashSet<string> LoadedInside              { get; } = new(StringComparer.Ordinal);
+			public HashSet<string> NativeModulesLoadedInside { get; } = new(StringComparer.OrdinalIgnoreCase);
 		}
 	}
 }

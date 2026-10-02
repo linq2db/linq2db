@@ -264,17 +264,24 @@ namespace Tests.LinqToDB.CLI
 				result.ExitCode.  ShouldBe(0, result.Error);
 				session.Runs.Count.ShouldBe(2);
 
-				// Cold at provider resolution, initialized (managed and native) before execution starts.
+				// Nothing in this process touched SQLite before the command. Native SQLite is loaded before execution
+				// starts and never while impersonated. (Whether it is already loaded when provider resolution starts
+				// depends on the platform, so that is not checked.)
 				//
-				session.Runs[0].NativeModulesAtEntry.Any(IsSqliteNative).ShouldBeFalse();
 				session.Runs[1].NativeModulesAtEntry.Any(IsSqliteNative).ShouldBeTrue();
+				session.Runs.SelectMany(static r => r.NativeModulesLoadedInside).Any(IsSqliteNative).ShouldBeFalse();
 				session.Runs[1].LoadedAtEntry.ShouldContain(static a => a.StartsWith("SQLitePCLRaw.", StringComparison.Ordinal));
 				session.Runs.SelectMany(static r => r.LoadedInside).ShouldNotContain(static a => a.StartsWith("SQLitePCLRaw.", StringComparison.Ordinal));
 			}
 
+			// The native library itself, not managed assemblies such as SQLitePCLRaw.provider.e_sqlite3.dll, which
+			// Windows lists among process modules too.
+			//
 			static bool IsSqliteNative(string module)
 			{
-				return module.Contains("e_sqlite3", StringComparison.OrdinalIgnoreCase);
+				var name = Path.GetFileNameWithoutExtension(module);
+
+				return name.Equals("e_sqlite3", StringComparison.OrdinalIgnoreCase) || name.Equals("libe_sqlite3", StringComparison.OrdinalIgnoreCase);
 			}
 		}
 
