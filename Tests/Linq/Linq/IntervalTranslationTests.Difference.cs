@@ -245,7 +245,7 @@ namespace Tests.Linq
 				: null;
 
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(Issue5777Data);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
 
 			t.Where(r => (DateTime.Now - r.ClosedOn).TotalDays > 300).Select(r => r.Id).ToList().ShouldBe([1]);
 			t.OrderBy(r => (DateTime.Now - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
@@ -318,7 +318,7 @@ namespace Tests.Linq
 			var asOf = new DateTime(2026, 1, 10, 8, 15, 30);
 
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(Issue5777Data);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
 
 			t.Where(r => (asOf - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
 			t.Where(r => (r.ClosedOn - asOf).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([2]);
@@ -329,7 +329,7 @@ namespace Tests.Linq
 				.Select(r => Sql.AsSql((r.ClosedOn - asOf).TotalHours))
 				.Single();
 
-			var expected = Issue5777Data[0].ClosedOn - asOf;
+			var expected = ClosedPeriods[0].ClosedOn - asOf;
 
 			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
 		}
@@ -935,7 +935,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class Issue5777Row
+		sealed class ClosedPeriodRow
 		{
 			[PrimaryKey] public int       Id               { get; set; }
 			[Column]     public DateTime  OpenedOn         { get; set; }
@@ -945,17 +945,17 @@ namespace Tests.Linq
 
 		// One row well in the past and one well in the future, whole hours from any midnight, so the answers below
 		// do not move with the clock, the storage precision or the day the test runs.
-		static readonly Issue5777Row[] Issue5777Data =
+		static readonly ClosedPeriodRow[] ClosedPeriods =
 		[
 			new() { Id = 1, OpenedOn = new DateTime(2019, 12, 20, 15, 30, 0), ClosedOn = new DateTime(2020, 1, 1, 3, 0, 0), ClosedOnNullable = new DateTime(2020, 1, 1, 3, 0, 0) },
 			new() { Id = 2, OpenedOn = new DateTime(2099, 5, 1),              ClosedOn = new DateTime(2099, 6, 1),          ClosedOnNullable = null                            },
 		];
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
-		public void Issue5777_TodayMinusColumn([DataSources(UnsupportedDifferenceProviders)] string context)
+		public void DateDifferenceFromToday([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(Issue5777Data);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
 
 			t.Where(r => (DateTime.Today - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
 			t.Where(r => (DateTime.Today - r.ClosedOn).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
@@ -972,10 +972,10 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
-		public void Issue5777_ColumnMinusColumn([DataSources(UnsupportedDifferenceProviders)] string context)
+		public void DateDifferenceBetweenColumns([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(Issue5777Data);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
 
 			t.Where(r => (r.ClosedOn - r.OpenedOn).TotalDays < 12).Select(r => r.Id).ToList().ShouldBe([1]);
 			t.OrderBy(r => (r.ClosedOn - r.OpenedOn).TotalHours).Select(r => r.Id).ToList().ShouldBe([1, 2]);
@@ -992,7 +992,7 @@ namespace Tests.Linq
 				})
 				.Single();
 
-			var expected = Issue5777Data[0].ClosedOn - Issue5777Data[0].OpenedOn;
+			var expected = ClosedPeriods[0].ClosedOn - ClosedPeriods[0].OpenedOn;
 
 			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
 			row.TotalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
@@ -1011,10 +1011,10 @@ namespace Tests.Linq
 		/// difference, so recognising the subtraction under the access is its only route to the member.
 		/// </remarks>
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5988")]
-		public void Issue5988_MemberThroughNullableValue([DataSources(UnsupportedDifferenceProviders)] string context)
+		public void DateDifferenceMemberThroughNullableValue([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable(Issue5777Data);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
 
 			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
 			t.Where(r => ((TimeSpan)(r.ClosedOnNullable - r.OpenedOn)!).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
@@ -1025,13 +1025,13 @@ namespace Tests.Linq
 				.Select(r => Sql.AsSql((r.ClosedOnNullable - r.OpenedOn)!.Value.TotalHours))
 				.Single();
 
-			var expected = Issue5777Data[0].ClosedOn - Issue5777Data[0].OpenedOn;
+			var expected = ClosedPeriods[0].ClosedOn - ClosedPeriods[0].OpenedOn;
 
 			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
 		}
 
 		[Table]
-		sealed class Issue5777SqlServerRow
+		sealed class CoarseDateRow
 		{
 			[PrimaryKey]                                           public int      Id      { get; set; }
 			[Column(DataType = DataType.Date)]                     public DateTime OnDate  { get; set; }
@@ -1051,14 +1051,14 @@ namespace Tests.Linq
 		/// so running them here would only repeat <see cref="DateDifferenceComponentsMatchClr"/> for those versions.
 		/// </remarks>
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
-		public void Issue5777_DifferenceFromCoarseSqlServerTypes(
+		public void DateDifferenceFromCoarseSqlServerTypes(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2014)] string context)
 		{
 			var start = new DateTime(2020, 1, 1, 3, 0, 0);
 			var end   = new DateTime(2026, 9, 29, 10, 20, 30).AddTicks(1234567);
 
 			using var db = GetDataContext(context);
-			using var t  = db.CreateLocalTable([new Issue5777SqlServerRow { Id = 1, OnDate = start.Date, OnSmall = start, End = end }]);
+			using var t  = db.CreateLocalTable([new CoarseDateRow { Id = 1, OnDate = start.Date, OnSmall = start, End = end }]);
 
 			var row = t
 				.Select(r => new
