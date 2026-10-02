@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -355,6 +356,81 @@ namespace Tests.Linq
 
 			if (iteration > 1)
 				q.GetCacheMissCount().ShouldBe(cacheMissCount);
+		}
+
+		// Rounds server-side to more digits than the column's declared scale, so a provider that emulates
+		// ROUND by scaling has to widen the intermediate: MoneyValue is Decimal(6,2) on YDB, and 11.45 * 10^5
+		// does not fit that.
+		[Test]
+		public void Round13([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5)));
+		}
+
+		// The widened intermediate must not leak into the result type: YQL arithmetic and IF reject
+		// Decimal operands of different types.
+		[Test]
+		public void Round14([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, 5) + p.MoneyValue));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(p.ID > 2 ? Math.Round(p.MoneyValue, 5) : p.MoneyValue));
+		}
+
+		[Test]
+		public void Round15([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Sql.Round(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.Round(p.MoneyValue, 5) + p.MoneyValue));
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue,
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Sql.RoundToEven(p.MoneyValue, 5) + p.MoneyValue));
+		}
+
+		// A non-constant precision must not cost the value its fractional digits.
+		[Test]
+		public void Round16([DataSources(TestProvName.AllDuckDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in    Types where p.MoneyValue != 0 select Math.Round(p.MoneyValue, p.ID % 2 + 2),
+				from p in db.Types where p.MoneyValue != 0 select Sql.AsSql(Math.Round(p.MoneyValue, p.ID % 2 + 2)));
+		}
+
+		sealed class RoundNearLimit
+		{
+			[PrimaryKey                       ] public int     Id    { get; set; }
+			[Column(Precision = 34, Scale = 2)] public decimal D34s2 { get; set; }
+			[Column(Precision = 35, Scale = 2)] public decimal D35s2 { get; set; }
+			[Column(Precision = 35, Scale = 6)] public decimal D35s6 { get; set; }
+		}
+
+		// Near the 35-digit limit the widened intermediate must not cost the value its fractional digits.
+		[Test]
+		public void Round17([IncludeDataSources(true, TestProvName.AllYdb)] string context, [Values(MidpointRounding.ToEven, MidpointRounding.AwayFromZero)] MidpointRounding mp)
+		{
+			var data = new[]
+			{
+				new RoundNearLimit { Id = 1, D34s2 =  1.75m, D35s2 =  1.75m, D35s6 =  1.114951m },
+				new RoundNearLimit { Id = 2, D34s2 = -2.35m, D35s2 = -2.35m, D35s6 =  1.125001m },
+				new RoundNearLimit { Id = 3, D34s2 = 11.45m, D35s2 = 11.45m, D35s6 = -1.114951m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			AreEqual(
+				from r in data orderby r.Id select new { r.Id, R34 = Math.Round(r.D34s2, 2, mp), R35 = Math.Round(r.D35s2, 5, mp), R6 = Math.Round(r.D35s6, 2, mp) },
+				from r in t    orderby r.Id select new { r.Id, R34 = Sql.AsSql(Math.Round(r.D34s2, 2, mp)), R35 = Sql.AsSql(Math.Round(r.D35s2, 5, mp)), R6 = Sql.AsSql(Math.Round(r.D35s6, 2, mp)) });
 		}
 
 		[Test]
