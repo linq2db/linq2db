@@ -34,6 +34,43 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Dictionary<MemberHelper.MemberInfoWithType, MemberReplacement>? _replacements;
 
+		// Method registrations made inside an OptionalScope(). An optional translation is a convenience: when the
+		// caller passes TranslationFlags.SkipOptional it declines and the expression is computed on the client.
+		// Only method registrations participate - see OptionalScope().
+		HashSet<MemberHelper.MemberInfoWithType>? _optionalTranslations;
+		int                                       _optionalScopeDepth;
+
+		/// <summary>
+		/// Method registrations made inside the returned scope are <b>optional</b>: they decline when the caller
+		/// passes <see cref="TranslationFlags.SkipOptional"/>, so the expression is calculated on the client.
+		/// </summary>
+		/// <remarks>
+		/// Only <c>RegisterMethod</c> registrations are affected. Member, constructor, binary, unary and
+		/// member-replacement registrations ignore the scope and are never optional: binary and unary nodes are
+		/// gated on the option before the registry is consulted, while member and constructor access always
+		/// translates.
+		/// <para>
+		/// A translation may only be made optional when evaluating it on the client over the materialized values of
+		/// its arguments gives the same answer. The client result is the .NET one, which may differ from the
+		/// server's in formatting or rounding — that is accepted. A translation must stay mandatory when it is
+		/// SQL-only (aggregates, window functions), marks intent (<c>Sql.*</c>), is non-deterministic or ambient
+		/// (<c>NewGuid</c>, current timestamp), carries nullability semantics (<c>Sql.ToNullable</c>,
+		/// <c>Sql.AsNullable</c>), has no client body or throws for every input that binds it, throws for a value
+		/// the column can hold (an instance call on a nullable receiver), or would return a different value from
+		/// the SQL <see langword="null"/> of a missed <c>LeftJoin</c>.
+		/// </para>
+		/// </remarks>
+		public IDisposable OptionalScope()
+		{
+			_optionalScopeDepth++;
+			return new OptionalScopeToken(this);
+		}
+
+		sealed class OptionalScopeToken(TranslationRegistration registration) : IDisposable
+		{
+			public void Dispose() => registration._optionalScopeDepth--;
+		}
+
 		public void RegisterMethodInternal(LambdaExpression methodCallPattern, TranslateMethodFunc translateMethodFunc, bool isGenericTypeMatch)
 		{
 			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(methodCallPattern);
@@ -48,6 +85,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 
 			_translations[memberInfoWithType] = (ctx, member, flags) => translateMethodFunc(ctx, (MethodCallExpression)member, flags);
+
+			// Follows the assignment above, and clears as well as sets: a subclass may re-register a key outside a
+			// scope to replace an optional registration, and the mark must not survive the replacement.
+			if (_optionalScopeDepth > 0)
+				(_optionalTranslations ??= new()).Add(memberInfoWithType);
+			else
+				_optionalTranslations?.Remove(memberInfoWithType);
 		}
 
 		public void RegisterMemberInternal(LambdaExpression memberAccessPattern, TranslateMemberAccessFunc translateMemberAccessFunc)
@@ -170,17 +214,27 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		public TranslateFunc? GetTranslation(MemberHelper.MemberInfoWithType memberInfoWithType)
+			=> GetTranslation(memberInfoWithType, out _);
+
+		/// <summary>
+		/// Resolves a translation and reports whether it was registered inside an <see cref="OptionalScope"/>.
+		/// </summary>
+		public TranslateFunc? GetTranslation(MemberHelper.MemberInfoWithType memberInfoWithType, out bool isOptional)
 		{
 			if (memberInfoWithType.MemberInfo is MethodInfo mi)
 			{
 				if (_translations.TryGetValue(memberInfoWithType, out var concreteFunc))
+				{
+					isOptional = _optionalTranslations?.Contains(memberInfoWithType) == true;
 					return concreteFunc;
+				}
 
 				if (mi.IsGenericMethod)
 					memberInfoWithType.MemberInfo = mi.GetGenericMethodDefinitionCached();
 			}
 
 			_translations.TryGetValue(memberInfoWithType, out var func);
+			isOptional = func != null && _optionalTranslations?.Contains(memberInfoWithType) == true;
 			return func;
 		}
 

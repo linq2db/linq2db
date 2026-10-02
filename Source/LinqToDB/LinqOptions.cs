@@ -154,12 +154,33 @@ namespace LinqToDB
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="PreferClientCalculation">
-	/// When enabled, computed expressions in the final projection (arithmetic, conditionals, unary operations, and
-	/// mapped members/methods that do not prefer server-side evaluation) are calculated on the client during
-	/// materialization instead of being translated into additional SQL columns. Real database columns,
+	/// When enabled, computed expressions in the final projection — arithmetic, conditionals, unary operations,
+	/// string interpolation, and methods whose translation is declared optional — are calculated on the client
+	/// during materialization instead of being translated into additional SQL columns. Real database columns,
 	/// already-built subqueries, and expressions that prefer or require server-side evaluation (for example,
 	/// members or methods mapped with <see cref="Sql.ExpressionAttribute.PreferServerSide"/> or
 	/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/>) are still translated to SQL.
+	/// <para>
+	/// A translation is declared optional only when evaluating it on the materialized values gives the same answer
+	/// the SQL would. It stays server-side when it is SQL-only (aggregates, window functions, the <c>Sql.*</c>
+	/// functions), non-deterministic or ambient (<c>NewGuid</c>, the current timestamp), a nullability widener
+	/// (<c>Sql.ToNullable</c>, <c>Sql.AsNullable</c>), when its client-side body can throw for a value the column
+	/// can hold, or when its client-side value over a missed <c>LeftJoin</c> would differ from the SQL
+	/// <see langword="null"/>. Concretely, <c>string.Join</c>, <c>string.Concat</c> over an array or sequence,
+	/// <c>Convert.ToString</c>, <c>Guid.ToString</c>, <c>Math.Max</c> / <c>Math.Min</c>, the <c>AddXxx</c> methods
+	/// on <see cref="System.DateTime"/>, <see cref="System.DateTimeOffset"/> and <c>DateOnly</c>, and the instance
+	/// methods on <see cref="string"/> are <b>not</b> affected by this option.
+	/// </para>
+	/// <para>
+	/// Two consequences worth knowing. A projection that produced a single computed SQL column may now select
+	/// several raw columns instead, so more data crosses the wire. And a diagnostic that is only raised while an
+	/// expression is translated to SQL is not raised for an expression kept on the client, so enabling this option
+	/// can suppress an error that would otherwise be reported.
+	/// </para>
+	/// <para>
+	/// Member access always translates to SQL. Bool-returning members are routed inconsistently and may or may not
+	/// move client-side depending on how they are mapped.
+	/// </para>
 	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="UpsertEmulationPolicy">

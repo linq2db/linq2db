@@ -250,7 +250,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		static BuildFlags CombineFlags(BuildFlags currentFlags, BuildFlags additional)
 		{
 			if (additional.HasFlag(BuildFlags.ResetPrevious))
-				return additional & ~BuildFlags.ResetPrevious;
+				// InsideTranslation survives the reset: it says "a translator is on the stack", which stays true
+				// however the nested build re-scopes its other flags. Dropping it would let PreferClientCalculation
+				// re-arm underneath a translator that requires its arguments in SQL. Measured: the reset is reached
+				// with the flag set - ToNullableOverCteMethodReturnsNull is the only shape that does - but no shape
+				// found so far makes dropping it observable, so treat this as a guard rather than as dead code.
+				return (additional & ~BuildFlags.ResetPrevious) | (currentFlags & BuildFlags.InsideTranslation);
 			return currentFlags | additional;
 		}
 
@@ -863,6 +868,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 			}
 
+			var declinedOptionalTranslation = false;
+
 			if (IsSqlOrExpression() && BuildContext != null)
 			{
 				var exposed = Builder.ConvertSingleExpression(node);
@@ -875,21 +882,19 @@ namespace LinqToDB.Internal.Linq.Builder
 					return translatedExposed;
 				}
 
-				// Honor PreferClientCalculation only for a mapped function that carries an [Expression] attribute
-				// (MappedFunctionAllowsClientCalculation). Functions like Sql.ToNullable deliberately carry no attribute and
-				// are translated server-side by SqlFunctionsMemberTranslatorBase, so they fail the check and keep translating;
-				// structural LINQ methods (aggregates) likewise have no attribute and translate as usual.
-				if (!PreferClientCalculation(node) || !MappedFunctionAllowsClientCalculation(node.Method))
+				// The two translation routes answer PreferClientCalculation differently. TranslateMember goes to the
+				// member-translator registry, which decides per registration: GetTranslationFlags passes SkipOptional
+				// and a registration made inside an OptionalScope() declines itself, so a mandatory one (Sql.ToNullable,
+				// aggregates, window functions) keeps translating. HandleExtension handles [Expression]-attributed
+				// functions, which have no such marker, so the option is applied here at the call site.
+				if (TranslateMember(BuildContext, node, out var translatedMember, out declinedOptionalTranslation) && !DeclinedForSetProjection(node, translatedMember))
 				{
-					if (TranslateMember(BuildContext, node, out var translatedMember) && !DeclinedForSetProjection(node, translatedMember))
-					{
-						return Visit(translatedMember);
-					}
+					return Visit(translatedMember);
+				}
 
-					if (HandleExtension(BuildContext, node, out translatedMember))
-					{
-						return Visit(translatedMember);
-					}
+				if (!PreferClientCalculation(node) && HandleExtension(BuildContext, node, out translatedMember))
+				{
+					return Visit(translatedMember);
 				}
 
 				if (HandleValue(node, out var translated))
@@ -898,7 +903,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 				}
 
-				if (HandleStringFormat(node, out var translatedFormat))
+				// string.Format is translated inline rather than through the registry, so it has no registration to
+				// mark optional and the option is applied at the call site instead. Every interpolated string reaches
+				// us as string.Format, so this is the gate that keeps `$"{a} {b}"` client-side.
+				if (!PreferClientCalculation(node) && HandleStringFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
 				if (node.Type == typeof(bool) && TryConvertPredicate(node, out var translatedPredicate))
@@ -918,6 +926,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Traverse or BuildPurpose.Expand or BuildPurpose.Extract or BuildPurpose.SubQuery)
 			{
 				var newNode = base.VisitMethodCall(node);
+
+				// Only where a registration declined: that is the case where the client stands in for SQL this
+				// call would otherwise have emitted, and the families opted in were measured NULL-strict. Reaching
+				// this fallback for any other reason - string.Format under the option, whose SQL is deliberately
+				// NULL-tolerant, or int.ToString(), which is client-side in both arms - must not change the answer.
+				if (declinedOptionalTranslation)
+					newNode = MakeClientCalculationNullAware(newNode, node.Type);
+
 				FoundRoot = null;
 				return newNode;
 			}
@@ -2281,10 +2297,18 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// requires server-side evaluation (per <c>Builder.PreferServerSide</c>) and set projections
 		/// (<see cref="BuildFlags.ForSetProjection"/>) still go to SQL.
 		/// </summary>
+		/// <remarks>
+		/// Never applies inside a translation (<see cref="BuildFlags.InsideTranslation"/>). A translator that is
+		/// running has already been admitted, and it translates its own arguments through
+		/// <c>ITranslationContext.Translate</c>; letting the option decline one of those arguments would make the
+		/// translator itself decline. For <c>Sql.ToNullable</c> / <c>Sql.AsNullable</c> that silently collapses a SQL
+		/// NULL to <c>default(T)</c> — see linq2db#5923.
+		/// </remarks>
 		bool PreferClientCalculation(Expression node)
 		{
 			return _buildPurpose is BuildPurpose.Expression
 				&& !_buildFlags.HasFlag(BuildFlags.ForSetProjection)
+				&& !_buildFlags.HasFlag(BuildFlags.InsideTranslation)
 				&& BuildContext != null
 				&& DataOptions.LinqOptions.PreferClientCalculation
 				&& !Builder.PreferServerSide(node, false)
@@ -2292,13 +2316,72 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// A method may be pulled client-side (under <see cref="LinqOptions.PreferClientCalculation"/>) only when it is a
-		/// mapped function — i.e. it carries an <see cref="Sql.ExpressionAttribute"/>. Structural LINQ methods (e.g.
-		/// aggregates) have no attribute and must keep translating to SQL.
+		/// Rebuilds a client-side calculation so it propagates a SQL NULL the way the translation it replaced did.
+		/// A column that is nullable in SQL but not in CLR materializes as <c>default(T)</c>, so the client answers
+		/// <c>f(default(T))</c> where the server answered NULL (linq2db#5929) — or, for a reference-typed receiver,
+		/// throws instead of answering at all (linq2db#5928).
 		/// </summary>
-		bool MappedFunctionAllowsClientCalculation(MethodInfo method)
+		Expression MakeClientCalculationNullAware(Expression clientSide, Type resultType)
 		{
-			return method.GetExpressionAttribute(MappingSchema) != null;
+			// Already inside a guard: the projection is rebuilt until it stops changing, so re-wrapping here would
+			// add a layer per pass and never converge.
+			if (_preferClientSide)
+				return clientSide;
+
+			// An eager-loaded collection is a separate query, so its placeholders say nothing about this row.
+			if (clientSide.Find(e => e is SqlEagerLoadExpression) != null)
+				return clientSide;
+
+			var placeholders = ExpressionBuilder.CollectPlaceholders(clientSide, false);
+			if (placeholders.Count == 0)
+				return clientSide;
+
+			// The instance receiver is guarded whatever its CLR type, because a null receiver throws rather than
+			// propagating. An argument is guarded only when its CLR type cannot carry the NULL itself - one that
+			// can already sees it, and the member's own semantics apply to it.
+			var receiverPlaceholders = clientSide is MethodCallExpression { Object: { } receiver }
+				? ExpressionBuilder.CollectPlaceholders(receiver, false)
+				: null;
+
+			var nullability = GetNullabilityContext();
+
+			List<Expression>?                   notNull    = null;
+			Dictionary<Expression, Expression>? replaceMap = null;
+
+			foreach (var placeholder in placeholders)
+			{
+				if (!placeholder.Sql.CanBeNullable(nullability))
+					continue;
+
+				var isReceiver = receiverPlaceholders?.Exists(p => ReferenceEquals(p, placeholder)) == true;
+
+				if (!isReceiver && placeholder.Type.IsNullableOrReferenceType)
+					continue;
+
+				var nullable = placeholder.MakeNullable();
+
+				(notNull ??= new List<Expression>()).Add(nullable);
+
+				if (!ReferenceEquals(nullable, placeholder))
+				{
+					// Read the column once: the value position uses the same placeholder the test reads, so both
+					// resolve to one select column instead of emitting the field twice.
+					(replaceMap ??= new Dictionary<Expression, Expression>())[placeholder] = Expression.Property(nullable, nameof(Nullable<>.Value));
+				}
+			}
+
+			if (notNull == null)
+				return clientSide;
+
+			if (replaceMap != null)
+				clientSide = clientSide.Replace(replaceMap);
+
+			var testCondition = notNull.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+			// The marker keeps the whole guard client-side and is what the early return above recognises on the
+			// next rebuild pass.
+			return MarkerExpression.PreferClientSide(
+				Expression.Condition(testCondition, clientSide, new DefaultValueExpression(MappingSchema, resultType, true)));
 		}
 
 		bool TryConvertToSql(Expression node, out Expression translated)
@@ -2344,7 +2427,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
 			if (PreferClientCalculation(node))
-				return base.VisitUnary(node);
+				return MakeClientCalculationNullAware(base.VisitUnary(node), node.Type);
 
 			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
 			{
@@ -3098,7 +3181,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(sqlValue);
 
 			if (_buildPurpose is BuildPurpose.Expression)
-				return base.VisitBinary(node);
+			{
+				var newNode = base.VisitBinary(node);
+
+				// TryConvertToSql above declines under the option without rebuilding, so this is where a binary
+				// left client-side by it lands.
+				return PreferClientCalculation(node) ? MakeClientCalculationNullAware(newNode, node.Type) : newNode;
+			}
 
 			if (HandleBinary(node, out var translated))
 				return translated; // Do not Visit again
@@ -5406,6 +5495,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class TranslationContext : ITranslationContext
 		{
+			public bool OptionalDeclined { get; set; }
+
 			sealed class SqlExpressionFactory : ISqlExpressionFactory
 			{
 				readonly ITranslationContext _translationContext;
@@ -5422,9 +5513,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias)
 			{
-				Visitor        = visitor;
-				CurrentContext = currentContext;
-				CurrentAlias   = currentAlias;
+				Visitor          = visitor;
+				CurrentContext   = currentContext;
+				CurrentAlias     = currentAlias;
+				OptionalDeclined = false;
 			}
 
 			public void Cleanup()
@@ -5480,7 +5572,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
 
-				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
+				// InsideTranslation: this is the translator -> builder re-entry, used by a translator to translate
+				// its own arguments. Those must reach SQL, so PreferClientCalculation must not apply to them.
+				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.InsideTranslation, alias: CurrentAlias);
 			}
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
@@ -5651,9 +5745,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static ObjectPool<TranslationContext> _translationContexts = new(() => new TranslationContext(), c => c.Cleanup(), 100);
 
-		TranslationFlags GetTranslationFlags()
+		TranslationFlags GetTranslationFlags(Expression node)
 		{
 			var result = TranslationFlags.None;
+
+			// Tells the registry that a translation registered as optional may decline, so the expression is
+			// calculated on the client instead of becoming an SQL column.
+			if (PreferClientCalculation(node))
+				result |= TranslationFlags.SkipOptional;
 
 			if (_buildPurpose is BuildPurpose.Sql)
 				result |= TranslationFlags.Sql;
@@ -5674,7 +5773,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool TranslateMember(IBuildContext? context, Expression memberExpression, [NotNullWhen(true)] out Expression? translated)
 		{
-			translated = null;
+			return TranslateMember(context, memberExpression, out translated, out _);
+		}
+
+		/// <param name="declinedOptional">
+		/// True when the registry had a translation and declined it because the caller prefers client calculation.
+		/// Distinct from "nothing could translate this", which also returns false - only the first means the
+		/// client-side rebuild replaces SQL that propagated NULL.
+		/// </param>
+		public bool TranslateMember(IBuildContext? context, Expression memberExpression, [NotNullWhen(true)] out Expression? translated, out bool declinedOptional)
+		{
+			translated       = null;
+			declinedOptional = false;
 
 			if (memberExpression
 			    is MethodCallExpression
@@ -5693,7 +5803,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				translationContext.Value.Init(this, context, Alias);
 
-				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags());
+				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags(memberExpression));
+
+				declinedOptional = translationContext.Value.OptionalDeclined;
 
 				if (translated == null)
 					return false;

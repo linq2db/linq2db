@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -270,6 +273,824 @@ namespace Tests.Linq
 			(selectQuery.Find(e => e is SqlBinaryExpression) != null).ShouldBe(!preferClient);
 		}
 
+		// String composition. Inside an expression tree the C# compiler lowers every interpolated string to
+		// string.Format (its string.Concat optimisation does not apply there), while `a + b` stays a binary Add
+		// carrying string.Concat as its method and an explicitly written string.Concat(...) is a plain call. The
+		// three forms reach three different translation paths, so each needs its own case.
+		//
+		// Assertion shape: "every projected column is a raw field" holds for all forms. The SqlConcatExpression
+		// check applies only where the format string has more than one part - QueryHelper.ConvertFormatToConcatenation
+		// returns the single part unwrapped, so a lone hole like $"{x:D4}" produces a CAST/COALESCE, not a concat.
+
+		[Table]
+		sealed class StringCalcEntity
+		{
+			[Column, PrimaryKey] public int     Id    { get; set; }
+			[Column]             public string? Name  { get; set; }
+			[Column]             public string? Name2 { get; set; }
+			[Column]             public int     Num   { get; set; }
+
+			public static readonly StringCalcEntity[] Seed =
+			[
+				new() { Id = 1, Name = "John", Name2 = "Smith", Num = 42 },
+				new() { Id = 2, Name = null,   Name2 = "Doe",   Num = 7  },
+				new() { Id = 3, Name = "Ann",  Name2 = null,    Num = 0  },
+			];
+		}
+
+		static void AssertComposition<T>(IQueryable<T> query, bool preferClient, bool multiPart = true)
+		{
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.Select.Columns.All(c => c.Expression is SqlField).ShouldBe(preferClient);
+
+			if (multiPart)
+				(selectQuery.Find(e => e is SqlConcatExpression) != null).ShouldBe(!preferClient);
+		}
+
+		[Test]
+		public void InterpolationTwoHolesProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Name} {e.Name2}";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationManyHolesProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			// Four holes: the compiler picks string.Format(String, Object[]) with a NewArrayInit.
+			var query = from e in table select $"{e.Name}, {e.Name2} ({e.Name}/{e.Name2})";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationNonStringHoleProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Num}: {e.Name}";
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void InterpolationFormatSpecifierProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select $"{e.Num:D4}";
+
+			// Single-part format, so no concat node either way - only the raw-field assertion applies.
+			AssertComposition(query, preferClient, multiPart: false);
+
+			// The value can only be asserted client-side: translated to SQL the format specifier is silently
+			// dropped (linq2db#5921), so the server-side result is "42" where .NET produces "0042".
+			if (preferClient)
+				AssertQuery(query);
+		}
+
+		[Test]
+		public void BinaryAddConcatProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			var query = from e in table select e.Name + " " + e.Name2;
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		[Test]
+		public void ExplicitConcatProjection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			// Exercises the registry path directly, independent of how the compiler lowers interpolation.
+			var query = from e in table select string.Concat(e.Name, " ", e.Name2);
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient);
+		}
+
+		// Nesting guard: a mandatory translator (Sql.ToNullable / Sql.AsNullable) forwards its flags into the
+		// translation of its own argument. If an optional registration nested underneath it declines, the widener
+		// receives a non-placeholder, declines in turn, and the whole call collapses to client-side - reading the
+		// missing LEFT JOIN row as default(int) = 0 instead of null. The argument shapes below are the ones that
+		// route through a registry registration (Math.Abs) and through VisitBinary (+ 1).
+
+		[Test]
+		public void ToNullableOverNestedMethodReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(Math.Abs(j.Value1)) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void AsNullableOverNestedMethodReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = (int?)Sql.AsNullable(Math.Abs(j.Value1)) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void ToNullableOverNestedBinaryReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(j.Value1 + 1) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void ToNullableOverCteMethodReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// The CTE projection contains an opted-in method, and a CTE is read back through a build proxy, which
+			// rebuilds under BuildFlags.ResetPrevious. If InsideTranslation did not survive that reset,
+			// PreferClientCalculation would re-arm underneath ToNullable and collapse the SQL NULL to default(T).
+			var cte = (from e in table select new { e.Id, Col = Math.Abs(e.Value1) }).AsCte();
+
+			var query =
+				from e in table
+				from c in cte.LeftJoin(c => c.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(c.Col) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Test]
+		public void ToNullableOverMethodOnCteColumnReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// The opted-in method sits in ToNullable's own argument, over a column read back through the CTE proxy -
+			// so the ResetPrevious rebuild happens while that argument is being translated. Dropping
+			// InsideTranslation there re-arms PreferClientCalculation under a mandatory translator, which makes
+			// ToNullable decline and collapses the SQL NULL to default(int).
+			var cte = table.AsCte();
+
+			var query =
+				from e in table
+				from c in cte.LeftJoin(c => c.Id == e.Id + 1000)
+				select new { e.Id, Joined = Sql.ToNullable(Math.Abs(c.Value1)) };
+
+			var results = query.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
+		}
+
+		[Table]
+		sealed class MissedJoinEntity
+		{
+			[Column, PrimaryKey] public int      Id     { get; set; }
+			[Column]             public int      Value1 { get; set; }
+			[Column]             public Guid     Key    { get; set; }
+			[Column]             public DateTime Date   { get; set; }
+			[Column]             public string?  Name   { get; set; }
+
+			public static readonly MissedJoinEntity[] Seed =
+			[
+				new() { Id = 1, Value1 = 10, Key = new Guid("11111111-1111-1111-1111-111111111111"), Date = new DateTime(2020, 1, 15), Name = "Alpha" },
+			];
+		}
+
+		// The values below are what the SQL answers, and they must hold whichever side computes them. Three of these
+		// members now move client-side and reach them through the null guard (linq2db#5929); the other three stay in
+		// SQL, so the same assertions pin both halves of the split. SQLite-only on purpose: Math.Max over a missed
+		// LeftJoin answers 0 here and on Oracle but 5 on SQL Server 2022, which is a separate divergence.
+		[Test]
+		public void ClientCalculationOverMissedLeftJoinMatchesSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var result =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 CvtStr  = Convert.ToString(j.Value1),
+					 GuidStr = j.Key.ToString(),
+					 Max     = Math.Max(j.Value1, 5),
+					 Min     = Math.Min(j.Value1, -5),
+					 AddDays = j.Date.AddDays(e.Value1),
+					 ConcatO = string.Concat((object)j.Value1, (object)"!"),
+				 })
+				.ToArray().Single();
+
+			result.CvtStr .ShouldBeNull();
+			result.GuidStr.ShouldBeNull();
+			result.Max    .ShouldBe(0);
+			result.Min    .ShouldBe(0);
+			result.AddDays.ShouldBe(default(DateTime));
+			result.ConcatO.ShouldBe("!");
+		}
+
+		// The guard reproduces the NULL propagation of the SQL it replaced, so it has to stay out of the way
+		// wherever the SQL did not propagate one. These three pin that boundary.
+
+		[Test]
+		public void NullCapableArgumentIsNotGuarded([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// A string column carries the NULL itself, so the guard must leave it alone and let string.Concat's own
+			// null handling answer - guarding it would turn "!" into null.
+			var result =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select string.Concat(j.Name, "!"))
+				.ToArray().Single();
+
+			result.ShouldBe("!");
+		}
+
+		[Test]
+		public void NoOuterJoinEmitsNoGuard([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// Nothing here can be NULL, so the guard costs nothing: no conditional, and the same one column the
+			// option-off arm selects.
+			var query = from e in table select Convert.ToString(e.Value1);
+
+			query.ToArray().Single().ShouldBe("10");
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void GuardedColumnIsReadOnce([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// The not-null test and the value read share one placeholder, so a guarded column is still one column.
+			var query =
+				from e in table
+				from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				select Convert.ToString(j.Value1);
+
+			query.ToArray().Single().ShouldBeNull();
+			query.GetSelectQuery().Select.Columns.Count.ShouldBe(1);
+		}
+
+		[Test]
+		public void BinaryOverMissedLeftJoinMatchesSql([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// The binary route reaches the client through TryConvertToSql declining, not through a registration,
+			// so it needs its own guard - without it this reads 1.
+			var result =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select j.Value1 + 1)
+				.ToArray().Single();
+
+			result.ShouldBe(0);
+		}
+
+		[Test]
+		public void DefaultIfEmptyOverMissedJoinMatchesSql([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2022, TestProvName.AllOracle)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			// Same shape written as a join-into-DefaultIfEmpty rather than LeftJoin, which reaches the nullability
+			// through a different builder.
+			var result =
+				(from e in table
+				 join j in table on e.Id + 1000 equals j.Id into g
+				 from j in g.DefaultIfEmpty()
+				 select Convert.ToString(j.Value1))
+				.ToArray().Single();
+
+			result.ShouldBeNull();
+		}
+
+		[Test]
+		public void ClientSideWithoutRegistrationMatchesSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
+
+			var r =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 ToStr  = j.Value1.ToString(),
+					 Interp = $"[{j.Value1}]",
+				 })
+				.ToArray().Single();
+
+			// int.ToString() routes through TranslateOverrideHandler, which has no registration site, so it is
+			// client-side in both arms and the option must not touch its answer. Guarding it would turn "0" into
+			// null purely because an option about *where* computation happens was enabled.
+			r.ToStr.ShouldBe("0");
+
+			// An interpolated string is gated at HandleStringFormat, not a registration, so the method-call guard
+			// does not reach it - and must not, since guarding string.Format itself answers null where its
+			// COALESCE-based SQL answers "[]". The arms agree because the *unary* guard reaches the boxing
+			// conversion in the hole, making it a null object rather than a boxed 0. Without any guard this
+			// reads "[0]", which is what makes this assertion carry weight.
+			r.Interp.ShouldBe("[]");
+		}
+
+		// Per-translator coverage, batched: one projection calls many members of a family at once, and the
+		// "every projected column is a raw field" assertion fails if *any* member in the batch stayed server-side.
+		// A newly registered member joins a batch by adding one line to its projection rather than adding a test.
+
+		[Table]
+		sealed class BatchCalcEntity
+		{
+			[Column, PrimaryKey] public int      Id   { get; set; }
+			[Column]             public int      Num  { get; set; }
+			[Column]             public double   Dbl  { get; set; }
+			[Column]             public decimal  Dec  { get; set; }
+			[Column]             public string   Name { get; set; } = null!;
+			[Column]             public DateTime Date { get; set; }
+
+			// Values deliberately avoid rounding midpoints: client and server disagree on midpoint rules, which
+			// would make the option-off arm fail for a reason unrelated to this change.
+			public static readonly BatchCalcEntity[] Seed =
+			[
+				new() { Id = 1, Num =  42, Dbl =  1.4, Dec =  10.2m, Name = "  John  ", Date = new DateTime(2020, 1, 15) },
+				new() { Id = 2, Num =  -7, Dbl = -2.6, Dec =  -3.7m, Name = "Ann",      Date = new DateTime(2021, 6, 30) },
+				new() { Id = 3, Num =   0, Dbl =  3.3, Dec =   5.1m, Name = "Bob",      Date = new DateTime(2022, 12, 1) },
+			];
+		}
+
+		[Test]
+		public void MathMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					// Math.Max / Math.Min are absent on purpose: they stay in SQL, because what their SQL answers
+					// for a NULL argument is provider-dependent, so no client-side rule matches it. Pinned by
+					// ClientCalculationOverMissedLeftJoinMatchesSql.
+					Abs   = Math.Abs(e.Num),
+					// Column precision, not a constant: TranslateMathRoundMethod declines whenever every argument
+					// after the value can be evaluated on the client, and for Math.Round(x) that set is empty - so
+					// the single-argument form is raw in both arms and asserts nothing. With a column it reaches
+					// SQL with the option off, which is what makes these two columns carry weight here.
+					RndD  = Math.Round(e.Dbl, e.Id),
+					RndM  = Math.Round(e.Dec, e.Id),
+				};
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient, multiPart: false);
+		}
+
+		[Test]
+		public void ConvertMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// Numeric conversions only - Convert.ToString is excluded because client and server disagree on
+			// numeric formatting, which is accepted behaviour but would break the option-off arm.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					I64 = Convert.ToInt64(e.Num),
+					Dbl = Convert.ToDouble(e.Num),
+					Dec = Convert.ToDecimal(e.Num),
+					I32 = Convert.ToInt32(e.Dec),
+				};
+
+			AssertQuery(query);
+			AssertComposition(query, preferClient, multiPart: false);
+		}
+
+		[Test]
+		public void ConvertWithoutClientBodyStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// Convert.ToInt32(DateTime) throws InvalidCastException client-side for every input, so it must stay in
+			// SQL in both arms - declining it turns a query that returns a value into one that throws.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					V = Convert.ToInt32(e.Date),
+				};
+
+			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
+			query.ToArray().Length.ShouldBe(BatchCalcEntity.Seed.Length);
+		}
+
+		// TranslateMember now runs before the option is consulted, and it returns early from the translated-SQL cache
+		// that HandleExtension populates for the same call elsewhere in the query. The WHERE below is not a final
+		// projection, so it translates the call and fills that cache; a hit in the projection would put ABS back into
+		// the SELECT. The option's answer must not depend on whether an unrelated clause used the same function.
+		[Test]
+		public void AttributedFunctionMovesClientSideEvenWhenTranslatedInWhere([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query = table.Where(e => PreferClient(e.Value1) == 20).Select(e => PreferClient(e.Value1));
+
+			// Guards the assertion below from going vacuous: if the WHERE stopped translating, the cache would be
+			// empty and the projection could be client-side for the wrong reason.
+			query.ToSqlQuery().Sql.ShouldContain("ABS");
+
+			query.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField).ShouldBeTrue();
+		}
+
+		sealed class ConvertRegistryProbe : ConvertMemberTranslatorDefault
+		{
+			public TranslationRegistration Registry => Registration;
+		}
+
+		// Census over every Convert.ToXxx registration. The direction asserted per overload is one-way: an overload
+		// with no client body may never be optional - 34 of them are documented as always throwing
+		// InvalidCastException, and declining those turns a working query into an exception. The reverse does not
+		// hold, because Convert.ToString is kept mandatory for a different reason (linq2db#5929), so the totals
+		// below are what pins the set. The no-client-body set itself is measured by invoking each overload rather
+		// than listed here, so a registration added later lands on the right side of that line by itself.
+		[Test]
+		public void ConvertRegistrationOptionalityMatchesClientBody()
+		{
+			var registry  = new ConvertRegistryProbe().Registry;
+			var optional  = 0;
+			var mandatory = 0;
+
+			foreach (var method in typeof(Convert).GetMethods(BindingFlags.Public | BindingFlags.Static))
+			{
+				var parameters = method.GetParameters();
+
+				if (parameters.Length != 1)
+					continue;
+
+				var call = Expression.Call(method, Expression.Default(parameters[0].ParameterType));
+
+				if (registry.GetTranslation(LinqToDB.Expressions.MemberHelper.GetMemberInfoWithType(call), out var isOptional) == null)
+					continue;
+
+				if (AlwaysThrowsInvalidCast(method))
+					isOptional.ShouldBeFalse($"Convert.{method.Name}({parameters[0].ParameterType.Name})");
+
+				if (isOptional)
+					optional++;
+				else
+					mandatory++;
+			}
+
+			// 34 with no client body, plus Convert.ToString(object) - the only ToString overload still mandatory,
+			// because the null guard keys on the column's CLR type and leaves a reference-typed one to the member,
+			// whose answer for null is "" rather than the SQL's NULL (linq2db#5929).
+			mandatory.ShouldBe(35);
+			optional.ShouldBe(205);
+		}
+
+		static bool AlwaysThrowsInvalidCast(MethodInfo method)
+		{
+			// The exception these overloads raise does not depend on the value, so the parameter's default is a
+			// sufficient probe.
+			var parameterType = method.GetParameters()[0].ParameterType;
+			var argument      = parameterType.IsValueType ? Activator.CreateInstance(parameterType) : null;
+
+			try
+			{
+				method.Invoke(null, [argument]);
+				return false;
+			}
+			catch (TargetInvocationException ex)
+			{
+				return ex.InnerException is InvalidCastException;
+			}
+		}
+
+		// The optional mark's contract, pinned on the registry directly. Nothing in the shipped translators registers
+		// a member inside a scope or re-registers a scoped key outside one, so both the mark and the clear in
+		// RegisterMethodInternal could be deleted without any other test noticing.
+		[Test]
+		public void OptionalScopeMarksOnlyMethodRegistrations()
+		{
+			var registration = new TranslationRegistration();
+
+			TranslationRegistration.TranslateMethodFunc       noMethod = (_, _, _) => null;
+			TranslationRegistration.TranslateMemberAccessFunc noMember = (_, _, _) => null;
+
+			using (registration.OptionalScope())
+			{
+				registration.RegisterMethod((string s) => s.Substring(1), noMethod);
+				registration.RegisterMember((string s) => s.Length,       noMember);
+			}
+
+			registration.RegisterMethod((string s) => s.Trim(), noMethod);
+
+			IsOptional(registration, (string s) => s.Substring(1)).ShouldBeTrue();
+			IsOptional(registration, (string s) => s.Length)      .ShouldBeFalse();
+			IsOptional(registration, (string s) => s.Trim())      .ShouldBeFalse();
+
+			// A provider subclass may replace an optional registration with a mandatory one, so re-registering the
+			// same key outside a scope has to clear the mark rather than leave the stale one behind.
+			registration.RegisterMethod((string s) => s.Substring(1), noMethod);
+
+			IsOptional(registration, (string s) => s.Substring(1)).ShouldBeFalse();
+		}
+
+		static bool IsOptional<T, TResult>(TranslationRegistration registration, Expression<Func<T, TResult>> pattern)
+		{
+			var member = LinqToDB.Expressions.MemberHelper.GetMemberInfoWithType(pattern);
+
+			registration.GetTranslation(member, out var isOptional).ShouldNotBeNull();
+
+			return isOptional;
+		}
+
+		[Test]
+		public void DateAddMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// Column increments, not constants: with a constant the translator declines in a final projection
+			// whatever the option says, so such a query could not tell a mandatory registration from an optional one.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					D1 = e.Date.AddDays(e.Num),
+					D2 = e.Date.AddHours(e.Num),
+				};
+
+			// Values are not compared across the arms: SQLite computes these through strftime, which is not
+			// tick-for-tick equal to DateTime arithmetic. Where the computation happens is the point here.
+			query.ToArray().Length.ShouldBe(BatchCalcEntity.Seed.Length);
+			AssertComposition(query, preferClient, multiPart: false);
+		}
+
+		[Table]
+		sealed class OffsetCalcEntity
+		{
+			[Column, PrimaryKey] public int            Id  { get; set; }
+			[Column]             public int            Num { get; set; }
+			[Column]             public DateTimeOffset Dto { get; set; }
+
+			public static readonly OffsetCalcEntity[] Seed =
+				[new() { Id = 1, Num = 3, Dto = new DateTimeOffset(2020, 1, 15, 0, 0, 0, TimeSpan.Zero) }];
+		}
+
+		[Test]
+		public void DateTimeOffsetAddMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(OffsetCalcEntity.Seed);
+
+			// Asserted on the AST only: these registrations had no coverage of any kind, and the point here is
+			// where the computation happens, not how a provider stores an offset.
+			var query =
+				from e in table
+				select new { e.Id, D = e.Dto.AddDays(e.Num) };
+
+			query.GetSelectQuery().Select.Columns.Count(c => c.Expression is not SqlField).ShouldBe(preferClient ? 0 : 1);
+		}
+
+		[Test]
+		public void StringInstanceMembersMoveClientSide([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			// The seed's NULL Name is what carries this test: a declined instance call is rebuilt over the
+			// materialized column, so without the receiver guard the null arrives as a null receiver and throws
+			// (linq2db#5928). With it, both arms answer null, which is what the emitted SQL answers too.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Rep  = e.Name!.Replace("o", "0"),
+					Pad  = e.Name!.PadLeft(12, '.'),
+					TrmS = e.Name!.TrimStart(' '),
+					TrmE = e.Name!.TrimEnd(' '),
+				};
+
+			var nullRow = query.ToArray().Single(r => r.Id == 2);
+
+			nullRow.Rep .ShouldBeNull();
+			nullRow.Pad .ShouldBeNull();
+			nullRow.TrmS.ShouldBeNull();
+			nullRow.TrmE.ShouldBeNull();
+
+			AssertComposition(query, preferClient, multiPart: false);
+		}
+
+		[Test]
+		public void StringCompareStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// Linq/Expressions.cs rewrites string.CompareOrdinal into string.CompareTo(string) before the registry
+			// is consulted, and CompareTo is culture-sensitive: on the client "Bob" sorts after "apple" where an
+			// ordinal comparison puts it before, so a client-side move returns 1 for that row instead of -1.
+			// The mapping itself is linq2db#5927; until that is fixed the registration must stay mandatory.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Cmp = string.CompareOrdinal(e.Name, "apple"),
+				};
+
+			query.ToArray().ShouldAllBe(r => r.Cmp < 0);
+			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
+		}
+
+		[Sql.Expression("{0} > 0", IsPredicate = true)]                        static bool AttributedPredicate(int value) => value > 0;
+		[Sql.Expression("{0} > 0", IsPredicate = true, ServerSideOnly = true)] static bool ServerOnlyPredicate(int value) => throw new ServerSideOnlyException(nameof(ServerOnlyPredicate));
+
+		[ExpressionMethod(nameof(IsPositiveImpl))]
+		static bool IsPositive(int value) => value > 0;
+		static Expression<Func<int, bool>> IsPositiveImpl() => v => v > 0;
+
+		[Test]
+		public void BooleanPredicateRoutesUnderOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// Measured routing for bool-returning members, pinned so a change in any of them is visible. The last
+			// two rows are inconsistent with the rest and are tracked as linq2db#5925; they are asserted as they
+			// behave today, not as they arguably should.
+			static bool AllRaw<T>(IQueryable<T> q) => q.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField);
+
+			// [Sql.Expression] -> HandleExtension, which the option gates.
+			AllRaw(from e in table select new { e.Id, V = AttributedPredicate(e.Num) }).ShouldBeTrue();
+
+			// ServerSideOnly excludes the node from the option entirely.
+			AllRaw(from e in table select new { e.Id, V = ServerOnlyPredicate(e.Num) }).ShouldBeFalse();
+
+			// [ExpressionMethod] expands before the gate; the expansion is a binary, which the option gates.
+			AllRaw(from e in table select new { e.Id, V = IsPositive(e.Num) }).ShouldBeTrue();
+
+			// The built-in predicate path declines under the option, so this moves too.
+			AllRaw(from e in table select new { e.Id, V = e.Name.Contains("o") }).ShouldBeTrue();
+
+			// #5925: expands to `p == null || p.Length == 0`; the comparison moves but Length is a member, and
+			// members always translate, so a computed Length(...) column remains.
+			AllRaw(from e in table select new { e.Id, V = string.IsNullOrEmpty(e.Name) }).ShouldBeFalse();
+
+			// #5925: registered in the same optional scope as Replace / PadLeft / Trim*, which do move - this one
+			// does not, and the whole predicate stays in SQL.
+			AllRaw(from e in table select new { e.Id, V = string.IsNullOrWhiteSpace(e.Name) }).ShouldBeFalse();
+		}
+
+		[Test]
+		public void BooleanMethodStaysInSqlDespiteOptionalRegistration([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// string.IsNullOrWhiteSpace is registered optional but does not move client-side, unlike the other
+			// members of the same scope. Kept as its own case rather than silently dropped from the string batch:
+			// the divergence is real and tracked as linq2db#5925, where the mechanism is still open. Results are
+			// correct either way, so AssertQuery holds in both modes - only the SQL shape differs.
+			var query = from e in table select new { e.Id, Ws = string.IsNullOrWhiteSpace(e.Name) };
+
+			AssertQuery(query);
+
+			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
+		}
+
+		[Test]
+		public void MandatoryMembersStayInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// The mirror of the batches above: Sql.* marks intent to compute server-side, so none of these may be
+			// pulled client-side whatever the option says. The DateAdd increment is a column, not a constant - with
+			// a constant the translator declines in any projection and that column would pin nothing.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Added = Sql.DateAdd(Sql.DateParts.Day, e.Num, e.Date),
+					Part  = Sql.DatePart(Sql.DateParts.Year, e.Date),
+					Cat   = Sql.Concat(e.Name, "!"),
+				};
+
+			var selectQuery = query.GetSelectQuery();
+
+			// Counted, not Any(): one computed column would otherwise satisfy the assertion for all three, so
+			// making any single one of these registrations optional by mistake would leave the test green.
+			selectQuery.Select.Columns.Count(c => c.Expression is not SqlField).ShouldBe(3);
+			(selectQuery.Find(e => e is SqlConcatExpression) != null).ShouldBeTrue();
+		}
+
+		[Test]
+		public void ServerSideOnlyMembersStayInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
+
+			// Members that must never move: SQL-only constructs, the sequence-taking concat overloads that share a
+			// delegate with aggregate concat, and string.CompareTo(object), whose client body throws. Guid.NewGuid
+			// is deliberately absent - measured, it produces no column in a projection in either arm, so there is
+			// nothing here for a pin to hold.
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Row  = Sql.Ext.RowNumber().Over().OrderBy(e.Id).ToValue(),
+					Cats = Sql.ConcatStrings(",", e.Name, e.Name2),
+					Cat  = string.Concat(new[] { e.Name, e.Name2 }),
+					Now  = Sql.GetDate(),
+					Cmp  = e.Name!.CompareTo((object)1),
+				};
+
+			// Counted, not Any(): one computed column would otherwise cover all five.
+			query.GetSelectQuery().Select.Columns.Count(c => c.Expression is not SqlField).ShouldBe(5);
+		}
+
+		[Test]
+		public void GroupedCompositionStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			// string.Concat / string.Join over a grouping share their delegate with aggregate concat, which has no
+			// client-side equivalent - declining them would leave the grouping in the projection.
+			var concat = from e in table group e by e.Id > 1 into g select string.Concat(g.Select(x => x.Name));
+			var join   = from e in table group e by e.Id > 1 into g select string.Join(", ", g.Select(x => x.Name));
+
+			_ = concat.ToArray();
+			_ = join.ToArray();
+		}
+
 		[Test]
 		public void SetProjectionStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
@@ -298,6 +1119,29 @@ namespace Tests.Linq
 			AssertQuery(from e in table select e.Id > 1 ? e.Value1 : e.Value2);
 			AssertQuery(from e in table select -e.Value1);
 			AssertQuery(from e in table select e.Value1 + PreferServer(e.Value2));
+
+			// The reported defect's own shape. Only string holes: a numeric hole would compare .NET formatting
+			// against each provider's CAST, which is a difference this option accepts rather than a regression.
+			AssertQuery(from e in table select new { e.Id, Cat = $"{e.Name} {e.Name}" });
+		}
+
+		[Test]
+		public void NestedNullableOverMissedJoinMatchesAcrossProviders([DataSources] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			// AssertQuery cannot be used here: a missed LeftJoin materializes as null in LINQ to Objects, so the
+			// in-memory arm would throw. The SQL answer is NULL, and it has to survive the option on every provider
+			// and through the remote context - which the [IncludeDataSources] tests in this fixture exclude.
+			var results =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new { e.Id, Joined = Sql.ToNullable(Math.Abs(j.Value1)) })
+				.ToArray();
+
+			results.Length.ShouldBe(ClientCalcEntity.Seed.Length);
+			results.ShouldAllBe(r => r.Joined == null);
 		}
 
 		// The following tests document a rule that is independent of PreferClientCalculation: in non-projection clauses

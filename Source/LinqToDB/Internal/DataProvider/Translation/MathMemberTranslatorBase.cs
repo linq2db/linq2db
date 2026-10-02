@@ -21,6 +21,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterMax()
 		{
+			// Mandatory: what the SQL answers for a NULL argument is provider-dependent, so no client-side rule
+			// can match it. Measured over a missed LeftJoin - SQLite (CASE WHEN x >= y OR x IS NULL) and Oracle
+			// (GREATEST) yield NULL, while SQL Server 2022 emits GREATEST with IfAllParametersNullable and
+			// answers y. linq2db#5929's guard cannot reconcile the two.
 			Registration.RegisterMethod((byte    x, byte    y) => Math.Max(x, y), TranslateMaxMethod);
 			Registration.RegisterMethod((decimal x, decimal y) => Math.Max(x, y), TranslateMaxMethod);
 			Registration.RegisterMethod((double  x, double  y) => Math.Max(x, y), TranslateMaxMethod);
@@ -36,6 +40,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterMin()
 		{
+			// Mandatory - same provider-dependent NULL answer as RegisterMax.
 			Registration.RegisterMethod((byte    x, byte    y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((decimal x, decimal y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((double  x, double  y) => Math.Min(x, y), TranslateMinMethod);
@@ -51,14 +56,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterAbs()
 		{
-			Registration.RegisterMethod((short   v) => Math.Abs(v), TranslateAbsMethod);
-			Registration.RegisterMethod((int     v) => Math.Abs(v), TranslateAbsMethod);
-			Registration.RegisterMethod((long    v) => Math.Abs(v), TranslateAbsMethod);
-			Registration.RegisterMethod((sbyte   v) => Math.Abs(v), TranslateAbsMethod);
-			Registration.RegisterMethod((float   v) => Math.Abs(v), TranslateAbsMethod);
-			Registration.RegisterMethod((double  v) => Math.Abs(v), TranslateAbsMethod);
-			Registration.RegisterMethod((decimal v) => Math.Abs(v), TranslateAbsMethod);
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((short   v) => Math.Abs(v), TranslateAbsMethod);
+				Registration.RegisterMethod((int     v) => Math.Abs(v), TranslateAbsMethod);
+				Registration.RegisterMethod((long    v) => Math.Abs(v), TranslateAbsMethod);
+				Registration.RegisterMethod((sbyte   v) => Math.Abs(v), TranslateAbsMethod);
+				Registration.RegisterMethod((float   v) => Math.Abs(v), TranslateAbsMethod);
+				Registration.RegisterMethod((double  v) => Math.Abs(v), TranslateAbsMethod);
+				Registration.RegisterMethod((decimal v) => Math.Abs(v), TranslateAbsMethod);
+			}
 
+			// Sql.Abs is an explicit request for SQL-side evaluation, so it stays mandatory.
 			Registration.RegisterMethod((decimal? v) => Sql.Abs(v), TranslateAbsMethod);
 			Registration.RegisterMethod((double?  v) => Sql.Abs(v), TranslateAbsMethod);
 			Registration.RegisterMethod((short?   v) => Sql.Abs(v), TranslateAbsMethod);
@@ -70,28 +79,43 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterRound()
 		{
-			Registration.RegisterMethod((double v) => Math.Round(v)                            , TranslateMathRoundMethod);
-			Registration.RegisterMethod((double v) => Math.Round(v, 0)                         , TranslateMathRoundMethod);
-			Registration.RegisterMethod((double v) => Math.Round(v, MidpointRounding.ToEven)   , TranslateMathRoundMethod);
-			Registration.RegisterMethod((double v) => Math.Round(v, 0, MidpointRounding.ToEven), TranslateMathRoundMethod);
+			// The scope is not what moves Math.Round: measured, a projected Math.Round(col, col) is client-side under
+			// the option even with a mandatory registration, so an earlier gate already declines it. Kept optional
+			// for consistency with the other BCL Math methods, not because it is load-bearing.
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((double v) => Math.Round(v)                            , TranslateMathRoundMethod);
+				Registration.RegisterMethod((double v) => Math.Round(v, 0)                         , TranslateMathRoundMethod);
+				Registration.RegisterMethod((double v) => Math.Round(v, MidpointRounding.ToEven)   , TranslateMathRoundMethod);
+				Registration.RegisterMethod((double v) => Math.Round(v, 0, MidpointRounding.ToEven), TranslateMathRoundMethod);
+			}
+
 			Registration.RegisterMethod((double v) => Sql.RoundToEven(v)                       , TranslateRoundToEvenMethod);
 			Registration.RegisterMethod((double v) => Sql.RoundToEven(v, 0)                    , TranslateRoundToEvenMethod);
 			Registration.RegisterMethod((double v) => Sql.Round(v)                             , TranslateRoundAwayFromZero);
 			Registration.RegisterMethod((double v) => Sql.Round(v, 0)                          , TranslateRoundAwayFromZero);
 
-			Registration.RegisterMethod((float v) => Math.Round(v)                            , TranslateMathRoundMethod);
-			Registration.RegisterMethod((float v) => Math.Round(v, 0)                         , TranslateMathRoundMethod);
-			Registration.RegisterMethod((float v) => Math.Round(v, MidpointRounding.ToEven)   , TranslateMathRoundMethod);
-			Registration.RegisterMethod((float v) => Math.Round(v, 0, MidpointRounding.ToEven), TranslateMathRoundMethod);
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((float v) => Math.Round(v)                            , TranslateMathRoundMethod);
+				Registration.RegisterMethod((float v) => Math.Round(v, 0)                         , TranslateMathRoundMethod);
+				Registration.RegisterMethod((float v) => Math.Round(v, MidpointRounding.ToEven)   , TranslateMathRoundMethod);
+				Registration.RegisterMethod((float v) => Math.Round(v, 0, MidpointRounding.ToEven), TranslateMathRoundMethod);
+			}
+
 			Registration.RegisterMethod((float v) => Sql.RoundToEven(v)                       , TranslateRoundToEvenMethod);
 			Registration.RegisterMethod((float v) => Sql.RoundToEven(v, 0)                    , TranslateRoundToEvenMethod);
 			Registration.RegisterMethod((float v) => Sql.Round(v)                             , TranslateRoundAwayFromZero);
 			Registration.RegisterMethod((float v) => Sql.Round(v, 0)                          , TranslateRoundAwayFromZero);
 
-			Registration.RegisterMethod((decimal v) => Math.Round(v)                            , TranslateMathRoundMethod);
-			Registration.RegisterMethod((decimal v) => Math.Round(v, 0)                         , TranslateMathRoundMethod);
-			Registration.RegisterMethod((decimal v) => Math.Round(v, MidpointRounding.ToEven)   , TranslateMathRoundMethod);
-			Registration.RegisterMethod((decimal v) => Math.Round(v, 0, MidpointRounding.ToEven), TranslateMathRoundMethod);
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod((decimal v) => Math.Round(v)                            , TranslateMathRoundMethod);
+				Registration.RegisterMethod((decimal v) => Math.Round(v, 0)                         , TranslateMathRoundMethod);
+				Registration.RegisterMethod((decimal v) => Math.Round(v, MidpointRounding.ToEven)   , TranslateMathRoundMethod);
+				Registration.RegisterMethod((decimal v) => Math.Round(v, 0, MidpointRounding.ToEven), TranslateMathRoundMethod);
+			}
+
 			Registration.RegisterMethod((decimal v) => Sql.RoundToEven(v)                       , TranslateRoundToEvenMethod);
 			Registration.RegisterMethod((decimal v) => Sql.RoundToEven(v, 0)                    , TranslateRoundToEvenMethod);
 			Registration.RegisterMethod((decimal v) => Sql.Round(v)                             , TranslateRoundAwayFromZero);
@@ -100,7 +124,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RgisterPow()
 		{
-			Registration.RegisterMethod((double  x, double  y) => Math.Pow(x, y), TranslatePow);
+			// Inert today: Expressions.MapMember rewrites Math.Pow to Sql.Power before this registration is
+			// consulted, so Math.Pow currently stays server-side. Marked optional anyway so it behaves like the
+			// other BCL Math methods once linq2db#5922 removes that mapping.
+			using (Registration.OptionalScope())
+				Registration.RegisterMethod((double  x, double  y) => Math.Pow(x, y), TranslatePow);
+
 			Registration.RegisterMethod((double  x, double  y) => Sql.Power(x, y), TranslatePow);
 			Registration.RegisterMethod((decimal x, decimal y) => Sql.Power(x, y), TranslatePow);
 		}

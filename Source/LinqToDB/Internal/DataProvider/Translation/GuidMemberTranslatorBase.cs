@@ -12,8 +12,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public GuidMemberTranslatorBase()
 		{
-			Registration.RegisterMethod(() => Guid.Empty.ToString(),          TranslateGuildToStringMethod);
-			Registration.RegisterMethod(() => ((Guid?)Guid.Empty).ToString(), TranslateGuildToStringMethod);
+			// Optional: the translation is a cast, NULL-strict on every provider, and the client rebuild guards on
+			// the column, so a missed LeftJoin reads null either way (linq2db#5929).
+			using (Registration.OptionalScope())
+			{
+				Registration.RegisterMethod(() => Guid.Empty.ToString(),          TranslateGuildToStringMethod);
+				Registration.RegisterMethod(() => ((Guid?)Guid.Empty).ToString(), TranslateGuildToStringMethod);
+			}
 		}
 
 		Expression? TranslateGuildToStringMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
