@@ -67,7 +67,7 @@ case ${1-} in
 		printf '%s' "$password" | st store --label="linq2db-cli $target" service linq2db-cli target "$target" user "$username" \
 			|| fail 'secret-tool store failed'
 		printf '%s\n' "$old_users" | while IFS= read -r old; do
-			[ -n "$old" ] && [ "$old" != "$username" ] || continue
+			if [ -z "$old" ] || [ "$old" = "$username" ]; then continue; fi
 			st clear service linq2db-cli target "$target" user "$old" || fail 'secret-tool clear of the previous item failed'
 		done
 		;;
