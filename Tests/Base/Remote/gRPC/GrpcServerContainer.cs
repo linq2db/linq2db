@@ -96,8 +96,7 @@ namespace Tests.Remote.ServerContainer
 
 				services.AddGrpc();
 				services.AddCodeFirstGrpc();
-				services.AddSingleton(p => GrpcLinqService);
-
+				services.AddSingleton(GrpcLinqService);
 			}
 
 			public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
