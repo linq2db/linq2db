@@ -376,6 +376,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return element;
 		}
 
+		// Access dates start at 0100-01-01, and it reads #0001-01-01# back as 2001.
+		public override ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
+		{
+			return RaiseDefaultDate(expression, new DateTime(100, 1, 1)) ?? base.ConvertDefaultValue(expression);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			return func switch
