@@ -1169,32 +1169,22 @@ namespace Tests.Linq
 				from b in right.Where(x => x.Id == a.Id).DefaultIfEmpty()
 				select new { a, b };
 
-			var rows = joined
-				.OrderBy(x => x.a.Id)
-				.Select(x => new
-				{
-					TotalDays = Sql.AsSql((double?)(x.b!.FinishedOn - x.a.StartedOn).TotalDays),
-					Days      = Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Days),
-					Hours     = Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Hours),
-					Minutes   = Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Minutes),
-					Reversed  = Sql.AsSql((double?)(x.a.StartedOn - x.b!.FinishedOn).TotalHours),
-					RevHours  = Sql.AsSql((int?)(x.a.StartedOn - x.b!.FinishedOn).Hours),
-				})
-				.ToList();
+			// One member per query: Access lowers each member of a difference in full and refuses a statement past a
+			// size it calls "too complex", which a projection of several members reaches.
+			var ordered = joined.OrderBy(x => x.a.Id);
 
-			rows[0].TotalDays!.Value.ShouldBe(amount.TotalDays, Tolerance(amount.TotalDays));
-			rows[0].Days.ShouldBe(amount.Days);
-			rows[0].Hours.ShouldBe(amount.Hours);
-			rows[0].Minutes.ShouldBe(amount.Minutes);
-			rows[0].Reversed!.Value.ShouldBe(-amount.TotalHours, Tolerance(amount.TotalHours));
-			rows[0].RevHours.ShouldBe(-amount.Hours);
+			var totalDays = ordered.Select(x => Sql.AsSql((double?)(x.b!.FinishedOn - x.a.StartedOn).TotalDays)).ToList();
+			totalDays[0]!.Value.ShouldBe(amount.TotalDays, Tolerance(amount.TotalDays));
+			totalDays[1].ShouldBeNull();
 
-			rows[1].TotalDays.ShouldBeNull();
-			rows[1].Days.ShouldBeNull();
-			rows[1].Hours.ShouldBeNull();
-			rows[1].Minutes.ShouldBeNull();
-			rows[1].Reversed.ShouldBeNull();
-			rows[1].RevHours.ShouldBeNull();
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Days)).ToList().ShouldBe([amount.Days, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Hours)).ToList().ShouldBe([amount.Hours, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Minutes)).ToList().ShouldBe([amount.Minutes, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.a.StartedOn - x.b!.FinishedOn).Hours)).ToList().ShouldBe([-amount.Hours, null]);
+
+			var reversed = ordered.Select(x => Sql.AsSql((double?)(x.a.StartedOn - x.b!.FinishedOn).TotalHours)).ToList();
+			reversed[0]!.Value.ShouldBe(-amount.TotalHours, Tolerance(amount.TotalHours));
+			reversed[1].ShouldBeNull();
 
 			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).TotalDays > 1).Select(x => x.a.Id).ToList().ShouldBe([1]);
 			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).Hours == amount.Hours).Select(x => x.a.Id).ToList().ShouldBe([1]);
