@@ -19,6 +19,33 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		/// <inheritdoc />
 		public override bool CanLowerIntervalDifference => true;
 
+		/// <inheritdoc />
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by whole milliseconds using SQLite's date modifiers.
+		/// </summary>
+		/// <remarks>
+		/// Durations are truncated toward zero to whole milliseconds. SQLite also normalizes the date
+		/// operand to millisecond resolution, and strftime emits three fractional digits. Sub-millisecond
+		/// date precision is not preserved, even when shifting by zero.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var stringType = Factory.GetDbDataType(typeof(string));
+
+			// Truncate before converting to double, and before negation so even Int64.MinValue is safe.
+			var milliseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond);
+			if (element.IsSubtract)
+				milliseconds = Factory.Multiply(longType, milliseconds, -1L);
+
+			var seconds  = Factory.Div(doubleType, Factory.Cast(milliseconds, doubleType), 1000);
+			var modifier = Factory.Concat(Factory.Cast(seconds, stringType), " Second");
+			return SQLiteDateTimeHelper.ShiftDate(Factory, element.Type, element.Temporal, modifier);
+		}
+
 		/// <summary>
 		/// <c>julianday</c> returns a double, and a Julian day number today is around 2460000 - so one unit in the
 		/// last place is about 47 microseconds. The millisecond is the finest quantum that survives that, whatever
@@ -245,8 +272,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (IsDateDataType(dbDataType, "Date"))
 						return new SqlFunction(dbDataType, "Date", expression) { DoNotOptimize = true };
 
-					if (expression is SqlFunction { Parameters: [SqlValue { Value: "%Y-%m-%d %H:%M:%f" }, var expr] })
-						expression = expr;
+					// Timestamp formatting is already complete, including any date modifiers. Date-only
+					// comparisons still need the Date() normalization above, regardless of the source type.
+					if (expression is SqlFunction { Name: "strftime", Parameters: [SqlValue { Value: "%Y-%m-%d %H:%M:%f" }, _, ..] } function)
+						return new SqlFunction(dbDataType, function.Name, function.Flags, function.NullabilityType,
+							function.CanBeNullNullable, function.Parameters) { DoNotOptimize = true };
 
 					return new SqlFunction(dbDataType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
 				}

@@ -161,7 +161,6 @@ namespace Tests.Linq
 		/// </para>
 		/// </remarks>
 		const string UnsupportedShiftProviders =
-			TestProvName.AllSQLite            + "," +
 			TestProvName.AllOracle            + "," +
 			TestProvName.AllFirebird          + "," +
 			TestProvName.AllSapHana           + "," +
