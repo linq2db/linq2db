@@ -1432,6 +1432,53 @@ namespace Tests.Linq
 			t.Where(r => r.OnSmall + (r.FinishedOn - r.StartedOn) > bound).Select(r => r.Id).ToArray().ShouldBe([1]);
 		}
 
+		[Table]
+		sealed class OptionalDueRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime? DueOn { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime StartedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A column shifted by the difference of two client values, written in its nullable spellings.
+		/// </summary>
+		/// <remarks>
+		/// Over a nullable column the addition is lifted and the difference converted to a nullable
+		/// <see cref="TimeSpan"/>; between two nullable locals the difference is one itself. Both are the shift
+		/// <see cref="AShiftOfAColumnByADifferenceOfClientValues"/> asks, and an absent local makes the result absent.
+		/// </remarks>
+		[Test]
+		public void AShiftByADifferenceOfClientValuesInANullableSpelling([DataSources(UnsupportedDeclaredShiftProviders)] string context)
+		{
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier.AddHours(1).AddMilliseconds(250);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			DateTime? earlierN = earlier;
+			DateTime? laterN   = later;
+			DateTime? absent   = null;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<OptionalDueRow>();
+
+			db.Insert(new OptionalDueRow { Id = 1, DueOn = started, StartedOn = started });
+
+			t.Select(r => Sql.AsSql(r.DueOn + (later - earlier))).Single().ShouldBe(started + (later - earlier));
+			t.Select(r => Sql.AsSql(r.StartedOn + (laterN - earlierN))).Single().ShouldBe(started + (later - earlier));
+			t.Select(r => Sql.AsSql(r.DueOn - (laterN - earlierN))).Single().ShouldBe(started - (later - earlier));
+			t.Select(r => Sql.AsSql(r.StartedOn + (laterN - absent))).Single().ShouldBeNull();
+
+			t.Where(r => r.DueOn + (later - earlier) > r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBe([1]);
+			t.Where(r => r.StartedOn + (laterN - earlierN) < r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBeEmpty();
+		}
+
 		/// <summary>
 		/// A <see cref="DateTimeOffset"/> shifted by a computed difference, answered as the same instant or refused.
 		/// </summary>

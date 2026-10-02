@@ -633,8 +633,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			result = null;
 
-			if (binaryExpression.Right is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction
-				|| subtraction.Type != typeof(TimeSpan)
+			// Over a nullable date the addition is lifted and the amount converted to TimeSpan?, and between two
+			// nullable locals the difference is a TimeSpan? itself; all three spellings are the same shift.
+			var amount = binaryExpression.Right;
+
+			if (amount is UnaryExpression { NodeType: ExpressionType.Convert } lifted && lifted.Type == typeof(TimeSpan?))
+				amount = lifted.Operand;
+
+			if (amount is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction
+				|| subtraction.Type.ToUnderlying() != typeof(TimeSpan)
 				|| AsDateDifference(subtraction) == null
 				|| !translationContext.CanBeEvaluatedOnClient(subtraction.Left)
 				|| !translationContext.CanBeEvaluatedOnClient(subtraction.Right))
@@ -649,8 +656,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			using (translationContext.UsingColumnDescriptor(null))
 			{
-				ticks = TranslateNoRequiredExpression(translationContext,
-					Expression.Property(subtraction, nameof(TimeSpan.Ticks)), translationFlags, skipIfParameter: false);
+				ticks = TranslateNoRequiredExpression(translationContext, TicksOf(subtraction), translationFlags, skipIfParameter: false);
 			}
 
 			if (ticks == null)
@@ -669,6 +675,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			result = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, shifted, binaryExpression);
 
 			return true;
+
+			// An absent difference has no ticks, and the shift by it is absent too.
+			static Expression TicksOf(Expression difference)
+			{
+				if (difference.Type == typeof(TimeSpan))
+					return Expression.Property(difference, nameof(TimeSpan.Ticks));
+
+				return Expression.Condition(
+					Expression.Property(difference, nameof(Nullable<>.HasValue)),
+					Expression.Convert(
+						Expression.Property(Expression.Property(difference, nameof(Nullable<>.Value)), nameof(TimeSpan.Ticks)),
+						typeof(long?)),
+					Expression.Constant(null, typeof(long?)));
+			}
 		}
 
 		/// <summary>
