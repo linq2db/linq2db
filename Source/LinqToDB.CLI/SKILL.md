@@ -66,6 +66,7 @@ Connection settings:
 - `--impersonate-mode` selects the Windows `LogonUser` mode: `network-cleartext` (default, system code `8`), `interactive` (`2`), `network` (`3`), or `new-credentials` (`9`).
 - `--impersonate` runs the whole database loop under one impersonation token: connection creation/opening, provider-specific session setup, command execution, reader metadata, row reads, output formatting, and reader/connection disposal.
 - Configuration files, SQL files, provider assembly files, output files, stdout, and stderr writers are opened by the original process account before the impersonated database loop starts.
+- SQL validation (single-statement and read-only checks) and loading of the tool's own assemblies also run under the original process account, before impersonation. A query rejected by validation never logs on as the impersonated user.
 - `--impersonate` requires resolved `user` and `password` values. Use `--user-env` and `--password-env` or configuration `userEnv` and `passwordEnv` when credentials must not be written as literals.
 - Windows impersonation uses network credentials intended for database access. It is not supported on Linux or macOS.
 

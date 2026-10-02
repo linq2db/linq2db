@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine.Commands.Mcp
 {
@@ -72,6 +74,11 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		public string? ReadLine()
 		{
 			throw new NotSupportedException("MCP query execution does not support interactive input.");
+		}
+
+		public Task<T> RunImpersonatedAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action)
+		{
+			return _inner.RunImpersonatedAsync(user, password, mode, action);
 		}
 	}
 }

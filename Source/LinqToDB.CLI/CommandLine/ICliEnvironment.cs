@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace LinqToDB.CommandLine
 {
@@ -42,5 +44,10 @@ namespace LinqToDB.CommandLine
 		bool TryReadSecret(string prompt, out string? secret, out string? error);
 		/// <summary>Reads one line from standard input.</summary>
 		string? ReadLine();
+		/// <summary>
+		/// Runs database work under a Windows user identity. The work must not load code or read local files:
+		/// the impersonated identity usually cannot access the tool's own files.
+		/// </summary>
+		Task<T> RunImpersonatedAsync<T>(string user, string password, WindowsImpersonationMode mode, Func<Task<T>> action);
 	}
 }

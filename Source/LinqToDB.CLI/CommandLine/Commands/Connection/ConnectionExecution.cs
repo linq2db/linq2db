@@ -1,5 +1,6 @@
 using System;
-using System.Threading;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.QueryExecution;
@@ -9,39 +10,73 @@ using LinqToDB.DataProvider;
 namespace LinqToDB.CommandLine.Commands.Connection
 {
 	/// <summary>
-	/// Shared provider loading, DataOptions creation, and optional impersonation boundary.
+	/// Shared provider loading, DataOptions creation, and the optional impersonation boundary.
 	/// </summary>
 	internal static class ConnectionExecution
 	{
-		public static async Task<ConnectionExecutionResult<T>> RunAsync<T>(
-			ConnectionSettings settings,
-			Func<DataOptions, IDataProvider, CancellationToken, Task<T>> action,
-			CancellationToken cancellationToken)
+		/// <summary>
+		/// Loads the provider and creates <see cref="DataOptions"/> for the connection.
+		/// Runs under the original process account: provider assemblies are loaded from local files.
+		/// </summary>
+		public static ConnectionExecutionResult<PreparedConnection> Prepare(ConnectionSettings settings)
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-
 			if (!ExternalProviderLoader.LoadExternalProvider(settings.Provider, settings.ProviderLocation, out var error))
-				return new ConnectionExecutionResult<T>(StatusCodes.EXPECTED_ERROR, error, default);
+				return new ConnectionExecutionResult<PreparedConnection>(StatusCodes.EXPECTED_ERROR, error, null);
 
 			var dataProvider = DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString);
 
 			if (dataProvider == null)
-				return new ConnectionExecutionResult<T>(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(settings.Provider), default);
+				return new ConnectionExecutionResult<PreparedConnection>(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(settings.Provider), null);
 
 			var dataOptions = new DataOptions().UseConnectionString(dataProvider, settings.ConnectionString);
 
 			if (settings.CommandTimeout > 0)
 				dataOptions = dataOptions.UseCommandTimeout(settings.CommandTimeout);
 
-			var result = settings.Impersonate
-				? await WindowsImpersonation.RunAsync(
-					settings.User!,
-					settings.Password!,
-					settings.ImpersonateMode,
-					() => action(dataOptions, dataProvider, cancellationToken))
-				: await action(dataOptions, dataProvider, cancellationToken);
+			return new ConnectionExecutionResult<PreparedConnection>(StatusCodes.SUCCESS, null, new PreparedConnection(dataOptions, dataProvider));
+		}
 
-			return new ConnectionExecutionResult<T>(StatusCodes.SUCCESS, null, result);
+		/// <summary>
+		/// Runs database work, under the resolved Windows identity when impersonation is enabled.
+		/// </summary>
+		/// <remarks>
+		/// The impersonated identity usually cannot read the tool's own files, so <paramref name="action"/> must
+		/// contain only connection opening and SQL execution. Configuration, credentials, provider loading and
+		/// SQL validation run before this call under the original process account.
+		/// </remarks>
+		public static Task<T> RunDatabaseWorkAsync<T>(ICliEnvironment environment, ConnectionSettings settings, Func<Task<T>> action)
+		{
+			if (!settings.Impersonate)
+				return action();
+
+			// Code the database work needs (provider value types, output formatting) is loaded on first use.
+			// Load it now, while file access still uses the original process account.
+			//
+			LoadReferencedAssemblies();
+
+			return environment.RunImpersonatedAsync(settings.User!, settings.Password!, settings.ImpersonateMode, action);
+		}
+
+		static bool _referencedAssembliesLoaded;
+
+		static void LoadReferencedAssemblies()
+		{
+			if (_referencedAssembliesLoaded)
+				return;
+
+			foreach (var assemblyName in typeof(ConnectionExecution).Assembly.GetReferencedAssemblies())
+			{
+				try
+				{
+					Assembly.Load(assemblyName);
+				}
+				catch (Exception ex) when (ex is FileNotFoundException or FileLoadException or BadImageFormatException)
+				{
+					// Not loadable as the process account either; code that needs it fails the same way later.
+				}
+			}
+
+			_referencedAssembliesLoaded = true;
 		}
 
 		static string CreateProviderCreationError(string provider)
