@@ -1224,6 +1224,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		SqlIntervalDifferenceExpression? MakeDateDifference(ITranslationContext translationContext, BinaryExpression binaryExpression, TranslationFlags translationFlags)
 		{
+			// A subtraction with no column in it at all is left to .NET, as TranslateDateTimeAddMember leaves its own:
+			// the client already has the exact value, and the database would only measure it again at its own,
+			// possibly coarser, resolution.
+			if (translationContext.CanBeEvaluatedOnClient(binaryExpression.Left) && translationContext.CanBeEvaluatedOnClient(binaryExpression.Right))
+				return null;
+
+			// Both operands are dates, so whatever column the difference itself is assigned to or compared with -
+			// a number, as a rule - says nothing about either of them, and a parameter typed by it would be bound
+			// as that number.
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			// Parameters are taken, as for a shift: measuring from a fixed date - a variable, an argument - is the
 			// ordinary case, and skipping it leaves the member with nothing to lower, so a filter or an ordering on
 			// it is refused outright.

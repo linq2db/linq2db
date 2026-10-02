@@ -334,6 +334,85 @@ namespace Tests.Linq
 			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
 		}
 
+		/// <summary>
+		/// A difference with no column in it is computed on the client, exact to the tick, on every provider.
+		/// </summary>
+		/// <remarks>
+		/// The client already has both values. Sent to the database, the difference would be measured again at the
+		/// provider's own resolution - whole milliseconds on several, a microsecond on others - and come back short of
+		/// what .NET answers. A shift by such a difference is a client value as a whole, too, so it needs no provider
+		/// that can shift a date.
+		/// <para>
+		/// The projection combines the member with a column. Projected alone, the difference is read back from the
+		/// database as a <see cref="TimeSpan"/> parameter and the member is taken from what returns, which is limited
+		/// by how each provider stores a time of day rather than by the translation of the difference.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void DateDifferenceOfTwoClientValuesIsExact([DataSources] string context)
+		{
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier.AddTicks(1234);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = earlier, FinishedOn = earlier.AddHours(1) });
+
+			var row = t
+				.Select(r => new
+				{
+					Ticks        = (later - earlier).Ticks + r.Id,
+					Milliseconds = (later - earlier).TotalMilliseconds + r.Id,
+				})
+				.Single();
+
+			row.Ticks.ShouldBe(1235);
+			row.Milliseconds.ShouldBe(1.1234, 1e-12);
+
+			t.Where(r => (later - earlier).Ticks == 1234).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (later - earlier).TotalMilliseconds > 0.1233).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => r.FinishedOn > later + (later - earlier)).Select(r => r.Id).ToList().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class MeasuredPeriodRow
+		{
+			[PrimaryKey] public int      Id       { get; set; }
+			[Column]     public DateTime ClosedOn { get; set; }
+			[Column]     public double   Elapsed  { get; set; }
+		}
+
+		/// <summary>
+		/// A difference from a parameter, assigned to a number column and compared with one.
+		/// </summary>
+		/// <remarks>
+		/// The column a value is assigned to or compared with types the parameters on the other side. Both operands
+		/// of a difference are dates, though, so a parameter among them has to keep its own type rather than take
+		/// the number's - on either side of the subtraction.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameterAssignedToANumber([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf     = new DateTime(2026, 1, 10, 8, 15, 30);
+			var closedOn = new DateTime(2026, 1, 1, 3, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new MeasuredPeriodRow { Id = 1, ClosedOn = closedOn }]);
+
+			var expected = asOf - closedOn;
+
+			t.Where(r => r.Id == 1).Set(r => r.Elapsed, r => (asOf - r.ClosedOn).TotalDays).Update();
+			t.Single().Elapsed.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+
+			t.Where(r => r.Elapsed < (asOf - r.ClosedOn).TotalHours).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			t.Where(r => r.Id == 1).Set(r => r.Elapsed, r => (r.ClosedOn - asOf).TotalHours).Update();
+			t.Single().Elapsed.ShouldBe(-expected.TotalHours, Tolerance(expected.TotalHours));
+
+			t.Where(r => r.Elapsed < (r.ClosedOn - asOf).TotalDays).Select(r => r.Id).ToList().ShouldBe([1]);
+		}
+
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
 		public void DateDifferenceComponentsMatchClr(
