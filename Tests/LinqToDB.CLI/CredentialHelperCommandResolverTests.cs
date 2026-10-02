@@ -41,6 +41,9 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void PosixAbsolutePath()
 		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX paths are normalized with the host's path rules.");
+
 			Resolve("/opt/h/helper.sh", false, null, null, ["/opt/h/helper.sh"], out var resolved, out var error).ShouldBeTrue(error);
 
 			resolved.ShouldBe("/opt/h/helper.sh");
