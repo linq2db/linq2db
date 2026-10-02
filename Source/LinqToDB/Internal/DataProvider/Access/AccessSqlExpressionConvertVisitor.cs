@@ -136,17 +136,29 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// comparison the anchor correction makes, to the next count, even to <c>IS NULL</c> - while a null read from a
 		/// column passes. So no count and no anchor may ever see one, whatever the unit.
 		/// </para>
+		/// <para>
+		/// Whether an operand can be null is asked of the bare operand and without the query's own predicates. A
+		/// filter on <c>.Value</c> marks the operand as not null and carries an <c>IS NOT NULL</c> beside the member,
+		/// but Access evaluates both sides of an <c>AND</c>, so the member still meets the null row. For the same
+		/// reason the substitution is written with Access's own <c>IIF</c> and <c>IsNull</c> functions: a condition
+		/// and an <c>IS NULL</c> would be folded back to the bare column on the strength of that predicate.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
 			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression nullableDifference)
 			{
-				var startNullable = nullableDifference.Start.CanBeNullable(NullabilityContext);
-				var endNullable   = nullableDifference.End.CanBeNullable(NullabilityContext);
+				var startNullable = QueryHelper.UnwrapNullablity(nullableDifference.Start).CanBeNullable(NullabilityContext.NonQuery);
+				var endNullable   = QueryHelper.UnwrapNullablity(nullableDifference.End).CanBeNullable(NullabilityContext.NonQuery);
 
 				if (startNullable || endNullable)
 				{
 					var dateType = Factory.GetDbDataType(nullableDifference.Start);
+
+					ISqlPredicate IsNull(ISqlExpression operand)
+					{
+						return Factory.IsNullPredicate(SqlNullabilityExpression.ApplyNullability(QueryHelper.UnwrapNullablity(operand), true));
+					}
 
 					// Any date would do: a result from it is discarded below.
 					ISqlExpression NotNull(ISqlExpression operand, bool nullable)
@@ -154,9 +166,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 						if (!nullable)
 							return operand;
 
-						return SqlNullabilityExpression.ApplyNullability(
-							Factory.Condition(Factory.IsNullPredicate(operand), Factory.Value(dateType, new DateTime(1899, 12, 30)), operand),
-							false);
+						// Functions the optimizer leaves alone rather than a condition and an IS NULL: beside the
+						// IS NOT NULL a filter on .Value carries, those are folded back to the bare column.
+						return new SqlFunction(dateType, "IIF", canBeNull: false,
+							new SqlFunction(Factory.GetDbDataType(typeof(bool)), "IsNull", canBeNull: false, operand) { DoNotOptimize = true },
+							Factory.Value(dateType, new DateTime(1899, 12, 30)),
+							operand) { DoNotOptimize = true };
 					}
 
 					var guarded = new SqlIntervalDifferenceExpression(
@@ -172,10 +187,10 @@ namespace LinqToDB.Internal.DataProvider.Access
 					var eitherNull = new SqlSearchCondition(isOr: true);
 
 					if (startNullable)
-						eitherNull.Add(Factory.IsNullPredicate(nullableDifference.Start));
+						eitherNull.Add(IsNull(nullableDifference.Start));
 
 					if (endNullable)
-						eitherNull.Add(Factory.IsNullPredicate(nullableDifference.End));
+						eitherNull.Add(IsNull(nullableDifference.End));
 
 					return Factory.Condition(eitherNull, new SqlValue(element.Type.WithSystemType(element.Type.SystemType.AsNullable()), null), lowered);
 				}
