@@ -423,6 +423,28 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		}
 	}
 
+	#region Issue 5975
+
+	public sealed class Issue5975TableOne
+	{
+		public int       Id       { get; set; }
+		public string?   Name     { get; set; }
+		public DateTime? FromDate { get; set; }
+		public DateTime? ToDate   { get; set; }
+	}
+
+	public sealed class Issue5975TableTwo
+	{
+		public int                Id         { get; set; }
+		public string?            Code       { get; set; }
+		public DateTime?          FromDate   { get; set; }
+		public DateTime?          ToDate     { get; set; }
+		public int?               TableOneId { get; set; }
+		public Issue5975TableOne? TableOne   { get; set; }
+	}
+
+	#endregion
+
 	#region Issue 5355
 
 	public interface IIssue5355Profile
