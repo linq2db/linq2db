@@ -367,7 +367,9 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					Ticks        = (later - earlier).Ticks + r.Id,
-					Milliseconds = (later - earlier).TotalMilliseconds + (double)r.Id,
+					// Converted on the server: a CLR cast to double is dropped, and DB2 and SAP HANA then type the
+					// parameter from the integer column and answer 1.
+					Milliseconds = (later - earlier).TotalMilliseconds + Sql.ConvertTo<double>.From(r.Id),
 				})
 				.Single();
 
