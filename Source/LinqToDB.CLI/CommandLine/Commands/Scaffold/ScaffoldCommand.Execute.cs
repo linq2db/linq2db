@@ -55,6 +55,7 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 			var provider     = providerName switch
 			{
 				DatabaseType.Access          => ProviderName.Access,
+				DatabaseType.AccessLibRed    => ProviderName.AccessLibRed,
 				DatabaseType.DB2             => ProviderName.DB2,
 				DatabaseType.Firebird        => ProviderName.Firebird,
 				DatabaseType.Informix        => ProviderName.Informix,
@@ -369,6 +370,24 @@ Install the x86 variant of linq2db.cli (see 'dotnet linq2db help' for instructio
 					}
 
 					break;
+				}
+				case ProviderName.AccessLibRed:
+				{
+#if !NET11_0_OR_GREATER
+					// LibRed.Ado is net11.0-only, so this tool's net10.0 asset does not carry it
+					Console.Error.WriteLine("The LibRed provider requires .NET 11 or later. Run the tool on a .NET 11 runtime.");
+					return null;
+#else
+					// the managed engine reads both file formats through one provider, so there is no
+					// second transport to merge a schema with
+					if (additionalConnectionString != null)
+					{
+						Console.Error.WriteLine("'--additional-connection' is not supported for the LibRed provider: it reads the whole schema itself.");
+						return null;
+					}
+
+					break;
+#endif
 				}
 				default:
 					Console.Error.WriteLine($"Unsupported database provider: {provider}");

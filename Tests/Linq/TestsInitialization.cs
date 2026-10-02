@@ -318,6 +318,8 @@ public class TestsInitialization
 		// through two Access engines for the whole run is not a supported combination, so the first config that
 		// opens wins and the rest of its group is left alone. Each transport still gets an anchor of its own:
 		// they share an engine core, so either one would warm both, but a split leg enables only one of them.
+		// LibRed gets no anchor: the 0->1 charge above is a property of the Microsoft drivers, and a managed
+		// in-process engine has neither the driver-manager close nor the handle leak.
 		KeepOneAccessConnectionAlive("ODBC",   new[] { "Access.Ace.Odbc",  "Access.Jet.Odbc"  }, static cs => new System.Data.Odbc.OdbcConnection(cs));
 		KeepOneAccessConnectionAlive("OLE DB", new[] { "Access.Ace.OleDb", "Access.Jet.OleDb" }, static cs => new System.Data.OleDb.OleDbConnection(cs));
 	}

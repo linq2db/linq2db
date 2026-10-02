@@ -346,6 +346,8 @@ namespace Tests.xUpdate
 			Details = "YDB strict-decimal facet mismatch plus Date/Time conversion gaps - Timestamp to Date and Interval to Int64. See also #5593.")]
 		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect,
 			Details = "no-declaration: unvalidated: the Devart client needs a licence key this machine does not have, so even CreateDatabase cannot connect. The gate's original prose covered only YDB, so nothing on record says why this provider was gated.")]
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed,
+			Details = "no-declaration: LibRed keeps sub-second precision that Access truncates, so a DATETIME round-trip returns 09:44:34.6530000 where the Microsoft drivers return 09:44:34 - an assertion failure, not a throw. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{

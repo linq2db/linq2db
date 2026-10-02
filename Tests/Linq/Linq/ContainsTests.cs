@@ -361,6 +361,9 @@ namespace Tests.Linq
 			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllAccessLibRed, ErrorTypeName = "System.InvalidCastException",
+			ErrorMessage = "cannot be read as a number",
+			Details = "no-issue: an alpha.2 -> alpha.3 regression, measured against both packages - comparing a text column against a numeric literal (=, IN, NOT IN) now coerces the text to a number and throws on any non-numeric value, where alpha.2 evaluated it and ACE accepts it. LibRed.Ado 11.0.0-alpha.3; re-check when a newer LibRed ships.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2608")]
 		public void Issue2608Test([DataSources(TestProvName.AllSapHana)] string context)
 		{
