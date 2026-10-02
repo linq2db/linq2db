@@ -1280,6 +1280,33 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// A column shifted by the difference of two client values, in SQL and in a predicate, both ways.
+		/// </summary>
+		/// <remarks>
+		/// The difference itself is the client's to compute, but it has to reach the shift as a duration. Handed over as
+		/// a bare <see cref="TimeSpan"/> it carries no unit, and the shift became a plain <c>+</c> between a date and a
+		/// time, which SQL Server refuses. The providers that cannot shift a date by an amount at all are not asked.
+		/// </remarks>
+		[Test]
+		public void AShiftOfAColumnByADifferenceOfClientValues([DataSources(UnsupportedDeclaredShiftProviders)] string context)
+		{
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier.AddHours(1).AddMilliseconds(250);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(2) });
+
+			t.Select(r => Sql.AsSql(r.StartedOn + (later - earlier))).Single().ShouldBe(started + (later - earlier));
+			t.Select(r => Sql.AsSql(r.FinishedOn - (later - earlier))).Single().ShouldBe(started.AddHours(2) - (later - earlier));
+
+			t.Where(r => r.StartedOn + (later - earlier) < r.FinishedOn).Select(r => r.Id).ToArray().ShouldBe([1]);
+			t.Where(r => r.FinishedOn - (later - earlier) > r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBeEmpty();
+		}
+
+		/// <summary>
 		/// A <see cref="DateTimeOffset"/> shifted by a computed difference, answered as the same instant or refused.
 		/// </summary>
 		/// <remarks>

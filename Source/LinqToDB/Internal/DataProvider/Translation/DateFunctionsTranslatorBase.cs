@@ -546,6 +546,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (temporal == null)
 				return null;
 
+			if (TranslateClientDifferenceShift(translationContext, binaryExpression, temporal, translationFlags, out var clientShift))
+				return clientShift;
+
 			// Without dropping the ambient descriptor the interval is built against the column the whole shift is
 			// assigned to, which is a date - and a TimeSpan parameter typed as a DateTime throws outright rather
 			// than producing a wrong value.
@@ -604,6 +607,68 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				factory.GetDbDataType(binaryExpression.Type));
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, shifted, binaryExpression);
+		}
+
+		/// <summary>
+		/// A date shifted by the difference of two client values.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="MakeDateDifference"/> leaves such a difference to .NET, which has it exactly, and it would then
+		/// reach the shift as a bare <see cref="TimeSpan"/> parameter. That carries no unit, so the shift would be left
+		/// to the generic binary handling: a plain <c>+</c> between a date and a time, which SQL Server refuses. The
+		/// client's tick count is passed instead, the amount every lowering of a shift takes. A shift with no column
+		/// in it at all is left to .NET whole, and so is one the provider cannot lower.
+		/// </remarks>
+		/// <returns>
+		/// <see langword="false"/> when the amount is not such a difference, and the shift is translated as usual;
+		/// otherwise <see langword="true"/>, with <paramref name="result"/> <see langword="null"/> where the shift is
+		/// left untranslated.
+		/// </returns>
+		bool TranslateClientDifferenceShift(
+			ITranslationContext      translationContext,
+			BinaryExpression         binaryExpression,
+			SqlPlaceholderExpression temporal,
+			TranslationFlags         translationFlags,
+			out Expression?          result)
+		{
+			result = null;
+
+			if (binaryExpression.Right is not BinaryExpression { NodeType: ExpressionType.Subtract } subtraction
+				|| subtraction.Type != typeof(TimeSpan)
+				|| AsDateDifference(subtraction) == null
+				|| !translationContext.CanBeEvaluatedOnClient(subtraction.Left)
+				|| !translationContext.CanBeEvaluatedOnClient(subtraction.Right))
+			{
+				return false;
+			}
+
+			if (translationContext.CanBeEvaluatedOnClient(binaryExpression.Left) || !translationContext.ProviderFlags.CanLowerIntervalShift)
+				return true;
+
+			SqlPlaceholderExpression? ticks;
+
+			using (translationContext.UsingColumnDescriptor(null))
+			{
+				ticks = TranslateNoRequiredExpression(translationContext,
+					Expression.Property(subtraction, nameof(TimeSpan.Ticks)), translationFlags, skipIfParameter: false);
+			}
+
+			if (ticks == null)
+				return true;
+
+			var factory = translationContext.ExpressionFactory;
+
+			// Cast, because the lowering only does arithmetic on it, and Firebird cannot type a bare parameter that
+			// is divided ("Invalid data type for division").
+			var shifted = new SqlTemporalArithmeticExpression(
+				temporal.Sql,
+				factory.Cast(ticks.Sql, factory.GetDbDataType(typeof(long)), true),
+				binaryExpression.NodeType == ExpressionType.Subtract,
+				factory.GetDbDataType(binaryExpression.Type));
+
+			result = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, shifted, binaryExpression);
+
+			return true;
 		}
 
 		/// <summary>
