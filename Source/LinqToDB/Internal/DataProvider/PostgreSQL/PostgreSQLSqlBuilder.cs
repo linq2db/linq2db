@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Numerics;
 using System.Text;
 
 using LinqToDB.DataProvider;
@@ -480,15 +479,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			return literal switch
 			{
-				sbyte      v => v < 0,
-				short      v => v < 0,
-				int        v => v < 0,
-				long       v => v < 0,
-				decimal    v => v < 0,
-				float      v => v < 0,
-				double     v => v < 0,
-				BigInteger v => v.Sign < 0,
-				_            => false,
+				sbyte v => v < 0,
+				short v => v < 0,
+				int   v => v < 0,
+				long  v => v < 0,
+				_       => false,
 			};
 		}
 
