@@ -1306,6 +1306,63 @@ namespace Tests.Linq
 			t.Where(r => r.FinishedOn - (later - earlier) > r.StartedOn.AddHours(1)).Select(r => r.Id).ToArray().ShouldBeEmpty();
 		}
 
+		[Table]
+		sealed class WideTimestampDeclaredRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Timestamp64)]
+			public DateTime On { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		[Table]
+		sealed class WideTimestampRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DbType = "Timestamp64")]
+			public DateTime On { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime StartedOn  { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 7)]
+			public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// A YDB <c>Timestamp64</c> declared through its <c>DbType</c> alone, shifted by a computed difference.
+		/// </summary>
+		/// <remarks>
+		/// Such a column is typed as a plain timestamp, and widening it like one would cast it to a
+		/// <c>Timestamp</c>, which starts in 1970 and cannot hold the value. The row is written through a mapping that
+		/// declares the data type: the DbType-only one would bind the 1960 parameter as a <c>Timestamp</c> too.
+		/// </remarks>
+		[Test]
+		public void AComputedShiftOfAWideTimestampKeepsItsRange([IncludeDataSources(TestProvName.AllYdb)] string context)
+		{
+			var on      = new DateTime(1960, 3, 1, 8, 0, 0);
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(0, 5, 30, 0, 250);
+
+			using var db = GetDataContext(context);
+			using var declared = db.CreateLocalTable<WideTimestampDeclaredRow>();
+
+			db.Insert(new WideTimestampDeclaredRow { Id = 1, On = on, StartedOn = started, FinishedOn = started + amount });
+
+			var t = db.GetTable<WideTimestampRow>().TableName(declared.TableName);
+
+			t.Select(r => Sql.AsSql(r.On + (r.FinishedOn - r.StartedOn))).Single().ShouldBe(on + amount);
+
+			t.Where(r => r.On + (r.FinishedOn - r.StartedOn) > r.On).Select(r => r.Id).ToArray().ShouldBe([1]);
+		}
+
 		/// <summary>
 		/// A <see cref="DateTimeOffset"/> shifted by a computed difference, answered as the same instant or refused.
 		/// </summary>

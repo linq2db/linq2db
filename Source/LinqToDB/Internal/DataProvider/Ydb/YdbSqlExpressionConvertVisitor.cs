@@ -74,14 +74,31 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var temporal     = element.Temporal;
 			var temporalType = Factory.GetDbDataType(temporal);
 
-			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime)
-				&& temporalType.DataType is not (DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64))
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime) && !IsWideDateType(temporalType))
 			{
 				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime2);
 				temporal     = Factory.Cast(temporal, temporalType, true);
 			}
 
 			return Factory.Cast(Factory.Add(temporalType, temporal, interval), temporalType, true);
+		}
+
+		/// <summary>
+		/// Whether the type is one of the 64-bit date types, whose range a <c>Timestamp</c> does not hold.
+		/// </summary>
+		/// <remarks>
+		/// Asked of the <c>DbType</c> too: a <see cref="DateTime"/> declared through it alone -
+		/// <c>[Column(DbType = "Timestamp64")]</c> - is otherwise typed as a plain timestamp.
+		/// </remarks>
+		static bool IsWideDateType(DbDataType type)
+		{
+			if (type.DataType is DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64)
+				return true;
+
+			return type.DbType != null
+				&& (type.DbType.StartsWith("Date32",      StringComparison.OrdinalIgnoreCase)
+				||  type.DbType.StartsWith("Datetime64",  StringComparison.OrdinalIgnoreCase)
+				||  type.DbType.StartsWith("Timestamp64", StringComparison.OrdinalIgnoreCase));
 		}
 
 		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB
