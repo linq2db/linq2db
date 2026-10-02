@@ -48,6 +48,7 @@ namespace Tests.Tools
 
 				settings1.Providers            ??= settings2.Providers;
 				settings1.Skip                 ??= settings2.Skip;
+				settings1.DisableRemoteContext ??= settings2.DisableRemoteContext;
 				settings1.TraceLevel           ??= settings2.TraceLevel;
 				settings1.DefaultConfiguration ??= settings2.DefaultConfiguration;
 				settings1.NoLinqService        ??= settings2.NoLinqService;

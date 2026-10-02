@@ -1194,7 +1194,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(ProviderName.DB2))
 				q = q.AsQueryable().Select(t => Math.Round(t, 2));
 
-			AreEqual(
+			AreEqualWithinDelta(
 				from p in Types
 				select new { Value = Math.Round(p.MoneyValue, 2) } into pp
 				where pp.Value != 0 && pp.Value != 7

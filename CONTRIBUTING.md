@@ -82,7 +82,9 @@ Custom debugging symbols:
 
 #### Test projects
 
-Tests targets: `net462`, `net8.0`, `net9.0`, `net10.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
+Tests targets: `net462`, `net10.0`, `net11.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
+
+The target-framework lists live in `Build/TargetFrameworks.props` - `ModernTargetFrameworks` and `LatestTargetFramework` there, plus one band row in `Directory.Packages.props`, are the only lines a new .NET release has to touch; every project's `TargetFrameworks` derives from them.
 
 Custom symbols:
 
@@ -95,12 +97,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produces a `trx` report. Parameters supported to change build configuration and executed TFMs, plus extra arguments forwarded to the test runner
+* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produces a `trx` report. Parameters are `<configuration> <net462> <net10.0> <net11.0> <extra args>`, where each TFM flag is `1` (run) or `0` (skip) and the extra arguments are forwarded to the test runner
 
-Example of running `Release` build tests for `net9.0` only:
+Example of running `Release` build tests for `net11.0` only:
 
 ```cmd
-test.cmd Release 0 0 1 0
+test.cmd Release 0 0 1
 ```
 
 ### Different platforms support
@@ -233,52 +235,30 @@ The `[User]DataProviders.json` is a regular JSON file:
 
     },
 
-    // .net 8.0 test configuration
-    "NET80" :
-    {
-        "BasedOn"              : "LocalConnectionStrings",
-        "Providers"            :
-        [
-            "SQLite.MS",
-            "Northwind.SQLite.MS",
-            "SqlServer.2014",
-            "SqlServer.2012",
-            "SqlServer.2008",
-            "SqlServer.2005",
-            "SqlServer.Azure",
-            "Firebird.5",
-            "MySql.8.0",
-            "MariaDB.11",
-            "PostgreSQL",
-            "SqlServer.Northwind",
-            "TestNoopProvider"
-        ]
-    },
-
-    // .net 9.0 test configuration
-    "NET90" :
-    {
-        "BasedOn"              : "LocalConnectionStrings",
-        "Providers"            :
-        [
-            "SQLite.MS",
-            "Northwind.SQLite.MS",
-            "SqlServer.2014",
-            "SqlServer.2012",
-            "SqlServer.2008",
-            "SqlServer.2005",
-            "SqlServer.Azure",
-            "Firebird.5",
-            "MySql.8.0",
-            "MariaDB.11",
-            "PostgreSQL",
-            "SqlServer.Northwind",
-            "TestNoopProvider"
-        ]
-    },
-
     // .net 10.0 test configuration
     "NET100" :
+    {
+        "BasedOn"              : "LocalConnectionStrings",
+        "Providers"            :
+        [
+            "SQLite.MS",
+            "Northwind.SQLite.MS",
+            "SqlServer.2014",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
+            "PostgreSQL",
+            "SqlServer.Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
+    // .net 11.0 test configuration
+    "NET110" :
     {
         "BasedOn"              : "LocalConnectionStrings",
         "Providers"            :
@@ -330,9 +310,8 @@ We do run builds and tests with:
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
   * .NET Framework 4.6.2
-  * .NET 8 (Windows, Linux and MacOS)
-  * .NET 9 (Windows, Linux and MacOS)
   * .NET 10 (Windows, Linux and MacOS)
+  * .NET 11 (Windows, Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.

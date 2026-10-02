@@ -1,0 +1,10 @@
+{
+	"Azure.TestJob": {
+		"Providers": [
+			"SqlServer.SA",
+			"SqlServer.SA.MS",
+			"SqlServer.Contained",
+			"SqlServer.Contained.MS"
+		]
+	}
+}

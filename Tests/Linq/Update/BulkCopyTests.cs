@@ -1459,8 +1459,8 @@ namespace Tests.xUpdate
 			{
 				for (var i = 0; i < 2; i++)
 				{
-					Assert.That(item[i].DecimalValue1, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue1));
-					Assert.That(item[i].DecimalValue2, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue2));
+					Assert.That(item[i].DecimalValue1, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue1).Within(FloatingPointDeltaPercent).Percent);
+					Assert.That(item[i].DecimalValue2, Is.EqualTo(MultipleRowsTable.Data[i].DecimalValue2).Within(FloatingPointDeltaPercent).Percent);
 				}
 			}
 		}

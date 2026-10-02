@@ -21,7 +21,7 @@ COMPONENTS
    https://github.com/DataAction/AdoNetCore.AseClient
    License: Apache-2.0  see [1]
 
-2. ClickHouse.Driver net10.0: 1.4.0, net462: 0.9.0, net472: 0.9.0, net8.0: 1.4.0, net8.0-windows7.0: 1.4.0, net9.0: 1.4.0
+2. ClickHouse.Driver net10.0: 1.4.0, net10.0-windows7.0: 1.4.0, net11.0: 1.4.0, net462: 0.9.0, net472: 0.9.0
    https://github.com/ClickHouse/clickhouse-cs
    License: MIT  see [2]
 
@@ -52,12 +52,12 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-8. Microsoft.Extensions.Http net10.0: 10.0.8, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.8, net8.0-windows7.0: 10.0.8, net9.0: 10.0.8
+8. Microsoft.Extensions.Http net10.0: 10.0.8, net10.0-windows7.0: 10.0.8, net11.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
 
-9. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net462: 10.0.0, net472: 10.0.0, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+9. Microsoft.Extensions.Logging.Abstractions net10.0: 10.0.12, net10.0-windows7.0: 10.0.8, net462: 10.0.0, net472: 10.0.0
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
@@ -84,16 +84,16 @@ COMPONENTS
    License: MIT  see [2]
    Copyright 2016–2026 Bradley Grainger
 
-14. Net.IBM.Data.Db2 9.0.0.400
+14. Net.IBM.Data.Db2 10.0.0.200
    License: IBM International Program License Agreement - Redistributables  see [9]
    Copyright(c) 2025 IBM Corporation. All rights reserved
    IBM grants redistribution of the Redistributables in object-code form only as part of a value-added application developed using the Program. linq2db satisfies all three limbs: the client is bundled inside linq2db scaffolding packages and the LINQPad driver rather than offered standalone, those packages are our own application built using the client, and only compiled assemblies and native libraries are shipped - no IBM source.
 
-15. NodaTime net10.0: 3.2.3, net462: 3.2.2, net472: 3.2.2, net8.0: 3.2.3, net8.0-windows7.0: 3.2.3, net9.0: 3.2.3
+15. NodaTime net10.0: 3.2.3, net10.0-windows7.0: 3.2.3, net11.0: 3.2.3, net462: 3.2.2, net472: 3.2.2
    https://nodatime.org/
    License: Apache-2.0  see [1]
 
-16. Npgsql net10.0: 10.0.3, net462: 8.0.9, net472: 8.0.9, net8.0: 10.0.3, net8.0-windows7.0: 10.0.3, net9.0: 10.0.3
+16. Npgsql net10.0: 10.0.3, net10.0-windows7.0: 10.0.3, net11.0: 10.0.3, net462: 8.0.9, net472: 8.0.9
    https://github.com/npgsql/npgsql
    License: PostgreSQL  see [10]
    Copyright 2025 © The Npgsql Development Team
@@ -103,20 +103,20 @@ COMPONENTS
    License: Oracle Free Distribution, Hosting, and Use Terms and Conditions  see [11]
    Copyright © 2026, Oracle and/or its affiliates
 
-18. SAP HANA .NET Data Provider v4.5
+18. SAP HANA .NET Data Provider net10.0-windows7.0: 1.9.0, net462: v4.5
    https://help.sap.com/docs/SAP_HANA_CLIENT
    License: SAP Developer License Agreement 3.2 (see notes - provenance is not certain for this build)  see [12]
    Copyright (c) SAP SE
    Redistribution: unresolved
    Sap.Data.Hana.v4.5.dll is checked into Redist/SapHana and copied into the T4 tools folder; no licence accompanied that copy in this repository. The text reproduced here is the SAP Developer License Agreement 3.2, which SAP attaches to the HANA .NET providers it publishes on nuget.org (Sap.Data.Hana.Net.v6.0/v8.0/v10.0) - it is the best available statement of SAP terms for this provider, but it is not necessarily the agreement under which the .NET Framework copy here was obtained, which came from a HANA client installation. Read it before relying on this component: section 1 grants a non-transferable, non-sublicensable licence and section 2(a) states the software may not be provided or made available to any third party. Note also that only the managed assembly is packed, not the native libadonetHDB it calls into, so it cannot connect unless the SAP HANA client is already installed.
 
-19. Microsoft SQL Server Compact 4.0 4.0
+19. Microsoft SQL Server Compact 4.0 net10.0-windows7.0: 1.9.0, net462: 4.0
    https://www.microsoft.com/en-us/download/details.aspx?id=30709
    License: Microsoft Software License Terms - Microsoft SQL Server Compact 4.0 SP1  see [8]
    Copyright (c) Microsoft Corporation
    Terms sourced from SQLCE_EULA_ENU.rtf as shipped in the Microsoft.SqlServer.Compact 4.0.8876.1 package; the copy here is a plain-text rendering of that RTF, which is also published at http://www.microsoft.com/web/webpi/eula/SQLCE_SP1_EULA_ENU.rtf. Section 2a grants Distributable Code rights - "you are permitted to distribute in programs you develop", "You may copy and distribute the object code form of code listed in REDIST.TXT files" and "Third Party Distribution" - subject to adding significant primary functionality, which linq2db scaffolding does. The binaries in Redist/SqlCe are byte-identical to that package's contents (verified by SHA-256 on System.Data.SqlServerCe.dll, sqlceca40.dll x86 and amd64, sqlcese40.dll and msvcr90.dll); sourcing them from the package instead is tracked on issue #5861.
 
-20. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net462: 3.53.3, net472: 3.53.3, net8.0: 2.1.12, net8.0-windows7.0: 3.53.3, net9.0: 2.1.12
+20. SQLitePCLRaw.lib.e_sqlite3 net10.0: 2.1.12, net10.0-windows7.0: 3.53.3, net11.0: 2.1.12, net462: 3.53.3, net472: 3.53.3
    License: Apache-2.0  see [1]
    Copyright 2014-2024 SourceGear, LLC
 
@@ -125,7 +125,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-22. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3, net8.0: 10.0.3, net8.0-windows7.0: 8.0.0, net9.0: 10.0.3
+22. System.Collections.Immutable net462: 9.0.10, net472: 10.0.3
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
@@ -139,7 +139,7 @@ COMPONENTS
    License: Public Domain
    Public Domain
 
-25. System.Diagnostics.DiagnosticSource net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.10, net8.0-windows7.0: 10.0.8, net9.0: 10.0.10
+25. System.Diagnostics.DiagnosticSource 10.0.3
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.
@@ -154,7 +154,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-28. System.Text.Json net462: 10.0.3, net472: 10.0.3, net8.0: 10.0.12, net8.0-windows7.0: 10.0.5, net9.0: 10.0.12
+28. System.Text.Json 10.0.3
    https://dot.net/
    License: MIT  see [5]
    © Microsoft Corporation. All rights reserved.

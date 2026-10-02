@@ -236,6 +236,10 @@ namespace Tests.DataProvider
 			}
 		}
 
+#if NET11_0_OR_GREATER
+		[ActiveIssue(Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException",
+			Details = "https://github.com/DataAction/AdoNetCore.AseClient/issues/240. AdoNetCore.AseClient returns DECIMAL through a double on .NET 11, so CAST(123.45 AS DECIMAL(10,2)) reads back as 123.45000000000000256981935710 from GetValue, GetProviderSpecificValue, GetDecimal and GetString alike. The same driver and query return 123.45 on .NET 10; MONEY is exact on both. No read path preserves the value, so this matrix cannot assert one.")]
+#endif
 		[Test]
 		public void SybaseProviderSpecificReadMatrix([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{

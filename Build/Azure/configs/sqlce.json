@@ -1,0 +1,7 @@
+{
+	"Azure.TestJob": {
+		"Providers": [
+			"SqlCe"
+		]
+	}
+}
