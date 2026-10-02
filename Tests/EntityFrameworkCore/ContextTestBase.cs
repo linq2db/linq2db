@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
+using Npgsql;
+
 using Tests;
 
 #if NETFRAMEWORK
@@ -55,6 +57,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var _ = new DisableBaseline("create db");
 
 			context.Database.EnsureDeleted();
+
+			// DROP DATABASE WITH (FORCE) kills pooled connections of contexts that don't share this context's data source
+			if (provider.IsAnyOf(TestProvName.AllPostgreSQL))
+				NpgsqlConnection.ClearAllPools();
+
 			context.Database.EnsureCreated();
 
 			TestContextTracker.LastContexts[connectionString] = typeof(TContext);
