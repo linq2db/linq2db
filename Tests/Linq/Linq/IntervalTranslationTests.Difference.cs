@@ -367,7 +367,7 @@ namespace Tests.Linq
 				.Select(r => new
 				{
 					Ticks        = (later - earlier).Ticks + r.Id,
-					Milliseconds = (later - earlier).TotalMilliseconds + r.Id,
+					Milliseconds = (later - earlier).TotalMilliseconds + (double)r.Id,
 				})
 				.Single();
 

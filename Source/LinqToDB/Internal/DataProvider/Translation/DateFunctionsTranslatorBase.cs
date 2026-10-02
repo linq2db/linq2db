@@ -1251,15 +1251,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		/// <summary>
 		/// Whether an operand is the difference between two date/time values, in either the shape it was written
-		/// in or the one a projection leaves behind.
+		/// in or the one a projection leaves behind, that the database would be asked to measure.
 		/// </summary>
+		/// <remarks>
+		/// A difference of two client values is not one: <see cref="MakeDateDifference"/> leaves it to .NET, so a
+		/// provider that cannot measure a difference has nothing to refuse there.
+		/// </remarks>
 		static bool IsDateDifference(ITranslationContext translationContext, Expression? operand)
 		{
 			if (operand == null)
 				return false;
 
-			return AsDateDifference(operand) != null
-				|| AsDateDifference(translationContext.Translate(operand, TranslationFlags.Expand)) != null;
+			var subtraction = AsDateDifference(operand)
+				?? AsDateDifference(translationContext.Translate(operand, TranslationFlags.Expand));
+
+			return subtraction != null
+				&& !(translationContext.CanBeEvaluatedOnClient(subtraction.Left) && translationContext.CanBeEvaluatedOnClient(subtraction.Right));
 		}
 
 		/// <summary>
