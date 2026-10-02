@@ -39,9 +39,26 @@ namespace LinqToDB.Internal.DataProvider.DuckDB
 		{
 			var longType     = Factory.GetDbDataType(typeof(long));
 			var microseconds = Factory.Function(longType, "Date_Diff",
-				Factory.Value(Factory.GetDbDataType(typeof(string)), "microsecond"), element.Start, element.End);
+				Factory.Value(Factory.GetDbDataType(typeof(string)), "microsecond"), TypeParameter(element.Start), TypeParameter(element.End));
 
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
+
+		/// <summary>
+		/// A parameter operand cast to its own type; any other operand as it is.
+		/// </summary>
+		/// <remarks>
+		/// DuckDB types a parameter from the call it appears in, and against a <c>TIMESTAMP</c> column the overloads
+		/// of <c>date_diff</c> leave it undecided. It is then bound as text, which the driver produces from the
+		/// <see cref="DateTime"/> in the client's culture - <c>1/10/2026 8:15:30 AM</c> - and DuckDB refuses to read
+		/// that as a timestamp.
+		/// </remarks>
+		ISqlExpression TypeParameter(ISqlExpression operand)
+		{
+			if (QueryHelper.UnwrapNullablity(operand) is SqlParameter)
+				return Factory.Cast(operand, Factory.GetDbDataType(operand), true);
+
+			return operand;
 		}
 
 		/// <inheritdoc />

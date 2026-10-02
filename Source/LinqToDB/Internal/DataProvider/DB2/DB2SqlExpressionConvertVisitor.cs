@@ -44,11 +44,22 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			var longType = Factory.GetDbDataType(typeof(long));
 			var intType  = Factory.GetDbDataType(typeof(int));
 
+			// DAYS, MIDNIGHT_SECONDS and MICROSECOND are overloaded over several date/time types, and a bare
+			// parameter marker gives DB2 nothing to choose between them by: it refuses the call as ambiguous
+			// (SQL0245N). A column is typed by its declaration, so only a parameter is cast.
+			ISqlExpression Typed(ISqlExpression operand)
+			{
+				if (operand is SqlParameter)
+					return Factory.Cast(operand, Factory.GetDbDataType(typeof(DateTime)), true);
+
+				return operand;
+			}
+
 			ISqlExpression FieldDifference(string function)
 			{
 				return Factory.Sub(longType,
-					Factory.Cast(Factory.Function(intType, function, element.End),   longType, true),
-					Factory.Cast(Factory.Function(intType, function, element.Start), longType, true));
+					Factory.Cast(Factory.Function(intType, function, Typed(element.End)),   longType, true),
+					Factory.Cast(Factory.Function(intType, function, Typed(element.Start)), longType, true));
 			}
 
 			return Factory.Add(longType, Factory.Multiply(longType, FieldDifference("Days"), TimeSpan.TicksPerDay),
@@ -78,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					new SqlFunction(
 						element.Type,
 						"Mod",
-						!element.Expr1.SystemType!.IsIntegerType ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1,
+						!IsIntegerOperand(element.Expr1) ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1,
 						element.Expr2
 					),
 
@@ -88,6 +99,24 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 				_   => base.ConvertSqlBinaryExpression(element),
 			};
+		}
+
+		/// <summary>
+		/// Whether <c>MOD</c> can take the operand as it is.
+		/// </summary>
+		/// <remarks>
+		/// Asked of the database type as well as the CLR one: a column can store an integer for a model type that is
+		/// not one - a <see cref="TimeSpan"/> stored as a count of seconds - and narrowing that through <c>INT</c>
+		/// overflows a <c>BIGINT</c> count past 2<sup>31</sup>.
+		/// </remarks>
+		bool IsIntegerOperand(ISqlExpression operand)
+		{
+			if (operand.SystemType?.IsIntegerType == true)
+				return true;
+
+			return QueryHelper.GetDbDataType(operand, MappingSchema).DataType
+				is DataType.SByte or DataType.Byte or DataType.Int16 or DataType.UInt16
+				or DataType.Int32 or DataType.UInt32 or DataType.Int64 or DataType.UInt64;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

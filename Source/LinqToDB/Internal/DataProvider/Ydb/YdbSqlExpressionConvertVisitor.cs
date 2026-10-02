@@ -37,6 +37,86 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: YQL adds a native <c>Interval</c> to a
+		/// <c>Timestamp</c>/<c>Datetime</c> directly, the same interval type <see cref="ElapsedTicks"/> already
+		/// reads a difference through.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts by building a YQL <c>Interval</c> from the tick count (microsecond resolution - YDB's own) and
+		/// adding it natively.
+		/// </summary>
+		/// <remarks>
+		/// A <see cref="DateTime"/> is cast to <c>Timestamp</c> first, whatever its mapping declares: adding an
+		/// interval keeps the type of the date, and a <c>Date</c> or a <c>Datetime</c> hold no time of day and no
+		/// fraction of a second respectively, while a column of either mapped as a plain <see cref="DateTime"/> is not
+		/// declared as one. The target is built from the CLR type, so a mapped <c>DbType</c> does not render the cast
+		/// as the type it was meant to leave. The wide types go to <c>Timestamp64</c> instead: a <c>Timestamp</c> would
+		/// not hold their range, while a <c>Date32</c> or a <c>Datetime64</c> would drop the time as the narrow ones do.
+		/// <para>
+		/// The sum is optional in YQL, even over two values that cannot be absent, and an optional cannot be written
+		/// to a column that is not nullable. So it is cast to its own type, which the builder unwraps wherever the
+		/// value cannot be null.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var intervalType = Factory.GetDbDataType(typeof(TimeSpan)).WithDataType(DataType.Interval);
+
+			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var microseconds = Factory.Div(longType, ticks, TimeSpan.TicksPerMillisecond / 1000);
+			var interval     = Factory.Function(intervalType, "DateTime::IntervalFromMicroseconds", microseconds);
+
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
+			{
+				temporalType = new DbDataType(temporalType.SystemType, IsWide(temporal) ? DataType.Timestamp64 : DataType.DateTime2);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			return Factory.Cast(Factory.Add(temporalType, temporal, interval), temporalType, true);
+		}
+
+		/// <summary>
+		/// Whether a shifted value is one of the 64-bit date types.
+		/// </summary>
+		/// <remarks>
+		/// A shift is lowered before its operand, so in a chain the operand may still be a shift node, typed by the
+		/// CLR mapping alone. Its wideness is that of the value it shifts in turn: the inner shift lowers to a
+		/// <c>Timestamp64</c> for a wide value, which a cast to <c>Timestamp</c> here would not hold.
+		/// </remarks>
+		bool IsWide(ISqlExpression temporal)
+		{
+			if (QueryHelper.UnwrapNullablity(temporal) is SqlTemporalArithmeticExpression inner)
+				return IsWide(inner.Temporal);
+
+			return IsWideDateType(Factory.GetDbDataType(temporal));
+		}
+
+		/// <summary>
+		/// Whether the type is one of the 64-bit date types, whose range only a <c>Timestamp64</c> holds with a time of day.
+		/// </summary>
+		/// <remarks>
+		/// Asked of the <c>DbType</c> too: a <see cref="DateTime"/> declared through it alone -
+		/// <c>[Column(DbType = "Timestamp64")]</c> - is otherwise typed as a plain timestamp.
+		/// </remarks>
+		static bool IsWideDateType(DbDataType type)
+		{
+			if (type.DataType is DataType.Date32 or DataType.DateTime64 or DataType.Timestamp64)
+				return true;
+
+			return type.DbType != null
+				&& (type.DbType.StartsWith("Date32",      StringComparison.OrdinalIgnoreCase)
+				||  type.DbType.StartsWith("Datetime64",  StringComparison.OrdinalIgnoreCase)
+				||  type.DbType.StartsWith("Timestamp64", StringComparison.OrdinalIgnoreCase));
+		}
+
 		// YQL has no NULLIF builtin. Keep the CASE WHEN a = b THEN NULL ELSE a END form (which YDB
 		// supports) instead of folding it to NULLIF.
 		protected override bool SupportsNullIf => false;
