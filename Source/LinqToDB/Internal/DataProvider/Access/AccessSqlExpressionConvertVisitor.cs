@@ -137,19 +137,26 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// column passes. So no count and no anchor may ever see one, whatever the unit.
 		/// </para>
 		/// <para>
-		/// Whether an operand can be null is asked of the bare operand and without the query's own predicates. A
-		/// filter on <c>.Value</c> marks the operand as not null and carries an <c>IS NOT NULL</c> beside the member,
-		/// but Access evaluates both sides of an <c>AND</c>, so the member still meets the null row. For the same
+		/// Whether an operand can be null is asked twice: of the bare operand without the query's own predicates, and
+		/// in the query, which knows what an outer join makes nullable. A filter on <c>.Value</c> marks the operand as
+		/// not null and carries an <c>IS NOT NULL</c> beside the member, but Access evaluates both sides of an
+		/// <c>AND</c>, so the member still meets the null row. For the same
 		/// reason the substitution is written with Access's own <c>IIF</c> and <c>IsNull</c> functions: a condition
 		/// and an <c>IS NULL</c> would be folded back to the bare column on the strength of that predicate.
 		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
+			bool MayBeNull(ISqlExpression operand)
+			{
+				return operand.CanBeNullable(NullabilityContext)
+					|| QueryHelper.UnwrapNullablity(operand).CanBeNullable(NullabilityContext.NonQuery);
+			}
+
 			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression nullableDifference)
 			{
-				var startNullable = QueryHelper.UnwrapNullablity(nullableDifference.Start).CanBeNullable(NullabilityContext.NonQuery);
-				var endNullable   = QueryHelper.UnwrapNullablity(nullableDifference.End).CanBeNullable(NullabilityContext.NonQuery);
+				var startNullable = MayBeNull(nullableDifference.Start);
+				var endNullable   = MayBeNull(nullableDifference.End);
 
 				if (startNullable || endNullable)
 				{

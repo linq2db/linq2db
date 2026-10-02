@@ -1147,6 +1147,45 @@ namespace Tests.Linq
 			components[1].Hours.ShouldBeNull();
 		}
 
+		/// <summary>
+		/// A member of a difference whose operand an outer join leaves absent on an unmatched row.
+		/// </summary>
+		/// <remarks>
+		/// The column itself cannot be null, but the join makes it so. Access refuses a null that <c>DateAdd</c> or
+		/// <c>DateDiff</c> derived once it is passed on, so the operand has to be recognised as one that can be null.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceAcrossAnOuterJoin([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(2, 3, 0, 0);
+
+			using var db    = GetDataContext(context);
+			using var left  = db.CreateLocalTable("OuterJoinLeft",  [new EventRow { Id = 1, StartedOn = started, FinishedOn = started }, new EventRow { Id = 2, StartedOn = started, FinishedOn = started }]);
+			using var right = db.CreateLocalTable("OuterJoinRight", [new EventRow { Id = 1, StartedOn = started, FinishedOn = started + amount }]);
+
+			var joined =
+				from a in left
+				from b in right.Where(x => x.Id == a.Id).DefaultIfEmpty()
+				select new { a, b };
+
+			var rows = joined
+				.OrderBy(x => x.a.Id)
+				.Select(x => new
+				{
+					TotalDays = Sql.AsSql((double?)(x.b!.FinishedOn - x.a.StartedOn).TotalDays),
+					Days      = Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Days),
+				})
+				.ToList();
+
+			rows[0].TotalDays!.Value.ShouldBe(amount.TotalDays, Tolerance(amount.TotalDays));
+			rows[0].Days.ShouldBe(amount.Days);
+			rows[1].TotalDays.ShouldBeNull();
+			rows[1].Days.ShouldBeNull();
+
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).TotalDays > 1).Select(x => x.a.Id).ToList().ShouldBe([1]);
+		}
+
 		[Table]
 		sealed class CoarseDateRow
 		{
