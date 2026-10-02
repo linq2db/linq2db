@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					new SqlFunction(
 						element.Type,
 						"Mod",
-						!element.Expr1.SystemType!.IsIntegerType ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1,
+						!IsIntegerOperand(element.Expr1) ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1,
 						element.Expr2
 					),
 
@@ -99,6 +99,24 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 				_   => base.ConvertSqlBinaryExpression(element),
 			};
+		}
+
+		/// <summary>
+		/// Whether <c>MOD</c> can take the operand as it is.
+		/// </summary>
+		/// <remarks>
+		/// Asked of the database type as well as the CLR one: a column can store an integer for a model type that is
+		/// not one - a <see cref="TimeSpan"/> stored as a count of seconds - and narrowing that through <c>INT</c>
+		/// overflows a <c>BIGINT</c> count past 2<sup>31</sup>.
+		/// </remarks>
+		bool IsIntegerOperand(ISqlExpression operand)
+		{
+			if (operand.SystemType?.IsIntegerType == true)
+				return true;
+
+			return QueryHelper.GetDbDataType(operand, MappingSchema).DataType
+				is DataType.SByte or DataType.Byte or DataType.Int16 or DataType.UInt16
+				or DataType.Int32 or DataType.UInt32 or DataType.Int64 or DataType.UInt64;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
