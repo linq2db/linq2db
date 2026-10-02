@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
@@ -164,40 +163,31 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		}
 
 		// IFX rejects a temporal parameter, cast or not, next to a non-parameter value in CASE results
-		static void InlineTemporalParameters(ISqlExpression?[] results)
+		static SqlParameter? GetTemporalParameter(ISqlExpression? result, out bool isOtherValue)
 		{
-			List<SqlParameter>? parameters    = null;
-			var                 hasOtherValue = false;
+			isOtherValue = false;
 
-			foreach (var result in results)
+			if (result == null)
+				return null;
+
+			var expr = QueryHelper.UnwrapNullablity(result);
+
+			if (expr is SqlValue { Value: null })
+				return null;
+
+			var parameter = expr switch
 			{
-				if (result == null)
-					continue;
+				SqlParameter               p                              => p,
+				SqlParameterCastExpression { Parameter : var p }          => p,
+				SqlCastExpression          { Expression: SqlParameter p } => p,
+				_                                                         => null,
+			};
 
-				var expr = QueryHelper.UnwrapNullablity(result);
+			if (parameter is { IsQueryParameter: true } && IsTemporal(parameter.Type.SystemType))
+				return parameter;
 
-				if (expr is SqlValue { Value: null })
-					continue;
-
-				var parameter = expr switch
-				{
-					SqlParameter               p                              => p,
-					SqlParameterCastExpression { Parameter : var p }          => p,
-					SqlCastExpression          { Expression: SqlParameter p } => p,
-					_                                                         => null,
-				};
-
-				if (parameter is { IsQueryParameter: true } && IsTemporal(parameter.Type.SystemType))
-					(parameters ??= new()).Add(parameter);
-				else
-					hasOtherValue = true;
-			}
-
-			if (parameters == null || !hasOtherValue)
-				return;
-
-			foreach (var parameter in parameters)
-				parameter.IsQueryParameter = false;
+			isOtherValue = true;
+			return null;
 
 			static bool IsTemporal(Type? type)
 			{
@@ -215,16 +205,31 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			}
 		}
 
+		static void InlineTemporalParameter(ISqlExpression? result)
+		{
+			var parameter = GetTemporalParameter(result, out _);
+
+			if (parameter != null)
+				parameter.IsQueryParameter = false;
+		}
+
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
-			var results = new ISqlExpression?[element.Cases.Count + 1];
+			var hasTemporalParameter = GetTemporalParameter(element.ElseExpression, out var hasOtherValue) != null;
 
 			for (var i = 0; i < element.Cases.Count; i++)
-				results[i] = element.Cases[i].ResultExpression;
+			{
+				hasTemporalParameter |= GetTemporalParameter(element.Cases[i].ResultExpression, out var isOtherValue) != null;
+				hasOtherValue        |= isOtherValue;
+			}
 
-			results[^1] = element.ElseExpression;
+			if (hasTemporalParameter && hasOtherValue)
+			{
+				for (var i = 0; i < element.Cases.Count; i++)
+					InlineTemporalParameter(element.Cases[i].ResultExpression);
 
-			InlineTemporalParameters(results);
+				InlineTemporalParameter(element.ElseExpression);
+			}
 
 			if (element.ElseExpression != null)
 			{
@@ -253,7 +258,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			InlineTemporalParameters([element.TrueValue, element.FalseValue]);
+			var trueParameter  = GetTemporalParameter(element.TrueValue,  out var trueIsOtherValue);
+			var falseParameter = GetTemporalParameter(element.FalseValue, out var falseIsOtherValue);
+
+			if (trueParameter  != null && falseIsOtherValue) trueParameter.IsQueryParameter  = false;
+			if (falseParameter != null && trueIsOtherValue)  falseParameter.IsQueryParameter = false;
 
 			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : false, forceConvert: true);
 			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : false, forceConvert: true);

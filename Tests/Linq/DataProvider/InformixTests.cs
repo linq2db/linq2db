@@ -548,6 +548,21 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void DateParameterNextToNonTemporalParameterInCase([IncludeDataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+			var text  = "2021-02-03 04:05:06";
+
+			t.OrderBy(x => x.Id).Select(x => x.Date != null ? value : Sql.Convert(Sql.Types.DateTime, text)).ToArray()
+				.ShouldBe([DateParameterInCaseValue, new DateTime(2021, 2, 3, 4, 5, 6)]);
+
+			db.LastQuery!.ShouldNotContain(text);
+		}
+
+		[Test]
 		public void DateParameterNextToColumnInCaseUpdate([IncludeDataSources(true, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
