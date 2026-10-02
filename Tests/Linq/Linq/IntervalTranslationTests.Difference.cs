@@ -1107,6 +1107,25 @@ namespace Tests.Linq
 			var expected = ClosedPeriods[0].ClosedOn - ClosedPeriods[0].OpenedOn;
 
 			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+
+			// A whole-unit component is counted with an anchor compared against the end, so the NULL row reaches
+			// that comparison too - in a filter and in a projection alike.
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.Days > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.Hours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			var components = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Days  = Sql.AsSql((int?)(r.ClosedOnNullable - r.OpenedOn)!.Value.Days),
+					Hours = Sql.AsSql((int?)(r.ClosedOnNullable - r.OpenedOn)!.Value.Hours),
+				})
+				.ToList();
+
+			components[0].Days.ShouldBe(expected.Days);
+			components[0].Hours.ShouldBe(expected.Hours);
+			components[1].Days.ShouldBeNull();
+			components[1].Hours.ShouldBeNull();
 		}
 
 		[Table]

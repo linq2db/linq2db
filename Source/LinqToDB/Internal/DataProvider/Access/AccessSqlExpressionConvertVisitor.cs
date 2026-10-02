@@ -129,9 +129,58 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// an anchor past the end turns the remainder negative - a sign the modulo keeps, answering -20 where 40 was
 		/// meant.
 		/// </para>
+		/// <para>
+		/// An operand that can be <see langword="null"/> is replaced by a fixed date before any of this, and the result
+		/// is made <see langword="null"/> from the operands themselves. Access refuses a null that <c>DateAdd</c> or
+		/// <c>DateDiff</c> derived with "Data type mismatch in criteria expression" as soon as it is passed on - to the
+		/// comparison the anchor correction makes, to the next count, even to <c>IS NULL</c> - while a null read from a
+		/// column passes. So no count and no anchor may ever see one, whatever the unit.
+		/// </para>
 		/// </remarks>
 		protected override ISqlExpression? LowerIntervalPart(SqlIntervalPartExpression element)
 		{
+			if (QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression nullableDifference)
+			{
+				var startNullable = nullableDifference.Start.CanBeNullable(NullabilityContext);
+				var endNullable   = nullableDifference.End.CanBeNullable(NullabilityContext);
+
+				if (startNullable || endNullable)
+				{
+					var dateType = Factory.GetDbDataType(nullableDifference.Start);
+
+					// Any date would do: a result from it is discarded below.
+					ISqlExpression NotNull(ISqlExpression operand, bool nullable)
+					{
+						if (!nullable)
+							return operand;
+
+						return SqlNullabilityExpression.ApplyNullability(
+							Factory.Condition(Factory.IsNullPredicate(operand), Factory.Value(dateType, new DateTime(1899, 12, 30)), operand),
+							false);
+					}
+
+					var guarded = new SqlIntervalDifferenceExpression(
+						NotNull(nullableDifference.Start, startNullable),
+						NotNull(nullableDifference.End,   endNullable),
+						nullableDifference.Type,
+						nullableDifference.IntervalType);
+
+					var lowered = LowerIntervalPart(new SqlIntervalPartExpression(guarded, element.Unit, element.Kind, element.Type, element.Within));
+					if (lowered == null)
+						return null;
+
+					var eitherNull = new SqlSearchCondition(isOr: true);
+
+					if (startNullable)
+						eitherNull.Add(Factory.IsNullPredicate(nullableDifference.Start));
+
+					if (endNullable)
+						eitherNull.Add(Factory.IsNullPredicate(nullableDifference.End));
+
+					return Factory.Condition(eitherNull, new SqlValue(element.Type.WithSystemType(element.Type.SystemType.AsNullable()), null), lowered);
+				}
+			}
+
 			if (element.Kind == SqlIntervalPartKind.Component
 				&& element.Unit is SqlIntervalUnit.Hour or SqlIntervalUnit.Minute or SqlIntervalUnit.Second
 				&& QueryHelper.UnwrapNullablity(element.Interval) is SqlIntervalDifferenceExpression difference)
@@ -194,10 +243,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 		/// to name, and a cast to a floating type renders as nothing here.
 		/// </para>
 		/// <para>
-		/// An operand that can be <see langword="null"/> is replaced by a fixed date before it reaches either function,
-		/// and the result is made <see langword="null"/> from the operands themselves. Access refuses a null that
-		/// <c>DateAdd</c> or <c>DateDiff</c> derived with "Data type mismatch in criteria expression" as soon as it
-		/// is passed on, even to <c>IS NULL</c>, while a null read from a column passes.
+		/// Neither operand is ever <see langword="null"/> here: <see cref="LowerIntervalPart"/> replaces one that can
+		/// be before counting starts.
 		/// </para>
 		/// <para>
 		/// This provider is the only one that gets here - it is the only override of
@@ -222,46 +269,15 @@ namespace LinqToDB.Internal.DataProvider.Access
 					longType, true);
 			}
 
-			var dateType      = Factory.GetDbDataType(start);
-			var startNullable = start.CanBeNullable(NullabilityContext);
-			var endNullable   = end.CanBeNullable(NullabilityContext);
+			var days   = Factory.Function(intType, DateDiffFunction, Factory.Value("d"), start, end);
+			var anchor = Factory.Function(Factory.GetDbDataType(start), DateAddFunction, Factory.Value("d"), days, start);
 
-			// Any date would do: a result from it is discarded below.
-			ISqlExpression NotNull(ISqlExpression operand, bool nullable)
-			{
-				if (!nullable)
-					return operand;
-
-				return Factory.Condition(Factory.IsNullPredicate(operand),
-					Factory.Value(dateType, new DateTime(1899, 12, 30)),
-					operand);
-			}
-
-			var fromDate = NotNull(start, startNullable);
-			var toDate   = NotNull(end,   endNullable);
-
-			var days   = Factory.Function(intType, DateDiffFunction, Factory.Value("d"), fromDate, toDate);
-			var anchor = Factory.Function(dateType, DateAddFunction, Factory.Value("d"), days, fromDate);
-
-			var remainder  = Factory.Function(intType, DateDiffFunction, Factory.Value(part), anchor, toDate);
+			var remainder  = Factory.Function(intType, DateDiffFunction, Factory.Value(part), anchor, end);
 			var doubleType = Factory.GetDbDataType(typeof(double));
 
-			var seconds = Factory.Add(doubleType,
+			return Factory.Add(doubleType,
 				Factory.Multiply(doubleType, Factory.Function(doubleType, ToDoubleFunction, days), SecondsPerDay),
 				remainder);
-
-			if (!startNullable && !endNullable)
-				return seconds;
-
-			var eitherNull = new SqlSearchCondition(isOr: true);
-
-			if (startNullable)
-				eitherNull.Add(Factory.IsNullPredicate(start));
-
-			if (endNullable)
-				eitherNull.Add(Factory.IsNullPredicate(end));
-
-			return Factory.Condition(eitherNull, Factory.Value<double?>(doubleType, null), seconds);
 		}
 
 		static readonly string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
