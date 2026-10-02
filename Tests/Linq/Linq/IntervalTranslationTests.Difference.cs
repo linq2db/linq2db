@@ -215,16 +215,20 @@ namespace Tests.Linq
 #endif
 
 		/// <summary>
-		/// A difference measured from the server's own clock, rather than from a literal or a parameter.
+		/// A difference measured from <see cref="DateTime.Now"/> - the server's clock where the provider translates it,
+		/// the client's elsewhere.
 		/// </summary>
 		/// <remarks>
-		/// <see cref="DateTime.Now"/> inside a query translates to a server-side call - <c>now()</c> on ClickHouse,
-		/// for instance - which is a distinct operand shape from a literal or a parameter: some providers give it a
-		/// coarser or otherwise different declared type than the one a mapped column or a client value carries, and
-		/// the elapsed-time lowering has to cope with that mismatch rather than assuming every operand shares one
-		/// type. The rows sit years away from the run date on both sides, so the sign and rough size of each member
-		/// stay stable regardless of clock skew between the test host and the server.
+		/// Where <see cref="DateTime.Now"/> translates to a server-side call - <c>now()</c> on ClickHouse, for
+		/// instance - it is a distinct operand shape from a literal or a parameter: some providers give it a coarser or
+		/// otherwise different declared type than the one a mapped column or a client value carries, and the
+		/// elapsed-time lowering has to cope with that mismatch rather than assuming every operand shares one type.
+		/// The providers listed below read it on the client instead. The rows sit years away from the run date on
+		/// both sides, so the sign and rough size of each member stay stable regardless of clock skew between the
+		/// test host and the server.
 		/// </remarks>
+		[ActiveIssue(5955, Configuration = TestProvName.AllClickHouse, ErrorMessage = "toUnixTimestamp64Nano",
+			Details = "now() is a plain DateTime, which toUnixTimestamp64Nano refuses; the difference does not coerce its operands to DateTime64 yet.")]
 		[Test]
 		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
 		{
