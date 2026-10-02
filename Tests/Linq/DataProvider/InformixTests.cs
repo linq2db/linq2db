@@ -563,6 +563,20 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void DateParameterInCaseStaysBoundElsewhere([IncludeDataSources(TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable(DateParameterInCaseData);
+
+			var value = DateParameterInCaseValue;
+
+			t.Where(x => x.Plain != value).OrderBy(x => x.Id).Select(x => x.Date != null ? value : x.Plain).ToArray()
+				.ShouldBe([DateParameterInCaseValue, DateParameterInCaseStored]);
+
+			db.LastQuery!.ShouldContain("@value");
+		}
+
+		[Test]
 		public void DateParameterNextToColumnInCaseUpdate([IncludeDataSources(true, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
