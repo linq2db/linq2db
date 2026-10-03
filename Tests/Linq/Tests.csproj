@@ -9,6 +9,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Identity\LinqToDB.Identity.csproj" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
