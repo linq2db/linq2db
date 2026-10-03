@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -300,6 +302,32 @@ namespace Tests.Linq
 					// best-effort: a temp file left behind is not worth failing the test over
 				}
 			}
+		}
+
+		[Table]
+		sealed class ConfigurationScopedColumnRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime2, Precision = 3)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime Value { get; set; }
+		}
+
+		// The server re-resolves every deserialized column against a mapping schema of its own, so a
+		// configuration-scoped attribute has to survive that step exactly as it does in a direct context.
+		[Test]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "10:11:12.1234560")]
+		public void ConfigurationScopedColumnAttributeAppliesOnTheServer([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			var value = new DateTime(2026, 6, 1, 10, 11, 12).AddTicks(1234567);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ConfigurationScopedColumnRow>();
+
+			db.Insert(new ConfigurationScopedColumnRow { Id = 1, Value = value });
+
+			t.Single().Value.ShouldBe(value);
 		}
 
 		// SignalRDataContext(HubConnection) builds the client itself, so the connection is the context's to
