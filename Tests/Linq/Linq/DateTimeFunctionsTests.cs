@@ -1833,6 +1833,24 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.MakeDateTime(2010, p.ID, 1, 20, 35, 44) where t.Value.Year == 2010 select t);
 		}
 
+		static readonly DateTime SubSecondBoundary = new(2010, 1, 1, 10, 0, 0, 500);
+
+		/// <summary>
+		/// A literal compared with a computed date keeps its sub-second part, whatever type the computed side reports.
+		/// </summary>
+		[Test]
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTimeComparedWithSubSecondLiteral([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var total = db.Types.Count();
+
+			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value <  SubSecondBoundary).ShouldBe(total);
+			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value >= SubSecondBoundary).ShouldBe(0);
+			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value == SubSecondBoundary).ShouldBe(0);
+		}
+
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
