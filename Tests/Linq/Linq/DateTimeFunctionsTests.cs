@@ -1837,6 +1837,7 @@ namespace Tests.Linq
 		/// A literal compared with a computed date keeps its sub-second part, whatever type the computed side reports.
 		/// </summary>
 		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}12")]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void MakeDateTimeComparedWithSubSecondLiteral([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
