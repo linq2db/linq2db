@@ -72,6 +72,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			statement = FinalizeInsert(statement);
+			FinalizeDataModificationCtes(statement);
 			statement = FinalizeSelect(statement);
 			statement = FixSetOperationValues(mappingSchema, statement);
 
@@ -82,6 +83,22 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Applies statement-level finalization to data-modifying statements nested in CTEs
+		/// (<see cref="CteClause.DataModification"/>), which are not reached by the top-level finalization.
+		/// </summary>
+		void FinalizeDataModificationCtes(SqlStatement statement)
+		{
+			if (statement is not SqlStatementWithQueryBase { With.Clauses: { Count: > 0 } clauses })
+				return;
+
+			foreach (var cte in clauses)
+			{
+				if (cte.DataModification != null)
+					cte.DataModification = (SqlStatementWithQueryBase)FinalizeInsert(cte.DataModification);
+			}
+		}
 
 		protected virtual SqlStatement FinalizeInsert(SqlStatement statement)
 		{
@@ -721,6 +738,7 @@ namespace LinqToDB.Internal.SqlProvider
 					_currentCteStack.Push(holder);
 				}
 
+				Visit(cteClause?.DataModification);
 				Visit(cteClause?.Body);
 
 				if (holder != null)
@@ -749,6 +767,9 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 			{
 				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+				if (!SqlProviderFlags.IsOutputAsSourceSupported && foundCtes.Keys.Any(static c => c.DataModification != null))
+					throw new LinqToDBException(ErrorHelper.Error_OutputAsSource_NotSupported);
+
 				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 

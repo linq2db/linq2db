@@ -749,6 +749,20 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 78), DefaultValue(true)]
 		public bool IsAffectedRowsCountSupported { get; set; } = true;
 
+		/// <summary>
+		/// Provider can use the rows returned by a data-modifying statement (<c>INSERT ... RETURNING</c> / <c>OUTPUT</c>)
+		/// as a query source inside the same SQL statement, e.g. PostgreSQL data-modifying CTE
+		/// (<c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>).
+		/// <para>
+		/// Used by <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, System.Linq.Expressions.Expression{System.Func{TTarget}})"/>
+		/// and its overloads. When <see langword="false"/>, such queries fail at build time.
+		/// Not implied by <see cref="IsCommonTableExpressionsSupported"/>: many providers accept only <c>SELECT</c> in a CTE.
+		/// </para>
+		/// Default: <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 80), DefaultValue(false)]
+		public bool IsOutputAsSourceSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
@@ -851,6 +865,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsDistinctOnSupported                                .GetHashCode()
 				^ IsUpdateOutputRowsSupported                          .GetHashCode()
 				^ IsAffectedRowsCountSupported                         .GetHashCode()
+				^ IsOutputAsSourceSupported                            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -935,6 +950,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsDistinctOnSupported                                 == other.IsDistinctOnSupported
 				&& IsUpdateOutputRowsSupported                           == other.IsUpdateOutputRowsSupported
 				&& IsAffectedRowsCountSupported                          == other.IsAffectedRowsCountSupported
+				&& IsOutputAsSourceSupported                             == other.IsOutputAsSourceSupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

@@ -24,6 +24,14 @@ namespace LinqToDB.Internal.SqlQuery
 		public bool         IsRecursive { get; set; }
 
 		/// <summary>
+		/// Data-modifying statement (currently <see cref="SqlInsertStatement"/>) whose <c>RETURNING</c>/<c>OUTPUT</c> rows
+		/// are the CTE rows. When set, <see cref="Body"/> is the projection of the output rows: its single <c>FROM</c> table is a
+		/// stand-in for the rows affected by the statement and its columns are the rendered output expressions.
+		/// Rendering is provider-specific and gated by <see cref="SqlProvider.SqlProviderFlags.IsOutputAsSourceSupported"/>.
+		/// </summary>
+		public SqlStatementWithQueryBase? DataModification { get; set; }
+
+		/// <summary>
 		/// Open-ended metadata bag for provider-specific CTE hints (e.g. PostgreSQL <c>MATERIALIZED</c>).
 		/// Providers that do not recognize an annotation name ignore it.
 		/// </summary>
@@ -96,6 +104,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(ElementType);
 			hash.Add(IsRecursive);
 			hash.Add(Body?.GetElementHashCode());
+			hash.Add(DataModification?.GetElementHashCode());
 			hash.Add(ObjectType);
 
 			foreach (var field in Fields)
