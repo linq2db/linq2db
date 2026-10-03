@@ -5047,7 +5047,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							// A computed value has no stored precision to match, so narrowing the literal to it would only
 							// drop the literal's sub-second or time part. A stored column still lends its type.
-							if (IsCoarserDateTime(type.DataType, context.DataType) && QueryHelper.GetColumnDescriptor(expr) == null)
+							if (IsCoarserDateTime(type.DataType, context.DataType) && QueryHelper.GetColumnDescriptorForTyping(expr) == null)
 								return true;
 
 							context.DataType  = type.DataType;

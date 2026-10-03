@@ -1850,6 +1850,22 @@ namespace Tests.Linq
 			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value == SubSecondBoundary).ShouldBe(0);
 		}
 
+		static readonly DateTime CoarseSubSecondBoundary = CoarseValue.AddMilliseconds(500);
+
+		/// <summary>
+		/// A cast that coarsens a column's type is a computed value too: the literal beside it keeps its sub-second part.
+		/// </summary>
+		[Test]
+		public void CoarseningCastComparedWithSubSecondLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db, CoarseValue.AddMilliseconds(250));
+
+			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) <  CoarseSubSecondBoundary).ShouldBe(1);
+			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) >= CoarseSubSecondBoundary).ShouldBe(0);
+			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) == CoarseSubSecondBoundary).ShouldBe(0);
+		}
+
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
