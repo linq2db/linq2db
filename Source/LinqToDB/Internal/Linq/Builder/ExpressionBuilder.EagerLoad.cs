@@ -185,9 +185,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					selectProjections ??= new();
 					selectProjections.Add(arg.UnwrapLambda());
 				}
-				else if (!mc.Type.IsSameOrParentOf(mc.Arguments[0].Type))
+				else if (mc.Type.GetItemType() != mc.Arguments[0].Type.GetItemType())
 				{
-					// Only Select can remap ordering lambdas; any other operator that changes the sequence type
+					// Only Select can remap ordering lambdas; any other operator that changes the element type
 					// (SelectMany, Cast, OfType, GroupBy...) leaves no client-side ordering to apply.
 					return null;
 				}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -261,6 +262,29 @@ namespace Tests.UserTests
 			result.Length.ShouldBe(2);
 			result[0].Logs.Length.ShouldBe(2);
 			result[1].Logs.Length.ShouldBe(2);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935 - a wrapper that keeps the element type must not drop the client-side ordering")]
+		public void OrderByAsQueryableTake(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
+		{
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
+			using var items = db.CreateLocalTable(ItemData);
+			using var logs  = db.CreateLocalTable(LogData);
+
+			var result = items
+				.OrderBy(i => i.Id)
+				.Select(i => new
+				{
+					i.Value,
+					Logs = i.Logs.OrderByDescending(l => l.Id).AsQueryable().Take(2).ToArray(),
+				})
+				.ToArray();
+
+			result.Length.ShouldBe(2);
+			result[0].Logs.Select(l => l.Id).ShouldBe([3, 2]);
+			result[1].Logs.Select(l => l.Id).ShouldBe([6, 5]);
 		}
 	}
 }
