@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -184,6 +185,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					selectProjections ??= new();
 					selectProjections.Add(arg.UnwrapLambda());
 				}
+				else if (mc.Type.GetItemType() != mc.Arguments[0].Type.GetItemType())
+				{
+					// Only Select can remap ordering lambdas; any other operator that changes the element type
+					// (SelectMany, Cast, OfType, GroupBy...) leaves no client-side ordering to apply.
+					return null;
+				}
 
 				current = mc.Arguments[0];
 			}
@@ -282,7 +289,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				if (!found)
-					remapped.Add((lambda, descending));
+					return null;
 			}
 
 			return remapped;
