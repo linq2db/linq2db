@@ -39,9 +39,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		/// Elapsed ticks from the nanosecond timestamps, divided by a hundred.
 		/// </summary>
 		/// <remarks>
-		/// The operands are coerced to <c>DateTime64(7)</c> first, which is a tick exactly, so every nanosecond
-		/// value here is a whole multiple of a hundred and the division is exact. <c>date_diff</c> is not used
-		/// because its finest unit is the second.
+		/// An operand that is not already a <c>DateTime64</c> is coerced to <c>DateTime64(7)</c>, which is a tick
+		/// exactly, so its nanosecond value is a whole multiple of a hundred and the division is exact. A
+		/// <c>DateTime64</c> keeps its own precision, so one finer than a tick is truncated to whole ticks.
+		/// <c>date_diff</c> is not used because its finest unit is the second.
 		/// <para>
 		/// Nanoseconds in an <see cref="long"/> reach from 1678 to 2262, narrower than what a
 		/// <c>DateTime64(7)</c> column itself holds. That is the same boundary the millisecond form of
