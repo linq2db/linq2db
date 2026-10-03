@@ -242,10 +242,17 @@ namespace Tests.UserTests
 		// Order is deliberately unasserted - for a limited detail the ORDER BY stays inside the APPLY
 		// subquery and never reaches the outer preamble query (#5937).
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935 - a limited detail hits the same defect")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
 		public void OrderByTakeKeyNotProjected(
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
 			using var items = db.CreateLocalTable(ItemData);
 			using var logs  = db.CreateLocalTable(LogData);
@@ -265,10 +272,17 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935 - a wrapper that keeps the element type must not drop the client-side ordering")]
+		[ThrowsForProvider("Sap.Data.Hana.HanaException", ProviderName.SapHanaNative, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
+		[ThrowsForProvider("System.Data.Odbc.OdbcException", ProviderName.SapHanaOdbc, ErrorMessage = "non-field expression with LATERAL",
+			AlsoWhenParameter = "strategy", AlsoWhenValue = EagerLoadingStrategy.KeyedQuery)]
 		public void OrderByAsQueryableTake(
 			[DataSources] string context,
 			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
+			if (strategy == EagerLoadingStrategy.KeyedQuery && context.IsAnyOf(TestProvName.AllAccess))
+				Assert.Ignore("KeyedQuery emits its key set as a FROM-less UNION ALL derived table, which Access rejects.");
+
 			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
 			using var items = db.CreateLocalTable(ItemData);
 			using var logs  = db.CreateLocalTable(LogData);
