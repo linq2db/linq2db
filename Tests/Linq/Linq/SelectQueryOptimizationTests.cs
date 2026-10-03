@@ -66,7 +66,8 @@ namespace Tests.Linq
 			// declared DataType.DateTime reported the schema's DateTime64(7), which is the type ClickHouse's
 			// epoch functions are then told to expect. (#5960)
 			var argumentType = new DbDataType(typeof(string), DataType.VarChar, null, 50, null, null);
-			var declaredType = new DbDataType(typeof(string), DataType.NVarChar);
+			// The length is what tells the declared type from the schema default for string.
+			var declaredType = new DbDataType(typeof(string), DataType.NVarChar, null, 100, null, null);
 			var argument     = new SqlValue(argumentType, "x");
 
 			foreach (var name in new[] { "MIN", "MAX" })
