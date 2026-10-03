@@ -2398,10 +2398,6 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		// CH: probably this https://github.com/ClickHouse/ClickHouse/issues/64794
-		// No ErrorTypeName, and no "Code: 60." either: each ClickHouse client wraps the server error in its own
-		// exception type, and Octonica drops the code prefix the other two keep.
-		[ActiveIssue(4012, Configuration = TestProvName.AllClickHouse, ErrorMessage = "DB::Exception: Unknown table expression identifier")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
 		public void Issue4012Test([RecursiveCteContextSource] string context)
 		{
