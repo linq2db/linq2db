@@ -1087,10 +1087,8 @@ namespace Tests.Linq
 		/// An explicit conversion applied to the result of a millisecond <c>DateAdd</c> is carried out.
 		/// </summary>
 		/// <remarks>
-		/// The addition is expressed through the nanosecond epoch and comes back as a <c>DateTime64</c> whatever the
-		/// operand was. Declaring the result as the operand's own type instead makes the requested conversion look
-		/// like a conversion to the type the value already has, and a redundant cast is removed - so the milliseconds
-		/// asked to be dropped would survive.
+		/// The addition goes through the nanosecond epoch, so the whole-second operand is coerced inside the
+		/// conversion; the conversion itself must still be emitted, or the milliseconds asked to be dropped survive.
 		/// </remarks>
 		[Test]
 		public void ConvertedDateAddMillisecondHonoursTheRequestedType([IncludeDataSources(TestProvName.AllClickHouse)] string context)
