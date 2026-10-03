@@ -203,13 +203,13 @@ namespace Tests.UserTests
 				.Select(i => new
 				{
 					i.Value,
-					Tags = i.Logs.OrderBy(l => l.Id).SelectMany(l => l.Tags).ToArray(),
+					Tags = i.Logs.OrderByDescending(l => l.Id).SelectMany(l => l.Tags).ToArray(),
 				})
 				.ToArray();
 
 			result.Length.ShouldBe(2);
-			result[0].Tags.Select(t => t.Name).OrderBy(n => n).ShouldBe(["t1", "t2", "t3"]);
-			result[1].Tags.Select(t => t.Name).OrderBy(n => n).ShouldBe(["t4", "t5", "t6"]);
+			result[0].Tags.Select(t => t.Name).ShouldBe(["t3", "t2", "t1"]);
+			result[1].Tags.Select(t => t.Name).ShouldBe(["t6", "t5", "t4"]);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935 - Cast below an OrderBy changes the element type without a remap")]
@@ -229,23 +229,23 @@ namespace Tests.UserTests
 				.Select(i => new
 				{
 					i.Value,
-					Logs = i.Logs.OrderBy(l => l.Id).Cast<object>().ToArray(),
+					Logs = i.Logs.OrderByDescending(l => l.Id).Cast<object>().ToArray(),
 				})
 				.ToArray();
 
 			result.Length.ShouldBe(2);
-			result[0].Logs.Length.ShouldBe(3);
-			result[1].Logs.Length.ShouldBe(3);
+			result[0].Logs.Cast<ItemLog>().Select(l => l.Id).ShouldBe([3, 2, 1]);
+			result[1].Logs.Cast<ItemLog>().Select(l => l.Id).ShouldBe([6, 5, 4]);
 		}
 
-		// Default strategy only: KeyedQuery rewrites the parent-key equality into a Contains, which leaves
-		// Take applied to the whole filtered set rather than per parent, so a row count means nothing there.
 		// Order is deliberately unasserted - for a limited detail the ORDER BY stays inside the APPLY
-		// subquery and never reaches the outer preamble query.
+		// subquery and never reaches the outer preamble query (#5937).
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5935 - a limited detail hits the same defect")]
-		public void OrderByTakeKeyNotProjected([DataSources] string context)
+		public void OrderByTakeKeyNotProjected(
+			[DataSources] string context,
+			[Values(EagerLoadingStrategy.Default, EagerLoadingStrategy.KeyedQuery)] EagerLoadingStrategy strategy)
 		{
-			using var db    = GetDataContext(context);
+			using var db    = GetDataContext(context, o => o.UseDefaultEagerLoadingStrategy(strategy));
 			using var items = db.CreateLocalTable(ItemData);
 			using var logs  = db.CreateLocalTable(LogData);
 

@@ -185,6 +185,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					selectProjections ??= new();
 					selectProjections.Add(arg.UnwrapLambda());
 				}
+				else if (!mc.Type.IsSameOrParentOf(mc.Arguments[0].Type))
+				{
+					// Only Select can remap ordering lambdas; any other operator that changes the sequence type
+					// (SelectMany, Cast, OfType, GroupBy...) leaves no client-side ordering to apply.
+					return null;
+				}
 
 				current = mc.Arguments[0];
 			}
@@ -282,8 +288,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				// The key is not among the projected members, so it cannot be referenced on the projected
-				// type. Drop the ordering rather than keep a lambda typed for the source element.
 				if (!found)
 					return null;
 			}
@@ -325,14 +329,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression ApplyEnumerableOrderBy(Expression queryExpr, List<(LambdaExpression Expression, bool Descending)> orderBy)
 		{
-			// CollectOrderBy crosses element-type-changing operators (SelectMany, Cast, OfType) without
-			// remapping the lambdas, so skip rather than emit a call that cannot bind.
-			var elementType = TypeHelper.GetEnumerableElementType(queryExpr.Type);
-
-			foreach (var order in orderBy)
-				if (!order.Expression.Parameters[0].Type.IsSameOrParentOf(elementType))
-					return queryExpr;
-
 			var isFirst = true;
 			foreach (var order in orderBy)
 			{
