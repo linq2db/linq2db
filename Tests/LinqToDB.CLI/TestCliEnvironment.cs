@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace Tests.LinqToDB.CLI
 {
@@ -21,6 +22,9 @@ namespace Tests.LinqToDB.CLI
 		public Queue<string> InputLines { get; } = new();
 
 		public Exception? WriteAllTextException { get; init; }
+
+		/// <summary>Impersonation sessions started by commands, in order.</summary>
+		public List<RecordingImpersonationSession> ImpersonationSessions { get; } = new();
 
 		public TextWriter Out   => _output;
 		public TextWriter Error => _error;
@@ -108,6 +112,19 @@ namespace Tests.LinqToDB.CLI
 		public string? ReadLine()
 		{
 			return InputLines.TryDequeue(out var line) ? line : null;
+		}
+
+		/// <summary>
+		/// Returns a session that records what each impersonated run saw, without changing identity.
+		/// </summary>
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
+		{
+			var session = new RecordingImpersonationSession(user, password, mode, _error.ToString);
+
+			lock (ImpersonationSessions)
+				ImpersonationSessions.Add(session);
+
+			return session;
 		}
 
 		private sealed class TestFileWriter(Action<string> save) : StringWriter
