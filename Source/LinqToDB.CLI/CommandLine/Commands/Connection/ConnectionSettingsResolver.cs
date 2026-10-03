@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
+using LinqToDB.CommandLine.Commands.Credentials;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
@@ -81,7 +83,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			if (credentials != null && !string.Equals(credentials, MissingEnvironmentVariable, StringComparison.Ordinal))
 			{
-				if (!_environment.CredentialStore.TryRead(credentials, out user, out password, out var credentialError))
+				var credentialStore = GetCredentialStore(values.CredentialHelper, configuration, configDirectory);
+
+				if (credentialStore == null)
+					return null;
+
+				if (!credentialStore.TryRead(credentials, out user, out password, out var credentialError))
 				{
 					_environment.Error.WriteLine(credentialError);
 					return null;
@@ -209,6 +216,53 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				_environment.Error.WriteLine($"Option '--{option.Name}' must be a non-negative integer number of seconds.");
 				return -1;
 			}
+		}
+
+		/// <summary>
+		/// Returns the credential store for <c>credentials</c> targets: the configured credential helper (the command-line
+		/// value wins over the profile's <c>credentialHelper</c>), otherwise the platform default store. Returns
+		/// <see langword="null"/> after writing a diagnostic when the helper value references a missing environment variable.
+		/// </summary>
+		public ICredentialStore? GetCredentialStore(string? commandLineHelper, QueryExecutionConfiguration? configuration, string? configDirectory)
+		{
+			CredentialHelperSettings? helper = null;
+
+			if (commandLineHelper != null)
+			{
+				var command = ResolveEnvironmentVariables(QueryExecutionCliOptions.CredentialHelper, commandLineHelper);
+
+				if (command == null || string.Equals(command, MissingEnvironmentVariable, StringComparison.Ordinal))
+					return null;
+
+				helper = new CredentialHelperSettings(command, CredentialHelperProtocol.Linq2Db, null);
+			}
+			else if (configuration?.CredentialHelper != null)
+			{
+				var command = ResolveEnvironmentVariables(QueryExecutionCliOptions.CredentialHelper, configuration.CredentialHelper);
+
+				if (command == null || string.Equals(command, MissingEnvironmentVariable, StringComparison.Ordinal))
+					return null;
+
+				var arguments = new List<string>(configuration.CredentialHelperArguments.Count);
+
+				foreach (var argument in configuration.CredentialHelperArguments)
+				{
+					var expanded = ResolveEnvironmentVariables(QueryExecutionCliOptions.CredentialHelper, argument);
+
+					if (expanded == null || string.Equals(expanded, MissingEnvironmentVariable, StringComparison.Ordinal))
+						return null;
+
+					arguments.Add(expanded);
+				}
+
+				helper = new CredentialHelperSettings(command, configuration.CredentialHelperProtocol, string.IsNullOrEmpty(configDirectory) ? null : Path.GetFullPath(configDirectory))
+				{
+					Arguments = arguments,
+					Timeout   = configuration.CredentialHelperTimeout is { } seconds ? TimeSpan.FromSeconds(seconds) : null,
+				};
+			}
+
+			return helper != null ? _environment.CreateHelperCredentialStore(helper) : _environment.CredentialStore;
 		}
 
 		public string? ResolvePath(CliOption option, string? path, string? baseDirectory = null)

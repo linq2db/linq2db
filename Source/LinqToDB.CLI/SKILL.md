@@ -52,9 +52,12 @@ Connection settings:
 - `--user <user>` and configuration `user` support `%NAME%` and `${NAME}` environment variable expansion. Password literals do not use environment variable expansion; use `--password-env` or `passwordEnv` for secrets.
 - `--connection-string-env <name>`, `--user-env <name>`, and `--password-env <name>` read those values from environment variables.
 - Configuration profiles can use `connectionStringEnv`, `userEnv`, and `passwordEnv` for the same purpose.
-- `--credentials <target>` and configuration `credentials` read both user and password from a credential store target. The built-in store supports linq2db-managed profiles and ordinary Windows Credential Manager generic credentials. The target name supports `%NAME%` and `${NAME}` environment variable expansion.
+- `--credentials <target>` and configuration `credentials` read both user and password from a credential store target. The target name supports `%NAME%` and `${NAME}` environment variable expansion.
+- Credential store: with a credential helper configured (`--credential-helper <command>` or configuration `credentialHelper`), the helper is used on every operating system. Without one, Windows uses its built-in store (linq2db-managed profiles and ordinary Windows Credential Manager generic credentials); Linux and macOS have no built-in store and report how to configure a helper.
+- `credentialHelper` is a string (a command using the linq2db credential helper protocol) or an object `{ "command": "<command>", "args": ["..."], "protocol": "linq2db" | "docker", "timeout": <seconds> }`. `args` are fixed arguments passed before the verb without any shell (for example `{ "command": "dotnet", "args": ["run", "/path/secrethelper.cs", "--"], "timeout": 120 }`); `timeout` replaces the default run timeouts; `docker` uses an existing `docker-credential-*` program (for example `docker-credential-secretservice` or `docker-credential-osxkeychain`). The command is an absolute path, a path relative to the configuration file, or a file name looked up on `PATH` (never the current directory); it supports `%NAME%` and `${NAME}` expansion. `--credential-helper` overrides the profile value and always uses the linq2db protocol.
+- A helper is any program that implements the linq2db credential helper protocol (verbs `get`, `store`, `erase`, `list`; `key=value` lines on standard input and output). The specification is `CREDENTIAL-HELPERS.md` in the linq2db repository (`Source/LinqToDB.CLI/CREDENTIAL-HELPERS.md`). linq2db-cli runs the configured helper as given, like git's `credential.helper`; securing it is the user's responsibility. Helpers time out after 10 seconds when nobody can answer a prompt (MCP, redirected input) and after 60 seconds at a terminal.
 - In an effective configuration profile, `credentials` cannot be combined with `user`, `userEnv`, `password`, or `passwordEnv`. On the command line, `--credentials` cannot be combined with command-line user/password sources and replaces those settings inherited from the selected profile.
-- Built-in credential profiles are visible only to the Windows account that created them. An MCP server launched under another account cannot read the current user's Credential Manager entries.
+- Built-in Windows credential profiles are visible only to the Windows account that created them. An MCP server launched under another account cannot read the current user's Credential Manager entries.
 - Value precedence is: command-line literal, command-line environment variable option, selected profile literal, selected profile environment variable option, inherited default profile literal or environment variable option.
 - If an environment variable option is specified, the variable must exist.
 - The final connection string is always produced with `string.Format(connectionString, user, password)`.
@@ -69,7 +72,7 @@ Connection settings:
 - `--impersonate` requires resolved `user` and `password` values. Use `--user-env` and `--password-env` or configuration `userEnv` and `passwordEnv` when credentials must not be written as literals.
 - Windows impersonation uses network credentials intended for database access. It is not supported on Linux or macOS.
 
-Create an encrypted linq2db credential profile without placing the password in command-line arguments:
+On Windows without a credential helper, create an encrypted linq2db credential profile without placing the password in command-line arguments:
 
 ```powershell
 dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
@@ -98,11 +101,19 @@ dotnet linq2db credentials remove --profile project-a/production-read
 dotnet linq2db credentials clear
 ```
 
+The store is the credential helper named by `--credential-helper <command>`, or by `credentialHelper` in the `default` profile of `--config <file>`; without either, Windows Credential Manager on Windows and an error elsewhere. On Linux and macOS, create a starter helper first:
+
+```bash
+dotnet linq2db credentials helper init --backend secret-tool --config .agents/linq2db-query.json
+dotnet linq2db credentials set --config .agents/linq2db-query.json --profile project-a/production-read --user ProjectReader
+```
+
 - `set` prompts for and confirms the password. Typed and pasted characters are echoed as `*`; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. It creates or replaces `linq2db/<profile>`.
 - `list` returns profile names and users; it never returns passwords.
 - `remove` removes one named profile.
 - `clear` removes all linq2db profiles after interactive confirmation. `--force` skips confirmation.
-- The built-in implementation currently requires Windows. Credential access is isolated behind `ICredentialStore` so other platform or external stores can be added without changing query execution.
+- `helper init --backend secret-tool|pass [--output <path>] [--config <file>] [--force]` writes a reviewable POSIX `sh` starter helper over `secret-tool` (Secret Service: GNOME Keyring, KWallet) or `pass`, owner-only, by default to `$XDG_CONFIG_HOME/linq2db/helpers/<backend>.sh`, and with `--config` records it as `credentialHelper` in the `default` profile. It is not available on Windows.
+- Linq2db targets (`linq2db/...`) are case-insensitive; with a helper they are sent in lower case. Other targets read through `--credentials` are passed to the helper exactly as written.
 - The command is a direct CLI facility and is not exposed through MCP.
 
 ## Supported Database Providers
@@ -219,7 +230,7 @@ The command is intended for safe SQL generation and database inspection by agent
 `schema` returns tables, views when available, columns, primary keys, and foreign keys when requested and returned by the provider.
 It does not accept SQL text, does not read table data, does not modify the database, and does not return procedures or functions.
 
-Connection and profile settings use the same trusted startup/config boundary as `query`: `--config`, `--profile`, `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--impersonate`, `--impersonate-mode`, and `--command-timeout`.
+Connection and profile settings use the same trusted startup/config boundary as `query`: `--config`, `--profile`, `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--credential-helper`, `--impersonate`, `--impersonate-mode`, and `--command-timeout`.
 
 Schema options:
 
@@ -341,13 +352,14 @@ Supported initialization options:
 - `--connection-string <connection-string>`.
 - `--connection-string-env <name>`.
 - `--credentials <target>`.
+- `--credential-helper <command>`.
 - `--max-rows <count>`.
 - `--output json|json-table|csv`.
 - `--if-exists error|replace|skip`.
 
 Advanced profile fields such as `user`, `password`, `impersonate`, `commandTimeout`, `lockTimeout`, and `outputFile` are intentionally not exposed by `config-init`; edit the JSON manually when those fields are needed.
 
-Prefer `--connection-string-env` when the connection string contains credentials. When `--connection-string` is used, the literal value is stored in the generated JSON and `config-init` writes a warning to `stderr`. Ensure configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. On Windows, use environment variables or Windows Credential Manager for secrets; Unix owner-only file permissions do not provide equivalent Windows ACL protection.
+Prefer `--connection-string-env` when the connection string contains credentials. When `--connection-string` is used, the literal value is stored in the generated JSON and `config-init` writes a warning to `stderr`. Ensure configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. On Windows, use environment variables, Windows Credential Manager, or a credential helper for secrets; Unix owner-only file permissions do not provide equivalent Windows ACL protection. On Linux and macOS, use environment variables or a credential helper.
 
 Configuration profiles are shared by `query` and `mcp`.
 The `query` command supports `json`, `json-table`, and `csv`.
@@ -377,7 +389,8 @@ Parameter surface:
 | `userEnv` | `--user-env` | yes | yes | yes | no | yes | no | environment variable name |
 | `password` | `--password` | yes | yes | yes | no | yes | no | string |
 | `passwordEnv` | `--password-env` | yes | yes | yes | no | yes | no | environment variable name |
-| `credentials` | `--credentials` | yes | yes | yes | yes | yes | no | credential store target containing user and password; built-in management is Windows-only; supports `%NAME%` and `${NAME}` |
+| `credentials` | `--credentials` | yes | yes | yes | yes | yes | no | credential store target containing user and password; read through `credentialHelper` when configured, otherwise the built-in Windows store (no built-in store on Linux/macOS); supports `%NAME%` and `${NAME}` |
+| `credentialHelper` | `--credential-helper` | yes | yes | yes | yes | yes | no | external credential helper: command string, or `{ "command", "args", "protocol": "linq2db" \| "docker", "timeout" }` in config; the CLI option is a command without arguments, protocol `linq2db`, and overrides config; supports `%NAME%` and `${NAME}` |
 | `impersonate` | `--impersonate` | yes | yes | yes | no | yes | no | boolean; JSON `true` or `false` in config |
 | `impersonateMode` | `--impersonate-mode` | yes | yes | yes | no | yes | no | `network-cleartext`, `interactive`, `network`, `new-credentials`, or system codes `8`, `2`, `3`, `9` |
 | `commandTimeout` | `--command-timeout` | yes | yes | yes | no | yes | no | non-negative integer seconds; `0` disables the option |
@@ -618,7 +631,7 @@ Trusted configuration boundary:
 - `--config <file>` and `--profile <name>` select the configuration profile used by default.
 - The configuration file is re-read for every tool call. Profile additions and edits take effect on the next call without restarting the MCP server.
 - Write access to the configuration file is a trust boundary: its profiles control reachable databases, credentials, provider assemblies, impersonation, timeouts, and execute permission.
-- `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are trusted server argument/configuration settings and are never tool-call inputs.
+- `--provider`, `--provider-location`, `--connection-string`, `--connection-string-env`, `--user`, `--user-env`, `--password`, `--password-env`, `--credentials`, `--credential-helper`, `--impersonate`, `--impersonate-mode`, `--command-timeout`, and `--lock-timeout` are trusted server argument/configuration settings and are never tool-call inputs.
 - `--max-rows` and `--output` can set startup defaults for tool calls.
 - `--max-response-bytes` sets the trusted server-wide schema/query/execute response limit. It overrides top-level `mcp.maxResponseBytes` and is not available as a tool-call argument.
 - `--enable-execute-tool` registers the write-capable `linq2db_execute` tool. It is off by default.
@@ -631,7 +644,8 @@ Tool-call boundary:
 - `profile` optionally selects a different profile from the startup `--config` file.
 - `maxRows` optionally overrides the startup/config row limit.
 - `output` optionally overrides the startup/config output format. MCP supports only `json` and `json-table`.
-- Provider, connection string, credentials, impersonation, provider assembly location, and timeout setup are not accepted through MCP tool input.
+- Provider, connection string, credentials, credential helper, impersonation, provider assembly location, and timeout setup are not accepted through MCP tool input.
+- A credential helper started for an MCP tool call runs non-interactively (`LINQ2DB_CREDENTIAL_INTERACTIVE=0`). If a helper fails, its first standard-error line (with the password linq2db-cli sent redacted) is included in the tool's error response. After a helper times out (for example a locked keyring), the server does not start it again for 60 seconds; unlock the credential store and retry.
 
 The MCP default output format is `json-table`, which preserves duplicate column names and carries `rowCount`, `truncated`, `truncationReason`, `maxOutputBytes`, and `recordsAffected` in-band when applicable. The existing `query` command keeps `json` as its default.
 

@@ -32,5 +32,9 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		QueryExecutionMode Mode,
 		string?            Sql,
 		string?            SqlFile,
-		string             DefaultOutput);
+		string             DefaultOutput)
+	{
+		/// <summary>Credential helper command from the command line; overrides the profile's <c>credentialHelper</c>.</summary>
+		public string? CredentialHelper { get; init; }
+	}
 }

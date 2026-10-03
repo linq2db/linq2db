@@ -83,11 +83,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="linq2db.CLI.Tests" />
+
 		<!-- The tool assembly is not a referenceable library API. -->
 		<PackageReference Remove="Microsoft.CodeAnalysis.PublicApiAnalyzers" />
 
 		<EmbeddedResource Include="Template.tt" LogicalName="LinqToDB.CLI.Template.tt" />
 		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
+		<EmbeddedResource Include="CredentialHelpers\secret-tool.sh" LogicalName="LinqToDB.CLI.CredentialHelpers.secret-tool.sh" />
+		<EmbeddedResource Include="CredentialHelpers\pass.sh"        LogicalName="LinqToDB.CLI.CredentialHelpers.pass.sh"        />
+
+		<!-- The reference credential helper is a standalone file-based app (dotnet run secrethelper.cs), not part of the tool. -->
+		<Compile Remove="CredentialHelpers\**" />
+		<None    Remove="CredentialHelpers\**" />
 
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 

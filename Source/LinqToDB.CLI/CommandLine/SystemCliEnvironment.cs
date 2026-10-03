@@ -94,7 +94,15 @@ namespace LinqToDB.CommandLine
 			return true;
 		}
 
-		public ICredentialStore CredentialStore { get; } = WindowsCredentialStore.Instance;
+		public ICredentialStore CredentialStore { get; } = UnavailableCredentialStore.GetDefault(OperatingSystem.IsWindows());
+
+		public ICredentialStore CreateHelperCredentialStore(CredentialHelperSettings helper)
+		{
+			// A helper may prompt (keyring unlock, pinentry) only when a user sits at the console.
+			var interactive = !Console.IsInputRedirected;
+
+			return new HelperCredentialStore(new CredentialHelperProcessRunner(helper, interactive), helper.Protocol);
+		}
 
 		public string? ReadLine()
 		{

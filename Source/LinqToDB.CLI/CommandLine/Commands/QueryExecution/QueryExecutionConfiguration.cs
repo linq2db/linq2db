@@ -5,6 +5,7 @@ using System.IO;
 using System.Text.Json;
 
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.Credentials;
 using LinqToDB.CommandLine.Options;
 
 namespace LinqToDB.CommandLine.Commands.QueryExecution
@@ -66,6 +67,26 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		/// System or external credential store target containing both database user name and password.
 		/// </summary>
 		public string? Credentials { get; private set; }
+
+		/// <summary>
+		/// External credential helper command that resolves <see cref="Credentials"/> targets.
+		/// </summary>
+		public string? CredentialHelper { get; private set; }
+
+		/// <summary>
+		/// Protocol spoken by <see cref="CredentialHelper"/>.
+		/// </summary>
+		public CredentialHelperProtocol CredentialHelperProtocol { get; private set; }
+
+		/// <summary>
+		/// Fixed arguments passed to <see cref="CredentialHelper"/> before the verb.
+		/// </summary>
+		public IReadOnlyList<string> CredentialHelperArguments { get; private set; } = [];
+
+		/// <summary>
+		/// Optional run timeout of <see cref="CredentialHelper"/> in seconds.
+		/// </summary>
+		public int? CredentialHelperTimeout { get; private set; }
 
 		/// <summary>
 		/// Run database access operations under resolved Windows <see cref="User"/>/<see cref="Password"/> credentials.
@@ -323,6 +344,16 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 						Credentials = value;
 						break;
+					case "credentialHelper":
+						if (!TryParseCredentialHelper(fileName, profileName, property, out var helperCommand, out var helperProtocol, out var helperArguments, out var helperTimeout, out error))
+							return false;
+
+						// The whole value is replaced: a named profile's helper does not inherit parts of the default's.
+						CredentialHelper          = helperCommand;
+						CredentialHelperProtocol  = helperProtocol;
+						CredentialHelperArguments = helperArguments;
+						CredentialHelperTimeout   = helperTimeout;
+						break;
 					case "impersonate":
 						if (!TryParseBoolean(fileName, profileName, property, out var booleanValue, out error))
 							return false;
@@ -401,6 +432,114 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 						error = $"Configuration file '{fileName}' profile '{profileName}' contains unknown property '{property.Name}'.";
 						return false;
 				}
+			}
+
+			error = null;
+			return true;
+		}
+
+		/// <summary>
+		/// Parses <c>"credentialHelper": "&lt;command&gt;"</c> (linq2db protocol) or
+		/// <c>"credentialHelper": { "command": "&lt;command&gt;", "args": [ … ], "protocol": "linq2db" | "docker", "timeout": &lt;seconds&gt; }</c>.
+		/// </summary>
+		static bool TryParseCredentialHelper(
+			string                       fileName,
+			string                       profileName,
+			JsonProperty                 property,
+			out string?                  command,
+			out CredentialHelperProtocol protocol,
+			out IReadOnlyList<string>    arguments,
+			out int?                     timeout,
+			out string?                  error)
+		{
+			command   = null;
+			protocol  = CredentialHelperProtocol.Linq2Db;
+			arguments = [];
+			timeout   = null;
+
+			if (property.Value.ValueKind == JsonValueKind.String)
+			{
+				command = property.Value.GetString();
+			}
+			else if (property.Value.ValueKind == JsonValueKind.Object)
+			{
+				string? protocolName = null;
+
+				foreach (var item in property.Value.EnumerateObject())
+				{
+					switch (item.Name)
+					{
+						case "command":
+							if (item.Value.ValueKind != JsonValueKind.String)
+							{
+								error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}.command' must be string.";
+								return false;
+							}
+
+							command = item.Value.GetString();
+							break;
+						case "protocol":
+							if (item.Value.ValueKind != JsonValueKind.String)
+							{
+								error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}.protocol' must be string.";
+								return false;
+							}
+
+							protocolName = item.Value.GetString();
+							break;
+						case "args":
+							if (item.Value.ValueKind != JsonValueKind.Array)
+							{
+								error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}.args' must be an array of strings.";
+								return false;
+							}
+
+							var list = new List<string>();
+
+							foreach (var argument in item.Value.EnumerateArray())
+							{
+								if (argument.ValueKind != JsonValueKind.String)
+								{
+									error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}.args' must be an array of strings.";
+									return false;
+								}
+
+								list.Add(argument.GetString()!);
+							}
+
+							arguments = list;
+							break;
+						case "timeout":
+							if (item.Value.ValueKind != JsonValueKind.Number || !item.Value.TryGetInt32(out var seconds) || seconds <= 0)
+							{
+								error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}.timeout' must be a positive integer number of seconds.";
+								return false;
+							}
+
+							timeout = seconds;
+							break;
+						default:
+							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' contains unknown property '{item.Name}'.";
+							return false;
+					}
+				}
+
+				if (!CredentialHelperSettings.TryParseProtocol(protocolName, out protocol))
+				{
+					error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}.protocol' has unknown value '{protocolName}'. Expected '{CredentialHelperSettings.Linq2DbProtocolName}' or '{CredentialHelperSettings.DockerProtocolName}'.";
+					return false;
+				}
+			}
+			else
+			{
+				error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must be string or object with 'command' and optional 'protocol'.";
+				return false;
+			}
+
+			if (string.IsNullOrWhiteSpace(command))
+			{
+				error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' must specify a non-empty command.";
+				return false;
 			}
 
 			error = null;

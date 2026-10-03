@@ -106,7 +106,7 @@ Available commands:
 - `dotnet linq2db execute <options>`: executes a single write-capable SQL statement when the selected trusted profile has `enableExecute` set to `true`
 - `dotnet linq2db schema <options>`: reads provider-aware database object metadata and writes JSON output
 - `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile
-- `dotnet linq2db credentials <set|list|remove|clear> <options>`: manages encrypted credential profiles for connection configuration
+- `dotnet linq2db credentials <set|list|remove|clear|helper init> <options>`: manages credential profiles for connection configuration in Windows Credential Manager or an external credential helper
 - `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, `linq2db_execute`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 
@@ -120,11 +120,44 @@ The MCP server exposes `linq2db_info` for non-secret runtime discovery of availa
 
 When `config-init` writes an existing configuration file, it rewrites it as normalized JSON and does not preserve comments or custom formatting.
 
-Prefer `--connection-string-env` when the connection string contains credentials. A literal `--connection-string` is stored in the generated JSON and produces a warning on `stderr`; ensure that configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. Generated files use owner-only permissions on Linux and macOS. On Windows, prefer environment variables or Windows Credential Manager because Unix file permissions do not provide Windows ACL protection.
+Prefer `--connection-string-env` when the connection string contains credentials. A literal `--connection-string` is stored in the generated JSON and produces a warning on `stderr`; ensure that configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. Generated files use owner-only permissions on Linux and macOS. On Windows, prefer environment variables, Windows Credential Manager, or a credential helper because Unix file permissions do not provide Windows ACL protection. On Linux and macOS, prefer environment variables or a credential helper.
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
-On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
+`dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace, and `--credentials <target>` / `"credentials": "<target>"` read a user and password from a target. Where they are stored:
+
+| Operating system | No credential helper configured | Credential helper configured |
+| --- | --- | --- |
+| Windows | Windows Credential Manager (built in) | the helper |
+| Linux, macOS | not available: configure a helper, or use `userEnv`/`passwordEnv` | the helper |
+
+A credential helper is any program that implements the [linq2db credential helper protocol](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.CLI/CREDENTIAL-HELPERS.md): a wrapper around Vault, the 1Password CLI, `pass`, `secret-tool`, a corporate tool, or an existing `docker-credential-*` program through the Docker adapter. Configure it in the profile (inherited from `default`) or on the command line:
+
+```json
+{
+  "default": { "credentialHelper": "${HOME}/.config/linq2db/helpers/secret-tool.sh" },
+  "production": {
+    "provider": "PostgreSQL",
+    "connectionString": "Host=db;Database=app;Username={0};Password={1}",
+    "credentials": "linq2db/project-a/production"
+  }
+}
+```
+
+```sh
+dotnet linq2db query --credential-helper /usr/local/bin/my-credential-helper --credentials linq2db/project-a/production ...
+```
+
+The object form `{ "command": "...", "args": [...], "protocol": "linq2db" | "docker", "timeout": <seconds> }` starts a helper through another program without a shell, for example `{ "command": "dotnet", "args": ["run", "/path/secrethelper.cs", "--"], "timeout": 120 }` for the [example helper](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.CLI/CredentialHelpers/secrethelper.cs), and `"credentialHelper": { "command": "docker-credential-secretservice", "protocol": "docker" }` uses an existing Docker credential helper. The `credentials` command uses `--credential-helper`, or `credentialHelper` from the `default` profile of `--config <file>`. linq2db-cli runs the configured helper as given, like git's `credential.helper`; securing it is the user's responsibility.
+
+On Linux and macOS, `credentials helper init` writes a reviewable starter helper over `secret-tool` (GNOME Keyring, KWallet) or `pass`:
+
+```sh
+dotnet linq2db credentials helper init --backend secret-tool --config .agents/linq2db-query.json
+dotnet linq2db credentials set --config .agents/linq2db-query.json --profile project-a/production --user app_reader
+```
+
+On Windows without a credential helper, `dotnet linq2db credentials` uses Windows Credential Manager. `credentials set` prompts for the password and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
 
 ```powershell
 dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
