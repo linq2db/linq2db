@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -42,6 +44,69 @@ namespace Tests.Linq
 			// A declared DataType.DateTime column is a 32-bit whole-second timestamp on the server.
 			_ = coarse.Select(r => (r.FinishedOn - r.StartedOn).TotalHours).ToList();
 			db.LastQuery!.ShouldContain("toDateTime64(");
+		}
+
+		[Table]
+		sealed class CoarseNullableEventRow
+		{
+			[PrimaryKey]                           public int       Id         { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime  StartedOn  { get; set; }
+			[Column(DataType = DataType.DateTime)] public DateTime? FinishedOn { get; set; }
+		}
+
+		static TempTable<CoarseNullableEventRow> SeedCoarseNullable(IDataContext db)
+		{
+			var t = db.CreateLocalTable<CoarseNullableEventRow>();
+
+			db.Insert(new CoarseNullableEventRow { Id = 1, StartedOn = CoarseStart,              FinishedOn = null                         });
+			db.Insert(new CoarseNullableEventRow { Id = 2, StartedOn = CoarseStart.AddHours(1), FinishedOn = CoarseStart.AddHours(3) });
+
+			return t;
+		}
+
+		[Test]
+		public void CoalesceOverASecondPrecisionColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn ?? r.StartedOn).TimeOfDay)).ToArray()
+				.ShouldBe([CoarseStart.TimeOfDay, CoarseStart.AddHours(3).TimeOfDay]);
+
+			t.OrderBy(r => r.Id).Select(r => Sql.AsSql(((r.FinishedOn ?? r.StartedOn) - r.StartedOn).TotalMilliseconds)).ToArray()
+				.ShouldBe([0d, 2 * 3600_000d]);
+		}
+
+		[Test]
+		public void ValueWindowFunctionOverASecondPrecisionColumnIsCoerced([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			t.Select(r => new
+				{
+					r.Id,
+					First = Sql.AsSql(Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded).TimeOfDay),
+					Last  = Sql.AsSql(Sql.Window.LastValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded).TimeOfDay),
+				})
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.First, r.Last })
+				.ToArray()
+				.ShouldAllBe(r => r.First == CoarseStart.TimeOfDay && r.Last == CoarseStart.AddHours(1).TimeOfDay);
+
+			var lags = t.Select(r => new
+				{
+					r.Id,
+					Lag       = Sql.AsSql((r.StartedOn - Sql.Window.Lag(r.StartedOn, w => w.OrderBy(r.Id))).TotalMilliseconds),
+					LagOffset = Sql.AsSql((r.StartedOn - Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id))).TotalMilliseconds),
+				})
+				.ToArray()
+				.OrderBy(r => r.Id)
+				.ToArray();
+
+			// The first row has no predecessor, and ClickHouse answers its type's default rather than NULL.
+			lags[1].Lag.ShouldBe(3600_000d);
+			lags.Select(r => r.LagOffset).ShouldBe([0d, 3600_000d]);
 		}
 	}
 }

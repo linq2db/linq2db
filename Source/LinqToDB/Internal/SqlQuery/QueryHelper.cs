@@ -457,11 +457,11 @@ namespace LinqToDB.Internal.SqlQuery
 				// COUNT and AVG stop here either way. The type guard below cannot do this on its own: it separates
 				// them only while the result type and the column's member type differ, which over an int column
 				// counted into an int they do not.
-				case SqlExtendedFunction { Arguments: [var singleArgument] } extendedFunction
+				case SqlExtendedFunction { Arguments: [var argument, ..] } extendedFunction
 					when extendedFunction.ArgumentDomain == SqlArgumentDomain.Element
 						|| (extendedFunction.ArgumentDomain == SqlArgumentDomain.SameKind && !forTyping):
 				{
-					var found = GetColumnDescriptor(singleArgument.Expression, alreadyVisitedElements, forTyping);
+					var found = GetColumnDescriptor(argument.Expression, alreadyVisitedElements, forTyping);
 					if (found?.GetDbDataType(true).SystemType != extendedFunction.SystemType)
 						return null;
 					return found;
@@ -718,10 +718,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 				SqlParameterizedExpressionBase { Type: var t } => t,
 
-				// MIN and MAX return a row's value unchanged, so the argument's column describes the result
-				// completely - the same relation GetColumnDescriptor reads off this node. SUM is excluded: it
-				// answers in the argument's terms but can outgrow the width the argument is declared with.
-				SqlExtendedFunction { ArgumentDomain: SqlArgumentDomain.Element, Arguments: [var argument] }
+				// MIN, MAX and the value window functions return a row's value unchanged, so the argument's column
+				// describes the result completely - the same relation GetColumnDescriptor reads off this node. SUM is
+				// excluded: it answers in the argument's terms but can outgrow the width the argument is declared with.
+				SqlExtendedFunction { ArgumentDomain: SqlArgumentDomain.Element, Arguments: [var argument, ..] }
 				                                    => GetDbDataTypeImpl(argument.Expression, visited),
 				SqlExtendedFunction { Type: var t } => t,
 
@@ -737,6 +737,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression, visited),
 				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression, visited),
+				SqlCoalesceExpression coalesceExpression   => GetCoalesceExpressionType(coalesceExpression, visited),
 
 				{ SystemType: null }  => DbDataType.Undefined,
 				{ SystemType: var t } => new(t),
@@ -788,6 +789,18 @@ namespace LinqToDB.Internal.SqlQuery
 					return trueType;
 
 				return GetDbDataTypeImpl(sqlCondition.FalseValue, visited);
+			}
+
+			static DbDataType GetCoalesceExpressionType(SqlCoalesceExpression coalesce, HashSet<IQueryElement>? visited)
+			{
+				foreach (var expression in coalesce.Expressions)
+				{
+					var type = GetDbDataTypeImpl(expression, visited);
+					if (type.DataType != DataType.Undefined)
+						return type;
+				}
+
+				return new DbDataType(coalesce.SystemType ?? typeof(object));
 			}
 		}
 
