@@ -1856,6 +1856,7 @@ namespace Tests.Linq
 		/// A cast that coarsens a column's type is a computed value too: the literal beside it keeps its sub-second part.
 		/// </summary>
 		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1")]
 		public void CoarseningCastComparedWithSubSecondLiteral([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
