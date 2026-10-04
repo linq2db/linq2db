@@ -249,8 +249,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		private void BuildMergeSourceEnumerable(SqlMergeStatement merge)
 		{
-			var sourceEnumerable = ConvertElement(merge.Source.SourceEnumerable);
-			var rows             = sourceEnumerable!.BuildRows(OptimizationContext.EvaluationContext);
+			var sourceEnumerable = merge.Source.SourceEnumerable;
+			var rows             = sourceEnumerable!.BuildRows(RenderContext.EvaluationContext);
 			if (rows.Count > 0)
 			{
 				StringBuilder.Append('(');

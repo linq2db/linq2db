@@ -8,14 +8,15 @@ using System.Runtime.InteropServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		public static readonly ParameterExpression PreambleParam =
-			Expression.Parameter(typeof(object[]), "preamble");
+		public static readonly ParameterExpression ExecutionContextParam =
+			Expression.Parameter(typeof(SqlCommandExecutionContext), "executionContext");
 
 		void CollectDependencies(IBuildContext context, Expression expression, HashSet<Expression> dependencies)
 		{
@@ -349,14 +350,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			return Expression.Lambda<Func<TMain, IEnumerable<TDetail>>>(body, mainParam);
 		}
 
-		static MethodInfo _buildPreambleQueryAttachedMethodInfo =
-			typeof(ExpressionBuilder).GetMethod(nameof(BuildPreambleQueryAttached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
+		static MethodInfo _buildHarvesterQueryAttachedMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildHarvesterQueryAttached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
 
-		Expression BuildPreambleQueryAttached<TKey, T>(
+		Expression BuildHarvesterQueryAttached<TKey, T>(
 			IBuildContext                   sequence,
 			Expression                      keyExpression,
 			ParameterExpression             queryParameter,
-			List<Preamble>                  preambles,
+			List<Harvester>                  harvesters,
 			List<(LambdaExpression, bool)>? additionalOrderBy,
 			Expression[]                    previousKeys)
 			where TKey : notnull
@@ -366,19 +367,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			query.Init(sequence);
 			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
-			if (!BuildQuery(query, sequence, queryParameter, ref preambles!, previousKeys))
+			if (!BuildQuery(query, sequence, queryParameter, ref harvesters!, previousKeys))
 				return query.ErrorExpression!;
 
-			var idx      = preambles.Count;
-			var preamble = new Preamble<TKey, T>(query);
-			preambles.Add(preamble);
+			var idx       = harvesters.Count;
+			var harvester = new Harvester<TKey, T>(query);
+			harvesters.Add(harvester);
 
-			var getListMethod = MemberHelper.MethodOf((PreambleResult<TKey, T> c) => c.GetList(default!));
+			var getListMethod = MemberHelper.MethodOf((HarvesterResult<TKey, T> c) => c.GetList(default!));
 
 			Expression resultExpression =
 				Expression.Call(
-					Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)),
-						typeof(PreambleResult<TKey, T>)), getListMethod, keyExpression);
+					Expression.Convert(Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)),
+						typeof(HarvesterResult<TKey, T>)), getListMethod, keyExpression);
 
 			if (additionalOrderBy != null)
 			{
@@ -388,26 +389,26 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		static MethodInfo _buildPreambleQueryDetachedMethodInfo =
-			typeof(ExpressionBuilder).GetMethod(nameof(BuildPreambleQueryDetached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
+		static MethodInfo _buildHarvesterQueryDetachedMethodInfo =
+			typeof(ExpressionBuilder).GetMethod(nameof(BuildHarvesterQueryDetached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
 
-		Expression BuildPreambleQueryDetached<T>(
+		Expression BuildHarvesterQueryDetached<T>(
 			IBuildContext       sequence,
 			ParameterExpression queryParameter,
-			List<Preamble>      preambles)
+			List<Harvester>      harvesters)
 		{
 			var query = new Query<T>(DataContext);
 
 			query.Init(sequence);
 			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
-			BuildQuery(query, sequence, queryParameter, ref preambles!, []);
+			BuildQuery(query, sequence, queryParameter, ref harvesters!, []);
 
-			var idx      = preambles.Count;
-			var preamble = new DetachedPreamble<T>(query);
-			preambles.Add(preamble);
+			var idx       = harvesters.Count;
+			var harvester = new DetachedHarvester<T>(query);
+			harvesters.Add(harvester);
 
-			var resultExpression = Expression.Convert(Expression.ArrayIndex(PreambleParam, ExpressionInstances.Int32(idx)), typeof(List<T>));
+			var resultExpression = Expression.Convert(Expression.Call(ExecutionContextParam, SqlCommandExecutionContext.GetResultMethodInfo, ExpressionInstances.Int32(idx)), typeof(List<T>));
 
 			return resultExpression;
 		}
@@ -558,7 +559,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression                       expression,
 			IBuildContext                    buildContext,
 			ParameterExpression              queryParameter,
-			ref List<Preamble>?              preambles,
+			ref List<Harvester>?              harvesters,
 			Expression[]                     previousKeys,
 			out Func<Expression, Expression> finalizer)
 		{
@@ -573,8 +574,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			expression = ReplaceLeakedSubqueries(expression);
 
-			var strategy       = ResolveStrategy(buildContext);
-			var localPreambles = preambles ?? [];
+			var strategy        = ResolveStrategy(buildContext);
+			var localHarvesters = harvesters ?? [];
 
 			// Diagnostic chain — populated as failed attempts are discarded; cleared on commit if
 			// the first attempt succeeded. Stays internal-only for tests / traces.
@@ -584,14 +585,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Fresh per-attempt state — no rollback plumbing needed because nothing outside of
 				// CompleteEagerLoadingExpressions observes this instance until commit.
-				var attempt          = new EagerLoadState();
-				var preambleSnapshot = localPreambles.Count;
+				var attempt           = new EagerLoadState();
+				var harvesterSnapshot = localHarvesters.Count;
 
 				// Phase 1: CteUnion — try to batch all eager loads into a single UNION ALL query
 				Dictionary<Expression, Expression>? cteUnionCache = null;
 
 				if (strategy == EagerLoadingStrategy.CteUnion)
-					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, localPreambles, previousKeys, attempt);
+					cteUnionCache = ProcessCteUnionBatch(expression, buildContext, queryParameter, localHarvesters, previousKeys, attempt);
 
 				// Phase 2: Process each remaining eager load with the current strategy
 				var failed             = false;
@@ -609,7 +610,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return cachedExpression;
 
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
-					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
+					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var harvesterExpression))
 					{
 						if (strategy == EagerLoadingStrategy.CteUnion)
 						{
@@ -619,27 +620,27 @@ namespace LinqToDB.Internal.Linq.Builder
 							// per-eager-load cache miss.
 							if (attempt.FallbackReason == EagerLoadFallbackReason.None)
 								attempt.FallbackReason = EagerLoadFallbackReason.BatchCacheMiss;
-							preambleExpression = null;
+							harvesterExpression = null;
 						}
 						else
 						{
-							preambleExpression = strategy switch
+							harvesterExpression = strategy switch
 							{
-								EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
-								_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localPreambles, previousKeys, attempt),
+								EagerLoadingStrategy.KeyedQuery => ProcessEagerLoadingKeyedQuery(buildContext, eagerLoad, queryParameter, localHarvesters, previousKeys, attempt),
+								_                               => ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, localHarvesters, previousKeys, attempt),
 							};
 						}
 
-						if (preambleExpression == null)
+						if (harvesterExpression == null)
 						{
 							failed = true;
 							return e;
 						}
 
-						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);
+						eagerLoadingCache.Add(eagerLoad.SequenceExpression, harvesterExpression);
 					}
 
-					return preambleExpression;
+					return harvesterExpression;
 				});
 
 				if (!failed)
@@ -651,21 +652,21 @@ namespace LinqToDB.Internal.Linq.Builder
 						_query.IsFinalized = true;
 
 					// Single-query CteUnion (parent branch inlined into carrier) reconstructs from
-					// path-based carrier slots — ToColumns must be skipped. All other modes (preamble-only
+					// path-based carrier slots — ToColumns must be skipped. All other modes (harvester-only
 					// CteUnion, KeyedQuery, Default) use column-index-based projection via ToColumns.
 					finalizer = attempt.HasCteUnionQuery
 						? static e => e
 						: e => ToColumns(buildContext.GetResultQuery(), e);
 
-					preambles = localPreambles;
+					harvesters = localHarvesters;
 					return updated;
 				}
 
-				// Fallback: drop `attempt` (no state restore needed), trim preambles added during this try.
+				// Fallback: drop `attempt` (no state restore needed), trim harvesters added during this try.
 				// Record (strategy, reason) for diagnostics before discarding the attempt's state.
 				(fallbackChain ??= new()).Add((strategy, attempt.FallbackReason));
 
-				localPreambles.RemoveRange(preambleSnapshot, localPreambles.Count - preambleSnapshot);
+				localHarvesters.RemoveRange(harvesterSnapshot, localHarvesters.Count - harvesterSnapshot);
 
 				strategy = strategy switch
 				{
@@ -676,7 +677,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		sealed class PreambleResult<TKey, T>
+		sealed class HarvesterResult<TKey, T>
 			where TKey : notnull
 		{
 			Dictionary<TKey, List<T>>? _items;
@@ -684,11 +685,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<T>?                   _prevList;
 			readonly IEqualityComparer<TKey>? _comparer;
 
-			public PreambleResult()
+			public HarvesterResult()
 			{
 			}
 
-			public PreambleResult(IEqualityComparer<TKey> comparer)
+			public HarvesterResult(IEqualityComparer<TKey> comparer)
 			{
 				_comparer = comparer;
 			}

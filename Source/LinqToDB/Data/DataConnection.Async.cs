@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
@@ -711,9 +711,14 @@ namespace LinqToDB.Data
 			}
 		}
 
-		internal async Task<DataReaderWrapper> ExecuteDataReaderAsync(
-			CommandBehavior commandBehavior,
-			CancellationToken cancellationToken)
+		// Async sibling of TraceExecuteReader: one tracing scaffold shared by the single-command (ExecuteDataReaderAsync) and
+		// DbBatch (ExecuteBatchDataReaderAsync) reader lifecycles. See TraceExecuteReader (sync) for the Command/CommandText
+		// tracing contract. The `run` delegate owns execution + interceptor semantics.
+		async Task<DataReaderWrapper> TraceExecuteReaderAsync(
+			DbCommand?                    command,
+			Func<string>?                 commandTextFactory,
+			Func<Task<DataReaderWrapper>> run,
+			CancellationToken             cancellationToken)
 		{
 			CheckAndThrowOnDisposed();
 
@@ -721,19 +726,20 @@ namespace LinqToDB.Data
 
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
-					return await ExecuteReaderAsync(commandBehavior, cancellationToken)
-						.ConfigureAwait(false);
+					return await run().ConfigureAwait(false);
 
-			var now = DateTime.UtcNow;
-			var sw  = Stopwatch.StartNew();
+			var now         = DateTime.UtcNow;
+			var sw          = Stopwatch.StartNew();
+			var commandText = commandTextFactory?.Invoke();
 
 			if (TraceSwitchConnection.TraceInfo)
 			{
 				OnTraceConnection(new TraceInfo(this, TraceInfoStep.BeforeExecute, TraceOperation.ExecuteReader, true)
 				{
-					TraceLevel     = TraceLevel.Info,
-					Command        = CurrentCommand,
-					StartTime      = now,
+					TraceLevel  = TraceLevel.Info,
+					Command     = command,
+					CommandText = commandText,
+					StartTime   = now,
 				});
 			}
 
@@ -742,17 +748,17 @@ namespace LinqToDB.Data
 				DataReaderWrapper ret;
 
 				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
-					ret = await ExecuteReaderAsync(commandBehavior, cancellationToken)
-						.ConfigureAwait(false);
+					ret = await run().ConfigureAwait(false);
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.AfterExecute, TraceOperation.ExecuteReader, true)
 					{
-						TraceLevel     = TraceLevel.Info,
-						Command        = ret.Command,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
+						TraceLevel    = TraceLevel.Info,
+						Command       = ret.Command ?? command,
+						CommandText   = commandText,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
 					});
 				}
 
@@ -764,17 +770,53 @@ namespace LinqToDB.Data
 				{
 					OnTraceConnection(new TraceInfo(this, TraceInfoStep.Error, TraceOperation.ExecuteReader, true)
 					{
-						TraceLevel     = TraceLevel.Error,
-						Command        = CurrentCommand,
-						StartTime      = now,
-						ExecutionTime  = sw.Elapsed,
-						Exception      = ex,
+						TraceLevel    = TraceLevel.Error,
+						Command       = command,
+						CommandText   = commandText,
+						StartTime     = now,
+						ExecutionTime = sw.Elapsed,
+						Exception     = ex,
 					});
 				}
 
 				throw;
 			}
 		}
+
+		internal Task<DataReaderWrapper> ExecuteDataReaderAsync(
+			CommandBehavior   commandBehavior,
+			CancellationToken cancellationToken)
+		{
+			return TraceExecuteReaderAsync(CurrentCommand, null, () => ExecuteReaderAsync(commandBehavior, cancellationToken), cancellationToken);
+		}
+
+#if SUPPORTS_DBBATCH
+		// DbBatch execution shares TraceExecuteReaderAsync with the single-command path. See ExecuteBatchDataReader (sync
+		// sibling) for why this carries no command interceptor (the CanUseDbBatch gate); the exception interceptor DOES run
+		// (see RunBatchReaderAsync).
+		internal Task<DataReaderWrapper> ExecuteBatchDataReaderAsync(DbBatch batch, CommandBehavior commandBehavior, CancellationToken cancellationToken)
+		{
+			return TraceExecuteReaderAsync(null, () => GetBatchTraceText(batch, isAsync: true), () => RunBatchReaderAsync(batch, GetCommandBehavior(commandBehavior), cancellationToken), cancellationToken);
+		}
+
+		// The DbBatch execution delegate for TraceExecuteReaderAsync. No command interceptor runs here (the CanUseDbBatch gate
+		// already excludes a registered ICommandInterceptor); the exception interceptor DOES run.
+		async Task<DataReaderWrapper> RunBatchReaderAsync(DbBatch batch, CommandBehavior commandBehavior, CancellationToken cancellationToken)
+		{
+			CheckAndThrowOnDisposed();
+
+			try
+			{
+				return new DataReaderWrapper(this, await batch.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(false), null);
+			}
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
+		}
+#endif
 
 		#endregion
 	}
