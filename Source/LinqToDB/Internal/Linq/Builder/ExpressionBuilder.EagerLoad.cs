@@ -218,6 +218,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// so they reference members of the projected type.
 		/// E.g., <c>(Department d =&gt; d.Id)</c> through <c>Select(d =&gt; new { d.Id, d.Name })</c>
 		/// becomes <c>(AnonymousType p =&gt; p.Id)</c>.
+		/// Returns <see langword="null"/> when any ordering key cannot be expressed through the projection,
+		/// which disables the client-side re-sort; the SQL <c>ORDER BY</c> still applies.
 		/// </summary>
 		static List<(LambdaExpression, bool)>? RemapOrderByThroughSelect(
 			List<(LambdaExpression lambda, bool descending)> orderByList,
