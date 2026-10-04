@@ -5044,6 +5044,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (e is ISqlExpression expr)
 						{
 							var type = QueryHelper.GetDbDataType(expr, context.MappingSchema);
+
+							// A computed value has no stored precision to match, so narrowing the literal to it would only
+							// drop the literal's sub-second or time part. A stored column still lends its type.
+							if (IsCoarserDateTime(type.DataType, context.DataType) && QueryHelper.GetColumnDescriptorForTyping(expr) == null)
+								return true;
+
 							context.DataType  = type.DataType;
 							context.DbType    = type.DbType;
 							context.Length    = type.Length;
@@ -5065,6 +5071,27 @@ namespace LinqToDB.Internal.Linq.Builder
 				ctx.Precision ?? baseType.Precision,
 				ctx.Scale     ?? baseType.Scale
 			);
+		}
+
+		/// <summary>
+		/// How finely a date/time type resolves an instant; <c>-1</c> for a type that is not one.
+		/// </summary>
+		static int DateTimeRank(DataType dataType)
+		{
+			return dataType switch
+			{
+				DataType.Date or DataType.Date32                                     => 0,
+				DataType.SmallDateTime                                               => 1,
+				DataType.DateTime                                                    => 2,
+				DataType.DateTime2 or DataType.DateTime64 or DataType.DateTimeOffset => 3,
+				_                                                                    => -1,
+			};
+		}
+
+		static bool IsCoarserDateTime(DataType dataType, DataType than)
+		{
+			var rank = DateTimeRank(dataType);
+			return rank >= 0 && rank < DateTimeRank(than);
 		}
 
 		#endregion

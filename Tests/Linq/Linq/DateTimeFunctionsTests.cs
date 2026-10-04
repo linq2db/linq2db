@@ -944,6 +944,161 @@ namespace Tests.Linq
 						new CustomNullableDateTimeComparer());
 		}
 
+		/// <summary>
+		/// The date shapes the millisecond functions have to answer over besides the one
+		/// <see cref="Model.LinqDataTypes"/> declares.
+		/// </summary>
+		/// <remarks>
+		/// On ClickHouse, <c>toUnixTimestamp64Milli</c> and <c>toUnixTimestamp64Nano</c> take a <c>DateTime64</c> and
+		/// refuse a whole-second <c>DateTime</c> and a <c>Date32</c> by name; <see cref="Model.LinqDataTypes"/>, which
+		/// the tests above run over, declares <c>DateTime64(3)</c> and so meets neither refusal.
+		/// </remarks>
+		[Table]
+		sealed class CoarseDateShapesRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime)] public DateTime Value { get; set; }
+
+			[Column(DataType = DataType.Date)]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Date32)]
+			public DateTime Day { get; set; }
+
+			// The only one of the three that reaches back before 1970 on ClickHouse, which rejects DateTime2 and
+			// falls back to its DateTime64(7) default.
+			[Column(DataType = DataType.DateTime2, Precision = 3)]
+			[Column(Configuration = ProviderName.ClickHouse)]
+			public DateTime Wide { get; set; }
+		}
+
+		// June, because a whole-second column carries a wall-clock reading the server resolves in its own zone and
+		// no daylight-saving transition falls inside this month in either hemisphere.
+		static readonly DateTime CoarseValue = new(2026, 6, 1, 10, 0, 0);
+
+		static TempTable<CoarseDateShapesRow> SeedCoarse(IDataContext db, DateTime? wide = null)
+		{
+			var t = db.CreateLocalTable<CoarseDateShapesRow>();
+
+			try
+			{
+				db.Insert(new CoarseDateShapesRow
+				{
+					Id    = 1,
+					Value = CoarseValue,
+					Day   = CoarseValue.Date,
+					Wide  = wide ?? CoarseValue,
+				});
+			}
+			catch
+			{
+				t.Dispose();
+				throw;
+			}
+
+			return t;
+		}
+
+		[Test]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllOracle, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T10:00:00.2260000")]
+		public void DateAddMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			var value = CoarseValue;
+
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Value))).Single().ShouldBe(value.AddMilliseconds(226), new CustomNullableDateTimeComparer());
+			t.Select(r => Sql.AsSql(r.Value.AddMilliseconds(226))).Single().ShouldBe(value.AddMilliseconds(226), new CustomDateTimeComparer());
+		}
+
+		/// <summary>
+		/// The same two calls over a column stored as a date, which the functions refuse separately from a
+		/// whole-second timestamp.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function dateadd for data type date")]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T00:00:00.2260000")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllDB2, ErrorMessage = "SQL0182N")]
+		public void DateAddMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			var day = CoarseValue.Date;
+
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DateAdd(Sql.DateParts.Millisecond, 226, r.Day))).Single().ShouldBe(day.AddMilliseconds(226), new CustomNullableDateTimeComparer());
+			t.Select(r => Sql.AsSql(r.Day.AddMilliseconds(226))).Single().ShouldBe(day.AddMilliseconds(226), new CustomDateTimeComparer());
+		}
+
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function datepart for data type date")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllFirebird, ErrorMessage = "Specified EXTRACT part does not exist in input datatype")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-01821")]
+		public void DatePartMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Day))).Single().ShouldBe(0);
+			t.Select(r => Sql.AsSql(r.Day.Millisecond)).Single().ShouldBe(0);
+		}
+
+		/// <summary>
+		/// The millisecond of a timestamp before 1970.
+		/// </summary>
+		/// <remarks>
+		/// The part is taken from the epoch, which is negative there, and a truncating <c>%</c> carries the sign
+		/// into the answer. Asked over the wide column because it is the only one of the three that can hold such a
+		/// date everywhere - a ClickHouse <c>DateTime</c> starts at 1970.
+		/// </remarks>
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500")]
+		public void DatePartMillisecondBeforeTheEpoch([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql, TestProvName.AllYdb)] string context)
+		{
+			var wide = new DateTime(1969, 1, 1, 0, 0, 0, 500);
+
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db, wide);
+
+			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Wide))).Single().ShouldBe(wide.Millisecond);
+			t.Select(r => Sql.AsSql(r.Wide.Millisecond)).Single().ShouldBe(wide.Millisecond);
+		}
+
+		/// <summary>
+		/// The millisecond part of a column that cannot hold one.
+		/// </summary>
+		/// <remarks>
+		/// The asserted value carries nothing - a whole-second column has no fractional part, so every wrong
+		/// coercion answers zero as well. What this pins is that the query runs: without one, the server refuses
+		/// <c>toUnixTimestamp64Milli</c> the same way it refuses its nanosecond sibling.
+		/// </remarks>
+		[Test]
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorMessage = "ORA-01821")]
+		public void DatePartMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.DatePart(Sql.DateParts.Millisecond, r.Value))).Single().ShouldBe(0);
+			t.Select(r => Sql.AsSql(r.Value.Millisecond)).Single().ShouldBe(0);
+		}
+
+		/// <summary>
+		/// An explicit conversion applied to the result of a millisecond <c>DateAdd</c> is carried out.
+		/// </summary>
+		/// <remarks>
+		/// The addition goes through the nanosecond epoch, so the whole-second operand is coerced inside the
+		/// conversion; the conversion itself must still be emitted, or the milliseconds asked to be dropped survive.
+		/// </remarks>
+		[Test]
+		public void ConvertedDateAddMillisecondHonoursTheRequestedType([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.Select(r => Sql.AsSql(Sql.Convert(Sql.Types.DateTime, r.Value.AddMilliseconds(226)))).Single().ShouldBe(CoarseValue);
+		}
+
 		[Test]
 		public void AddYears([DataSources] string context)
 		{
@@ -1674,6 +1829,42 @@ namespace Tests.Linq
 				AreEqual(
 				from t in from p in Types select Sql.MakeDateTime(2010, p.ID, 1, 20, 35, 44) where t.Value.Year == 2010 select t,
 					from t in from p in db.Types select Sql.MakeDateTime(2010, p.ID, 1, 20, 35, 44) where t.Value.Year == 2010 select t);
+		}
+
+		static readonly DateTime SubSecondBoundary = new(2010, 1, 1, 10, 0, 0, 500);
+
+		/// <summary>
+		/// A literal compared with a computed date keeps its sub-second part, whatever type the computed side reports.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}12")]
+		// PostgreSQL 9.4+ (make_timestamp)
+		public void MakeDateTimeComparedWithSubSecondLiteral([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var total = db.Types.Count();
+
+			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value <  SubSecondBoundary).ShouldBe(total);
+			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value >= SubSecondBoundary).ShouldBe(0);
+			db.Types.Count(p => Sql.MakeDateTime(2010, 1, 1, 10, 0, p.ID % 1)!.Value == SubSecondBoundary).ShouldBe(0);
+		}
+
+		static readonly DateTime CoarseSubSecondBoundary = CoarseValue.AddMilliseconds(500);
+
+		/// <summary>
+		/// A cast that coarsens a column's type is a computed value too: the literal beside it keeps its sub-second part.
+		/// </summary>
+		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1")]
+		public void CoarseningCastComparedWithSubSecondLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db, CoarseValue.AddMilliseconds(250));
+
+			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) <  CoarseSubSecondBoundary).ShouldBe(1);
+			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) >= CoarseSubSecondBoundary).ShouldBe(0);
+			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) == CoarseSubSecondBoundary).ShouldBe(0);
 		}
 
 		[Test]

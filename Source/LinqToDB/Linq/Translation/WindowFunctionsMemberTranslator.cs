@@ -931,10 +931,9 @@ namespace LinqToDB.Linq.Translation
 				nullTreatment   : information.NullTreatment,
 				fromPosition    : information.FromPosition,
 				isWindowFunction: true,
-				// The same three names an ordinary aggregate builds, so they answer about their argument the same
-				// way here. Nothing reaches this with a declared duration today - the window aggregates are typed
-				// per overload and none takes a TimeSpan - but a name carrying two domains would make two otherwise
-				// identical nodes stop comparing equal.
+				// MIN, MAX and SUM answer about their argument the same way an ordinary aggregate does, since a name
+				// carrying two domains would make two otherwise identical nodes stop comparing equal. The value
+				// functions (LAG, FIRST_VALUE, ...) return the argument's own values.
 				argumentDomain  : SqlArgumentDomains.ForAggregate(functionName)
 			);
 
