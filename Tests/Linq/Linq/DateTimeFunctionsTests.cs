@@ -1882,6 +1882,22 @@ namespace Tests.Linq
 			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == CoarseSubSecondBoundary).Count().ShouldBe(0);
 		}
 
+		static readonly DateTime CoarseMidnight = new(2026, 6, 1);
+
+		/// <summary>
+		/// A cast to a date compared with a timestamp at that date's midnight is equal to it.
+		/// </summary>
+		[Test]
+		public void DateCastComparedWithMidnightTimestamp([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) == CoarseMidnight).ShouldBe(1);
+			t.Count(r => Sql.Convert(Sql.Types.Date, r.Value) <  CoarseMidnight).ShouldBe(0);
+			t.Count(r => CoarseMidnight == Sql.Convert(Sql.Types.Date, r.Value)).ShouldBe(1);
+		}
+
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
