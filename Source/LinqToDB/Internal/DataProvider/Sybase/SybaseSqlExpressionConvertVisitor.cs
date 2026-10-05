@@ -86,6 +86,25 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		#endregion
 
+		public override IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			var leftType  = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
+			var rightType = QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema);
+
+			// ASE compares a date with a datetime as a date, dropping the time part
+			if (leftType.DataType == DataType.Date && IsTimestamp(rightType))
+				predicate = new SqlPredicate.ExprExpr(PseudoFunctions.MakeMandatoryCast(predicate.Expr1, new DbDataType(leftType.SystemType, DataType.DateTime), null), predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
+			else if (rightType.DataType == DataType.Date && IsTimestamp(leftType))
+				predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, PseudoFunctions.MakeMandatoryCast(predicate.Expr2, new DbDataType(rightType.SystemType, DataType.DateTime), null), predicate.UnknownAsValue);
+
+			return base.ConvertExprExprPredicate(predicate);
+
+			static bool IsTimestamp(DbDataType type)
+			{
+				return type.DataType is DataType.DateTime or DataType.DateTime2 or DataType.SmallDateTime;
+			}
+		}
+
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var result = base.VisitExistsPredicate(predicate);
