@@ -13,21 +13,21 @@ Jit=RyuJit  Platform=X64
 ```
 | Method                          | Runtime              | Mean       | Allocated |
 |-------------------------------- |--------------------- |-----------:|----------:|
-| TypeMapperAction                | .NET 8.0             |  2.8458 ns |         - |
-| DirectAccessAction              | .NET 8.0             |  0.4378 ns |         - |
-| TypeMapperActionWithCast        | .NET 8.0             |  2.8087 ns |         - |
-| DirectAccessActionWithCast      | .NET 8.0             |  0.3542 ns |         - |
-| TypeMapperActionWithParameter   | .NET 8.0             |  2.6835 ns |         - |
-| DirectAccessActionWithParameter | .NET 8.0             |  0.4341 ns |         - |
-| TypeMapperAction                | .NET 9.0             |  1.2369 ns |         - |
-| DirectAccessAction              | .NET 9.0             |  1.8133 ns |         - |
-| TypeMapperActionWithCast        | .NET 9.0             |  0.0009 ns |         - |
-| DirectAccessActionWithCast      | .NET 9.0             |  0.4443 ns |         - |
-| TypeMapperActionWithParameter   | .NET 9.0             |  1.7421 ns |         - |
-| DirectAccessActionWithParameter | .NET 9.0             |  0.2427 ns |         - |
-| TypeMapperAction                | .NET Framework 4.6.2 | 19.9105 ns |         - |
-| DirectAccessAction              | .NET Framework 4.6.2 |  0.4165 ns |         - |
-| TypeMapperActionWithCast        | .NET Framework 4.6.2 | 15.4602 ns |         - |
-| DirectAccessActionWithCast      | .NET Framework 4.6.2 |  0.9442 ns |         - |
-| TypeMapperActionWithParameter   | .NET Framework 4.6.2 | 14.1197 ns |         - |
-| DirectAccessActionWithParameter | .NET Framework 4.6.2 |  0.4180 ns |         - |
+| TypeMapperAction                | .NET 8.0             |  2.4230 ns |         - |
+| DirectAccessAction              | .NET 8.0             |  0.2773 ns |         - |
+| TypeMapperActionWithCast        | .NET 8.0             |  2.2700 ns |         - |
+| DirectAccessActionWithCast      | .NET 8.0             |  0.4610 ns |         - |
+| TypeMapperActionWithParameter   | .NET 8.0             |  2.7477 ns |         - |
+| DirectAccessActionWithParameter | .NET 8.0             |  0.4524 ns |         - |
+| TypeMapperAction                | .NET 9.0             |  2.7534 ns |         - |
+| DirectAccessAction              | .NET 9.0             |  0.4551 ns |         - |
+| TypeMapperActionWithCast        | .NET 9.0             |  2.8089 ns |         - |
+| DirectAccessActionWithCast      | .NET 9.0             |  0.3781 ns |         - |
+| TypeMapperActionWithParameter   | .NET 9.0             |  2.8479 ns |         - |
+| DirectAccessActionWithParameter | .NET 9.0             |  0.2963 ns |         - |
+| TypeMapperAction                | .NET Framework 4.6.2 | 22.4665 ns |         - |
+| DirectAccessAction              | .NET Framework 4.6.2 |  0.8947 ns |         - |
+| TypeMapperActionWithCast        | .NET Framework 4.6.2 | 15.8412 ns |         - |
+| DirectAccessActionWithCast      | .NET Framework 4.6.2 |  0.8020 ns |         - |
+| TypeMapperActionWithParameter   | .NET Framework 4.6.2 | 22.8099 ns |         - |
+| DirectAccessActionWithParameter | .NET Framework 4.6.2 |  0.7097 ns |         - |
