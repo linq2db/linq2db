@@ -5120,14 +5120,30 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsStoredValue(ISqlExpression expr)
 		{
+			return IsStoredValue(expr, null);
+		}
+
+		static bool IsStoredValue(ISqlExpression expr, HashSet<IQueryElement>? visitedCteFields)
+		{
 			switch (expr)
 			{
-				case SqlField or SqlCteTableField:
+				case SqlField:
 					return true;
+
+				// A CTE column is stored only if what it projects is; a recursive CTE that reaches itself again is not.
+				case SqlCteTableField cteTableField:
+				{
+					if (cteTableField.CteField is not { Column: { } cteColumn } cteField)
+						return true;
+
+					visitedCteFields ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
+					return visitedCteFields.Add(cteField) && IsStoredValue(cteColumn, visitedCteFields);
+				}
 
 				case SqlColumn column:
 				{
-					if (!IsStoredValue(column.Expression))
+					if (!IsStoredValue(column.Expression, visitedCteFields))
 						return false;
 
 					if (column.Parent?.HasSetOperators == true)
@@ -5136,7 +5152,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						foreach (var setOperator in column.Parent.SetOperators)
 						{
-							if (idx < 0 || !IsStoredValue(setOperator.SelectQuery.Select.Columns[idx].Expression))
+							if (idx < 0 || !IsStoredValue(setOperator.SelectQuery.Select.Columns[idx].Expression, visitedCteFields))
 								return false;
 						}
 					}
@@ -5145,16 +5161,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				case SqlNullabilityExpression nullability:
-					return IsStoredValue(nullability.SqlExpression);
+					return IsStoredValue(nullability.SqlExpression, visitedCteFields);
 
 				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
-					return IsStoredValue(parameter);
+					return IsStoredValue(parameter, visitedCteFields);
 
 				case SqlCastExpression cast:
-					return IsStoredValue(cast.Expression);
+					return IsStoredValue(cast.Expression, visitedCteFields);
 
 				case SelectQuery { Select.Columns: [var singleColumn] }:
-					return IsStoredValue(singleColumn);
+					return IsStoredValue(singleColumn, visitedCteFields);
 
 				default:
 					return false;

@@ -1898,6 +1898,22 @@ namespace Tests.Linq
 			t.Count(r => CoarseMidnight == Sql.Convert(Sql.Types.Date, r.Value)).ShouldBe(1);
 		}
 
+		/// <summary>
+		/// A CTE column computed from a coarse column is a computed value too: the literal beside it keeps its time part.
+		/// </summary>
+		[Test]
+		public void CoarseAggregateCteColumnComparedWithFinerLiteral([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			var cte = t.GroupBy(r => r.Id).Select(g => new { Day = g.Max(r => r.Day), Value = g.Max(r => r.Value) }).AsCte();
+
+			cte.Count(c => c.Day   <  CoarseValue).ShouldBe(1);
+			cte.Count(c => c.Value <  CoarseSubSecondBoundary).ShouldBe(1);
+			cte.Count(c => c.Value == CoarseSubSecondBoundary).ShouldBe(0);
+		}
+
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
