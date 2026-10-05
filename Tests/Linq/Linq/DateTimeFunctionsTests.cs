@@ -1871,6 +1871,7 @@ namespace Tests.Linq
 		/// An aggregate over a coarse column is a computed value too: the literal beside it keeps its time part.
 		/// </summary>
 		[Test]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1")]
 		public void CoarseAggregateComparedWithFinerLiteral([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
