@@ -99,6 +99,8 @@ namespace Tests.Linq
 					r.Id,
 					Lag       = Sql.AsSql((r.StartedOn - Sql.Window.Lag(r.StartedOn, w => w.OrderBy(r.Id))).TotalMilliseconds),
 					LagOffset = Sql.AsSql((r.StartedOn - Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id))).TotalMilliseconds),
+					Lead      = Sql.AsSql((Sql.Window.Lead(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id)) - r.StartedOn).TotalMilliseconds),
+					Nth       = Sql.AsSql((Sql.Window.NthValue(r.StartedOn, 2L, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded) - r.StartedOn).TotalMilliseconds),
 				})
 				.ToArray()
 				.OrderBy(r => r.Id)
@@ -107,6 +109,8 @@ namespace Tests.Linq
 			// The first row has no predecessor, and ClickHouse answers its type's default rather than NULL.
 			lags[1].Lag.ShouldBe(3600_000d);
 			lags.Select(r => r.LagOffset).ShouldBe([0d, 3600_000d]);
+			lags.Select(r => r.Lead).ShouldBe([3600_000d, 0d]);
+			lags.Select(r => r.Nth).ShouldBe([3600_000d, 0d]);
 		}
 
 		// Spelled out rather than derived from CoarseStart: static initializers in separate partial-class files run in
