@@ -18,6 +18,10 @@
 // input (protocol, target, username, password); the answer is key=value lines on standard output; a failure is a
 // non-zero exit code with a reason on standard error.
 
+// A file-based app defaults to NativeAOT, which downloads the AOT toolchain on the first run and disables
+// reflection-based JSON; this helper needs neither.
+#:property PublishAot=false
+
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
