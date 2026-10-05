@@ -2978,6 +2978,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Asked for typing: whatever is written down on the other side of this expression takes its terms from
 			// here, so a column that cannot lend its declared width - one reached through a SUM - is not offered.
 			var descriptor = QueryHelper.GetColumnDescriptorForTyping(placeholderTest.Sql);
+
+			// A value computed from a coarse date/time column is not stored in it, so its coarse type is not lent to the
+			// other side, where it would drop a sub-second or time part.
+			if (descriptor != null && !IsStoredValue(placeholderTest.Sql))
+			{
+				var columnType = descriptor.GetDbDataType(true);
+
+				if (IsCoarserDateTime(columnType.DataType, MappingSchema.GetDbDataType(columnType.SystemType).DataType))
+					return null;
+			}
+
 			return descriptor;
 		}
 
@@ -5047,7 +5058,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							// A computed value has no stored precision to match, so narrowing the literal to it would only
 							// drop the literal's sub-second or time part. A stored column still lends its type.
-							if (IsCoarserDateTime(type.DataType, context.DataType) && QueryHelper.GetColumnDescriptorForTyping(expr) == null)
+							if (IsCoarserDateTime(type.DataType, context.DataType) && !IsStoredColumn(expr))
 								return true;
 
 							context.DataType  = type.DataType;
@@ -5092,6 +5103,62 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var rank = DateTimeRank(dataType);
 			return rank >= 0 && rank < DateTimeRank(than);
+		}
+
+		/// <summary>
+		/// Whether <paramref name="expr"/> is a stored column's value as it is, rather than one computed from it.
+		/// </summary>
+		/// <remarks>
+		/// Narrower than <see cref="QueryHelper.GetColumnDescriptorForTyping"/>, which also finds a column through
+		/// COALESCE, MIN/MAX and the value window functions. A cast is transparent to the structural walk because
+		/// <see cref="QueryHelper.GetColumnDescriptorForTyping"/> already refuses one that changed the database type.
+		/// </remarks>
+		static bool IsStoredColumn(ISqlExpression expr)
+		{
+			return QueryHelper.GetColumnDescriptorForTyping(expr) != null && IsStoredValue(expr);
+		}
+
+		static bool IsStoredValue(ISqlExpression expr)
+		{
+			switch (expr)
+			{
+				case SqlField or SqlCteTableField:
+					return true;
+
+				case SqlColumn column:
+				{
+					if (!IsStoredValue(column.Expression))
+						return false;
+
+					if (column.Parent?.HasSetOperators == true)
+					{
+						var idx = column.Parent.Select.Columns.IndexOf(column);
+
+						foreach (var setOperator in column.Parent.SetOperators)
+						{
+							if (idx < 0 || !IsStoredValue(setOperator.SelectQuery.Select.Columns[idx].Expression))
+								return false;
+						}
+					}
+
+					return true;
+				}
+
+				case SqlNullabilityExpression nullability:
+					return IsStoredValue(nullability.SqlExpression);
+
+				case SqlExpression { Expr: "{0}", Parameters: [var parameter] }:
+					return IsStoredValue(parameter);
+
+				case SqlCastExpression cast:
+					return IsStoredValue(cast.Expression);
+
+				case SelectQuery { Select.Columns: [var singleColumn] }:
+					return IsStoredValue(singleColumn);
+
+				default:
+					return false;
+			}
 		}
 
 		#endregion

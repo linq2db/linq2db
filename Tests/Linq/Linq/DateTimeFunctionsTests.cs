@@ -1867,6 +1867,21 @@ namespace Tests.Linq
 			t.Count(r => Sql.Convert(Sql.Types.DateTime, r.Wide) == CoarseSubSecondBoundary).ShouldBe(0);
 		}
 
+		/// <summary>
+		/// An aggregate over a coarse column is a computed value too: the literal beside it keeps its time part.
+		/// </summary>
+		[Test]
+		public void CoarseAggregateComparedWithFinerLiteral([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarse(db);
+
+			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Day) <  CoarseValue).Count().ShouldBe(1);
+			t.GroupBy(r => r.Id).Where(g => g.Min(r => r.Day) >= CoarseValue).Count().ShouldBe(0);
+			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) <  CoarseSubSecondBoundary).Count().ShouldBe(1);
+			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == CoarseSubSecondBoundary).Count().ShouldBe(0);
+		}
+
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)

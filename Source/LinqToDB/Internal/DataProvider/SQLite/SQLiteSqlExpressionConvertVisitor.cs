@@ -176,7 +176,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			if (IsDateTime(leftType) || IsDateTime(rightType))
 			{
-				var dateType = IsDateTime(leftType) ? leftType : rightType;
+				// A date compared with a timestamp is compared as a timestamp whichever side it is on, so the time part
+				// is not dropped.
+				var dateType = IsDateTime(leftType) && !(IsDateDataType(leftType, "Date") && IsDateTime(rightType) && rightType.DataType != DataType.Time)
+					? leftType
+					: rightType;
 				var expr1 = GetActualExpr(predicate.Expr1);
 				if (expr1 is not (SqlCastExpression or SqlFunction { DoNotOptimize: true }))
 				{

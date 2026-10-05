@@ -108,5 +108,38 @@ namespace Tests.Linq
 			lags[1].Lag.ShouldBe(3600_000d);
 			lags.Select(r => r.LagOffset).ShouldBe([0d, 3600_000d]);
 		}
+
+		// Spelled out rather than derived from CoarseStart: static initializers in separate partial-class files run in
+		// no defined order.
+		static readonly DateTime CoarseSubSecond = new(2026, 6, 1, 10, 0, 0, 500);
+
+		/// <summary>
+		/// A coalesce or a value window function over a whole-second column is a computed value: the literal beside it
+		/// keeps its sub-second part.
+		/// </summary>
+		[Test]
+		public void ComputedSecondPrecisionValueComparedWithSubSecondLiteral([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = SeedCoarseNullable(db);
+
+			t.Count(r => (r.FinishedOn ?? r.StartedOn) <  CoarseSubSecond).ShouldBe(1);
+			t.Count(r => CoarseSubSecond > (r.FinishedOn ?? r.StartedOn)).ShouldBe(1);
+			t.Count(r => (r.FinishedOn ?? r.StartedOn) == CoarseSubSecond).ShouldBe(0);
+
+			var windowed = t
+				.Select(r => new
+				{
+					First = Sql.Window.FirstValue(r.StartedOn, w => w.OrderBy(r.Id).RowsBetween.Unbounded.And.Unbounded),
+					Lag   = Sql.Window.Lag(r.StartedOn, 1, r.StartedOn, w => w.OrderBy(r.Id)),
+				})
+				.AsSubQuery();
+
+			var boundary = CoarseSubSecond;
+
+			windowed.Count(r => r.First < CoarseSubSecond).ShouldBe(2);
+			windowed.Count(r => r.Lag   < CoarseSubSecond).ShouldBe(2);
+			windowed.Count(r => r.Lag   < boundary).ShouldBe(2);
+		}
 	}
 }
