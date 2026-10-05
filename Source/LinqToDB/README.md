@@ -1,244 +1,795 @@
-# LINQ to DB <!-- omit in toc -->
+# LINQ to DB<!-- omit in toc -->
 
-[![License](https://img.shields.io/github/license/linq2db/linq2db)](https://github.com/linq2db/linq2db/blob/master/MIT-LICENSE.txt)
+[![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
-LINQ to DB is the fastest LINQ database access library for .NET - a simple, light, and type-safe layer between your objects and your database.
+- [Standout Features](#standout-features)
+  - [Related Linq To DB and 3rd-party projects](#related-linq-to-db-and-3rd-party-projects)
+- [Configuring connection strings](#configuring-connection-strings)
+  - [Passing Into Constructor](#passing-into-constructor)
+  - [Using Config File (.NET Framework)](#using-config-file-net-framework)
+  - [Using Connection String Settings Provider](#using-connection-string-settings-provider)
+  - [Use with ASP.NET Core and Dependency Injection](#use-with-aspnet-core-and-dependency-injection)
+- [Define **POCO** class](#define-poco-class)
+  - [Configuration using mapping attributes](#configuration-using-mapping-attributes)
+  - [Fluent Configuration](#fluent-configuration)
+  - [Inferred Configuration](#inferred-configuration)
+  - [DataConnection class](#dataconnection-class)
+- [Queries](#queries)
+  - [Selecting Columns](#selecting-columns)
+  - [Composing queries](#composing-queries)
+  - [Paging](#paging)
+  - [Joins](#joins)
+  - [Creating your POCOs](#creating-your-pocos)
+  - [Insert](#insert)
+  - [Update](#update)
+  - [Delete](#delete)
+  - [Bulk Copy](#bulk-copy)
+  - [Transactions](#transactions)
+  - [Merge](#merge)
+  - [Window (Analytic) Functions](#window-analytic-functions)
+- [Analyzers](#analyzers)
+- [MiniProfiler](#miniprofiler)
+- [More](#more)
 
-Write SQL as type-safe C# - queries compile, refactor, and translate to transparent, predictable SQL with no magic strings.
+LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database.
 
-Supports SQL Server, PostgreSQL, MySQL, Oracle, SQLite, and [many more providers](https://linq2db.github.io/articles/general/databases.html).
+Architecturally it is one step above micro-ORMs like Dapper, Massive, or PetaPoco, in that you work with LINQ expressions, not with magic strings, while maintaining a thin abstraction layer between your code and the database. Your queries are checked by the C# compiler and allow for easy refactoring.
 
-> **AI/LLM agents:** this package includes a package-local skill for using this linq2db version.
-> In the NuGet package, read `skills/linq2db/SKILL.md` before writing code against this package.
-> In the repository, the same skill lives at `Source/Skills/linq2db/SKILL.md`.
-> Task-specific references are under `skills/linq2db/docs`, and exact API discovery uses
-> `skills/linq2db/docs/api.md` plus `lib/<TFM>/linq2db.xml`.
+However, it's not as heavy as LINQ to SQL or Entity Framework. There is no change-tracking, so you have to manage that yourself, but on the positive side you get more control and faster access to your data.
 
-## Features
+In other words **LINQ to DB is type-safe SQL**.
 
-- **Typed SQL** - express SQL intent directly in C#; queries are compiler-checked, refactorable, and translate to transparent predictable SQL
-- **Full DML support** - `Insert`, `Update`, `Delete`, `InsertOrReplace`, set-based updates
-- **Bulk copy** - high-performance batch inserts using provider-native mechanisms
-- **Merge API** - set-based MERGE (INSERT / UPDATE / DELETE in one statement)
-- **CTE support** - composable Common Table Expressions including recursive
-- **Window / analytic functions** - `OVER`, `PARTITION BY`, `ORDER BY` via LINQ
-- **Associations** - define relationships between entities once; use them as navigation properties in queries instead of writing explicit JOINs; use `LoadWith` for eager loading
-- **Temp tables** - create and query temporary tables within a session
-- **Explicit join syntax** - `InnerJoin`, `LeftJoin`, `CrossJoin` in addition to standard LINQ
-- **Provider-specific hints** - query and table hints for SQL Server, Oracle, PostgreSQL, MySQL, and others applied directly in LINQ
-- **Rich built-in SQL translation** - hundreds of standard .NET methods (`string`, `Math`, `DateTime`, numeric conversions) translated to SQL out of the box; the `Sql` class adds SQL-specific functions (`CharIndex`, `Left`/`Right`, `Stuff`, math, type conversions) with provider-aware implementations
-- **Extensible SQL mapping** - map application-specific methods and properties to any SQL expression, function, operator, or fragment; reuse SQL constructs as C# methods via `[ExpressionMethod]`
+## Standout Features
 
-## Quick start
+- Rich Querying API:
+  - [Explicit Join Syntax](https://linq2db.github.io/articles/sql/Join-Operators.html) (In addition to standard LINQ join syntax)
+  - [CTE Support](https://linq2db.github.io/articles/sql/CTE.html)
+  - [Bulk Copy/Insert](https://linq2db.github.io/articles/sql/Bulk-Copy.html)
+  - [Window/Analytic Functions](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html)
+  - [Merge API](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
+- Extensibility:
+  - [Ability to Map Custom SQL to Static Functions](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB/Sql/)
 
+See [Github.io documentation](https://linq2db.github.io/index.html) for more details.
+
+<!-- You can visit our [blog](http://blog.linq2db.com/) -->
+
+Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
+
+### Related Linq To DB and 3rd-party projects
+
+- [linq2db.EntityFrameworkCore](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.EntityFrameworkCore) (adds support for linq2db functionality in EF.Core projects)
+- [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using Linq To DB
+- [LINQPad Driver](https://github.com/linq2db/linq2db/tree/master/Source/LinqToDB.LINQPad)
+- [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
+- [ASP.NET Core Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-5)
+- [PostGIS extensions for linq2db](https://github.com/apdevelop/linq2db-postgis-extensions)
+
+Notable open-source users:
+
+- [nopCommerce](https://github.com/nopSolutions/nopCommerce) - popular open-source e-commerce solution
+- [OdataToEntity](https://github.com/voronov-maxim/OdataToEntity) - library to create OData service from database context
+- [SunEngine](https://github.com/sunengine/SunEngine) - site, blog and forum engine
+
+## Configuring connection strings
+
+### Passing Into Constructor
+
+You can simply pass connection string into `DataConnection` or `DataContext` constructor using [`DataOptions`](https://linq2db.github.io/api/LinqToDB.DataOptions.html) class.
+
+Minimal configuration example:
 ```cs
-// Configure once - reuse for all connections
-static readonly DataOptions _options = new DataOptions()
-    .UseSqlServer("connection string");
-
-// Use per operation
-using var db = new DataConnection(_options);
-
-// Query
-var products = await db.GetTable<Product>()
-    .Where(p => p.IsActive && p.Price < 100m)
-    .OrderBy(p => p.Name)
-    .ToListAsync();
-
-// Insert / Update / Delete
-await db.InsertAsync(product);
-await db.UpdateAsync(product);
-await db.DeleteAsync(product);
+var db = new DataConnection(
+  new DataOptions()
+    .UseSqlServer(@"Server=.\;Database=Northwind;Trusted_Connection=True;"));
 ```
 
-## Mapping
+Use connection configuration action to setup SqlClient-specific authentication token:
 
 ```cs
+var options = new DataOptions()
+  .UseSqlServer(connectionString, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient)
+  .UseBeforeConnectionOpened(cn =>
+    {
+        ((SqlConnection)cn).AccessToken = accessToken;
+    });
+
+// pass configured options to data context constructor
+var dc = new DataContext(options);
+```
+
+> [!TIP]
+> There are a lot of configuration methods on `DataOptions` you can use.
+>
+> [!TIP]
+> It is recommended to create configured `DataOptions` instance once and use it everywhere. E.g. you can register it in your DI container.
+>
+
+### Using Config File (.NET Framework)
+
+In your `web.config` or `app.config` make sure you have a connection string (check [this file](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB/ProviderName.cs) for supported providers):
+
+```xml
+<connectionStrings>
+  <add name="Northwind" 
+    connectionString = "Server=.\;Database=Northwind;Trusted_Connection=True;" 
+    providerName     = "SqlServer" />
+</connectionStrings>
+```
+
+### Using Connection String Settings Provider
+
+Alternatively, you can implement custom settings provider with `ILinqToDBSettings` interface, for example:
+
+```cs
+public class ConnectionStringSettings : IConnectionStringSettings
+{
+    public string ConnectionString { get; set; }
+    public string Name             { get; set; }
+    public string ProviderName     { get; set; }
+    public bool   IsGlobal         => false;
+}
+
+public class MySettings : ILinqToDBSettings
+{
+    public IEnumerable<IDataProviderSettings> DataProviders
+        => Enumerable.Empty<IDataProviderSettings>();
+
+    public string DefaultConfiguration => "SqlServer";
+    public string DefaultDataProvider  => "SqlServer";
+
+    public IEnumerable<IConnectionStringSettings> ConnectionStrings
+    {
+        get
+        {
+            // note that you can return multiple ConnectionStringSettings instances here
+            yield return
+                new ConnectionStringSettings
+                {
+                    Name             = "Northwind",
+                    ProviderName     = ProviderName.SqlServer,
+                    ConnectionString =
+                        @"Server=.\;Database=Northwind;Trusted_Connection=True;"
+                };
+        }
+    }
+}
+```
+
+And later just set on program startup before the first query is done (Startup.cs for example):
+
+```cs
+DataConnection.DefaultSettings = new MySettings();
+```
+
+### Use with ASP.NET Core and Dependency Injection
+
+See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
+
+## Define **POCO** class
+
+You can generate POCO classes from your database using [linq2db.cli](https://www.nuget.org/packages/linq2db.cli)  `dotnet tool`.
+
+Alternatively, you can write them manually and map to database using mapping attributes or `fluent mapping configuration`. Also you can use POCO classes as-is without additional mappings if they use same naming for classes and properties as table and column names in database.
+
+### Configuration using mapping attributes
+
+```c#
+using System;
+using LinqToDB.Mapping;
+
 [Table("Products")]
 public class Product
 {
-    [PrimaryKey, Identity]
-    public int ProductID { get; set; }
+  [PrimaryKey, Identity]
+  public int ProductID { get; set; }
 
-    [Column(Length = 200), NotNull]
-    public string Name { get; set; } = null!;
+  [Column("ProductName"), NotNull]
+  public string Name { get; set; }
 
-    [Column]
-    public bool IsActive { get; set; }
+  [Column]
+  public int VendorID { get; set; }
 
-    [Column(Precision = 18, Scale = 2)]
-    public decimal Price { get; set; }
+  [Association(ThisKey = nameof(VendorID), OtherKey = nameof(Vendor.ID))]
+  public Vendor Vendor { get; set; }
+
+  // ... other columns ...
 }
 ```
 
-Attributes, fluent mapping via `MappingSchema`, and convention-based mapping are all supported.
-To scaffold classes from an existing database use [linq2db.cli](https://www.nuget.org/packages/linq2db.cli) (`dotnet tool`) or [T4 templates](https://linq2db.github.io/articles/T4.html).
+This approach involves attributes on all properties that should be mapped. This way lets you to configure all possible things linq2db ever supports. There is one thing to mention: if you add at least one attribute into POCO, all other properties should also have attributes, otherwise they will be ignored:
 
-### Default mapping conventions
+```c#
+using System;
+using LinqToDB.Mapping;
 
-When no mapping attributes are applied, LinqToDB infers names and membership automatically:
-
-| Concept | Convention |
-|---|---|
-| Table name | Class name; for interfaces, a leading `I` is stripped (`IProduct` → `Product`) |
-| Schema / database | None - specify via `[Table(Schema="..")]` or a runtime override |
-| Column name | Property or field name (exact case) |
-| Included members | All public instance properties and fields whose CLR type is scalar |
-| Nullability | `Nullable<T>` / reference types → nullable column; non-nullable value types → non-nullable |
-
-**Switching to explicit mapping**
-
-Adding `[Table]` to a class opts the **entire class** into explicit mode: only members marked with
-`[Column]`, `[PrimaryKey]`, `[Identity]`, or `[ColumnAlias]` become columns.
-To keep convention-based inclusion while still using `[Table]`, set `[Table(IsColumnAttributeRequired = false)]`.
-
-> **Note:** If you need a custom `MappingSchema`, create it **once** and share it across all connections.
-> Creating a new custom `MappingSchema` per `DataConnection` or per request disables internal caches
-> and severely degrades performance. See anti-pattern #1 in [`skills/linq2db/docs/agent-antipatterns.md`](skills/linq2db/docs/agent-antipatterns.md).
-
-## Typed context
-
-```cs
-class AppDB : DataConnection
+[Table("Products")]
+public class Product
 {
-    static readonly DataOptions _options =
-        new DataOptions().UseSqlServer("connection string");
+  [PrimaryKey, Identity]
+  public int ProductID { get; set; }
 
-    public AppDB() : base(_options) {}
-
-    public ITable<Product> Products => GetTable<Product>();
+  // Property `Name` will be ignored as it lacks `Column` attibute.
+  public string Name { get; set; }
 }
 ```
 
-Inherit from `DataConnection` (persistent connection per instance) rather than `DataContext` (per-query connections). Both support the same query APIs; see `skills/linq2db/docs/architecture.md` for a full comparison.
+### Fluent Configuration
 
-**DataConnection vs DataContext - when it matters**
+This method lets you configure your mapping dynamically at runtime. Furthermore, it lets you to have several different configurations if you need so. You will get all configuration abilities available with attribute configuration. These two approaches are interchangeable in their abilities. This kind of configuration is done through the class `MappingSchema`.
 
-| Scenario | Use |
-|---|---|
-| Temp tables (`CreateTempTable`) | `DataConnection` - requires a stable physical session |
-| Explicit `BeginTransaction` / `CommitAsync` | `DataConnection` |
-| Session variables, provider `SET` statements | `DataConnection` |
-| Ambient `TransactionScope` (auto-enlist) | `DataContext` |
-| Ordinary queries / DI scoped context | Either |
+With fluent approach you can configure only things that require it explicitly. All other properties will be inferred by Linq To DB:
 
-## DI / ASP.NET Core
+```c#
+// IMPORTANT: configure mapping schema instance only once
+// and use it with all your connections that need those mappings
+// Never create new mapping schema for each connection as
+// it will seriously harm performance
+var myFluentMappings = new MappingSchema();
+var builder          = new FluentMappingBuilder(mappingSchema);
 
-```cs
-// Register options once as singleton, inject context as scoped
-builder.Services.AddSingleton(new DataOptions().UseSqlServer(connectionString));
-builder.Services.AddScoped<AppDB>();
+builder.Entity<Product>()
+    .HasTableName("Products")
+    .HasSchemaName("dbo")
+    .HasIdentity(x => x.ProductID)
+    .HasPrimaryKey(x => x.ProductID)
+    .Ignore(x => x.SomeNonDbProperty)
+    .Property(x => x.TimeStamp)
+        .HasSkipOnInsert()
+        .HasSkipOnUpdate()
+    .Association(x => x.Vendor, x => x.VendorID, x => x.VendorID, canBeNull: false)
+    ;
+
+//... other mapping configurations
+
+// commit configured mappings to mapping schema
+builder.Build();
 ```
 
-See [ASP.NET Core setup guide](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
+In this example we configured only three properties and one association. We let Linq To DB to infer all other properties as columns with same name as property.
 
-## Joins
+To use your `MappingSchema` instance you should pass it `DataConnection` or `DataContext` constructor:
 
 ```cs
-// INNER JOIN
-var result = from p in db.GetTable<Product>()
-             join c in db.GetTable<Category>() on p.CategoryID equals c.CategoryID
-             select new { p.Name, c.CategoryName };
+var options = new DataOptions()
+    .UseSqlServer(@"Server=.\;Database=Northwind;Trusted_Connection=True;")
+    .UseMappingSchema(myFluentMappings);
 
-// LEFT JOIN
-var result = from p in db.GetTable<Product>()
-             from c in db.GetTable<Category>()
-                         .Where(c => c.CategoryID == p.CategoryID)
-                         .DefaultIfEmpty()
-             select new { p.Name, CategoryName = c != null ? c.CategoryName : null };
+var db = new DataConnection(option);
 ```
 
-See [Join Operators](https://linq2db.github.io/articles/sql/Join-Operators.html) for explicit `InnerJoin` / `LeftJoin` syntax.
+### Inferred Configuration
 
-## Composing queries
+This approach involves no attributes at all. In this case Linq To DB will use POCO's name as table name and property names as column names (with exact same casing, which could be important for case-sensitive databases). This might seem to be convenient, but there are some restrictions:
 
-```cs
-// Queries are built lazily - add filters and projections before executing
-var query = db.GetTable<Product>().AsQueryable();
+- Linq To DB will not infer primary key even if class has property called `ID`;
+- it will not infer nullability of reference types if you don't use nullable reference types annotations;
+- associations will not be automatically configured.
 
-if (onlyActive)
-    query = query.Where(p => p.IsActive);
+```c#
+using System;
+using LinqToDB.Mapping;
 
-if (searchFor != null)
-    query = query.Where(p => p.Name.Contains(searchFor));
+public class Product
+{
+  public int    ProductID { get; set; }
 
-var page = await query
-    .OrderBy(p => p.Name)
-    .Skip((currentPage - 1) * pageSize)
-    .Take(pageSize)
-    .ToListAsync();
+  public string Name      { get; set; }
+
+  public int    VendorID  { get; set; }
+
+  public Vendor Vendor    { get; set; }
+
+  // ... other columns ...
+}
 ```
 
-## Transactions
+This way Linq To DB will auto-configure `Product` class to map to `Product` table with fields `ProductID`, `Name`, and `VendorID`. POCO will not get `ProductID` property treated as primary key. And there will be no association with `Vendor`.
 
-```cs
-using var db = new AppDB();
-using var tr = await db.BeginTransactionAsync();
+This approach is not generally recommended.
 
-await db.InsertAsync(order);
-await db.InsertAsync(orderLine);
+### DataConnection class
 
-await tr.CommitAsync();  // or tr.RollbackAsync() on error
+At this point LINQ to DB doesn't know how to connect to our database or which POCOs go with what database. All this mapping is done through a `DataConnection` class:
+
+```c#
+public class DbNorthwind : LinqToDB.Data.DataConnection
+{
+  public DbNorthwind() : base("Northwind") { }
+
+  public ITable<Product>  Product  => this.GetTable<Product>();
+  public ITable<Category> Category => this.GetTable<Category>();
+
+  // ... other tables ...
+}
 ```
 
-`DataContext` supports `TransactionScope` as well - open the connection inside the scope for it to enlist automatically.
+We call the base constructor with the "Northwind" parameter. This parameter (called `configuration name`) has to match the `name="Northwind"` we defined above as name of our connection string. We also added convenience properties for `Product` and `Category` mapping classes to write LINQ queries.
 
-> **Note:** Temp tables, session variables, and other session-scoped state require `DataConnection`.
-> `DataContext` opens a new connection per command; session state created in one command does not
-> survive to the next. See the decision table above.
-
-## Bulk copy
+And now let's get some data:
 
 ```cs
+using LinqToDB;
+
+public static List<Product> GetProducts()
+{
+  using var db = new DbNorthwind();
+
+  var query = from p in db.Product
+                where p.ProductID > 25
+                orderby p.Name descending
+                select p;
+
+  return query.ToList();
+}
+```
+
+Make sure you **always** wrap your `DataConnection` class (in our case `DbNorthwind`) in a `using` statement. This is required for proper resource management, like releasing the database connections back into the pool ([more details](https://linq2db.github.io/articles/general/Managing-data-connection.html)).
+
+## Queries
+
+### Selecting Columns
+
+Most times we get the entire row from the database:
+
+```c#
+from p in db.Product
+where p.ProductID == 5
+select p;
+```
+
+However, sometimes getting all the fields is too wasteful so we want only certain fields, but still use our POCOs; something that is challenging for libraries that rely on object tracking, like LINQ to SQL.
+
+```c#
+from p in db.Product
+orderby p.Name descending
+select new Product
+{
+  Name = p.Name
+};
+```
+
+### Composing queries
+
+Rather than concatenating strings we can 'compose' LINQ expressions.  In the example below the final SQL will be different if `onlyActive` is true or false, or if `searchFor` is not null.
+
+```c#
+public static Product[] GetProducts(bool onlyActive, string searchFor)
+{
+  using var db = new DbNorthwind();
+  var products = from p in db.Product 
+                   select p;
+
+  if (onlyActive)
+  {
+    products = from p in products 
+               where !p.Discontinued 
+               select p;
+  }
+
+  if (searchFor != null)
+  {
+    products = from p in products 
+                 where p.Name.Contains(searchFor) 
+                 select p;
+  }
+
+  return products.ToArray();
+}
+```
+
+### Paging
+
+A lot of times we need to write code that returns only a subset of the entire dataset. We expand on the previous example to show what a product search function could look like.
+
+Keep in mind that the code below will query the database twice. Once to find out the total number of records, something that is required by many paging controls, and once to return the actual data.
+
+```c#
+public static List<Product> Search(
+                  string  searchFor,
+                  int     currentPage,
+                  int     pageSize,
+                  out int totalRecords)
+{
+  using var db = new DbNorthwind();
+  var products = from p in db.Product 
+                   select p;
+
+  if (searchFor != null)
+  {
+    products = from p in products 
+               where p.Name.Contains(searchFor) 
+               select p;
+  }
+
+  totalRecords = products.Count();
+
+  return products.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+}
+```
+
+### Joins
+
+This assumes we added a `Category` class, just like we did with the `Product` class, defined all the fields, and defined table access property in our `DbNorthwind` data access class. We can now write an **INNER JOIN** query like this:
+
+```c#
+from p in db.Product
+join c in db.Category on p.CategoryID equals c.CategoryID
+select new Product
+{
+  Name = p.Name,
+  Category = c
+};
+```
+
+and a **LEFT JOIN** query like this:
+
+```c#
+from p in db.Product
+from c in db.Category.Where(q => q.CategoryID == p.CategoryID).DefaultIfEmpty()
+select new Product
+{
+  Name = p.Name,
+  Category = c
+};
+```
+
+[More samples are here](https://linq2db.github.io/articles/sql/Join-Operators.html)
+
+### Creating your POCOs
+
+In the previous example we assign an entire `Category` object to our product, but what if we want all the fields in our `Product` class, but we don't want to specify every field by hand? Unfortunately, we **cannot** write this:
+
+```c#
+from p in db.Product
+from c in db.Category.Where(q => q.CategoryID == p.CategoryID).DefaultIfEmpty()
+select new Product(c);
+```
+
+The query above assumes the Product class has a constructor that takes in a `Category` object. The query above won't work, but we **can** work around that with the following query:
+
+```c#
+from p in db.Product
+from c in db.Category.Where(q => q.CategoryID == p.CategoryID).DefaultIfEmpty()
+select Product.Build(p, c);
+```
+
+For this to work, we need a function in the `Product` class that looks like this:
+
+```c#
+public static Product Build(Product? product, Category category)
+{
+  if (product != null)
+  {
+    product.Category = category;
+  }
+  return product;
+}
+```
+
+One caveat with this approach is that if you're using it with composed queries (see example above) the `select Build` part has to come only in the final select.
+
+### Insert
+
+At some point we will need to add a new `Product` to the database. One way would be to call the `Insert` extension method found in the `LinqToDB` namespace; so make sure you import that.
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+db.Insert(product);
+```
+
+This inserts all the columns from our `Product` class, but without retrieving the generated identity value. To do that we can use `InsertWith*Identity` methods, like this:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+product.ProductID = db.InsertWithInt32Identity(product);
+```
+
+There is also `InsertOrReplace` that updates a database record if it was found by primary key or adds it otherwise.
+
+If you need to insert only certain fields, or use values generated by the database, you could write:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+db.Product
+  .Value(p => p.Name, product.Name)
+  .Value(p => p.UnitPrice, 10.2m)
+  .Value(p => p.Added, () => Sql.CurrentTimestamp)
+  .Insert();
+```
+
+Use of this method also allows us to build insert statements like this:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+var statement = db.Product
+                    .Value(p => p.Name, product.Name)
+                    .Value(p => p.UnitPrice, 10.2m);
+
+if (storeAdded) statement.Value(p => p.Added, () => Sql.CurrentTimestamp);
+
+statement.Insert();
+```
+
+### Update
+
+Updating records follows similar pattern to `Insert`. We have an extension method that updates all the columns in the database:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+db.Update(product);
+```
+
+And we also have a lower level update mechanism:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+db.Product
+  .Where(p => p.ProductID == product.ProductID)
+  .Set(p => p.Name, product.Name)
+  .Set(p => p.UnitPrice, product.UnitPrice)
+  .Update();
+```
+
+Similarly, we can break an update query into multiple pieces if needed:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+var statement = db.Product
+                    .Where(p => p.ProductID == product.ProductID)
+                    .Set(p => p.Name, product.Name);
+
+if (updatePrice) statement = statement.Set(p => p.UnitPrice, product.UnitPrice);
+
+statement.Update();
+```
+
+You're not limited to a single record update. For example, we could discontinue all the products that are no longer in stock:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+db.Product
+  .Where(p => p.UnitsInStock == 0)
+  .Set(p => p.Discontinued, true)
+  .Update();
+```
+
+### Delete
+
+Similar to how you update records, you can also delete records:
+
+```c#
+using LinqToDB;
+
+using var db = new DbNorthwind();
+db.Product
+  .Where(p => p.Discontinued)
+  .Delete();
+```
+
+### Bulk Copy
+
+Bulk copy feature supports the transfer of large amounts of data into a table from another data source. For more details read this [article](https://linq2db.github.io/articles/sql/Bulk-Copy.html).
+
+```c#
 using LinqToDB.Data;
 
-var rows = new List<Product> { /* ... */ };
+[Table("ProductsTemp")]
+public class ProductTemp
+{
+  [PrimaryKey]
+  public int ProductID { get; set; }
 
-using var db = new AppDB();
-await db.BulkCopyAsync(rows);  // uses provider-native bulk mechanism
+  [Column("ProductName"), NotNull]
+  public string Name { get; set; }
+
+  // ... other columns ...
+}
+
+var list = new List<ProductTemp>();
+
+// ... populate list ...
+
+using var db = new DbNorthwind();
+db.BulkCopy(list);
 ```
 
-See [Bulk Copy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) for options (`BulkCopyOptions`, row count, transaction control).
+### Transactions
 
-## Documentation and resources
+Using database transactions is easy. All you have to do is call `BeginTransaction()` on your `DataConnection`, run one or more queries, and then commit the changes by calling `CommitTransaction()`. If something happened and you need to roll back your changes you can either call `RollbackTransaction()` or throw an exception.
 
-- [Full documentation](https://linq2db.github.io)
-- [FAQ](https://linq2db.github.io/articles/FAQ.html)
-- [Examples](https://github.com/linq2db/examples)
-- [linq2db.cli](https://www.nuget.org/packages/linq2db.cli) - scaffold POCO classes from a database schema
+```c#
+using var db = new DbNorthwind();
+db.BeginTransaction();
+// or
+//using var tr = db.BeginTransaction();
+  
+  // ... select / insert / update / delete ...
 
----
+if (somethingIsNotRight)
+{
+  db.RollbackTransaction();
+  // or
+  // tr.Rollback();
+}
+else
+{
+  db.CommitTransaction();
+  // or
+  // tr.Commit();
+}
+```
 
-## For AI/LLM agents
+Also, you can use .NET built-in `TransactionScope` class:
 
-See `skills/linq2db/SKILL.md` for mandatory pre-coding steps, generated API/XML-doc reference rules,
-provider runtime dependency checks, and a quick violation reference.
+```c#
+using var transaction = new TransactionScope();
+// or for async code
+// using var transaction = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+using var db = new DbNorthwind();
+...
+transaction.Complete();
+```
 
-This package bundles machine-readable documentation inside the NuGet package.
-The files below are bundled with this readme and are readable by any agent with filesystem access
-to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet global cache).
+It should be noted that there are two base classes for your "context" class: `LinqToDB.Data.DataConnection` and `LinqToDB.DataContext`. The key difference between them is in connection retention behaviour. `DataConnection` opens connection with first query and holds it open until dispose happens. `DataContext` behaves the way you might used to with Entity Framework: it opens connection per query and closes it right after query is done.
 
-| Package-local path | Content |
-|---|---|
-| `skills/linq2db/SKILL.md` | Canonical AI entry point for this package version |
-| `skills/linq2db/docs/architecture.md` | Architecture overview, translation pipeline, execution model, entry points |
-| `skills/linq2db/docs/coverage.md` | Covered and not-yet-covered package-local AI documentation areas |
-| `skills/linq2db/docs/ai-tags.md` | `<ai-tags />` metadata format - controlled vocabulary for generated API behavior annotations |
-| `skills/linq2db/docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
-| `skills/linq2db/docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
-| `skills/linq2db/docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |
-| `skills/linq2db/docs/mapping.md` | Mapping attributes, fluent mapping, generated DDL metadata, value converters |
-| `skills/linq2db/docs/crud/*.md` | SELECT, INSERT, UPDATE, DELETE, UPSERT, MERGE, and bulk-copy guides |
-| `skills/linq2db/docs/query-cte.md` | CTE query composition |
-| `skills/linq2db/docs/query-temp-tables.md` | Temporary table workflows |
-| `skills/linq2db/docs/api.md` | API discovery rules and curated extract entries for exact package-version member lookup |
-| `skills/linq2db/docs/hints.md` | Query, table, join, subquery, provider-specific, and MERGE hint guidance |
-| `skills/linq2db/docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hints to typed provider-specific APIs |
-| `skills/linq2db/docs/translatable-methods.md` | Standard .NET methods translated to SQL (String, Math, DateTime, Nullable, casts, Sql.*) |
-| `skills/linq2db/docs/configuration.md` | DataOptions patterns: connection setup, logging, retry, interceptors |
-| `skills/linq2db/docs/extensions.md` | Extension mechanisms: `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, `IMemberTranslator`, provider-specific overloads |
-| `skills/linq2db/docs/interceptors.md` | Interceptor extension points and safe usage |
+This difference in behavior matters when used with `TransactionScope`:
 
-Online copies may exist on the repository `master` branch, but they can describe a different version.
-For installed-package API decisions, agents should use the bundled files above unless package-local
-files are unavailable or the user explicitly asks about latest/mainline behavior.
+```c#
+using var db = new LinqToDB.Data.DataConnection("provider name", "connection string");
+
+var product = db.GetTable<Product>()
+  .FirstOrDefault(); // connection opened here
+
+var scope = new TransactionScope();
+// this transaction was not attached to connection
+// because it was opened earlier
+
+product.Name = "Lollipop";
+db.Update(product);
+
+scope.Dispose();
+
+// no transaction rollback happed, "Lollipop" has been saved
+```
+
+A `DataConnection` is attached with ambient transaction in moment it is opened. Any `TransactionScope`s created after the connection is created will no effect on that connection. Replacing `DataConnection` with `DataContext` in code shown earlier will make transaction scope work as expected: the created record will be discarded with the transaction.
+
+Although, `DataContext` appears to be the right class to choose, it is strongly recommended to use `DataConnection` instead. It's default behaviour might be changed with setting `CloseAfterUse` property to `true`:
+
+```c#
+public class DbNorthwind : LinqToDB.Data.DataConnection
+{
+  public DbNorthwind() : base("Northwind")
+  {
+    (this as IDataContext).CloseAfterUse = true;
+  }
+}
+```
+
+### Merge
+
+[Here](https://linq2db.github.io/articles/sql/merge/Merge-API.html) you can read about SQL MERGE support.
+
+### Window (Analytic) Functions
+
+[Here](https://linq2db.github.io/articles/sql/Window-Functions-%28Analytic-Functions%29.html) you can read about Window (Analytic) Functions support.
+
+## Analyzers
+
+Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains.
+
+| Id | Severity | Description |
+|----|----------|-------------|
+| [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+
+Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
+
+```ini
+dotnet_diagnostic.L2DB1001.severity = warning
+```
+
+Every rule shipped by linq2db is in the `LinqToDB` analyzer category, so one line sets them all:
+
+```ini
+dotnet_analyzer_diagnostic.category-LinqToDB.severity = warning
+```
+
+Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from the legacy `ToValue<TR>()` slot (default `false`; when enabled you resolve any resulting type change, e.g. widening `int` to `long`, by hand):
+
+```ini
+linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
+
+Turn all of them off for a project:
+
+```xml
+<PropertyGroup>
+	<EnableLinqToDBAnalyzers>false</EnableLinqToDBAnalyzers>
+</PropertyGroup>
+```
+
+To run the rules against an older linq2db — sizing and applying a migration before upgrading — reference `linq2db.Analyzers` directly; it carries no `linq2db` dependency, so it composes with any version. See its [readme](https://www.nuget.org/packages/linq2db.Analyzers).
+
+## MiniProfiler
+
+If you would like to use [MiniProfiler](https://github.com/MiniProfiler/dotnet) or other profiling tool that wraps ADO.NET provider classes, you need to configure our regular `DataConnection` to use wrapped connection.
+
+```c#
+// example of SQL Server-backed data connection with MiniProfiler enabled for debug builds
+public class DbDataContext : DataConnection
+{
+// let's use profiler only for debug builds
+#if !DEBUG
+
+  // regular non-profiled constructor
+  public DbDataContext() : base("Northwind") {}
+  
+#else
+  public DbDataContext()
+      : base(
+          new DataOptions()
+            .UseSqlServer(connectionString, SqlServerVersion.v2012)
+            .UseConnectionFactory(GetConnection)
+            .UseInterceptor(new UnwrapProfilerInterceptor()))
+  {
+  }
+
+  // wrap connection into profiler wrapper
+  private static DbConnection GetConnection(DataOptions options)
+  {
+     // create provider-specific connection instance. SqlConnection in our case
+     var dbConnection = new SqlConnection(options.ConnectionOptions.ConnectionString);
+
+     // wrap it by profiler's connection implementation
+     return new StackExchange.Profiling.Data.ProfiledDbConnection(
+                                                 dbConnection,
+                                                 MiniProfiler.Current);
+  }
+
+  // define UnwrapDataObjectInterceptor
+  sealed class UnwrapProfilerInterceptor : UnwrapDataObjectInterceptor
+  {
+    public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
+    {
+      return connection is ProfiledDbConnection c ? c.WrappedConnection : connection;
+    }
+
+    public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
+    {
+       return transaction is ProfiledDbTransaction t ? t.WrappedTransaction : transaction;
+    }
+
+    public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
+    {
+      return command is ProfiledDbCommand c ? c.WrappedCommand : command;
+    }
+
+    public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
+    {
+      return dataReader is ProfiledDbDataReader dr ? dr.WrappedReader : dataReader;
+    }
+  }
+#endif
+}
+```
+
+## More
+
+Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/FAQ.html)
