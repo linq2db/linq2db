@@ -120,7 +120,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// creating a table can race that propagation and see SchemeError for a table that, from every other
 		// connection's perspective, already exists. A handful of short retries absorbs that window. Nothing
 		// is swallowed: only SchemeError is retried, and once the attempts run out the exception propagates
-		// unchanged, so a genuine scheme failure is delayed by at most a few hundred milliseconds.
+		// unchanged, so a genuine scheme failure is delayed by at most about a second - the retries span 7 x 150 ms,
+		// which covers the propagation lag above.
 		//
 		// TODO: this is really a driver-level bug, not something a consumer should have to work around -
 		// Ydb.Sdk.Ado.YdbSchema.GetColumns lists tables and then calls DescribeTable per name as two
@@ -130,7 +131,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		// released, re-check whether this retry is still needed and remove it if not.
 		static DataTable GetSchemaWithRetry(DbConnection connection, string collectionName)
 		{
-			const int maxAttempts = 5;
+			const int maxAttempts = 8;
 			const int delayMs     = 150;
 
 			for (var attempt = 1; ; attempt++)
