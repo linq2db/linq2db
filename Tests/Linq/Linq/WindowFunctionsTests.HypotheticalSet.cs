@@ -18,7 +18,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
-			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
+			TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
 		public void HypotheticalRank([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -48,7 +48,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
-			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
+			TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
 		public void HypotheticalDenseRank([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -78,7 +78,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
-			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
+			TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
 		public void HypotheticalPercentRank([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();
@@ -108,7 +108,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL93Minus,
 			TestProvName.AllSqlServer2008Minus, TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllMySql80, TestProvName.AllMariaDB, TestProvName.AllClickHouse,
 			TestProvName.AllFirebird3Plus, TestProvName.AllSapHana, TestProvName.AllInformix, ProviderName.Ydb, TestProvName.AllDuckDB, TestProvName.AllDB2,
-			ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
+			TestProvName.AllAccessLibRed, ErrorMessage = ErrorHelper.Error_WindowFunction_HypotheticalSet)]
 		public void HypotheticalCumeDist([SupportsAnalyticFunctionsContext] string context)
 		{
 			var data = WindowFunctionTestEntity.Seed();

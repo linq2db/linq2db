@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	{
 		// access needs more stack  as it is in-process provider and needs to use our stack
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
-		public void InThread([DataSources(false, TestProvName.AllAccess)] string context)
+		public void InThread([DataSources(false, TestProvName.AllNativeAccess)] string context)
 		{
 			using var sc = new ThreadHopsScope(-1);
 			using var db = GetDataContext((string)context!);

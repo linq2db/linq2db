@@ -163,7 +163,7 @@ namespace Tests.Linq
 
 		// Access and SAP HANA ODBC provider detectors use connection string sniffing
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false, TestProvName.AllAccess, ProviderName.SapHanaOdbc)] string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false, TestProvName.AllNativeAccess, ProviderName.SapHanaOdbc)] string context)
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 			Assert.Throws<LinqToDBException>(() => new DataContext(new DataOptions().UseConnectionString("BAD", db.ConnectionString!)));

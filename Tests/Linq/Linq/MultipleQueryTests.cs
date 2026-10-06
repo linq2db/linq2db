@@ -46,7 +46,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test5([DataSources(TestProvName.AllAccess)] string context)
+		public void Test5([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(

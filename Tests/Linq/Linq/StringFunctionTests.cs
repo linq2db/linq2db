@@ -597,7 +597,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith2([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
+		public void StartsWith2([DataSources(ProviderName.DB2, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -606,7 +606,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith3([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
+		public void StartsWith3([DataSources(ProviderName.DB2, TestProvName.AllNativeAccess)] string context)
 		{
 			var str = "John123";
 
@@ -617,7 +617,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith4([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
+		public void StartsWith4([DataSources(ProviderName.DB2, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -633,7 +633,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWith5([DataSources(ProviderName.DB2, TestProvName.AllAccess)] string context)
+		public void StartsWith5([DataSources(ProviderName.DB2, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -698,7 +698,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StartsWithDataType3([DataSources(TestProvName.AllAccess)] string context)
+		public void StartsWithDataType3([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var str   = "some";
@@ -885,13 +885,13 @@ namespace Tests.Linq
 			Details = "no-issue: Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
 		[ActiveIssue(Configuration = TestProvName.AllSQLite, ErrorMessage = "no such function: CharIndex",
 			Details = "no-issue: as above; SQLite has no such function, so it refuses instead of answering nothing. Message-only because the two SQLite drivers put the detail on different lines.")]
-		[ActiveIssue(Configuration = TestProvName.AllOracle, ErrorTypeName = "System.InvalidOperationException",
+		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllAccessLibRed], ErrorTypeName = "System.InvalidOperationException",
 			ErrorMessage = "Sequence contains no elements",
-			Details = "no-issue: as above - Oracle answers nothing rather than refusing, so the assertion runs out of rows. One wording over both transports, the failure being ours and not the driver's.")]
+			Details = "no-issue: as above - Oracle and LibRed answer nothing rather than refusing, so the assertion runs out of rows. One wording over both transports, the failure being ours and not the driver's.")]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
-			ProviderName.SqlCe, TestProvName.AllAccess)]
+			ProviderName.SqlCe, TestProvName.AllNativeAccess)]
 			string context)
 		{
 			var s  = "e";
@@ -906,7 +906,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf1([DataSources(
 			ProviderName.DB2,
-			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
+			ProviderName.SqlCe, TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -917,7 +917,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
+			TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -935,7 +935,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
+			TestProvName.AllNativeAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
 			string context)
 		{
 			using var db = GetDataContext(context);
@@ -1003,7 +1003,7 @@ namespace Tests.Linq
 		[Test]
 		public void Reverse([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana,
+			TestProvName.AllNativeAccess, TestProvName.AllSapHana,
 			TestProvName.AllSQLite)]
 			string context)
 		{
@@ -1196,7 +1196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Replace([DataSources(TestProvName.AllAccess)] string context)
+		public void Replace([DataSources(TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -1253,7 +1253,7 @@ namespace Tests.Linq
 		public void TrimLeftCharacters([DataSources(
 			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllSqlServer2019Minus,
 			TestProvName.AllSybase)] string context)
@@ -1272,7 +1272,7 @@ namespace Tests.Linq
 		public void TrimRightCharacters([DataSources(
 			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllSqlServer2019Minus,
 			TestProvName.AllSybase)] string context)
@@ -1293,7 +1293,7 @@ namespace Tests.Linq
 		public void TrimLeftCharacter([DataSources(
 			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllSqlServer2019Minus,
 			TestProvName.AllSybase)] string context)
@@ -1312,7 +1312,7 @@ namespace Tests.Linq
 		public void TrimRightCharacter([DataSources(
 			TestProvName.AllFirebird,
 			TestProvName.AllMySql,
-			TestProvName.AllAccess,
+			TestProvName.AllNativeAccess,
 			ProviderName.SqlCe,
 			TestProvName.AllSqlServer2019Minus,
 			TestProvName.AllSybase)] string context)

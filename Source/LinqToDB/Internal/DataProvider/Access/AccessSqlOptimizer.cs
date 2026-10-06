@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return statement;
 		}
 
-		SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		protected virtual SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			statement = statement.Convert(1, (_, e) =>
 			{
