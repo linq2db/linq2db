@@ -98,7 +98,7 @@ dotnet linq2db credentials remove --profile project-a/production-read
 dotnet linq2db credentials clear
 ```
 
-- `set` prompts for and confirms the password without echo. It creates or replaces `linq2db/<profile>`.
+- `set` prompts for and confirms the password. Typed and pasted characters are echoed as `*`; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. It creates or replaces `linq2db/<profile>`.
 - `list` returns profile names and users; it never returns passwords.
 - `remove` removes one named profile.
 - `clear` removes all linq2db profiles after interactive confirmation. `--force` skips confirmation.

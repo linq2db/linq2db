@@ -19,14 +19,9 @@ namespace Tests.DataProvider
 		{
 			// number of parameters to create for providers with unnamed parameters
 			paramCount = 1;
-			// ORDER BY ID: AllTypes is a shared fixture other tests also insert into (deliberately never
-			// cleaned up here - see TestBase.Identity.cs's ResetAllTypesIdentity - so a leftover row with a
-			// duplicate value is a real, if rare, possibility). Only the lookup's chosen row matters (Execute
-			// reads a single scalar), so ordering by ID makes it deterministically the lowest-ID (canonical)
-			// match instead of whichever row the engine happens to return first.
-			return "SELECT ID FROM {1} WHERE @p IS NULL AND {0} IS NULL OR @p IS NOT NULL AND {0} = @p ORDER BY ID";
+			return "SELECT ID FROM {1} WHERE @p IS NULL AND {0} IS NULL OR @p IS NOT NULL AND {0} = @p";
 		}
-		protected virtual string  PassValueSql(DataConnection dc) => "SELECT ID FROM {1} WHERE {0} = @p ORDER BY ID";
+		protected virtual string  PassValueSql(DataConnection dc) => "SELECT ID FROM {1} WHERE {0} = @p";
 
 		protected T TestType<T>(DataConnection conn, string fieldName,
 			DataType dataType          = DataType.Undefined,

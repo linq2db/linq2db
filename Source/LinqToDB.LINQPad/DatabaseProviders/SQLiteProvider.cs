@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using Microsoft.Data.Sqlite;
 
@@ -20,8 +20,10 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 #if NETFRAMEWORK
 	static SQLiteProvider()
 	{
-		// temporary, see SQLite.Runtime.props notes
-		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sds"));
+		// Both SQLite clients are SQLitePCLRaw-based and now share one native package, so both load
+		// e_sqlite3 from the standard runtimes/ folder. Set explicitly rather than left to default
+		// probing because LINQPad 5 does not run the driver from its own base directory.
+		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", AppDomain.CurrentDomain.BaseDirectory);
 
 		// data adapter not implemented by MS provider
 		// https://github.com/dotnet/efcore/issues/13838
@@ -41,13 +43,32 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
+			return [("System.Data.SQLite", NuGetPackageVersions.System_Data_SQLite), ("SQLitePCLRaw.lib.e_sqlite3", NuGetPackageVersions.SQLitePCLRaw_lib_e_sqlite3)];
+
+		return [("Microsoft.Data.Sqlite", NuGetPackageVersions.Microsoft_Data_Sqlite), ("SQLitePCLRaw.lib.e_sqlite3", NuGetPackageVersions.SQLitePCLRaw_lib_e_sqlite3)];
+	}
+#endif
+
+	// each client is touched from its own non-inlined method: the assembly is loaded when a method
+	// referencing its types is JIT-compiled, and only the packages of the provider the connection uses
+	// are provisioned (see GetNuGetPackages), so a shared body would load the one that is missing
 	public override void ClearAllPools(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
-			SQLiteConnection.ClearAllPools();
+			ClearClassicPools();
 		else
-			SqliteConnection.ClearAllPools();
+			ClearMicrosoftPools();
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ClearClassicPools() => SQLiteConnection.ClearAllPools();
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ClearMicrosoftPools() => SqliteConnection.ClearAllPools();
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
@@ -58,14 +79,22 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
-			return SQLiteFactory.Instance;
+			return GetClassicFactory();
 		else
 #if NETFRAMEWORK
 			return MsDbProviderFactory.Instance;
 #else
-			return SqliteFactory.Instance;
+			return GetMicrosoftFactory();
 #endif
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetClassicFactory() => SQLiteFactory.Instance;
+
+#if !NETFRAMEWORK
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetMicrosoftFactory() => SqliteFactory.Instance;
+#endif
 
 #if NETFRAMEWORK
 	sealed class MsDbProviderFactory : DbProviderFactory

@@ -142,12 +142,43 @@ namespace LinqToDB.Internal.Linq
 			return (IQueryable<T>)(LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source);
 		}
 
+		/// <summary>
+		/// Returns query, wrapped by <paramref name="source"/>, if it is a query wrapper (e.g. query, returned by
+		/// <c>LoadWith</c> or by database-specific hint methods), otherwise returns <paramref name="source"/> as-is.
+		/// </summary>
+		internal static IQueryable<T> UnwrapQueryable<T>(this IQueryable<T> source)
+		{
+			while (source is IQueryableWrapper<T> wrapper)
+				source = wrapper.WrappedQuery;
+
+			return source;
+		}
+
+		/// <summary>
+		/// Returns query provider for <paramref name="source"/> query and throws, if it is not a linq2db query.
+		/// Use <see cref="AsLinqToDBQuery{T}"/> instead for callers that must fall back to non-linq2db behavior
+		/// instead of throwing.
+		/// </summary>
 		public static IQueryProviderAsync GetLinqToDBSource<T>(this IQueryable<T> source, [CallerMemberName] string? method = null)
 		{
-			if (source.ProcessIQueryable() is not IQueryProviderAsync query)
+			if (source.ProcessIQueryable().UnwrapQueryable() is not IQueryProviderAsync query)
 				return ThrowInvalidSource(method);
 
 			return query;
+		}
+
+		/// <summary>
+		/// Returns linq2db query behind <paramref name="source"/> or <see langword="null"/>, if <paramref name="source"/>
+		/// is not a linq2db query (including queries, wrapped by <see cref="IQueryableWrapper{T}"/> implementations).
+		/// <para>
+		/// Unlike <see cref="GetLinqToDBSource{T}"/> it doesn't throw for a non-linq2db query and doesn't apply
+		/// <see cref="ProcessIQueryable{T}"/>, as callers of this method have their own fallbacks for such queries
+		/// (e.g. <see cref="LinqExtensions.ExtensionsAdapter"/>).
+		/// </para>
+		/// </summary>
+		internal static ExpressionQuery<T>? AsLinqToDBQuery<T>(this IQueryable<T> source)
+		{
+			return source.UnwrapQueryable() as ExpressionQuery<T>;
 		}
 
 		[DoesNotReturn]

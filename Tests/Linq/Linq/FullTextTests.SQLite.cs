@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -1012,7 +1012,8 @@ namespace Tests.Linq
 			[Column] public byte[]? root;
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic, Details = "Make hybrid fields work for classic provider too")]
+		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic, ErrorTypeName = "LinqToDB.Common.LinqToDBConvertException", ErrorMessage = "Mapping of column 'end_block' value failed",
+			Details = "no-issue: System.Data.SQLite cannot map an FTS3 column that holds either an integer or text; Microsoft.Data.Sqlite can")]
 		[Test]
 		public void Fts3SegDirTableQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

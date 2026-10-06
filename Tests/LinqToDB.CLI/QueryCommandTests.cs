@@ -2232,9 +2232,9 @@ namespace Tests.LinqToDB.CLI
 			return fileName;
 		}
 
-		private static async Task<CliResult> RunCli(params string[] arguments)
+		private static Task<CliResult> RunCli(params string[] arguments)
 		{
-			return await RunCli(new TestCliEnvironment(), arguments).ConfigureAwait(false);
+			return RunCli(new TestCliEnvironment(), arguments);
 		}
 
 		private static async Task<CliResult> RunCli(TestCliEnvironment environment, params string[] arguments)

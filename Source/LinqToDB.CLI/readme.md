@@ -1,6 +1,8 @@
 <!-- omit in toc -->
 # LINQ to DB CLI tools
 
+<!-- mcp-name: io.github.linq2db/linq2db.cli -->
+
 ***
 > **NOTE**: This is not a library you could reference from your project, but command line utility, installed using `dotnet tool` command (see [installation notes](#installation)).
 ***
@@ -14,6 +16,7 @@
   - [Usage Examples](#usage-examples)
     - [Generate SQLite database model in current folder](#generate-sqlite-database-model-in-current-folder)
     - [Generate SQLite database model using response file](#generate-sqlite-database-model-using-response-file)
+- [Licensing](#licensing)
 
 ## Installation
 
@@ -121,7 +124,7 @@ Prefer `--connection-string-env` when the connection string contains credentials
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
-On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password without echo and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
+On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
 
 ```powershell
 dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
@@ -206,3 +209,18 @@ Scaffold configs (response files) are convenient in many ways:
 - you can store scaffolding options for your project in source control and share with other developers
 - with many options it is hard to work with command line
 - some options not available from CLI or hard to use due to CLI nature (e.g. various issues with escaping of parameters)
+
+## Licensing
+
+The MIT license this package declares covers LINQ to DB's own code.
+
+Unlike a library package, a .NET tool does not resolve its dependencies at install time — it carries
+them. `linq2db.cli` therefore ships the database clients for every provider it supports, plus the
+runtime libraries they need, as files inside the package. Those components are third-party software
+under their own licenses, not under the MIT license above.
+
+Every one of them is listed, with its license reproduced in full, in `THIRD-PARTY-NOTICES.txt`. It is
+included at the root of the package and installed alongside the tool, so after
+`dotnet tool install -g linq2db.cli` you will find it next to `dotnet-linq2db` in the tool's store
+directory (`~/.dotnet/tools/.store/linq2db.cli.<rid>/<version>/linq2db.cli.<rid>/<version>/tools/<tfm>/<rid>/`
+on a default install).

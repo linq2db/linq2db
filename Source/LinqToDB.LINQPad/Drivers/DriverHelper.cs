@@ -10,7 +10,6 @@ using LinqToDB.Mapping;
 
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Text;
 using System.Globalization;
 
 #if NETFRAMEWORK
@@ -199,23 +198,36 @@ internal static class DriverHelper
 		}
 		catch (Exception ex)
 		{
-			HandleException(ex, nameof(ClearConnectionPools));
+			// closing pools needs the database client, which LINQPad has not downloaded for a connection that
+			// was never used - and then there is nothing to close either, so this must not interrupt the user
+			LogException(ex, nameof(ClearConnectionPools));
 		}
 	}
 
 	public static bool ShowConnectionDialog(IConnectionInfo cxInfo, bool isDynamic)
 	{
 		var settings = ConnectionSettings.Load(cxInfo);
-		var model    = new SettingsModel(settings, !isDynamic);
 
-		if (SettingsDialog.Show(
-			model,
-			isDynamic ? TestDynamicConnection : TestStaticConnection,
-			isDynamic ? "Connection to database failed." : "Invalid configuration."))
+		// WPF is available to a driver only from this method, see Notification
+		Notification.BeginConnectionDialog();
+
+		try
 		{
-			model.Save();
-			settings.Save(cxInfo);
-			return true;
+			var model = new SettingsModel(settings, !isDynamic);
+
+			if (SettingsDialog.Show(
+				model,
+				isDynamic ? TestDynamicConnection : TestStaticConnection,
+				isDynamic ? "Connection to database failed." : "Invalid configuration."))
+			{
+				model.Save();
+				settings.Save(cxInfo);
+				return true;
+			}
+		}
+		finally
+		{
+			Notification.EndConnectionDialog();
 		}
 
 		return false;
@@ -239,7 +251,7 @@ internal static class DriverHelper
 			}
 		}
 
-		static Exception? TestDynamicConnection(SettingsModel model)
+		Exception? TestDynamicConnection(SettingsModel model)
 		{
 			try
 			{
@@ -265,22 +277,22 @@ internal static class DriverHelper
 						throw new LinqToDBLinqPadException($"Cannot access provider assembly at {model.DynamicConnection.ProviderPath}");
 				}
 
-				var connectionString = PasswordManager.ResolvePasswordManagerFields(model.DynamicConnection.ConnectionString);
-				var provider         = DatabaseProviders.GetDataProvider(model.DynamicConnection.Provider.Name, connectionString, model.DynamicConnection.ProviderPath);
-				using (var con       = provider.CreateConnection(connectionString))
-					con.Open();
-
-				if (model.DynamicConnection.Database.SupportsSecondaryConnection
-					&& model.DynamicConnection.SecondaryProvider != null
-					&& model.DynamicConnection.SecondaryConnectionString != null)
-				{
-					var secondaryConnectionString = PasswordManager.ResolvePasswordManagerFields(model.DynamicConnection.SecondaryConnectionString);
-					var secondaryProvider         = DatabaseProviders.GetDataProvider(model.DynamicConnection.SecondaryProvider.Name, secondaryConnectionString, null);
-					using var con                 = secondaryProvider.CreateConnection(secondaryConnectionString);
-					con.Open();
-				}
+#if NETFRAMEWORK
+				// LINQPad 5 ships every database client with the driver, so the connection can be opened here
+				OpenConnections(settings);
 
 				return null;
+#else
+				// This dialog runs in LINQPad's own process, which has only the driver's static dependencies:
+				// database clients are provisioned per connection (see OverrideDriverDependencies) and resolve
+				// in the driver process, so the connection must be opened there. LINQPad rolls back changes to
+				// cxInfo when the dialog is cancelled, so saving before the test is safe.
+				settings.Save(cxInfo);
+
+				var error = DataContextDriver.TestConnection(cxInfo, out _);
+
+				return error == null ? null : new LinqToDBLinqPadException(error);
+#endif
 			}
 			catch (Exception ex)
 			{
@@ -289,23 +301,112 @@ internal static class DriverHelper
 		}
 	}
 
+#if !NETFRAMEWORK
+	/// <summary>
+	/// Implements <see cref="DataContextDriver.TestConnectionCore(IConnectionInfo)"/>. Runs in the driver
+	/// process, where the database clients provisioned for the connection can be loaded.
+	/// </summary>
+	public static string? TestConnection(IConnectionInfo cxInfo)
+	{
+		try
+		{
+			OpenConnections(ConnectionSettings.Load(cxInfo));
+
+			return null;
+		}
+		catch (Exception ex)
+		{
+			// the returned message is what LINQPad reports and the dialog renders, so a box here would
+			// duplicate it - and this runs in the driver process, where it would have no owner window
+			Notification.Log(ex, "Connection test failed.");
+
+			return Notification.FormatMessages(ex);
+		}
+	}
+#endif
+
+	private static void OpenConnections(ConnectionSettings settings)
+	{
+		var database         = DatabaseProviders.GetProvider(settings.Connection.Database);
+		var connectionString = PasswordManager.ResolvePasswordManagerFields(settings.Connection.ConnectionString!);
+		var provider         = DatabaseProviders.GetDataProvider(settings.Connection.Provider, connectionString, settings.Connection.ProviderPath);
+
+		using (var cn = provider.CreateConnection(connectionString))
+			cn.Open();
+
+		if (database.SupportsSecondaryConnection
+			&& settings.Connection.SecondaryProvider != null
+			&& settings.Connection.SecondaryConnectionString != null)
+		{
+			var secondaryConnectionString = PasswordManager.ResolvePasswordManagerFields(settings.Connection.SecondaryConnectionString);
+			var secondaryProvider         = DatabaseProviders.GetDataProvider(settings.Connection.SecondaryProvider, secondaryConnectionString, null);
+
+			using var cn = secondaryProvider.CreateConnection(secondaryConnectionString);
+			cn.Open();
+		}
+	}
+
+#if !NETFRAMEWORK
+	/// <summary>
+	/// Implements <see cref="DataContextDriver.OverrideDriverDependencies(DriverDependencyInfo)"/> method.
+	/// Database clients are not declared as dependencies of the driver package, so a user downloads only
+	/// the client libraries for databases he actually connects to.
+	/// </summary>
+	public static void OverrideDriverDependencies(DriverDependencyInfo dependencyInfo, bool isDynamic)
+	{
+		try
+		{
+			var settings = ConnectionSettings.Load(dependencyInfo.CxInfo);
+			var packages = new HashSet<(string Id, string Version)>();
+
+			if (isDynamic && settings.Connection.Database != null && settings.Connection.Provider != null)
+			{
+				var provider = DatabaseProviders.GetProvider(settings.Connection.Database);
+
+				packages.UnionWith(provider.GetNuGetPackages(settings.Connection.Provider));
+
+				if (settings.Connection.SecondaryProvider != null)
+					packages.UnionWith(provider.GetNuGetPackages(settings.Connection.SecondaryProvider));
+			}
+			// a static context selects its provider itself, so it cannot be detected - but the connection may
+			// name the database, and then the clients of that one are enough
+			else if (!isDynamic
+				&& settings.StaticContext.Database != null
+				&& DatabaseProviders.Providers.TryGetValue(settings.StaticContext.Database, out var staticProvider))
+			{
+				packages.UnionWith(DatabaseProviders.GetNuGetPackages(staticProvider));
+			}
+			// a connection being created has no provider selected yet, and a static context that names no
+			// database could be any of them: the client is unknown, so all are provisioned, as before
+			else
+			{
+				packages.UnionWith(DatabaseProviders.GetAllNuGetPackages());
+			}
+
+			if (packages.Count > 0)
+				dependencyInfo.AddNuGetPackages(packages);
+		}
+		catch (Exception ex)
+		{
+			HandleException(ex, nameof(OverrideDriverDependencies));
+		}
+	}
+#endif
+
 	// intercepts exceptions from driver to linqpad
 	public static void HandleException(Exception ex, string method)
 	{
-		var error = new StringBuilder();
+		Notification.Error(ex, string.Create(CultureInfo.InvariantCulture, $"Unhandled error in method '{method}':"), "Linq To DB Driver Error");
+	}
 
-		error.AppendLine(string.Create(CultureInfo.InvariantCulture, $"Unhandled error in method '{method}':"));
-
-		var currEx = ex;
-
-		while (currEx != null)
-		{
-			error.AppendLine(currEx.Message);
-			error.AppendLine(currEx.StackTrace);
-			currEx = currEx.InnerException;
-		}
-
-		Notification.Error(error.ToString(), "Linq To DB Driver Error");
+	/// <summary>
+	/// Same as <see cref="HandleException"/> for failures the driver recovers from: they go to the log
+	/// without interrupting the user with a dialog. Use it for anything LINQPad may call on a connection
+	/// before it has downloaded that connection's database client, as no client can be loaded until then.
+	/// </summary>
+	public static void LogException(Exception ex, string method)
+	{
+		Notification.Log(ex, string.Create(CultureInfo.InvariantCulture, $"Recovered error in method '{method}':"));
 	}
 
 	public static IEnumerable<string> GetAssembliesToAdd(IConnectionInfo cxInfo)
@@ -328,7 +429,10 @@ internal static class DriverHelper
 		}
 		catch (Exception ex)
 		{
-			HandleException(ex, nameof(GetAssembliesToAdd));
+			// LINQPad also asks for these while the connection dialog is open, from its own process, where the
+			// database client provisioned for the connection cannot be loaded. The list is advisory - the call
+			// made from the query process returns the full set - so this must not interrupt the user.
+			LogException(ex, nameof(GetAssembliesToAdd));
 			yield break;
 		}
 

@@ -38,7 +38,7 @@ namespace LinqToDB.CommandLine
 		void CreateDirectory(string path);
 		/// <summary>Reads an environment variable.</summary>
 		string? GetEnvironmentVariable(string name);
-		/// <summary>Reads a secret from the interactive console without echo.</summary>
+		/// <summary>Reads a secret from the interactive console, echoing a mask character per typed character.</summary>
 		bool TryReadSecret(string prompt, out string? secret, out string? error);
 		/// <summary>Reads one line from standard input.</summary>
 		string? ReadLine();
