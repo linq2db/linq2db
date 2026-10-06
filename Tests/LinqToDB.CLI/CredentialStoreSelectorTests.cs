@@ -175,6 +175,63 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void WindowsShortNameOfTheProfileIsInsideIt()
+		{
+			if (!OperatingSystem.IsWindows())
+				Assert.Ignore("Windows 8.3 short names.");
+
+			var profile = Directory.CreateDirectory(Path.Combine(_directory, "Long Profile Name")).FullName;
+			var shortProfile = GetShortPath(profile);
+
+			if (shortProfile == null || string.Equals(shortProfile, profile, StringComparison.OrdinalIgnoreCase))
+				Assert.Ignore("8.3 short names are disabled on this volume.");
+
+			CredentialsDirectory.IsInsideProfile(Path.Combine(shortProfile, "AppData", "linq2db"), profile).ShouldBeTrue();
+			CredentialsDirectory.IsInsideProfile(Path.Combine(profile, "AppData", "linq2db"), shortProfile).ShouldBeTrue();
+		}
+
+		[Test]
+		public void WindowsLinkFromTheProfileToElsewhereIsOutside()
+		{
+			if (!OperatingSystem.IsWindows())
+				Assert.Ignore("Windows links.");
+
+			var profile = Directory.CreateDirectory(Path.Combine(_directory, "profile")).FullName;
+			var outside = Directory.CreateDirectory(Path.Combine(_directory, "outside")).FullName;
+			var link    = Path.Combine(profile, "shared");
+
+			try
+			{
+				Directory.CreateSymbolicLink(link, outside);
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				Assert.Ignore($"Cannot create a directory link here: {ex.Message}");
+			}
+
+			CredentialsDirectory.IsInsideProfile(Path.Combine(link, "linq2db"), profile).ShouldBeFalse();
+			CredentialsDirectory.IsInsideProfile(Path.Combine(profile, "linq2db"), profile).ShouldBeTrue();
+		}
+
+		/// <summary>The 8.3 short form of an existing path, as cmd.exe reports it (%~s).</summary>
+		static string? GetShortPath(string path)
+		{
+			var startInfo = new System.Diagnostics.ProcessStartInfo("cmd.exe")
+			{
+				Arguments              = $"/d /c for %I in (\"{path}\") do @echo %~sI",
+				UseShellExecute        = false,
+				RedirectStandardOutput = true,
+			};
+
+			using var process = System.Diagnostics.Process.Start(startInfo)!;
+
+			var output = process.StandardOutput.ReadToEnd().Trim();
+			process.WaitForExit();
+
+			return process.ExitCode == 0 && output.Length > 0 ? output : null;
+		}
+
+		[Test]
 		public void WindowsLocalStoreOutsideProfileIsRefused()
 		{
 			if (!OperatingSystem.IsWindows())
@@ -265,6 +322,29 @@ namespace Tests.LinqToDB.CLI
 			WriteGeneratedScript("keyring", UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupWrite);
 
 			SelectError("@keyring", false, DirectoryVariables()).ShouldContain("chmod 700");
+		}
+
+		[Test]
+		public void GeneratedScriptUnderAGroupWritableAncestorIsRefused()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX scripts.");
+
+			var shared    = Path.Combine(_directory, "shared");
+			var directory = Path.Combine(shared, "deeper", "credentials");
+
+			Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			File.SetUnixFileMode(Path.Combine(shared, "deeper"), UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			File.SetUnixFileMode(shared, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute);
+
+			var script = Path.Combine(directory, "credentials-gpg.sh");
+			File.WriteAllText(script, "#!/bin/sh\n");
+			File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+			var error = SelectError("@gpg", false, Variables((CredentialsDirectory.Variable, directory)));
+
+			error.ShouldContain($"is inside '{shared}', which other users can write to without the sticky bit");
+			error.ShouldContain("chmod go-w");
 		}
 
 		[Test]

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.Credentials;
@@ -235,6 +236,25 @@ namespace Tests.LinqToDB.CLI
 			error.ShouldNotBeNull().ShouldContain("is not a linq2db local store file");
 		}
 
+		[TestCase(7,  "is not a linq2db local store file, or it is truncated", TestName = "MagicOnlyDataFileIsAnError")]
+		[TestCase(20, "is truncated: it is shorter than its header",          TestName = "TruncatedDataFileIsAnError")]
+		[TestCase(3,  "is not a linq2db local store file, or it is truncated", TestName = "ShortDataFileIsAnError")]
+		public void TruncatedDataFileIsAnError(int length, string message)
+		{
+			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+
+			File.WriteAllBytes(DataPath, File.ReadAllBytes(DataPath).Take(length).ToArray());
+
+			foreach (var store in new[] { CreateStore(), CreateStore() })
+			{
+				store.TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
+				error.ShouldNotBeNull().ShouldContain(message);
+
+				store.TryStore("b", "u", "p", out error).ShouldBeFalse();
+				error.ShouldNotBeNull().ShouldContain(message);
+			}
+		}
+
 		[Test]
 		public void UnknownVersionIsAnError()
 		{
@@ -333,6 +353,35 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void DirectoryUnderASharedWritableParentIsRefused()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("Unix file modes.");
+
+			// Another user could rename the credentials directory away and put their own in its place.
+			var shared = Path.Combine(_root, "shared");
+			Directory.CreateDirectory(shared);
+			File.SetUnixFileMode(shared, (UnixFileMode)0b111_111_111);
+
+			try
+			{
+				var store = new LocalCredentialStore(Path.Combine(shared, "credentials"), _root);
+
+				store.TryStore("a", "u", "p", out var error).ShouldBeFalse();
+				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which other users can write to without the sticky bit");
+
+				// With the sticky bit others cannot rename or delete what they do not own.
+				File.SetUnixFileMode(shared, (UnixFileMode)0b111_111_111 | UnixFileMode.StickyBit);
+
+				store.TryStore("a", "u", "p", out error).ShouldBeTrue(error);
+			}
+			finally
+			{
+				File.SetUnixFileMode(shared, Owner700);
+			}
+		}
+
+		[Test]
 		public void SymlinkedDirectoryIsRefused()
 		{
 			if (OperatingSystem.IsWindows())
@@ -375,6 +424,43 @@ namespace Tests.LinqToDB.CLI
 
 			File.Exists(stale).ShouldBeFalse();
 			File.Exists(fresh).ShouldBeTrue();
+		}
+
+		[Test]
+		public void ReaderWithoutLockFileDoesNotBlockAWriter()
+		{
+			// A store whose lock file is gone (deleted by hand): readers run without the lock, and must still let a writer
+			// replace the data file (on Windows a reader's handle without delete sharing would make the replace fail).
+			CreateStore().TryStore("seed", "u", "p", out var error).ShouldBeTrue(error);
+			File.Delete(LockPath);
+
+			var errors = new System.Collections.Concurrent.ConcurrentQueue<string>();
+			var reader = CreateStore(TimeSpan.FromSeconds(30));
+			var done   = false;
+
+			var readers = Task.Run(() =>
+			{
+				while (!Volatile.Read(ref done))
+				{
+					if (!reader.TryGetCount(out _, out var readError))
+						errors.Enqueue(readError!);
+				}
+			});
+
+			var writer = CreateStore(TimeSpan.FromSeconds(30));
+
+			for (var i = 0; i < 25; i++)
+			{
+				if (!writer.TryStore($"w/{i}", "u", "p", out var storeError))
+					errors.Enqueue(storeError!);
+			}
+
+			Volatile.Write(ref done, true);
+			readers.Wait(TimeSpan.FromSeconds(60)).ShouldBeTrue("the reader did not finish");
+
+			errors.ShouldBeEmpty();
+			CreateStore().TryGetCount(out var count, out error).ShouldBeTrue(error);
+			count.ShouldBe(26);
 		}
 
 		[Test]

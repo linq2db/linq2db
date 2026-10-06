@@ -76,13 +76,21 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
-		/// The Windows rule for the local store: the directory must be inside the user profile. A folder elsewhere may inherit
-		/// write access for other users, who could then delete the data or put back an older copy.
+		/// The Windows rule for the local store: the directory must be inside the user profile. A folder elsewhere may give
+		/// other users write access, who could then delete the data or put back an older copy. On Windows both paths are
+		/// first resolved by the file system (8.3 short names, junctions and symbolic links), so a link inside the profile
+		/// that points elsewhere does not count as inside.
 		/// </summary>
 		public static bool IsInsideProfile(string directory, string? userProfile)
 		{
 			if (string.IsNullOrEmpty(userProfile))
 				return false;
+
+			if (OperatingSystem.IsWindows())
+			{
+				directory   = WindowsPaths.GetFinalPath(directory);
+				userProfile = WindowsPaths.GetFinalPath(userProfile);
+			}
 
 			var profile = Normalize(userProfile);
 			var path    = Normalize(directory);
@@ -91,8 +99,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			static string Normalize(string value)
 			{
-				var full = OperatingSystem.IsWindows() ? Path.GetFullPath(value) : value;
-				return full.Replace('/', '\\').TrimEnd('\\');
+				return value.Replace('/', '\\').TrimEnd('\\');
 			}
 		}
 
@@ -129,8 +136,9 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
-		/// Refuses an existing directory that is a symbolic link or that other users can write to: they could replace the
-		/// key, the data or a generated script.
+		/// Refuses an existing directory that is a symbolic link or that other users can write to, and a directory with an
+		/// ancestor that other users can write to without the sticky bit: they could replace the key, the data or a
+		/// generated script, or rename the whole directory and put their own in its place.
 		/// </summary>
 		[UnsupportedOSPlatform("windows")]
 		public static bool CheckUnix(string directory, out string? error)
@@ -149,6 +157,19 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				{
 					error = $"The credentials directory '{directory}' is writable by other users, who could replace its files. Run: chmod 700 '{directory}'";
 					return false;
+				}
+
+				for (var ancestor = info.Parent; ancestor != null; ancestor = ancestor.Parent)
+				{
+					// A symbolic link's own mode means nothing: check the directory it leads to (for example /tmp -> /private/tmp).
+					var target = ancestor.LinkTarget != null ? ancestor.ResolveLinkTarget(returnFinalTarget: true) ?? ancestor : ancestor;
+					var mode   = target.UnixFileMode;
+
+					if ((mode & OthersWrite) != 0 && !mode.HasFlag(UnixFileMode.StickyBit))
+					{
+						error = $"The credentials directory '{directory}' is inside '{ancestor.FullName}', which other users can write to without the sticky bit: they could replace the credentials directory. Move it (set {Variable}) or run: chmod go-w '{ancestor.FullName}'";
+						return false;
+					}
 				}
 
 				error = null;

@@ -389,14 +389,16 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			if (fileError != null)
 				return fileError;
 
-			var data = File.ReadAllBytes(DataPath);
+			var data = ReadAllBytesShared(DataPath);
 
-			if (data.Length < _header.Length + NonceSize + TagSize || !data.AsSpan(0, _header.Length).SequenceEqual(_header))
-			{
-				return data.Length >= _header.Length - 1 && data.AsSpan(0, _header.Length - 1).SequenceEqual(_header.AsSpan(0, _header.Length - 1))
-					? $"'{DataPath}' has format version {data[_header.Length - 1].ToString(CultureInfo.InvariantCulture)}, which this linq2db-cli does not read."
-					: $"'{DataPath}' is not a linq2db local store file.";
-			}
+			if (data.Length < _header.Length || !data.AsSpan(0, _header.Length - 1).SequenceEqual(_header.AsSpan(0, _header.Length - 1)))
+				return $"'{DataPath}' is not a linq2db local store file, or it is truncated.";
+
+			if (data[_header.Length - 1] != _header[^1])
+				return $"'{DataPath}' has format version {data[_header.Length - 1].ToString(CultureInfo.InvariantCulture)}, which this linq2db-cli does not read.";
+
+			if (data.Length < _header.Length + NonceSize + TagSize)
+				return $"'{DataPath}' is truncated: it is shorter than its header, nonce and tag.";
 
 			if (!TryGetKey(create: false, out var key, out var keyError))
 				return keyError;
@@ -505,7 +507,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return false;
 			}
 
-			var bytes = File.ReadAllBytes(KeyPath);
+			var bytes = ReadAllBytesShared(KeyPath);
 
 			if (OperatingSystem.IsWindows())
 			{
@@ -561,13 +563,46 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			{
 				WriteNewFile(temporary, data);
 				// The rename replaces the file atomically: a reader sees the old or the new data, never a part.
-				File.Move(temporary, DataPath, overwrite: true);
+				ReplaceFile(temporary, DataPath);
 				return null;
 			}
 			finally
 			{
 				if (File.Exists(temporary))
 					File.Delete(temporary);
+			}
+		}
+
+		/// <summary>
+		/// Reads a whole file while letting a writer replace it: a read can run without the lock (when no lock file exists
+		/// yet), and on Windows an open handle without delete sharing would make the writer's replacing move fail.
+		/// </summary>
+		static byte[] ReadAllBytesShared(string path)
+		{
+			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+
+			var result = new byte[stream.Length];
+			stream.ReadExactly(result);
+			return result;
+		}
+
+		/// <summary>
+		/// Renames <paramref name="source"/> over <paramref name="destination"/>. On Windows a process outside the lock (an
+		/// antivirus scanner, an indexer) can hold the file briefly, so the rename is retried a few times.
+		/// </summary>
+		static void ReplaceFile(string source, string destination)
+		{
+			for (var attempt = 1; ; attempt++)
+			{
+				try
+				{
+					File.Move(source, destination, overwrite: true);
+					return;
+				}
+				catch (Exception ex) when ((ex is IOException or UnauthorizedAccessException) && OperatingSystem.IsWindows() && attempt < 5)
+				{
+					Thread.Sleep(50);
+				}
 			}
 		}
 
