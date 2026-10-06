@@ -27,7 +27,7 @@ COMPONENTS
    License: MIT  see [2]
    © Microsoft Corporation. All rights reserved.
 
-3. SAP HANA .NET Data Provider v4.5
+3. SAP HANA .NET Data Provider net10.0-windows7.0: 1.9.0, net462: v4.5
    https://help.sap.com/docs/SAP_HANA_CLIENT
    License: SAP Developer License Agreement 3.2 (see notes - provenance is not certain for this build)  see [3]
    Copyright (c) SAP SE

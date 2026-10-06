@@ -5,7 +5,7 @@
 		<AssemblyName>linq2db.LINQPad</AssemblyName>
 
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
-		<TargetFrameworks>net472;net8.0-windows7.0</TargetFrameworks>
+		<TargetFrameworks>net472;net10.0-windows7.0</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 
 		<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>
@@ -68,16 +68,8 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<!-- the nuget driver loads into the LINQPad host, whose in-box System.Collections.Immutable and
-		     System.Reflection.Metadata win over ours, so Roslyn's floor for them has to stay at 8.0.0 -->
+		     System.Reflection.Metadata win over ours, so Roslyn's floor for them must not exceed the host's -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" VersionOverride="$(RoslynLinqPadVersion)" />
-
-		<!-- Roslyn's API is expressed in ImmutableArray (EmitResult.Diagnostics), so this reference cannot be
-		     avoided - but the version stamped on it has to be the lowest supported host's, for the same reason:
-		     the assembly is in the shared framework, so a .NET 8 host offers 8.0.0.0 and cannot satisfy a higher
-		     reference. Oracle's client pulls the package to 10.x transitively, which stamped 10.0.0.0 and is the
-		     load failure reported in #5768. NU1605 is expected: the downgrade only decides what this assembly
-		     compiles against, and LINQPad restores the Oracle client's own closure when it provisions it. -->
-		<PackageReference Include="System.Collections.Immutable" VersionOverride="$(Net8LatestForNuget)" NoWarn="NU1605" />
 
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
@@ -126,9 +118,10 @@
 		</Page>
 	</ItemGroup>
 
-	<!-- Generate the LINQPad 5 .lpx plugin on build. Set to false to build the driver assembly only
-	     (e.g. from LinqToDB.LINQPad.Pack, which packs the NuGet and doesn't need the .lpx, and to
-	     avoid coupling `dotnet pack` to 7-Zip / Pack.cmd). -->
+	<!-- Generate the LINQPad 5 .lpx plugin on build. Set to false (on the command line) to build the
+	     driver assembly only, e.g. to avoid coupling a local build to 7-Zip / Pack.cmd. Never pass it
+	     from a ProjectReference: a global property the solution build does not also set forks a second
+	     MSBuild instance of this project, and the two race to write the same output files. -->
 	<PropertyGroup>
 		<GenerateLpxArtifacts Condition="'$(GenerateLpxArtifacts)' == ''">true</GenerateLpxArtifacts>
 	</PropertyGroup>
@@ -169,12 +162,10 @@
 	     generated from central package management instead of being duplicated in code, where they would drift.
 
 	     Watch the TFM branches when bumping a client. These expand against *this* project's TargetFramework
-	     (net8.0-windows7.0), so a PackageVersion split across TFMs contributes only its net8.0-compatible entry:
-	     Net.IBM.Data.Db2 and its -lnx/-osx siblings resolve to 9.0.0.400, never to the 10.0.0.200 the net10.0
-	     entries carry. That is required rather than incidental - those 10.x packages ship a net10.0-only
-	     dependency group, and the driver assembly is lib/net8.0 - but it means bumping a net10.0-conditioned
-	     entry alone never reaches the driver, which then keeps provisioning the old client with nothing to say
-	     so. Bump the net8.0 branch in the same change, or confirm deliberately that the driver stays behind. -->
+	     (net10.0-windows7.0), so a PackageVersion split across TFMs contributes only its net10.0-compatible entry:
+	     bumping an entry conditioned on a newer TFM alone never reaches the driver, which then keeps provisioning
+	     the old client with nothing to say so. Bump the net10.0 branch in the same change, or confirm deliberately
+	     that the driver stays behind. -->
 	<Target Name="GenerateNuGetPackageVersions" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)' != 'net472'">
 		<PropertyGroup>
 			<_NuGetPackageVersionsFile>$(IntermediateOutputPath)NuGetPackageVersions.g.cs</_NuGetPackageVersionsFile>

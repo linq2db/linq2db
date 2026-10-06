@@ -30,11 +30,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					=> optionsBuilder
 					.UseNpgsql(connectionString, o => o.UseNodaTime())
 					.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
+#if EF_MYSQL
 				_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
 #if !NETFRAMEWORK
 					.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
 #else
 					.UseMySql(connectionString),
+#endif
 #endif
 				_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
 				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),
