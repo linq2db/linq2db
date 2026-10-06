@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 
 namespace LinqToDB.CommandLine.Commands.Credentials
@@ -136,9 +137,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
-		/// Refuses an existing directory that is a symbolic link or that other users can write to, and a directory with an
-		/// ancestor that other users can write to without the sticky bit: they could replace the key, the data or a
-		/// generated script, or rename the whole directory and put their own in its place.
+		/// Refuses an existing directory that is a symbolic link or that group or other users can write to, and a directory
+		/// whose real path has an ancestor that every user can write to without the sticky bit: they could replace the key,
+		/// the data or a generated script, or rename the whole directory and put their own in its place. Ownership is not
+		/// checked.
 		/// </summary>
 		[UnsupportedOSPlatform("windows")]
 		public static bool CheckUnix(string directory, out string? error)
@@ -159,15 +161,15 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					return false;
 				}
 
-				for (var ancestor = info.Parent; ancestor != null; ancestor = ancestor.Parent)
+				// Ancestors of the real path: a link such as ~/work -> /srv/shared/work puts the directory under /srv/shared.
+				// Group write is accepted there: with private user groups (umask 002) ~/.config is often 0775.
+				for (var ancestor = new DirectoryInfo(GetRealPath(directory)).Parent; ancestor != null; ancestor = ancestor.Parent)
 				{
-					// A symbolic link's own mode means nothing: check the directory it leads to (for example /tmp -> /private/tmp).
-					var target = ancestor.LinkTarget != null ? ancestor.ResolveLinkTarget(returnFinalTarget: true) ?? ancestor : ancestor;
-					var mode   = target.UnixFileMode;
+					var mode = ancestor.UnixFileMode;
 
-					if ((mode & OthersWrite) != 0 && !mode.HasFlag(UnixFileMode.StickyBit))
+					if (mode.HasFlag(UnixFileMode.OtherWrite) && !mode.HasFlag(UnixFileMode.StickyBit))
 					{
-						error = $"The credentials directory '{directory}' is inside '{ancestor.FullName}', which other users can write to without the sticky bit: they could replace the credentials directory. Move it (set {Variable}) or run: chmod go-w '{ancestor.FullName}'";
+						error = $"The credentials directory '{directory}' is inside '{ancestor.FullName}', which every user can write to without the sticky bit: another user could replace the credentials directory. Move it (set {Variable}) or run: chmod o-w '{ancestor.FullName}'";
 						return false;
 					}
 				}
@@ -180,6 +182,44 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				error = $"Cannot check the credentials directory '{directory}': {ex.Message}{AccessHint(ex)}";
 				return false;
 			}
+		}
+
+		/// <summary>
+		/// Resolves symbolic links in every component of an absolute Unix path (like realpath; components that do not exist
+		/// are kept as written). Gives up after 40 links, as the kernel does.
+		/// </summary>
+		internal static string GetRealPath(string path)
+		{
+			var current = Path.GetFullPath(path);
+
+			for (var links = 0; links < 40; links++)
+			{
+				var parts    = current.Split('/', StringSplitOptions.RemoveEmptyEntries);
+				var resolved = "/";
+				string? next = null;
+
+				for (var i = 0; i < parts.Length; i++)
+				{
+					var candidate = Path.Combine(resolved, parts[i]);
+					var target    = new FileInfo(candidate).LinkTarget;
+
+					if (target != null)
+					{
+						var linked = Path.IsPathRooted(target) ? target : Path.Combine(resolved, target);
+						next = Path.GetFullPath(Path.Combine([linked, .. parts.Skip(i + 1)]));
+						break;
+					}
+
+					resolved = candidate;
+				}
+
+				if (next == null)
+					return resolved;
+
+				current = next;
+			}
+
+			return current;
 		}
 
 		/// <summary>The hint added to an access-denied error: the usual cause is a file created with sudo.</summary>

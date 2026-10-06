@@ -68,14 +68,19 @@ One directory holds the local store's files and the generated scripts:
 - Windows: `%LINQ2DB_CREDENTIALS_DIR%`, else `%LOCALAPPDATA%\linq2db`.
 
 A relative value of these variables is ignored. `LINQ2DB_CREDENTIALS_DIR` is meant for tests and containers; it must not
-be under a directory that other users can write to (see below). When no directory can be determined (no home
-directory), set `LINQ2DB_CREDENTIALS_DIR` to an absolute path.
+be under a directory that every user can write to (see below), and it must be a directory you created. When no
+directory can be determined (no home directory), set `LINQ2DB_CREDENTIALS_DIR` to an absolute path.
 
 On Linux and macOS the directory is created owner-only (`0700`); a directory that is a symbolic link or that other users
-can write to is refused, because they could replace the key, the data or a generated script. So is a directory with an
-ancestor that other users can write to without the sticky bit (`/tmp` has the sticky bit): they could rename the whole
-directory and put their own in its place. The error names that ancestor. linq2db-cli warns when the directory is inside
-a git working tree.
+can write to (group or other write permission) is refused, because they could replace the key, the data or a generated
+script. So is a directory whose real path (symbolic links resolved) has an ancestor that every user can write to
+without the sticky bit (`/tmp` has the sticky bit): another user could rename the whole directory and put their own in
+its place. Group write on an ancestor is accepted, since with private user groups (umask `002`) `~/.config` is often
+`0775`. The error names that ancestor. linq2db-cli warns when the directory is inside a git working tree.
+
+Ownership is not checked: the directory, its files and the generated scripts must be created by you. A predictable path
+in a shared location (for example under `/tmp`) can be created first by another user, who then owns what you use; keep
+the credentials directory in your home directory, or point `LINQ2DB_CREDENTIALS_DIR` at a directory you created.
 
 On Windows the local store refuses a directory outside your user profile: a folder elsewhere may give other users write
 access, and while they could neither read nor forge entries, they could delete the data or put back an older copy. The

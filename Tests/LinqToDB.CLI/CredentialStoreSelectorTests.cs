@@ -324,8 +324,9 @@ namespace Tests.LinqToDB.CLI
 			SelectError("@keyring", false, DirectoryVariables()).ShouldContain("chmod 700");
 		}
 
-		[Test]
-		public void GeneratedScriptUnderAGroupWritableAncestorIsRefused()
+		[TestCase(0b111_111_101, false, TestName = "GeneratedScriptUnderAGroupWritableAncestorIsAccepted")]
+		[TestCase(0b111_111_111, true,  TestName = "GeneratedScriptUnderAWorldWritableAncestorIsRefused")]
+		public void GeneratedScriptAncestorMode(int ancestorMode, bool refused)
 		{
 			if (OperatingSystem.IsWindows())
 				Assert.Ignore("POSIX scripts.");
@@ -335,16 +336,43 @@ namespace Tests.LinqToDB.CLI
 
 			Directory.CreateDirectory(directory, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 			File.SetUnixFileMode(Path.Combine(shared, "deeper"), UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
-			File.SetUnixFileMode(shared, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute);
+			File.SetUnixFileMode(shared, (UnixFileMode)ancestorMode);
 
 			var script = Path.Combine(directory, "credentials-gpg.sh");
 			File.WriteAllText(script, "#!/bin/sh\n");
 			File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
 
-			var error = SelectError("@gpg", false, Variables((CredentialsDirectory.Variable, directory)));
+			try
+			{
+				if (refused)
+				{
+					var error = SelectError("@gpg", false, Variables((CredentialsDirectory.Variable, directory)));
 
-			error.ShouldContain($"is inside '{shared}', which other users can write to without the sticky bit");
-			error.ShouldContain("chmod go-w");
+					error.ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
+					error.ShouldContain("chmod o-w");
+				}
+				else
+				{
+					Select("@gpg", false, Variables((CredentialsDirectory.Variable, directory))).Script.ShouldBe(script);
+				}
+			}
+			finally
+			{
+				File.SetUnixFileMode(shared, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+			}
+		}
+
+		[Test]
+		public void RealPathResolvesEveryComponent()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX symbolic links.");
+
+			var real = Directory.CreateDirectory(Path.Combine(_directory, "real", "inner")).FullName;
+			Directory.CreateSymbolicLink(Path.Combine(_directory, "a"), Path.Combine(_directory, "real"));
+			Directory.CreateSymbolicLink(Path.Combine(_directory, "b"), "a/inner");
+
+			CredentialsDirectory.GetRealPath(Path.Combine(_directory, "b", "missing")).ShouldBe(Path.Combine(CredentialsDirectory.GetRealPath(real), "missing"));
 		}
 
 		[Test]

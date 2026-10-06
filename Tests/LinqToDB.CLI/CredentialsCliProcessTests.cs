@@ -105,35 +105,49 @@ namespace Tests.LinqToDB.CLI
 			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldBe("[a b]\n[c]\n[store]\n");
 		}
 
-		/// <summary>Builds a small program that prints each of its arguments as <c>[argument]</c> on a line.</summary>
-		string BuildArgumentEchoProgram()
+		static readonly System.Threading.Lock _argumentEchoLock = new();
+
+		/// <summary>
+		/// Builds (once per test run; later runs reuse the build in the shared test root) a small program that prints each of
+		/// its arguments as <c>[argument]</c> on a line.
+		/// </summary>
+		static string BuildArgumentEchoProgram()
 		{
-			var source = Path.Combine(_directory, "argecho.cs");
-			var output = Path.Combine(_directory, "argecho");
+			var directory  = Path.Combine(CredentialsCliTestSupport.Root, "argecho-v1");
+			var source     = Path.Combine(directory, "argecho.cs");
+			var output     = Path.Combine(directory, "bin");
+			var executable = Path.Combine(output, OperatingSystem.IsWindows() ? "argecho.exe" : "argecho");
 
-			File.WriteAllText(source, "#:property PublishAot=false\nforeach (var argument in args)\n\tSystem.Console.Out.Write(\"[\" + argument + \"]\\n\");\n");
-
-			var build = new ProcessStartInfo(CredentialsCliTestSupport.DotnetCommand)
+			lock (_argumentEchoLock)
 			{
-				UseShellExecute        = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError  = true,
-			};
+				if (File.Exists(executable))
+					return executable;
 
-			foreach (var argument in new[] { "build", source, "-o", output })
-				build.ArgumentList.Add(argument);
+				Directory.CreateDirectory(directory);
+				File.WriteAllText(source, "#:property PublishAot=false\nforeach (var argument in args)\n\tSystem.Console.Out.Write(\"[\" + argument + \"]\\n\");\n");
 
-			build.Environment["DOTNET_NOLOGO"] = "1";
+				var build = new ProcessStartInfo(CredentialsCliTestSupport.DotnetCommand)
+				{
+					UseShellExecute        = false,
+					RedirectStandardOutput = true,
+					RedirectStandardError  = true,
+				};
 
-			using var process = Process.Start(build)!;
+				foreach (var argument in new[] { "build", source, "-o", output })
+					build.ArgumentList.Add(argument);
 
-			var buildOutput = process.StandardOutput.ReadToEndAsync();
-			var buildErrors = process.StandardError.ReadToEndAsync();
+				build.Environment["DOTNET_NOLOGO"] = "1";
 
-			process.WaitForExit(TimeSpan.FromSeconds(300)).ShouldBeTrue("dotnet build of the argument echo program timed out");
-			process.ExitCode.ShouldBe(0, buildOutput.Result + buildErrors.Result);
+				using var process = Process.Start(build)!;
 
-			return Path.Combine(output, OperatingSystem.IsWindows() ? "argecho.exe" : "argecho");
+				var buildOutput = process.StandardOutput.ReadToEndAsync();
+				var buildErrors = process.StandardError.ReadToEndAsync();
+
+				process.WaitForExit(TimeSpan.FromSeconds(300)).ShouldBeTrue("dotnet build of the argument echo program timed out");
+				process.ExitCode.ShouldBe(0, buildOutput.Result + buildErrors.Result);
+
+				return executable;
+			}
 		}
 
 		[Test]

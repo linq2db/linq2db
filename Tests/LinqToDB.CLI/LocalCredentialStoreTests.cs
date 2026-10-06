@@ -368,12 +368,53 @@ namespace Tests.LinqToDB.CLI
 				var store = new LocalCredentialStore(Path.Combine(shared, "credentials"), _root);
 
 				store.TryStore("a", "u", "p", out var error).ShouldBeFalse();
-				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which other users can write to without the sticky bit");
+				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
 
 				// With the sticky bit others cannot rename or delete what they do not own.
 				File.SetUnixFileMode(shared, (UnixFileMode)0b111_111_111 | UnixFileMode.StickyBit);
 
 				store.TryStore("a", "u", "p", out error).ShouldBeTrue(error);
+			}
+			finally
+			{
+				File.SetUnixFileMode(shared, Owner700);
+			}
+		}
+
+		[Test]
+		public void GroupWritableAncestorIsAccepted()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("Unix file modes.");
+
+			// Private user groups with umask 002 leave ~/.config at 0775.
+			var config = Path.Combine(_root, ".config");
+			Directory.CreateDirectory(config);
+			File.SetUnixFileMode(config, (UnixFileMode)0b111_111_101);
+
+			new LocalCredentialStore(Path.Combine(config, "linq2db"), _root).TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+		}
+
+		[Test]
+		public void LinkIntoAWorldWritableTreeIsRefused()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX symbolic links.");
+
+			// ~/work -> <shared>/work: the real path is under a directory every user can write to.
+			var shared = Path.Combine(_root, "shared");
+			var work   = Path.Combine(shared, "work");
+			var link   = Path.Combine(_root, "work");
+
+			Directory.CreateDirectory(work);
+			File.SetUnixFileMode(work, Owner700);
+			File.SetUnixFileMode(shared, (UnixFileMode)0b111_111_111);
+			Directory.CreateSymbolicLink(link, work);
+
+			try
+			{
+				new LocalCredentialStore(Path.Combine(link, "credentials"), _root).TryStore("a", "u", "p", out var error).ShouldBeFalse();
+				error.ShouldNotBeNull().ShouldContain($"is inside '{shared}', which every user can write to without the sticky bit");
 			}
 			finally
 			{
