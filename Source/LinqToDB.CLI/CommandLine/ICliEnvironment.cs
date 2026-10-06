@@ -18,12 +18,16 @@ namespace LinqToDB.CommandLine
 		/// <summary>Available console buffer width.</summary>
 		int BufferWidth { get; }
 		/// <summary>
-		/// Platform default credential store, used by connection resolution and credential management when no credential
-		/// helper is configured: Windows Credential Manager on Windows; elsewhere a store that reports how to configure one.
+		/// Windows Credential Manager: the default credential store on Windows, and <c>@credential-manager</c>.
 		/// </summary>
 		ICredentialStore CredentialStore { get; }
-		/// <summary>Creates a credential store backed by a configured external credential helper.</summary>
-		ICredentialStore CreateHelperCredentialStore(CredentialHelperSettings helper);
+		/// <summary>
+		/// Creates the built-in local store in a credentials directory: the default credential store on Linux and macOS,
+		/// and <c>@local</c>.
+		/// </summary>
+		ICredentialStore CreateLocalCredentialStore(string directory);
+		/// <summary>Creates a credential store backed by a credentials CLI.</summary>
+		ICredentialStore CreateCredentialsCliStore(CredentialsCliSettings settings);
 
 		/// <summary>Checks whether a file exists.</summary>
 		bool FileExists(string path);

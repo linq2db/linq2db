@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -83,7 +82,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			if (credentials != null && !string.Equals(credentials, MissingEnvironmentVariable, StringComparison.Ordinal))
 			{
-				var credentialStore = GetCredentialStore(values.CredentialHelper, configuration, configDirectory);
+				var credentialStore = GetCredentialStore(values.CredentialsCli, configuration, configFileName);
 
 				if (credentialStore == null)
 					return null;
@@ -219,50 +218,19 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		}
 
 		/// <summary>
-		/// Returns the credential store for <c>credentials</c> targets: the configured credential helper (the command-line
-		/// value wins over the profile's <c>credentialHelper</c>), otherwise the platform default store. Returns
-		/// <see langword="null"/> after writing a diagnostic when the helper value references a missing environment variable.
+		/// Returns the credential store for <c>credentials</c> targets: the <c>--credentials-cli</c> value, else the profile's
+		/// <c>credentialsCli</c>, else the OS default. Returns <see langword="null"/> after writing a diagnostic when no store
+		/// can be selected.
 		/// </summary>
-		public ICredentialStore? GetCredentialStore(string? commandLineHelper, QueryExecutionConfiguration? configuration, string? configDirectory)
+		public ICredentialStore? GetCredentialStore(string? optionValue, QueryExecutionConfiguration? configuration, string? configFile)
 		{
-			CredentialHelperSettings? helper = null;
-
-			if (commandLineHelper != null)
+			if (!CredentialStoreSelector.TrySelect(_environment, optionValue, configuration, configFile, out var choice, out var error))
 			{
-				var command = ResolveEnvironmentVariables(QueryExecutionCliOptions.CredentialHelper, commandLineHelper);
-
-				if (command == null || string.Equals(command, MissingEnvironmentVariable, StringComparison.Ordinal))
-					return null;
-
-				helper = new CredentialHelperSettings(command, CredentialHelperProtocol.Linq2Db, null);
-			}
-			else if (configuration?.CredentialHelper != null)
-			{
-				var command = ResolveEnvironmentVariables(QueryExecutionCliOptions.CredentialHelper, configuration.CredentialHelper);
-
-				if (command == null || string.Equals(command, MissingEnvironmentVariable, StringComparison.Ordinal))
-					return null;
-
-				var arguments = new List<string>(configuration.CredentialHelperArguments.Count);
-
-				foreach (var argument in configuration.CredentialHelperArguments)
-				{
-					var expanded = ResolveEnvironmentVariables(QueryExecutionCliOptions.CredentialHelper, argument);
-
-					if (expanded == null || string.Equals(expanded, MissingEnvironmentVariable, StringComparison.Ordinal))
-						return null;
-
-					arguments.Add(expanded);
-				}
-
-				helper = new CredentialHelperSettings(command, configuration.CredentialHelperProtocol, string.IsNullOrEmpty(configDirectory) ? null : Path.GetFullPath(configDirectory))
-				{
-					Arguments = arguments,
-					Timeout   = configuration.CredentialHelperTimeout is { } seconds ? TimeSpan.FromSeconds(seconds) : null,
-				};
+				_environment.Error.WriteLine(error);
+				return null;
 			}
 
-			return helper != null ? _environment.CreateHelperCredentialStore(helper) : _environment.CredentialStore;
+			return CredentialStoreSelector.Create(_environment, choice);
 		}
 
 		public string? ResolvePath(CliOption option, string? path, string? baseDirectory = null)
@@ -293,7 +261,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			return MissingEnvironmentVariable;
 		}
 
-		string? ResolveEnvironmentVariables(CliOption option, string? value)
+		internal string? ResolveEnvironmentVariables(CliOption option, string? value)
 		{
 			if (value == null)
 				return null;

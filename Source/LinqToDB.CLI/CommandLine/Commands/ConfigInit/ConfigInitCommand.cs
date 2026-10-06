@@ -93,7 +93,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ConnectionString);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.ConnectionStringEnv);
 			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.Credentials);
-			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.CredentialHelper);
+			AddOption(QueryExecutionCliOptions.ConnectionOptions, QueryExecutionCliOptions.CredentialsCli);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     _output);
 			AddOption(QueryExecutionCliOptions.OutputOptions,     QueryExecutionCliOptions.MaxRows);
 			AddOption(_existsOptions,                            _ifExists);
@@ -115,7 +115,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			options.Remove(QueryExecutionCliOptions.ConnectionString,    out var connectionString);
 			options.Remove(QueryExecutionCliOptions.ConnectionStringEnv, out var connectionStringEnv);
 			options.Remove(QueryExecutionCliOptions.Credentials,         out var credentials);
-			options.Remove(QueryExecutionCliOptions.CredentialHelper,    out var credentialHelper);
+			options.Remove(QueryExecutionCliOptions.CredentialsCli,      out var credentialsCli);
 			options.Remove(_output,                                      out var output);
 			options.Remove(QueryExecutionCliOptions.MaxRows,             out var maxRows);
 			options.Remove(_ifExists,                                   out var ifExists);
@@ -144,7 +144,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				(string?)connectionString,
 				(string?)connectionStringEnv,
 				(string?)credentials,
-				(string?)credentialHelper,
+				(string?)credentialsCli,
 				(string?)output ?? DefaultOutput,
 				(string?)maxRows,
 				(string?)ifExists ?? "error");
@@ -355,8 +355,8 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			if (values.Credentials != null)
 				profile["credentials"] = values.Credentials;
 
-			if (values.CredentialHelper != null)
-				profile["credentialHelper"] = values.CredentialHelper;
+			if (values.CredentialsCli != null)
+				profile["credentialsCli"] = values.CredentialsCli;
 
 			profile["maxRows"]       = maxRows;
 			profile["output"]        = values.Output;
@@ -374,7 +374,7 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 			string? ConnectionString,
 			string? ConnectionStringEnv,
 			string? Credentials,
-			string? CredentialHelper,
+			string? CredentialsCli,
 			string  Output,
 			string? MaxRows,
 			string  IfExists);

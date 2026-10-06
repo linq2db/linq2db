@@ -106,7 +106,7 @@ Available commands:
 - `dotnet linq2db execute <options>`: executes a single write-capable SQL statement when the selected trusted profile has `enableExecute` set to `true`
 - `dotnet linq2db schema <options>`: reads provider-aware database object metadata and writes JSON output
 - `dotnet linq2db config-init <options>`: creates or updates a query/MCP JSON configuration profile
-- `dotnet linq2db credentials <set|list|remove|clear|helper init> <options>`: manages credential profiles for connection configuration in Windows Credential Manager or an external credential helper
+- `dotnet linq2db credentials <set|list|remove|clear|cli init> <options>`: manages credential records for connection configuration in the built-in local store, Windows Credential Manager, or a credentials CLI
 - `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, `linq2db_execute`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
 
@@ -120,22 +120,25 @@ The MCP server exposes `linq2db_info` for non-secret runtime discovery of availa
 
 When `config-init` writes an existing configuration file, it rewrites it as normalized JSON and does not preserve comments or custom formatting.
 
-Prefer `--connection-string-env` when the connection string contains credentials. A literal `--connection-string` is stored in the generated JSON and produces a warning on `stderr`; ensure that configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. Generated files use owner-only permissions on Linux and macOS. On Windows, prefer environment variables, Windows Credential Manager, or a credential helper because Unix file permissions do not provide Windows ACL protection. On Linux and macOS, prefer environment variables or a credential helper.
+Prefer `--connection-string-env` when the connection string contains credentials. A literal `--connection-string` is stored in the generated JSON and produces a warning on `stderr`; ensure that configuration files containing credentials, including the default `.agents/linq2db-query.json`, are excluded from version control. Generated files use owner-only permissions on Linux and macOS. On Windows, prefer environment variables, Windows Credential Manager, or a credential store because Unix file permissions do not provide Windows ACL protection. On Linux and macOS, prefer environment variables or a credential store.
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
-`dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace, and `--credentials <target>` / `"credentials": "<target>"` read a user and password from a target. Where they are stored:
+`dotnet linq2db credentials` manages credential records under the `linq2db/` target namespace, and `--credentials <target>` / `"credentials": "<target>"` read a user and password from a target. The store is `--credentials-cli`, else `credentialsCli` of the configuration profile (inherited from `default`), else the default for the operating system:
 
-| Operating system | No credential helper configured | Credential helper configured |
+| Operating system | Nothing names a store | Named with `--credentials-cli` / `credentialsCli` |
 | --- | --- | --- |
-| Windows | Windows Credential Manager (built in) | the helper |
-| Linux, macOS | not available: configure a helper, or use `userEnv`/`passwordEnv` | the helper |
+| Windows | Windows Credential Manager | `@local`, `@credential-manager`, or a credentials CLI |
+| Linux, macOS | the built-in local store | `@local`, `@keyring`, `@gpg`, or a credentials CLI |
 
-A credential helper is any program that implements the [linq2db credential helper protocol](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.CLI/CREDENTIAL-HELPERS.md): a wrapper around Vault, the 1Password CLI, `pass`, `secret-tool`, a corporate tool, or an existing `docker-credential-*` program through the Docker adapter. Configure it in the profile (inherited from `default`) or on the command line:
+- `@local`: linq2db's own built-in store: an encrypted file in `~/.config/linq2db` (`%LOCALAPPDATA%\linq2db` on Windows), readable only by your user account, with its key in a separate file next to it (on Windows protected with DPAPI). Like Windows Credential Manager it keeps passwords from other users and from anyone opening the file; any program running as you can read them. A copy of both files opens it (use disk encryption); keep them together and do not commit them. `LINQ2DB_CREDENTIALS_DIR` overrides the directory (for tests and containers).
+- `@credential-manager`: Windows Credential Manager.
+- `@keyring`, `@gpg`: scripts that `credentials cli init --store keyring|gpg` generates over `secret-tool` (your desktop keyring: GNOME Keyring or KWallet) or `pass` (one GPG-encrypted file per password); they are used only when named.
+- Anything else is a credentials CLI command line, `"<program> [arguments]"`: any program that implements the [linq2db credentials CLI protocol](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.CLI/CREDENTIALS-CLI.md), such as a wrapper around Vault, the 1Password CLI or a corporate tool. No shell is involved and nothing is expanded; quote a program path with spaces. The configured credentials CLI is a trusted executable: a configuration that sets credentialsCli runs that program as you.
 
 ```json
 {
-  "default": { "credentialHelper": "${HOME}/.config/linq2db/helpers/secret-tool.sh" },
+  "default": { "credentialsCli": "/opt/vault-cli/vault-cli --mount db" },
   "production": {
     "provider": "PostgreSQL",
     "connectionString": "Host=db;Database=app;Username={0};Password={1}",
@@ -145,27 +148,25 @@ A credential helper is any program that implements the [linq2db credential helpe
 ```
 
 ```sh
-dotnet linq2db query --credential-helper /usr/local/bin/my-credential-helper --credentials linq2db/project-a/production ...
+dotnet linq2db credentials set --credentials linq2db/project-a/production --user app_reader
+dotnet linq2db credentials set --config .agents/linq2db-query.json --profile production --user app_reader
+dotnet linq2db credentials cli init --store gpg --config .agents/linq2db-query.json
+dotnet linq2db query --credentials-cli @gpg --credentials linq2db/project-a/production ...
 ```
 
-The object form `{ "command": "...", "args": [...], "protocol": "linq2db" | "docker", "timeout": <seconds> }` starts a helper through another program without a shell, for example `{ "command": "dotnet", "args": ["run", "/path/secrethelper.cs", "--"], "timeout": 120 }` for the [example helper](https://github.com/linq2db/linq2db/blob/master/Source/LinqToDB.CLI/CredentialHelpers/secrethelper.cs), and `"credentialHelper": { "command": "docker-credential-secretservice", "protocol": "docker" }` uses an existing Docker credential helper. The `credentials` command uses `--credential-helper`, or `credentialHelper` from the `default` profile of `--config <file>`. linq2db-cli runs the configured helper as given, like git's `credential.helper`; securing it is the user's responsibility.
+`credentials set` prompts for the password. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. With `--config`, `--profile` selects the configuration profile (as for `query`): its store, and its `credentials` as the record to set or remove; `--credentials linq2db/<name>` names the record directly. `credentials list` returns record names and users but never passwords. `credentials remove` removes one record, and `credentials clear` removes all `linq2db/` records of the store after confirmation; use `--force` only for intentional non-interactive cleanup. The commands print the store they use on `stderr`.
 
-On Linux and macOS, `credentials helper init` writes a reviewable starter helper over `secret-tool` (GNOME Keyring, KWallet) or `pass`:
+Breaking change in 6.6: `credentials --profile <name>` used to name the record `linq2db/<name>`; it now selects a configuration profile. Use `--credentials linq2db/<name>` for the old meaning.
 
-```sh
-dotnet linq2db credentials helper init --backend secret-tool --config .agents/linq2db-query.json
-dotnet linq2db credentials set --config .agents/linq2db-query.json --profile project-a/production --user app_reader
-```
-
-On Windows without a credential helper, `dotnet linq2db credentials` uses Windows Credential Manager. `credentials set` prompts for the password and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
+On Windows, Windows Credential Manager stores the real user/password payload behind a version marker with additional current-user DPAPI protection:
 
 ```powershell
-dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
+dotnet linq2db credentials set --credentials linq2db/project-a/production --user "DOMAIN\ServiceAccount"
 dotnet linq2db credentials list
-dotnet linq2db credentials remove --profile project-a/production
+dotnet linq2db credentials remove --credentials linq2db/project-a/production
 ```
 
-Reference the generated target using `"credentials": "linq2db/project-a/production"` or `--credentials linq2db/project-a/production`. Credential entries are scoped to the Windows account that created them, so an MCP process running under another account cannot read them.
+Reference the record using `"credentials": "linq2db/project-a/production"` or `--credentials linq2db/project-a/production`. Windows Credential Manager entries and the local store are scoped to the account that created them, so an MCP process running under another account cannot read them.
 
 Ordinary generic Credential Manager entries remain supported. Create one without placing the password in command-line arguments:
 

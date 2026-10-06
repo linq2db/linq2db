@@ -19,10 +19,15 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		public int BufferWidth => _inner.BufferWidth;
 		public ICredentialStore CredentialStore => _inner.CredentialStore;
 
-		public ICredentialStore CreateHelperCredentialStore(CredentialHelperSettings helper)
+		public ICredentialStore CreateLocalCredentialStore(string directory)
 		{
-			// Nobody can answer a prompt raised by a helper started from an MCP tool call.
-			return new HelperCredentialStore(new CredentialHelperProcessRunner(helper, interactive: false), helper.Protocol);
+			return _inner.CreateLocalCredentialStore(directory);
+		}
+
+		public ICredentialStore CreateCredentialsCliStore(CredentialsCliSettings settings)
+		{
+			// Nobody can answer a prompt raised by a credentials CLI started from an MCP tool call.
+			return new CredentialsCliStore(new CredentialsCliProcessRunner(settings, interactive: false));
 		}
 
 		public bool FileExists(string path)

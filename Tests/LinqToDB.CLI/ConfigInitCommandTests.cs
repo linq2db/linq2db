@@ -111,7 +111,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task ConfigInitWritesCredentialHelper()
+		public async Task ConfigInitWritesCredentialsCli()
 		{
 			var environment = new TestCliEnvironment();
 
@@ -124,13 +124,13 @@ namespace Tests.LinqToDB.CLI
 				"PG_CONNECTION",
 				"--credentials",
 				"linq2db/project-a/read",
-				"--credential-helper",
-				"${HOME}/.config/linq2db/helpers/pass.sh");
+				"--credentials-cli",
+				"@gpg");
 
 			result.ExitCode.ShouldBe(0);
 
 			using var json = JsonDocument.Parse(environment.Files[".agents/linq2db-query.json"]);
-			json.RootElement.GetProperty("default").GetProperty("credentialHelper").GetString().ShouldBe("${HOME}/.config/linq2db/helpers/pass.sh");
+			json.RootElement.GetProperty("default").GetProperty("credentialsCli").GetString().ShouldBe("@gpg");
 		}
 
 		[Test]

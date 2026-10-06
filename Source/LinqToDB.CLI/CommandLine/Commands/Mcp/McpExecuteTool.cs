@@ -103,7 +103,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 				null,
 				"json-table")
 			{
-				CredentialHelper = _startupOptions.CredentialHelper,
+				CredentialsCli = _startupOptions.CredentialsCli,
 			};
 		}
 

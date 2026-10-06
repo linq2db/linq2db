@@ -1,26 +1,30 @@
-// Minimal linq2db-cli credential helper (protocol 1) that keeps credentials in a JSON file.
+// Minimal linq2db credentials CLI (protocol 1) that keeps credentials in a JSON file.
 //
-// An illustration of the credential helper protocol, not a secure store: the file is plain text protected only by
-// file permissions (owner-only on Linux and macOS). Use a helper over your platform's secret store for real secrets.
+// An illustration of the linq2db credentials CLI protocol, not a secure store: the file is plain text protected only
+// by file permissions (owner-only on Linux and macOS). For real secrets use the built-in local store (@local) or a
+// credentials CLI over your platform's secret store.
 //
-// Run it with "dotnet run" from the linq2db-cli configuration (the first run builds it, hence the timeout):
+// Run it with "dotnet run" from the linq2db-cli configuration (the first run builds it):
 //
-//     "credentialHelper": { "command": "dotnet", "args": ["run", "/path/to/secrethelper.cs", "--"], "timeout": 120 }
+//     "credentialsCli": "dotnet run --file /path/to/secrethelper.cs --"
 //
 // or build it once and configure the produced executable (secrethelper, or secrethelper.exe on Windows):
 //
 //     dotnet build secrethelper.cs -o ~/.local/lib/linq2db-secrethelper
-//     dotnet linq2db credentials set --credential-helper ~/.local/lib/linq2db-secrethelper/secrethelper --profile dev --user reader
+//     dotnet linq2db credentials set --credentials-cli /home/me/.local/lib/linq2db-secrethelper/secrethelper --credentials linq2db/dev --user reader
 //
 // The file is $SECRETHELPER_FILE, or ~/.linq2db-secrethelper.json by default.
 //
-// Protocol summary: the verb (get, store, erase, list) is the only argument; the request is key=value lines on standard
-// input (protocol, target, username, password); the answer is key=value lines on standard output; a failure is a
-// non-zero exit code with a reason on standard error.
+// Protocol summary: the verb (get, store, erase, list) is the last argument and the "verb" line of the request; the
+// request is key=value lines on standard input (protocol, verb, target, username, password); the answer on standard
+// output starts with "protocol=1" and "status=<ok|not-found|unsupported|error>", then key=value lines; a failure
+// answers "status=error" with a non-zero exit code and the reason on standard error.
 
 // A file-based app defaults to NativeAOT, which downloads the AOT toolchain on the first run and disables
-// reflection-based JSON; this helper needs neither.
+// reflection-based JSON; this example needs neither.
 #:property PublishAot=false
+// "dotnet run" prints build warnings on standard output, which is the protocol channel: build without any.
+#:property WarningLevel=0
 
 using System.Text;
 using System.Text.Json;
@@ -30,11 +34,11 @@ var request = ReadRequest();
 
 if (request.GetValueOrDefault("protocol") != "1")
 {
-	Answer("unsupported=protocol\n");
+	Answer("unsupported");
 	return 0;
 }
 
-var verb   = args.Length == 1 ? args[0] : string.Empty;
+var verb   = request.GetValueOrDefault("verb") ?? (args.Length > 0 ? args[^1] : string.Empty);
 var target = request.GetValueOrDefault("target") ?? string.Empty;
 
 try
@@ -43,10 +47,10 @@ try
 	{
 		case "get":
 		{
-			var store = Load();
-
-			if (store[target] is JsonObject entry)
-				Answer($"username={entry["username"]?.GetValue<string>()}\npassword={entry["password"]?.GetValue<string>()}\n");
+			if (Load()[target] is JsonObject entry)
+				Answer("ok", $"username={entry["username"]?.GetValue<string>()}\npassword={entry["password"]?.GetValue<string>()}\n");
+			else
+				Answer("not-found");
 
 			return 0;
 		}
@@ -63,6 +67,7 @@ try
 			};
 
 			Save(store);
+			Answer("ok");
 			return 0;
 		}
 
@@ -75,23 +80,23 @@ try
 			if (removed)
 				Save(store);
 
-			Answer(removed ? "removed=true\n" : "removed=false\n");
+			Answer(removed ? "ok" : "not-found");
 			return 0;
 		}
 
 		case "list":
 		{
-			var answer = new StringBuilder();
+			var records = new StringBuilder();
 
 			foreach (var (key, value) in Load())
-				answer.Append($"target={key}\nusername={value?["username"]?.GetValue<string>()}\n\n");
+				records.Append($"\ntarget={key}\nusername={value?["username"]?.GetValue<string>()}\n");
 
-			Answer(answer.ToString());
+			Answer("ok", records.ToString());
 			return 0;
 		}
 
 		default:
-			Answer("unsupported=verb\n");
+			Answer("unsupported");
 			return 0;
 	}
 }
@@ -99,14 +104,15 @@ catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or J
 {
 	// Never report "not found" or success when the store cannot be read or written.
 	Console.Error.WriteLine($"secrethelper: {ex.Message}");
+	Answer("error");
 	return 1;
 }
 
 // The protocol is UTF-8 on every OS; Console.Out would use the console code page on Windows.
-static void Answer(string text)
+static void Answer(string status, string body = "")
 {
 	using var output = Console.OpenStandardOutput();
-	var bytes = new UTF8Encoding(false).GetBytes(text);
+	var bytes = new UTF8Encoding(false).GetBytes($"protocol=1\nstatus={status}\n{body}");
 	output.Write(bytes, 0, bytes.Length);
 }
 
@@ -146,7 +152,7 @@ static JsonObject Load()
 	return JsonNode.Parse(File.ReadAllText(path)) as JsonObject ?? throw new JsonException($"'{path}' does not contain a JSON object.");
 }
 
-// Serializes concurrent changes: the helper may run in several processes at once (a CLI command and an MCP server).
+// Serializes concurrent changes: the program may run in several processes at once (a CLI command and an MCP server).
 static FileStream Lock()
 {
 	var path = GetStorePath() + ".lock";

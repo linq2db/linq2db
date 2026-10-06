@@ -26,7 +26,7 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		int     MaxResponseBytes,
 		bool    EnableExecuteTool)
 	{
-		/// <summary>Credential helper command from the server arguments; overrides the profile's <c>credentialHelper</c>.</summary>
-		public string? CredentialHelper { get; init; }
+		/// <summary>Credential store or credentials CLI from the server arguments; overrides the profile's <c>credentialsCli</c>.</summary>
+		public string? CredentialsCli { get; init; }
 	}
 }
