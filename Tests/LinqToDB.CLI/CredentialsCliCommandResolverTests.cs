@@ -93,6 +93,9 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void MissingPathIsReported()
 		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("POSIX paths are normalized with the host's path rules.");
+
 			Resolve("/opt/missing", false, null, null, [], out _, out var error).ShouldBeFalse();
 
 			error.ShouldBe("Credentials CLI program '/opt/missing' was not found (looked for '/opt/missing').");
@@ -170,10 +173,10 @@ namespace Tests.LinqToDB.CLI
 			error.ShouldBe("Credentials CLI program 'helper' was not found (looked up on PATH; the current directory is never searched).");
 		}
 
-		[TestCase("helper.ps1",            "pwsh -NoProfile -File")]
-		[TestCase(@"C:\Tools\helper.ps1",  "pwsh -NoProfile -File")]
-		[TestCase(@"C:\Tools\helper.py",   @"python \""C:\\Tools\\helper.py\""")]
-		[TestCase(@"C:\Tools\helper.sh",   "through its interpreter")]
+		[TestCase("helper.ps1",            "pwsh -NoProfile -File",                   TestName = "WindowsBarePowerShellScriptSuggestsPwsh")]
+		[TestCase(@"C:\Tools\helper.ps1",  "pwsh -NoProfile -File",                   TestName = "WindowsPowerShellScriptSuggestsPwsh")]
+		[TestCase(@"C:\Tools\helper.py",   @"python \""C:\\Tools\\helper.py\""", TestName = "WindowsPythonScriptSuggestsPython")]
+		[TestCase(@"C:\Tools\helper.sh",   "through its interpreter",                 TestName = "WindowsShellScriptSuggestsAnInterpreter")]
 		public void WindowsUnsupportedExtensionSuggestsTheInterpreter(string command, string hint)
 		{
 			Resolve(command, true, @"C:\Tools", null, [@"C:\Tools\helper.ps1", @"C:\Tools\helper.sh", @"C:\Tools\helper.py"], out _, out var error).ShouldBeFalse();

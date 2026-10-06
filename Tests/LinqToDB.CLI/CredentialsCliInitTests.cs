@@ -126,10 +126,17 @@ namespace Tests.LinqToDB.CLI
 			File.GetUnixFileMode(script).ShouldBe(Owner700);
 		}
 
-		[TestCase("a\"b.sh")]
-		[TestCase("a'b.sh")]
-		public async Task OutputWithQuotesIsRefused(string name)
+		// Test names and arguments stay free of quotes: a failed test is re-run by a filter built from its name.
+		[TestCase('"',  TestName = "OutputWithDoubleQuoteIsRefused")]
+		[TestCase('\'', TestName = "OutputWithSingleQuoteIsRefused")]
+		public async Task OutputWithQuotesIsRefused(char quote)
 		{
+			// --output names a keyring/gpg script, and those stores exist only on Linux and macOS; on Windows the store is
+			// refused before the path is looked at.
+			RequirePosix();
+
+			var name = $"a{quote}b.sh";
+
 			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", Path.Combine(_root, name));
 
 			exitCode.ShouldBe(-1);
