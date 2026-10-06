@@ -2,6 +2,4 @@
 
 namespace LinqToDB.LINQPad;
 
-public sealed class LinqToDBLinqPadException(string message) : Exception(message)
-{
-}
+public sealed class LinqToDBLinqPadException(string message) : Exception(message);

@@ -6,7 +6,7 @@
 	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo         = false;
 
-	// temporary, see SQLite.Runtime.props notes
+	// both SQLite clients share one native package and resolve e_sqlite3 under runtimes/
 	var sqliteRuntimesPath = Host.ResolveAssemblyReference("$(LinqToDBT4SharedTools)");
-	Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", Path.Combine(sqliteRuntimesPath, "sds"));
+	Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", sqliteRuntimesPath);
 #>

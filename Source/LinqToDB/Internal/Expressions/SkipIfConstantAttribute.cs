@@ -7,7 +7,5 @@ namespace LinqToDB.Internal.Expressions
 	/// Method parameter parameterization should be also implemented in method builder.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Parameter)]
-	internal sealed class SkipIfConstantAttribute : Attribute
-	{
-	}
+	internal sealed class SkipIfConstantAttribute : Attribute;
 }

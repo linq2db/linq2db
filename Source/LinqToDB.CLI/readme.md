@@ -1,6 +1,8 @@
 <!-- omit in toc -->
 # LINQ to DB CLI tools
 
+<!-- mcp-name: io.github.linq2db/linq2db.cli -->
+
 ***
 > **NOTE**: This is not a library you could reference from your project, but command line utility, installed using `dotnet tool` command (see [installation notes](#installation)).
 ***
@@ -9,10 +11,12 @@
 
 - [Installation](#installation)
   - [Choosing 32-bit vs 64-bit (Windows)](#choosing-32-bit-vs-64-bit-windows)
+  - [DB2 and Informix on Windows with UTF-8 codepage](#db2-and-informix-on-windows-with-utf-8-codepage)
 - [Use](#use)
   - [Usage Examples](#usage-examples)
     - [Generate SQLite database model in current folder](#generate-sqlite-database-model-in-current-folder)
     - [Generate SQLite database model using response file](#generate-sqlite-database-model-using-response-file)
+- [Licensing](#licensing)
 
 ## Installation
 
@@ -68,6 +72,26 @@ dotnet tool install linq2db.cli --tool-path C:\tools\linq2db-x86 --arch x86
 
 Use any paths you like; if the path contains spaces, quote it (PowerShell: `"C:\My Tools\linq2db-x86"`; cmd: `"%USERPROFILE%\tools\x86"`).
 
+### DB2 and Informix on Windows with UTF-8 codepage
+
+If DB2 or Informix connections fail with `ERROR - no error information available` — no `SQLSTATE`, no inner exception, and nothing written to `db2diag.log` on either the client or the server — set the environment variable:
+
+```
+DB2CODEPAGE=1208
+```
+
+**Why:** when Windows is configured with *Use Unicode UTF-8 for worldwide language support*, the system ANSI and OEM codepages are both `65001`. IBM's native client cannot derive its codepage from `65001`, so it fails to allocate a CLI environment handle before any connection is attempted — which is why the error carries no detail. `1208` is DB2's codepage number for UTF-8.
+
+This affects **both DB2 and Informix**, because both go through `IBM.Data.Db2`. Set it machine- or user-wide rather than per-shell, and restart any already-running host (Visual Studio, LINQPad, an IDE terminal) — a process started before the change keeps the old environment.
+
+To confirm the diagnosis independently of linq2db, run IBM's own tool from the driver's `clidriver\bin`:
+
+```
+db2cli.exe validate -connect -connstring "DATABASE=mydb;HOSTNAME=localhost;PORT=50000;UID=user;PWD=password;"
+```
+
+`Failed to alloc env handle` is this problem; with `DB2CODEPAGE=1208` set, the same command reports `[SUCCESS]`.
+
 ## Use
 
 To invoke tool use `dotnet-linq2db <PARAMETERS>` or `dotnet linq2db <PARAMETERS>` command.
@@ -100,7 +124,7 @@ Prefer `--connection-string-env` when the connection string contains credentials
 
 Configuration profiles are shared by `query`, `schema`, and `mcp`. The `query` command supports `json`, `json-table`, and `csv`. The `schema` command outputs JSON only. The MCP `linq2db_query` tool supports only `json` and `json-table`; if a selected profile has `output: "csv"`, MCP calls must pass `output: "json-table"` or `output: "json"` explicitly, or the profile should be adjusted for MCP usage.
 
-On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password without echo and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
+On Windows, `dotnet linq2db credentials` manages credential profiles under the `linq2db/` target namespace. `credentials set` prompts for the password and stores the real user/password payload behind a version marker with additional current-user DPAPI protection. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. `credentials list` returns profile names and users but never passwords. `credentials remove` removes one profile, and `credentials clear` removes all `linq2db/` profiles after confirmation; use `--force` only for intentional non-interactive cleanup.
 
 ```powershell
 dotnet linq2db credentials set --profile project-a/production --user "DOMAIN\ServiceAccount"
@@ -185,3 +209,18 @@ Scaffold configs (response files) are convenient in many ways:
 - you can store scaffolding options for your project in source control and share with other developers
 - with many options it is hard to work with command line
 - some options not available from CLI or hard to use due to CLI nature (e.g. various issues with escaping of parameters)
+
+## Licensing
+
+The MIT license this package declares covers LINQ to DB's own code.
+
+Unlike a library package, a .NET tool does not resolve its dependencies at install time — it carries
+them. `linq2db.cli` therefore ships the database clients for every provider it supports, plus the
+runtime libraries they need, as files inside the package. Those components are third-party software
+under their own licenses, not under the MIT license above.
+
+Every one of them is listed, with its license reproduced in full, in `THIRD-PARTY-NOTICES.txt`. It is
+included at the root of the package and installed alongside the tool, so after
+`dotnet tool install -g linq2db.cli` you will find it next to `dotnet-linq2db` in the tool's store
+directory (`~/.dotnet/tools/.store/linq2db.cli.<rid>/<version>/linq2db.cli.<rid>/<version>/tools/<tfm>/<rid>/`
+on a default install).

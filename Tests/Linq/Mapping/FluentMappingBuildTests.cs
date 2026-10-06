@@ -111,7 +111,7 @@ namespace Tests.Mapping
 				.MergeAsync();
 		}
 
-		[Test]
+		[Test, QueryCacheTest]
 		public void CacheTest([DataSources] string context)
 		{
 			var count = Test("Value");

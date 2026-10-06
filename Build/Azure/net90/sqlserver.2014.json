@@ -1,4 +1,4 @@
-﻿{
+{
 	"NET90.Azure": {
 		"Providers": [
 			"SqlServer.2014",

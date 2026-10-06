@@ -282,7 +282,8 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					await DisposeClientAsync(client).ConfigureAwait(false);
+					if (OwnsClient)
+						await DisposeClientAsync(client).ConfigureAwait(false);
 				}
 			}
 		}
@@ -297,6 +298,14 @@ namespace LinqToDB.Remote
 			// preload _configurationInfo asynchronously if needed
 			return PreloadConfigurationInfoAsync(cancellationToken);
 		}
+
+		/// <summary>
+		/// Whether an instance returned by <see cref="GetClient"/> belongs to its caller, which disposes it
+		/// when done with it. Override to return <see langword="false"/> when <see cref="GetClient"/> hands
+		/// out an instance whose lifetime is managed elsewhere - a client shared by every query cannot be
+		/// disposed after one of them.
+		/// </summary>
+		protected virtual bool OwnsClient => true;
 
 		protected abstract ILinqService GetClient();
 		protected abstract string       ContextIDPrefix { get; }
@@ -573,7 +582,9 @@ namespace LinqToDB.Remote
 				}
 				finally
 				{
-					await DisposeClientAsync(client).ConfigureAwait(false);
+					if (OwnsClient)
+						await DisposeClientAsync(client).ConfigureAwait(false);
+
 					_queryBatch = null;
 				}
 			}

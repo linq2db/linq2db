@@ -693,11 +693,14 @@ public class DbNorthwind : LinqToDB.Data.DataConnection
 
 ## Analyzers
 
-Roslyn analyzers and code fixes that flag legacy API usage and offer automatic migrations to the current API ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains.
+Roslyn analyzers and code fixes that flag legacy API usage, offer automatic migrations to the current API, and report mistakes the compiler cannot see — a query that is valid C# but cannot mean what it says — ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains.
 
 | Id | Severity | Description |
 |----|----------|-------------|
 | [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+| [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
+| [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
+| [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
 
 Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
 
@@ -715,6 +718,18 @@ Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from
 
 ```ini
 linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
+
+Both exception-type lists below are **additive** to their defaults and match type names **exactly**, not by subclass. Add exception types your own stubs throw, so L2DB1004 accepts them:
+
+```ini
+linq2db.L2DB1004.allowed_exception_types = MyCompany.ServerSideException, MyCompany.SqlOnlyException
+```
+
+Add exception types that mark an *unattributed* stub as server-side-only, widening what L2DB1003 reports (the default is `LinqToDB.ServerSideOnlyException` alone, which keeps ordinary `NotImplementedException` placeholders out of the results):
+
+```ini
+linq2db.L2DB1003.unmarked_stub_exception_types = MyCompany.ServerSideException
 ```
 
 Turn all of them off for a project:

@@ -435,6 +435,25 @@ namespace LinqToDB.CommandLine.Commands.Help
 				environment.Out.WriteLine("    yourself. Use any paths you like (quote if they contain spaces):");
 				environment.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x64 --arch x64");
 				environment.Out.WriteLine("        dotnet tool install linq2db.cli --tool-path C:\\tools\\linq2db-x86 --arch x86");
+
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("DB2 and Informix with UTF-8 codepage:");
+				environment.Out.WriteLine("    If DB2 or Informix connections fail with 'ERROR - no error information available' (no SQLSTATE,");
+				environment.Out.WriteLine("    no inner exception, nothing logged to db2diag.log), set the environment variable:");
+				environment.Out.WriteLine("        DB2CODEPAGE=1208");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    Cause: with Windows 'Use Unicode UTF-8 for worldwide language support' enabled, the ANSI and OEM");
+				environment.Out.WriteLine("    codepages are both 65001. IBM's native client cannot derive its codepage from 65001, so it fails to");
+				environment.Out.WriteLine("    allocate a CLI environment handle before any connection is attempted - which is why the error");
+				environment.Out.WriteLine("    carries no detail. 1208 is DB2's codepage number for UTF-8.");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    Applies to both DB2 and Informix (both use IBM.Data.Db2). Set it machine- or user-wide, and");
+				environment.Out.WriteLine("    restart any host started before the change (Visual Studio, LINQPad, an IDE terminal) - a process");
+				environment.Out.WriteLine("    started earlier keeps the old environment.");
+				environment.Out.WriteLine();
+				environment.Out.WriteLine("    To confirm independently of linq2db, run IBM's own tool from the driver's clidriver\\bin:");
+				environment.Out.WriteLine("        db2cli.exe validate -connect -connstring \"DATABASE=db;HOSTNAME=host;PORT=50000;UID=u;PWD=p;\"");
+				environment.Out.WriteLine("    'Failed to alloc env handle' is this problem; with DB2CODEPAGE=1208 it reports [SUCCESS].");
 			}
 
 			environment.Out.WriteLine();

@@ -161,6 +161,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -218,6 +220,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -254,6 +258,15 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// This overload will be removed in version 7.
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
+		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -636,6 +649,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -695,6 +710,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -730,6 +747,15 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// This overload will be removed in version 7.
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
+		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -1097,6 +1123,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -1148,6 +1176,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -1179,6 +1209,15 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// This overload will be removed in version 7.
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
+		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -1492,6 +1531,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -1536,6 +1577,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior to version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
@@ -1565,6 +1608,15 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// This overload will be removed in version 7.
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
+		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]

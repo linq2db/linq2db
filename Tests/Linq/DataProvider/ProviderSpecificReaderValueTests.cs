@@ -205,7 +205,10 @@ namespace Tests.DataProvider
 				AssertReadMatrix(conn, "CAST('[(1,2),(3,4)]' AS path)"                                             , typeof(NpgsqlPath)            , typeof(NpgsqlPath)            , "[(1,2),(3,4)]");
 				AssertReadMatrix(conn, "CAST('((1,2),(3,4),(5,6))' AS polygon)"                                    , typeof(NpgsqlPolygon)         , typeof(NpgsqlPolygon)         , "[(1,2),(3,4),(5,6)]");
 				AssertReadMatrix(conn, "circle(point(1,2), 3)"                                                     , typeof(NpgsqlCircle)          , typeof(NpgsqlCircle)          , "<(1,2),3>");
-				AssertReadMatrix(conn, "line(point(1,2), point(3,4))"                                              , typeof(NpgsqlLine)            , typeof(NpgsqlLine)            , "{1,-1,1}");
+				// PostgreSQL declared the line type before implementing its I/O functions - reading one on 9.2/9.3
+				// fails with 0A000 'type "line" not yet implemented'. Implemented in 9.4.
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL93Minus))
+					AssertReadMatrix(conn, "line(point(1,2), point(3,4))"                                          , typeof(NpgsqlLine)            , typeof(NpgsqlLine)            , "{1,-1,1}");
 				AssertReadMatrix(conn, "int4range(1, 5, '[)')"                                                     , typeof(NpgsqlRange<int>)      , typeof(NpgsqlRange<int>)      , "[1,5)");
 				AssertReadMatrix(conn, "numrange(1.1, 5.5, '[)')"                                                  , typeof(NpgsqlRange<decimal>)  , typeof(NpgsqlRange<decimal>)  , "[1.1,5.5)");
 				AssertReadMatrix(conn, "daterange(date '2024-01-01', date '2024-02-01', '[)')"                    , typeof(NpgsqlRange<DateOnly>), typeof(NpgsqlRange<DateOnly>), "[2024-01-01,2024-02-01)", providerSpecificOnly: true);

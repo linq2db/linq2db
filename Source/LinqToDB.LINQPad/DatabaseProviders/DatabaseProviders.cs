@@ -77,6 +77,36 @@ internal static class DatabaseProviders
 #endif
 	}
 
+#if !NETFRAMEWORK
+	/// <summary>
+	/// Returns NuGet packages of all known providers, used when the client needed by a connection cannot be
+	/// identified (see <see cref="DriverHelper.OverrideDriverDependencies"/>).
+	/// </summary>
+	public static IEnumerable<(string Id, string Version)> GetAllNuGetPackages()
+	{
+		foreach (var provider in Providers.Values)
+		{
+			// a database that cannot work on this host needs no client (e.g. Access OLE DB on macOS)
+			if (!provider.IsPlatformSupported)
+				continue;
+
+			foreach (var package in GetNuGetPackages(provider))
+				yield return package;
+		}
+	}
+
+	/// <summary>
+	/// Returns NuGet packages of every provider of one database. Which of them a connection will use is not
+	/// always known, and the sets differ only for the databases that have more than one client.
+	/// </summary>
+	public static IEnumerable<(string Id, string Version)> GetNuGetPackages(IDatabaseProvider provider)
+	{
+		foreach (var info in provider.Providers)
+			foreach (var package in provider.GetNuGetPackages(info.Name))
+				yield return package;
+	}
+#endif
+
 	public static DbConnection CreateConnection(ConnectionSettings settings)
 	{
 		return GetDataProvider(settings).CreateConnection(settings.Connection.GetFullConnectionString()!);
