@@ -69,32 +69,71 @@ namespace Tests.LinqToDB.CLI
 				recorded.ShouldContain("argc=1\n");
 		}
 
-		[Test]
-		public void ArgumentStringIsSplitByTheWindowsRules()
+		[TestCase(false, TestName = "ArgumentStringIsSplitByTheWindowsRulesForAScript")]
+		[TestCase(true,  TestName = "ArgumentStringIsSplitByTheWindowsRulesForAnExecutable")]
+		public void ArgumentStringIsSplitByTheWindowsRules(bool executable)
 		{
 			// The configured rest of the command line reaches the program split like a Windows command line (MSVCRT rules)
-			// on every OS: whitespace separates, "..." groups, \" is a quote; the verb comes last.
-			var record = Path.Combine(_directory, "argv.txt");
-			var helper = Script(
-				"argv-helper",
-				$"for a in \"$@\"; do printf '[%s]\\n' \"$a\"; done > '{record}'\nprintf 'protocol=1\\nstatus=ok\\n'\n",
-				$"@echo off\r\n(echo [%~1]& echo [%~2]& echo [%~3]& echo [%~4]) > \"{record}\"\r\necho protocol=1\r\necho status=ok\r\n");
+			// on every OS: whitespace separates, "..." groups, \" is a quote; the verb comes last. On Unix .NET splits the
+			// string before it starts the program; on Windows an executable splits its own command line. cmd.exe, which
+			// runs batch files, has no backslash escape: see BatchProgramGetsGroupedArguments.
+			if (!executable && OperatingSystem.IsWindows())
+				Assert.Ignore("Batch files: see BatchProgramGetsGroupedArguments.");
 
-			var result = CredentialsCliTestSupport.CreateRunner(helper, arguments: "\"a b\" c\\\"d e").Run("store", CredentialsCliTestSupport.Request("protocol=1", "verb=store"));
+			var program = executable
+				? BuildArgumentEchoProgram()
+				: Script("argv-helper", "for a in \"$@\"; do printf '[%s]\\n' \"$a\"; done\n", string.Empty);
+
+			var result = CredentialsCliTestSupport.CreateRunner(program, arguments: "\"a b\" c\\\"d e").Run("store", CredentialsCliTestSupport.Request("protocol=1", "verb=store"));
+
+			result.Failure.ShouldBeNull();
+			result.ExitCode.ShouldBe(0, result.ErrorOutput);
+			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldBe("[a b]\n[c\"d]\n[e]\n[store]\n");
+		}
+
+		[Test]
+		public void BatchProgramGetsGroupedArguments()
+		{
+			if (!OperatingSystem.IsWindows())
+				Assert.Ignore("cmd.exe batch files.");
+
+			var helper = Script("argv-helper", string.Empty, "@echo off\r\necho [%~1]\r\necho [%~2]\r\necho [%~3]\r\n");
+
+			var result = CredentialsCliTestSupport.CreateRunner(helper, arguments: "\"a b\" c").Run("store", CredentialsCliTestSupport.Request("protocol=1", "verb=store"));
 
 			result.ExitCode.ShouldBe(0, result.ErrorOutput);
+			Encoding.UTF8.GetString(result.Output).Replace("\r", string.Empty, StringComparison.Ordinal).ShouldBe("[a b]\n[c]\n[store]\n");
+		}
 
-			var lines = File.ReadAllText(record).Replace("\r", string.Empty, StringComparison.Ordinal);
+		/// <summary>Builds a small program that prints each of its arguments as <c>[argument]</c> on a line.</summary>
+		string BuildArgumentEchoProgram()
+		{
+			var source = Path.Combine(_directory, "argecho.cs");
+			var output = Path.Combine(_directory, "argecho");
 
-			if (OperatingSystem.IsWindows())
+			File.WriteAllText(source, "#:property PublishAot=false\nforeach (var argument in args)\n\tSystem.Console.Out.Write(\"[\" + argument + \"]\\n\");\n");
+
+			var build = new ProcessStartInfo(CredentialsCliTestSupport.DotnetCommand)
 			{
-				// cmd.exe hands a batch file the raw command line; %~n removes the grouping quotes only.
-				lines.ShouldBe("[a b]\n[c\\\"d]\n[e]\n[store]\n");
-			}
-			else
-			{
-				lines.ShouldBe("[a b]\n[c\"d]\n[e]\n[store]\n");
-			}
+				UseShellExecute        = false,
+				RedirectStandardOutput = true,
+				RedirectStandardError  = true,
+			};
+
+			foreach (var argument in new[] { "build", source, "-o", output })
+				build.ArgumentList.Add(argument);
+
+			build.Environment["DOTNET_NOLOGO"] = "1";
+
+			using var process = Process.Start(build)!;
+
+			var buildOutput = process.StandardOutput.ReadToEndAsync();
+			var buildErrors = process.StandardError.ReadToEndAsync();
+
+			process.WaitForExit(TimeSpan.FromSeconds(300)).ShouldBeTrue("dotnet build of the argument echo program timed out");
+			process.ExitCode.ShouldBe(0, buildOutput.Result + buildErrors.Result);
+
+			return Path.Combine(output, OperatingSystem.IsWindows() ? "argecho.exe" : "argecho");
 		}
 
 		[Test]
