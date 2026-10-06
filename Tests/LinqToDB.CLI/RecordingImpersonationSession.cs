@@ -61,7 +61,9 @@ namespace Tests.LinqToDB.CLI
 
 			void OnAssemblyLoad(object? sender, AssemblyLoadEventArgs args)
 			{
-				if (Current != this)
+				// Dynamic assemblies (e.g. the one hosting dynamic methods) are created in memory, not loaded from disk.
+				//
+				if (Current != this || args.LoadedAssembly.IsDynamic)
 					return;
 
 				lock (run.LoadedInside)
@@ -78,7 +80,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			using var process = Process.GetCurrentProcess();
 
-			return process.Modules.Cast<ProcessModule>().Select(static m => m.ModuleName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+			return process.Modules.Cast<ProcessModule>().Select(static m => m.FileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
 		}
 
 		internal sealed record ImpersonatedRun(string ErrorOutputAtEntry, HashSet<string> LoadedAtEntry, HashSet<string> NativeModulesAtEntry)

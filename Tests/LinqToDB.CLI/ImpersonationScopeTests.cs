@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -28,11 +30,13 @@ namespace Tests.LinqToDB.CLI
 	public sealed class ImpersonationScopeTests
 	{
 		const string ScriptDomAssembly = "Microsoft.SqlServer.TransactSql.ScriptDom";
+		const string ColdCaseVariable     = "LINQ2DB_CLI_COLD_CASE";
 		const string ColdDatabaseVariable = "LINQ2DB_CLI_COLD_SQLITE_DATABASE";
 
 		// Nothing listens on port 1, so connection attempts fail fast.
 		//
-		const string UnreachableSqlServer = "Server=127.0.0.1,1;Database=master;User Id=sa;Password=x;TrustServerCertificate=True;Connect Timeout=2;ConnectRetryCount=0";
+		const string UnreachableSqlServer  = "Server=127.0.0.1,1;Database=master;User Id=sa;Password=x;TrustServerCertificate=True;Connect Timeout=2;ConnectRetryCount=0";
+		const string UnreachablePostgreSql = "Host=127.0.0.1;Port=1;Username=user;Password=x;Timeout=2";
 
 		[Test]
 		public async Task QueryRejectsWriteSqlBeforeExecution()
@@ -189,10 +193,30 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		/// <summary>
-		/// Runs <see cref="ColdSqliteProcess"/> in a new process, where nothing has initialized SQLite yet.
+		/// Commands run by <see cref="NothingIsLoadedWhileImpersonating"/>, each in a new process: nothing in that
+		/// process has initialized the client, so whatever the command needs would be loaded on first use.
+		/// Unreachable servers still run the client's connection code and its error path (message resources).
 		/// </summary>
-		[Test]
-		public async Task ColdSqliteInitializesBeforeImpersonation()
+		static readonly Dictionary<string, string[]> _coldCases = new(StringComparer.Ordinal)
+		{
+			["SQLite query"]                     = ["query",   "--provider", "SQLite",         "--connection-string", "Data Source=%DATABASE%;Pooling=False", "--output", "json", "--sql", "select Id, Name from Person"],
+			["SQLite execute"]                   = ["execute", "--config",   "%CONFIG%",       "--output", "json-table", "--sql", "update Person set Name = 'updated' where Id = 1"],
+			["SQLite schema"]                    = ["schema",  "--provider", "SQLite",         "--connection-string", "Data Source=%DATABASE%;Pooling=False"],
+			["SqlServer query"]                  = ["query",   "--provider", "SqlServer",      "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
+			["SqlServer.2022 query"]             = ["query",   "--provider", "SqlServer.2022", "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
+			["SqlServer.2022 query, de-DE"]      = ["query",   "--provider", "SqlServer.2022", "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
+			["SqlServer schema"]                 = ["schema",  "--provider", "SqlServer",      "--connection-string", UnreachableSqlServer],
+			["PostgreSQL query"]                 = ["query",   "--provider", "PostgreSQL",     "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
+			["PostgreSQL.15 query"]              = ["query",   "--provider", "PostgreSQL.15",  "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
+		};
+
+		static IEnumerable<string> ColdCases => _coldCases.Keys;
+
+		/// <summary>
+		/// Runs <see cref="ColdProcess"/> for <paramref name="coldCase"/> in a new process.
+		/// </summary>
+		[TestCaseSource(nameof(ColdCases))]
+		public async Task NothingIsLoadedWhileImpersonating(string coldCase)
 		{
 			var database   = CreateSqliteDatabase();
 			var resultsDir = Path.Combine(Path.GetTempPath(), $"linq2db-cli-cold-{Guid.NewGuid():N}");
@@ -208,9 +232,10 @@ namespace Tests.LinqToDB.CLI
 
 				startInfo.ArgumentList.Add(typeof(ImpersonationScopeTests).Assembly.Location);
 				startInfo.ArgumentList.Add("--filter");
-				startInfo.ArgumentList.Add($"FullyQualifiedName={typeof(ImpersonationScopeTests).FullName}.{nameof(ColdSqliteProcess)}");
+				startInfo.ArgumentList.Add($"FullyQualifiedName={typeof(ImpersonationScopeTests).FullName}.{nameof(ColdProcess)}");
 				startInfo.ArgumentList.Add("--results-directory");
 				startInfo.ArgumentList.Add(resultsDir);
+				startInfo.Environment[ColdCaseVariable]     = coldCase;
 				startInfo.Environment[ColdDatabaseVariable] = database;
 
 				using var process = Process.Start(startInfo) ?? throw new InvalidOperationException("Cannot start test process.");
@@ -245,33 +270,74 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
-		[Test, Explicit("Started in a new process by ColdSqliteInitializesBeforeImpersonation.")]
-		public async Task ColdSqliteProcess()
+		[Test, Explicit("Started in a new process by NothingIsLoadedWhileImpersonating.")]
+		public async Task ColdProcess()
 		{
+			var coldCase = Environment.GetEnvironmentVariable(ColdCaseVariable);
 			var database = Environment.GetEnvironmentVariable(ColdDatabaseVariable);
 
-			if (database == null)
-				Assert.Ignore($"Runs only from {nameof(ColdSqliteInitializesBeforeImpersonation)}.");
+			if (coldCase == null || database == null)
+				Assert.Ignore($"Runs only from {nameof(NothingIsLoadedWhileImpersonating)}.");
+
+			// The SQL Server client ships German messages; the error below must come from them.
+			//
+			if (coldCase.EndsWith(", de-DE", StringComparison.Ordinal))
+				CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de-DE");
 
 			var environment = new TestCliEnvironment();
+			var config      = AddConfigFile(environment, """
+				{
+					"default": {
+						"provider": "SQLite",
+						"connectionString": "Data Source=%DATABASE%;Pooling=False",
+						"user": "user",
+						"password": "secret",
+						"impersonate": true,
+						"enableExecute": true
+					}
+				}
+				""".Replace("%DATABASE%", database.Replace("\\", "\\\\", StringComparison.Ordinal), StringComparison.Ordinal));
 
-			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--output", "json", "--sql", "select Id, Name from Person");
+			var arguments = _coldCases[coldCase]
+				.Select(a => a.Replace("%DATABASE%", database, StringComparison.Ordinal).Replace("%CONFIG%", config, StringComparison.Ordinal))
+				.Concat(coldCase.Contains("execute", StringComparison.Ordinal) ? [] : ["--user", "user", "--password", "secret", "--impersonate"])
+				.ToArray();
 
+			var result  = await RunCli(environment, arguments);
 			var session = environment.ImpersonationSessions.ShouldHaveSingleItem();
+
+			// Native libraries shipped with the tool or the .NET runtime. Those of the operating system (e.g. the
+			// Kerberos libraries the runtime's GSSAPI shim loads on Linux) are readable by every account.
+			//
+			var shippedDirectories = new[] { AppContext.BaseDirectory, RuntimeEnvironment.GetRuntimeDirectory() };
 
 			using (Assert.EnterMultipleScope())
 			{
-				result.ExitCode.  ShouldBe(0, result.Error);
+				if (coldCase.StartsWith("SQLite", StringComparison.Ordinal))
+					result.ExitCode.ShouldBe(0, result.Error);
+				else
+					result.Error.ShouldContain(coldCase.Contains("schema", StringComparison.Ordinal) ? "Schema inspection failed:" : "SQL execution failed:");
+
 				session.Runs.Count.ShouldBe(2);
 
-				// Nothing in this process touched SQLite before the command. Native SQLite is loaded before execution
-				// starts and never while impersonated. (Whether it is already loaded when provider resolution starts
-				// depends on the platform, so that is not checked.)
-				//
-				session.Runs[1].NativeModulesAtEntry.Any(IsSqliteNative).ShouldBeTrue();
-				session.Runs.SelectMany(static r => r.NativeModulesLoadedInside).Any(IsSqliteNative).ShouldBeFalse();
-				session.Runs[1].LoadedAtEntry.ShouldContain(static a => a.StartsWith("SQLitePCLRaw.", StringComparison.Ordinal));
-				session.Runs.SelectMany(static r => r.LoadedInside).ShouldNotContain(static a => a.StartsWith("SQLitePCLRaw.", StringComparison.Ordinal));
+				session.Runs.SelectMany(static r => r.LoadedInside).ShouldBeEmpty();
+				session.Runs.SelectMany(static r => r.NativeModulesLoadedInside)
+					.Where(m => shippedDirectories.Any(d => m.StartsWith(d, StringComparison.OrdinalIgnoreCase)))
+					.ShouldBeEmpty();
+
+				if (coldCase.StartsWith("SQLite", StringComparison.Ordinal))
+				{
+					// Native SQLite is loaded before provider resolution starts.
+					//
+					session.Runs[0].NativeModulesAtEntry.Any(IsSqliteNative).ShouldBeTrue();
+				}
+
+				if (coldCase.EndsWith(", de-DE", StringComparison.Ordinal))
+				{
+					session.Runs[0].LoadedAtEntry.ShouldContain("Microsoft.Data.SqlClient.resources");
+					result.Error.ShouldContain("SQL Server", Case.Sensitive);
+					result.Error.ShouldNotContain("A network-related or instance-specific error", Case.Sensitive);
+				}
 			}
 
 			// The native library itself, not managed assemblies such as SQLitePCLRaw.provider.e_sqlite3.dll, which
