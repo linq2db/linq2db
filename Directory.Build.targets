@@ -1,0 +1,10 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!-- .targets, not .props: a props file is evaluated before the project body, so $(TargetFramework)
+	     is empty there for a project that declares a single TargetFramework in its own body, and the
+	     condition silently never fires. Override with -p:Features=strict to build without it. -->
+	<PropertyGroup>
+		<Features Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0')) ">$(Features);runtime-async=on</Features>
+	</PropertyGroup>
+
+</Project>
