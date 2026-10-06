@@ -67,14 +67,20 @@ One directory holds the local store's files and the generated scripts:
 - Linux, macOS: `$LINQ2DB_CREDENTIALS_DIR`, else `$XDG_CONFIG_HOME/linq2db`, else `~/.config/linq2db`;
 - Windows: `%LINQ2DB_CREDENTIALS_DIR%`, else `%LOCALAPPDATA%\linq2db`.
 
-A relative value of these variables is ignored. `LINQ2DB_CREDENTIALS_DIR` is meant for tests and containers. When no
-directory can be determined (no home directory), set `LINQ2DB_CREDENTIALS_DIR` to an absolute path.
+A relative value of these variables is ignored. `LINQ2DB_CREDENTIALS_DIR` is meant for tests and containers; it must not
+be under a directory that other users can write to (see below). When no directory can be determined (no home
+directory), set `LINQ2DB_CREDENTIALS_DIR` to an absolute path.
 
 On Linux and macOS the directory is created owner-only (`0700`); a directory that is a symbolic link or that other users
-can write to is refused, because they could replace the key, the data or a generated script. linq2db-cli warns when the
-directory is inside a git working tree. On Windows the local store refuses a directory outside your user profile: a
-folder elsewhere may give other users write access, and while they could neither read nor forge entries, they could
-delete the data or put back an older copy.
+can write to is refused, because they could replace the key, the data or a generated script. So is a directory with an
+ancestor that other users can write to without the sticky bit (`/tmp` has the sticky bit): they could rename the whole
+directory and put their own in its place. The error names that ancestor. linq2db-cli warns when the directory is inside
+a git working tree.
+
+On Windows the local store refuses a directory outside your user profile: a folder elsewhere may give other users write
+access, and while they could neither read nor forge entries, they could delete the data or put back an older copy. The
+check follows junctions and symbolic links and understands 8.3 short names, so a link inside the profile that leads
+elsewhere is outside.
 
 ## 4. The built-in local store
 
@@ -87,6 +93,9 @@ loses the passwords; do not commit them. Default on Linux and macOS.
 
 - Files: `credentials.key` (32 random bytes; on Windows wrapped with DPAPI for the current user), `credentials.dat`
   (AES-256-GCM, a fresh nonce on every write) and `credentials.lock`.
+- Every write goes to a new file that is flushed to disk and then renamed over `credentials.dat` (or into place as
+  `credentials.key`). The directory itself is not flushed after the rename, so after a power loss the previous data may
+  come back; a torn or partly written file never does.
 - Every operation takes an operating-system lock on `credentials.lock`; it is released when the process ends, so it is
   never stale. A command and an MCP server can use the store at the same time.
 - Reading never creates anything: before the first `credentials set` (or `credentials cli init --store local`) there is
@@ -141,8 +150,9 @@ unchanged as its argument string, followed by the verb as one more argument:
 - On Windows a program is an `.exe`, `.com`, `.cmd` or `.bat` file; a name without an extension is tried with each
   `PATHEXT` extension in order (other `PATHEXT` entries are ignored). A `.cmd` or `.bat` file is run as
   `cmd.exe /d /v:off /s /c ""<file>" <arguments> <verb>"`: a path with spaces and parentheses
-  (`C:\Program Files (x86)\...`) stays intact, AutoRun commands are skipped, and `cmd.exe` parses the arguments
-  (`%NAME%` in them is expanded by `cmd.exe`).
+  (`C:\Program Files (x86)\...`) stays intact, AutoRun commands are skipped, and `cmd.exe` parses the arguments:
+  `%NAME%` in them is expanded, and `&`, `|`, `^`, `<` and `>` outside quotes are `cmd.exe` syntax, not text. `cmd.exe`
+  has no backslash escape for `"`; keep arguments of a batch file simple, or run the program the batch file runs.
 - Run a script through its interpreter:
   - PowerShell: `"credentialsCli": "pwsh -NoProfile -File \"C:\\Tools\\vault.ps1\" -Mount db"`. The execution policy and
     the console encoding are the script's business: set UTF-8 on both streams, as the example below does.
