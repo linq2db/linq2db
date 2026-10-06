@@ -270,6 +270,8 @@ public class a_CreateData : TestBase
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessAction);      break;
 			case string when context.IsAnyOf(TestProvName.AllAccessOdbc)  : RunScript(context,          "\nGO\n",  "Access",   AccessODBCAction);
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessODBCAction);  break;
+			case string when context.IsAnyOf(TestProvName.AllAccessLibRed): RunScript(context,          "\nGO\n",  "Access",   AccessLibRedAction);
+			                                                                RunScript(context+ ".Data", "\nGO\n",  "Access",   AccessLibRedAction); break;
 			case ProviderName.SqlCe                                       : RunScript(context,          "\nGO\n",  "SqlCe");
 			                                                                RunScript(context+ ".Data", "\nGO\n",  "SqlCe");                       break;
 			case string when context.IsAnyOf(TestProvName.AllClickHouse)  : RunScript(context,          "\nGO\n",  "ClickHouse");                  break;
@@ -321,9 +323,12 @@ public class a_CreateData : TestBase
 			});
 	}
 
-	static void AccessAction(DbConnection connection)
+	static void AccessAction      (DbConnection connection) => AccessNamedParametersAction(connection, AccessProvider.OleDb);
+	static void AccessLibRedAction(DbConnection connection) => AccessNamedParametersAction(connection, AccessProvider.LibRed);
+
+	static void AccessNamedParametersAction(DbConnection connection, AccessProvider provider)
 	{
-		using var conn = AccessTools.CreateDataConnection(connection, provider: AccessProvider.OleDb);
+		using var conn = AccessTools.CreateDataConnection(connection, provider: provider);
 		conn.Execute(@"
 				INSERT INTO AllTypes
 				(

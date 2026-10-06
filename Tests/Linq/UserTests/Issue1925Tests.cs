@@ -1,4 +1,5 @@
-﻿using System.Data.Odbc;
+﻿using System;
+using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Linq;
 
@@ -66,6 +67,12 @@ namespace Tests.UserTests
 			{
 				Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
 				Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
+			}
+			// LibRed rejects the unterminated bracket as the Microsoft drivers do, with its own exception
+			else if (context.IsAnyOf(TestProvName.AllAccessLibRed))
+			{
+				Assert.Throws<ArgumentException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
+				Assert.Throws<ArgumentException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
 			}
 			else
 			{

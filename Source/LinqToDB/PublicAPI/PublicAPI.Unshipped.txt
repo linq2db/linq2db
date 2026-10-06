@@ -1,2 +1,33 @@
-﻿#nullable enable
+#nullable enable
+LinqToDB.DataProvider.Access.AccessProvider.LibRed = 3 -> LinqToDB.DataProvider.Access.AccessProvider
+LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider
+LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.AccessLibRedSchemaProvider() -> void
+LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder
+LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.AccessLibRedSqlBuilder(LinqToDB.DataProvider.IDataProvider? provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.Internal.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.Internal.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
+LinqToDB.Internal.DataProvider.Access.AccessMappingSchema.LibRedMappingSchema
+LinqToDB.Internal.DataProvider.Access.AccessMappingSchema.LibRedMappingSchema.LibRedMappingSchema() -> void
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.ClearPool.get -> System.Action<System.Data.Common.DbConnection!>!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.CommandType.get -> System.Type!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.ConnectionType.get -> System.Type!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.CreateConnection(string! connectionString) -> System.Data.Common.DbConnection!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.DataReaderType.get -> System.Type!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.DatabaseExists.get -> System.Func<string!, bool>!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.DropDatabase.get -> System.Action<string!>!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.ParameterType.get -> System.Type!
+LinqToDB.Internal.DataProvider.LibRedProviderAdapter.TransactionType.get -> System.Type!
 const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
+const LinqToDB.Internal.DataProvider.LibRedProviderAdapter.AssemblyName = "LibRed.Ado" -> string!
+const LinqToDB.Internal.DataProvider.LibRedProviderAdapter.ClientNamespace = "LibRed.Data" -> string!
+const LinqToDB.ProviderName.AccessLibRed = "Access.LibRed" -> string!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetColumns(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.Internal.SchemaProvider.ColumnInfo!>!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetDataTypes(LinqToDB.Data.DataConnection! dataConnection) -> System.Collections.Generic.List<LinqToDB.Internal.SchemaProvider.DataTypeInfo!>!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetForeignKeys(LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.IEnumerable<LinqToDB.SchemaProvider.TableSchema!>! tables, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Internal.SchemaProvider.ForeignKeyInfo!>!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetPrimaryKeys(LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.IEnumerable<LinqToDB.SchemaProvider.TableSchema!>! tables, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Internal.SchemaProvider.PrimaryKeyInfo!>!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetProcedureParameters(LinqToDB.Data.DataConnection! dataConnection, System.Collections.Generic.IEnumerable<LinqToDB.Internal.SchemaProvider.ProcedureInfo!>! procedures, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.Internal.SchemaProvider.ProcedureParameterInfo!>!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetProcedureResultColumns(System.Data.DataTable! resultTable, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.SchemaProvider.ColumnSchema!>!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetProcedures(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.Internal.SchemaProvider.ProcedureInfo!>?
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSchemaProvider.GetTables(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options) -> System.Collections.Generic.List<LinqToDB.SchemaProvider.TableInfo!>!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.BuildObjectName(System.Text.StringBuilder! sb, LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.SqlQuery.ConvertType objectType = LinqToDB.SqlQuery.ConvertType.NameToQueryTable, bool escape = true, LinqToDB.TableOptions tableOptions = LinqToDB.TableOptions.NotSet, bool withoutSuffix = false) -> System.Text.StringBuilder!
+override LinqToDB.Internal.DataProvider.Access.AccessLibRedSqlBuilder.CreateSqlBuilder() -> LinqToDB.Internal.SqlProvider.ISqlBuilder!
+static LinqToDB.Internal.DataProvider.LibRedProviderAdapter.GetInstance() -> LinqToDB.Internal.DataProvider.LibRedProviderAdapter!

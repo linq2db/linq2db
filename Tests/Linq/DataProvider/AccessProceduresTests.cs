@@ -19,6 +19,9 @@ namespace Tests.DataProvider
 		public void Test_SelectProcedureSchema([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
 			var isODBC = context.IsAnyOf(TestProvName.AllAccessOdbc);
+			// LibRed carries the base column's nullability into a procedure's result schema; the Microsoft
+			// drivers report every result column as nullable regardless of the declaration
+			var resultNullable = !context.IsAnyOf(TestProvName.AllAccessLibRed);
 			using var db = GetDataConnection(context);
 			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -49,7 +52,7 @@ namespace Tests.DataProvider
 				Assert.That(proc.Parameters[0].ParameterType, Is.EqualTo("int?"));
 				Assert.That(proc.Parameters[0].ProviderSpecificType, Is.Null);
 				Assert.That(proc.Parameters[0].SchemaName, Is.EqualTo("@id"));
-				Assert.That(proc.Parameters[0].SchemaType, Is.EqualTo(context.IsAnyOf(TestProvName.AllAccessOleDb) ? "Long" : "INTEGER"));
+				Assert.That(proc.Parameters[0].SchemaType, Is.EqualTo(isODBC ? "INTEGER" : "Long"));
 				Assert.That(proc.Parameters[0].Size, Is.Null);
 				Assert.That(proc.Parameters[0].SystemType, Is.EqualTo(typeof(int)));
 
@@ -97,7 +100,7 @@ namespace Tests.DataProvider
 				Assert.That(proc.ResultTable.Columns[1].DataType, Is.EqualTo(DataType.VarChar));
 				Assert.That(proc.ResultTable.Columns[1].Description, Is.Null);
 				Assert.That(proc.ResultTable.Columns[1].IsIdentity, Is.False);
-				Assert.That(proc.ResultTable.Columns[1].IsNullable, Is.True);
+				Assert.That(proc.ResultTable.Columns[1].IsNullable, Is.EqualTo(resultNullable));
 				Assert.That(proc.ResultTable.Columns[1].IsPrimaryKey, Is.False);
 				Assert.That(proc.ResultTable.Columns[1].Length, Is.Null);
 				Assert.That(proc.ResultTable.Columns[1].MemberName, Is.EqualTo("FirstName"));
@@ -116,7 +119,7 @@ namespace Tests.DataProvider
 				Assert.That(proc.ResultTable.Columns[2].DataType, Is.EqualTo(DataType.VarChar));
 				Assert.That(proc.ResultTable.Columns[2].Description, Is.Null);
 				Assert.That(proc.ResultTable.Columns[2].IsIdentity, Is.False);
-				Assert.That(proc.ResultTable.Columns[2].IsNullable, Is.True);
+				Assert.That(proc.ResultTable.Columns[2].IsNullable, Is.EqualTo(resultNullable));
 				Assert.That(proc.ResultTable.Columns[2].IsPrimaryKey, Is.False);
 				Assert.That(proc.ResultTable.Columns[2].Length, Is.Null);
 				Assert.That(proc.ResultTable.Columns[2].MemberName, Is.EqualTo("LastName"));
@@ -154,7 +157,7 @@ namespace Tests.DataProvider
 				Assert.That(proc.ResultTable.Columns[4].DataType, Is.EqualTo(DataType.VarChar));
 				Assert.That(proc.ResultTable.Columns[4].Description, Is.Null);
 				Assert.That(proc.ResultTable.Columns[4].IsIdentity, Is.False);
-				Assert.That(proc.ResultTable.Columns[4].IsNullable, Is.True);
+				Assert.That(proc.ResultTable.Columns[4].IsNullable, Is.EqualTo(resultNullable));
 				Assert.That(proc.ResultTable.Columns[4].IsPrimaryKey, Is.False);
 				Assert.That(proc.ResultTable.Columns[4].Length, Is.Null);
 				Assert.That(proc.ResultTable.Columns[4].MemberName, Is.EqualTo("Gender"));
@@ -413,12 +416,15 @@ namespace Tests.DataProvider
 		}
 
 		#region Procedures
+		// the parameter names match the procedure declarations in Data/Create Scripts/Access.sql: the OLE DB
+		// and ODBC drivers bind Access stored-query parameters positionally and ignore names, but LibRed
+		// binds by name and raises "No value was supplied for parameter '@MiddleName'" otherwise
 		private static int Person_Delete(IDataContext dataConnection, int id, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_Delete(?) }" : "[Person_Delete]";
 			return dataConnection.ExecuteProc(
 				commandText,
-				new DataParameter("@id", id, DataType.Int32));
+				new DataParameter("@PersonID", id, DataType.Int32));
 		}
 
 		private static int Person_Update(IDataContext dataConnection, int id, string firstName, string? midleName, string lastName, char gender, bool odbc)
@@ -426,11 +432,11 @@ namespace Tests.DataProvider
 			var commandText = odbc ? "{ CALL Person_Update(?, ?, ?, ?, ?) }" : "Person_Update";
 			return dataConnection.ExecuteProc(
 				commandText,
-				new DataParameter("id"       , id       , DataType.Int32),
-				new DataParameter("firstName", firstName, DataType.VarChar),
-				new DataParameter("midleName", midleName, DataType.VarChar),
-				new DataParameter("lastName" , lastName , DataType.VarChar),
-				new DataParameter("gender"   , gender   , DataType.Char));
+				new DataParameter("id"        , id       , DataType.Int32),
+				new DataParameter("FirstName" , firstName, DataType.VarChar),
+				new DataParameter("MiddleName", midleName, DataType.VarChar),
+				new DataParameter("LastName"  , lastName , DataType.VarChar),
+				new DataParameter("Gender"    , gender   , DataType.Char));
 		}
 
 		private static int Person_Insert(IDataContext dataConnection, string firstName, string? midleName, string lastName, char gender, bool odbc)
@@ -438,10 +444,10 @@ namespace Tests.DataProvider
 			var commandText = odbc ? "{ CALL Person_Insert(?, ?, ?, ?) }" : "Person_Insert";
 			return dataConnection.ExecuteProc(
 				commandText,
-				new DataParameter("firstName", firstName, DataType.VarChar),
-				new DataParameter("midleName", midleName, DataType.VarChar),
-				new DataParameter("lastName" , lastName , DataType.VarChar),
-				new DataParameter("gender"   , gender   , DataType.Char));
+				new DataParameter("FirstName" , firstName, DataType.VarChar),
+				new DataParameter("MiddleName", midleName, DataType.VarChar),
+				new DataParameter("LastName"  , lastName , DataType.VarChar),
+				new DataParameter("Gender"    , gender   , DataType.Char));
 		}
 
 		private static int ThisProcedureNotVisibleFromODBC(IDataContext dataConnection, bool odbc)

@@ -9,10 +9,11 @@ using NUnit.Framework;
 namespace Tests.Extensions
 {
 	[TestFixture]
+	// both tests execute the query they build, and LibRed's parser rejects WITH OWNERACCESS OPTION
 	public class AccessTests : TestBase
 	{
 		[Test]
-		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		public void QueryHintTest([IncludeDataSources(true, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -29,7 +30,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void WithOwnerAccessOptionTest([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		public void WithOwnerAccessOptionTest([IncludeDataSources(true, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

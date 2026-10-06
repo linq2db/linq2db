@@ -265,9 +265,8 @@ internal static class DriverHelper
 				if (model.DynamicConnection.ConnectionString == null)
 					throw new LinqToDBLinqPadException("Connection string is not specified");
 
-				if (model.DynamicConnection.SecondaryProvider != null
-					&& string.Equals(model.DynamicConnection.Provider.Name, model.DynamicConnection.SecondaryProvider.Name, StringComparison.Ordinal))
-					throw new LinqToDBLinqPadException("Secondary connection shouldn't use same provider type as primary connection");
+				if (model.DynamicConnection.Provider.SecondaryName != null && model.DynamicConnection.SecondaryConnectionString == null)
+					throw new LinqToDBLinqPadException($"{model.DynamicConnection.SecondaryConnectionStringLabel} is not specified");
 
 				if (model.DynamicConnection.Database.IsProviderPathSupported(model.DynamicConnection.Provider.Name))
 				{
@@ -358,15 +357,16 @@ internal static class DriverHelper
 		{
 			var settings = ConnectionSettings.Load(dependencyInfo.CxInfo);
 			var packages = new HashSet<(string Id, string Version)>();
+			var runtime  = GetRuntimeMajor(dependencyInfo.FrameworkVersion);
 
 			if (isDynamic && settings.Connection.Database != null && settings.Connection.Provider != null)
 			{
 				var provider = DatabaseProviders.GetProvider(settings.Connection.Database);
 
-				packages.UnionWith(provider.GetNuGetPackages(settings.Connection.Provider));
+				packages.UnionWith(DatabaseProviders.GetNuGetPackages(provider, settings.Connection.Provider, runtime));
 
 				if (settings.Connection.SecondaryProvider != null)
-					packages.UnionWith(provider.GetNuGetPackages(settings.Connection.SecondaryProvider));
+					packages.UnionWith(DatabaseProviders.GetNuGetPackages(provider, settings.Connection.SecondaryProvider, runtime));
 			}
 			// a static context selects its provider itself, so it cannot be detected - but the connection may
 			// name the database, and then the clients of that one are enough
@@ -374,13 +374,13 @@ internal static class DriverHelper
 				&& settings.StaticContext.Database != null
 				&& DatabaseProviders.Providers.TryGetValue(settings.StaticContext.Database, out var staticProvider))
 			{
-				packages.UnionWith(DatabaseProviders.GetNuGetPackages(staticProvider));
+				packages.UnionWith(DatabaseProviders.GetNuGetPackages(staticProvider, runtime));
 			}
 			// a connection being created has no provider selected yet, and a static context that names no
 			// database could be any of them: the client is unknown, so all are provisioned, as before
 			else
 			{
-				packages.UnionWith(DatabaseProviders.GetAllNuGetPackages());
+				packages.UnionWith(DatabaseProviders.GetAllNuGetPackages(runtime));
 			}
 
 			if (packages.Count > 0)
@@ -390,6 +390,25 @@ internal static class DriverHelper
 		{
 			HandleException(ex, nameof(OverrideDriverDependencies));
 		}
+	}
+
+	// the format of DriverDependencyInfo.FrameworkVersion is undocumented: read its leading number, and fall back
+	// to this process's runtime when there is none
+	private static int GetRuntimeMajor(string? frameworkVersion)
+	{
+		var span  = frameworkVersion.AsSpan();
+		var start = span.IndexOfAnyInRange('0', '9');
+
+		if (start >= 0)
+		{
+			span    = span[start..];
+			var end = span.IndexOfAnyExceptInRange('0', '9');
+
+			if (int.TryParse(end < 0 ? span : span[..end], NumberStyles.None, CultureInfo.InvariantCulture, out var major))
+				return major;
+		}
+
+		return Environment.Version.Major;
 	}
 #endif
 

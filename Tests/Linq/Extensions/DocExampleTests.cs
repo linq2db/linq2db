@@ -17,7 +17,8 @@ namespace Tests.Extensions
 	public class DocExampleTests : TestBase
 	{
 		[Test]
-		public void AccessTest([IncludeDataSources(true, TestProvName.AllAccess)] string context)
+		// LibRed's parser rejects WITH OWNERACCESS OPTION, and these tests execute the query they build
+		public void AccessTest([IncludeDataSources(true, TestProvName.AllNativeAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -166,7 +167,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void DatabaseSpecificTest([DataSources] string context)
+		public void DatabaseSpecificTest([DataSources(TestProvName.AllAccessLibRed)] string context)
 		{
 			using var db = GetDataContext(context);
 

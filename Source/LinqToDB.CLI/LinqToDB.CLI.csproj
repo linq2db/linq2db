@@ -120,4 +120,9 @@
 		<PackageReference Include="DuckDB.NET.Data.Full" />
 		<PackageReference Include="Ydb.Sdk" />
 	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net11.0' ">
+		<!--the managed Access engine; net11.0-only, so the net10.0 asset of this tool cannot offer it-->
+		<PackageReference Include="LibRed.Ado" />
+	</ItemGroup>
 </Project>
