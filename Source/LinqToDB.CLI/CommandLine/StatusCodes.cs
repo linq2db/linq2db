@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CommandLine
+using System;
+
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// CLI return codes.
@@ -14,7 +16,7 @@
 		/// </summary>
 		public const int INVALID_ARGUMENTS = -1;
 		/// <summary>
-		/// Command failed with unhadnled exception.
+		/// Command failed with unhandled exception.
 		/// </summary>
 		public const int INTERNAL_ERROR    = -2;
 		/// <summary>

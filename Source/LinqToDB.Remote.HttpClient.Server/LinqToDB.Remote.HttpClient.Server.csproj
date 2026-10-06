@@ -25,7 +25,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" PrivateAssets="contentfiles;build" />
 	</ItemGroup>
 
 	<ItemGroup>

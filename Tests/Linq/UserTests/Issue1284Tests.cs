@@ -58,7 +58,6 @@ namespace Tests.UserTests
 			Assert.That(item, Is.EqualTo(expected));
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "CH 26.1.1 regression")]
 		[Test]
 		public void TestCteInvalidMappingUnion([CteContextSource] string context)
 		{

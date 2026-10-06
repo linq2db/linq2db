@@ -17,4 +17,28 @@
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\CodeMetricsConfig.txt" />
 	</ItemGroup>
+
+	<!--
+	LinqToDB carries a ProjectReference to the code-fix project purely to produce the linq2db ->
+	linq2db.Analyzers package dependency that delivers the user-facing rules (see
+	Source/LinqToDB/LinqToDB.csproj). Nothing compiles against those types except Tests/Tests.Analyzers,
+	which references them directly - but the SDK's IncludeTransitiveProjectReferences injects the
+	reference into every downstream project's closure, turning a packaging-only dependency into a
+	compile reference and a copy-local item:
+	  - RAR unifies its Roslyn-4.8 System.Collections.Immutable 7.0.0 against EF Core 3.x's 1.7.0 and
+	    warns MSB3277 on LinqToDB.EntityFrameworkCore.EF3's net462 / netstandard2.0 legs;
+	  - LinqToDB.CLI is PackAsTool, which packs the build output, so it lands in the payload of every
+	    linq2db.cli.<rid> sub-package.
+	A package consumer never sees any of this (linq2db.Analyzers ships analyzers/ only, no lib/), so
+	this is an artifact of building the whole product from one tree. Removing only the SDK-injected
+	item leaves LinqToDB's own direct reference - and with it the nuspec dependency - untouched; the
+	metadata knobs on the reference itself can't express this (ReferenceOutputAssembly="false" drops
+	that nuspec dependency, PrivateAssets hiding runtime breaks the P2P build ordering, and
+	Private="false" covers the direct hop only, measured).
+	-->
+	<Target Name="_DropTransitiveAnalyzerCodeFixesReference" AfterTargets="IncludeTransitiveProjectReferences">
+		<ItemGroup>
+			<ProjectReference Remove="@(_TransitiveProjectReferences->WithMetadataValue('Filename','LinqToDB.Analyzers.CodeFixes'))" />
+		</ItemGroup>
+	</Target>
 </Project>

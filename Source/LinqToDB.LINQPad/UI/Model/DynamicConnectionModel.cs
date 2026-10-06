@@ -10,7 +10,11 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 	public DynamicConnectionModel(ConnectionSettings settings, bool enabled)
 		: base(settings, enabled)
 	{
-		foreach (var db in DatabaseProviders.Providers.Values.OrderBy(static db => db.Description, System.StringComparer.Ordinal))
+		// the database already configured stays listed even where it cannot work: the combo binds SelectedValue
+		// against the items, so dropping it would push null back and clear the connection's database and provider
+		var current = Database;
+
+		foreach (var db in DatabaseProviders.Providers.Values.Where(db => db.IsPlatformSupported || db == current).OrderBy(static db => db.Description, System.StringComparer.Ordinal))
 			Databases.Add(db);
 
 		UpdateProviders();

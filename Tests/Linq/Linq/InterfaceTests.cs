@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -65,35 +65,25 @@ namespace Tests.Linq
 			[Column("UNKNOWN")] int IIssue4031.Id { get; set; }
 		}
 
-		public class Issue4031Case01 : Issue4031BaseExternal, IIssue4031
-		{
-		}
+		public class Issue4031Case01 : Issue4031BaseExternal, IIssue4031;
 
-		public class Issue4031Case02 : Issue4031BaseInternal, IIssue4031
-		{
-		}
+		public class Issue4031Case02 : Issue4031BaseInternal, IIssue4031;
 
-		public class Issue4031Case03 : Issue4031BaseImplicit
-		{
-		}
+		public class Issue4031Case03 : Issue4031BaseImplicit;
 
 		public class Issue4031Case04 : Issue4031BaseImplicit
 		{
 			[Column("UNKNOWN")] public new int Id { get; set; }
 		}
 
-		public class Issue4031Case05 : Issue4031BaseExplicit
-		{
-		}
+		public class Issue4031Case05 : Issue4031BaseExplicit;
 
 		public class Issue4031Case06 : Issue4031BaseExplicit
 		{
 			[Column("UNKNOWN")] public int Id { get; set; }
 		}
 
-		public class Issue4031Case07 : Issue4031BaseImplicit, IIssue4031
-		{
-		}
+		public class Issue4031Case07 : Issue4031BaseImplicit, IIssue4031;
 
 		public class Issue4031Case08 : Issue4031BaseImplicit, IIssue4031
 		{
@@ -105,9 +95,7 @@ namespace Tests.Linq
 			[Column("PersonID")] public new int Id { get; set; }
 		}
 
-		public class Issue4031Case10 : Issue4031BaseExplicit, IIssue4031
-		{
-		}
+		public class Issue4031Case10 : Issue4031BaseExplicit, IIssue4031;
 
 		public class Issue4031Case11 : Issue4031BaseExplicit, IIssue4031
 		{
@@ -119,9 +107,7 @@ namespace Tests.Linq
 			[Column("PersonID")] int IIssue4031.Id { get; set; }
 		}
 
-		public class Issue4031Case13 : Issue4031BaseImplicit, IIssue4031
-		{
-		}
+		public class Issue4031Case13 : Issue4031BaseImplicit, IIssue4031;
 
 		public class Issue4031Case14 : Issue4031BaseImplicitBad, IIssue4031
 		{
@@ -133,9 +119,7 @@ namespace Tests.Linq
 			[Column("PersonID")] int IIssue4031.Id { get; set; }
 		}
 
-		public class Issue4031Case16 : Issue4031BaseExternal, IIssue4031<int>
-		{
-		}
+		public class Issue4031Case16 : Issue4031BaseExternal, IIssue4031<int>;
 
 		[Test]
 		public void Issue4031_Case01([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
@@ -158,7 +142,8 @@ namespace Tests.Linq
 		// unsuported case:
 		// we prefer member declared with "new" over interface implementation member for backward compatibility
 		// (see https://github.com/linq2db/linq2db/issues/4113)
-		[Test, ActiveIssue]
+		[Test, ActiveIssue(ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "could not be converted to SQL",
+			Details = "no-issue: an accepted limitation rather than a tracked defect - the comment above records the trade-off and cites #4113 as its justification, which is background for the choice and not a bug to fix.")]
 		public void Issue4031_Case04([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			Issue4031_Execute_TwoFields<Issue4031Case04>(context);
@@ -555,10 +540,10 @@ namespace Tests.Linq
 			public int Id { get; set; }
 
 			[ExpressionMethod(nameof(UserIdExpression))]
-			public int UserId => throw new InvalidOperationException();
+			public int UserId => throw new ServerSideOnlyException(nameof(UserId));
 
 			[ExpressionMethod(nameof(UserIdExpression))]
-			public int UserIdMethod() => throw new InvalidOperationException();
+			public int UserIdMethod() => throw new ServerSideOnlyException(nameof(UserIdMethod));
 
 			private static Expression<Func<TransactionLine, int>> UserIdExpression()
 				=> x => x.Id;

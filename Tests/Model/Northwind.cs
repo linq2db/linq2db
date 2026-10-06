@@ -202,7 +202,7 @@ namespace Tests.Model
 			[Association(ThisKey="SupplierID", OtherKey="SupplierID")] public Supplier?         Supplier     { get; set; }
 		}
 
-		public class ActiveProduct       : Product {}
+		public class ActiveProduct       : Product;
 		public class DiscontinuedProduct : Product
 		{
 			public override int GetHashCode()

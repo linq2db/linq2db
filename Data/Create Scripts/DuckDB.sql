@@ -120,12 +120,6 @@ CREATE TABLE "LinqDataTypes"
 )
 GO
 
-DROP SEQUENCE IF EXISTS SequenceTestSeq
-GO
-
-CREATE SEQUENCE SequenceTestSeq INCREMENT BY 1 START 1
-GO
-
 DROP TABLE IF EXISTS "SequenceTest1"
 GO
 
@@ -133,6 +127,14 @@ DROP TABLE IF EXISTS "SequenceTest2"
 GO
 
 DROP TABLE IF EXISTS "SequenceTest3"
+GO
+
+-- drop the sequence after its dependent tables: on a preloaded in-memory catalog SequenceTest3
+-- still defaults off SequenceTestSeq, so dropping the sequence first is blocked and CREATE collides
+DROP SEQUENCE IF EXISTS SequenceTestSeq
+GO
+
+CREATE SEQUENCE SequenceTestSeq INCREMENT BY 1 START 1
 GO
 
 DROP SEQUENCE IF EXISTS "SequenceTest2_ID_seq"

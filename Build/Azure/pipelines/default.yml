@@ -24,6 +24,7 @@ stages:
       with_nugets: true
       with_examples: true
       with_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_analyzer_tests: true
       with_singlefile_smoke: true
       ${{ if eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']) }}:
         with_api_analyzers: true
@@ -42,6 +43,5 @@ stages:
     parameters:
       enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
       with_baselines: true
-      mac_enabled: false
       full_run: true
-      db_filter: '[all][metrics]'
+      db_filter: '[all]'

@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Arbitrary string (more or less) CLI option.
@@ -22,11 +25,11 @@ namespace LinqToDB.CommandLine
 		bool      Required,
 		bool      AllowMultiple,
 		string    Help,
-		string?   DetailedHelp,
-		string[]? Examples,
-		string[]? JsonExamples,
-		string[]? Default,
-		string[]? T4Default)
+		string?   DetailedHelp = null,
+		string[]? Examples     = null,
+		string[]? JsonExamples = null,
+		string[]? Default      = null,
+		string[]? T4Default    = null)
 		: CliOption(
 			Name,
 			ShortName,
@@ -71,6 +74,7 @@ namespace LinqToDB.CommandLine
 				}
 
 				errorDetails = null;
+
 				return values.ToArray();
 
 			}
@@ -84,6 +88,7 @@ namespace LinqToDB.CommandLine
 			}
 
 			errorDetails = $"string expected but got '{rawValue.ValueKind}'";
+
 			return null;
 		}
 	}

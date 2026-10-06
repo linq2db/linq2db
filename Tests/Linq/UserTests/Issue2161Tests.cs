@@ -33,12 +33,8 @@ namespace Tests.UserTests
 			public IEnumerable<OrderDetail> Details { get; set; } = null!;
 		}
 
-		public class OrderType1 : Order
-		{
-		}
-		public class OrderType2 : Order
-		{
-		}
+		public class OrderType1 : Order;
+		public class OrderType2 : Order;
 
 		public class OrderDetail
 		{

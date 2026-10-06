@@ -12,13 +12,14 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue822Tests : TestBase
 	{
-		int? ID1;
-
-		int? ID2;
-
 		[Test]
 		public void TestWrongValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
+			// ID1/ID2 are locals (not fixture fields) so parallel cases don't share state; the query closures
+			// still capture them and linq2db re-reads the value at execution, so mutating before ToList() is #822's point.
+			int? ID1 = null;
+			int? ID2 = null;
+
 			using var db = GetDataContext(context);
 			var query = db.GetTable<LinqDataTypes2>()
 					.Where(_ => GetSource(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));
@@ -41,6 +42,9 @@ namespace Tests.UserTests
 		[Test]
 		public void TestNullValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
+			int? ID1 = null;
+			int? ID2 = null;
+
 			using var db = GetDataContext(context);
 			var query = db.GetTable<LinqDataTypes2>()
 					.Where(_ => GetSource(db, ID1!.Value).Select(r => r.ID).Contains(_.ID));

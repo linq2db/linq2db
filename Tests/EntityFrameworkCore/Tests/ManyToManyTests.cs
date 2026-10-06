@@ -21,7 +21,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return provider switch
 			{
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => new PostgreSQL.Models.ManyToMany.ManyToManyContext(options),
-				_ when provider.IsAnyOf(TestProvName.AllMySql)       => new Pomelo.Models.ManyToMany.ManyToManyContext(options),
+				_ when provider.IsAnyOf(TestProvName.AllMySql)       => new MySql.Models.ManyToMany.ManyToManyContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSQLite)      => new SQLite.Models.ManyToMany.ManyToManyContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSqlServer)   => new SqlServer.Models.ManyToMany.ManyToManyContext(options),
 				_ => throw new InvalidOperationException($"{nameof(CreateProviderContext)} is not implemented for provider {provider}")

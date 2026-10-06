@@ -630,6 +630,8 @@ LinqToDB.CodeModel.WellKnownTypes.LinqToDB
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Common
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Configuration
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data
+LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataProvider
+LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataProvider.SqlServer
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Mapping
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Tools
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Tools.Comparers
@@ -1010,6 +1012,8 @@ LinqToDB.Metadata.ColumnMetadata.SkipOnUpdate.get -> bool
 LinqToDB.Metadata.ColumnMetadata.SkipOnUpdate.set -> void
 LinqToDB.Metadata.ColumnMetadata.Storage.get -> string?
 LinqToDB.Metadata.ColumnMetadata.Storage.set -> void
+LinqToDB.Metadata.ColumnMetadata.UseGetSqlDecimal.get -> bool
+LinqToDB.Metadata.ColumnMetadata.UseGetSqlDecimal.set -> void
 LinqToDB.Metadata.EntityMetadata
 LinqToDB.Metadata.EntityMetadata.Configuration.get -> string?
 LinqToDB.Metadata.EntityMetadata.Configuration.set -> void
@@ -1221,6 +1225,8 @@ LinqToDB.Scaffold.DataModelOptions.GenerateScale.get -> bool
 LinqToDB.Scaffold.DataModelOptions.GenerateScale.set -> void
 LinqToDB.Scaffold.DataModelOptions.GenerateSchemaAsType.get -> bool
 LinqToDB.Scaffold.DataModelOptions.GenerateSchemaAsType.set -> void
+LinqToDB.Scaffold.DataModelOptions.GenerateSqlServerDecimalOverflowProtection.get -> bool
+LinqToDB.Scaffold.DataModelOptions.GenerateSqlServerDecimalOverflowProtection.set -> void
 LinqToDB.Scaffold.DataModelOptions.GenerateStaticInitDataContextMethod.get -> bool
 LinqToDB.Scaffold.DataModelOptions.GenerateStaticInitDataContextMethod.set -> void
 LinqToDB.Scaffold.DataModelOptions.HasConfigurationConstructor.get -> bool
@@ -2096,6 +2102,8 @@ LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateScaleProperty.get -> bool?
 LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateScaleProperty.set -> void
 LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateSchemaAsType.get -> bool
 LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateSchemaAsType.set -> void
+LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateSqlServerDecimalOverflowProtection.get -> bool
+LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateSqlServerDecimalOverflowProtection.set -> void
 LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateTableRegion.get -> bool
 LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateTableRegion.set -> void
 LinqToDB.Tools.ModelGeneration.ModelGenerator.GenerateViews.get -> bool
@@ -2651,6 +2659,7 @@ static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions.get -> LinqToDB
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_GetTable.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_QueryFromExpression.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_TableFromExpression.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataProvider.SqlServer.GetSqlDecimalAttribute.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataType.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.IDataContext.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.IDataContext_MappingSchema.get -> LinqToDB.CodeModel.CodeReference!
@@ -2747,6 +2756,7 @@ static LinqToDB.CodeModel.WellKnownTypes.System.Data.SqlTypes.SqlMoney.get -> Li
 static LinqToDB.CodeModel.WellKnownTypes.System.Data.SqlTypes.SqlSingle.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.System.Data.SqlTypes.SqlString.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.System.Data.SqlTypes.SqlXml.get -> LinqToDB.CodeModel.IType!
+static LinqToDB.CodeModel.WellKnownTypes.System.Decimal.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.System.Func(LinqToDB.CodeModel.IType! returnType) -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.System.Func(LinqToDB.CodeModel.IType! returnType, LinqToDB.CodeModel.IType! arg0) -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.System.Func(LinqToDB.CodeModel.IType! returnType, LinqToDB.CodeModel.IType! arg0, LinqToDB.CodeModel.IType! arg1) -> LinqToDB.CodeModel.IType!

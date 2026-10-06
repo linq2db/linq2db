@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 LinqToDB.Remote.Grpc.Dto.GrpcConfiguration
 LinqToDB.Remote.Grpc.Dto.GrpcConfiguration.Configuration.get -> string?
 LinqToDB.Remote.Grpc.Dto.GrpcConfiguration.Configuration.set -> void

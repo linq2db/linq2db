@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -27,7 +27,8 @@ namespace LinqToDB.Internal.SqlQuery
 			SqlKeepClause?                    keepClause                  = null,
 			Sql.Nulls                         nullTreatment               = Sql.Nulls.None,
 			Sql.From                          fromPosition                = Sql.From.None,
-			bool                              isWindowFunction            = false)
+			bool                              isWindowFunction            = false,
+			SqlArgumentDomain                 argumentDomain              = SqlArgumentDomain.None)
 		{
 			Type                        = dbDataType;
 			FunctionName                = functionName;
@@ -46,6 +47,7 @@ namespace LinqToDB.Internal.SqlQuery
 			NullTreatment               = nullTreatment;
 			FromPosition                = fromPosition;
 			_isWindowFunction           = isWindowFunction;
+			ArgumentDomain              = argumentDomain;
 		}
 
 		public DbDataType                Type                        { get; }
@@ -64,6 +66,20 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlKeepClause?            KeepClause                  { get; private set; }
 		public Sql.Nulls                 NullTreatment               { get; }
 		public Sql.From                  FromPosition                { get; }
+
+		/// <summary>
+		/// How this function's result relates to the domain of its argument.
+		/// </summary>
+		/// <remarks>
+		/// Set by whoever builds the node, where the function's meaning is known, and read where a column descriptor
+		/// is recovered from an expression: while it holds, the argument's column still describes the result, and the
+		/// value converter that column carries still applies to it.
+		/// <para>
+		/// Carried on the node so it survives renaming: <see cref="WithFunctionName"/> keeps it, and a provider is
+		/// free to spell the same function its own way.
+		/// </para>
+		/// </remarks>
+		public SqlArgumentDomain         ArgumentDomain              { get; }
 
 		public void Modify(List<SqlFunctionArgument> arguments,
 			List<SqlWindowOrderItem>?                withinGroup,
@@ -101,7 +117,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithFunctionName(string functionName)
@@ -123,7 +140,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
@@ -145,7 +163,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
@@ -167,7 +186,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
@@ -189,7 +209,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithFrameClause(SqlFrameClause? frameClause)
@@ -211,7 +232,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithFilter(SqlSearchCondition? filter)
@@ -233,7 +255,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		public SqlExtendedFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
@@ -255,7 +278,8 @@ namespace LinqToDB.Internal.SqlQuery
 				keepClause: KeepClause,
 				nullTreatment: NullTreatment,
 				fromPosition: FromPosition,
-				isWindowFunction: IsWindowFunction);
+				isWindowFunction: IsWindowFunction,
+				argumentDomain: ArgumentDomain);
 		}
 
 		static bool CheckNulls(object? expr1, object? expr2)
@@ -275,6 +299,13 @@ namespace LinqToDB.Internal.SqlQuery
 				return false;
 
 			if (IsAggregate != otherFunction.IsAggregate)
+				return false;
+
+			// Compared although it is currently decided by the name above, which is compared too. That makes this
+			// redundant only for as long as the mapping stays one-to-one, and the cost of it not being compared is
+			// paid silently: two nodes alike in everything else would be interchangeable under hash-keyed reuse,
+			// and one call site would take the other's answer about what its argument describes.
+			if (ArgumentDomain != otherFunction.ArgumentDomain)
 				return false;
 
 			if (Arguments.Count != otherFunction.Arguments.Count)
@@ -533,6 +564,7 @@ namespace LinqToDB.Internal.SqlQuery
 			hash.Add(FrameClause?.GetElementHashCode());
 			hash.Add(Filter?.GetElementHashCode());
 			hash.Add(IsAggregate);
+			hash.Add(ArgumentDomain);
 			hash.Add(CanBeAffectedByOrderBy);
 			hash.Add(KeepClause?.GetElementHashCode());
 			hash.Add(NullTreatment);

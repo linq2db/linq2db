@@ -19,7 +19,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" PrivateAssets="contentfiles;build" />
 
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
 	</ItemGroup>

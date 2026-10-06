@@ -147,6 +147,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
@@ -194,6 +196,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
@@ -242,6 +246,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7
@@ -567,6 +573,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<TSource,TTarget,TOutput>(
@@ -613,6 +621,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
@@ -660,6 +670,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7
@@ -966,6 +978,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
@@ -1007,6 +1021,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
@@ -1049,6 +1065,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7
@@ -1326,6 +1344,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IEnumerable<TOutput> UpdateWithOutput<T,TOutput>(
@@ -1364,6 +1384,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (prior version 5 returns only one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
@@ -1403,6 +1425,8 @@ namespace LinqToDB
 		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL (v18+ required to access data from <c>deleted</c> table)</item>
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// <item>DuckDB (doesn't support old data; database limitation)</item>
+		/// <item>YDB (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
 		// TODO: Remove in v7

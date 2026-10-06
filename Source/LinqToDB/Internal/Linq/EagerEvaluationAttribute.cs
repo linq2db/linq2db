@@ -36,7 +36,5 @@ namespace LinqToDB.Internal.Linq
 	///     </para>
 	/// </remarks>
 	[AttributeUsage(AttributeTargets.Method, Inherited = false)]
-	public sealed class EagerEvaluationAttribute : Attribute
-	{
-	}
+	public sealed class EagerEvaluationAttribute : Attribute;
 }
