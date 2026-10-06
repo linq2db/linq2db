@@ -16,6 +16,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 	{
 		public const int ProtocolVersion = 1;
 
+		/// <summary>A secret shorter than this is not redacted from standard error; standard error is dropped instead.</summary>
+		const int MinRedactableSecretLength = 4;
+
+		/// <summary>One <c>key=value</c> line of an answer and its 1-based line number.</summary>
+		internal readonly record struct AnswerLine(string Key, string Value, int Number);
+
 		const string StatusOk          = "ok";
 		const string StatusNotFound    = "not-found";
 		const string StatusUnsupported = "unsupported";
@@ -24,7 +30,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		static readonly UTF8Encoding _strictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
 		/// <summary>A compiler diagnostic, as <c>dotnet run</c> prints it when it builds a file-based app.</summary>
-		static readonly Regex _buildOutput = new(@"^(?<diagnostic>.+\(\d+,\d+\): (?:warning|error) [A-Z]+\d+):", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(1));
+		static readonly Regex _buildOutput = new(@"^.+\(\d+,\d+\): (?:warning|error) (?<code>[A-Z]+\d+):", RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture, TimeSpan.FromSeconds(1));
 
 		readonly ICredentialsCliRunner _runner;
 
@@ -165,7 +171,8 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				if (duplicate != null)
 				{
-					error = InvalidAnswer("list", $"a record repeats '{duplicate.Key}'.");
+					// The key text is not shown: the output can hold a secret.
+					error = InvalidAnswer("list", $"line {duplicate.ElementAt(1).Number.ToString(CultureInfo.InvariantCulture)} repeats a key of its record.");
 					return false;
 				}
 
@@ -192,7 +199,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// Runs one verb and validates the answer: exit code 0, <c>protocol=1</c>, a known <c>status</c> valid for the verb,
 		/// and nothing after a status other than <c>ok</c>. Returns the status and, for <c>ok</c>, the records after the header.
 		/// </summary>
-		bool TryRun(string verb, string? target, string? user, string? password, out string status, out List<List<KeyValuePair<string, string>>> records, out string? error)
+		bool TryRun(string verb, string? target, string? user, string? password, out string status, out List<List<AnswerLine>> records, out string? error)
 		{
 			status  = string.Empty;
 			records = [];
@@ -313,7 +320,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// <c>protocol=&lt;N&gt;</c>, line 2 <c>status=&lt;status&gt;</c>, then <c>key=value</c> lines split at the first
 		/// <c>=</c>, in records separated by empty lines. The output itself is never put into a message: it can hold a secret.
 		/// </summary>
-		internal static bool TryParseAnswer(byte[] output, out int protocol, out string status, out List<List<KeyValuePair<string, string>>> records, out string? error)
+		internal static bool TryParseAnswer(byte[] output, out int protocol, out string status, out List<List<AnswerLine>> records, out string? error)
 		{
 			protocol = 0;
 			status   = string.Empty;
@@ -348,7 +355,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				var match = _buildOutput.Match(lines[0]);
 
 				error = match.Success
-					? $"the first line looks like build output: `{Shorten(match.Groups["diagnostic"].Value)}`."
+					? $"the first line looks like build output (diagnostic {match.Groups["code"].Value}); a program run through dotnet run must build without warnings."
 					: $"the first line is not protocol={ProtocolVersion.ToString(CultureInfo.InvariantCulture)} ({lines[0].Length.ToString(CultureInfo.InvariantCulture)} characters).";
 				return false;
 			}
@@ -368,10 +375,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return false;
 			}
 
-			var record = new List<KeyValuePair<string, string>>();
+			var record = new List<AnswerLine>();
 
-			foreach (var line in lines.Skip(2))
+			for (var index = 2; index < lines.Length; index++)
 			{
+				var line = lines[index];
+
 				if (line.Length == 0)
 				{
 					if (record.Count > 0)
@@ -413,7 +422,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					return false;
 				}
 
-				record.Add(new KeyValuePair<string, string>(key, value));
+				record.Add(new AnswerLine(key, value, index + 1));
 			}
 
 			if (record.Count > 0)
@@ -423,19 +432,16 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return true;
 		}
 
-		static string Shorten(string text)
-		{
-			return text.Length > CredentialsCliProcessRunner.MaxErrorLineLength
-				? string.Concat(text.AsSpan(0, CredentialsCliProcessRunner.MaxErrorLineLength), "...")
-				: text;
-		}
-
 		/// <summary>
 		/// The first line of the program's standard error for an error message, with a secret the client sent removed before
 		/// the line is trimmed or shortened.
 		/// </summary>
 		static string? ErrorLine(CredentialsCliRunResult result, string? secret)
 		{
+			// A very short secret cannot be removed reliably (it matches ordinary text), so nothing of standard error is shown.
+			if (secret != null && secret.Length is > 0 and < MinRedactableSecretLength && CredentialsCliProcessRunner.GetFirstLine(result.ErrorOutput) != null)
+				return "(standard error is not shown: the password is too short to remove from it)";
+
 			return CredentialsCliProcessRunner.GetFirstLine(Redact(result.ErrorOutput, secret, result.ErrorOutputTruncated));
 		}
 

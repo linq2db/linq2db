@@ -253,15 +253,26 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public void BuildWarningFirstLineIsReportedUpToTheCode()
+		public void BuildWarningFirstLineIsReportedByItsCodeOnly()
 		{
 			var runner = new FakeRunner().Answer($"/home/u/secrethelper.cs(12,5): warning CS8321: The local function 'X' is declared but never used [{Secret}]\nprotocol=1\nstatus=ok\nusername=u\npassword={Secret}\n");
 
 			Store(runner).TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
 
-			error.ShouldBe("Credentials CLI 'fake-cli' returned an invalid answer to 'get': the first line looks like build output: `/home/u/secrethelper.cs(12,5): warning CS8321`.");
-			error.ShouldNotBeNull().ShouldNotContain("declared");
+			error.ShouldBe("Credentials CLI 'fake-cli' returned an invalid answer to 'get': the first line looks like build output (diagnostic CS8321); a program run through dotnet run must build without warnings.");
+			error.ShouldNotBeNull().ShouldNotContain("secrethelper.cs");
 			error.ShouldNotContain(Secret);
+		}
+
+		[Test]
+		public void BuildOutputShapedSecretIsNotEchoed()
+		{
+			var runner = new FakeRunner().Answer("TOPSECRET(1,1): error CS1000: suffix\n");
+
+			Store(runner).TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
+
+			error.ShouldNotBeNull().ShouldContain("(diagnostic CS1000)");
+			error.ShouldNotContain("TOPSECRET");
 		}
 
 		[TestCase("protocol=1\nusername=u\n",                         "the second line is not status=",   TestName = "MissingStatusIsInvalid")]
@@ -352,8 +363,9 @@ namespace Tests.LinqToDB.CLI
 			error.ShouldBe($"Credentials CLI 'fake-cli' returned an invalid answer to '{verb}': status=not-found is not an answer to '{verb}'.");
 		}
 
-		[TestCase("\ntarget=linq2db/a\nusername=u\nusername=v\n", "a record repeats 'username'", TestName = "ListDuplicateUsernameIsInvalid")]
-		[TestCase("\ntarget=linq2db/a\ntarget=linq2db/b\n",        "a record repeats 'target'",   TestName = "ListDuplicateTargetIsInvalid")]
+		[TestCase("\ntarget=linq2db/a\nusername=u\nusername=v\n", "line 6 repeats a key of its record", TestName = "ListDuplicateUsernameIsInvalid")]
+		[TestCase("\ntarget=linq2db/a\ntarget=linq2db/b\n",        "line 5 repeats a key of its record", TestName = "ListDuplicateTargetIsInvalid")]
+		[TestCase("\ntarget=linq2db/a\nTOPSECRET=1\nTOPSECRET=2\n", "line 6 repeats a key of its record", TestName = "ListDuplicateUnknownKeyIsNotEchoed")]
 		[TestCase("\ntarget=linq2db/a\n\nusername=orphan\n",       "a record has no 'target'",    TestName = "ListMissingTargetIsInvalid")]
 		[TestCase("\ntarget=linq2db/a\nusername=\u001b]0;title\u0007\n", "a value contains a control character", TestName = "ListUsernameWithEscapeSequenceIsInvalid")]
 		public void InvalidListAnswer(string records, string message)
@@ -468,6 +480,17 @@ namespace Tests.LinqToDB.CLI
 			Store(runner).TryStore("a", "u", "TOPSECRETVALUE", out var error).ShouldBeFalse();
 
 			error.ShouldBe("Credentials CLI 'fake-cli' failed with exit code 1: failed at T");
+		}
+
+		[TestCase("abc")]
+		[TestCase("p")]
+		public void ShortPasswordDropsStandardError(string password)
+		{
+			var runner = new FakeRunner().Answer(string.Empty, 1, $"rejected {password} for abc-db\n");
+
+			Store(runner).TryStore("a", "u", password, out var error).ShouldBeFalse();
+
+			error.ShouldBe("Credentials CLI 'fake-cli' failed with exit code 1: (standard error is not shown: the password is too short to remove from it)");
 		}
 
 		[Test]
