@@ -2237,15 +2237,29 @@ namespace Tests.Linq
 			results.ShouldAllBe(r => r.Joined == null);
 		}
 
+		// The arguments a member translator translates for itself stay in SQL under the option: left client-side, they would
+		// make the translator decline and move the whole call to the client.
+		[Test]
+		public void TranslatorArgumentsStayInSqlUnderOption([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
+			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
+
+			var query = from e in table select new { e.Id, Shifted = e.Date.AddDays(e.Num + 1) };
+
+			AssertQuery(query);
+
+			query.GetSelectQuery().Select.Columns.Any(c => c.Expression is not SqlField).ShouldBeTrue();
+		}
+
 		[Test]
 		public void ToNullableOverCteMethodReturnsNull([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
 
-			// The CTE projection contains an opted-in method, and a CTE is read back through a build proxy, which
-			// rebuilds under BuildFlags.ResetPrevious. If InsideTranslation did not survive that reset,
-			// PreferClientCalculation would re-arm underneath ToNullable and collapse the SQL NULL to default(T).
+			// A method calculated in the CTE and read back through its build proxy (rebuilt under BuildFlags.ResetPrevious)
+			// keeps the NULL ToNullable asks for, in both arms.
 			var cte = (from e in table select new { e.Id, Col = Math.Abs(e.Value1) }).AsCte();
 
 			var query =
@@ -2265,10 +2279,8 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
 
-			// The opted-in method sits in ToNullable's own argument, over a column read back through the CTE proxy -
-			// so the ResetPrevious rebuild happens while that argument is being translated. Dropping
-			// InsideTranslation there re-arms PreferClientCalculation under a mandatory translator, which makes
-			// ToNullable decline and collapses the SQL NULL to default(int).
+			// A method in ToNullable's own argument, over a column read back through the CTE proxy (rebuilt under
+			// BuildFlags.ResetPrevious while that argument is translated), keeps the NULL in both arms.
 			var cte = table.AsCte();
 
 			var query =
