@@ -1,4 +1,5 @@
 ﻿#nullable enable
+*REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
 LinqToDB.Internal.SqlQuery.QueryElementType.SqlDefaultValueExpression = 89 -> LinqToDB.Internal.SqlQuery.QueryElementType
 LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression
 LinqToDB.Internal.SqlQuery.SqlDefaultValueExpression.SqlDefaultValueExpression(LinqToDB.DbDataType type, object? value) -> void
