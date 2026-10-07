@@ -648,11 +648,16 @@ namespace Tests.Linq
 					 Min     = Math.Min(j.Value1, -5),
 					 Boxed   = string.Concat((object)j.Value1, (object)"!"),
 					 Name    = string.Concat(j.Name, "!"),
-					 Shifted = j.Date.AddDays(e.Value1),
-					 Year    = j.Date.AddDays(e.Value1).Year,
-					 Day     = j.Date.AddDays(e.Value1).Day,
+					 // A constant shift, as Informix builds the interval as a literal; Sql.AsSql keeps it in SQL, where a shift by a
+					 // constant would otherwise be calculated on the client.
+					 Shifted = Sql.AsSql(j.Date.AddDays(10)),
+					 Year    = Sql.AsSql(j.Date.AddDays(10).Year),
+					 Day     = Sql.AsSql(j.Date.AddDays(10).Day),
 				 })
 				.ToArray();
+
+			// Sybase ASE reads the empty string a NULL is coalesced to as a single space.
+			var emptyOnNull = context.IsAnyOf(TestProvName.AllSybase) ? " " : "";
 
 			// Asserted apart: the in-memory arm of AssertQuery does not null-guard an instance call on a value type.
 			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
@@ -661,15 +666,15 @@ namespace Tests.Linq
 			rows.ShouldAllBe(r => r.Max   == 5);
 			rows.ShouldAllBe(r => r.Min   == -5);
 			rows.ShouldAllBe(r => r.Boxed == "0!");
-			rows.ShouldAllBe(r => r.Name  == "!");
+			rows.ShouldAllBe(r => r.Name  == emptyOnNull + "!");
 
 			// The shifted date is the one written for the missed row: the least date the engine has where it has no 0001-01-01.
-			rows.ShouldAllBe(r => r.Year == MissedRowYear(context) && r.Day == 1 + r.Value1);
+			rows.ShouldAllBe(r => r.Year == MissedRowYear(context) && r.Day == 11);
 
 			// Access reads a date before 1900 back into .NET shifted (0100-01-01 arrives as 0098-11-26), so there only the parts
 			// it calculates itself are compared.
 			if (!context.IsAnyOf(TestProvName.AllAccess))
-				rows.ShouldAllBe(r => r.Shifted == new DateTime(MissedRowYear(context), 1, 1).AddDays(r.Value1));
+				rows.ShouldAllBe(r => r.Shifted == new DateTime(MissedRowYear(context), 1, 11));
 		}
 
 		// The group-join form reaches the missed row through DefaultIfEmpty rather than LeftJoin, and reads it alike.
