@@ -601,6 +601,88 @@ namespace Tests.Linq
 			return 1;
 		}
 
+		[Table]
+		sealed class TranslatedMemberEntity
+		{
+			[Column, PrimaryKey] public int      Id     { get; set; }
+			[Column]             public int      Value1 { get; set; }
+			[Column]             public DateTime Date   { get; set; }
+			[Column]             public Guid     Key    { get; set; }
+			[Column]             public string?  Name   { get; set; }
+
+			public static readonly TranslatedMemberEntity[] Seed =
+			[
+				new() { Id = 1, Value1 = 10, Date = new DateTime(2020, 1, 15), Key = new Guid("3f2504e0-4f89-11d3-9a0c-0305e82c3301"), Name = "one" },
+				new() { Id = 2, Value1 = 20, Date = new DateTime(2021, 2, 16), Key = new Guid("7c9e6679-7425-40de-944b-e07fc1f90ae7"), Name = null  },
+			];
+		}
+
+		// A member with a translator of its own reads a missed row's non-nullable member as default(T), as an operator does:
+		// conversions to string, Math.Max / Math.Min (GREATEST / LEAST where the engine has them), string.Concat over boxed
+		// values and a date shift. A nullable string is not defaulted: the concat reads its NULL as empty.
+		[Test]
+		public void TranslatedMemberOverMissedLeftJoinReadsDefault([DataSources] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
+
+			var rows =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 e.Value1,
+					 Text    = Convert.ToString(j.Value1),
+					 Key     = j.Key.ToString(),
+					 Max     = Math.Max(j.Value1, 5),
+					 Min     = Math.Min(j.Value1, -5),
+					 Boxed   = string.Concat((object)j.Value1, (object)"!"),
+					 Name    = string.Concat(j.Name, "!"),
+					 Shifted = j.Date.AddDays(e.Value1),
+					 Year    = j.Date.AddDays(e.Value1).Year,
+					 Day     = j.Date.AddDays(e.Value1).Day,
+				 })
+				.ToArray();
+
+			// Asserted apart: the in-memory arm of AssertQuery does not null-guard an instance call on a value type.
+			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Text  == "0");
+			rows.ShouldAllBe(r => r.Key   == "00000000-0000-0000-0000-000000000000");
+			rows.ShouldAllBe(r => r.Max   == 5);
+			rows.ShouldAllBe(r => r.Min   == -5);
+			rows.ShouldAllBe(r => r.Boxed == "0!");
+			rows.ShouldAllBe(r => r.Name  == "!");
+
+			// The shifted date is the one written for the missed row: the least date the engine has where it has no 0001-01-01.
+			rows.ShouldAllBe(r => r.Year == MissedRowYear(context) && r.Day == 1 + r.Value1);
+
+			// Access reads a date before 1900 back into .NET shifted (0100-01-01 arrives as 0098-11-26), so there only the parts
+			// it calculates itself are compared.
+			if (!context.IsAnyOf(TestProvName.AllAccess))
+				rows.ShouldAllBe(r => r.Shifted == new DateTime(MissedRowYear(context), 1, 1).AddDays(r.Value1));
+		}
+
+		// The group-join form reaches the missed row through DefaultIfEmpty rather than LeftJoin, and reads it alike.
+		[Test]
+		public void GroupJoinOverMissedRowReadsDefault([DataSources] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
+
+			var query =
+				from e in table
+				join j in table on e.Id + 1000 equals j.Id into g
+				from j in g.DefaultIfEmpty()
+				select new
+				{
+					e.Id,
+					Text = Convert.ToString(j.Value1),
+					Plus = j.Value1 + 1,
+				};
+
+			AssertQuery(query);
+		}
+
 		// DateOnly and DateTimeOffset: of the providers that create them, only ClickHouse and YDB map them to a type without
 		// 0001-01-01.
 		static int MissedRowNativeYear(string context)
@@ -2206,8 +2288,7 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
 
-			// Nothing here can be NULL, so the guard costs nothing: no conditional, and the same one column the
-			// option-off arm selects.
+			// Nothing here can be NULL, so nothing is defaulted: the same one column, read as it is, in both arms.
 			var query = from e in table where e.Id == 1 select Convert.ToString(e.Value1);
 
 			query.ToArray().Single().ShouldBe("10");
@@ -2221,7 +2302,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
 
 			// Convert.ToInt32(DateTime) throws InvalidCastException client-side for every input, so it must stay in
-			// SQL in both arms - declining it turns a query that returns a value into one that throws.
+			// SQL in both arms - moving it to the client turns a query that returns a value into one that throws.
 			var query =
 				from e in table
 				select new
@@ -2263,7 +2344,7 @@ namespace Tests.Linq
 			// Linq/Expressions.cs rewrites string.CompareOrdinal into string.CompareTo(string) before the registry
 			// is consulted, and CompareTo is culture-sensitive: on the client "Bob" sorts after "apple" where an
 			// ordinal comparison puts it before, so a client-side move returns 1 for that row instead of -1.
-			// The mapping itself is linq2db#5927; until that is fixed the registration must stay mandatory.
+			// The mapping itself is linq2db#5927; until that is fixed the comparison must stay in SQL.
 			var query =
 				from e in table
 				select new
@@ -2310,21 +2391,19 @@ namespace Tests.Linq
 			// members always translate, so a computed Length(...) column remains.
 			AllRaw(from e in table select new { e.Id, V = string.IsNullOrEmpty(e.Name) }).ShouldBeFalse();
 
-			// #5925: registered in the same optional scope as Replace / PadLeft / Trim*, which do move - this one
-			// does not, and the whole predicate stays in SQL.
+			// #5925: a member translation, which the option never moves, so the whole predicate stays in SQL.
 			AllRaw(from e in table select new { e.Id, V = string.IsNullOrWhiteSpace(e.Name) }).ShouldBeFalse();
 		}
 
 		[Test]
-		public void BooleanMethodStaysInSqlDespiteOptionalRegistration([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		public void BooleanMethodStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
 		{
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
 
-			// string.IsNullOrWhiteSpace is registered optional but does not move client-side, unlike the other
-			// members of the same scope. Kept as its own case rather than silently dropped from the string batch:
-			// the divergence is real and tracked as linq2db#5925, where the mechanism is still open. Results are
-			// correct either way, so AssertQuery holds in both modes - only the SQL shape differs.
+			// string.IsNullOrWhiteSpace is a member translation, which the option does not move (linq2db#5925 tracks how
+			// bool-returning members are routed). Results are correct either way, so AssertQuery holds in both modes - only
+			// the SQL shape differs.
 			var query = from e in table select new { e.Id, Ws = string.IsNullOrWhiteSpace(e.Name) };
 
 			AssertQuery(query);
@@ -2338,8 +2417,8 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
 
-			// The mirror of the batches above: Sql.* marks intent to compute server-side, so none of these may be
-			// pulled client-side whatever the option says. The DateAdd increment is a column, not a constant - with
+			// Sql.* marks intent to compute server-side, so none of these may be pulled client-side whatever the option
+			// says. The DateAdd increment is a column, not a constant - with
 			// a constant the translator declines in any projection and that column would pin nothing.
 			var query =
 				from e in table
@@ -2354,7 +2433,7 @@ namespace Tests.Linq
 			var selectQuery = query.GetSelectQuery();
 
 			// Counted, not Any(): one computed column would otherwise satisfy the assertion for all three, so
-			// making any single one of these registrations optional by mistake would leave the test green.
+			// moving any single one of them to the client by mistake would leave the test green.
 			selectQuery.Select.Columns.Count(c => c.Expression is not SqlField).ShouldBe(3);
 			(selectQuery.Find(e => e is SqlConcatExpression) != null).ShouldBeTrue();
 		}
@@ -2392,7 +2471,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
 
 			// string.Concat / string.Join over a grouping share their delegate with aggregate concat, which has no
-			// client-side equivalent - declining them would leave the grouping in the projection.
+			// client-side equivalent - moving them to the client would leave the grouping in the projection.
 			var concat = from e in table group e by e.Id > 1 into g select string.Concat(g.Select(x => x.Name));
 			var join   = from e in table group e by e.Id > 1 into g select string.Join(", ", g.Select(x => x.Name));
 

@@ -2058,6 +2058,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <returns>The expression the default is written as.</returns>
 		public virtual ISqlExpression ConvertDefaultValue(SqlDefaultValueExpression expression)
 		{
+			// TODO: #5999 - once the mapping schema holds a default per database type, take it from there and drop the provider overrides.
 			return new SqlValue(expression.Type, expression.Value);
 		}
 
