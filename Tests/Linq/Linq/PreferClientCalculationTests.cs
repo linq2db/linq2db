@@ -342,7 +342,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
 
-			var query = from e in table select $"{e.Name} {e.Name2}";
+			var query =
+				from e in table
+				select $"{e.Name} {e.Name2}";
 
 			AssertScalarQuery(query);
 			AssertComposition(query, preferClient);
@@ -355,7 +357,9 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
 
 			// Four holes: the compiler picks string.Format(String, Object[]) with a NewArrayInit.
-			var query = from e in table select $"{e.Name}, {e.Name2} ({e.Name}/{e.Name2})";
+			var query =
+				from e in table
+				select $"{e.Name}, {e.Name2} ({e.Name}/{e.Name2})";
 
 			AssertScalarQuery(query);
 			AssertComposition(query, preferClient);
@@ -367,7 +371,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
 
-			var query = from e in table select $"{e.Num}: {e.Name}";
+			var query =
+				from e in table
+				select $"{e.Num}: {e.Name}";
 
 			AssertScalarQuery(query);
 			AssertComposition(query, preferClient);
@@ -379,7 +385,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
 
-			var query = from e in table select $"{e.Num:D4}";
+			var query =
+				from e in table
+				select $"{e.Num:D4}";
 
 			// Single-part format, so no concat node either way - only the raw-field assertion applies.
 			AssertComposition(query, preferClient, multiPart: false);
@@ -396,7 +404,9 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(StringCalcEntity.Seed);
 
-			var query = from e in table select e.Name + " " + e.Name2;
+			var query =
+				from e in table
+				select e.Name + " " + e.Name2;
 
 			AssertScalarQuery(query);
 			AssertComposition(query, preferClient);
@@ -1561,8 +1571,12 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
 
+			var rounded =
+				from e in table
+				select Math.Round(e.Value1 / 4.0);
+
 			var query =
-				from t in (from e in table select Math.Round(e.Value1 / 4.0))
+				from t in rounded
 				where t != 0
 				select t;
 
@@ -1679,8 +1693,18 @@ namespace Tests.Linq
 				select new
 				{
 					e.Id,
-					Inner = (from t in table from k in table.LeftJoin(k => k.Id == t.Id + 1000) where t.Id == e.Id select k.Value1 + 1).FirstOrDefault(),
-					Outer = (from t in table from k in table.LeftJoin(k => k.Id == t.Id + 1000) where t.Id == e.Id select k.Value1).FirstOrDefault() + 1,
+					Inner =
+						(from t in table
+						 from k in table.LeftJoin(k => k.Id == t.Id + 1000)
+						 where t.Id == e.Id
+						 select k.Value1 + 1)
+						.FirstOrDefault(),
+					Outer =
+						(from t in table
+						 from k in table.LeftJoin(k => k.Id == t.Id + 1000)
+						 where t.Id == e.Id
+						 select k.Value1)
+						.FirstOrDefault() + 1,
 				};
 
 			AssertQuery(query);
@@ -2078,14 +2102,27 @@ namespace Tests.Linq
 
 			// Pure correctness sweep across every provider (including remote): the result must match client-side
 			// evaluation no matter where the computation happens.
-			AssertQuery(from e in table select new { e.Id, Calc = e.Value1 + 12345 });
-			AssertScalarQuery(from e in table select e.Id > 1 ? e.Value1 : e.Value2);
-			AssertScalarQuery(from e in table select -e.Value1);
-			AssertScalarQuery(from e in table select e.Value1 + PreferServer(e.Value2));
+			AssertQuery(
+				from e in table
+				select new { e.Id, Calc = e.Value1 + 12345 });
+
+			AssertScalarQuery(
+				from e in table
+				select e.Id > 1 ? e.Value1 : e.Value2);
+
+			AssertScalarQuery(
+				from e in table
+				select -e.Value1);
+
+			AssertScalarQuery(
+				from e in table
+				select e.Value1 + PreferServer(e.Value2));
 
 			// String interpolation. Only string holes: a numeric hole would compare .NET formatting against each
 			// provider's CAST, which is a difference this option accepts rather than a regression.
-			AssertQuery(from e in table select new { e.Id, Cat = $"{e.Name} {e.Name}" });
+			AssertQuery(
+				from e in table
+				select new { e.Id, Cat = $"{e.Name} {e.Name}" });
 		}
 
 		[Test]
@@ -2245,7 +2282,13 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(true));
 			using var table = db.CreateLocalTable(BatchCalcEntity.Seed);
 
-			var query = from e in table select new { e.Id, Shifted = e.Date.AddDays(e.Num + 1) };
+			var query =
+				from e in table
+				select new
+				{
+					e.Id,
+					Shifted = e.Date.AddDays(e.Num + 1),
+				};
 
 			AssertQuery(query);
 
@@ -2260,7 +2303,10 @@ namespace Tests.Linq
 
 			// A method calculated in the CTE and read back through its build proxy (rebuilt under BuildFlags.ResetPrevious)
 			// keeps the NULL ToNullable asks for, in both arms.
-			var cte = (from e in table select new { e.Id, Col = Math.Abs(e.Value1) }).AsCte();
+			var cte =
+				(from e in table
+				 select new { e.Id, Col = Math.Abs(e.Value1) })
+				.AsCte();
 
 			var query =
 				from e in table
@@ -2301,7 +2347,10 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(MissedJoinEntity.Seed);
 
 			// Nothing here can be NULL, so nothing is defaulted: the same one column, read as it is, in both arms.
-			var query = from e in table where e.Id == 1 select Convert.ToString(e.Value1);
+			var query =
+				from e in table
+				where e.Id == 1
+				select Convert.ToString(e.Value1);
 
 			query.ToArray().Single().ShouldBe("10");
 			query.GetSelectQuery().Select.Columns.Count.ShouldBe(1);
@@ -2388,23 +2437,41 @@ namespace Tests.Linq
 			static bool AllRaw<T>(IQueryable<T> q) => q.GetSelectQuery().Select.Columns.All(c => c.Expression is SqlField);
 
 			// [Sql.Expression] -> HandleExtension, which the option gates.
-			AllRaw(from e in table select new { e.Id, V = AttributedPredicate(e.Num) }).ShouldBeTrue();
+			AllRaw(
+				from e in table
+				select new { e.Id, V = AttributedPredicate(e.Num) })
+				.ShouldBeTrue();
 
 			// ServerSideOnly excludes the node from the option entirely.
-			AllRaw(from e in table select new { e.Id, V = ServerOnlyPredicate(e.Num) }).ShouldBeFalse();
+			AllRaw(
+				from e in table
+				select new { e.Id, V = ServerOnlyPredicate(e.Num) })
+				.ShouldBeFalse();
 
 			// [ExpressionMethod] expands before the gate; the expansion is a binary, which the option gates.
-			AllRaw(from e in table select new { e.Id, V = IsPositive(e.Num) }).ShouldBeTrue();
+			AllRaw(
+				from e in table
+				select new { e.Id, V = IsPositive(e.Num) })
+				.ShouldBeTrue();
 
 			// The built-in predicate path declines under the option, so this moves too.
-			AllRaw(from e in table select new { e.Id, V = e.Name.Contains("o") }).ShouldBeTrue();
+			AllRaw(
+				from e in table
+				select new { e.Id, V = e.Name.Contains("o") })
+				.ShouldBeTrue();
 
 			// #5925: expands to `p == null || p.Length == 0`; the comparison moves but Length is a member, and
 			// members always translate, so a computed Length(...) column remains.
-			AllRaw(from e in table select new { e.Id, V = string.IsNullOrEmpty(e.Name) }).ShouldBeFalse();
+			AllRaw(
+				from e in table
+				select new { e.Id, V = string.IsNullOrEmpty(e.Name) })
+				.ShouldBeFalse();
 
 			// #5925: a member translation, which the option never moves, so the whole predicate stays in SQL.
-			AllRaw(from e in table select new { e.Id, V = string.IsNullOrWhiteSpace(e.Name) }).ShouldBeFalse();
+			AllRaw(
+				from e in table
+				select new { e.Id, V = string.IsNullOrWhiteSpace(e.Name) })
+				.ShouldBeFalse();
 		}
 
 		[Test]
@@ -2416,7 +2483,9 @@ namespace Tests.Linq
 			// string.IsNullOrWhiteSpace is a member translation, which the option does not move (linq2db#5925 tracks how
 			// bool-returning members are routed). Results are correct either way, so AssertQuery holds in both modes - only
 			// the SQL shape differs.
-			var query = from e in table select new { e.Id, Ws = string.IsNullOrWhiteSpace(e.Name) };
+			var query =
+				from e in table
+				select new { e.Id, Ws = string.IsNullOrWhiteSpace(e.Name) };
 
 			AssertQuery(query);
 
@@ -2484,8 +2553,15 @@ namespace Tests.Linq
 
 			// string.Concat / string.Join over a grouping share their delegate with aggregate concat, which has no
 			// client-side equivalent - moving them to the client would leave the grouping in the projection.
-			var concat = from e in table group e by e.Id > 1 into g select string.Concat(g.Select(x => x.Name));
-			var join   = from e in table group e by e.Id > 1 into g select string.Join(", ", g.Select(x => x.Name));
+			var concat =
+				from e in table
+				group e by e.Id > 1 into g
+				select string.Concat(g.Select(x => x.Name));
+
+			var join =
+				from e in table
+				group e by e.Id > 1 into g
+				select string.Join(", ", g.Select(x => x.Name));
 
 			_ = concat.ToArray();
 			_ = join.ToArray();
