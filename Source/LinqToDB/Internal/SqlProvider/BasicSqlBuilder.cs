@@ -4204,10 +4204,18 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(format);
 			else
 			{
-				var values = new object[parameters.Count];
+				var values     = new object[parameters.Count];
+				var referenced = GetReferencedFormatItems(format, values.Length);
 
 				for (var i = 0; i < values.Length; i++)
 				{
+					// building a parameter registers it on the command, and some providers reject one the SQL does not use
+					if (referenced?[i] == false)
+					{
+						values[i] = string.Empty;
+						continue;
+					}
+
 					var value = ConvertElement(parameters[i]);
 
 					values[i] = WithStringBuilderBuildExpression(precedence, value);
@@ -4215,6 +4223,54 @@ namespace LinqToDB.Internal.SqlProvider
 
 				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
+		}
+
+		// null when the format cannot be read - AppendFormat then reports it
+		static bool[]? GetReferencedFormatItems(string format, int count)
+		{
+			var referenced = new bool[count];
+
+			for (var i = 0; i < format.Length; i++)
+			{
+				var c = format[i];
+
+				if (c == '}' && i + 1 < format.Length && format[i + 1] == '}')
+				{
+					i++;
+					continue;
+				}
+
+				if (c != '{')
+					continue;
+
+				if (i + 1 < format.Length && format[i + 1] == '{')
+				{
+					i++;
+					continue;
+				}
+
+				var start = ++i;
+				var index = 0;
+
+				while (i < format.Length && format[i] is >= '0' and <= '9')
+				{
+					index = index * 10 + (format[i] - '0');
+					i++;
+				}
+
+				if (i == start)
+					return null;
+
+				if ((uint)index < (uint)count)
+					referenced[index] = true;
+
+				i = format.IndexOf('}', i);
+
+				if (i < 0)
+					return null;
+			}
+
+			return referenced;
 		}
 
 		static string IdentText(string text, int ident)
