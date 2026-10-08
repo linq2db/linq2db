@@ -1148,6 +1148,193 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		static string Issue6000Select(string context, string condition)
+		{
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+			var alias = context.IsAnyOf(TestProvName.AllYdb) ? "`value`" : "\"value\"";
+
+			return $"SELECT {id} AS {alias} FROM {table} WHERE {id} {condition}";
+		}
+
+		static int[] Issue6000Ids(IQueryable<Person> query) => query.AsEnumerable().Select(p => p.ID).OrderBy(id => id).ToArray();
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_FormatChanges([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var misses = new long[3];
+			var i      = 0;
+
+			foreach (var value in new[] { 1, 2, 1 })
+			{
+				var sql = Issue6000Select(context, $"= {value}");
+
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(FormattableStringFactory.Create(sql))));
+
+				Issue6000Ids(query).ShouldBe(new[] { value });
+				misses[i++] = query.GetCacheMissCount();
+			}
+
+			misses[1].ShouldBeGreaterThan(misses[0]);
+			misses[2].ShouldBe(misses[1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_CapturedFormattable_FormatAndArgumentChange([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			foreach (var (condition, value, expected) in new[] { ("= {0}", 1, new[] { 1 }), ("<> {0}", 2, new[] { 1, 3, 4 }), ("= {0}", 1, new[] { 1 }) })
+			{
+				var fs = FormattableStringFactory.Create(Issue6000Select(context, condition), value);
+
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+				Issue6000Ids(query).ShouldBe(expected);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_CapturedFormattable_ArgumentChanges([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var misses = new long[3];
+			var i      = 0;
+
+			foreach (var value in new[] { 1, 2, 1 })
+			{
+				var fs = FormattableStringFactory.Create(Issue6000Select(context, "= {0}"), value);
+
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+				Issue6000Ids(query).ShouldBe(new[] { value });
+				misses[i++] = query.GetCacheMissCount();
+			}
+
+			misses[1].ShouldBe(misses[0]);
+			misses[2].ShouldBe(misses[0]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_CapturedFormattable_ValueThenNull([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			foreach (var value in new int?[] { 1, null, 1 })
+			{
+				var fs = FormattableStringFactory.Create(Issue6000Select(context, "= {0}"), value);
+
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+				Issue6000Ids(query).ShouldBe(value == null ? [] : new[] { value.Value });
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_CapturedFormattable_NullThenValue([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			foreach (var value in new int?[] { null, 1, null })
+			{
+				var fs = FormattableStringFactory.Create(Issue6000Select(context, "= {0}"), value);
+
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+				Issue6000Ids(query).ShouldBe(value == null ? [] : new[] { value.Value });
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_CapturedFormattable_ArgumentShapeChanges([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			foreach (var (args, expected) in new[] { (new object[] { 1 }, 1), (new object[] { 2L, 99 }, 2), (new object[] { 1 }, 1) })
+			{
+				var fs = FormattableStringFactory.Create(Issue6000Select(context, "= {0}"), args);
+
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+				Issue6000Ids(query).ShouldBe(new[] { expected });
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_CapturedFormattable_SqlExpressionArgumentChanges([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			foreach (var value in new[] { 1, 2, 1 })
+			{
+				var fs = FormattableStringFactory.Create(Issue6000Select(context, "= {0}"), new SqlValue(value));
+
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+				Issue6000Ids(query).ShouldBe(new[] { value });
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_Nested_CapturedRawSqlString_ArgumentArrayChanges([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+
+			foreach (var (args, expected) in new[] { (new object[] { 1 }, 1), (new object[] { 2L, 99 }, 2), (new object[] { 1 }, 1) })
+			{
+				RawSqlString rs = $"SELECT * FROM {table} WHERE {id} = {{0}}";
+
+				var query = db.Person.Where(p => db.FromSql<Person>(rs, args).Any(s => s.ID == p.ID));
+
+				Issue6000Ids(query).ShouldBe(new[] { expected });
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_Nested_CapturedRawSqlString_FormatChanges([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+
+			foreach (var (condition, expected) in new[] { ("=", new[] { 1 }), ("<>", new[] { 2, 3, 4 }), ("=", new[] { 1 }) })
+			{
+				var value    = 1;
+				RawSqlString rs = $"SELECT * FROM {table} WHERE {id} {condition} {{0}}";
+
+				var query = db.Person.Where(p => db.FromSql<Person>(rs, value).Any(s => s.ID == p.ID));
+
+				Issue6000Ids(query).ShouldBe(expected);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
+		public void Issue6000_NestedScalar_InlineInterpolation_Cached([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var misses = new long[3];
+			var i      = 0;
+
+			foreach (var value in new[] { 1, 2, 1 })
+			{
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>($"SELECT {GetColumn("PersonID")} AS {GetColumn("value")} FROM {GetName(db.Person)} WHERE {GetColumn("PersonID")} = {value}")));
+
+				Issue6000Ids(query).ShouldBe(new[] { value });
+				misses[i++] = query.GetCacheMissCount();
+			}
+
+			misses[1].ShouldBe(misses[0]);
+			misses[2].ShouldBe(misses[0]);
+		}
+
 		sealed record Projection1(int i1, int i2);
 
 		sealed record Projection2(int i);

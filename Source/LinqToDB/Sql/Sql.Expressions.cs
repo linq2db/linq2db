@@ -536,7 +536,8 @@ namespace LinqToDB
 			{
 				Internal.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
 					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,
-					out var format, out var arguments);
+					false,
+					out var format, out var arguments, out _);
 
 				var memberType = builder.Member.GetMemberType();
 
