@@ -100,7 +100,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		/// <summary>
-		/// Whether the type is one of the 64-bit date types, whose range only a <c>Timestamp64</c> holds with a time of day.
+		/// Whether the type is one of the 64-bit date types, whose range only a <c>Timestamp64</c> holds to the microsecond.
 		/// </summary>
 		/// <remarks>
 		/// Asked of the <c>DbType</c> too: a <see cref="DateTime"/> declared through it alone -

@@ -1385,6 +1385,18 @@ namespace Tests.Linq
 			row.Day32.ShouldBe(on.Date + amount);
 			row.On64.ShouldBe(on + amount);
 
+			// The same shift through the mapping that declares the data type.
+			var declaredRow = declared
+				.Select(r => new
+				{
+					Day32 = Sql.AsSql(r.Day32 + (r.FinishedOn - r.StartedOn)),
+					On64  = Sql.AsSql(r.On64  + (r.FinishedOn - r.StartedOn)),
+				})
+				.Single();
+
+			declaredRow.Day32.ShouldBe(on.Date + amount);
+			declaredRow.On64.ShouldBe(on + amount);
+
 			t.Where(r => r.On    + (r.FinishedOn - r.StartedOn) > r.On).Select(r => r.Id).ToArray().ShouldBe([1]);
 			t.Where(r => r.Day32 + (r.FinishedOn - r.StartedOn) > r.Day32).Select(r => r.Id).ToArray().ShouldBe([1]);
 			t.Where(r => r.On64  + (r.FinishedOn - r.StartedOn) > r.On64.AddHours(5).AddMinutes(30)).Select(r => r.Id).ToArray().ShouldBe([1]);
