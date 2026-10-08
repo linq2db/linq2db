@@ -218,6 +218,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return sb.Append(value);
 		}
 
+		// Npgsql also accepts @name
+		protected override bool IsParameterReferenced(string format, string name)
+		{
+			return base.IsParameterReferenced(format, name) || ContainsParameterReference(format, "@" + name);
+		}
+
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
 			BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(insertOrUpdate);

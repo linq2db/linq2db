@@ -4210,7 +4210,7 @@ namespace LinqToDB.Internal.SqlProvider
 				for (var i = 0; i < values.Length; i++)
 				{
 					// building a parameter registers it on the command, and some providers reject one the SQL does not use;
-					// a named parameter (e.g. DataParameter) can be referenced by its name instead of {n}
+					// a parameter can still be referenced by its name or position instead of {n}
 					if (referenced?[i] == false && !IsReferencedByName(format, parameters[i]))
 					{
 						values[i] = string.Empty;
@@ -4226,26 +4226,49 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		static bool IsReferencedByName(string format, ISqlExpression parameter)
+		bool IsReferencedByName(string format, ISqlExpression parameter)
 		{
-			if (parameter is not SqlParameter { Name: { Length: > 0 } name })
+			if (parameter is not SqlParameter sqlParameter)
 				return false;
 
-			name = name.TrimStart('@', ':', '?');
+			// positional parameters bind by order, so raw SQL may reference any of them with '?'
+			if (SqlProviderFlags.IsParameterOrderDependent)
+				return true;
 
-			if (name.Length == 0)
-				return false;
+			var name  = sqlParameter.Name ?? string.Empty;
+			var start = 0;
 
-			for (var i = format.IndexOf(name, StringComparison.OrdinalIgnoreCase); i >= 0; i = format.IndexOf(name, i + 1, StringComparison.OrdinalIgnoreCase))
+			while (start < name.Length && !IsIdentifierChar(name[start]))
+				start++;
+
+			return start < name.Length && IsParameterReferenced(format, name.Substring(start));
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when raw SQL <paramref name="format"/> references query parameter <paramref name="name"/>.
+		/// </summary>
+		protected virtual bool IsParameterReferenced(string format, string name)
+		{
+			return ContainsParameterReference(format, ConvertInline(name, ConvertType.NameToQueryParameter));
+		}
+
+		/// <summary>
+		/// Returns <see langword="true"/> when <paramref name="format"/> contains <paramref name="reference"/> not followed by an identifier character.
+		/// </summary>
+		protected static bool ContainsParameterReference(string format, string reference)
+		{
+			for (var i = format.IndexOf(reference, StringComparison.OrdinalIgnoreCase); i >= 0; i = format.IndexOf(reference, i + 1, StringComparison.OrdinalIgnoreCase))
 			{
-				var end = i + name.Length;
+				var end = i + reference.Length;
 
-				if (i > 0 && format[i - 1] is '@' or ':' or '?' && (end == format.Length || !(char.IsLetterOrDigit(format[end]) || format[end] == '_')))
+				if (end == format.Length || !IsIdentifierChar(format[end]))
 					return true;
 			}
 
 			return false;
 		}
+
+		static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
 
 		// null when the format cannot be read - AppendFormat then reports it
 		static bool[]? GetReferencedFormatItems(string format, int count)
