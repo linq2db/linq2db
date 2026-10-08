@@ -40,6 +40,9 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo Guid_ToByteArray     = MemberHelper.MethodOf<Guid>(g => g.ToByteArray());
 			public static readonly MethodInfo String_ObjectsConcat = MemberHelper.MethodOf(() => string.Concat((object?)null, (object?)null));
 
+			public static readonly MethodInfo Object_GetType                 = MemberHelper.MethodOf<object>(o => o.GetType());
+			public static readonly MethodInfo FormattableString_GetArguments = MemberHelper.MethodOf<FormattableString>(fs => fs.GetArguments());
+
 		}
 
 		public static class Enumerable

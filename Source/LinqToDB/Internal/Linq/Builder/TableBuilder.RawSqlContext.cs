@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -78,17 +77,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, entityType, isScalar.Value, format, sqlArguments));
 		}
 
-		static readonly MethodInfo _getArgumentsMethod = MemberHelper.MethodOf<FormattableString>(fs => fs.GetArguments());
-		static readonly MethodInfo _getTypeMethod      = MemberHelper.MethodOf<object>(o => o.GetType());
-
-		static bool IsConstantValue(Expression expression)
-		{
-			while (expression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
-				expression = ((UnaryExpression)expression).Operand;
-
-			return expression.NodeType == ExpressionType.Constant;
-		}
-
 		// Accessors built over a captured argument array are typed by the build-time values, so a cached query
 		// is reusable only while the count, the runtime types and any inlined ISqlExpression stay the same.
 		// The count goes first: comparison stops at the first mismatch, before indexing a shorter array.
@@ -103,7 +91,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var typeExpr = Expression.Condition(
 					Expression.Equal(itemExpr, Expression.Constant(null)),
 					Expression.Constant(null, typeof(Type)),
-					Expression.Call(itemExpr, _getTypeMethod));
+					Expression.Call(itemExpr, Methods.System.Object_GetType));
 
 				dependencies.Add((typeExpr, array[i]?.GetType()));
 
@@ -144,12 +132,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				// format text is baked into SQL, so a captured format must take part in cache comparison
-				if (!IsConstantValue(mc.Arguments[0]))
+				if (mc.Arguments[0].Unwrap() is not ConstantExpression)
 					cacheDependencies = [(mc.Arguments[0], format)];
 			}
 			else
 			{
-				var isConstant   = IsConstantValue(formatArg);
+				var isConstant   = formatArg.Unwrap() is ConstantExpression;
 				var evaluatedSql = formatArg.EvaluateExpression()!;
 				if (evaluatedSql is FormattableString formattable)
 				{
@@ -163,7 +151,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var array = formattable.GetArguments();
 					var args   = new Expression[array.Length];
 
-					var argumentsExpr = parameterizeCapturedArguments && !isConstant ? Expression.Call(formattableExpr, _getArgumentsMethod) : null;
+					var argumentsExpr = parameterizeCapturedArguments && !isConstant ? Expression.Call(formattableExpr, Methods.System.FormattableString_GetArguments) : null;
 
 					if (argumentsExpr != null)
 						AddArgumentDependencies(ref cacheDependencies, argumentsExpr, array);
@@ -202,7 +190,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var array = arrayExpr.EvaluateExpression<object[]>()!;
 						var args  = new Expression[array.Length];
 
-						if (parameterizeCapturedArguments && !IsConstantValue(arrayExpr))
+						if (parameterizeCapturedArguments && arrayExpr.Unwrap() is not ConstantExpression)
 							AddArgumentDependencies(ref cacheDependencies, arrayExpr, array);
 
 						for (var i = 0; i < array.Length; i++)
