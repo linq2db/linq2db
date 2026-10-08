@@ -4209,8 +4209,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				for (var i = 0; i < values.Length; i++)
 				{
-					// building a parameter registers it on the command, and some providers reject one the SQL does not use
-					if (referenced?[i] == false)
+					// building a parameter registers it on the command, and some providers reject one the SQL does not use;
+					// a named parameter (e.g. DataParameter) can be referenced by its name instead of {n}
+					if (referenced?[i] == false && !IsReferencedByName(format, parameters[i]))
 					{
 						values[i] = string.Empty;
 						continue;
@@ -4223,6 +4224,27 @@ namespace LinqToDB.Internal.SqlProvider
 
 				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
+		}
+
+		static bool IsReferencedByName(string format, ISqlExpression parameter)
+		{
+			if (parameter is not SqlParameter { Name: { Length: > 0 } name })
+				return false;
+
+			name = name.TrimStart('@', ':', '?');
+
+			if (name.Length == 0)
+				return false;
+
+			for (var i = format.IndexOf(name, StringComparison.OrdinalIgnoreCase); i >= 0; i = format.IndexOf(name, i + 1, StringComparison.OrdinalIgnoreCase))
+			{
+				var end = i + name.Length;
+
+				if (i > 0 && format[i - 1] is '@' or ':' or '?' && (end == format.Length || !(char.IsLetterOrDigit(format[end]) || format[end] == '_')))
+					return true;
+			}
+
+			return false;
 		}
 
 		// null when the format cannot be read - AppendFormat then reports it

@@ -1324,6 +1324,17 @@ namespace Tests.Linq
 			query.ToSqlQuery().Parameters.ShouldNotContain(p => Equals(p.Value, 99));
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6003")]
+		public void Issue6000_ArgumentReferencedByNameIsSent([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var prefix = context.IsAnyOf(TestProvName.AllOracle) ? ":" : "@";
+			var sql    = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {prefix}p";
+
+			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe(new[] { 2 });
+		}
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
 		[ThrowsCannotBeConverted(TestProvName.AllYdb)]
 		public void Issue6000_Nested_CapturedRawSqlString_ArgumentTypeChanges([DataSources(TestProvName.AllAccess)] string context)
