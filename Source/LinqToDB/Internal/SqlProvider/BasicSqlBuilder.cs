@@ -4204,19 +4204,10 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(format);
 			else
 			{
-				var values     = new object[parameters.Count];
-				var referenced = GetReferencedFormatItems(format, values.Length);
+				var values = new object[parameters.Count];
 
 				for (var i = 0; i < values.Length; i++)
 				{
-					// building a parameter registers it on the command, and some providers reject one the SQL does not use;
-					// a parameter can still be referenced by its name or position instead of {n}
-					if (referenced?[i] == false && !IsReferencedByName(format, parameters[i]))
-					{
-						values[i] = string.Empty;
-						continue;
-					}
-
 					var value = ConvertElement(parameters[i]);
 
 					values[i] = WithStringBuilderBuildExpression(precedence, value);
@@ -4224,98 +4215,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
-		}
-
-		bool IsReferencedByName(string format, ISqlExpression parameter)
-		{
-			if (parameter is not SqlParameter sqlParameter)
-				return false;
-
-			// positional parameters bind by order, so raw SQL may reference any of them with '?'
-			if (SqlProviderFlags.IsParameterOrderDependent)
-				return true;
-
-			var name  = sqlParameter.Name ?? string.Empty;
-			var start = 0;
-
-			while (start < name.Length && !IsIdentifierChar(name[start]))
-				start++;
-
-			return start < name.Length && IsParameterReferenced(format, name.Substring(start));
-		}
-
-		/// <summary>
-		/// Returns <see langword="true"/> when raw SQL <paramref name="format"/> references query parameter <paramref name="name"/>.
-		/// </summary>
-		protected virtual bool IsParameterReferenced(string format, string name)
-		{
-			return ContainsParameterReference(format, ConvertInline(name, ConvertType.NameToQueryParameter));
-		}
-
-		/// <summary>
-		/// Returns <see langword="true"/> when <paramref name="format"/> contains <paramref name="reference"/> not followed by an identifier character.
-		/// </summary>
-		protected static bool ContainsParameterReference(string format, string reference)
-		{
-			for (var i = format.IndexOf(reference, StringComparison.OrdinalIgnoreCase); i >= 0; i = format.IndexOf(reference, i + 1, StringComparison.OrdinalIgnoreCase))
-			{
-				var end = i + reference.Length;
-
-				if (end == format.Length || !IsIdentifierChar(format[end]))
-					return true;
-			}
-
-			return false;
-		}
-
-		static bool IsIdentifierChar(char c) => char.IsLetterOrDigit(c) || c == '_';
-
-		// null when the format cannot be read - AppendFormat then reports it
-		static bool[]? GetReferencedFormatItems(string format, int count)
-		{
-			var referenced = new bool[count];
-
-			for (var i = 0; i < format.Length; i++)
-			{
-				var c = format[i];
-
-				if (c == '}' && i + 1 < format.Length && format[i + 1] == '}')
-				{
-					i++;
-					continue;
-				}
-
-				if (c != '{')
-					continue;
-
-				if (i + 1 < format.Length && format[i + 1] == '{')
-				{
-					i++;
-					continue;
-				}
-
-				var start = ++i;
-				var index = 0;
-
-				while (i < format.Length && format[i] is >= '0' and <= '9')
-				{
-					index = index * 10 + (format[i] - '0');
-					i++;
-				}
-
-				if (i == start)
-					return null;
-
-				if ((uint)index < (uint)count)
-					referenced[index] = true;
-
-				i = format.IndexOf('}', i);
-
-				if (i < 0)
-					return null;
-			}
-
-			return referenced;
 		}
 
 		static string IdentText(string text, int ident)

@@ -2194,8 +2194,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (inPredicate.SubQuery.Where.SearchCondition.IsOr)
 				throw new InvalidOperationException("Not expected root SearchCondition.");
 
-			// a transformed query owns its WHERE clause but still shares the original's search condition
-			if (GetVisitMode(subQuery) == VisitMode.Transform || GetVisitMode(subQuery.Where.SearchCondition) == VisitMode.Transform || subQuery.Where.SearchCondition.IsOr)
+			if (GetVisitMode(subQuery) == VisitMode.Transform || subQuery.Where.SearchCondition.IsOr)
 			{
 				subQuery = subQuery.CloneQuery();
 				subQuery.Where.EnsureConjunction();

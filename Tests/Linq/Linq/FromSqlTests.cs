@@ -1296,69 +1296,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/pull/6003"), QueryCacheTest]
-		public void Issue6000_NestedScalar_InToExists_SqlExpressionArgument([DataSources(TestProvName.AllAccess)] string context)
-		{
-			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(true));
-
-			foreach (var value in new[] { 1, 2, 1 })
-			{
-				var fs = FormattableStringFactory.Create(Issue6000Select(context, "= {0}"), new SqlValue(value));
-
-				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
-
-				Issue6000Ids(query).ShouldBe(new[] { value });
-			}
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/pull/6003")]
-		public void Issue6000_UnreferencedArgumentIsNotSent([DataSources(TestProvName.AllAccess)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var fs = FormattableStringFactory.Create(Issue6000Select(context, "= {0}"), 1, 99);
-
-			var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
-
-			Issue6000Ids(query).ShouldBe(new[] { 1 });
-
-			if (db.SqlProviderFlags.IsParameterOrderDependent)
-				query.ToSqlQuery().Parameters.ShouldContain(p => Equals(p.Value, 99));
-			else
-				query.ToSqlQuery().Parameters.ShouldNotContain(p => Equals(p.Value, 99));
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/pull/6003")]
-		public void Issue6000_ArgumentReferencedByNameIsSent([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var prefix = context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL) ? ":" : "@";
-			var sql    = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {prefix}p";
-
-			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe(new[] { 2 });
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/pull/6003")]
-		public void Issue6000_ArgumentReferencedByAlternateNameIsSent([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var sql = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = @p";
-
-			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe(new[] { 2 });
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/pull/6003")]
-		public void Issue6000_ArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var sql = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = ?";
-
-			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe(new[] { 2 });
-		}
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000"), QueryCacheTest]
 		[ThrowsCannotBeConverted(TestProvName.AllYdb)]
 		public void Issue6000_Nested_CapturedRawSqlString_ArgumentTypeChanges([DataSources(TestProvName.AllAccess)] string context)
