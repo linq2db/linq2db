@@ -433,6 +433,34 @@ namespace Tests.Linq
 				from r in t    orderby r.Id select new { r.Id, R34 = Sql.AsSql(Math.Round(r.D34s2, 2, mp)), R35 = Sql.AsSql(Math.Round(r.D35s2, 5, mp)), R6 = Sql.AsSql(Math.Round(r.D35s6, 2, mp)) });
 		}
 
+		sealed class RoundNegative
+		{
+			[PrimaryKey                      ] public int     Id { get; set; }
+			[Column(Precision = 6, Scale = 2)] public decimal D  { get; set; }
+		}
+
+		// A negative precision rounds left of the point: the intermediate keeps the integer digits and gains scale.
+		[Test]
+		public void Round18([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegative { Id = 1, D =  1234.56m },
+				new RoundNegative { Id = 2, D =  1234.96m },
+				new RoundNegative { Id = 3, D = -1234.96m },
+				new RoundNegative { Id = 4, D =  1225.00m },
+				new RoundNegative { Id = 5, D = -1225.00m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, -1)), Even = Sql.AsSql(Sql.RoundToEven(r.D, -1)) }).ToArray();
+
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1230m, -1230m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1220m, -1220m });
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
