@@ -500,12 +500,14 @@ jobs:
             10.x
 
       # Anonymous pulls hit Docker Hub's rate limit (#6008); a failed login falls back to them.
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      # Plain CLI, not docker/login-action: the repo allows GitHub-owned actions only.
+      - name: Docker Hub login
         if: matrix.script_global != ''
         continue-on-error: true
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: echo "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
 
       - name: Start the database
         if: matrix.script_global != ''
