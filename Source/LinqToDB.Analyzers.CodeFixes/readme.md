@@ -28,6 +28,7 @@ than the runtime it runs against degrades to silence rather than to a broken fix
 | [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
 | [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
 | [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
+| [L2DB2001](https://github.com/linq2db/linq2db/wiki/L2DB2001) | Warning | A hint passed as text (`TableHint("NOLOCK")`, `With`, `TablesInScopeHint`, `QueryHint`) has a typed provider helper that emits the same SQL (`AsSqlServer().WithNoLock()`). A code fix rewrites the call; on a generic receiver it offers one rewrite per provider, each restricting the hint to that provider. |
 
 ### L2DB1001 — migrate `Sql.Ext` window functions to `Sql.Window`
 
@@ -107,6 +108,37 @@ the rule only treats it as a stub when it throws `ServerSideOnlyException`, so o
 On a member carrying several configuration-scoped `Sql.*` attributes, the code fix sets `ServerSideOnly = true`
 on one of them, which is enough to satisfy the rule — but the runtime resolves the attribute per
 configuration, so add it to the rest by hand if the member should be server-side-only on every provider.
+
+### L2DB2001 — a string hint that has a typed equivalent
+
+```csharp
+// L2DB2001: Hint 'NOLOCK' has a typed equivalent: AsSqlServer().WithNoLock() for SQL Server,
+//           AsSqlCe().WithNoLock() for SQL Server CE.
+var q1 = db.Person.TableHint("NOLOCK");
+
+// code fix (SQL Server)
+var q1 = db.Person.AsSqlServer().WithNoLock();
+
+// L2DB2001: Hint 'RECOMPILE' has a typed equivalent: OptionRecompile().
+var q2 = db.Person.Where(p => p.Id > 0).AsSqlServer().QueryHint("RECOMPILE");
+
+// code fix
+var q2 = db.Person.Where(p => p.Id > 0).AsSqlServer().OptionRecompile();
+```
+
+The generic text overloads on `LinqExtensions` emit their text on every provider the query runs on; a typed
+helper is checked by the compiler and emits only on its own provider. The rule reports a constant hint text
+(case and surrounding blanks ignored) that a provider's typed helper emits as is, for `TableHint`, `With`,
+`TablesInScopeHint` and `QueryHint`. Hints that take a value, an index name or a table id, and text no typed
+helper produces, are not reported.
+
+On a receiver that is already provider-specific (after `AsSqlServer()` and the like) the rewrite is exact. On a
+generic receiver it also restricts the hint to the provider you pick, which is what you want when the query
+only ever runs there — and a change of behaviour if the same query also runs on another database that accepted
+the text. Each fix title says which provider it restricts the hint to. A tables-in-scope or query hint on a
+table goes through `AsQueryable()` first, since `AsSqlServer()` on a table yields the table form.
+
+The message ends with the path of the hints guide inside the `linq2db` package (`skills/linq2db/docs/hints.md`).
 
 ## Configuration
 
