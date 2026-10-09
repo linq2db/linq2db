@@ -52,6 +52,12 @@ namespace LinqToDB.CommandLine.Commands.Skill
 					if (name.StartsWith('.') || _skippedDirectories.Contains(name, StringComparer.OrdinalIgnoreCase))
 						continue;
 
+					// a link can loop back to an ancestor or lead out of the repository into unrelated projects
+					var info = new DirectoryInfo(child);
+
+					if (info.LinkTarget != null || info.Attributes.HasFlag(FileAttributes.ReparsePoint))
+						continue;
+
 					found.AddRange(EnumerateProjects(child));
 					queue.Enqueue(child);
 				}
