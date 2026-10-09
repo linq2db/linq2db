@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -235,6 +236,19 @@ namespace Tests.Remote
 			database.RowsRead.ShouldBeLessThanOrEqualTo(4);
 		}
 
+		// A stream without items (a null scalar) completes too.
+		[Test]
+		public async Task EmptyStreamCompletes()
+		{
+			var readerType = typeof(LinqToDBHub).Assembly.GetType("LinqToDB.Remote.SignalR.OperationChannelReader`1", throwOnError: true)!.MakeGenericType(typeof(string));
+			Func<CancellationToken, Task<IReadOnlyList<string>>> operation = static _ => Task.FromResult<IReadOnlyList<string>>([]);
+
+			var reader = (ChannelReader<string>)Activator.CreateInstance(readerType, operation, CancellationToken.None)!;
+
+			(await reader.WaitToReadAsync()).ShouldBeFalse();
+			(await WaitAsync(reader.Completion, Prompt)).ShouldBeTrue("the stream never completed");
+		}
+
 		#endregion
 
 		#region Concurrency
@@ -461,7 +475,50 @@ namespace Tests.Remote
 			service.Calls.ShouldBe(0);
 			hubConnection.State.ShouldBe(HubConnectionState.Connected);
 		}
+		// Per-hub options (AddHubOptions<THub>) win over the global ones for the size limit and the default
+		// parallelism, whatever else they set.
+		[Test]
+		public async Task PerHubOptionsApply()
+		{
+			var service = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(200) };
+			using var host = TestHost.Start<ScriptedHub>(
+				services => services.AddSingleton<ILinqService>(service),
+				hub    => hub.MaximumReceiveMessageSize = 1024 * 1024,
+				perHub: hub =>
+				{
+					hub.MaximumReceiveMessageSize           = 4096;
+					hub.MaximumParallelInvocationsPerClient = 2;
+					hub.SupportedProtocols                  = null;
+				});
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			(await hubConnection.InvokeAsync<long>("GetMaximumReceiveMessageSize")).ShouldBe(4096);
+
+			await RunConcurrentCallsAsync(host, connections: 1, callsPerConnection: 6);
+
+			service.MaxConcurrency.ShouldBe(2);
+		}
+
 #endif
+
+		// The bound counts six bytes for every non-ASCII character, but the JSON protocol writes them as UTF-8: a
+		// request over the bound and under the limit must still be sent.
+		[Test]
+		public async Task NonAsciiRequestUnderTheLimitIsSent()
+		{
+			var service = new ScriptedLinqService { Behavior = static (query, _) => Task.FromResult(query) };
+			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service));
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			var queryData = new string('\u00e9', 6000);
+
+			(await ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData)).ShouldBe(6000);
+			service.Calls.ShouldBe(1);
+		}
 
 		#endregion
 
@@ -593,6 +650,35 @@ namespace Tests.Remote
 			ConnectionCountingHub.Connections.ShouldBe(1);
 		}
 
+#if !NETFRAMEWORK
+		// Signal/R raises Reconnecting/Reconnected/Closed asynchronously, so they may arrive in any order. A late
+		// Reconnecting after Reconnected must not leave the wrapper waiting for a reconnect that already happened.
+		[Test]
+		public async Task DIConnectionIgnoresReorderedEvents()
+		{
+			using var database = new SqliteDatabase();
+			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
+
+			await using var provider = BuildClientServices(host.Port);
+
+			var connection = provider.GetRequiredService<LinqToDBSignalRConnection>();
+
+			await connection.EnsureConnectedAsync();
+
+			const BindingFlags Flags = BindingFlags.Instance | BindingFlags.NonPublic;
+
+			await (Task)typeof(LinqToDBSignalRConnection).GetMethod("OnReconnected",  Flags)!.Invoke(connection, ["id"])!;
+			await (Task)typeof(LinqToDBSignalRConnection).GetMethod("OnReconnecting", Flags)!.Invoke(connection, [null])!;
+
+			var sw = Stopwatch.StartNew();
+
+			await using (var scope = provider.CreateAsyncScope())
+				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+
+			sw.Elapsed.ShouldBeLessThan(Prompt);
+		}
+#endif
+
 		[Test]
 		public async Task DIContainerDisposesTheConnection()
 		{
@@ -663,31 +749,24 @@ namespace Tests.Remote
 			await using (Own(hubConnection))
 			await using (var db = new SignalRDataContext(hubConnection, o => o.UseConfiguration(Configuration + ".PostgreSQL")))
 			{
-				using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(300));
+				using var admin = GetDataConnection(context);
+				using var cts   = new CancellationTokenSource();
 
-				var sw    = Stopwatch.StartNew();
-				var error = await CatchAsync(() => db.FromSql<SleepRow>("SELECT 1 AS \"Value\" FROM pg_sleep(5)").ToListAsync(cts.Token));
+				const string SleepingQuery = "SELECT count(*)::int FROM pg_stat_activity WHERE state = 'active' AND query LIKE '%pg_sleep(10)%' AND pid <> pg_backend_pid()";
 
-				error.ShouldBeAssignableTo<OperationCanceledException>();
+				var query = CatchAsync(() => db.FromSql<SleepRow>("SELECT 1 AS \"Value\" FROM pg_sleep(10)").ToListAsync(cts.Token));
+
+				// Cancel only once the command is really running in the database.
+				(await WaitForAsync(() => admin.Execute<int>(SleepingQuery) == 1, TimeSpan.FromSeconds(8))).ShouldBeTrue("the query never started in the database");
+
+				var sw = Stopwatch.StartNew();
+
+				cts.Cancel();
+
+				(await query).ShouldBeAssignableTo<OperationCanceledException>();
 				sw.Elapsed.ShouldBeLessThan(Prompt);
 
-				using var admin = GetDataConnection(context);
-
-				var deadline = Stopwatch.StartNew();
-				int sleeping;
-
-				do
-				{
-					sleeping = admin.Execute<int>("SELECT count(*)::int FROM pg_stat_activity WHERE state = 'active' AND query LIKE '%pg_sleep(5)%' AND pid <> pg_backend_pid()");
-
-					if (sleeping == 0)
-						break;
-
-					await Task.Delay(50);
-				}
-				while (deadline.Elapsed < Prompt);
-
-				sleeping.ShouldBe(0, "the query kept running in the database");
+				(await WaitForAsync(() => admin.Execute<int>(SleepingQuery) == 0, Prompt)).ShouldBeTrue("the query kept running in the database");
 
 				sw.Restart();
 				(await db.FromSql<SleepRow>("SELECT 2 AS \"Value\"").ToListAsync()).Single().Value.ShouldBe(2);
@@ -744,6 +823,21 @@ namespace Tests.Remote
 		static async Task<bool> WaitAsync(Task task, TimeSpan timeout)
 		{
 			return await Task.WhenAny(task, Task.Delay(timeout)) == task;
+		}
+
+		static async Task<bool> WaitForAsync(Func<bool> condition, TimeSpan timeout)
+		{
+			var sw = Stopwatch.StartNew();
+
+			while (!condition())
+			{
+				if (sw.Elapsed > timeout)
+					return false;
+
+				await Task.Delay(20);
+			}
+
+			return true;
 		}
 
 		static async Task<Exception?> CatchAsync(Func<Task> action)
