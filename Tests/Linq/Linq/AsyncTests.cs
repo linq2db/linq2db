@@ -285,7 +285,7 @@ namespace Tests.Linq
 				}
 			});
 
-			// the cancelled token leaves a pending server-side cancel on a Firebird attachment
+			// the cancelled token leaves a pending server-side cancel on a Firebird attachment (#6012)
 			TestUtils.DiscardFirebirdConnection(db);
 		}
 

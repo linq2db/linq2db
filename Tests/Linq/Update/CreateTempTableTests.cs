@@ -328,8 +328,7 @@ namespace Tests.xUpdate
 				tableExists = false;
 			}
 
-			// On Firebird the server-side cancel that FirebirdClient sends for the already-cancelled insert can fail the
-			// temp table's own cleanup DROP instead, leaving the table behind (it was dropped just above).
+			// Firebird: the driver's stray cancel can fail TempTable's own cleanup DROP (#6012); remove this exemption once it is fixed
 			if (!context.IsAnyOf(TestProvName.AllFirebird))
 				Assert.That(tableExists, Is.False);
 		}

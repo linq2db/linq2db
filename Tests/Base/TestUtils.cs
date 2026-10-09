@@ -270,12 +270,8 @@ namespace Tests
 		}
 
 		/// <summary>
-		/// Firebird only (no-op for other providers): closes the context and evicts its connection pool.
-		/// Call it after a Firebird operation received an already-cancelled token. FirebirdClient still sends a
-		/// server-side cancel for such a token; the server applies it to the next, unrelated call on the same
-		/// attachment, and a command that failed that way is left unusable: running it again leaves a half-written
-		/// request in the connection's buffer, the connection goes back to the pool as healthy, and the next test
-		/// that gets it hangs. Discarding the attachment drops both the pending cancel and the broken command.
+		/// Firebird only (no-op for other providers): closes the context and evicts its connection pool, so a connection
+		/// left broken by a cancelled operation is not handed to the next test (#6012).
 		/// </summary>
 		public static void DiscardFirebirdConnection(IDataContext db)
 		{
