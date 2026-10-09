@@ -66,6 +66,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue5177Table> Issue5177 { get; set; } = null!;
 
+		public DbSet<Issue5975TableOne> Issue5975TableOnes { get; set; } = null!;
+		public DbSet<Issue5975TableTwo> Issue5975TableTwos { get; set; } = null!;
+
 		public DbSet<Issue5355LicenseProfile> Issue5355LicenseProfiles { get; set; } = null!;
 		public DbSet<Issue5355Customer>       Issue5355Customers       { get; set; } = null!;
 
@@ -359,6 +362,32 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				e.Property(e => e.Value).HasConversion(converter);
 			});
 
+			// CLR-only conversions: the nullable one delegates to the plain one, as in the issue
+			var issue5975Converter = new ValueConverter<DateTime, DateTime>(
+				v => Issue5975ToStore(v),
+				v => Issue5975FromStore(v));
+			var issue5975NullableConverter = new ValueConverter<DateTime?, DateTime?>(
+				v => v != null ? (DateTime?)issue5975Converter.ConvertToProvider(v.Value) : (DateTime?)null,
+				v => v != null ? (DateTime?)issue5975Converter.ConvertFromProvider(v.Value) : (DateTime?)null);
+
+			modelBuilder.Entity<Issue5975TableOne>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+				b.Property(e => e.FromDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.ToDate).HasConversion(issue5975NullableConverter);
+			});
+
+			modelBuilder.Entity<Issue5975TableTwo>(b =>
+			{
+				b.Property(e => e.Id).ValueGeneratedNever();
+				b.Property(e => e.FromDate).HasConversion(issue5975NullableConverter);
+				b.Property(e => e.ToDate).HasConversion(issue5975NullableConverter);
+
+				b.HasOne(e => e.TableOne)
+					.WithMany()
+					.HasForeignKey(e => e.TableOneId);
+			});
+
 			modelBuilder.Entity<Issue5388Task>().Property(x => x.IsArchived)
 				.IsRequired()
 				.HasConversion<short>(); // bool stored as smallint in database
@@ -441,5 +470,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			});
 #endif
 		}
+
+		static DateTime Issue5975ToStore  (DateTime v) => v.AddHours(1);
+		static DateTime Issue5975FromStore(DateTime v) => v.AddHours(-1);
 	}
 }
