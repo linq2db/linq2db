@@ -4,10 +4,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Mapping
 {
@@ -90,7 +89,7 @@ namespace LinqToDB.Mapping
 		static bool TrySplitFormattableString(Expression expression, [NotNullWhen(true)] out Expression? format, [NotNullWhen(true)] out Expression? arguments)
 		{
 			if (expression is MethodCallExpression { Arguments: [var f, { NodeType: ExpressionType.NewArrayInit } a] } create
-				&& create.Method.DeclaringType == typeof(FormattableStringFactory))
+				&& create.Method == Methods.System.FormattableStringFactory_Create)
 			{
 				format    = f;
 				arguments = a;

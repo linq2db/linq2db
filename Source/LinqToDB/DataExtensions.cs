@@ -16,6 +16,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Options;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -1467,17 +1468,8 @@ namespace LinqToDB
 
 		internal static MethodCallExpression GenerateFormattableString(string format, Expression arguments)
 		{
-			return Expression.Call(null, _formattableStringCreateMethodInfo, Expression.Constant(format), arguments);
+			return Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Constant(format), arguments);
 		}
-
-		static readonly MethodInfo _formattableStringCreateMethodInfo =
-			MemberHelper.MethodOf(() => System.Runtime.CompilerServices.FormattableStringFactory.Create(null!, null!));
-
-		internal static readonly MethodInfo FromSqlFormattableMethodInfo =
-			MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<int>((FormattableString)null!));
-
-		internal static readonly MethodInfo FromSqlRawMethodInfo =
-			MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<int>(default(RawSqlString)));
 
 		/// <summary>
 		///     <para>

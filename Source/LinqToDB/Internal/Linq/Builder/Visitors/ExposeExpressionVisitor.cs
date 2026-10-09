@@ -6,7 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -238,24 +237,36 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return node;
 			}
 
-			// FromSql(sql, parameters) is FromSql(FormattableStringFactory.Create(sql.Format, parameters)),
-			// so both overloads reach the cache in one shape.
+			// FromSql(sql, parameters) and Sql.Expr(sql, parameters) are their FormattableString overloads over
+			// FormattableStringFactory.Create(sql.Format, parameters), so both overloads reach the cache in one shape.
 			MethodCallExpression? ConvertRawSqlString(MethodCallExpression node)
 			{
-				if (!node.Method.IsGenericMethod || node.Method.GetGenericMethodDefinition() != DataExtensions.FromSqlRawMethodInfo)
+				if (!node.Method.IsGenericMethod)
 					return null;
 
-				var sql = node.Arguments[1];
+				var definition = node.Method.GetGenericMethodDefinition();
+
+				MethodInfo formattableMethod;
+
+				if (definition == Methods.LinqToDB.FromSqlRaw)
+					formattableMethod = Methods.LinqToDB.FromSqlFormattable;
+				else if (definition == Methods.LinqToDB.SqlExt.ExprRaw)
+					formattableMethod = Methods.LinqToDB.SqlExt.ExprFormattable;
+				else
+					return null;
+
+				// sql and parameters are the last two arguments of both methods
+				var sql = node.Arguments[^2];
 
 				if (!IsCompilable(sql))
 					return null;
 
-				var format = ((RawSqlString)EvaluateExpression(sql)!).Format;
+				var format    = ((RawSqlString)EvaluateExpression(sql)!).Format;
+				var arguments = node.Arguments.Take(node.Arguments.Count - 2).ToList();
 
-				return Expression.Call(
-					DataExtensions.FromSqlFormattableMethodInfo.MakeGenericMethod(node.Method.GetGenericArguments()),
-					node.Arguments[0],
-					DataExtensions.GenerateFormattableString(format, node.Arguments[2]));
+				arguments.Add(DataExtensions.GenerateFormattableString(format, node.Arguments[^1]));
+
+				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
 			}
 
 			// Only the format shapes the SQL, so only the format is evaluated; the arguments stay
@@ -263,7 +274,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			Expression PrepareFormattableString(Expression argument)
 			{
 				if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit } arguments] } create
-					&& create.Method.DeclaringType == typeof(FormattableStringFactory))
+					&& create.Method == Methods.System.FormattableStringFactory_Create)
 				{
 					if (format.NodeType == ExpressionType.Constant || !IsCompilable(format))
 						return argument;

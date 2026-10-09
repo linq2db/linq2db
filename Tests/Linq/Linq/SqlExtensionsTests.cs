@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -6,6 +7,8 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -217,6 +220,37 @@ namespace Tests.Linq
 						select t;
 
 			Assert.That(query.Count(), Is.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_FormatChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[] { new SampleClass { Id = 1 }, new SampleClass { Id = 2 } });
+
+			IQueryable<int> Query(string sql) =>
+				from t in table
+				where t.Id == Sql.Expr<int>(FormattableStringFactory.Create(sql))
+				select t.Id;
+
+			Query("1").ToArray().ShouldBe([1]);
+			Query("2").ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_RawSqlString_ArgumentsChange([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[] { new SampleClass { Id = 1 }, new SampleClass { Id = 2 } });
+
+			IQueryable<int> Query(params object[] arguments) =>
+				from t in table
+				where t.Id == Sql.Expr<int>("{0}", arguments)
+				select t.Id;
+
+			Query(1).ToArray().ShouldBe([1]);
+			Query(2L).ToArray().ShouldBe([2]);
+			Query(1, 3).ToArray().ShouldBe([1]);
 		}
 
 		public class FreeTextKey<T>
