@@ -1,3 +1,8 @@
+---
+name: linq2db-cli
+description: Use when you need to look at a real database from the command line or over MCP with the dotnet linq2db tool (linq2db.cli) - list connection profiles, read table and column metadata, run read-only SQL queries, check actual data, create a query configuration, or store database credentials. Covers the query, schema, execute, config-init, credentials, mcp and skill commands, supported database providers and SQL dialects, and the safety rules for write-capable SQL.
+---
+
 # linq2db CLI Agent Skill
 
 Use `dotnet linq2db` to run linq2db command-line tools.
@@ -710,24 +715,22 @@ Use `dotnet linq2db help` for general help and `dotnet linq2db help <command>` f
 
 ## Skill Command
 
-Use `dotnet linq2db skill` to print this agent-oriented Markdown document to stdout.
-
-The command has no options and doesn't accept arguments.
+Use `dotnet linq2db skill` to print this agent-oriented Markdown document to stdout (without the YAML frontmatter that skill loaders read).
 
 Use this command when an agent needs current instructions for using linq2db CLI from the installed tool instead of relying on repository files or external documentation.
 
-To add the current tool-provided skill to this solution, run one of the following commands from the repository root.
+Use `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]` to add the agent skills to a repository. It installs two skills, each as a real copy in both `.agents/skills/<name>/` (Codex, GitHub Copilot, Cursor, Gemini, Junie and others) and `.claude/skills/<name>/` (Claude Code):
 
-PowerShell:
+- `linq2db`: guidance for writing code with the linq2db library. It is taken from the linq2db NuGet package version the project references (the project must be restored; the package's assets file is located through MSBuild), so the guidance matches the API in use. When the package carries no skill, or no restored project references linq2db, the copy embedded in the tool is used and a warning says so when its version differs.
+- `linq2db-cli`: this document, taken from the tool.
 
-```powershell
-New-Item -ItemType Directory -Force ".\.agents\skills\linq2db-cli" | Out-Null; dotnet linq2db skill > ".\.agents\skills\linq2db-cli\SKILL.md"
-```
+Options:
 
-cmd.exe:
+- `--project` is a project file or a directory to search for projects (default: current directory). Projects that reference different linq2db versions are an error; name the one to use.
+- `--root` is the repository root that receives `.agents/` and `.claude/` (default: the git work tree root above the project, else the project directory).
+- `--check` writes nothing and exits with a non-zero code when an installed skill is missing, stale or edited. Use it in CI.
+- `--force` overwrites files that were edited locally or that the tool did not install.
 
-```cmd
-mkdir ".\.agents\skills\linq2db-cli" 2>nul & dotnet linq2db skill > ".\.agents\skills\linq2db-cli\SKILL.md"
-```
+Each installed skill directory gets a `.linq2db-skill.json` manifest with a hash per file; hashes ignore CRLF versus LF, so a checkout that normalises line endings does not count as an edit. A later install replaces only files listed in the manifest that are unchanged, and refuses to continue (writing nothing) when a skill directory has no manifest or one of its files was edited, unless `--force` is passed. Files the tool did not install are never touched. The command never edits `AGENTS.md` or `CLAUDE.md`; when neither mentions the skill it prints a short block that can be pasted into `AGENTS.md`.
 
 Keep this document synchronized with command behavior. When a command option, configuration rule, execute policy, or agent workflow changes, update `SKILL.md` and the `skill` command tests in the same change.
