@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,12 +23,19 @@ namespace LinqToDB.Remote.SignalR
 		readonly TimeSpan _connectTimeout;
 		readonly Lock     _sync = new();
 
-		// The legacy client has neither State nor reconnect events, so the state is tracked here on every target.
+		// The legacy client has neither State nor reconnect events: there the wrapper tracks the state itself, from
+		// its own starts and the Closed event. On .NET 8+ the connection's own State is the truth: Signal/R raises
+		// Reconnecting/Reconnected/Closed asynchronously, so their order is not to be trusted, and they only wake
+		// waiters to look at the state again.
+#if !NET8_0_OR_GREATER
 		volatile bool              _connected;
+#endif
 		Task?                      _startTask;
 		int                        _generation;
-		TaskCompletionSource<bool>? _reconnecting;
+		TaskCompletionSource<bool> _stateChanged = NewStateChanged();
 		bool                       _disposed;
+
+		static readonly TimeSpan _statePollInterval = TimeSpan.FromMilliseconds(100);
 
 		/// <summary>
 		/// Creates a connection to the hub at <paramref name="hubUrl"/>. The connection is not started until it is
@@ -78,37 +86,50 @@ namespace LinqToDB.Remote.SignalR
 		/// <exception cref="TimeoutException">The connection was not established within the connect timeout.</exception>
 		public Task EnsureConnectedAsync(CancellationToken cancellationToken = default)
 		{
-			if (_connected)
+			if (IsConnected)
 				return Task.CompletedTask;
 
 			return EnsureConnectedSlowAsync(cancellationToken);
 		}
 
+		bool IsConnected
+		{
+			get
+			{
+#if NET8_0_OR_GREATER
+				return HubConnection.State == HubConnectionState.Connected;
+#else
+				return _connected;
+#endif
+			}
+		}
+
 		async Task EnsureConnectedSlowAsync(CancellationToken cancellationToken)
 		{
+			var elapsed = Stopwatch.StartNew();
+
 			while (true)
 			{
 				Task wait;
+				var  starting = true;
 
 				lock (_sync)
 				{
 					ObjectDisposedException.ThrowIf(_disposed, this);
 
-					if (_connected)
+					if (IsConnected)
 						return;
 
 #if NET8_0_OR_GREATER
-					// Started or reconnected outside of the wrapper.
-					if (HubConnection.State == HubConnectionState.Connected && _reconnecting == null)
+					// Connecting or reconnecting on the client's own initiative (automatic reconnect, or a start from
+					// outside the wrapper): wait for it rather than start.
+					if (HubConnection.State != HubConnectionState.Disconnected && _startTask is null or { IsCompleted: true })
 					{
-						_connected = true;
-						return;
+						wait     = _stateChanged.Task;
+						starting = false;
 					}
-#endif
-
-					if (_reconnecting != null)
-						wait = _reconnecting.Task;
 					else
+#endif
 					{
 						// A finished start task without a connection means it failed, or the connection was lost
 						// right after it; either way start again.
@@ -119,7 +140,29 @@ namespace LinqToDB.Remote.SignalR
 					}
 				}
 
-				await TaskHelper.WaitAsync(wait, cancellationToken, _connectTimeout).ConfigureAwait(false);
+				TimeSpan? remaining = null;
+
+				if (_connectTimeout != Timeout.InfiniteTimeSpan)
+				{
+					remaining = _connectTimeout - elapsed.Elapsed;
+
+					if (remaining <= TimeSpan.Zero)
+						throw new TimeoutException($"The Signal/R connection was not established within {_connectTimeout}.");
+				}
+
+				if (starting)
+				{
+					await TaskHelper.WaitAsync(wait, cancellationToken, remaining).ConfigureAwait(false);
+				}
+				else
+				{
+					// A state change wakes the wait early; the poll covers a change no event reports.
+					var poll = remaining is { } r && r < _statePollInterval ? r : _statePollInterval;
+
+					await Task.WhenAny(wait, Task.Delay(poll, cancellationToken)).ConfigureAwait(false);
+
+					cancellationToken.ThrowIfCancellationRequested();
+				}
 			}
 		}
 
@@ -128,53 +171,76 @@ namespace LinqToDB.Remote.SignalR
 			// Run the start outside of the caller's lock.
 			await Task.Yield();
 
-			using (var timeout = new CancellationTokenSource(_connectTimeout))
+			try
+			{
+				using var timeout = new CancellationTokenSource(_connectTimeout);
+
 				await HubConnection.StartAsync(timeout.Token).ConfigureAwait(false);
+
+#if !NET8_0_OR_GREATER
+				lock (_sync)
+				{
+					// A Closed event during the start means this connection is gone already.
+					if (generation == _generation)
+						_connected = true;
+				}
+#endif
+			}
+#if NET8_0_OR_GREATER
+			catch (InvalidOperationException) when (HubConnection.State != HubConnectionState.Disconnected)
+			{
+				// The client started or began reconnecting on its own between the check and this start; the caller
+				// looks at the state again.
+			}
+#endif
+			finally
+			{
+				PulseStateChanged();
+			}
+		}
+
+		static TaskCompletionSource<bool> NewStateChanged()
+		{
+			return new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+		}
+
+		void PulseStateChanged()
+		{
+			TaskCompletionSource<bool> changed;
 
 			lock (_sync)
 			{
-				// A Closed event during the start means this connection is gone already.
-				if (generation == _generation)
-					_connected = true;
+				changed       = _stateChanged;
+				_stateChanged = NewStateChanged();
 			}
+
+			changed.TrySetResult(true);
 		}
 
 		Task OnClosed(Exception? exception)
 		{
 			lock (_sync)
 			{
+#if !NET8_0_OR_GREATER
 				_connected = false;
+#endif
 				_generation++;
-
-				_reconnecting?.TrySetResult(false);
-				_reconnecting = null;
 			}
 
+			PulseStateChanged();
 			return Task.CompletedTask;
 		}
 
 #if NET8_0_OR_GREATER
 		Task OnReconnecting(Exception? exception)
 		{
-			lock (_sync)
-			{
-				_connected      = false;
-				_reconnecting ??= new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-			}
-
+			PulseStateChanged();
 			return Task.CompletedTask;
 		}
 
 		Task OnReconnected(string? connectionId)
 		{
-			lock (_sync)
-			{
-				_connected = true;
-
-				_reconnecting?.TrySetResult(true);
-				_reconnecting = null;
-			}
-
+			PulseStateChanged();
 			return Task.CompletedTask;
 		}
 #endif
@@ -189,8 +255,7 @@ namespace LinqToDB.Remote.SignalR
 				if (_disposed)
 					return;
 
-				_disposed  = true;
-				_connected = false;
+				_disposed = true;
 			}
 
 			await HubConnection.DisposeAsync().ConfigureAwait(false);
