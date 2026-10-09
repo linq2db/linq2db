@@ -711,6 +711,7 @@ Roslyn analyzers and code fixes that flag legacy API usage, offer automatic migr
 | [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
 | [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
 | [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
+| [L2DB2001](https://github.com/linq2db/linq2db/wiki/L2DB2001) | Warning | A hint passed as text (`TableHint("NOLOCK")`, `With`, `TablesInScopeHint`, `QueryHint`) has a typed provider helper that emits the same SQL (`AsSqlServer().WithNoLock()`). A code fix rewrites the call; on a generic receiver it offers one rewrite per provider, each restricting the hint to that provider. |
 
 Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
 
