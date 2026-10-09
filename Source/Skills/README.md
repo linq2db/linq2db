@@ -53,7 +53,9 @@ The skill is used from one of two places:
 - Files are UTF-8 without BOM; line endings follow `.gitattributes`.
 
 `Tests/Linq/Infrastructure/SkillPackageTests.cs` checks the frontmatter, that every relative link inside
-the skill resolves, and that the packed `linq2db` package contains `skills/linq2db/**`.
+the skill resolves, and that the packed `linq2db` package carries exactly these files with the same
+content. The package is the one named by `LINQ2DB_SKILL_PACKAGE`, or the one under `.build/package`
+packed from the `linq2db.dll` the test runs against; without either, that check is skipped.
 
 ## Not yet covered
 

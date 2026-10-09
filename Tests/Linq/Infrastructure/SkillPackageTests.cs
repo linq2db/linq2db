@@ -178,43 +178,109 @@ namespace Tests.Infrastructure
 
 #if !NETFRAMEWORK
 		/// <summary>
-		/// Compares the newest packed <c>linq2db.*.nupkg</c> under <c>.build/package</c> (where <c>dotnet pack</c>
-		/// writes) with the skill sources. Ignored when nothing has been packed.
+		/// Environment variable naming the <c>linq2db</c> package to check, for a pipeline step that runs this test
+		/// right after <c>dotnet pack</c>.
+		/// </summary>
+		const string PackageVariable = "LINQ2DB_SKILL_PACKAGE";
+
+		/// <summary>
+		/// Compares the skill files in the <c>linq2db</c> package with <c>Source/Skills/linq2db</c>, by name and content.
+		/// The package is the one named by <see cref="PackageVariable"/>, or else the package under
+		/// <c>.build/package</c> that was packed from the very <c>linq2db.dll</c> this test runs against (so a package
+		/// from another configuration, version or older build is never used). Ignored when there is no such package.
 		/// </summary>
 		[Test]
 		public void PackedPackageContainsSkill()
 		{
-			var repository  = GetRepositoryRoot();
-			var packageRoot = Path.Combine(repository, ".build", "package");
-			var package     = Directory.Exists(packageRoot)
-				? new DirectoryInfo(packageRoot)
-					.EnumerateFiles("linq2db.*.nupkg", SearchOption.AllDirectories)
-					.Where(f => Regex.IsMatch(f.Name, @"^linq2db\.\d+\.\d+\.\d+.*\.nupkg$") && !f.Name.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
-					.OrderByDescending(f => f.LastWriteTimeUtc)
-					.FirstOrDefault()
-				: null;
+			var package = Environment.GetEnvironmentVariable(PackageVariable);
 
-			if (package == null)
-				Assert.Ignore($"No packed linq2db package under {packageRoot}; run 'dotnet pack Source/LinqToDB/LinqToDB.csproj' to check its content.");
+			if (!string.IsNullOrEmpty(package))
+			{
+				File.Exists(package).ShouldBeTrue($"{PackageVariable} names a missing file: {package}");
+			}
+			else
+			{
+				package = FindPackageOfLoadedAssembly();
+
+				if (package == null)
+					Assert.Ignore($"No package under .build/package was packed from the linq2db.dll this test uses; run 'dotnet pack Source/LinqToDB/LinqToDB.csproj --no-build' with the test's configuration, or set {PackageVariable}.");
+			}
 
 			var root     = GetSkillRoot();
 			var expected = GetSkillFiles(root)
-				.Select(f => "skills/linq2db/" + Relative(root, f))
-				.OrderBy(f => f, StringComparer.Ordinal)
-				.ToList();
+				.ToDictionary(f => "skills/linq2db/" + Relative(root, f), f => HashText(File.ReadAllBytes(f)), StringComparer.Ordinal);
 
-			List<string> actual;
+			var actual = new Dictionary<string, string>(StringComparer.Ordinal);
 
-			using (var zip = System.IO.Compression.ZipFile.OpenRead(package!.FullName))
+			using (var zip = System.IO.Compression.ZipFile.OpenRead(package!))
 			{
-				actual = zip.Entries
-					.Select(e => Uri.UnescapeDataString(e.FullName.Replace('\\', '/')))
-					.Where(e => e.StartsWith("skills/", StringComparison.Ordinal))
-					.OrderBy(e => e, StringComparer.Ordinal)
-					.ToList();
+				foreach (var entry in zip.Entries)
+				{
+					var name = Uri.UnescapeDataString(entry.FullName.Replace('\\', '/'));
+
+					if (name.StartsWith("skills/", StringComparison.Ordinal))
+						actual.Add(name, HashText(ReadEntry(entry)));
+				}
 			}
 
-			actual.ShouldBe(expected, $"{package.Name} does not carry the current skill files; re-pack if it is stale");
+			actual.Keys.OrderBy(k => k, StringComparer.Ordinal).ShouldBe(expected.Keys.OrderBy(k => k, StringComparer.Ordinal), $"{Path.GetFileName(package)}: skill file list differs from Source/Skills/linq2db");
+
+			var changed = expected.Where(e => actual[e.Key] != e.Value).Select(e => e.Key).ToList();
+
+			changed.ShouldBeEmpty($"{Path.GetFileName(package)}: skill file content differs from Source/Skills/linq2db");
+		}
+
+		static string? FindPackageOfLoadedAssembly()
+		{
+			var packageRoot = Path.Combine(GetRepositoryRoot(), ".build", "package");
+
+			if (!Directory.Exists(packageRoot))
+				return null;
+
+			var assembly = File.ReadAllBytes(typeof(LinqToDB.DataOptions).Assembly.Location);
+
+			foreach (var file in Directory.EnumerateFiles(packageRoot, "linq2db.*.nupkg", SearchOption.AllDirectories))
+			{
+				if (!Regex.IsMatch(Path.GetFileName(file), @"^linq2db\.\d+\.\d+\.\d+[^.]*(\.\d+)*\.nupkg$"))
+					continue;
+
+				using var zip = System.IO.Compression.ZipFile.OpenRead(file);
+
+				foreach (var entry in zip.Entries)
+				{
+					var name = entry.FullName.Replace('\\', '/');
+
+					if (name.StartsWith("lib/", StringComparison.Ordinal)
+						&& name.EndsWith("/linq2db.dll", StringComparison.Ordinal)
+						&& entry.Length == assembly.Length
+						&& ReadEntry(entry).AsSpan().SequenceEqual(assembly))
+					{
+						return file;
+					}
+				}
+			}
+
+			return null;
+		}
+
+		static byte[] ReadEntry(System.IO.Compression.ZipArchiveEntry entry)
+		{
+			using var stream = entry.Open();
+			using var memory = new MemoryStream();
+
+			stream.CopyTo(memory);
+
+			return memory.ToArray();
+		}
+
+		/// <summary>
+		/// SHA-256 of the text with CRLF normalised to LF, so a package packed from a CRLF checkout matches LF sources.
+		/// </summary>
+		static string HashText(byte[] bytes)
+		{
+			var text = Encoding.UTF8.GetString(bytes).Replace("\r\n", "\n");
+
+			return Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(text)));
 		}
 #endif
 
