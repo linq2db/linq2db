@@ -284,6 +284,9 @@ namespace Tests.Linq
 					throw new OperationCanceledException();
 				}
 			});
+
+			// the cancelled token leaves a pending server-side cancel on a Firebird attachment
+			TestUtils.DiscardFirebirdConnection(db);
 		}
 
 		// The enumerator for a linq2db query creates its underlying enumerator lazily, on the first
