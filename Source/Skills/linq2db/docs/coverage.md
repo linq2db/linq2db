@@ -56,8 +56,9 @@ yet have a task-focused guide in this skill. For these topics, search
 - remote data contexts and service contracts: `RemoteDataContextBase`, `ILinqService`,
   `LinqToDB.Remote.*` packages;
 - compatibility namespaces: `LinqToDB.Compatibility.*` legacy surface;
-- analytic/window functions and string aggregate helpers: recognized, but dedicated guidance is
-  deferred while the API shape is expected to evolve.
+- analytic/window functions: `Sql.Window` (`WindowFunctionBuilder`); the older `Sql.Ext`
+  analytic chains are legacy (analyzer `L2DB1001`). String aggregate helpers: `Sql.StringAggregate`,
+  `Sql.ConcatStrings`.
 
 ## Package Scope
 

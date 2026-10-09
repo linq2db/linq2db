@@ -57,7 +57,10 @@ JOIN conditions inside the recursive part - check the matrix row for your provid
 
 **Window Functions**
 `OVER (PARTITION BY ... ORDER BY ...)` analytical functions.
-Exposed via `Sql.Ext` window function helpers.
+Exposed via `Sql.Window` (for example
+`Sql.Window.RowNumber(f => f.PartitionBy(t.Category).OrderBy(t.Id))`). The older `Sql.Ext`
+analytic-function chains are legacy; analyzer `L2DB1001` flags them and its code fix migrates
+them to `Sql.Window`.
 
 **APPLY / LATERAL**
 `CROSS APPLY` / `OUTER APPLY` (SQL Server, Oracle, SAP HANA) or
