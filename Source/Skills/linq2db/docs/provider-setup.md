@@ -1,16 +1,13 @@
 # LinqToDB Provider Setup
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - select the correct `UseXxx` method and `ProviderName` constant for a specific database
 > - identify which NuGet driver package to install
 > - configure connection string, existing `DbConnection`, or `DbDataSource`
 
-AI-facing reference: how to configure each supported database provider.
+Reference: how to configure each supported database provider.
 Use this to select the correct `ProviderName` constant, call the right `DataOptions.UseXxx()` method,
 and install the required NuGet packages.
 

@@ -1,19 +1,16 @@
 # LinqToDB Anti-Patterns
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - verify that the code you are generating follows correct LinqToDB patterns
 > - look up a specific mistake by symptom or exception
 > - understand why a pattern is wrong and what the correct alternative is
 >
-> Review this document before generating non-trivial LinqToDB code, or when diagnosing unexpected behavior.
+> Use the symptom index below when diagnosing unexpected behavior, or as a checklist when reviewing code.
 
 Common incorrect usage patterns, their consequences, and correct alternatives.
-Intended for developers and AI agents generating code against LinqToDB.
+Intended for anyone writing or reviewing code against LinqToDB.
 
 ---
 
@@ -266,7 +263,7 @@ tx.Commit();
 
 **Anti-pattern:**
 Reading conceptual markdown docs and then generating code without checking XML-doc
-(`lib/<TFM>/linq2db.xml`) for the specific LinqToDB APIs being used.
+(`linq2db.xml`) for the specific LinqToDB APIs being used.
 
 **Consequence:**
 The version-matched XML documentation is the primary reference for exact signatures, overloads,
@@ -296,7 +293,8 @@ Do not synthesize scope helper names by string concatenation; use the verified p
 `docs/hints-api-map.md` and XML-doc when needed.
 Apply scope helpers to the composed query/subquery that already contains the target tables; applying
 a `TablesInScope` helper to only the first table before adding joins will not cover later joined
-tables.
+tables. Scope helpers also miss tables reached only through association (navigation) properties
+([#4321](https://github.com/linq2db/linq2db/issues/4321)); see `docs/hints.md`.
 
 ---
 
@@ -384,14 +382,14 @@ by the domain meaning of the field, and add a TODO comment to flag it for review
 [Column(Precision = 18, Scale = 2)]  public decimal Price { get; set; }
 ```
 
-> **Rule:** add a TODO comment when the bound is a heuristic placeholder chosen by the agent
-> for an application-specific field - this signals to the developer that the value needs review.
+> Add a TODO comment when the bound is a placeholder chosen for an application-specific
+> field - this signals to the developer that the value needs review.
 >
 > A TODO is not required when the value comes directly from the task or follows a widely
 > established technical convention (for example `Length = 254` for an email address, or
 > `Precision = 18, Scale = 2` for a monetary amount).
 >
-> Do NOT write `[Column] // TODO: add length later` - the column must carry an explicit value
+> Do not write `[Column] // TODO: add length later` - the column must carry an explicit value
 > even if the bound is provisional.
 
 ---
@@ -416,7 +414,7 @@ await table.BulkCopyAsync(rows);
 
 **Consequence:**
 The code uses lower-level population steps instead of the overload that matches the source shape.
-This makes AI-generated answers look plausible while missing the LinqToDB API designed for the
+This looks plausible while missing the LinqToDB API designed for the
 case:
 - in-memory rows can be passed directly to `CreateTempTable(items)` /
   `CreateTempTableAsync(items)`;
@@ -478,7 +476,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 ```
 
-For exact API discovery, search `lib/<TFM>/linq2db.xml`, but ignore
+For exact API discovery, search `linq2db.xml`, but ignore
 `LinqToDB.Internal.*` members for application code.
 
 ---

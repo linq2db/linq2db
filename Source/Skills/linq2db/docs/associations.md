@@ -1,9 +1,6 @@
 # Associations And Eager Loading
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - define relationships with `[Association]` or fluent `.Association(...)`
@@ -355,7 +352,7 @@ whole query into eager loading.
 
 ## API lookup anchors
 
-When exact signatures are needed, search XML-doc (`lib/<TFM>/linq2db.xml`) for:
+When exact signatures are needed, search XML-doc (`linq2db.xml`) for:
 
 - `AssociationAttribute`
 - `EntityMappingBuilder.Association`

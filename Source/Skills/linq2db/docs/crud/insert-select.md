@@ -1,9 +1,6 @@
 # LinqToDB - INSERT … SELECT
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../../SKILL.md).
 
 > **You are here if** you need to:
 > - copy rows from one table to another without materializing them in the application
@@ -12,8 +9,8 @@
 > - receive the inserted rows back via `OUTPUT / RETURNING`
 > - insert from one source into multiple Oracle tables in a single statement
 >
-> For inserting from a C# object or expression values → [`crud-insert-values.md`](crud-insert-values.md)
-> For upsert → [`crud-upsert.md`](crud-upsert.md)
+> For inserting from a C# object or expression values → [`insert-values.md`](insert-values.md)
+> For upsert → [`upsert.md`](upsert.md)
 
 ---
 
@@ -183,6 +180,6 @@ All three terminals (`Insert`, `InsertAll`, `InsertFirst`) have `Async` counterp
 
 ## See also
 
-- [`crud-insert-values.md`](crud-insert-values.md) - insert from C# object or expression values
-- [`crud-upsert.md`](crud-upsert.md) - upsert (`InsertOrReplace`, `InsertOrUpdate`)
+- [`insert-values.md`](insert-values.md) - insert from C# object or expression values
+- [`upsert.md`](upsert.md) - upsert (`InsertOrReplace`, `InsertOrUpdate`)
 - [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider

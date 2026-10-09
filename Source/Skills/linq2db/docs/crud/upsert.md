@@ -1,9 +1,6 @@
 # LinqToDB - Upsert (Insert-or-Update)
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../../SKILL.md).
 
 > **You are here if** you need to:
 > - insert a row if the primary key does not exist, update it if it does
@@ -11,8 +8,8 @@
 > - control which columns participate in each phase at runtime
 > - insert a row only when it does not exist, without touching the existing row
 >
-> For plain insert → [`crud-insert-values.md`](crud-insert-values.md)
-> For `INSERT … SELECT` → [`crud-insert-select.md`](crud-insert-select.md)
+> For plain insert → [`insert-values.md`](insert-values.md)
+> For `INSERT … SELECT` → [`insert-select.md`](insert-select.md)
 
 ---
 
@@ -42,7 +39,7 @@
 > Unassigned properties are omitted from INSERT and are not modified during UPDATE (sections 2, 3).
 >
 > For interface-mapped entities where `new IProduct { ... }` is not valid C#, use `InsertOrUpdate`
-> (section 2) or the fluent builder in [`crud-insert-values.md`](crud-insert-values.md).
+> (section 2) or the fluent builder in [`insert-values.md`](insert-values.md).
 
 ---
 
@@ -150,9 +147,9 @@ await db.GetTable<Product>()
 
 ## See also
 
-- [`crud-insert-values.md`](crud-insert-values.md) - plain insert from object or expressions
-- [`crud-insert-select.md`](crud-insert-select.md) - `INSERT … SELECT`
-- [`crud-update.md`](crud-update.md) - updating rows
-- [`crud-merge.md`](crud-merge.md) - full MERGE builder (multi-operation sync, OUTPUT)
+- [`insert-values.md`](insert-values.md) - plain insert from object or expressions
+- [`insert-select.md`](insert-select.md) - `INSERT … SELECT`
+- [`update.md`](update.md) - updating rows
+- [`merge.md`](merge.md) - full MERGE builder (multi-operation sync, OUTPUT)
 - [`provider-capabilities.md`](../provider-capabilities.md) - upsert support per provider
 - [`agent-antipatterns.md`](../agent-antipatterns.md) - anti-pattern #9 (`InsertOrReplace` + Identity)

@@ -1,9 +1,6 @@
 # LinqToDB - Common Table Expressions (CTE)
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > **You are here if** you need to:
 > - introduce an explicit named SQL CTE (`WITH ...`) within a larger query
@@ -190,5 +187,5 @@ toDelete.Delete();
 
 ## See also
 
-- [`crud-select.md`](crud/crud-select.md) - everyday querying
+- [`select.md`](crud/select.md) - everyday querying
 - [`provider-capabilities.md`](provider-capabilities.md) - CTE support per provider

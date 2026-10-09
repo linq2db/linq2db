@@ -1,9 +1,6 @@
 # LinqToDB - Deleting Data
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../../SKILL.md).
 
 > **You are here if** you need to:
 > - delete a single row by entity
@@ -122,7 +119,7 @@ int affected = await db.GetTable<Product>()
 
 ## See also
 
-- [`crud-update.md`](crud-update.md) - updating rows
-- [`crud-insert.md`](crud-insert.md) - inserting rows
+- [`update.md`](update.md) - updating rows
+- [`insert.md`](insert.md) - inserting rows
 - [`concurrency.md`](../concurrency.md) - optimistic concurrency for entity update/delete
 - [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider

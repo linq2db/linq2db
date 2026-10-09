@@ -1,15 +1,12 @@
 # LinqToDB Provider Capability Matrix
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - verify whether a specific SQL feature (MERGE, CTE, bulk copy, OUTPUT/RETURNING, upsert) is supported by the target provider
 > - avoid generating SQL patterns that will fail or behave incorrectly on a given database
 
-AI-facing reference: lists SQL feature support per provider.
+Reference: lists SQL feature support per provider.
 Use this table to avoid generating SQL patterns that are unsupported by the target provider.
 
 Version-conditional capabilities are noted with a version qualifier (e.g. `v8.0+`).

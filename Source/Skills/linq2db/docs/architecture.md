@@ -1,9 +1,6 @@
 # LinqToDB Architecture
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - understand how LinqToDB translates LINQ to SQL
@@ -125,7 +122,7 @@ Supported providers include (but are not limited to):
 
 Provider-specific behavior must always be considered when generating SQL.
 
-AI agents and developers should not assume uniform SQL capabilities across providers.
+Do not assume uniform SQL capabilities across providers.
 
 ---
 
@@ -186,8 +183,8 @@ Mapping configuration and metadata.
 Sql
 Helper API for SQL constructs.
 
-> **For AI agents:** Markdown docs provide orientation and scenario rules. XML-doc
-> (`lib/<TFM>/linq2db.xml`) is the version-matched primary reference for exact signatures,
+> Markdown docs provide orientation and scenario rules. XML-doc
+> (`linq2db.xml`) is the version-matched primary reference for exact signatures,
 > overloads, remarks, usage rules, lifetime constraints, and thread-safety details.
 
 ---

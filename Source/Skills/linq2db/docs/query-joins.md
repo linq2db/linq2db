@@ -1,9 +1,6 @@
 # LinqToDB - Joins
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > **You are here if** you need to:
 > - use LinqToDB's fluent `InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin` extensions
@@ -148,5 +145,5 @@ short of restructuring the query.
 - [`docs/associations.md`](associations.md) - declaring associations, `LoadWith`/`ThenLoad` eager
   loading, eager-loading strategies
 - [`docs/provider-capabilities.md`](provider-capabilities.md) - `APPLY / LATERAL` provider support
-- [`docs/crud/crud-select.md`](crud/crud-select.md) - everyday querying
+- [`docs/crud/select.md`](crud/select.md) - everyday querying
 - [`docs/agent-antipatterns.md`](agent-antipatterns.md) - common mistakes and how to avoid them

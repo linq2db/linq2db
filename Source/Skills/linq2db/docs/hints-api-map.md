@@ -1,9 +1,6 @@
 # Provider-Specific Hints API Map
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - find a typed provider-specific hint API from a SQL hint keyword
@@ -20,12 +17,12 @@ modifiers when they are exposed as concrete typed helpers. It also includes sele
 provider-specific open-ended directive families, such as ClickHouse `SETTINGS` or SQL Server
 `USE HINT`, where LinqToDB intentionally exposes one provider helper for a large vendor-defined
 set instead of enumerating every possible setting or hint value.
-It is not a conceptual guide and not a substitute for XML-doc. For exact signatures, overloads, remarks, and package-version truth, inspect `lib/<TFM>/linq2db.xml`.
+It is not a conceptual guide and not a substitute for XML-doc. For exact signatures, overloads, remarks, and package-version truth, inspect `linq2db.xml`.
 
 Use this map to go from SQL/database wording to LinqToDB API. Search both `SQL hint` and `Search aliases`; aliases cover common user wording such as `MAX RECURSION` for `MAXRECURSION`, `NO LOCK` for `NOLOCK`, or underscore-separated hint names written with spaces.
 If the required SQL hint is absent here, search XML-doc before falling back to generic APIs; absence from this map alone is not proof that the API does not exist.
 
-Negative lookup rule: do not say "this map has no typed helper" from memory, semantic retrieval, or a partial provider summary. First perform an exact lookup in this map for both the provider heading and the SQL/database term from the request, then search `lib/<TFM>/linq2db.xml` for the provider `*Hints` type. A negative answer about typed hint API existence is valid only after both checks fail.
+A typed helper is absent only if an exact lookup in this map (provider heading plus the SQL/database term) and a search of `linq2db.xml` for the provider `*Hints` type both come up empty; a partial provider summary or memory is not enough.
 
 Plain provider-neutral raw-text hint injectors such as `QueryHint(...)`, `TableHint(...)`,
 `TablesInScopeHint(...)`, `JoinHint(...)`, and `SubQueryHint(...)` are documented in
@@ -40,7 +37,7 @@ How to read the `Receiver` column:
 | `ISqlServerSpecificTable<TSource>` and other `*SpecificTable<TSource>` receivers | The helper is called after the provider marker on one table source, for example `db.GetTable<T>().AsSqlServer().WithNoLock()`. |
 | Multiple rows for the same SQL hint | They are different APIs and scopes. Choose the row whose `Hint type` and `Receiver` match the table/query scope you need. |
 
-Required use:
+How to use it:
 
 1. Search this map by provider, SQL hint text, and search aliases.
 2. Use the API column only as a candidate.
@@ -57,12 +54,15 @@ Required use:
    for `Hint type` = `TablesInScope` and API names containing `InScope` before considering
    `TablesInScopeHint("...")`. Apply the typed `TablesInScope` helper to the query/subquery that
    already contains the table references to affect; applying it to only the first table before
-   adding joins does not automatically include later joined tables.
+   adding joins does not automatically include later joined tables. Scope helpers do not reach
+   tables joined through association (navigation) properties
+   ([#4321](https://github.com/linq2db/linq2db/issues/4321)); see the scope rules in
+   [`docs/hints.md`](hints.md#tables-in-scope-hints).
 6. Treat method-name patterns as lookup hints, not as proof of an API. Common shapes are
    `<Base>Hint(...)` -> `<Base>InScopeHint(...)` and `With<Base>(...)` ->
    `With<Base>InScope(...)`. Provider aliases can exist, so do not invent names by string
    concatenation.
-7. Verify the exact member in `lib/<TFM>/linq2db.xml` before writing code.
+7. Verify the exact member in `linq2db.xml` before writing code.
 8. Prefer the concrete typed provider-specific helper over generic raw hint APIs.
 9. Prefer the concrete typed provider-specific helper over provider-specific open-ended directive
    families too. Do not use entries like ClickHouse `SettingsHint`, SQL Server `OptionUseHint`, or
