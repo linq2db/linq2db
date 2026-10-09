@@ -1898,11 +1898,14 @@ using LinqToDB.Mapping;
 | Update entity through filtered source | `UpdateOptimistic(entity)` | `IQueryable<T>` | number of updated records |
 | Delete entity through context table | `DeleteOptimistic(entity)` | `IDataContext` | number of deleted records |
 | Delete entity through filtered source | `DeleteOptimistic(entity)` | `IQueryable<T>` | number of deleted records |
+| Update entity and refresh its lock column(s) | `UpdateOptimisticWithRefresh(entity)` | `IDataContext` | number of updated records |
+| Update entity through filtered source and refresh its lock column(s) | `UpdateOptimisticWithRefresh(entity)` | `IQueryable<T>` | number of updated records |
 | Build optimistic key filter | `WhereKeyOptimistic(entity)` | `IQueryable<T>` | filtered `IQueryable<T>` |
 
 Async forms are available for update and delete:
 
 - `UpdateOptimisticAsync(entity, cancellationToken)`
+- `UpdateOptimisticWithRefreshAsync(entity, cancellationToken)`
 - `DeleteOptimisticAsync(entity, cancellationToken)`
 
 The entity type must be a class. The entity mapping must have a primary key; the implementation
@@ -1964,6 +1967,10 @@ generation strategy for the new value.
 The return value is the number of updated records. If another transaction changed the lock column
 before this update, the optimistic filter should match no row and the affected count should be `0`.
 
+The count is only meaningful on providers that report affected rows. XML-doc states that on providers
+that do not, the count is unreliable - always `0` on ClickHouse - so it cannot be used to detect an
+optimistic-concurrency failure there. The same applies to `DeleteOptimistic`.
+
 Async:
 
 ```csharp
@@ -1971,6 +1978,41 @@ using LinqToDB.Concurrency;
 
 var affected = await db.UpdateOptimisticAsync(product, cancellationToken);
 ```
+
+## Update And Refresh The Lock Column
+
+`UpdateOptimistic` does not write the new lock value back to the entity instance. Use
+`UpdateOptimisticWithRefresh` when the same instance will be updated again, so it carries the
+regenerated lock value:
+
+```csharp
+using LinqToDB.Concurrency;
+
+var affected = db.UpdateOptimisticWithRefresh(product);
+```
+
+Async:
+
+```csharp
+using LinqToDB.Concurrency;
+
+var affected = await db.UpdateOptimisticWithRefreshAsync(product, cancellationToken);
+```
+
+XML-doc states that:
+
+- the regenerated lock value(s) are read back from the same statement via OUTPUT / RETURNING; on
+  providers without OUTPUT / RETURNING they are read back with a follow-up `SELECT`, which is only
+  guaranteed to return this update's value when the call runs inside a transaction;
+- when the entity has a lock column, `0` indicates an optimistic-concurrency failure and the entity is
+  left untouched; the count is reliable wherever the method is supported, including providers that
+  do not report affected rows but support OUTPUT / RETURNING (e.g. YDB);
+- a `LinqToDBException` is thrown when the provider supports neither UPDATE OUTPUT / RETURNING nor a
+  reliable affected-rows count (e.g. ClickHouse), or when a lock member has no setter;
+- on SQL Server the OUTPUT path cannot be used against a table with any enabled UPDATE trigger;
+- without a lock column the call degrades to a plain update and returns the raw provider count.
+
+The `IQueryable<T>` receiver shape (see below) is available for `UpdateOptimisticWithRefresh` too.
 
 ## Update Through A Filtered Source
 
@@ -2118,6 +2160,10 @@ if (affected == 0)
 }
 ```
 
+This check is valid only on providers that report affected rows. On ClickHouse the count is always
+`0`, so every successful update would look like a conflict; there `UpdateOptimisticWithRefresh`
+throws instead of returning an unreliable count.
+
 The package API returns the affected row count. Do not document exception behavior for stale
 versions unless a version-matched XML-doc/API entry explicitly states it.
 
@@ -2127,6 +2173,8 @@ Search `docs/api.md` for:
 
 - `UpdateOptimistic`
 - `UpdateOptimisticAsync`
+- `UpdateOptimisticWithRefresh`
+- `UpdateOptimisticWithRefreshAsync`
 - `DeleteOptimistic`
 - `DeleteOptimisticAsync`
 - `WhereKeyOptimistic`

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-04T14:45:11",
+  "generated_at": "2026-09-29T00:30:20",
   "prompt_source": ".agents/knowledge-pack-maintenance.md",
   "source_root": "Source/Skills/linq2db",
   "xml_source": ".build/bin/LinqToDB/Release/net10.0/linq2db.xml",
@@ -23,7 +23,7 @@
     "16-xml-doc.md",
     "17-associations.md"
   ],
-  "xml_member_count": 5026,
+  "xml_member_count": 5318,
   "included_docs": [
     "../../LinqToDB/README.md",
     "docs/agent-antipatterns.md",
@@ -61,13 +61,13 @@
     "SKILL.md"
   ],
   "source_hashes": {
-    "../../LinqToDB/README.md": "1bb680aafa5964b6a29cb5311e5748a663d9e46500df36c64082576a6357a71d",
+    "../../LinqToDB/README.md": "a561e8c32dd722f4c1a2f77f502641393e7c032154ac36c1b73d707f30cb830b",
     "docs/agent-antipatterns.md": "1b6a33a90a33609229cda8e2c79f20e3565da0acb37a6e2c2b550756e2e57416",
-    "docs/ai-tags.md": "489df0f024cea3ebc67edddacaea032e667557059924a20954fad6e626e8df81",
-    "docs/api.md": "f468b6c45ff5226bab98d1168f504d6aa759ef36d18c656cb43d20b8533f15e8",
-    "docs/architecture.md": "ea0c884d00330a861930cec8d991d992d90bb03a8fa7c5d288afdbb84c9a93b5",
+    "docs/ai-tags.md": "b8023cd2ae0a87ec8a9ae07d52b9f2557373e31472e7c5988a5bbc7a2424d134",
+    "docs/api.md": "857002ce9b1357f5e0adcdbdfdb130442b40399102d03ada644891a28f1280fc",
+    "docs/architecture.md": "64e77d671e47cea189f3465decef20fad1cc0ce3ec231e60122536d1913fde8d",
     "docs/associations.md": "7d7ef0ad338b58231ccc1749d6e39e5f5a3a59eee035f3d56ff167f92dac9fa5",
-    "docs/concurrency.md": "4df480326c4ae75668975a14c2928105f9fe84c2e777cd65e357792a86f92e12",
+    "docs/concurrency.md": "e3b7926a10d73de5f54d2df0c95cff5e6aa78a6470792d48445d58d27d157e27",
     "docs/configuration.md": "464aca62ebcab91562c5c8fc206817609de55b4defb3c242cbdcae784d3f389b",
     "docs/coverage.md": "341e18bba8969932a2ba972f8b73ff6497b6220f05e72bd8ba33867af3416168",
     "docs/crud/crud-bulkcopy.md": "4d50e665c1f4c5bb92f98f4d2d1e39b0508d35b414b49e58cc6deaaee08ef5aa",
@@ -81,20 +81,20 @@
     "docs/crud/crud-upsert.md": "4845be12e20b277e29b18e1afa05cbcd7f3dc43b2b8c5023e4f8a946f209b228",
     "docs/crud/crud.md": "2c0b7195a8372fb033ce475138aab7cce83aa3d1304998a6dc2571239434eb3a",
     "docs/extensions.md": "b16cfd5bc7cb8f70047efba4b57f9181b69270a78e3eeea40bbfe92d0a12f450",
-    "docs/hints-api-map.md": "f390324ab050711067201810f730356ddfbba1500205e445d78b72d0d3458671",
-    "docs/hints.md": "f7a4639686463a9597ea38a1eb852de78d16fde85cf77e5a4bd449c62d5d29c5",
+    "docs/hints-api-map.md": "efc41fc2b0ce492f5fe59b5ff16a3257244cc505540e88ad306ea18efacf69c9",
+    "docs/hints.md": "f6ef87a27b06a01b5b3c83ab2ad49cbf1812f18c3d91e5fc08ccb8012c9d03d4",
     "docs/interceptors.md": "9303c9c7b641c29e941dfa7f1586dc91d3677a082f6984c222ee092372ed5b7e",
     "docs/mapping.md": "90df40f6bf4a60251db6357aa148a02ea3807fa942d5f9b88299ba8aef3af1fd",
-    "docs/null-semantics.md": "dfb1e926dfe7c874e9a40e6d444b3d135949130b928d7ac2f28ab4ad581cfd94",
-    "docs/parameters.md": "ac92254c5eb9b6567baf72d196f25ba775dba5755a327947acff7af109a4dd18",
+    "docs/null-semantics.md": "f099860affb163bc4e0ba4eb76bd60dd82e3eb501a5102b2880404bce8ff96b1",
+    "docs/parameters.md": "2482ccda89c14970c785060de3feb75b60f3c383bed2dc03cae39abe33068159",
     "docs/provider-capabilities.md": "dba03d3ae23fb6ac787327e2e69a4d411c3e22bfbb0b2bc9e0d21111c64517d0",
     "docs/provider-setup.md": "00a49bff171d1cabe6a2849d6f64a4315a986cfa55d3b062f9abb3b2c40253a8",
     "docs/query-cte.md": "6c359cba89307afd2241bc7c998a6e00f6f505cba898df7404b8791c8c42545b",
-    "docs/query-joins.md": "4fb5ffdcce41b13ef875388b4f909f3fede9f911204dcd7f49c3e9ac121355f0",
-    "docs/query-temp-tables.md": "695b0e2082b158ae2ef1077a3c69d91f1b97a96348ec83fde399847abb2b3e18",
+    "docs/query-joins.md": "9bc45b8a3bfbdd6c68442e49087bb31958e49a4c1ed0dad2fd638c5759044a4c",
+    "docs/query-temp-tables.md": "5ef3f9dde0c8d2b115ae0299248b4b7cdc6bb1f96bf9e0dddd772b57ea9b5cbd",
     "docs/raw-sql.md": "9734ed81bef5435b5d931ce6a76bd6688cf6b604b44996c2daf24149ab54a531",
     "docs/translatable-methods.md": "6d0875c5ae5c031fc1caaf1b802c1ce268ec1078b2b7a7d20543971fc6066287",
-    "SKILL.md": "2925da5eaf38392e6861ca2609a237e3fbf8bcf3a674d2ee01708ff642d0c014",
-    "linq2db.xml": "b0a57acfd2f36c2e746b6dfc0f1d1f57dda44bd536c7e283ebe238458d9f65a2"
+    "SKILL.md": "c84f52ffd9c71090f09e48fab84efdbaf0751c64d77159e2a3d4ecb0d0eda8ba",
+    "linq2db.xml": "b1f87d536bce36861bdbd9ef23ac6d374d6c48bb5fd35cc7e790ffab4ae8bb37"
   }
 }

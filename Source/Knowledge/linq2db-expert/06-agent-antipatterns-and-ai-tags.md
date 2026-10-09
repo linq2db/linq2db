@@ -518,12 +518,13 @@ This is the primary diagnostic tool for translation issues, unexpected query sha
 # AI Tags for API Documentation
 
 > You are here if you need to:
-> - add or update `<ai-tags />` metadata on a new or modified public API
+> - add or update `[AiTags]` metadata on a new or modified public API
 > - verify that a key or value in existing AI metadata is valid
 > - understand the canonical vocabulary for generated `AI-Tags` keys and values
 
 `AI-Tags` are compact generated metadata annotations for public APIs.
-In source XML documentation they are authored as custom XML-doc elements, not as prose in
+In source code they are authored as internal attributes (`AiTagsAttribute` /
+`AiTagsDefaultsAttribute` in `LinqToDB.Internal.Metadata`), not as XML-doc elements or prose in
 `<remarks>`.
 
 They are intended for:
@@ -533,59 +534,69 @@ They are intended for:
 
 ## Canonical format
 
-Use a custom XML-doc element next to `<summary>` / `<remarks>`, not inside `<remarks>`:
+Apply the attribute to the member, next to its XML documentation. Values are enum members, so the
+compiler validates the vocabulary:
 
-```xml
-<ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" />
+```cs
+[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 ```
 
-Optional defaults element for an API surface:
+Optional defaults attribute for an API surface (applied to the declaring class or interface):
 
-```xml
-<ai-tags-defaults pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+```cs
+[AiTagsDefaults(Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 ```
 
-Generated docs normalize those XML attributes to the canonical display format:
+Generated docs render the merged attribute values in the canonical display format:
 
 `AI metadata: Key1=Value1; Key2=Value2; ...;`
 
+Keys are rendered in a fixed order (`Groups`, `HintType`, `Execution`, `Composability`, `Affects`,
+`Pipeline`, `Provider`). Multi-value (`[Flags]`) values are rendered comma-separated in enum
+declaration order, for example `Pipeline=ExpressionTree,SqlAST,SqlText`.
+
 Example:
 
-```xml
-<ai-tags group="DML" execution="Immediate" composability="Terminal" affects="DmlStatement" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+```cs
+[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 ```
 
-Multi-group example (for aggregate docs like namespace/class overviews):
+renders as:
 
-```xml
-<ai-tags groups="QueryDirectives,NavigationLoading,DML,Merge,Helpers" pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+`AI metadata: Groups=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;`
+
+Multi-group example (for aggregate API surfaces that span several categories):
+
+```cs
+[AiTags(Groups = AiGroup.QueryDirectives | AiGroup.NavigationLoading | AiGroup.DML | AiGroup.Merge | AiGroup.Helpers)]
 ```
 
-Defaults example (applies to member tags in the same documented API surface unless overridden):
+Defaults example (applies to members of the attributed type unless overridden):
 
-```xml
-<ai-tags-defaults pipeline="ExpressionTree,SqlAST,SqlText" provider="ProviderDefined" />
+```cs
+[AiTagsDefaults(Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 ```
 
 ## Standard keys
 
-| XML attribute | Generated key | Meaning |
-|---|---|---|
-| `group` | `Group` | Primary API category for a single API member. |
-| `groups` | `Groups` | Comma-separated API categories for aggregate documentation that covers multiple categories. |
-| `execution` | `Execution` | When execution happens. |
-| `composability` | `Composability` | Whether API returns a composable query structure or is terminal. |
-| `affects` | `Affects` | Main semantic artifact affected by the call. |
-| `pipeline` | `Pipeline` | Affected translation/execution stages. |
-| `provider` | `Provider` | Provider dependency level. |
-| `hint-type` | `HintType` | Hint scope/type for hint-bearing APIs. |
+| Attribute property | Enum type | Generated key | Meaning |
+|---|---|---|---|
+| `Groups` | `AiGroup` (`[Flags]`) | `Groups` | API category, or several categories combined with `\|`. |
+| `Execution` | `AiExecution` | `Execution` | When execution happens. |
+| `Composability` | `AiComposability` | `Composability` | Whether API returns a composable query structure or is terminal. |
+| `Affects` | `AiAffects` (`[Flags]`) | `Affects` | Main semantic artifact affected by the call. |
+| `Pipeline` | `AiPipeline` (`[Flags]`) | `Pipeline` | Affected translation/execution stages. |
+| `Provider` | `AiProvider` | `Provider` | Provider dependency level. |
+| `HintType` | `AiHintType` | `HintType` | Hint scope/type for hint-bearing APIs. |
 
-`<ai-tags-defaults />` uses the same keys and controlled values as `<ai-tags />`.
-Generated docs display both as `AI metadata` / defaults metadata.
+`[AiTagsDefaults]` uses the same properties and enum values as `[AiTags]`.
+Only properties set explicitly at the attribute usage are emitted; unset properties are not
+rendered as a default enum value.
+Generated docs display the merged result as `AI metadata`.
 
 ## Coverage policy
 
-Do not treat `<ai-tags />` as mandatory for every public member.
+Do not treat `[AiTags]` as mandatory for every public member.
 Use it on API surfaces where compact machine-readable routing materially helps agents:
 
 - DML terminal and builder APIs;
@@ -600,7 +611,7 @@ For overload families, tag representative overloads or all overloads when the me
 receiver, execution timing, scope, or result shape. Avoid adding duplicate metadata mechanically when
 the surrounding type-level/default metadata is already sufficient for discovery.
 
-The accepted coverage model is selective, not exhaustive. Missing `<ai-tags />` on an ordinary
+The accepted coverage model is selective, not exhaustive. Missing `[AiTags]` on an ordinary
 public member is not a documentation defect by itself. It is a defect when the member belongs to a
 routing-critical public API surface and the missing metadata makes agents more likely to confuse:
 
@@ -614,9 +625,10 @@ When auditing coverage, prefer adding metadata to surfaces that change agent rou
 mechanically tagging every overload. If a topic guide or generated API search already gives agents a
 clear route, additional duplicate metadata is optional.
 
-The generators validate `<ai-tags />` and `<ai-tags-defaults />` attribute names and controlled
-values. A generator failure means the vocabulary in this file and the authored XML-doc metadata are
-out of sync.
+The compiler validates the controlled values: they are members of the `LinqToDB.Internal.Metadata`
+enums listed below. The generators reject the retired XML-doc `<ai-tags />` / `<ai-tags-defaults />`
+form. If this file lists a value that the enums do not have (or the reverse), this file and the code
+are out of sync.
 
 ## Controlled values (current baseline)
 
@@ -645,7 +657,7 @@ out of sync.
 - `ProviderAgnostic`
 
 ### `HintType`
-Use this key for hint-bearing APIs, including `Group=Hints` and MERGE hint overloads in `Group=Merge`.
+Use this key for hint-bearing APIs, including `Groups=Hints` and MERGE hint overloads in `Groups=Merge`.
 `HintType` tells agents where the hint is applied; it does not name the concrete SQL hint.
 For provider-specific typed hint helpers, read the member XML summary and use the SQL hint text
 inside `<c>...</c>`.
@@ -661,8 +673,9 @@ inside `<c>...</c>`.
 
 ### `Affects`
 The primary semantic artifact altered or produced by the call.
-Compound values (comma-separated) are allowed when a single operation has primary effects on multiple artifacts
-(e.g., `DdlStatement,QueryRoot` for a method that creates a table and returns `ITable<T>`).
+Compound values (flags combined with `|`, rendered comma-separated) are allowed when a single operation has
+primary effects on multiple artifacts (e.g., `AiAffects.DdlStatement | AiAffects.QueryRoot`, rendered as
+`DdlStatement,QueryRoot`, for a method that creates a table and returns `ITable<T>`).
 
 - `DmlStatement` - generates a DML statement (INSERT / UPDATE / DELETE / MERGE)
 - `DdlStatement` - generates a DDL statement (CREATE TABLE / DROP TABLE)
@@ -682,7 +695,7 @@ Compound values (comma-separated) are allowed when a single operation has primar
 
 ### `Pipeline`
 The translation and execution stages involved in processing the call.
-Comma-separated when a call spans multiple stages.
+Flags combined with `|` (rendered comma-separated) when a call spans multiple stages.
 
 - `ExpressionTree` - the LINQ Expression Tree analysis and transformation stage
 - `SqlAST` - the SQL AST construction stage (internal SQL query model, before text generation)
@@ -698,30 +711,31 @@ Common combinations:
 
 ## Authoring rules
 
-1. Keep one `<ai-tags />` element per API member.
-2. Use `Group` for single-category tagging.
-3. Use `Groups` only when documentation intentionally spans multiple categories; encode values as a comma-separated list with no extra spaces.
+1. Keep one `[AiTags]` attribute per API member (the attribute is `AllowMultiple = false`).
+2. Use a single `AiGroup` value for single-category tagging.
+3. Combine several `AiGroup` values with `|` only when the API surface intentionally spans multiple categories.
 4. Keep vocabulary stable; avoid introducing synonyms.
-5. Prefer extending controlled values in this document before using new values in code.
+5. Extend the enum and the controlled values in this document together before using a new value in code.
 6. If API semantics are multi-modal (e.g., provider-dependent execution structure), encode the dominant behavior and explain details in regular XML remarks.
 7. Keep tags behavior-focused (execution/composability/semantic impact), not implementation-detail-focused.
-8. Use `<ai-tags-defaults />` only for API surface-level defaults (for example class-level extension API docs), not for per-member semantics.
-9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `<ai-tags-defaults />` for a surface and omit per-member repeats unless a member differs.
-10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline=SqlText` - there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
-11. For `BulkCopy` use `Pipeline=BulkInsert` - the data transfer does not go through the LINQ translation pipeline at all.
+8. Use `[AiTagsDefaults]` only for API surface-level defaults (for example on a class of extension methods), not for per-member semantics.
+9. Treat `Pipeline=ExpressionTree,SqlAST,SqlText` as the default LinqToDB pipeline; prefer declaring it once in `[AiTagsDefaults]` for a surface and omit per-member repeats unless a member differs.
+10. For raw SQL APIs (e.g., `SetCommand`/`CommandInfo`) use `Pipeline = AiPipeline.SqlText` - there is no Expression Tree or SQL AST stage; the caller provides SQL text directly.
+11. For `BulkCopy` use `Pipeline = AiPipeline.BulkInsert` - the data transfer does not go through the LINQ translation pipeline at all.
 12. `Affects` values name the primary artifact altered or produced by the API, not an internal processing phase.
-13. For APIs in `Group=Hints`, and MERGE hint overloads in `Group=Merge`, include `HintType` so agents can distinguish table, join, query, subquery, MERGE, and scoped table hints without parsing method names.
+13. For APIs in `Groups=Hints`, and MERGE hint overloads in `Groups=Merge`, include `HintType` so agents can distinguish table, join, query, subquery, MERGE, and scoped table hints without parsing method names.
 14. For provider-specific typed hint helpers, keep the concrete SQL hint text in the member XML summary inside `<c>...</c>`; agents must inspect that summary before choosing, comparing, or rewriting hint helpers.
+15. For T4-generated sources (for example `*Hints.generated.cs`), put the attribute in the `.tt` template, not in the generated file.
 
 ## Defaults merge rules
 
-When both `<ai-tags-defaults />` and member-level `<ai-tags />` exist:
+When both `[AiTagsDefaults]` on the declaring type and member-level `[AiTags]` exist:
 
-1. Start from `<ai-tags-defaults />`.
-2. Apply member-level `<ai-tags />` on top.
+1. Start from `[AiTagsDefaults]`.
+2. Apply member-level `[AiTags]` on top.
 3. For the same key, member-level value replaces the default value.
-4. Keys absent in member-level `<ai-tags />` are inherited from defaults.
-5. If no defaults are present, member-level `<ai-tags />` are used as-is.
+4. Keys absent in member-level `[AiTags]` are inherited from defaults.
+5. If no defaults are present, member-level `[AiTags]` values are used as-is.
 
 ## Scope guidance
 
@@ -733,6 +747,6 @@ Prioritize tagging for:
 
 ## Notes
 
-`<ai-tags />` complements XML documentation; it does not replace human-readable API docs.
+`[AiTags]` complements XML documentation; it does not replace human-readable API docs.
 Keep `<summary>` and `<remarks>` readable for humans. Generated `docs/api.md` exposes these
-elements as `AI metadata` / `AI-Tags` for agent retrieval.
+attributes as `AI metadata` for agent retrieval.

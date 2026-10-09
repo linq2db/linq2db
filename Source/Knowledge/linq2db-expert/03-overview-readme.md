@@ -185,9 +185,10 @@ await tr.CommitAsync();  // or tr.RollbackAsync() on error
 
 `DataContext` supports `TransactionScope` as well - open the connection inside the scope for it to enlist automatically.
 
-> **Note:** Temp tables, session variables, and other session-scoped state require `DataConnection`.
-> `DataContext` opens a new connection per command; session state created in one command does not
-> survive to the next. See the decision table above.
+> **Note:** Temp tables, session variables, and other session-scoped state need a connection that stays
+> open across commands. By default `DataContext` opens a new connection per command, so session state
+> created in one command does not survive to the next; use `DataConnection`, or call
+> `SetKeepConnectionAlive(true)` on the `DataContext`. See the decision table above.
 
 ## Bulk copy
 
@@ -201,6 +202,57 @@ await db.BulkCopyAsync(rows);  // uses provider-native bulk mechanism
 ```
 
 See [Bulk Copy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) for options (`BulkCopyOptions`, row count, transaction control).
+
+## Analyzers
+
+Roslyn analyzers and code fixes that flag legacy API usage, offer automatic migrations to the current API, and report mistakes the compiler cannot see — a query that is valid C# but cannot mean what it says — ship in the [`linq2db.Analyzers`](https://www.nuget.org/packages/linq2db.Analyzers) package, which `linq2db` depends on. No extra package reference is needed — the rules also reach a project that references only a satellite package (`linq2db.EntityFrameworkCore`, the Tools or Remote packages). They run only in IDEs / SDKs with Roslyn 4.8 or later (.NET SDK 8.0+, Visual Studio 2022 17.8+) and are silently skipped on older toolchains.
+
+| Id | Severity | Description |
+|----|----------|-------------|
+| [L2DB1001](https://github.com/linq2db/linq2db/wiki/L2DB1001) | Info | Legacy `Sql.Ext` analytic / window-function API is superseded by `Sql.Window`. A code fix migrates convertible chains. |
+| [L2DB1002](https://github.com/linq2db/linq2db/wiki/L2DB1002) | Info | An `==` / `!=` against a `[Duration]` column compares a duration the declared unit cannot represent, so the comparison is degenerate — it can never match, or always does. Reported only; no code fix. |
+| [L2DB1003](https://github.com/linq2db/linq2db/wiki/L2DB1003) | Info | A throw-only stub that nothing declares server-side-only. A code fix adds the marker. |
+| [L2DB1004](https://github.com/linq2db/linq2db/wiki/L2DB1004) | Info | A server-side-only stub throwing something other than `ServerSideOnlyException`. A code fix replaces it. |
+
+Adjust a rule's severity in `.editorconfig` (`none` disables the rule):
+
+```ini
+dotnet_diagnostic.L2DB1001.severity = warning
+```
+
+Every rule shipped by linq2db is in the `LinqToDB` analyzer category, so one line sets them all:
+
+```ini
+dotnet_analyzer_diagnostic.category-LinqToDB.severity = warning
+```
+
+Apply the L2DB1001 code fix even when the `Sql.Window` return type diverges from the legacy `ToValue<TR>()` slot (default `false`; when enabled you resolve any resulting type change, e.g. widening `int` to `long`, by hand):
+
+```ini
+linq2db.L2DB1001.apply_fix_on_return_type_mismatch = true
+```
+
+Both exception-type lists below are **additive** to their defaults and match type names **exactly**, not by subclass. Add exception types your own stubs throw, so L2DB1004 accepts them:
+
+```ini
+linq2db.L2DB1004.allowed_exception_types = MyCompany.ServerSideException, MyCompany.SqlOnlyException
+```
+
+Add exception types that mark an *unattributed* stub as server-side-only, widening what L2DB1003 reports (the default is `LinqToDB.ServerSideOnlyException` alone, which keeps ordinary `NotImplementedException` placeholders out of the results):
+
+```ini
+linq2db.L2DB1003.unmarked_stub_exception_types = MyCompany.ServerSideException
+```
+
+Turn all of them off for a project:
+
+```xml
+<PropertyGroup>
+	<EnableLinqToDBAnalyzers>false</EnableLinqToDBAnalyzers>
+</PropertyGroup>
+```
+
+To run the rules against an older linq2db — sizing and applying a migration before upgrading — reference `linq2db.Analyzers` directly; it carries no `linq2db` dependency, so it composes with any version. See its [readme](https://www.nuget.org/packages/linq2db.Analyzers).
 
 ## Documentation and resources
 
@@ -225,7 +277,7 @@ to the NuGet package directory (e.g. via MCP filesystem tools or the NuGet globa
 | `skills/linq2db/SKILL.md` | Canonical AI entry point for this package version |
 | `skills/linq2db/docs/architecture.md` | Architecture overview, translation pipeline, execution model, entry points |
 | `skills/linq2db/docs/coverage.md` | Covered and not-yet-covered package-local AI documentation areas |
-| `skills/linq2db/docs/ai-tags.md` | `<ai-tags />` metadata format - controlled vocabulary for generated API behavior annotations |
+| `skills/linq2db/docs/ai-tags.md` | AI metadata format - controlled vocabulary for generated API behavior annotations |
 | `skills/linq2db/docs/agent-antipatterns.md` | Operational anti-patterns with `// WRONG` / `// CORRECT` code examples |
 | `skills/linq2db/docs/provider-capabilities.md` | SQL feature support matrix per provider (MERGE, CTE, bulk copy, OUTPUT, etc.) |
 | `skills/linq2db/docs/provider-setup.md` | Provider configuration reference (ProviderName constants, UseXxx methods, NuGet packages) |

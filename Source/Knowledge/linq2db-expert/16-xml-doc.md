@@ -494,7 +494,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `F:LinqToDB.DataProvider.Oracle.AlternativeBulkCopy.InsertInto`
 - Kind: Field
-- Summary: This mode performs regular INSERT INTO query with array of values for each column. INSERT INTO target_table(/*columns*/) VALUES(:column1ArrayParameter, ..., :columnXArrayParameter)
+- Summary: This mode performs regular INSERT INTO query with array of values for each column. INSERT INTO target_table(/*columns*/) VALUES(:column1ArrayParameter, ..., :columnXArrayParameter) Because the statement is a single fixed row template, this mode is bounded only by — it does not consult or .
 
 ## LinqToDB.DataProvider.Oracle.OracleProvider.AutoDetect
 
@@ -1390,17 +1390,29 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: Event
 
-## LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy._maxParameters
+## LinqToDB.Internal.Common.ErrorHelper.Error_Interval_ComponentBelowResolution
 
-- XML member: `F:LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy._maxParameters`
+- XML member: `F:LinqToDB.Internal.Common.ErrorHelper.Error_Interval_ComponentBelowResolution`
 - Kind: Field
-- Remarks: Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/ We subtract 1 based on possibility of provider using parameter for command.
+- Summary: {0} - the requested component unit, {1} - the finest unit the provider resolves.
 
-## LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy._maxSqlLength
+## LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Difference
 
-- XML member: `F:LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy._maxSqlLength`
+- XML member: `F:LinqToDB.Internal.Common.ErrorHelper.Error_Interval_Difference`
 - Kind: Field
-- Summary: Setting is conservative, based on https://docs.oracle.com/cd/A58617_01/server.804/a58242/ch5.htm Max is actually more arbitrary in later versions than Oracle 8.
+- Summary: Spelled out rather than terse, unlike its neighbours, because this one describes a capability that was taken away rather than one that never existed: before 6.5 the same expression was rewritten into Sql.DateDiff, which counts crossed boundaries instead of measuring elapsed time. Provider-neutral wording because more than one provider reaches it.
+
+## LinqToDB.Internal.Common.ErrorHelper.Error_Interval_UndeclaredOperand
+
+- XML member: `F:LinqToDB.Internal.Common.ErrorHelper.Error_Interval_UndeclaredOperand`
+- Kind: Field
+- Summary: Names the declaration rather than the provider, because no provider can answer this one: the two stored numbers are counted in different units and only one of them says so.
+
+## LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands
+
+- XML member: `F:LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands`
+- Kind: Field
+- Summary: {0} and {1} - the two columns. Named rather than described, because two conversions are indistinguishable in the query text and the mistake is in the model rather than in what was written.
 
 ## LinqToDB.Internal.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlDbType.Citext
 
@@ -1641,6 +1653,19 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.Internal.Linq.Builder.ProjectFlags.Traverse`
 - Kind: Field
 - Summary: Specify that we expect real expression under hidden by Selects chain
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext._divergentPaths
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext._divergentPaths`
+- Kind: Field
+- Summary: Paths whose two branches store the value in different terms, so one column cannot be read for both.
+- Remarks: Recorded while the branches are paired up, which is the only moment the two sides are still told apart: from then on a branch is named by the member path it fills, and that path reads the same on both sides. Kept as the set of paths rather than one flag so the answer stays available per member to whoever needs it later.
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.SecondBranchMarker
+
+- XML member: `F:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.SecondBranchMarker`
+- Kind: Field
+- Summary: Distinguishes the second branch's own column from the one both branches share, by naming a path nothing else can name - the same trick ExpressionPathVisitor uses to tell the two arms of a conditional apart.
 
 ## LinqToDB.Internal.Linq.ParameterCacheEntry.ClientToProviderConverter
 
@@ -2339,6 +2364,127 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Field
 - Summary: Custom query extensions, e.g. hints, applied to specific query fragment. Implemented by .
 
+## LinqToDB.Internal.SqlQuery.SqlArgumentDomain.Element
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlArgumentDomain.Element`
+- Kind: Field
+- Summary: The result is one of the argument's own values - MIN and MAX return a row's value unchanged - so the argument's column describes it completely, width included.
+
+## LinqToDB.Internal.SqlQuery.SqlArgumentDomain.None
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlArgumentDomain.None`
+- Kind: Field
+- Summary: The result is unrelated to the argument's domain: COUNT answers how many rows there are and AVG in a type of its own. Neither the reading nor the width of the argument describes it.
+
+## LinqToDB.Internal.SqlQuery.SqlArgumentDomain.SameKind
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlArgumentDomain.SameKind`
+- Kind: Field
+- Summary: The result is a value of the same kind as the argument, but not necessarily one of its values: SUM reads back the way the argument does and can exceed the width the argument is declared with.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Calendar
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Calendar`
+- Kind: Field
+- Summary: A calendar-relative interval, whose elapsed length depends on the point in time it is applied to. Corresponds to SQL INTERVAL YEAR TO MONTH and to the month component of a PostgreSQL interval.
+- Remarks: Reserved: nothing constructs one yet. It is named here because the distinction it draws is what makes the duration family safe to reason about - an optimization that may reorder or fold a fixed duration must not do the same to a calendar one - so the two are kept apart from the start rather than after the fact.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Duration
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalDomain.Duration`
+- Kind: Field
+- Summary: A fixed-length duration, with CLR semantics.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Component
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Component`
+- Kind: Field
+- Summary: The component within the next coarser unit, truncated toward zero, as TimeSpan.Minutes does.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Total
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalPartKind.Total`
+- Kind: Field
+- Summary: The whole interval expressed in the requested unit, keeping the fractional part, as TimeSpan.TotalMinutes does.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType.ClrTimeSpan
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalType.ClrTimeSpan`
+- Kind: Field
+- Summary: The logical type of a CLR : a signed fixed-length duration with tick resolution.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Day
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Day`
+- Kind: Field
+- Summary: Days. Exactly 24 hours within .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Hour
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Hour`
+- Kind: Field
+- Summary: Hours.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Microsecond
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Microsecond`
+- Kind: Field
+- Summary: Microseconds.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Millisecond
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Millisecond`
+- Kind: Field
+- Summary: Milliseconds.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Minute
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Minute`
+- Kind: Field
+- Summary: Minutes.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Month
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Month`
+- Kind: Field
+- Summary: Calendar months. Valid only within .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Nanosecond
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Nanosecond`
+- Kind: Field
+- Summary: Nanoseconds.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Quarter
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Quarter`
+- Kind: Field
+- Summary: Calendar quarters. Valid only within .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Second
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Second`
+- Kind: Field
+- Summary: Seconds.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Tick`
+- Kind: Field
+- Summary: 100-nanosecond units, matching .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Week
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Week`
+- Kind: Field
+- Summary: Weeks. Exactly 7 days within .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Year
+
+- XML member: `F:LinqToDB.Internal.SqlQuery.SqlIntervalUnit.Year`
+- Kind: Field
+- Summary: Calendar years. Valid only within .
+
 ## LinqToDB.Internal.SqlQuery.SqlTableType.SystemTable
 
 - XML member: `F:LinqToDB.Internal.SqlQuery.SqlTableType.SystemTable`
@@ -2380,6 +2526,55 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `F:LinqToDB.Mapping.ConversionType.ToDatabase`
 - Kind: Field
 - Summary: Conversion is used to convert values from object to database.
+
+## LinqToDB.Mapping.DurationUnit.Day
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Day`
+- Kind: Field
+- Summary: Days, always exactly 24 hours.
+
+## LinqToDB.Mapping.DurationUnit.Hour
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Hour`
+- Kind: Field
+- Summary: Hours.
+
+## LinqToDB.Mapping.DurationUnit.Microsecond
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Microsecond`
+- Kind: Field
+- Summary: Microseconds.
+
+## LinqToDB.Mapping.DurationUnit.Millisecond
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Millisecond`
+- Kind: Field
+- Summary: Milliseconds.
+
+## LinqToDB.Mapping.DurationUnit.Minute
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Minute`
+- Kind: Field
+- Summary: Minutes.
+
+## LinqToDB.Mapping.DurationUnit.Nanosecond
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Nanosecond`
+- Kind: Field
+- Summary: Nanoseconds. Note that resolution is 100 nanoseconds, so stored values are always multiples of 100 and reading a finer value cannot be represented exactly.
+- Remarks: The only unit finer than a tick, and the one the server cannot compute with. A value stored in it round trips, but reaching a tick count from it is a division, and no lowering performs one - integer division rounds a negative value differently from one provider to the next, so a chosen rule would answer differently depending on the database. In consequence a member asked for in SQL is refused rather than answered, and so is a comparison or a membership test against a column declared in any other unit, since the two have no unit they can meet in. A plain projection is unaffected: the column is read and the member computed in .NET, which answers exactly.
+
+## LinqToDB.Mapping.DurationUnit.Second
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Second`
+- Kind: Field
+- Summary: Seconds.
+
+## LinqToDB.Mapping.DurationUnit.Tick
+
+- XML member: `F:LinqToDB.Mapping.DurationUnit.Tick`
+- Kind: Field
+- Summary: 100-nanosecond units, matching . This is the only unit that can represent every value exactly.
 
 ## LinqToDB.Mapping.InheritanceMapping.Code
 
@@ -3976,7 +4171,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `dc`: Database context.
   - `obj`: Entity instance to delete.
-- Returns: Number of deleted records.
+- Returns: Number of deleted records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.DeleteOptimistic<T>
 
@@ -3988,7 +4183,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Table source with optional filtering applied.
   - `obj`: Entity instance to delete.
-- Returns: Number of deleted records.
+- Returns: Number of deleted records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.DeleteOptimisticAsync<T>
 
@@ -4001,7 +4196,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dc`: Database context.
   - `obj`: Entity instance to delete.
   - `cancellationToken`: Asynchronous operation cancellation token.
-- Returns: Number of deleted records.
+- Returns: Number of deleted records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.DeleteOptimisticAsync<T>
 
@@ -4014,7 +4209,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Table source with optional filtering applied.
   - `obj`: Entity instance to delete.
   - `cancellationToken`: Asynchronous operation cancellation token.
-- Returns: Number of deleted records.
+- Returns: Number of deleted records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimistic<T>
 
@@ -4026,7 +4221,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `dc`: Database context.
   - `obj`: Entity instance to update.
-- Returns: Number of updated records.
+- Returns: Number of updated records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimistic<T>
 
@@ -4038,7 +4233,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Table source with optional filtering applied.
   - `obj`: Entity instance to update.
-- Returns: Number of updated records.
+- Returns: Number of updated records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticAsync<T>
 
@@ -4051,7 +4246,7 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dc`: Database context.
   - `obj`: Entity instance to update.
   - `cancellationToken`: Asynchronous operation cancellation token.
-- Returns: Number of updated records.
+- Returns: Number of updated records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticAsync<T>
 
@@ -4064,7 +4259,57 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Table source with optional filtering applied.
   - `obj`: Entity instance to update.
   - `cancellationToken`: Asynchronous operation cancellation token.
-- Returns: Number of updated records.
+- Returns: Number of updated records. On providers that do not report affected rows the count is unreliable - always 0 on ClickHouse - so it cannot be used to detect an optimistic-concurrency failure there.
+
+## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh<T>
+
+- XML member: `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh``1(LinqToDB.IDataContext,``0)`
+- Kind: Method
+- Summary: Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up SELECT instead. That follow-up SELECT is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because OUTPUT without INTO is rejected there; that also rules out the database-trigger variant of .
+- Type parameters:
+  - `T`: Entity type.
+- Parameters:
+  - `dc`: Database context.
+  - `obj`: Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.
+- Returns: Number of updated records. When the entity declares at least one optimistic-lock column, 0 indicates an optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB). When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING path is not used, so the raw provider count is returned and is unreliable on every provider that does not report affected rows - including YDB, and always 0 on ClickHouse.
+
+## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh<T>
+
+- XML member: `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefresh``1(System.Linq.IQueryable{``0},``0)`
+- Kind: Method
+- Summary: Performs record update using optimistic lock strategy and refreshes the optimistic-lock column(s) on with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up SELECT instead. That follow-up SELECT is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because OUTPUT without INTO is rejected there; that also rules out the database-trigger variant of .
+- Type parameters:
+  - `T`: Entity type.
+- Parameters:
+  - `source`: Table source with optional filtering applied.
+  - `obj`: Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.
+- Returns: Number of updated records. When the entity declares at least one optimistic-lock column, 0 indicates an optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB). When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING path is not used, so the raw provider count is returned and is unreliable on every provider that does not report affected rows - including YDB, and always 0 on ClickHouse.
+
+## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync<T>
+
+- XML member: `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync``1(LinqToDB.IDataContext,``0,System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s) on with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up SELECT instead. That follow-up SELECT is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because OUTPUT without INTO is rejected there; that also rules out the database-trigger variant of .
+- Type parameters:
+  - `T`: Entity type.
+- Parameters:
+  - `dc`: Database context.
+  - `obj`: Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.
+  - `cancellationToken`: Asynchronous operation cancellation token.
+- Returns: Number of updated records. When the entity declares at least one optimistic-lock column, 0 indicates an optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB). When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING path is not used, so the raw provider count is returned and is unreliable on every provider that does not report affected rows - including YDB, and always 0 on ClickHouse.
+
+## LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync<T>
+
+- XML member: `M:LinqToDB.Concurrency.ConcurrencyExtensions.UpdateOptimisticWithRefreshAsync``1(System.Linq.IQueryable{``0},``0,System.Threading.CancellationToken)`
+- Kind: Method
+- Summary: Performs record update using optimistic lock strategy asynchronously and refreshes the optimistic-lock column(s) on with the regenerated value(s) read back from the same statement (via OUTPUT / RETURNING). On providers without OUTPUT / RETURNING support the value is read back with a follow-up SELECT instead. That follow-up SELECT is a separate statement, so the refreshed value is only guaranteed to be the one this update wrote when the call runs inside a transaction; without one a concurrent writer's value can be observed instead, and when the read-back matches no row at all - the row was deleted concurrently, or an entity query filter no longer accepts the updated values - the entity is left unrefreshed even though a non-zero count is returned. On SQL Server the OUTPUT path cannot be used against a table carrying any enabled UPDATE trigger - not just a version-generating one - because OUTPUT without INTO is rejected there; that also rules out the database-trigger variant of .
+- Type parameters:
+  - `T`: Entity type.
+- Parameters:
+  - `source`: Table source with optional filtering applied.
+  - `obj`: Entity instance to update. Receives the regenerated optimistic-lock value(s) on success.
+  - `cancellationToken`: Asynchronous operation cancellation token.
+- Returns: Number of updated records. When the entity declares at least one optimistic-lock column, 0 indicates an optimistic-concurrency failure and the entity is left untouched; the count is reliable wherever this method is supported, including on providers that do not report affected rows but do support OUTPUT / RETURNING (e.g. YDB). When the entity declares no optimistic-lock column the call degrades to a plain update: the OUTPUT / RETURNING path is not used, so the raw provider count is returned and is unreliable on every provider that does not report affected rows - including YDB, and always 0 on ClickHouse.
 
 ## LinqToDB.Concurrency.ConcurrencyExtensions.WhereKeyOptimistic<T>
 
@@ -4120,7 +4365,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.Data.BulkCopyOptions.Constructor
 
-- XML member: `M:LinqToDB.Data.BulkCopyOptions.#ctor(System.Nullable{System.Int32},System.Nullable{System.Int32},LinqToDB.Data.BulkCopyType,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String,System.String,System.String,System.String,LinqToDB.TableOptions,System.Int32,System.Action{LinqToDB.Data.BulkCopyRowsCopied},System.Boolean,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,LinqToDB.Data.ConflictAction)`
+- XML member: `M:LinqToDB.Data.BulkCopyOptions.#ctor(System.Nullable{System.Int32},System.Nullable{System.Int32},LinqToDB.Data.BulkCopyType,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.String,System.String,System.String,System.String,LinqToDB.TableOptions,System.Int32,System.Action{LinqToDB.Data.BulkCopyRowsCopied},System.Boolean,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Boolean,LinqToDB.Data.ConflictAction,System.Nullable{System.Int32})`
 - Kind: Method
 - Summary: Defines behavior of method.
 - Remarks: Pass an instance to the BulkCopy / BulkCopyAsync overloads to control batch size, timeouts, identity handling, conflict resolution, and provider-specific features. The parameter selects the insert strategy: — provider chooses the most efficient path. — uses the provider's native bulk API when available. — generates multi-row INSERT … VALUES statements. — inserts one row per statement (slowest; most compatible). Many parameters (e.g., , , ) are only honoured for mode on supporting providers. See individual parameter documentation for provider support details.
@@ -4142,10 +4387,11 @@ Generated directly from the current package XML documentation. Use XML member id
   - `NotifyAfter`: Gets or sets counter after how many copied records should be called. E.g. if you set it to 10, callback will be called after each 10 copied records. To disable callback, set this option to 0 (default value).
   - `RowsCopiedCallback`: Gets or sets callback method that will be called by BulkCopy operation after each rows copied. This callback will not be used if set to 0.
   - `UseParameters`: Gets or sets whether to always use Parameters for MultipleRowsCopy. Default is false. If True, provider-specific parameter limit per batch will be used to determine the maximum number of rows per insert, Unless overridden by .
-  - `MaxParametersForBatch`: If set, will set the maximum parameters per batch statement. Also see .
+  - `MaxParametersForBatch`: If set, will set the maximum parameters per batch statement. Also see . Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped.
   - `MaxDegreeOfParallelism`: Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in mode.
   - `WithoutSession`: Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session. Note that session-less connections cannot be used with session-bound functionality like temporary tables.
   - `ConflictAction`: Specifies the action to take when conflicts occur during bulk copy operation. See for more details on supported databases and compatibility.
+  - `MaxSqlLengthForBatch`: If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When (the default), the provider's own limit is used. Honored by the MultipleRows copy path — , and also / on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's AlternativeBulkCopy.InsertInto mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp.
 
 ## LinqToDB.Data.CommandInfo.Constructor
 
@@ -4912,7 +5158,6 @@ Generated directly from the current package XML documentation. Use XML member id
 - Remarks: will share instances that were created by combining same mapping schemas.
 - Parameters:
   - `mappingSchema`: Mapping schema.
-- Returns: Current connection object.
 
 ## LinqToDB.Data.DataConnection.AddProviderDetector
 
@@ -9498,7 +9743,13 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.UseBulkCopyMaxParametersForBatch(LinqToDB.DataOptions,System.Nullable{System.Int32})`
 - Kind: Method
-- Summary: If set, will set the maximum parameters per batch statement. Also see .
+- Summary: If set, will set the maximum parameters per batch statement. Also see . Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped.
+
+## LinqToDB.DataOptionsExtensions.UseBulkCopyMaxSqlLengthForBatch
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.UseBulkCopyMaxSqlLengthForBatch(LinqToDB.DataOptions,System.Nullable{System.Int32})`
+- Kind: Method
+- Summary: If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When (the default), the provider's own limit is used. Honored by the MultipleRows copy path — , and also / on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's AlternativeBulkCopy.InsertInto mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp.
 
 ## LinqToDB.DataOptionsExtensions.UseBulkCopyNotifyAfter
 
@@ -10741,13 +10992,19 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.WithMaxParametersForBatch(LinqToDB.Data.BulkCopyOptions,System.Nullable{System.Int32})`
 - Kind: Method
-- Summary: If set, will set the maximum parameters per batch statement. Also see .
+- Summary: If set, will set the maximum parameters per batch statement. Also see . Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped.
 
 ## LinqToDB.DataOptionsExtensions.WithMaxRetryCount
 
 - XML member: `M:LinqToDB.DataOptionsExtensions.WithMaxRetryCount(LinqToDB.Data.RetryPolicy.RetryPolicyOptions,System.Int32)`
 - Kind: Method
 - Summary: The number of retry attempts. Default value: 5.
+
+## LinqToDB.DataOptionsExtensions.WithMaxSqlLengthForBatch
+
+- XML member: `M:LinqToDB.DataOptionsExtensions.WithMaxSqlLengthForBatch(LinqToDB.Data.BulkCopyOptions,System.Nullable{System.Int32})`
+- Kind: Method
+- Summary: If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When (the default), the provider's own limit is used. Honored by the MultipleRows copy path — , and also / on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's AlternativeBulkCopy.InsertInto mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp.
 
 ## LinqToDB.DataOptionsExtensions.WithNotifyAfter
 
@@ -20098,6 +20355,41 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Remarks: Pattern:PARAMETERS ((\\[(?<name>[^\\]]+)\\]|(?<name>[^\\s]+))\\s(?<type>[^,;\\s]+(\\s\\([^\\)]+\\))?)[,;]\\s)* Options:RegexOptions.ExplicitCapture Explanation: ○ Match the string "PARAMETERS ". ○ Loop atomically any number of times. ○ Match with 2 alternative expressions. ○ Match a sequence of expressions. ○ Match '['. ○ "name" capture group. ○ Match a character other than ']' atomically at least once. ○ Match ']'. ○ "name" capture group. ○ Match any character other than a whitespace character atomically at least once. ○ Match a whitespace character. ○ "type" capture group. ○ Match a character in the set [^,;\s] greedily at least once. ○ Optional (greedy). ○ Match a whitespace character. ○ Match '('. ○ Match a character other than ')' atomically at least once. ○ Match ')'. ○ Match a character in the set [,;]. ○ Match a whitespace character.
 
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CountDateBoundaries
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Boundary counting through DateDiff, whose count is a 32-bit value - so a count in seconds is taken across the sub-day remainder rather than across the whole span.
+- Remarks: A second count reaches the 32-bit limit after about sixty-eight years, which is inside the range a person's age can reach. Past it Access answers Numeric value out of range instead of a number, and it does so before any cast here can widen the result - the overflow happens while Access computes the count. Counting days first and seconds only from there keeps both counts small: days stay 32-bit for any date Access can hold, and the remainder spans at most a day. Every coarser datepart is counted directly, being far from the limit - minutes reach it only after four thousand years. The two counts telescope, so the split is exact rather than an approximation. DateDiff truncates both operands to the unit and subtracts, which makes it additive through any intermediate point, and shifting by whole days leaves the time of day alone - so the day count contributes exactly its own seconds. That holds even when the day count overshoots the end, as it does between an evening and the following morning: the remainder comes back negative by the same amount. CDbl is what keeps the product from overflowing in turn - Access multiplies in 32-bit integers and a century of days is past that once scaled to seconds. A cast to a wider integer would not do: Access has none to name, and a cast to a floating type renders as nothing here. This provider is the only one that gets here - it is the only override of to , and everywhere else a member is taken from the tick count instead.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: No tick count from Access at all.
+- Remarks: DateDiff hands back a 32-bit count, and scaling seconds to ticks overflows it after about three and a half minutes - the driver answers Numeric value out of range. There is no wider integer to reach for, so the interval never becomes a value here and its member translator says so.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.LowerIntervalPart
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.LowerIntervalPart(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression)`
+- Kind: Method
+- Summary: Forms a component of an elapsed difference over the last day of it rather than over the whole span.
+- Remarks: Everything this provider counts with is 32-bit, and a component asks for all three of it: the count, the amount the correction's anchor is shifted by, and MOD, which coerces both operands before dividing. A second count crosses that range after about sixty-eight years - inside a human lifetime - and the last of the three takes the elapsed count whole, so no split made inside the component can help. Made outside it instead. A component wraps at a divisor of a day - twenty-four hours, sixty minutes, sixty seconds - so whole days contribute nothing to it, and the same answer comes from the part of the span that is left after them. That part is under a day, which every count and every shift here holds comfortably. The day count has to be the elapsed one rather than the boundary one, which is the whole reason this is not simply DateDiff. A boundary count overshoots between an evening and the following morning, and an anchor past the end turns the remainder negative - a sign the modulo keeps, answering -20 where 40 was meant.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.LowerTemporalArithmetic
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+- Summary: No shift by an interval either, for the reason gives.
+- Remarks: The amount reaches a shift as a tick count whatever it was built from, and that is the one number Access cannot hold - scaling to ticks overflows its arithmetic and the driver answers Numeric value out of range. Refusing by name is the whole of the difference between this and a date that comes back wrong. Access shifts dates perfectly well in seconds; what it cannot do is take delivery of the amount in ticks. Should a coarser hand-off ever exist, this is the override to drop.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.TruncateDivide
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: Access has no FLOOR or CEILING, but its Fix is exactly truncation toward zero - the semantic the base composes those two functions to reach.
+- Remarks: Int would be wrong here: it rounds down, so Int(-2.5) is -3 where CLR integer division gives -2. Access division is floating, so no cast is needed before Fix.
+
 ## LinqToDB.Internal.DataProvider.BasicBulkCopy.GetInsertInto
 
 - XML member: `M:LinqToDB.Internal.DataProvider.BasicBulkCopy.GetInsertInto(LinqToDB.Internal.DataProvider.MultipleRowsHelper)`
@@ -20109,6 +20401,32 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.DataProvider.BasicBulkCopy.GetMultipleRowsSuffix(LinqToDB.Data.BulkCopyOptions)`
 - Kind: Method
 - Summary: Returns an optional SQL suffix appended after the INSERT ... VALUES statement in MultipleRows bulk copy mode. Override in provider-specific bulk copy classes to append clauses such as ON CONFLICT DO NOTHING.
+
+## LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks from the nanosecond timestamps, divided by a hundred.
+- Remarks: linq2db maps date/time values to DateTime64(7), which is a tick exactly, so every nanosecond value here is a whole multiple of a hundred and the division is exact. date_diff is not used because its finest unit is the second. Nanoseconds in an reach from 1678 to 2262, narrower than what a DateTime64(7) column itself holds. That is the same boundary the millisecond form of DateAdd already works within on this provider. The span between two of them is narrower still, because the subtraction is taken in nanoseconds as well: two endpoints inside that window can differ by more than an holds, so the usable span is about 292 years rather than the 584 the endpoints cover. ClickHouse wraps instead of raising, so a wider difference comes back as a plausible-looking wrong number.
+
+## LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: NTILE alone, and by way of the frame rather than the ordering: unordered, the window defaults to a frame ClickHouse will not accept for it (Unsupported window frame type for function 'NTILE'). Giving it a sort key restores the default frame it wants.
+
+## LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.LowerTemporalArithmetic
+
+- XML member: `M:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+- Summary: Shifts by the interval expressed in nanoseconds, the unit that matches what a tick is.
+- Remarks: toIntervalNanosecond takes an expression, so the count needs no decomposition. Scaling ticks up by a hundred caps the amount at long.MaxValue / 100 - about 292 years, far short of what a TimeSpan holds, but past any span these timestamps measure exactly: above carries the same ceiling, and for the same reason.
+
+## LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.TruncateDivide
+
+- XML member: `M:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: intDiv, because ClickHouse's / produces a float even between two integers.
 
 ## LinqToDB.Internal.DataProvider.DataProviderBase.CreateDmlService
 
@@ -20207,6 +20525,19 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Improved version of Replace("[", "[[]") code, used before.
 
+## LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks summed from the three fields a DB2 timestamp decomposes into.
+- Remarks: TIMESTAMPDIFF is documented as an estimate - it assumes months of thirty days - so it cannot answer this. A timestamp is a whole number of days plus seconds since midnight plus microseconds, and each field's difference is exact, so their sum is the exact elapsed time. This is the same decomposition the provider's DateDiff lowering already uses.
+
+## LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: Every ranking function, NTILE, and LAG/LEAD - all of them SQL0104N ... Expected tokens may include: "ORDER BY" - plus any frame, which is SQL20117N A window specification for an OLAP function is not valid on its own. ROW_NUMBER and the *_VALUE pair are fine unordered, and so is an unframed aggregate.
+
 ## LinqToDB.Internal.DataProvider.DmlServiceBase.HResultMatches
 
 - XML member: `M:LinqToDB.Internal.DataProvider.DmlServiceBase.HResultMatches(System.Exception,System.Int32)`
@@ -20243,6 +20574,25 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Returns the sequence name used for identity columns: {tableName}_{fieldName}_seq. Must match across CreateTable, CreateTableFieldType, and TruncateTable.
 
+## LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks from date_diff at microsecond resolution.
+- Remarks: A DuckDB timestamp holds microseconds, so the count is exact and scaling it to ticks - ten of them to the microsecond - loses nothing. Taken through the count rather than DuckDB's own INTERVAL, because an interval carries months and days alongside the microseconds and only the count is a single number.
+
+## LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.LowerTemporalArithmetic
+
+- XML member: `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+- Summary: Shifts by an interval built from the microsecond count, which is what DuckDB stores.
+
+## LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.TruncateDivide
+
+- XML member: `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: //, DuckDB's integer division - its / produces a double even between two integers.
+
 ## LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlOptimizer.InlineParametersInOutputClause
 
 - XML member: `M:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlOptimizer.InlineParametersInOutputClause(LinqToDB.Internal.SqlQuery.SqlStatement)`
@@ -20260,6 +20610,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlBuilder.IsValidIdentifier(System.String)`
 - Kind: Method
 - Summary: Check if identifier is valid without quotation. Expects non-zero length string as input.
+
+## LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks from DATEDIFF at millisecond resolution, which Firebird answers with one decimal place.
+- Remarks: That tenth of a millisecond is exactly what a Firebird timestamp stores - its resolution is a hundred microseconds - so scaling the count to ticks loses nothing, and the scaled value is always whole. Every version comes through here, including 2.5 - this class is what FirebirdSqlOptimizer builds, and the later ones derive from it - so the count is taken at whatever fidelity the version offers rather than being asked for by version. From 3 on the answer carries that tenth and is exact against what the timestamp stores. On 2.5 it is truncated to a whole millisecond, which is what below declares.
 
 ## LinqToDB.Internal.DataProvider.Firebird.Translation.FirebirdMemberTranslator.TranslateGuidToString
 
@@ -20289,6 +20646,19 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Check if identifier is valid without quotation. Expects non-zero length string as input.
 
+## LinqToDB.Internal.DataProvider.Informix.InformixSqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Informix.InformixSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: The ntile, lead, lag and ranking window functions require window order, and a frame separately reports The window frame extent specification requires window order clause. ROW_NUMBER and the *_VALUE pair are not counted as ranking functions here, and an unframed aggregate is free.
+
+## LinqToDB.Internal.DataProvider.Informix.InformixSqlOptimizer.WrapParameters<T>
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Informix.InformixSqlOptimizer.WrapParameters``1(``0,LinqToDB.Internal.SqlQuery.Visitors.VisitMode)`
+- Kind: Method
+- Parameters:
+  - `visitMode`: Must match ownership of . is correct only when the caller owns it (the path); a caller running inside a Transform-mode convert must pass . The wrap puts a cast around the parameter usage, and under writes it into the parent node in place - on a Transform pass that parent is the cached statement's own node.
+
 ## LinqToDB.Internal.DataProvider.IQueryParametersNormalizer.Normalize
 
 - XML member: `M:LinqToDB.Internal.DataProvider.IQueryParametersNormalizer.Normalize(System.String)`
@@ -20297,6 +20667,32 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `originalName`: Original parameter name.
 - Returns: Normalized parameter name.
+
+## LinqToDB.Internal.DataProvider.MySql.MariaDBSqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.DataProvider.MySql.MariaDBSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: The ranking functions and LAG/LEAD need an ORDER BY here - No order list in window specification for 'rank'. ROW_NUMBER, NTILE, the *_VALUE pair and framed aggregates are left alone, and MySQL proper - which takes a bare OVER () for every window function - keeps the base's answer of no requirement at all.
+
+## LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks from TIMESTAMPDIFF at microsecond resolution.
+- Remarks: A microsecond is the finest unit MySQL stores, so the count is exact and scaling it to ticks - ten of them to the microsecond - loses nothing. The result is a BIGINT of microseconds, which runs out far beyond any range can hold.
+
+## LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.LowerTemporalArithmetic
+
+- XML member: `M:LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+- Summary: Shifts through DATE_ADD at microsecond resolution - the interval's own unit here.
+- Remarks: The amount is an expression rather than a literal, and MySQL takes it as written, so the whole tick count converts in one step with no decomposition into coarser units.
+
+## LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.TruncateDivide
+
+- XML member: `M:LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: DIV, because MySQL's / is a decimal division even between two integers.
 
 ## LinqToDB.Internal.DataProvider.Oracle.Oracle11SqlOptimizer.ReplaceTakeSkipWithRowNum
 
@@ -20312,6 +20708,31 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.DataProvider.Oracle.OracleSqlBuilderBase.IsValidIdentifier(System.String)`
 - Kind: Method
 - Summary: Check if identifier is valid without quotation. Expects non-zero length string as input.
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks summed field by field out of the interval two timestamps subtract to.
+- Remarks: Both operands are cast to timestamp first: subtracting Oracle date values yields a number of days instead, and a date carries no fraction of a second to lose. Field by field rather than through the day count, because that count is a floating number of days and cannot carry a tick over a long range - the same reason the existing DateDiff lowering decomposes its millisecond form. Fields of a negative interval are all negative, so the sum needs no sign handling.
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.Extract
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.Extract(System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.DbDataType)`
+- Kind: Method
+- Summary: EXTRACT as a function node. Its argument uses the standard field FROM value form, which is not a comma-separated argument list.
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: Every ranking function, plus LAG/LEAD, plus any frame - all of them ORA-30485: missing ORDER BY expression in the window specification. Unlike SQL Server, Oracle is content to leave FIRST_VALUE/LAST_VALUE unordered, and an unframed aggregate is unconstrained.
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.TruncateDivide
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: Oracle's TRUNC already is truncation toward zero, the semantic the base composes FLOOR and CEILING to reach - and Oracle spells the second one CEIL, so that composition does not even parse here.
 
 ## LinqToDB.Internal.DataProvider.PostgreSQL.NpgsqlProviderAdapter.NpgsqlBinaryImporter.Cancel
 
@@ -20338,6 +20759,60 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Remarks: Pattern:^(?<type>.*)(\\(\\d+(,\\s*\\d+)?\\))(?<suffix>.*)$ Options:RegexOptions.ExplicitCapture Explanation: ○ Match if at the beginning of the string. ○ "type" capture group. ○ Match a character other than '\n' greedily any number of times. ○ Match '('. ○ Match a Unicode digit greedily at least once. ○ Optional (greedy). ○ Match ','. ○ Match a whitespace character atomically any number of times. ○ Match a Unicode digit atomically at least once. ○ Match ')'. ○ "suffix" capture group. ○ Match a character other than '\n' greedily any number of times. ○ Match if at the end of the string or if before an ending newline.
 
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.AsTimestamp
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.AsTimestamp(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Widens a date operand to a timestamp.
+- Remarks: date - date is the one subtraction PostgreSQL answers with an integer count of days rather than an interval. A date carries no time of day, so widening it is lossless and makes the operation uniform.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.Elapsed
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.Elapsed(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: The elapsed interval, built to stand on its own wherever it is embedded.
+- Remarks: Declared with no precedence, which the builder reads as "always parenthesise". A subtraction otherwise binds tighter than an addition, so base + end - start would be emitted for base + (end - start): the same number, but a different grouping of types, and PostgreSQL has no operator adding one timestamp to another.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Ticks summed field by field out of the interval, rather than from its epoch.
+- Remarks: EXTRACT(EPOCH ...) is the obvious form and the wrong one: it returns a double before PostgreSQL 14, whose spacing grows past a tick over a range of decades. Every other field is bounded - seconds stay below sixty - so a double carries them exactly however far apart the two timestamps are, and the day count is whole. A timestamp difference never carries months, so days are the coarsest field there is. Fields of a negative interval are all negative, so the sum needs no sign handling.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.Extract
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.Extract(System.String,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.DbDataType)`
+- Kind: Method
+- Summary: Extract as a function node rather than raw text. Its argument uses the standard field FROM value form, which is not a comma-separated argument list - the same shape the date part translation already builds.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.IntervalFromTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.IntervalFromTicks(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: A tick count as a native interval, counted in microseconds.
+- Remarks: The microsecond is what a timestamp stores, so nothing is lost that the value could have kept: dividing the ticks by ten drops only the digit PostgreSQL would have dropped on its way into the column.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerIntervalDifference
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerIntervalDifference(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: The elapsed time itself, as a native interval: PostgreSQL subtracts two date/time values into one directly, and TimeSpan is already mapped to it, so the value needs no decomposition on either side.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerIntervalPart
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerIntervalPart(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression)`
+- Kind: Method
+- Summary: Subtracting two timestamps in PostgreSQL yields a real interval, already split into days and a time of day, so the components can be read straight out of it - no boundary counting, no anchoring.
+- Remarks: The split is what makes this match the CLR: '2026-01-03 13:30' - '2026-01-01 10:00' is 2 days 03:30:00, so EXTRACT(HOUR ...) is 3 - the hours within the day, exactly what TimeSpan.Hours means - and negatives come back as -2 days -03:30:00, giving -3 as the CLR does. A constructed interval is not normalised the same way, which is why this is applied only to a difference of two timestamps. Totals go through EPOCH, which is the whole interval in seconds and needs no decomposition - PostgreSQL stores microseconds, so the double it returns carries the full stored precision. Ticks are the exception, and take the decomposition instead - see below.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerTemporalArithmetic
+
+- XML member: `M:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+- Summary: A timestamp takes an interval directly, so the shift is the operator itself.
+- Remarks: A difference lowers to a native interval here, so it is added as it stands. Every other interval arrives as a tick count, which PostgreSQL reads as an ordinary number and refuses to add to a date - so it is turned into an interval first.
+
 ## LinqToDB.Internal.DataProvider.ProviderDetectorBase<T1,T2>.ClearCache
 
 - XML member: `M:LinqToDB.Internal.DataProvider.ProviderDetectorBase`2.ClearCache`
@@ -20358,11 +20833,57 @@ Generated directly from the current package XML documentation. Use XML member id
 - Remarks: Uses cache to avoid unwanted connections to Database.
 - Returns: Detected database server/dialect version.
 
+## LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: NANO100_BETWEEN counts hundred-nanosecond units, which is a tick and is also what a SAP HANA timestamp stores, so the elapsed count needs no scaling and loses nothing.
+
+## LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: feature not supported: Function must have ORDER BY clause - for every ranking function except ROW_NUMBER, which SAP HANA is happy to leave unordered, and for the five that read a neighbouring row. A frame needs one too (Window functions must have ORDER BY clause); an unframed aggregate does not. NTH_VALUE belongs here and nowhere else - Oracle and DB2 both execute NTH_VALUE(x, 2) OVER () without complaint.
+
+## LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CountDateBoundaries
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Boundary counting through DATEDIFF, which the anchor correction turns into elapsed units.
+- Remarks: SQL CE has no wide form of DATEDIFF, so the count is a 32-bit integer and overflows about 24 days apart in milliseconds. Counting whole units keeps the number small for every unit a member asks for, and the fine count that fills in a fraction is only ever taken across a window shorter than one of those units. Only a total asked for in milliseconds spans the whole range in the fine unit, and there SQL CE raises an overflow rather than returning a wrapped value.
+
+## LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.IsRemainderable
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.IsRemainderable(LinqToDB.DbDataType)`
+- Kind: Method
+- Summary: Whether SQL CE will take a remainder of the value as it stands - "Modulo is not supported on real, float, money, and numeric data types".
+- Remarks: A column carrying a value converter is read as something its storage does not say - a duration read from a BIGINT - and the remainder is taken of what is stored, so the stored type answers here as well as the read one. Reading only the latter casts such a column to INT, which a duration in ticks overflows after a little over three minutes.
+
+## LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateDivide
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: The divisor carries an explicit BIGINT cast.
+- Remarks: SQL CE types a literal past the INT range as NUMERIC, which would make the division numeric as well - and its % rejects that type outright: "Modulo is not supported on real, float, money, and numeric data types". Naming the type keeps the division integral.
+
+## LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateRemainder
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: The same explicit BIGINT the division needs - SQL CE refuses a remainder on a numeric outright.
+
 ## LinqToDB.Internal.DataProvider.SQLite.SQLiteSchemaProvider.TypeExtractRegex
 
 - XML member: `M:LinqToDB.Internal.DataProvider.SQLite.SQLiteSchemaProvider.TypeExtractRegex`
 - Kind: Method
 - Remarks: Pattern:^(?<type>\\w+)(\\((?<facet1>\\d+)(,\\s*(?<facet2>\\d+))?\\))?$ Options:RegexOptions.ExplicitCapture Explanation: ○ Match if at the beginning of the string. ○ "type" capture group. ○ Match a word character greedily at least once. ○ Optional (greedy). ○ Match '('. ○ "facet1" capture group. ○ Match a Unicode digit greedily at least once. ○ Optional (greedy). ○ Match ','. ○ Match a whitespace character atomically any number of times. ○ "facet2" capture group. ○ Match a Unicode digit atomically at least once. ○ Match ')'. ○ Match if at the end of the string or if before an ending newline.
+
+## LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks from the Julian day difference, resolved to the millisecond.
+- Remarks: SQLite has no date type: values are text, and julianday is the only way to do arithmetic on them. It returns a double whose spacing at present-day dates is around fifty microseconds, so the millisecond it is rounded to is the finest unit that comes back exact - and it is also the resolution SQLite date arithmetic already works at, since strftime's %f emits three fractional digits and AddTicks has always lost anything below that. Rounding rather than truncating for the same reason: the true value is a whole number of milliseconds, and the error is far below half of one, so the nearest is the exact one.
 
 ## LinqToDB.Internal.DataProvider.SqlServer.SqlServer2012SqlOptimizer.AddOrderByForSkip
 
@@ -20382,11 +20903,184 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Tries to load and register spatial types using provided path to types assembly (Microsoft.SqlServer.Types). Also check https://linq2db.github.io/articles/FAQ.html#how-can-i-use-sql-server-spatial-types for additional required configuration steps.
 
+## LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: Every ranking function and every one that reads a neighbouring row - The function 'ROW_NUMBER' must have an OVER clause with ORDER BY - and any frame at all, which is Incorrect syntax near 'ROWS' without one. An unframed aggregate is exempt: SUM(x) OVER () is valid.
+
+## LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CountDateBoundaries
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Boundary counting through DATEDIFF, which the tick decomposition turns into elapsed time.
+- Remarks: The count is a 32-bit value, so asking it for milliseconds across more than about twenty-four days overflows. Nothing does: the whole part is counted in days and the millisecond count only ever spans the remainder of one, which is 86,400,000 at most.
+
 ## LinqToDB.Internal.DataProvider.Translation.ConvertContext.Constructor
 
 - XML member: `M:LinqToDB.Internal.DataProvider.Translation.ConvertContext.#ctor(LinqToDB.DataOptions)`
 - Kind: Method
 - Summary: Default implementation.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.AsDateDifference
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.AsDateDifference(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: The expression as a subtraction of two date/time values of the same type, or .
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.BoundIn
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.BoundIn(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,System.Int64,System.Boolean)`
+- Kind: Method
+- Summary: A duration operand counted in units of ticks rather than in ticks, rounded the way the comparison needs.
+- Remarks: Taking both sides to ticks makes a comparison mean the same thing on both, but it puts the arithmetic on the column - col * 10000000 > … - and a column under arithmetic cannot use its index. The same question is asked of the bare column by converting the other side instead, and the conversion is done where the value is: in the expression, before it ever becomes a parameter. Nothing is written into the statement that was not going there anyway, so a query differing only by its duration still asks its own question. A duration that lands between two representable values is not simply truncated - that would answer a different question. Which way the bound moves is what the operator decides: a column counting whole seconds is above 1.5 exactly when it is above 1, but is at least 1.5 only when it is at least 2. So > and <= take the floor and >= and < take the ceiling, and each is exact for a representable duration too, where the two agree.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.BoundInUnit
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.BoundInUnit(System.Linq.Expressions.Expression,System.Int64,System.Int64,System.Boolean)`
+- Kind: Method
+- Summary: A bound written as a count of one unit, counted in another - the column's - and rounded the way the comparison needs.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.CarriesWholeTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.CarriesWholeTicks(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Whether an operand's storage can hold a tick count as a whole number.
+- Remarks: A computed difference is a tick count already and needs nothing. A declared duration is whatever its column is, and only an integral column can carry the reconciled result back - a duration kept as money, which is how a provider without a 64-bit integer keeps one, produces a decimal that no conversion turns into a .
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.Compare
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.Compare(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.SqlPredicate.Operator,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: A comparison between two durations, reading one that is absent the way the language reads it.
+- Remarks: Every comparison here is written as a filter, and a duration that is not there is neither above nor below anything - which is what the language says of it, and what the pair standing in for an equality has to say too: read the other way, an absent duration would come out equal to every duration asked about. The factory's shorter overloads read >= and <= the other way, for callers putting the comparison in a CASE, so the reading is stated here rather than taken.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.CountIn
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.CountIn(System.Nullable{System.TimeSpan},System.Int64,System.Boolean)`
+- Kind: Method
+- Summary: The same count for a duration that may be absent, which counts to nothing when it is.
+- Remarks: A comparison whose bound is absent has nothing to hold a row against and answers no to every one of them, which is the answer the language gives it.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.CountIn
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.CountIn(System.TimeSpan,System.Int64,System.Boolean)`
+- Kind: Method
+- Summary: The whole number of -tick units a duration is above or below, according to .
+- Remarks: A call rather than the arithmetic written into the expression, so that what reaches the statement is one value worked out beside the duration it came from. Written out, the parts a duration that may be absent needs - asking whether it is there, and choosing between two answers - are themselves things this translator is registered for, and the conversion would arrive back at itself. Decimal rather than double for the division: a tick count reaches nineteen digits and a double stops being able to tell two of them apart at sixteen.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.InDeclaredUnit
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.InDeclaredUnit(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Linq.Expressions.Expression,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags,LinqToDB.Internal.SqlQuery.SqlPredicate.Operator,System.Boolean)`
+- Kind: Method
+- Summary: A comparison asked of the bare declared column, or when the operands are not a declared duration against a value, or when the operator cannot be asked that way.
+- Remarks: Equality is asked as the two comparisons it is made of - at least the duration, and at most it - rather than built here. Those two round in the directions equality needs without being told to: at least takes the representable value above and at most the one below, so a duration the column can hold makes them meet on it, and one it cannot makes them cross over and hold nothing. That is what equality means for a column that cannot represent the duration asked about, and it is said by asking, not by deciding. A duration that may itself be absent gets the same range written in equalities instead, because a range spelled with bounds has no ends when the duration is absent and so matches nothing - where the language has an absent duration equal to a column that is absent too. Inequality is not asked this way. It is the complement of that pair, which is a disjunction - and one no index is going to walk anyway, so the column is left to scale into ticks and the comparison stays a single predicate.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IntervalResolutionOf
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IntervalResolutionOf(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: The unit an interval operand counts in, whichever of the two interval shapes it is.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IsDateDifference
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IsDateDifference(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Whether an operand is the difference between two date/time values, in either the shape it was written in or the one a projection leaves behind.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IsPresentDuration
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IsPresentDuration(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Whether the operand is a duration whose value is settled before the statement runs and cannot turn out to be absent.
+- Remarks: Only such a duration can have its equality written as a range. One that may be absent is equal to a column that is absent too, and a range spelled with bounds cannot say that.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IsUndeclaredStorage
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.IsUndeclaredStorage(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: Whether an operand is a stored value that carries no declared unit.
+- Remarks: The question separates the two things that reach here having failed to become an interval. A literal or a parameter is a real and can be counted into any unit asked of it. A column mapped through a hand-written value converter cannot: what is stored is a number the converter chose, and only a would say what it counts.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TotalInDeclaredUnit
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TotalInDeclaredUnit(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags,LinqToDB.Internal.SqlQuery.SqlPredicate.Operator,System.Boolean)`
+- Kind: Method
+- Summary: The comparison asked of the column the total was read from, or when the operands are not a declared duration's total against a number.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateDateTimeDifference
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateDateTimeDifference(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.BinaryExpression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: Translates end - start between two date/time values into an elapsed interval.
+- Remarks: Elapsed time, not a boundary count: Sql.DateDiff answers a different question and would report one hour between 10:59 and 11:01, where this reports two minutes. The existing per-provider DateDiffBuilder family implements the boundary contract and deliberately is not reused here.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalArithmetic
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalArithmetic(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.BinaryExpression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: Adds or subtracts two durations, bringing them to a common unit first.
+- Remarks: A duration lowers to the number it is stored as, and the unit that number is in lives in the column descriptor rather than in the expression. Two durations declared in different units therefore arrive here as plain numbers that are not commensurable - ninety minutes held as 1800 seconds and as 18000000000 ticks - and combining them as they stand answers with the sum of two unrelated counts, read back through whichever descriptor the walk reaches first. Both sides are taken to ticks instead, which is the representation every duration shares and the one a computed difference already carries. The result is marked as a tick count rather than left bare, so the reader builds a from it through the constructor rather than looking for a column descriptor that a computed value does not have. Operands already agreeing on a unit are left to the generic binary handling. Their stored numbers are commensurable as they are, and taking them to ticks would put a multiplication on the column and lose whatever index it has - the same reason the comparison path converts the other side rather than the column when it can.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalComparison
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalComparison(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.BinaryExpression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: Compares two durations by their tick counts rather than by the numbers they happen to be stored as.
+- Remarks: A duration lowers to its stored amount and nothing more - the unit is put back by the read path, through the column descriptor. That works for a projection and for nothing else: two durations meeting in a comparison arrive as bare numbers in whatever units they were declared with, so ninety minutes held as 1800 seconds and as 18000000000 ticks compare unequal. Both sides are taken to ticks instead, which is the one representation every duration has: a declared column converts through its unit, and an elapsed difference is a tick count already. On a provider with a native interval type this also stops the two sides having different SQL types.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalOperand
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalOperand(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: The interval a member is taken from.
+- Remarks: A date difference is built here rather than left to the registered subtraction, because a provider may be able to lower a member without being able to lower the bare difference.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalRatio
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateIntervalRatio(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.BinaryExpression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: Divides one duration by another, which asks how many of the second fit in the first.
+- Remarks: Kept apart from because the answer is not a duration: a ratio is dimensionless, so it comes back as a bare number and cannot be marked as a tick count the way a sum is. Both sides are taken to ticks and the ratio formed there, and the division is a floating one on both counts. Two durations declared in the same unit are not left to the generic handling, which is where this differs from the sum: their stored numbers are commensurable, but they are also integral, so a provider divides them as integers - fifteen minutes over thirty answered zero rather than one half. An ordinary value on either side is left alone. The generic handling writes it through the other operand's column descriptor, which puts it in that column's unit, so the two numbers already count the same thing.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateOverrideHandler
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateOverrideHandler(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: Every expression the registries did not claim passes here, which is where a comparison against a duration's total can be caught.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateTemporalArithmetic
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateTemporalArithmetic(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.BinaryExpression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: Translates date + interval and date - interval into a node that keeps the shift visible.
+- Remarks: Registered so that it is not left to the generic binary handling, which builds a plain + between the date and whatever the interval lowered to - a tick count on most providers - and a database evaluates that without complaint: SQLite reads the date as text, coerces it to a number and answers with something that still looks like a date. With the shift carried as a node the provider can lower it properly, and the optimizer can cancel it against the difference it came from.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateTotalComparison
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TranslateTotalComparison(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.BinaryExpression,LinqToDB.Linq.Translation.TranslationFlags)`
+- Kind: Method
+- Summary: A comparison between a duration's total in some unit and a number, asked of the bare declared column.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TryGetTotalUnit
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TryGetTotalUnit(System.Reflection.MemberInfo,LinqToDB.Internal.SqlQuery.SqlIntervalUnit@)`
+- Kind: Method
+- Summary: The duration unit a Total* member counts in, when the member is one.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TryMakeInterval
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.TryMakeInterval(LinqToDB.Linq.Translation.ITranslationContext,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Wraps a translated expression as an interval, provided the mapping says what unit it is stored in.
+- Remarks: Returning when no unit is declared is what keeps duration support opt-in: an undeclared column falls back to whatever it means today rather than being reinterpreted as a tick count.
+
+## LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.ValueIn
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.DateFunctionsTranslatorBase.ValueIn(LinqToDB.Linq.Translation.ITranslationContext,System.Linq.Expressions.Expression,LinqToDB.Linq.Translation.TranslationFlags,System.Int64,System.Boolean)`
+- Kind: Method
+- Summary: A operand, or one that may be absent, as a whole number of -tick units.
+- Remarks: An operand that could not be worked out leaves the comparison untranslated, which is how it is refused rather than quietly answered. One that may be absent is counted here too, and that is not a convenience. Refused, it would fall back on the conversion the column carries for reading and writing, which divides and keeps the whole part - right for storing a duration finer than the column, wrong for asking about one, since it would put the question to a duration the caller did not ask about.
 
 ## LinqToDB.Internal.DataProvider.Translation.IMemberConverter.Convert
 
@@ -20425,6 +21119,30 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Concat(LinqToDB.Linq.Translation.ISqlExpressionFactory,System.Boolean,LinqToDB.Internal.SqlQuery.ISqlExpression[])`
 - Kind: Method
 - Summary: Builds a SqlConcatExpression with the specified preserveNull semantic — preserveNull enabled for strict any-null-→-null (e.g. Sql.Concat); preserveNull disabled for null-as-empty (each operand wrapped in Coalesce(.., '') at the lowering layer; string.Concat).
+
+## LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Greater
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Greater(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Nullable{System.Boolean})`
+- Kind: Method
+- Summary: An ordering comparison, saying what an operand that is absent makes of it.
+- Remarks: There is no reading that suits every caller, which is why this is asked for rather than assumed. A comparison written as a filter wants the language's reading - a value that is not there is neither above nor below anything, so . A comparison written as the test of a often wants the opposite, because CASE reads the third answer as no and would hand back the other branch's value where the absence should have carried through; steers it to the branch that carries it. The overload without this parameter picks the second reading for >= and <= and the first for > and <. That is worth knowing before using it as a filter: taken as a filter, the second reading lets a row whose value is absent through.
+- Parameters:
+  - `unknownValue`: What the comparison answers when an operand is absent and the answer has to be one of the two - or to leave it the third thing SQL has, which a WHERE reads as no and a value position keeps as absent.
+
+## LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.GreaterOrEqual
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.GreaterOrEqual(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Nullable{System.Boolean})`
+- Kind: Method
+
+## LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Less
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.Less(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Nullable{System.Boolean})`
+- Kind: Method
+
+## LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.LessOrEqual
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Translation.SqlExpressionFactoryExtensions.LessOrEqual(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,System.Nullable{System.Boolean})`
+- Kind: Method
 
 ## LinqToDB.Internal.DataProvider.Translation.StringMemberTranslatorBase.BuildAggregateNullsOrderBy
 
@@ -20550,6 +21268,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Determines if the given exception is retryable according to YDB rules.
 
+## LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks from the microsecond count a YQL Interval casts to.
+- Remarks: Subtracting two temporal values yields an Interval, and casting one to Int64 gives the microseconds it holds - which is also the finest a YDB timestamp stores, so scaling to ticks loses nothing. The subtraction has to carry the interval type, or the cast reads as a no-op between two Int64 values and is pruned.
+
 ## LinqToDB.Internal.DataProvider.Ydb.YdbTransientExceptionDetector.ShouldRetryOn
 
 - XML member: `M:LinqToDB.Internal.DataProvider.Ydb.YdbTransientExceptionDetector.ShouldRetryOn(System.Exception,System.Boolean)`
@@ -20586,6 +21311,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.Expressions.ConvertFromDataReaderExpression.ColumnReader.RawValuePlaceholder`
 - Kind: Method
 - Summary: This method is used as placeholder, which will be replaced with raw value variable.
+
+## LinqToDB.Internal.Expressions.ExpressionEqualityComparer.CompareValues
+
+- XML member: `M:LinqToDB.Internal.Expressions.ExpressionEqualityComparer.CompareValues(System.Object,System.Object)`
+- Kind: Method
+- Summary: Compares two values by content: collections are compared item by item, so a re-evaluated collection with the same items stays equal to the recorded one. This is deliberately laxer than the comparison a constant left in the query cache key gets, which is reference equality for a collection. A queryable on either side is treated as opaque, because enumerating it may execute a query.
 
 ## LinqToDB.Internal.Expressions.ExpressionHelper.Field
 
@@ -20631,6 +21362,19 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.Expressions.ExpressionHelper.PropertyOrField(System.Type,System.String,System.Boolean)`
 - Kind: Method
 - Summary: Compared to , performs case-sensitive member search.
+
+## LinqToDB.Internal.Expressions.ExpressionHelpers.IsValueMarker
+
+- XML member: `M:LinqToDB.Internal.Expressions.ExpressionHelpers.IsValueMarker(System.Reflection.MethodInfo)`
+- Kind: Method
+- Summary: Whether the method is one of the two that say how a value should reach the statement rather than what it is - Sql.Constant and Sql.Parameter, both of which return their argument unchanged.
+
+## LinqToDB.Internal.Expressions.ExpressionHelpers.MoveValueMarkerOutside
+
+- XML member: `M:LinqToDB.Internal.Expressions.ExpressionHelpers.MoveValueMarkerOutside(System.Linq.Expressions.Expression,System.Func{System.Linq.Expressions.Expression,System.Linq.Expressions.Expression})`
+- Kind: Method
+- Summary: Moves a Sql.Constant or Sql.Parameter request outward through whatever makes of its result.
+- Remarks: The request is written around the value the caller had in hand, but what a translator ends up sending is something made from it - a duration's tick count, a duration rounded down to whole seconds. Built inside the request, that work would leave the request wrapping an argument nothing reads any more, and the caller's choice of how the value should travel would be dropped in silence. Rewriting the request around the built value keeps it on what actually reaches the statement. An expression carrying no such request is handed to unchanged, so this is safe to apply whether or not one of the two is underneath.
 
 ## LinqToDB.Internal.Expressions.ExpressionPrinter.Constructor
 
@@ -21498,6 +22242,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `left`: 
   - `right`: 
 
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ExposeExpression
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ExposeExpression(System.Linq.Expressions.Expression,LinqToDB.IDataContext,LinqToDB.Internal.Linq.Builder.ExpressionTreeOptimizationContext,System.Object[],System.Boolean,System.Boolean,System.Int32[]@)`
+- Kind: Method
+- Summary: Same as the overload without , additionally reporting which slots this pass baked into the returned tree. A caller that caches the result needs them in its key, and cannot derive them beforehand: expansion runs recursively, so a dependent position can appear only after several rewrites.
+
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.FinalizeProjection<T>
 
 - XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.FinalizeProjection``1(LinqToDB.Internal.Linq.Builder.IBuildContext,System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble}@,System.Linq.Expressions.Expression[])`
@@ -21553,6 +22303,15 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.ProcessEagerLoadingKeyedQuery(LinqToDB.Internal.Linq.Builder.IBuildContext,LinqToDB.Internal.Expressions.SqlEagerLoadExpression,System.Linq.Expressions.ParameterExpression,System.Collections.Generic.List{LinqToDB.Internal.Linq.Preamble},System.Linq.Expressions.Expression[],LinqToDB.Internal.Linq.Builder.ExpressionBuilder.EagerLoadState)`
 - Kind: Method
 - Summary: KeyedQuery strategy: joins child records to a local key collection (VALUES table) instead of re-querying the parent table. Keys are provided at runtime through a populated by a key-extraction preamble. Inner eager loads within the child query fall back to Default strategy.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RegisterExtensionAccessors
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RegisterExtensionAccessors(System.Linq.Expressions.Expression,System.Collections.Generic.HashSet{System.Linq.Expressions.Expression})`
+- Kind: Method
+- Summary: Registers extension member/arguments, which are not translated into SQL, for by-value comparison during query cache lookup. Extension builder may read such value to generate SQL, which makes it a part of the query shape.
+- Parameters:
+  - `expression`: Extension member or method call expression.
+  - `translatedToSql`: Expressions, translated into SQL while extension was built.
 
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuilder.RegisterOrderBy
 
@@ -21620,6 +22379,27 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: When the FK is not in the final projected type (stripped by a terminal Select), modifies that Select to wrap its body in KeyDetailEnvelope using the FK from the pre-projection entity parameter.
 
+## LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.CanShareOneReading
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.CanShareOneReading(LinqToDB.Internal.Expressions.SqlPlaceholderExpression,LinqToDB.Internal.Expressions.SqlPlaceholderExpression)`
+- Kind: Method
+- Summary: Refuses to bring the two answers of a conditional into a single SQL value when they are not read the same way.
+- Remarks: A CASE hands the reader one value with one conversion, which is right for both answers only while they are stored on the same terms. Two columns holding a duration in different units, or carrying different value converters, are not - collapsing them would read one through the other's conversion, which is exactly the difference the conditional was built to keep. Asking for the choice in SQL leaves nobody to make it per row, so it is refused by name instead of answered wrongly. A literal or a parameter never stands in the way: it is written through the descriptor of whatever it is being chosen against, so it arrives on those terms by construction. A computed value does not - an elapsed difference lowers to a bare tick count that carries no unit and is converted by nothing - so it stands in terms of its own and cannot share a reading with a column that carries one. Collapsing those two reads the tick count through the column's unit, which is the silent factor-of-10000000 error the declaration exists to prevent.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.CombinesDivergentStorage
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.CombinesDivergentStorage(LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,System.String@)`
+- Kind: Method
+- Summary: Whether an operator was asked to combine two stored values that do not count the same thing, and the message naming them if so.
+- Remarks: A conversion is not arithmetic on the SQL side, so an operator between two columns runs on the numbers they happen to be stored as. Where the two converters disagree about what those numbers mean the answer is neither operand's - ninety minutes held as 54000000000 ticks and as 5400 seconds add to a sum that is no duration at all - and it is then read back through whichever descriptor the walk reaches first, which is silent and wrong by whatever the two conversions differ by. Only two stored values can disagree, so an operand without a descriptor is waved through: a literal or a parameter is written through the descriptor in scope and therefore arrives on the other column's terms, which is what makes column + TimeSpan.FromMinutes(5) right today. That is narrower than , which also keeps a computed value apart from a converted column - there the two are brought into one SQL value and only one conversion can read it, while here the operator itself is what has to make sense.
+
+## LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.DeclinedForSetProjection
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.DeclinedForSetProjection(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: A projection built with — a set-operation operand, a row of an in-memory sequence, or one of the CTE-union branches an eager load builds — makes ask translators for strict SQL, so a member they cannot translate (e.g. Guid.ToString("N")) comes back as an error instead of being declined. Such a member is still projectable: each operand selects the columns it reads and the materializer computes the value, exactly as for a terminal Select. Treat the error as "not translated" so the caller falls through to the client-side path.
+- Remarks: Only where the translator would have declined had SQL not been demanded, which is what asking it a second time decides - the error alone does not say which kind of refusal it is. A refusal raised whatever the flags say is about the construct rather than about a missing SQL form, so there is no half of it left for the client side to read the operands through: swallowing one leaves the generic handling to answer with a value instead, which is what the refusal exists to stop. The second ask happens only on a path that has already failed, so the successful one is unchanged.
+
 ## LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.MappedFunctionAllowsClientCalculation
 
 - XML member: `M:LinqToDB.Internal.Linq.Builder.ExpressionBuildVisitor.MappedFunctionAllowsClientCalculation(System.Reflection.MethodInfo)`
@@ -21685,6 +22465,94 @@ Generated directly from the current package XML documentation. Use XML member id
   - `accessorFunc`: Function, which will used for retrieving current expression during cache comparison.
 - Returns: Result of execution of accessorFunc
 
+## LinqToDB.Internal.Linq.Builder.SequenceHelper.Canonicalize
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SequenceHelper.Canonicalize(System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Rewrites a conversion body so that two of them can be told apart by what they compute rather than by the nullability they were written against: the parameter becomes a shared one, and a conversion that only puts a value into or takes it out of Nullable<> is dropped.
+
+## LinqToDB.Internal.Linq.Builder.SequenceHelper.ConversionsMatch
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SequenceHelper.ConversionsMatch(System.Linq.Expressions.LambdaExpression,System.Linq.Expressions.LambdaExpression)`
+- Kind: Method
+- Summary: Whether two conversion lambdas carry the same value across, disregarding which of them speaks in terms of a nullable type.
+- Remarks: The same conversion declared on a nullable property and on a plain one produces lambdas that differ only in where Nullable<> appears - the delegate types differ, and the body carries an extra conversion to reach the declared type. Compared as they stand they are never equal, which would keep apart two columns that hold the same thing. Nulls themselves are not what is being compared here: whether a converter is prepared to see one is already settled by , and a NULL read is decided by the column's nullability rather than by the conversion.
+
+## LinqToDB.Internal.Linq.Builder.SequenceHelper.ConvertTheSameWay
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SequenceHelper.ConvertTheSameWay(LinqToDB.Mapping.IValueConverter,LinqToDB.Mapping.IValueConverter)`
+- Kind: Method
+- Summary: Whether two value converters carry a value between the model and the database on the same terms.
+- Remarks: Compared by what they do rather than by which object they are, so the same conversion declared twice counts as one: two entities that each say HasConversion(ts => ts.Ticks, v => TimeSpan.FromTicks(v)) get converters that are equal in every way except identity, and treating those as different would keep apart two columns that are interchangeable. A converter built from delegates rather than expressions holds them as opaque constants, so two of those never compare equal however alike they behave. That is the safe direction to be wrong in: the answer is used to decide whether one reading can serve both values, and "no" costs a column or a refusal while "yes" would silently read one value through the other's conversion.
+
+## LinqToDB.Internal.Linq.Builder.SequenceHelper.IsConstructorBranch
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SequenceHelper.IsConstructorBranch(System.Linq.Expressions.Expression,LinqToDB.Internal.Expressions.SqlGenericConstructorExpression@)`
+- Kind: Method
+
+## LinqToDB.Internal.Linq.Builder.SequenceHelper.IsConstructorBranch
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SequenceHelper.IsConstructorBranch(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Whether the expression projects a constructed object, seen through a Convert / ConvertChecked chain carrying no conversion operator, or a SqlAdjustTypeExpression. A set operation unifies branch projections of differing but assignable types by converting one of them, so a branch is a constructor with a conversion in front of it as often as a bare one. A TypeAs is not one of the node kinds seen through here - it is rewritten into a conversion earlier, while the projection is built.
+
+## LinqToDB.Internal.Linq.Builder.SequenceHelper.ReadTheSameWay
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SequenceHelper.ReadTheSameWay(LinqToDB.Mapping.ColumnDescriptor,LinqToDB.Mapping.ColumnDescriptor)`
+- Kind: Method
+- Summary: Whether two stored values are handed to the reader on the same terms, so one reading can serve both.
+- Remarks: A conversion is not arithmetic on the SQL side, so bringing two values that carry different ones into a single value loses the difference: whichever conversion the result is read through is right for at most one of them. Callers that only know one side decide for themselves what an unknown means - here both sides are known. The declared duration unit is compared rather than the converter derived from it: two columns declaring the same unit get equivalent converters that are not the same object. That substitution is sound because a declared unit is the only thing that can define the stored form - refuses a column that states a unit and carries a hand-written converter as well, so equal units cannot hide unequal conversions.
+
+## LinqToDB.Internal.Linq.Builder.SequenceHelper.TryCanonicalize
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SequenceHelper.TryCanonicalize(System.Linq.Expressions.Expression,System.Linq.Expressions.ParameterExpression,System.Linq.Expressions.Expression,System.Linq.Expressions.Expression@)`
+- Kind: Method
+- Summary: Rewrites a conversion body around , reporting whether the body survives it rather than throwing when it does not.
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.BranchesReadTheSameWay
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.BranchesReadTheSameWay(System.Linq.Expressions.Expression,System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Whether one column can be read for both branches, or each branch has to be read its own way.
+- Remarks: Answered from what was worked out while the branches were paired up, not from the projections in hand: by this point a branch is named by the member path it fills, and that path is the same text on both sides, so nothing here can tell a duration in seconds from one in ticks.
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.DescribeDivergentMembers
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.DescribeDivergentMembers(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: The members holds, written the way the query names them, for a refusal to quote back.
+- Remarks: A path is a sequence of constants describing how the value is reached - a marker, the constructed type, the member taken from it - repeated once per level, so the member names alone spell the reachable path and everything else is scaffolding. A projection that is a bare value carries no member at all, and there the type is all there is to say. The constructed type is skipped by asking for a property or a field rather than for a member, because is itself a and would otherwise put the generated name of an anonymous projection in front of every member it holds. A step that arrived as a member access rather than as a constant answers from the member it reads, so either spelling names the same thing.
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.IsKeptApart
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.IsKeptApart(System.Linq.Expressions.Expression[])`
+- Kind: Method
+- Summary: Whether the branches keep this member in a column each rather than meeting in one.
+- Remarks: Only reads a row as belonging to one branch. Every other set operation compares or removes rows by the values themselves, in the database, so a member the branches store on different terms is refused outright rather than split - and splitting it would change what the operation compares.
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.ReadsTheSameWay
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.ReadsTheSameWay(LinqToDB.Internal.Expressions.SqlPlaceholderExpression,LinqToDB.Internal.Expressions.SqlPlaceholderExpression)`
+- Kind: Method
+- Summary: Whether the two sides of one path store the value on the same terms.
+- Remarks: The branches meet in a single output column, so the reader applies one conversion to every row of it. That holds only while the branches agree on what the stored value means. A duration held in seconds meeting one held in ticks does not agree, and neither does a column with a value converter meeting one converted differently - reading either through the other's conversion is silently wrong, and no arithmetic on the SQL side can reconcile a conversion that is not arithmetic to begin with. The declared duration unit is compared rather than the converter derived from it: two columns declaring the same unit get equivalent converters that are not the same object.
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.RemapPathToPlaceholders
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.RemapPathToPlaceholders(System.Linq.Expressions.Expression,System.Boolean)`
+- Kind: Method
+- Summary: Replaces the member paths of a projection with the columns that carry them.
+- Remarks: Everywhere else both branches meet in one column, so both answers are the same placeholder, and the conditional a caller wraps around the two readings collapses on its own.
+- Parameters:
+  - `expression`: Projection to rewrite.
+  - `second`: Whether the projection is being read for a row that came from the second branch. It only makes a difference for a member the branches keep apart, and there it names that branch's own place.
+
+## LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.SecondBranchPath
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.SetOperationBuilder.SetOperationContext.SecondBranchPath(System.Linq.Expressions.Expression[])`
+- Kind: Method
+- Summary: The place the second branch fills for a member the branches keep apart.
+
 ## LinqToDB.Internal.Linq.Builder.TranslationModifier.IsFilterDisabled
 
 - XML member: `M:LinqToDB.Internal.Linq.Builder.TranslationModifier.IsFilterDisabled(System.Type,System.String)`
@@ -21702,6 +22570,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.Linq.Builder.TranslationModifier.WithIgnoreQueryFilters(System.Type[])`
 - Kind: Method
 - Summary: Back-compat helper. Pushes a scope {Keys = null, Types = ignoreQueryFilters} on the stack.
+
+## LinqToDB.Internal.Linq.Builder.UpdateBuilder.EnsureDeclaringType
+
+- XML member: `M:LinqToDB.Internal.Linq.Builder.UpdateBuilder.EnsureDeclaringType(System.Linq.Expressions.Expression,System.Reflection.MemberInfo)`
+- Kind: Method
+- Summary: Retypes to 's declaring type when the member is declared on a subtype of what the target currently carries.
+- Remarks: A setter may construct a type derived from the table's entity type, as in GetTable<Base>().Insert(() => new Derived { ... }); an output projection over an inheritance root carries the subtypes' columns for the same reason. Either way the member is declared on a subtype while the target carries the table's type, a pairing rejects. Retyping is enough for the column to resolve in the reported shape: the subtype's is merged into the base entity descriptor unless its member name collides with an already-merged one, and the field lookup compares members by name and declaring-type relationship rather than by the target's type. Requiring a same-or-parent relation rather than plain name equality is also what keeps two sibling-declared members of the same name from matching each other.
 
 ## LinqToDB.Internal.Linq.Builder.UpsertBuilder.BuildAsMerge
 
@@ -21779,12 +22654,15 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.Internal.Linq.ExpressionCacheManager.RegisterParameterEntry
 
-- XML member: `M:LinqToDB.Internal.Linq.ExpressionCacheManager.RegisterParameterEntry(System.Linq.Expressions.Expression,LinqToDB.Internal.Linq.ParameterCacheEntry,System.Func{System.Linq.Expressions.Expression,System.Object},System.Int32@)`
+- XML member: `M:LinqToDB.Internal.Linq.ExpressionCacheManager.RegisterParameterEntry(System.Linq.Expressions.Expression,LinqToDB.Internal.Linq.ParameterCacheEntry,System.Func{System.Linq.Expressions.Expression,System.Object},System.Boolean,System.Int32@)`
 - Kind: Method
 - Summary: Registers parameter entry in cache. Searches for duplicates and registers them.
 - Parameters:
-  - `paramExpr`: 
-  - `paramEntry`: 
+  - `paramExpr`: Expression the parameter value is read from.
+  - `paramEntry`: Cache entry being registered.
+  - `evaluator`: Evaluates an occurrence to its current value, used to confirm that two occurrences agree before they share a parameter. when no evaluator is available, in which case structurally equal occurrences are shared unchecked.
+  - `allowNameLookup`: Whether the by-parameter-path-name lookup may run. It compares occurrences that are not structurally equal, which only makes sense for scalar values.
+  - `finalParameterId`: Id of the parameter to use - an existing one when a duplicate was found, otherwise 's own.
 
 ## LinqToDB.Internal.Linq.ExpressionCacheManager.ReplaceParameterizedAndClosures
 
@@ -21795,6 +22673,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `expression`: 
   - `nonComparable`: 
   - `newParameterized`: 
+
+## LinqToDB.Internal.Linq.ExpressionCacheManager.SuggestParameterDisplayName
+
+- XML member: `M:LinqToDB.Internal.Linq.ExpressionCacheManager.SuggestParameterDisplayName(System.Linq.Expressions.Expression)`
+- Kind: Method
+- Summary: Suggests a display name for a parameter built from , taken from the member the value is read from rather than from the column it is compared against - a parameter carries a value, so it reads better named after that value's source. When the expression is not itself a member access, the walk follows the value's own spine and returns the first member access it reaches: through unary operators, into the array or container of an element read, and into the target of a parameterless GetValueOrDefault. Only that spine is walked - indices and call arguments are not - so dict[key] is named after dict. The index itself must not reach the name: it is substituted out of the query-cache key, so a cached query would carry the index of whichever call site built it first. A method call that computes a new value would give a name that describes the wrong thing - the parameter behind today.AddDays(-7) is not today - so those keep returning and are named the way they were before source-based naming existed.
 
 ## LinqToDB.Internal.Linq.Internals.ExposeQueryExpression
 
@@ -21861,6 +22745,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Returns SQL text with parameters for query.
 - Returns: Query SQL text with parameters.
 
+## LinqToDB.Internal.Linq.LinqInternalExtensions.AsLinqToDBQuery<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.LinqInternalExtensions.AsLinqToDBQuery``1(System.Linq.IQueryable{``0})`
+- Kind: Method
+- Summary: Returns linq2db query behind or , if is not a linq2db query (including queries, wrapped by implementations). Unlike it doesn't throw for a non-linq2db query and doesn't apply , as callers of this method have their own fallbacks for such queries (e.g. ).
+
 ## LinqToDB.Internal.Linq.LinqInternalExtensions.DisableFilterInternal<T>
 
 - XML member: `M:LinqToDB.Internal.Linq.LinqInternalExtensions.DisableFilterInternal``1(System.Linq.IQueryable{``0})`
@@ -21872,6 +22762,12 @@ Generated directly from the current package XML documentation. Use XML member id
   - `source`: Source query.
 - Returns: Query with disabled filters.
 
+## LinqToDB.Internal.Linq.LinqInternalExtensions.GetLinqToDBSource<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.LinqInternalExtensions.GetLinqToDBSource``1(System.Linq.IQueryable{``0},System.String)`
+- Kind: Method
+- Summary: Returns query provider for query and throws, if it is not a linq2db query. Use instead for callers that must fall back to non-linq2db behavior instead of throwing.
+
 ## LinqToDB.Internal.Linq.LinqInternalExtensions.SelectDistinct<T>
 
 - XML member: `M:LinqToDB.Internal.Linq.LinqInternalExtensions.SelectDistinct``1(System.Linq.IQueryable{``0})`
@@ -21882,6 +22778,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `source`: Source query.
 - Returns: Distinct query.
+
+## LinqToDB.Internal.Linq.LinqInternalExtensions.UnwrapQueryable<T>
+
+- XML member: `M:LinqToDB.Internal.Linq.LinqInternalExtensions.UnwrapQueryable``1(System.Linq.IQueryable{``0})`
+- Kind: Method
+- Summary: Returns query, wrapped by , if it is a query wrapper (e.g. query, returned by LoadWith or by database-specific hint methods), otherwise returns as-is.
 
 ## LinqToDB.Internal.Linq.LinqInternalExtensions.UseTableDescriptor<T>
 
@@ -22202,6 +23104,45 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Allows to add text after generated merge command. E.g. to specify command terminator if provider requires it.
 
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalDifferenceExpression
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalDifferenceExpression(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalExpression
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression)`
+- Kind: Method
+- Summary: Renders an interval that survived to the builder. There is no portable form, so the default reports the operation as unsupported; a provider with a native INTERVAL type overrides these to render it, and a provider without one lowers the node away in its SqlExpressionConvertVisitor first.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalPartExpression
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlIntervalPartExpression(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression)`
+- Kind: Method
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlParameterCastExpression
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlParameterCastExpression(LinqToDB.Internal.SqlQuery.SqlParameterCastExpression)`
+- Kind: Method
+- Summary: Renders a parameter usage that was marked as needing an explicit type. The node states no type of its own, so the type comes from ; a from there means this provider wants no cast at this position after all.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlTemporalArithmeticExpression
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetParameterCastType
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter)`
+- Kind: Method
+- Summary: Type used to render a over , or to render the parameter bare. Defaults to the parameter's own type; providers that must state exact facets override it, typically via .
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetValueBasedParameterCastType
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetValueBasedParameterCastType(LinqToDB.Internal.SqlQuery.SqlParameter)`
+- Kind: Method
+- Summary: Cast type derived from the value bound to for this execution: length from the actual string / byte[], facets from the actual decimal. A statement is re-rendered per execution whenever it carries such a cast (see BasicSqlOptimizer.IsParameterDependedElement), which is what keeps these facets correct as values change.
+
 ## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetWindowNullsPlacement
 
 - XML member: `M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.GetWindowNullsPlacement(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
@@ -22279,6 +23220,70 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dataOptions`: 
   - `mappingSchema`: 
 
+## LinqToDB.Internal.SqlProvider.IntervalLowering.Composed
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.Composed(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.SqlIntervalExpression,LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression,System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64,LinqToDB.Internal.SqlQuery.ISqlExpression},System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64,LinqToDB.Internal.SqlQuery.ISqlExpression})`
+- Kind: Method
+- Summary: The same member arithmetic written straight over the stored amount, for a column whose unit and the member's unit are whole multiples of one another - or where they are not.
+- Remarks: Ticks are the axis every unit converts through, and that is what keeps the number of conversions linear in the number of units rather than square in it. Where both ends are known the axis is a detour: seconds to hours is a division by 3600, and going by way of ticks multiplies by ten million first only to divide it back out. The detour is not merely long. The number it forms on the way is where a fine unit overflows - a column of milliseconds multiplied by ten thousand reaches what a duration holds at all - and going out to a floating type and back rounds twice where composing rounds once. Only whole multiples compose. A unit finer than a tick has a ratio that is not one, and keeps the axis, which is where its own arithmetic already lives.
+
+## LinqToDB.Internal.SqlProvider.IntervalLowering.ElapsedTotal
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.ElapsedTotal(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression,LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Nullable{LinqToDB.Internal.SqlQuery.SqlIntervalUnit},System.Func{LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression},System.Func{LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression})`
+- Kind: Method
+- Summary: The whole interval expressed in , fraction included - TotalHours and friends.
+- Remarks: Built as whole units plus the leftover, never as one division of a tick count: a century in ticks exceeds , so the undivided form is not representable at all. The leftover is measured between the anchor and the end, a window shorter than one unit, so the fine count is always small. The raw boundary count, uncorrected, for the reason the elapsed tick count gives: the leftover is measured from wherever the anchor landed, so a count that overshot by one unit comes back as a leftover of the same size pointing the other way, and the two telescope. Correcting it first would change nothing about the answer and would put the correction - three comparisons and two arithmetic terms - into the expression twice over, once as the whole part and once inside the anchor. A component is the other case and does need the correction, because there the whole number is the answer and nothing follows it to make up the difference.
+
+## LinqToDB.Internal.SqlProvider.IntervalLowering.ElapsedUnits
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.ElapsedUnits(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression,LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Func{LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression},System.Func{LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression})`
+- Kind: Method
+- Summary: Elapsed whole units between two date/time values, reproducing _ticks / TicksPerUnit without ever materialising the tick count.
+- Remarks: The provider's own difference counts crossed boundaries, so 10:59:30 to 11:01:00 reports two minutes where only one and a half elapsed. Shifting the start by that count and comparing against the end says whether it overshot, and the correction is at most one unit either way. Counting whole units cannot overflow the way a fine-grained difference over the same range does - that limit is what caps DATEDIFF(millisecond, ...) at about 24 days.
+- Parameters:
+  - `factory`: Expression factory.
+  - `difference`: The difference whose elapsed units are wanted.
+  - `unit`: Unit to count in.
+  - `countBoundaries`: Provider's DATEDIFF - boundary counting.
+  - `shiftDate`: Provider's DATEADD - must be exact.
+
+## LinqToDB.Internal.SqlProvider.IntervalLowering.FromTicks
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.FromTicks(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression,System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64,LinqToDB.Internal.SqlQuery.ISqlExpression},System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64,LinqToDB.Internal.SqlQuery.ISqlExpression})`
+- Kind: Method
+- Summary: The same member arithmetic as , over a tick count the caller already has.
+- Remarks: Where a provider can produce elapsed ticks directly, this answers every member from that one value, which is both shorter and closer to what .NET does than counting each unit separately. It is the second choice all the same: counting cannot overflow, and a fine-grained difference over a long range can.
+
+## LinqToDB.Internal.SqlProvider.IntervalLowering.LowerPart
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.LowerPart(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression,System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64,LinqToDB.Internal.SqlQuery.ISqlExpression},System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64,LinqToDB.Internal.SqlQuery.ISqlExpression})`
+- Kind: Method
+- Summary: Lowers a component or total of an interval into ordinary arithmetic.
+- Parameters:
+  - `factory`: Expression factory.
+  - `element`: Part to lower.
+  - `truncateDivide`: Integer division truncating toward zero, as the provider spells it.
+  - `truncateRemainder`: Remainder of that same division.
+
+## LinqToDB.Internal.SqlProvider.IntervalLowering.ToTicks
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.ToTicks(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.SqlIntervalExpression)`
+- Kind: Method
+- Summary: Converts an interval's stored amount to ticks, exactly.
+
+## LinqToDB.Internal.SqlProvider.IntervalLowering.TryGetWrap
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.TryGetWrap(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Nullable{LinqToDB.Internal.SqlQuery.SqlIntervalUnit},System.Int64@)`
+- Kind: Method
+- Summary: How many fit in , when the component wraps at all.
+
+## LinqToDB.Internal.SqlProvider.IntervalLowering.WrapComponent
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.IntervalLowering.WrapComponent(LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Nullable{LinqToDB.Internal.SqlQuery.SqlIntervalUnit},System.Func{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64,LinqToDB.Internal.SqlQuery.ISqlExpression})`
+- Kind: Method
+- Summary: Wraps a whole-unit count into its CLR component, mirroring TimeSpan term for term: Hours is (_ticks / TicksPerHour) % 24, and this is the % 24.
+- Remarks: Days does not wrap - a duration may legitimately exceed a year, and .NET applies no modulo to it.
+
 ## LinqToDB.Internal.SqlProvider.ISqlBuilder.BuildObjectName
 
 - XML member: `M:LinqToDB.Internal.SqlProvider.ISqlBuilder.BuildObjectName(System.Text.StringBuilder,LinqToDB.SqlQuery.SqlObjectName,LinqToDB.Internal.SqlProvider.ConvertType,System.Boolean,LinqToDB.TableOptions,System.Boolean)`
@@ -22354,6 +23359,21 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Implements conversion.
 
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CountDateBoundaries
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CountDateBoundaries(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Counts unit boundaries crossed between two date/time values - the provider's DATEDIFF.
+- Remarks: Boundary counting, not elapsed time. It is deliberately the wrong answer on its own: it is the cheap starting estimate that the anchor correction turns into the elapsed count, and being a count of whole units it cannot overflow the way a fine-grained difference over the same range would.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicks
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Elapsed ticks between two date/time values, exactly.
+- Remarks: The one quantity that has to be a tick count rather than any equivalent duration, because asks for it by name. Unlike the other members it is not a count of whole units that anchoring can correct, so a provider answers it or does not - one that cannot produce it exactly, at the resolution its own date type stores, returns rather than approximating. The default derives it from the counting primitives, so a provider that has those needs nothing more: whole elapsed days, plus the remainder counted in . Neither part can overflow - the day count is small for any range a can hold, and the remainder is measured across a window shorter than one day - which is what makes this preferable to counting the whole range in a fine unit. A provider with a single exact expression for the difference overrides it with that instead.
+- Returns: when the provider has no exact form, leaving the expression untranslated.
+
 ## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.EscapeLikePattern
 
 - XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.EscapeLikePattern(System.String)`
@@ -22363,11 +23383,109 @@ Generated directly from the current package XML documentation. Use XML member id
   - `str`: Raw pattern value.
 - Returns: Escaped pattern value.
 
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IsOrderDependentWindowFunction
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IsOrderDependentWindowFunction(System.String)`
+- Kind: Method
+- Summary: The window functions no provider will order implicitly: a rank has to know what it is ranking, and LAG/LEAD have to know which row counts as the neighbour. Every provider that enforces an ORDER BY requirement at all covers at least these.
+- Remarks: NTILE and FIRST_VALUE/LAST_VALUE are deliberately left out, because providers genuinely disagree on them: SQL Server and SAP HANA demand an ordering for all three, Oracle, DB2 and Informix for NTILE alone, ClickHouse for NTILE and nothing else, MariaDB for none of them. So is ROW_NUMBER, which answers from a provider flag. Each override adds the ones its own dialect needs.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IsWindowOrderByRequired
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IsWindowOrderByRequired(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: Whether the provider insists on an ORDER BY inside this function's OVER clause. The default is : standard SQL leaves the ordering optional, and most providers follow it.
+- Remarks: Two things are answered here. ROW_NUMBER, from the flag that already states this very thing for the row-number paging emulation. And a frame whose boundaries are read off the sort key - a GROUPS frame, or a RANGE frame with a value offset - which the standard defines in terms of that key, so every dialect enforces it and no provider may opt out. Which functions carry the requirement is another matter entirely: providers disagree, so that part is left to the overrides, and PostgreSQL, SQLite, DuckDB, Firebird, YDB and MySQL 8 add nothing at all. YDB in particular must stay that way, since it cannot parse a scalar subquery as a sort key - it is safe here only because it rejects RANGE and GROUPS frames at translation, so the frame arm below can never fire for it.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalDifference
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalDifference(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression)`
+- Kind: Method
+- Summary: Lowers End - Start into the elapsed time as a value, in whatever form the read path turns back into a .
+- Remarks: Over integral storage that form is the tick count, which is the default. A provider with a native interval type overrides this to produce one instead - the value is the same duration either way, and which representation is used is exactly the provider's business.
+- Returns: when the provider has no exact form, leaving the expression untranslated.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalPart
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerIntervalPart(LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression)`
+- Kind: Method
+- Summary: Lowers an interval part to SQL. The default uses 's integral-storage strategy; providers with a native interval type override this to use it instead.
+- Returns: when the part cannot be produced exactly, leaving it untranslated.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerTemporalArithmetic
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+- Summary: Lowers a date/time value shifted by an interval.
+- Remarks: There is no default. A provider with a native interval type applies the operator directly; one that lowered the interval to a tick count has to spend that count through its own DATEADD, whose argument is usually a 32-bit integer and so cannot take ticks in one step. Left alone, the node reaches the builder and is refused by name. That is the point of it existing: the generic binary handling would otherwise put a plain operator between a date and a number, which a database evaluates into something that still looks like a date.
+- Returns: when the provider cannot express the shift.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.NormalizeWindowOrderBy
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.NormalizeWindowOrderBy(LinqToDB.Internal.SqlQuery.SqlExtendedFunction)`
+- Kind: Method
+- Summary: Brings a window's ORDER BY to a form every dialect accepts.
+- Remarks: A sort key that holds the same value for every row orders nothing - all rows tie - so it is dropped, the same treatment gives a statement's ORDER BY. That alone settles the dialects that refuse a constant there (SQL Server and SAP HANA reject any constant; MySQL 8 reads an integer one as a legacy column position), because none of them ever sees one inside OVER. Only that ordering is rewritten here: the same node's WITHIN GROUP and KEEP order lists are built elsewhere and still carry a constant through verbatim. Dropping can empty the clause, which is a problem of its own: on some providers a ranking function needs an ORDER BY, and so does a frame. says when that is the case, and the first key the caller wrote comes back wrapped by - keeping the value, the direction and the NULLS position it was given - rather than being replaced by an invented one. Only a window that arrived with no ORDER BY at all has nothing to carry over, and that one gets a plain 1; Sql.Window.DefineWindow with only a PARTITION BY reaches a ranking function that way.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ReconcileDurationUnits
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ReconcileDurationUnits(LinqToDB.Internal.SqlQuery.SqlPredicate.InSubQuery)`
+- Kind: Method
+- Summary: Brings a membership test between two declared durations to common terms, or returns when there is nothing to reconcile.
+- Remarks: A comparison is reconciled while it is translated, because both operands are still expressions there. A membership test is not: it becomes a predicate over one expression and a sub-query, and the two numbers are then compared as they stand - 1800 against 18000000000 is the same ninety minutes written twice. Neither value is known while the query is built, so no conversion of a constant can bridge them. Both sides go to ticks rather than one side to the other's unit: converting the test down to a coarser unit would truncate it, and a duration that the column cannot represent would then match a stored value it does not equal. The sub-query is cloned before its column is rewritten unless this visitor owns it outright, the same condition applies for the same reason - it may be shared, and a statement reached through the query cache must not be edited in place.
+
 ## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues
 
 - XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.RemoveNullValues(LinqToDB.Internal.SqlQuery.SqlCoalesceExpression)`
 - Kind: Method
 - Summary: Removes NULL-literal operands from a COALESCE operand list — a literal NULL can never be the value COALESCE returns, so it is redundant. Returns the sole surviving operand when only one remains, a reduced over the survivors when several remain, or the last operand when every operand is a NULL literal. Returns unchanged when it has no NULL-literal operands. Shared so providers that fold COALESCE into a native construct (Informix Nvl, Access IIF) apply the same normalization the base does before folding; otherwise a no-op guard such as Coalesce(x, NULL) folds to Nvl(x, NULL) / IIF(x IS NULL, NULL, x) (issue #5531).
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ShiftDate
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ShiftDate(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Shifts a date/time value by a whole number of units - the provider's DATEADD.
+- Remarks: Must be exact: the anchor correction in shifts by a computed count and compares the result against the original, so an approximate shift would produce an off-by-one count.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TotalIn
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TotalIn(LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Mapping.ColumnDescriptor,LinqToDB.Mapping.DurationUnit,LinqToDB.Mapping.DurationUnit)`
+- Kind: Method
+- Summary: A declared duration counted in rather than in the unit it is stored as. Where the two are the same the count is the stored amount, and the column is left as it is.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateDivide
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateDivide(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: Integer division truncating toward zero.
+- Remarks: The default is the division itself, which is what dividing two integers means in SQL and matches CLR integer division on negatives. A provider whose division is not integral overrides it - MySQL and DuckDB return a fraction, Access has no integer division at all - and so does one whose truncation is spelled its own way.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateRemainder
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.TruncateRemainder(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int64)`
+- Kind: Method
+- Summary: Remainder of the same truncating division, which is what % means on integers in most databases and what the CLR operator means.
+- Remarks: Kept separate from because composing it out of one - as value - trunc(value / divisor) * divisor - repeats the value three times, and the components of an interval nest two of these, so the repetition multiplies. A provider whose remainder disagrees on negatives, or that spells it as a function, overrides this.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlIntervalExpression
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlIntervalExpression(LinqToDB.Internal.SqlQuery.SqlIntervalExpression)`
+- Kind: Method
+- Remarks: Over integral storage an interval is its stored amount, so the node simply disappears here. The read path turns the amount back into a through the operand's column descriptor, which reaches by looking through this node. Which makes reaching that descriptor an invariant rather than a convenience: past this point the SQL value no longer says what unit it counts, so whatever wraps or rewrites it - a cast, a function, a projection into a derived table, a branch of a set operation - has to leave the descriptor reachable from the result. Where it does not, the statement stays valid and the value is read through the wrong conversion, which is the one failure the lowering cannot see for itself. refuses this node rather than rendering its operand for the same reason: a provider that never lowered it away should say so, not quietly emit a bare number where a duration was meant.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.WrapWindowOrderByConstant
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.WrapWindowOrderByConstant(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Restates a constant window sort key as a scalar subquery, for a provider that demands an ORDER BY but refuses a constant one.
+- Remarks: (SELECT 1) is constant in value but is not a constant expression, and that is the distinction the strict dialects draw: it is the documented T-SQL spelling of "no meaningful ordering", and Oracle and SAP HANA take it too, once their builders supply the dummy FROM a table-less query needs there. Wrapping rather than substituting keeps whatever the caller passed - OrderBy(5) stays a 5, and a captured local stays the parameter it became instead of vanishing from the command. stops query optimization from folding the subquery away.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitSqlTemporalArithmeticExpression
+
+- XML member: `M:LinqToDB.Internal.SqlProvider.SqlExpressionOptimizerVisitor.VisitSqlTemporalArithmeticExpression(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression)`
+- Kind: Method
+- Summary: Cancels a shift against the difference it was built from: start + (end - start) is end.
+- Remarks: Worth doing here rather than leaving to each provider, because it removes the arithmetic entirely - the result needs no interval type, no date addition and no lowering at all, so it works even where the provider could express none of those. Both operands have to be the same expression for the terms to cancel, which is what the comparison checks.
 
 ## LinqToDB.Internal.SqlQuery.AliasesContext.GetColumnAlias
 
@@ -22519,6 +23637,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `whereClause`: 
 
+## LinqToDB.Internal.SqlQuery.QueryHelper.EnsureParameterCast
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.EnsureParameterCast(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Marks a single usage of as needing an explicit cast in the generated SQL, without touching the expression itself - so a parameter shared by several usages keeps one instance, and one DECLARE, while only the positions that need it are cast.
+- Remarks: A cast that is already there is promoted rather than wrapped: it states a type someone chose deliberately, and a second cast would render as CAST(CAST(x)), which the optimizer does not collapse (it only folds casts that are not mandatory). Mandatory is what keeps such a cast alive - through SqlExpressionOptimizerVisitor.VisitSqlCastExpression, and through DB2SqlExpressionConvertVisitor, which drops a non-mandatory cast over a same-type parameter. A bare parameter instead gets a , which has no type of its own - see that type for why.
+
 ## LinqToDB.Internal.SqlQuery.QueryHelper.EnumerateAccessibleSources
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.EnumerateAccessibleSources(LinqToDB.Internal.SqlQuery.SelectQuery)`
@@ -22564,22 +23689,30 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor
 
-- XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Collections.Generic.HashSet{LinqToDB.Internal.SqlQuery.IQueryElement})`
+- XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor(LinqToDB.Internal.SqlQuery.ISqlExpression,System.Collections.Generic.HashSet{LinqToDB.Internal.SqlQuery.IQueryElement},System.Boolean)`
 - Kind: Method
 - Summary: Returns for .
 - Parameters:
   - `expr`: Tested SQL Expression.
   - `alreadyVisitedElements`: Set of already visited elements to avoid infinite recursion.
+  - `forTyping`: What the descriptor is wanted for, which decides how much of an aggregate the walk sees through. asks how the value is read back - the converter and the unit it is stored in - and passes through any aggregate answering in its argument's terms. asks for the column whose declared type may be given to a value written down beside this expression, and stops at an aggregate that can outgrow its argument's width. Threaded through the recursion rather than tested at the top, because the aggregate need not be the outermost node: a grouped SUM is lifted into a column of the enclosing query, and the walk reaches it through that column.
 - Returns: Associated column descriptor or .
 
 ## LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptor(LinqToDB.Internal.SqlQuery.ISqlExpression)`
 - Kind: Method
-- Summary: Returns for .
+- Summary: Returns for - the column an expression's value is read from, when there is one, which is the descriptor that says how to turn what the database returns back into the member's value.
 - Parameters:
   - `expr`: Tested SQL Expression.
 - Returns: Associated column descriptor or .
+
+## LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptorForTyping
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.QueryHelper.GetColumnDescriptorForTyping(LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: The column whose declared type may be given to a value written down beside this expression, when there is one.
+- Remarks: Stricter than : a result that is merely of its argument's kind rather than one of its argument's values - a SUM - is read through the argument's column but cannot lend that column's width to anything, because the sum outgrows it.
 
 ## LinqToDB.Internal.SqlQuery.QueryHelper.GetNaturalNullsPosition
 
@@ -22842,6 +23975,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.SqlQuery.SelectQueryExtensions.get_IsTrivialFromWrapper(LinqToDB.Internal.SqlQuery.SelectQuery)`
 - Kind: Method
 
+## LinqToDB.Internal.SqlQuery.SqlArgumentDomains.ForAggregate
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.SqlArgumentDomains.ForAggregate(System.String)`
+- Kind: Method
+- Summary: The domain for , or where the argument does not describe the result.
+- Parameters:
+  - `functionName`: Name the function is built with.
+
 ## LinqToDB.Internal.SqlQuery.SqlExtensions.EnsureQuery
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.SqlExtensions.EnsureQuery(LinqToDB.Internal.SqlQuery.SqlStatement)`
@@ -22883,6 +24024,63 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Internal.SqlQuery.SqlExtensions.HasSomeModifiers(LinqToDB.Internal.SqlQuery.SqlSelectClause,System.Boolean,System.Boolean)`
 - Kind: Method
 - Summary: This is internal API and is not intended for use by Linq To DB applications. It may change or be removed without further notice.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType.Constructor
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.SqlIntervalType.#ctor(LinqToDB.Internal.SqlQuery.SqlIntervalDomain,LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Boolean)`
+- Kind: Method
+- Summary: Logical type of an interval expression: what it means, not how it is stored.
+- Remarks: Physical storage - a native INTERVAL, a BIGINT of ticks, a DECIMAL of seconds - is a separate concern, resolved from the mapping. Keeping the two apart is what lets the AST carry the intent through optimization and lower it per provider afterwards.
+- Parameters:
+  - `Domain`: Whether the interval is a fixed duration or a calendar interval.
+  - `Resolution`: Finest unit the interval can represent exactly. This is what makes precision loss computable: an operation whose exact result needs a finer unit than this cannot be translated and must be rejected rather than rounded.
+  - `IsSigned`: Whether the interval can represent negative values.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType.ForDuration
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.SqlIntervalType.ForDuration(LinqToDB.Mapping.DurationUnit,System.Boolean)`
+- Kind: Method
+- Summary: Returns the logical type of a duration stored in .
+- Parameters:
+  - `unit`: Storage unit declared by the mapping.
+  - `isSigned`: Whether the storage can hold negative values. Defaults to .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType.ToIntervalUnit
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.SqlIntervalType.ToIntervalUnit(LinqToDB.Mapping.DurationUnit)`
+- Kind: Method
+- Summary: Maps a storage unit to the corresponding interval unit. Total by construction: deliberately has no calendar members.
+- Parameters:
+  - `unit`: Storage unit declared by the mapping.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnits.IsFinerThan
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.SqlIntervalUnits.IsFinerThan(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,LinqToDB.Internal.SqlQuery.SqlIntervalUnit)`
+- Kind: Method
+- Summary: Whether is smaller than .
+- Remarks: Compared through the tick ratios rather than the enum's declaration order, so the answer stays right if a member is ever added out of order. Calendar units have no fixed tick count and are not comparable this way - the method reports for them rather than guessing.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryGetTicksRatio
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryGetTicksRatio(LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Int64@,System.Int64@)`
+- Kind: Method
+- Summary: Gets the exact ratio converting an amount in to ticks: ticks = amount * numerator / denominator.
+- Parameters:
+  - `unit`: Unit to convert from.
+  - `numerator`: Ratio numerator.
+  - `denominator`: Ratio denominator, always positive.
+- Returns: for calendar units, whose elapsed length depends on the point in time they are applied to and therefore has no fixed tick count. Callers must reject rather than approximate those.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryToTicks
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.SqlIntervalUnits.TryToTicks(System.Int64,LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Int64@)`
+- Kind: Method
+- Summary: Converts an amount expressed in to ticks, exactly.
+- Parameters:
+  - `amount`: Amount in units.
+  - `unit`: Unit is expressed in.
+  - `ticks`: Resulting tick count.
+- Returns: when the unit is a calendar unit, or when the result overflows . A silent wrap here would be a wrong duration, so overflow is a failure, not a value.
 
 ## LinqToDB.Internal.SqlQuery.SqlPredicate.ExprExpr.Reduce
 
@@ -23036,6 +24234,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Visits list of query elements.
 - Returns: Return value depends on value: when is ;: returns input list instance;: returns input list instance, could contain inplace list item replacements;: returns new list instance when there were changes to list items; otherwise returns original list.
 
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitInListValues
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitInListValues(LinqToDB.Internal.SqlQuery.SqlPredicate.InList,System.Collections.Generic.List{LinqToDB.Internal.SqlQuery.ISqlExpression},LinqToDB.Internal.SqlQuery.Visitors.VisitMode)`
+- Kind: Method
+- Summary: Visit of the value list of an IN predicate. The values are a different position from the tested expression - a visitor that must treat them differently overrides this rather than the whole predicate.
+
 ## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitListOfArrays<T>
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitListOfArrays``1(System.Collections.Generic.List{``0[]},LinqToDB.Internal.SqlQuery.Visitors.VisitMode)`
@@ -23049,6 +24253,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Visits list of list of query elements.
 - Returns: Return value depends on value: when is ;: returns input list instance;: returns input list instance, could contain inplace list item replacements;: returns new list instance when there were changes to list items; otherwise returns original list.
+
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSkip
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSkip(LinqToDB.Internal.SqlQuery.SqlSelectClause,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Visit of the SKIP modifier of a select clause. See .
 
 ## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlColumnExpression
 
@@ -23080,11 +24290,41 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Method
 - Summary: Visitor for .
 
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExtendedFunctionPartition
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlExtendedFunctionPartition(LinqToDB.Internal.SqlQuery.SqlExtendedFunction,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Visit of a single PARTITION BY item of . Unlike ORDER BY items, which are and get their own visitor, partition items are plain expressions — this hook gives derived visitors the owning function as context.
+
 ## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFieldReference
 
 - XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitSqlFieldReference(LinqToDB.Internal.SqlQuery.SqlField)`
 - Kind: Method
 - Summary: Visitor for reference from query expressions.
+
+## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitTake
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor.VisitTake(LinqToDB.Internal.SqlQuery.SqlSelectClause,LinqToDB.Internal.SqlQuery.ISqlExpression)`
+- Kind: Method
+- Summary: Visit of the TAKE modifier of a select clause. A modifier is not a value position, so a visitor that must treat it differently from a column expression overrides this instead of the whole clause.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.AllowDerivedSetColumns
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.AllowDerivedSetColumns(LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Whether an outer projection over may be pushed down into its legs at the cost of repeating the expression once per leg. Only the body of a recursive CTE asks for it: SQL forbids the self-reference from sitting inside a derived table, so a wrapping projection there is not merely redundant - it makes the statement invalid ("circular reference" on SQLite, and its equivalents elsewhere), and the wrapper has to go even when folding it duplicates work. Everywhere else the wrapper renders fine and is cheaper than N copies of the expression, so derivation stays off. Keyed on the enclosing recursive clause rather than on plus a separate "is recursive" flag: a single field carries both facts, so they cannot disagree about which clause the reference is tested against.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.BuildSetLegExpression
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.BuildSetLegExpression(LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.SelectQuery,System.Collections.Generic.Dictionary{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32},System.Collections.Generic.IReadOnlyList{LinqToDB.Internal.SqlQuery.SqlColumn})`
+- Kind: Method
+- Summary: Rewrites for one leg of a set operation: every read of a column becomes the expression projects at the same position. Returns when the leg is too narrow to supply one of them.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.CanDeriveFromSetColumns
+
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.CanDeriveFromSetColumns(LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.SelectQuery)`
+- Kind: Method
+- Summary: Tests whether - an outer projection with no matching column in - can be recomputed inside each leg of that set operation. It must read nothing but 's own columns, which every leg supplies at the same position, and must not be sensitive to what it is evaluated over: an aggregate, a window function or a subquery means something different per leg than it does over the whole union.
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.CorrectLeftJoins
 
@@ -23132,9 +24372,9 @@ Generated directly from the current package XML documentation. Use XML member id
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryReorderSetColumns
 
-- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryReorderSetColumns(System.Collections.Generic.Dictionary{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32},LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SetOperation)`
+- XML member: `M:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.TryReorderSetColumns(System.Collections.Generic.Dictionary{LinqToDB.Internal.SqlQuery.ISqlExpression,System.Int32},LinqToDB.Internal.SqlQuery.SelectQuery,LinqToDB.Internal.SqlQuery.SetOperation,System.Boolean)`
 - Kind: Method
-- Summary: Reorders (and, for , trims/augments) the columns of and every one of its legs so that column i corresponds to the expression whose target position is i in . Returns — leaving the query untouched — when the requested layout cannot be realized: a target expression is missing from and the operation forbids synthesis (non-UnionAll) or the expression is not a constant;a leg has fewer columns than for a non-UnionAll operation (legs must be aligned). Runs in O(N + M·L) where N is the setQuery column count, M is the target column count, and L is the number of set-operator legs — linear per column, no in-place shuffling.
+- Summary: Reorders (and, for , trims/augments) the columns of and every one of its legs so that column i corresponds to the expression whose target position is i in . Returns — leaving the query untouched — when the requested layout cannot be realized: a target expression is missing from and the operation forbids synthesis (non-UnionAll) or the expression is neither a constant nor, when is set, derivable from the legs;a leg has fewer columns than for a non-UnionAll operation (legs must be aligned);a leg is too short to hold a position that resolved to an existing column — for any operation, since widening the leg would make it read a column of a sibling query;a derived position reads a column that one of the legs does not project at the same index. Runs in O(N + M·L) where N is the setQuery column count, M is the target column count, and L is the number of set-operator legs — linear per column, no in-place shuffling.
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SqlQueryColumnOptimizerVisitor.Constructor
 
@@ -23520,6 +24760,20 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Forces expression cache to compare expressions by value, not by reference.
 - Parameters:
   - `expression`: 
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.Constructor
+
+- XML member: `M:LinqToDB.Linq.Translation.TranslationProviderFlags.#ctor(LinqToDB.Internal.SqlQuery.NullsDefaultOrdering,System.Boolean,System.Boolean,System.Boolean,System.Boolean,LinqToDB.Internal.SqlQuery.SqlIntervalUnit,System.Boolean)`
+- Kind: Method
+- Summary: Initializes a new .
+- Parameters:
+  - `defaultNullsOrdering`: The provider's natural NULL placement when no NULLS FIRST/NULLS LAST is specified.
+  - `isNullsOrderingSupported`: Whether the provider supports the NULLS FIRST/NULLS LAST keyword in ORDER BY.
+  - `canLowerIntervalDifference`: Whether an elapsed date difference can be lowered to a value.
+  - `canLowerIntervalPart`: Whether a member of an elapsed date difference can be lowered.
+  - `canLowerIntervalShift`: Whether a date shifted by an interval can be lowered.
+  - `intervalResolution`: The finest unit the provider can resolve when measuring elapsed time.
+  - `canMeasureDifferenceInTicks`: Whether an elapsed date difference can become a tick count.
 
 ## LinqToDB.Linq.Translation.TranslationProviderFlags.Constructor
 
@@ -26860,7 +28114,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutput``2(LinqToDB.Linq.IUpdatable{``0},System.Linq.Expressions.Expression{System.Func{``0,``0,``1}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement for an already configured query. Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `T`: Updated record type.
   - `TOutput`: Output record type.
@@ -26889,7 +28143,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutput``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``0}},System.Linq.Expressions.Expression{System.Func{``0,``0,``1}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement for records produced by . Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `T`: Updated record type.
   - `TOutput`: Output record type.
@@ -26919,7 +28173,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutput``3(System.Linq.IQueryable{``0},LinqToDB.ITable{``1},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1,``1,``2}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement that targets and uses as the driving query. Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `TSource`: Source query record type.
   - `TTarget`: Target table mapping type.
@@ -26936,7 +28190,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutput``3(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1,``1,``2}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement that targets the row selected by and uses as the driving query. Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `TSource`: Source query record type.
   - `TTarget`: Target table mapping type.
@@ -26992,14 +28246,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``2(LinqToDB.Linq.IUpdatable{``0},System.Linq.Expressions.Expression{System.Func{``0,``0,``1}},System.Threading.CancellationToken)`
 - Kind: Method
 - Summary: Obsolete: materializes into an array.
-- Remarks: This overload will be removed in version 7.
+- Remarks: This overload will be removed in version 7. Database support: SQL Server 2005+Firebird 2.5+ (doesn't support more than one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation)
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2>
 
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``2(LinqToDB.Linq.IUpdatable{``0},System.Linq.Expressions.Expression{System.Func{``0,``0,``1}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement for an already configured query. Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `T`: Updated record type.
   - `TOutput`: Output record type.
@@ -27035,14 +28289,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``0}},System.Linq.Expressions.Expression{System.Func{``0,``0,``1}},System.Threading.CancellationToken)`
 - Kind: Method
 - Summary: Obsolete: materializes into an array.
-- Remarks: This overload will be removed in version 7.
+- Remarks: This overload will be removed in version 7. Database support: SQL Server 2005+Firebird 2.5+ (doesn't support more than one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation)
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2>
 
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``2(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``0}},System.Linq.Expressions.Expression{System.Func{``0,``0,``1}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement for records produced by . Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `T`: Updated record type.
   - `TOutput`: Output record type.
@@ -27079,14 +28333,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``3(System.Linq.IQueryable{``0},LinqToDB.ITable{``1},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1,``1,``2}},System.Threading.CancellationToken)`
 - Kind: Method
 - Summary: Obsolete: materializes into an array.
-- Remarks: This overload will be removed in version 7.
+- Remarks: This overload will be removed in version 7. Database support: SQL Server 2005+Firebird 2.5+ (doesn't support more than one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation)
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2,T3>
 
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``3(System.Linq.IQueryable{``0},LinqToDB.ITable{``1},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1,``1,``2}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement that targets and uses as the driving query. Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `TSource`: Source query record type.
   - `TTarget`: Target table mapping type.
@@ -27103,14 +28357,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``3(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1,``1,``2}},System.Threading.CancellationToken)`
 - Kind: Method
 - Summary: Obsolete: materializes into an array.
-- Remarks: This overload will be removed in version 7.
+- Remarks: This overload will be removed in version 7. Database support: SQL Server 2005+Firebird 2.5+ (doesn't support more than one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation)
 
 ## LinqToDB.LinqExtensions.UpdateWithOutputAsync<T1,T2,T3>
 
 - XML member: `M:LinqToDB.LinqExtensions.UpdateWithOutputAsync``3(System.Linq.IQueryable{``0},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1}},System.Linq.Expressions.Expression{System.Func{``0,``1,``1,``2}})`
 - Kind: Method
 - Summary: Builds an UPDATE statement that targets the row selected by and uses as the driving query. Projects provider output into .
-- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
+- Remarks: Database support: SQL Server 2005+Firebird 2.5+ (prior to version 5 returns only one record; database limitation)PostgreSQL (v18+ required to access data from deleted table)SQLite 3.35+ (doesn't support old data; database limitation)DuckDB (doesn't support old data; database limitation)YDB (doesn't support old data; database limitation) Execution is deferred until enumeration and the method is terminal. Output availability and exact semantics are provider-defined.
 - Type parameters:
   - `TSource`: Source query record type.
   - `TTarget`: Target table mapping type.
@@ -27998,6 +29252,13 @@ Generated directly from the current package XML documentation. Use XML member id
   - `includingEnum`: Provides default enum conversion.
 - Returns: Expression with applied conversions.
 
+## LinqToDB.Mapping.ColumnDescriptor.CreateDurationConverter
+
+- XML member: `M:LinqToDB.Mapping.ColumnDescriptor.CreateDurationConverter(System.Type,LinqToDB.Mapping.DurationUnit)`
+- Kind: Method
+- Summary: Builds the to integral conversion implied by a declared duration unit.
+- Remarks: Writing a duration whose precision is finer than the storage unit truncates - storing 1.5 seconds in a column declared as seconds keeps 1. That is inherent to the storage the user chose, not something the conversion can avoid.
+
 ## LinqToDB.Mapping.ColumnDescriptor.GetConvertedDbDataType
 
 - XML member: `M:LinqToDB.Mapping.ColumnDescriptor.GetConvertedDbDataType`
@@ -28117,6 +29378,14 @@ Generated directly from the current package XML documentation. Use XML member id
   - `T`: Type, for which default value set.
 - Parameters:
   - `value`: Default value for specific type.
+
+## LinqToDB.Mapping.DurationAttribute.Constructor
+
+- XML member: `M:LinqToDB.Mapping.DurationAttribute.#ctor(LinqToDB.Mapping.DurationUnit)`
+- Kind: Method
+- Summary: Creates attribute instance.
+- Parameters:
+  - `unit`: Unit in which the duration is stored.
 
 ## LinqToDB.Mapping.EntityDescriptor.Constructor
 
@@ -29585,6 +30854,16 @@ Generated directly from the current package XML documentation. Use XML member id
   - `dbType`: Column type.
 - Returns: Returns current column mapping builder.
 
+## LinqToDB.Mapping.PropertyMappingBuilder<T1,T2>.HasDuration
+
+- XML member: `M:LinqToDB.Mapping.PropertyMappingBuilder`2.HasDuration(LinqToDB.Mapping.DurationUnit)`
+- Kind: Method
+- Summary: Declares that current column stores a duration, and in which unit.
+- Remarks: The unit is what makes server-side translation possible: a BIGINT column alone does not say whether it holds ticks or seconds. Without this, a column keeps its existing meaning.
+- Parameters:
+  - `unit`: Unit in which the duration is stored.
+- Returns: Returns current column mapping builder.
+
 ## LinqToDB.Mapping.PropertyMappingBuilder<T1,T2>.HasLength
 
 - XML member: `M:LinqToDB.Mapping.PropertyMappingBuilder`2.HasLength(System.Int32)`
@@ -30430,11 +31709,32 @@ Generated directly from the current package XML documentation. Use XML member id
 - Parameters:
   - `expression`: The SQL expression. Use {0},{1}... for parameters given to the method call.
 
+## LinqToDB.Sql.ExpressionAttribute.GetExpression<T>
+
+- XML member: `M:LinqToDB.Sql.ExpressionAttribute.GetExpression``1(``0,LinqToDB.IDataContext,LinqToDB.Expressions.IExpressionEvaluator,LinqToDB.Internal.SqlQuery.SelectQuery,System.Linq.Expressions.Expression,LinqToDB.Sql.ExpressionAttribute.ConvertFunc{``0})`
+- Kind: Method
+- Summary: Builds SQL for the extension member or method call.
+- Type parameters:
+  - `TContext`: Type of the context, passed to .
+- Parameters:
+  - `context`: Context, passed to on each call.
+  - `dataContext`: Data context, which query is built for.
+  - `evaluator`: Evaluator, used to calculate values of client-side expressions.
+  - `query`: Query, which the extension belongs to.
+  - `expression`: Extension member or method call expression.
+  - `converter`: Function, which translates an expression to SQL. An expression, which it translates successfully, has its value supplied to the database through a parameter, which is re-read from the query expression on every execution, or through an inlined literal, which the parameters context registers for comparison. Either way the extension does not have to make it a part of the query cache key itself. Value, which is read instead of being translated, is baked into generated SQL and has to be compared on query cache lookup - see .
+- Returns: Expression with generated SQL, or an error expression when the extension cannot be translated.
+
 ## LinqToDB.Sql.ExpressionAttribute.MatchParamRegex
 
 - XML member: `M:LinqToDB.Sql.ExpressionAttribute.MatchParamRegex`
 - Kind: Method
 - Remarks: Pattern:{(?<name>[0-9a-z_A-Z?]*)(,\\s'(?<delimiter>.*)')?} Options:RegexOptions.ExplicitCapture Explanation: ○ Match '{'. ○ "name" capture group. ○ Match a character in the set [0-9?A-Z_a-z] greedily any number of times. ○ Optional (greedy). ○ Match ','. ○ Match a whitespace character. ○ Match '\''. ○ "delimiter" capture group. ○ Match a character other than '\n' greedily any number of times. ○ Match '\''. ○ Match '}'.
+
+## LinqToDB.Sql.ExtensionAttribute.GetExpression<T>
+
+- XML member: `M:LinqToDB.Sql.ExtensionAttribute.GetExpression``1(``0,LinqToDB.IDataContext,LinqToDB.Expressions.IExpressionEvaluator,LinqToDB.Internal.SqlQuery.SelectQuery,System.Linq.Expressions.Expression,LinqToDB.Sql.ExpressionAttribute.ConvertFunc{``0})`
+- Kind: Method
 
 ## LinqToDB.Sql.FunctionAttribute.Constructor
 
@@ -30490,6 +31790,42 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.Sql.IdentityStep(System.String)`
 - Kind: Method
 - Summary: Returns identity step for specific table.
+
+## LinqToDB.Sql.ISqlExtensionBuilder.GetExpression
+
+- XML member: `M:LinqToDB.Sql.ISqlExtensionBuilder.GetExpression(System.Int32,System.Boolean,System.Nullable{System.Boolean})`
+- Kind: Method
+- Summary: Translates extension method argument to SQL.
+- Remarks: Translated argument travels to the database as a parameter, whose value is re-read from the query expression on every execution, or as a literal when is , in which case the parameters context registers the value for comparison. Either way the builder does not have to make it a part of the query cache key itself. Argument, read with or taken from instead, is baked into generated SQL by the builder, so it becomes a part of the query cache key.
+- Parameters:
+  - `index`: Argument position in the extension method call.
+  - `unwrap`: When , conversion operators are removed from the argument expression before translation.
+  - `inlineParameters`: When , argument value is rendered as a literal instead of a parameter. keeps current query setting.
+- Returns: Argument SQL or when argument cannot be translated.
+
+## LinqToDB.Sql.ISqlExtensionBuilder.GetExpression
+
+- XML member: `M:LinqToDB.Sql.ISqlExtensionBuilder.GetExpression(System.String,System.Boolean,System.Nullable{System.Boolean})`
+- Kind: Method
+- Summary: Translates extension method argument to SQL.
+- Remarks: Translated argument travels to the database as a parameter, whose value is re-read from the query expression on every execution, or as a literal when is , in which case the parameters context registers the value for comparison. Either way the builder does not have to make it a part of the query cache key itself. Argument, read with or taken from instead, is baked into generated SQL by the builder, so it becomes a part of the query cache key.
+- Parameters:
+  - `argName`: Name of the extension method parameter.
+  - `unwrap`: When , conversion operators are removed from the argument expression before translation.
+  - `inlineParameters`: When , argument value is rendered as a literal instead of a parameter. keeps current query setting.
+- Returns: Argument SQL or when argument cannot be translated.
+
+## LinqToDB.Sql.ISqlExtensionBuilder.GetValue<T>
+
+- XML member: `M:LinqToDB.Sql.ISqlExtensionBuilder.GetValue``1(System.Int32)`
+- Kind: Method
+- Remarks: Read value is baked into generated SQL by the builder, so it becomes a part of the query cache key. See for the translated-argument counterpart. Only the outermost call of a chained extension has its arguments registered, so a builder reading an argument of an inner element must mark it with to keep the value in the key.
+
+## LinqToDB.Sql.ISqlExtensionBuilder.GetValue<T>
+
+- XML member: `M:LinqToDB.Sql.ISqlExtensionBuilder.GetValue``1(System.String)`
+- Kind: Method
+- Remarks: Read value is baked into generated SQL by the builder, so it becomes a part of the query cache key. See for the translated-argument counterpart. Only the outermost call of a chained extension has its arguments registered, so a builder reading an argument of an inner element must mark it with to keep the value in the key.
 
 ## LinqToDB.Sql.NamedCollationBuilder.CollationValidationRegex
 
@@ -31920,7 +33256,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.WindowFunctionBuilder.PercentileCont``2(System.Collections.Generic.IEnumerable{``0},System.Double,System.Func{``0,LinqToDB.WindowFunctionBuilder.IOnlyOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
 - Kind: Method
 - Summary: Generates SQL PERCENTILE_CONT() ordered-set aggregate. Computes a percentile based on continuous distribution.
-- Remarks: Syntax:source.PercentileCont(fraction, (e, f) => f.OrderBy(e.Column)[.Filter(...)])May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Median = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+- Remarks: Syntax:source.PercentileCont(fraction, (e, f) => f.OrderBy(e.Column)[.Filter(...)])May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Median = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept Server-side only. To execute it outside a query, use or its async counterpart.
 
 ## LinqToDB.WindowFunctionBuilder.PercentileDisc<T>
 
@@ -31934,7 +33270,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `M:LinqToDB.WindowFunctionBuilder.PercentileDisc``2(System.Collections.Generic.IEnumerable{``0},System.Double,System.Func{``0,LinqToDB.WindowFunctionBuilder.IMultipleOrderByPart,LinqToDB.WindowFunctionBuilder.IDefinedFunction{``1}})`
 - Kind: Method
 - Summary: Generates SQL PERCENTILE_DISC() ordered-set aggregate. Returns the value at the specified percentile from the sorted set.
-- Remarks: Syntax:source.PercentileDisc(fraction, (e, f) => f.OrderBy(e.Column)[.ThenBy(...)][.Filter(...)])May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Median = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept
+- Remarks: Syntax:source.PercentileDisc(fraction, (e, f) => f.OrderBy(e.Column)[.ThenBy(...)][.Filter(...)])May not be supported by all database providers (e.g. SQLite, MySQL, ClickHouse).C# usage: var query = from t in db.Table group t by t.Dept into g select new { g.Key, Median = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.Salary)), }; Generated SQL: SELECT t.Dept, PERCENTILE_DISC(0.5) WITHIN GROUP (ORDER BY t.Salary) FROM Table t GROUP BY t.Dept Server-side only. To execute it outside a query, use or its async counterpart.
 
 ## LinqToDB.WindowFunctionBuilder.PercentRank
 
@@ -32663,7 +33999,13 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `P:LinqToDB.Data.BulkCopyOptions.MaxParametersForBatch`
 - Kind: Property
-- Summary: If set, will set the maximum parameters per batch statement. Also see .
+- Summary: If set, will set the maximum parameters per batch statement. Also see . Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped.
+
+## LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch
+
+- XML member: `P:LinqToDB.Data.BulkCopyOptions.MaxSqlLengthForBatch`
+- Kind: Property
+- Summary: If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When (the default), the provider's own limit is used. Honored by the MultipleRows copy path — , and also / on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's AlternativeBulkCopy.InsertInto mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp.
 
 ## LinqToDB.Data.BulkCopyOptions.NotifyAfter
 
@@ -34183,6 +35525,43 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Remarks: This max is based on https://support.microsoft.com/en-us/office/access-specifications-0cf3c66f-9cf2-4e32-9568-98c1025bb47c
 
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalPart
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalPart`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalShift
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanLowerIntervalShift`
+- Kind: Property
+- Remarks: Declared false although is named: the base implementation would spend the amount through DateAdd, and this provider refuses the shift outright below.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanMeasureDifferenceInTicks
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.CanMeasureDifferenceInTicks`
+- Kind: Property
+- Summary: And no tick count either, for the reason gives, which is what leaves a total below the resolution with nowhere to come from rather than merely quantised.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicksResolveMembers
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.ElapsedTicksResolveMembers`
+- Kind: Property
+- Summary: Access counts seconds, and an OLE Automation date holds fractions of one, so a tick count derived from it is only good to the second - which is why the members are counted instead.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.FinestDateUnit
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.FinestDateUnit`
+- Kind: Property
+- Summary: A second is as fine as Access counts - DateDiff has no millisecond part at all.
+- Remarks: The whole-unit members are still exact, because the anchor correction compares actual dates rather than trusting the count. What this limits is the fraction of a Total and anything below a second, which an OLE Automation date - a floating day number - could not carry reliably anyway.
+
+## LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Access.AccessSqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: A second is also as fine as the measurement resolves, so a component asked for below one is identically zero rather than merely imprecise.
+- Remarks: Access refuses such a member either way - there is no millisecond date part to extract and no tick count to divide - but where it refuses decides what a caller can do about it. Declined here, while the expression is still being built, the message names the unit and the resolution, and a projection stays free to fall back to .NET, which holds both dates and answers exactly. Left to the builder, the refusal arrives as an exception with no such escape.
+
 ## LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseProviderAdapter.DriverWrappers.InsertOptions.BatchSize
 
 - XML member: `P:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseProviderAdapter.DriverWrappers.InsertOptions.BatchSize`
@@ -34206,6 +35585,17 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseProviderAdapter.DriverWrappers.InsertOptions.UseSession`
 - Kind: Property
 - Summary: Default: null (use client settings).
+
+## LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalShift
+
+- XML member: `P:LinqToDB.Internal.DataProvider.ClickHouse.ClickHouseSqlExpressionConvertVisitor.CanLowerIntervalShift`
+- Kind: Property
+- Remarks: Lowered below without going through FinestDateUnit, which the default reads.
 
 ## LinqToDB.Internal.DataProvider.DataProviderOptions<T>.BulkCopyType
 
@@ -34242,6 +35632,42 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: This is internal API and is not intended for use by Linq To DB applications. It may change or be removed without further notice.
 
+## LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.DB2.DB2SqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: The tick count is built from MICROSECOND() scaled by ten, so it is a multiple of ten by construction and a component below the microsecond is identically zero rather than merely imprecise.
+- Remarks: Declared even though a column may be wider - timestamp(7) is what this fixture's model asks for - because what the measurement can distinguish is what the count is taken from, not what the column holds. The declined member falls back to .NET and answers from the two dates.
+
+## LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanLowerIntervalShift
+
+- XML member: `P:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanLowerIntervalShift`
+- Kind: Property
+- Remarks: Lowered below without going through FinestDateUnit, which the default reads.
+
+## LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanWrapWindowOrderByConstant
+
+- XML member: `P:LinqToDB.Internal.DataProvider.DuckDB.DuckDBSqlExpressionConvertVisitor.CanWrapWindowOrderByConstant`
+- Kind: Property
+- Summary: DuckDB takes a scalar subquery as a window sort key in general, but not inside a RANGE frame - there it fails with Serialization Error: Cannot copy BoundSubqueryExpression. It runs ORDER BY 1 RANGE BETWEEN 1 PRECEDING AND 2 FOLLOWING happily, so the caller's own key is kept.
+- Remarks: Keeping it is safe because DuckDB reads the integer as a constant expression rather than an output column position, unlike MySQL 8: ORDER BY 99 is accepted with only four columns in play, and a RANGE frame over ORDER BY 1 covers the whole partition instead of ordering by the first column. So the key ties every row exactly as the dropped constant did.
+
+## LinqToDB.Internal.DataProvider.Firebird.Firebird3SqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Firebird.Firebird3SqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: From 3 on DATEDIFF carries the tenth of a millisecond rather than truncating to a whole one, so the measurement is exact against what a TIMESTAMP stores and no member needs declining. The base class declares the millisecond for 2.5, the one version that truncates.
+
 ## LinqToDB.Internal.DataProvider.Firebird.FirebirdBulkCopy.MaxParameters
 
 - XML member: `P:LinqToDB.Internal.DataProvider.Firebird.FirebirdBulkCopy.MaxParameters`
@@ -34259,6 +35685,18 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.DataProvider.Firebird.FirebirdProviderAdapter.FbDecFloatType`
 - Kind: Property
 - Summary: FB client 7.10.0+.
+
+## LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: 2.5 truncates the count to a whole millisecond, so a component asked for below one is identically zero rather than merely imprecise, and is declined here instead. Overridden back to on , which is what the provider builds from version 3 up.
+- Remarks: Measured rather than taken from the release notes: against engine 2.5.9 and 3.0.10, a gap of 0.4 ms answers 0 and 0.4 respectively, and 1.5 ms answers 1 and 1.5. The hundred microseconds a TIMESTAMP stores has been so since 2.5 - what arrived later is the fractional DATEDIFF, and it arrived in 3.
 
 ## LinqToDB.Internal.DataProvider.IDynamicProviderAdapter.CommandType
 
@@ -34338,6 +35776,41 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Not supported by MySqlConnector prior to 2.1.0.
 
+## LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.CanLowerIntervalShift
+
+- XML member: `P:LinqToDB.Internal.DataProvider.MySql.MySqlSqlExpressionConvertVisitor.CanLowerIntervalShift`
+- Kind: Property
+- Remarks: Lowered below without going through FinestDateUnit, which the default reads.
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy.MaxParameters
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy.MaxParameters`
+- Kind: Property
+- Remarks: Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/ We subtract 1 based on possibility of provider using parameter for command.
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy.MaxSqlLength
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Oracle.OracleBulkCopy.MaxSqlLength`
+- Kind: Property
+- Remarks: Oracle publishes no fixed maximum statement length. "Logical Database Limits" only says the limit "depends on many factors, including database configuration, disk space, and memory": https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/logical-database-limits.html The previous 65535 came from Oracle 8 documentation, which no longer applies to any supported version. 393,216 characters - 384 * 1024, counted in UTF-16 characters of the generated SQL rather than in bytes, the same unit as - was chosen from measurement (2026-08, issue #5825): on Oracle 11 - the oldest supported version - and on Oracle 23, both INSERT ALL and INSERT ... SELECT FROM DUAL UNION ALL statements of inlined literals parsed and executed correctly up to 4M characters (8MB of bytes for a multi-byte payload under AL32UTF8). This value therefore keeps better than 10x headroom over what was verified, while staying in line with the other providers here and bounding the cost of a hard parse: the default Oracle path inlines literals, so every batch is a distinct statement that is parsed from scratch. Users whose database and driver accept longer statements can raise it with .
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: The operands are narrowed to six fractional digits before they are subtracted, so a component below the microsecond is identically zero rather than merely imprecise, and is declined instead.
+- Remarks: casts to with no precision, which renders as a bare timestamp - six digits - so the sub-microsecond tick cannot survive the subtraction whatever the column holds. Declaring the floor makes the member fall back to .NET, which answers it from the two dates, rather than depending on what the driver happens to round-trip.
+
 ## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLBulkCopy.MaxParameters
 
 - XML member: `P:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLBulkCopy.MaxParameters`
@@ -34349,6 +35822,17 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLBulkCopy.MaxSqlLength`
 - Kind: Property
 - Summary: Setting based on https://stackoverflow.com/a/4937695/2937845 Max is actually 2GiB, but we keep a lower number here to avoid the cost of huge statements.
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.CanLowerIntervalShift
+
+- XML member: `P:LinqToDB.Internal.DataProvider.PostgreSQL.PostgreSQLSqlExpressionConvertVisitor.CanLowerIntervalShift`
+- Kind: Property
+- Remarks: Lowered below without going through FinestDateUnit, which the default reads.
 
 ## LinqToDB.Internal.DataProvider.ReaderInfo.DataReaderType
 
@@ -34380,6 +35864,29 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Expected type (e.g. type of property in mapped entity class). For nullable value types doesn't include wrapper.
 
+## LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SapHana.SapHanaSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.FinestDateUnit
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.FinestDateUnit`
+- Kind: Property
+- Summary: DATEDIFF counts milliseconds, which is what a SQL CE datetime stores, so the leftover of a total is exact.
+
+## LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SqlCe.SqlCeSqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: The measurement stops at the millisecond as well, so a component asked for below one is identically zero rather than merely imprecise - the count it is taken from was rounded to a coarser unit first.
+- Remarks: Declared for the reason SQLite declares the same limit: declining while the expression is still being built leaves the member to .NET, which holds both dates and answers exactly. A stored difference does carry a sub-millisecond part here - a datetime counts in three-and-a-third millisecond steps - so answering zero would be a wrong number rather than a coarse one.
+
 ## LinqToDB.Internal.DataProvider.SQLite.SQLiteBulkCopy.MaxParameters
 
 - XML member: `P:LinqToDB.Internal.DataProvider.SQLite.SQLiteBulkCopy.MaxParameters`
@@ -34391,6 +35898,17 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.DataProvider.SQLite.SQLiteBulkCopy.MaxSqlLength`
 - Kind: Property
 - Remarks: Based on https://www.sqlite.org/limits.html. Since SQLite is parsed locally by the lib, we aren't worried about network congestion and keep the max.
+
+## LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: julianday returns a double, and a Julian day number today is around 2460000 - so one unit in the last place is about 47 microseconds. The millisecond is the finest quantum that survives that, whatever the column holds.
 
 ## LinqToDB.Internal.DataProvider.SqlServer.SqlServerBulkCopy.MaxParameters
 
@@ -34410,6 +35928,19 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: True when the loaded SqlClient driver dropped SqlBulkCopy support for SQL Server 2005 (Microsoft.Data.SqlClient 7.0+). The destination-table inspection statement SqlBulkCopy issues on 7.0+ uses T-SQL syntax 2005 doesn't accept, so callers should fall back to a non-SqlBulkCopy path for 2005 targets. False for System.Data.SqlClient regardless of version.
 
+## LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+- Summary: DATEDIFF_BIG arrived in 2016; earlier versions leave date subtraction to .NET.
+
+## LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.FinestDateUnit
+
+- XML member: `P:LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.FinestDateUnit`
+- Kind: Property
+- Summary: DATEDIFF_BIG counts nanoseconds, and datetime2 stores 100ns, so the leftover of a total is exact. It is only ever applied to a sub-unit window, well inside the roughly 292 years at which the nanosecond form would overflow.
+- Remarks: The nanosecond datepart arrived with datetime2 in 2008 - DATEADD on 2005 answers is not a recognized dateadd option - so that version counts in milliseconds instead, which is as fine as its own datetime resolves anyway. Version-checked here rather than overridden on the 2005 visitor, because the 2008 one derives from it and would inherit the wrong answer.
+
 ## LinqToDB.Internal.DataProvider.Sybase.SybaseBulkCopy.MaxParameters
 
 - XML member: `P:LinqToDB.Internal.DataProvider.Sybase.SybaseBulkCopy.MaxParameters`
@@ -34422,6 +35953,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Remarks: Setting is conservative based on https://maxdb.sap.com/doc/7_6/f6/069940ccd42a54e10000000a1550b0/content.htm Possible to be higher in other versions.
 
+## LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+
+## LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.FinestDateUnit
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.FinestDateUnit`
+- Kind: Property
+- Summary: DATEDIFF counts milliseconds, finer than the three-and-a-third that an ASE datetime stores, so the remainder that completes an elapsed count is exact.
+
+## LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Sybase.SybaseSqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: The measurement stops there as well, so a component asked for below the millisecond is identically zero rather than merely imprecise - the count it is taken from was rounded to a coarser unit first.
+- Remarks: Declared for the reason SQLite declares the same limit: declining while the expression is still being built leaves the member to .NET, which holds both dates and answers exactly. The three-and-a-third millisecond step above is what makes a stored difference carry a sub-millisecond part at all, so answering zero would be a wrong number rather than a coarse one.
+
 ## LinqToDB.Internal.DataProvider.Translation.ConvertContext.DataOptions
 
 - XML member: `P:LinqToDB.Internal.DataProvider.Translation.ConvertContext.DataOptions`
@@ -34432,6 +35981,11 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.DataProvider.Translation.IConvertContext.DataOptions`
 - Kind: Property
 - Summary: Data options for the current query/conversion.
+
+## LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
 
 ## LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.SupportsNullInColumn
 
@@ -34695,12 +36249,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Set by .Update(v => v.When((t, s) => cond)).
 
+## LinqToDB.Internal.Linq.Builder.Visitors.ExposeExpressionVisitor.MaterializedArgumentSlots
+
+- XML member: `P:LinqToDB.Internal.Linq.Builder.Visitors.ExposeExpressionVisitor.MaterializedArgumentSlots`
+- Kind: Property
+- Summary: Argument-array slots whose values this pass baked into the tree. Expansion can create a position that did not exist before it ran, so a caller caching the result cannot know these up front - it has to be told which ones were used.
+
 ## LinqToDB.Internal.Linq.IExpressionQuery<T>.Expression
 
 - XML member: `P:LinqToDB.Internal.Linq.IExpressionQuery`1.Expression`
 - Kind: Property
 - Summary: Gets the LINQ expression tree that represents the current query.
 - Remarks: This expression is produced by query composition (LINQ operators) and is used by the provider as input for translation and execution.
+
+## LinqToDB.Internal.Linq.IQueryableWrapper<T>.WrappedQuery
+
+- XML member: `P:LinqToDB.Internal.Linq.IQueryableWrapper`1.WrappedQuery`
+- Kind: Property
+- Summary: Gets wrapped query.
 
 ## LinqToDB.Internal.Linq.Preamble.IsInlined
 
@@ -34834,6 +36400,24 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: End-of-line open parentheses element. Default value: "("
 
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastDecimalNullsOnly
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastDecimalNullsOnly`
+- Kind: Property
+- Summary: Whether decimal facets are only filled in where the parameter type leaves them unset, rather than always taken from the value.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastMaxLength
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastMaxLength`
+- Kind: Property
+- Summary: Length above which renders no cast, or for no limit.
+
+## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastResolvesUndefinedType
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.ParameterCastResolvesUndefinedType`
+- Kind: Property
+- Summary: Whether resolves an undefined parameter type through the mapping schema before inspecting the value.
+
 ## LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresConstantColumnAliases
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.RequiresConstantColumnAliases`
@@ -34876,11 +36460,66 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: if it is needed to wrap join condition with ()
 
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalDifference`
+- Kind: Property
+- Summary: Whether an elapsed date difference can be lowered to a value here.
+- Remarks: Declared beside the lowering it describes, and read by the member translator through ITranslationContext.ProviderFlags. The translator has to ask before it builds anything, because a difference it does not build stays an ordinary .NET subtraction and is computed on materialisation - and by the time this visitor runs, the read expression is already bound to its columns, so there is no going back.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalPart
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalPart`
+- Kind: Property
+- Summary: Whether a member of an elapsed date difference can be lowered. Defaults to whatever the difference itself can do.
+- Remarks: Separate because one provider has only this half: Access counts elapsed units well enough to answer TotalHours, but its DateDiff is a 32-bit count that overflows once scaled to ticks, so the interval never becomes a value there.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalShift
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanLowerIntervalShift`
+- Kind: Property
+- Summary: Whether can express a date shifted by an interval at all.
+- Remarks: Read by the member translator so a declared duration added to a date is declined while the expression is still being built, rather than reaching the builder as a node nothing can render - a refusal there has no client-side fallback left. The default follows what the base implementation needs: it spends the amount through at , so a provider that names no finest unit cannot lower one. Only the declared half is declined early. A shift by a computed difference is left to be built, because start + (end - start) cancels against the difference it came from and asks the provider for nothing - refusing it here would sink a query that works everywhere.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanMeasureDifferenceInTicks
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanMeasureDifferenceInTicks`
+- Kind: Property
+- Summary: Whether an elapsed date difference can become a tick count here. Defaults to yes.
+- Remarks: A provider answering no has no way to reach a unit finer than at all: leaves it nothing to divide, and its own difference function cannot name such a unit either. Access is the case - its DateDiff is a 32-bit count that overflows once scaled to ticks. Read by the member translator, which declines to build a total in a unit finer than the resolution when this is false. Left to be built, that node reaches the SQL builder, which can only throw - and a throw there takes with it the projection's fall back to .NET, the one place the member can still be answered exactly. A total is otherwise left alone, because a coarser measurement makes one quantised rather than meaningless, which is why this is asked rather than the resolution alone.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanWrapWindowOrderByConstant
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.CanWrapWindowOrderByConstant`
+- Kind: Property
+- Summary: Whether the scalar subquery builds is parseable as a window sort key here. DuckDB is the exception: it takes one in a plain window but not inside a RANGE frame, and it accepts the bare constant there instead, so it keeps the caller's key rather than the stand-in.
+
 ## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ConcatRequiresExplicitStringCast`
 - Kind: Property
 - Summary: When (default), wraps every non-string operand in an explicit CAST(... AS VARCHAR(N)) before adding it to the concat chain. Required for providers whose concat operator is + (SQL Server pre-2025, SqlCe, Access) — SQL-standard data-type precedence would otherwise try to coerce string operands to the non-string side's type. Most providers whose final concat operator is || (PostgreSQL / Oracle / SQLite / SAP HANA / DuckDB / Firebird / DB2 / Informix / SQL Server 2025+) or CONCAT(...) function (MySQL / ClickHouse) auto-coerce non-string operands and override this to for cleaner SQL. Sybase ASE is the exception: it emits || but keeps this , since ASE requires an explicit convert() for non-character operands under both + and ||.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicksResolveMembers
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.ElapsedTicksResolveMembers`
+- Kind: Property
+- Summary: Whether is fine enough to answer the individual members, or only the difference taken as a whole. Defaults to yes.
+- Remarks: A tick count answers every member with far less SQL, but only where it resolves what the provider stores. Access counts seconds while an OLE Automation date holds fractions of one, so its count can sit a second from the truth - enough to move Hours across a boundary - and counting each unit with the correction against the actual dates stays exact there. The tick count still answers the difference itself, which has no other form.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.FinestDateUnit
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.FinestDateUnit`
+- Kind: Property
+- Summary: Finest unit this provider can count date boundaries in, used for the fractional part of a Total* member. means totals of a date difference are not supported.
+- Remarks: Only ever applied to a window shorter than one of the requested units, so it cannot overflow however far apart the two dates are - which is what makes a total expressible at all. Taking the whole difference in this unit would overflow: a century in ticks is more than holds.
+
+## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IntervalResolution
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.IntervalResolution`
+- Kind: Property
+- Summary: The finest unit this provider can actually resolve when it measures elapsed time. Defaults to - no loss.
+- Remarks: Distinct from , which names the finest unit the provider's own difference function counts in. A provider may measure elapsed time some other way and still be limited: SQLite goes through julianday, whose double holds about 47 microseconds of a Julian day number, so its measurement is rounded to the millisecond however the value is stored. Read by the member translator, which declines to build a component in a unit finer than this. Such a component is not merely less precise - it is identically zero, because the count it is taken from was rounded to a coarser unit first. Declining leaves the member to .NET, which has both dates and can answer exactly.
 
 ## LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.LikeCharactersToEscape
 
@@ -34960,6 +36599,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Indicates that provider has bug in LEFT join translator. In the following example can_be_null is always not null, which is wrong. SELECT can_be_null FROM Some LEFT JOIN 1 as can_be_null, * FROM Other ON ... As workaround translator is trying to check for nullability all projected fields. Default value: .
 
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAffectedRowsCountSupported`
+- Kind: Property
+- Summary: Provider reports the number of affected rows from INSERT / UPDATE / DELETE / MERGE execution. Used by 's UpdateOptimisticWithRefresh overloads: when the affected-row count is unreliable, so — unless the provider also supports UPDATE OUTPUT / RETURNING — the optimistic-concurrency result cannot be reported and the operation throws. Default: .
+
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAllSetOperationsSupported
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsAllSetOperationsSupported`
@@ -34996,7 +36641,7 @@ Generated directly from the current package XML documentation. Use XML member id
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsComplexJoinConditionSupported`
 - Kind: Property
-- Summary: When disabled, all conditions from INNER JOIN ON moved to WHERE except conjunction of equality predicates. FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10 -- with flag: FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 WHERE t1.field3 > 10 Default: .
+- Summary: When disabled, an AND-joined ON clause has each predicate that is not a plain equality of two non-literal expressions moved out of ON: for an INNER JOIN it goes to WHERE; for a LEFT JOIN one depending only on the outer side goes to WHERE, one depending only on the joined subtree is pushed into a wrapped derived table, and one referencing both join inputs has to stay in ON. An ON clause that is itself a disjunction is left untouched. FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10 -- with flag: FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 WHERE t1.field3 > 10 Default: .
 
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsCorrelatedSubQueryTakeSupported
 
@@ -35265,6 +36910,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Indicates support for following UPDATE syntax: UPDATE A SET ... FROM B Default (set by ): .
 
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateOutputRowsSupported
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateOutputRowsSupported`
+- Kind: Property
+- Summary: Provider's UPDATE … OUTPUT / RETURNING returns the new (post-update) values as a result set of the rows the statement actually updated — so an UPDATE matching no row returns no rows. This is narrower than "the provider has some form of UPDATE output". A provider whose RETURNING is a singleton, yielding one record whatever the statement matched, does not qualify: a zero-row update is then indistinguishable from a one-row update. Firebird before v5 behaves that way and is therefore here even though it can return new values for a matched row. Used by 's UpdateOptimisticWithRefresh overloads to read the regenerated optimistic-lock value back in the same statement, and to take the number of returned rows as the affected-row count. When the value is read with a follow-up SELECT instead, gated on . Default: .
+
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateSkipTakeSupported
 
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsUpdateSkipTakeSupported`
@@ -35348,6 +36999,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsBooleanType`
 - Kind: Property
 - Summary: Indicates that boolean type could be used as predicate without additional conversions. Default value: .
+
+## LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition
+
+- XML member: `P:LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicateInFunctionValuePosition`
+- Kind: Property
+- Summary: Indicates that provider accepts a predicate directly as a value operand of an aggregate or window function — as a function argument (COUNT(x = 1)) or as an OVER (PARTITION BY ...) key. This is narrower than : a provider may have a usable boolean type, and accept a predicate as a value in the select list, GROUP BY and ORDER BY, yet still reject it in these positions (Informix). When , such a predicate is folded into a CASE expression. It does not affect window ORDER BY / WITHIN GROUP / KEEP keys, which follow only. Default value: .
 
 ## LinqToDB.Internal.SqlProvider.SqlProviderFlags.SupportsPredicatesComparison
 
@@ -35558,6 +37215,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Type delegated to CteField; SystemType follows automatically via the base.
 
+## LinqToDB.Internal.SqlQuery.SqlExtendedFunction.ArgumentDomain
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlExtendedFunction.ArgumentDomain`
+- Kind: Property
+- Summary: How this function's result relates to the domain of its argument.
+- Remarks: Set by whoever builds the node, where the function's meaning is known, and read where a column descriptor is recovered from an expression: while it holds, the argument's column still describes the result, and the value converter that column carries still applies to it. Carried on the node so it survives renaming: keeps it, and a provider is free to spell the same function its own way.
+
 ## LinqToDB.Internal.SqlQuery.SqlExtensions.<G>$F24F25D260C9F5E3C5FAF1DA4AEA4D1A.InsertClause
 
 - XML member: `P:LinqToDB.Internal.SqlQuery.SqlExtensions.<G>$F24F25D260C9F5E3C5FAF1DA4AEA4D1A.InsertClause`
@@ -35606,11 +37270,90 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Optional predicate attached to the UPDATE branch of an upsert (e.g. the WHERE on ON CONFLICT ... DO UPDATE SET ... WHERE <cond> in PostgreSQL / SQLite, or the WHEN MATCHED AND <cond> in a MERGE-based emitter). when the upsert has no conditional update gate. Populated by UpsertBuilder from .Update(v => v.When(...)).
 
-## LinqToDB.Internal.SqlQuery.SqlParameter.NeedsCast
+## LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.End
 
-- XML member: `P:LinqToDB.Internal.SqlQuery.SqlParameter.NeedsCast`
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.End`
 - Kind: Property
-- Summary: Enable parameter wrapping with type-cast. Ignored when is .
+- Summary: Minuend - the later value in a positive result.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.IntervalType
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.IntervalType`
+- Kind: Property
+- Summary: Logical type of the produced interval.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Start
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression.Start`
+- Kind: Property
+- Summary: Subtrahend - the earlier value in a positive result.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalExpression.IntervalType
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalExpression.IntervalType`
+- Kind: Property
+- Summary: Logical type of the produced interval.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Unit
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Unit`
+- Kind: Property
+- Summary: Unit is counted in.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Value
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalExpression.Value`
+- Kind: Property
+- Summary: Scalar amount, counted in .Resolution units.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Interval
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Interval`
+- Kind: Property
+- Summary: Interval the part is taken from.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Kind
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Kind`
+- Kind: Property
+- Summary: Whether a component within an enclosing unit or the whole interval is requested.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Type
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Type`
+- Kind: Property
+- Summary: Result type - integral for , floating point for .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Unit
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Unit`
+- Kind: Property
+- Summary: Unit the result is expressed in.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Within
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression.Within`
+- Kind: Property
+- Summary: The unit a is counted within, or when it is not counted within anything - TimeSpan.Days is the whole day count and does not wrap. Meaningless for .
+- Remarks: Stated rather than implied. "The next coarser unit" cannot express the two readings the same unit has - TimeSpan.Microseconds counts within the millisecond while DATEPART(microsecond, ...) counts within the second - and it is the enclosing unit, not this one, that decides whether a component survives a coarse measurement: nanoseconds within a microsecond stay meaningful at tick resolution, because a tick is a hundred of them.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType.Domain
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalType.Domain`
+- Kind: Property
+- Summary: Whether the interval is a fixed duration or a calendar interval.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType.IsSigned
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalType.IsSigned`
+- Kind: Property
+- Summary: Whether the interval can represent negative values.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType.Resolution
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlIntervalType.Resolution`
+- Kind: Property
+- Summary: Finest unit the interval can represent exactly. This is what makes precision loss computable: an operation whose exact result needs a finer unit than this cannot be translated and must be rejected rather than rounded.
 
 ## LinqToDB.Internal.SqlQuery.SqlPredicate.ExprExpr.UnknownAsValue
 
@@ -35683,6 +37426,31 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Internal.SqlQuery.SqlTableSource.UniqueKeys`
 - Kind: Property
 - Summary: Contains list of columns that build unique key for . Used in JoinOptimizer for safely removing sub-query from resulting SQL.
+
+## LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Interval
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Interval`
+- Kind: Property
+- Summary: Interval to shift by, carrying no unit of its own.
+- Remarks: Either a , which each provider lowers into the form its own date arithmetic takes, or an amount already reduced to ticks. Never a : that one holds a number in a declared unit, and nothing downstream can recover the unit from the node it lowers to - so the translator converts it before building this one.
+
+## LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.IsSubtract
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.IsSubtract`
+- Kind: Property
+- Summary: to subtract the interval, to add it.
+
+## LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Temporal
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Temporal`
+- Kind: Property
+- Summary: Value being shifted.
+
+## LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Type
+
+- XML member: `P:LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression.Type`
+- Kind: Property
+- Summary: Result type - the temporal type of .
 
 ## LinqToDB.Internal.SqlQuery.SqlValue.Value
 
@@ -35768,11 +37536,41 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Read-only, translation-relevant subset of the provider's SQL flags (see ).
 
+## LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference
+
+- XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalDifference`
+- Kind: Property
+- Summary: Whether an elapsed date difference can be lowered to a value. Answered by the provider's SqlExpressionConvertVisitor, which owns the lowering and documents the contract.
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart
+
+- XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalPart`
+- Kind: Property
+- Summary: Whether a member of an elapsed date difference can be lowered. Separate from because a provider may have only this half.
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift
+
+- XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanLowerIntervalShift`
+- Kind: Property
+- Summary: Whether a date shifted by an interval can be lowered. Read for a shift by a declared duration only: that amount is real and nothing later removes it, so a provider that cannot spend one says so while the expression is still being built and leaves a projection free to fall back to .NET. A shift by a computed difference is built regardless, because it may cancel against the difference it came from and ask the provider for nothing at all.
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.CanMeasureDifferenceInTicks
+
+- XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.CanMeasureDifferenceInTicks`
+- Kind: Property
+- Summary: Whether an elapsed date difference can become a tick count. Where it cannot, a total asked for in a unit finer than has nowhere to come from, so the translator declines to build it and leaves the member to .NET rather than letting the SQL builder fail the whole query. A total is otherwise built: a coarser measurement quantises one without making it meaningless.
+
 ## LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering
 
 - XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.DefaultNullsOrdering`
 - Kind: Property
 - Summary: The provider's natural NULL placement when no NULLS FIRST/NULLS LAST is specified.
+
+## LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution
+
+- XML member: `P:LinqToDB.Linq.Translation.TranslationProviderFlags.IntervalResolution`
+- Kind: Property
+- Summary: The finest unit the provider can resolve when measuring elapsed time. A component asked for in a finer unit is identically zero rather than merely imprecise, so the translator declines to build it and leaves the member to .NET.
 
 ## LinqToDB.Linq.Translation.TranslationProviderFlags.IsNullsOrderingSupported
 
@@ -36241,6 +38039,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Property
 - Summary: Gets the name of the database column type.
 
+## LinqToDB.Mapping.ColumnDescriptor.DurationUnit
+
+- XML member: `P:LinqToDB.Mapping.ColumnDescriptor.DurationUnit`
+- Kind: Property
+- Summary: Gets the unit in which this column stores a duration, or when the column was not declared as a duration. See .
+- Remarks: A column without this set keeps its existing, provider-defined meaning - notably a time of day where maps to a TIME column. Duration semantics are opt-in so that existing mappings are not silently reinterpreted.
+
 ## LinqToDB.Mapping.ColumnDescriptor.EntityDescriptor
 
 - XML member: `P:LinqToDB.Mapping.ColumnDescriptor.EntityDescriptor`
@@ -36420,6 +38225,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Mapping.DefaultValue`1.Value`
 - Kind: Property
 - Summary: Gets or sets default value for specific type.
+
+## LinqToDB.Mapping.DurationAttribute.Unit
+
+- XML member: `P:LinqToDB.Mapping.DurationAttribute.Unit`
+- Kind: Property
+- Summary: Gets or sets the unit in which the duration is stored in the column.
 
 ## LinqToDB.Mapping.DynamicColumnAccessorAttribute.GetterExpression
 
@@ -36958,6 +38769,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `P:LinqToDB.Remote.RemoteDataContextBase.Options`
 - Kind: Property
 - Summary: Current DataContext LINQ options
+
+## LinqToDB.Remote.RemoteDataContextBase.OwnsClient
+
+- XML member: `P:LinqToDB.Remote.RemoteDataContextBase.OwnsClient`
+- Kind: Property
+- Summary: Whether an instance returned by belongs to its caller, which disposes it when done with it. Override to return when hands out an instance whose lifetime is managed elsewhere - a client shared by every query cannot be disposed after one of them.
 
 ## LinqToDB.SchemaProvider.ColumnSchema.ColumnName
 
@@ -37827,10 +39644,11 @@ Generated directly from the current package XML documentation. Use XML member id
   - `NotifyAfter`: Gets or sets counter after how many copied records should be called. E.g. if you set it to 10, callback will be called after each 10 copied records. To disable callback, set this option to 0 (default value).
   - `RowsCopiedCallback`: Gets or sets callback method that will be called by BulkCopy operation after each rows copied. This callback will not be used if set to 0.
   - `UseParameters`: Gets or sets whether to always use Parameters for MultipleRowsCopy. Default is false. If True, provider-specific parameter limit per batch will be used to determine the maximum number of rows per insert, Unless overridden by .
-  - `MaxParametersForBatch`: If set, will set the maximum parameters per batch statement. Also see .
+  - `MaxParametersForBatch`: If set, will set the maximum parameters per batch statement. Also see . Overrides the provider's own parameter limit in both directions, so raising it past what the driver accepts surfaces as a driver error rather than being silently clamped.
   - `MaxDegreeOfParallelism`: Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in mode.
   - `WithoutSession`: Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session. Note that session-less connections cannot be used with session-bound functionality like temporary tables.
   - `ConflictAction`: Specifies the action to take when conflicts occur during bulk copy operation. See for more details on supported databases and compatibility.
+  - `MaxSqlLengthForBatch`: If set, overrides the provider-specific limit on the length of the generated statement per batch, measured in characters of the generated SQL, not bytes. When (the default), the provider's own limit is used. Honored by the MultipleRows copy path — , and also / on providers that have no native bulk copy or whose native path declines. Within that path it is not honored by Oracle's AlternativeBulkCopy.InsertInto mode, which array-binds a single fixed-length statement, nor on Access, Informix and SAP HANA, whose mode falls back to row-by-row inserts and so never reaches the batch splitter. A batch always contains at least one row, so a value below the length of a single rendered row does not truncate: it degrades to one statement per row. Provider defaults are conservative; raise this value if your database and driver accept longer statements. A batch is also capped at rows (1000 when unset), so raising this value alone has no effect once that row cap is the binding clamp.
 
 ## LinqToDB.Data.BulkCopyType
 
@@ -37985,7 +39803,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.DataExtensions`
 - Kind: Type
 - Summary: Data context extension methods.
-- Remarks: Common metadata defaults for this API surface: method-level ai-tags elements should specify only behavior-specific fields and override defaults only when needed.
+- Remarks: Common metadata defaults for this API surface: method-level AiTags attributes should specify only behavior-specific fields and override defaults only when needed.
 
 ## LinqToDB.DataOptions
 
@@ -38864,6 +40682,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Interface, implemented by query parameter name normalization policy for specific provider/database.
 
+## LinqToDB.Internal.DataProvider.MySql.MariaDBSqlOptimizer
+
+- XML member: `T:LinqToDB.Internal.DataProvider.MySql.MariaDBSqlOptimizer`
+- Kind: Type
+- Summary: MariaDB differs from MySQL proper on window function requirements, so it gets its own convert visitor.
+- Remarks: A subclass rather than a version passed to : a remote data context builds its optimizer reflectively and accepts only a (SqlProviderFlags) or (SqlProviderFlags, DataOptions) constructor, so a version parameter would leave the type unconstructible over a LinqService connection.
+
 ## LinqToDB.Internal.DataProvider.NoopQueryParametersNormalizer
 
 - XML member: `T:LinqToDB.Internal.DataProvider.NoopQueryParametersNormalizer`
@@ -39079,6 +40904,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Default implementation of used during expression translation. Captures configuration chosen by the user so it can be copied onto the emitted .
 - Remarks: Extension methods that live under LinqToDB set provider-specific state by casting to and calling its members.
 
+## LinqToDB.Internal.Linq.Builder.DistinctByBuilder.SourceAnchorContext
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.DistinctByBuilder.SourceAnchorContext`
+- Kind: Type
+- Summary: Anchors the already-built source sequence for the ROW_NUMBER rewrite. Re-entering TryBuildSequence with a bare resolves it through first, and answers that with a reference to its own inner context — repeatedly, until the reference names the innermost table context. Everything the peeled wrappers carried is then lost (a preceding Where above all), and the OVER-clause placeholders captured against them are left dangling, which surfaces as "Table not found for '...'" at SQL-build time. The descend must not be suppressed in itself: it is what decides which query an aggregate is attached to, and short-circuiting it moves a grouping aggregate into a correlated subquery while its arguments stay bound to the outer grouped query — invalid SQL for ordered-set aggregates (PERCENTILE_DISC ... WITHIN GROUP (ORDER BY <non-grouped column>)). Hence the anchor is applied here, at the only re-entry site that hands back a reference to an already-built sequence, rather than globally.
+
 ## LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason
 
 - XML member: `T:LinqToDB.Internal.Linq.Builder.EagerLoadFallbackReason`
@@ -39184,6 +41015,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Read-only validation pass for the ImplicitCollectionLoading option. Throws when a is reached that is not inside a marker subtree — i.e. an implicit collection projection rather than an explicit LoadWith/ThenLoad load. Everything within a marker is treated as explicit, including a collection nested in a LoadWith/ThenLoad load-function's complex select (the user wrote that projection deliberately).
 
+## LinqToDB.Internal.Linq.Builder.ProjectFlags
+
+- XML member: `T:LinqToDB.Internal.Linq.Builder.ProjectFlags`
+- Kind: Type
+- Summary: Two kinds of bit in one enum. Purpose - , , , , , , , , , - is mutually exclusive: exactly one is set on any value reaching . Modifiers - , , - are independent, except that only ever accompanies , or . Neither split is expressible in the type system, so both are enforced by the LINQ2DB0004 / LINQ2DB0005 analyzer, which derives them from ExpressionBuildVisitor.GetProjectFlags - the sole producer - rather than from this comment. Adding a member here is a build error until GetProjectFlags produces it; changing which purpose carries which modifier there is not, because the reader re-derives the split from that method on every build. That analyzer applies the model to every ProjectFlags local or parameter in the assembly, not only to the values that reach . A value composed by hand out of two purpose bits therefore lies outside the model - see ProjectFlagsAnalyzer's remarks for the two such values in the tree and for the #pragma warning disable escape hatch - so check there before writing a flag conjunction over a value that did not come from GetProjectFlags.
+
 ## LinqToDB.Internal.Linq.Builder.UpsertBuilder
 
 - XML member: `T:LinqToDB.Internal.Linq.Builder.UpsertBuilder`
@@ -39195,6 +41032,12 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.Internal.Linq.ColumnReaderAttribute`
 - Kind: Type
 - Summary: Attribute specify parameter index of reader column ordinal for custom reader method that accepts reader and column ordinal parameters. This information is used by mapper builder for queries with behavior enabled. Alternative approach (when possible) is to move reading of raw value from reader to external expression and passing it to custom reader. // such helper requires attribute to work in SequentialAccess mode [ColumnReader(1)] static int GetCustomInt(DbDataReader rd, int ordinal) => int.Parse(rd.GetString(ordinal)); ReaderExpressions[...] = (rd, i) => GetCustomInt(rd, i); // such helper will work without attribute static int GetCustomInt(string value) => int.Parse(value); ReaderExpressions[...] = (rd, i) => GetCustomInt(rd.GetString(i));
+
+## LinqToDB.Internal.Linq.DependentArgumentValues
+
+- XML member: `T:LinqToDB.Internal.Linq.DependentArgumentValues`
+- Kind: Type
+- Summary: Values a compiled table's query was built from, for the arguments its expression materialises. The cache key is compared through the tuple's per-field default comparer, which would compare an array by reference - hence a holder rather than the array itself. Values compare element-wise and recursively; SqlQueryDependentAttribute.ObjectsEqual compares a sequence's elements with the non-recursive object.Equals, so it is the looser of the two - the difference can only cost an extra miss here, never a false match.
 
 ## LinqToDB.Internal.Linq.EagerEvaluationAttribute
 
@@ -39216,6 +41059,14 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: LINQ query object represented by a LINQ expression tree and executed by a LinqToDB query provider.
 - Remarks: is a composable query description: it implements / and carries the LINQ that represents the current query. Deferred execution: building/composing the query does not execute it. Translation and execution happen only when the query is enumerated or explicitly materialized (sync or async) by the underlying provider. Execution boundary: the associated provider translates the expression tree into an internal SQL AST, then generates provider-specific SQL text, executes it, and materializes results. Async support: enables asynchronous execution paths for the same query.
+
+## LinqToDB.Internal.Linq.IQueryableWrapper<T>
+
+- XML member: `T:LinqToDB.Internal.Linq.IQueryableWrapper`1`
+- Kind: Type
+- Summary: Implemented by implementations, which wrap another query to add extra query-building functionality (e.g. queries, returned by LoadWith or database-specific hint methods). Provides access to wrapped query, so query consumers could detect linq2db query behind the wrapper.
+- Type parameters:
+  - `TSource`: Query element type.
 
 ## LinqToDB.Internal.Linq.QueryCache
 
@@ -39310,6 +41161,13 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: How the IGNORE NULLS modifier of a value/offset window function is emitted relative to the argument list.
 
+## LinqToDB.Internal.SqlProvider.IntervalLowering
+
+- XML member: `T:LinqToDB.Internal.SqlProvider.IntervalLowering`
+- Kind: Type
+- Summary: Default lowering of interval nodes onto integral storage: the strategy used when a provider has no native interval type, or has one but the column is not mapped to it.
+- Remarks: This is one strategy among several - native INTERVAL, TIME, OLE Automation dates - so it lives apart from the visitor that selects it. Every method returns when the result cannot be produced exactly, which leaves the node untranslated rather than approximated. Truncating division is taken as a parameter rather than emitted here, because the SQL for it varies by provider - see SqlExpressionConvertVisitor.TruncateDivide.
+
 ## LinqToDB.Internal.SqlProvider.RowFeature
 
 - XML member: `T:LinqToDB.Internal.SqlProvider.RowFeature`
@@ -39394,6 +41252,20 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: SQL AST node types.
 
+## LinqToDB.Internal.SqlQuery.SqlArgumentDomain
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlArgumentDomain`
+- Kind: Type
+- Summary: How a function's result relates to the domain of its argument.
+- Remarks: Read where a column descriptor is recovered from an expression. The descriptor answers two questions that come apart here: how the value is read back - its value converter, and the unit a duration is stored in - and how wide the column that holds it is declared. A result drawn from the argument's own values answers both, one merely of the same kind answers only the first.
+
+## LinqToDB.Internal.SqlQuery.SqlArgumentDomains
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlArgumentDomains`
+- Kind: Type
+- Summary: The domain an aggregate's result draws from, by the name the function is built with.
+- Remarks: Shared because the same three names are built on two surfaces - an ordinary aggregate and a window function - and a name that answered differently depending on which asked would put two domains on one function. That is not merely untidy: compares its domain, so two nodes alike in everything else would stop being interchangeable.
+
 ## LinqToDB.Internal.SqlQuery.SqlCteField
 
 - XML member: `T:LinqToDB.Internal.SqlQuery.SqlCteField`
@@ -39424,17 +41296,97 @@ Generated directly from the current package XML documentation. Use XML member id
 - Kind: Type
 - Summary: Untyped (doesn't have type of type information should be hidden from Linq To DB) SQL fragment with parameters.
 
+## LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression`
+- Kind: Type
+- Summary: The interval elapsed between two temporal values.
+- Remarks: The contract is exactly End - Start: elapsed time, signed, exact within the resolution of . It is deliberately not a boundary count - Sql.DateDiff counts how many unit boundaries were crossed, which for 10:59 to 11:01 gives one hour where the elapsed duration is two minutes. Keeping the two apart in the AST is what stops that confusion from being reintroduced downstream. There is no unit on this node. It produces a whole interval, not "a number of hours" - a unit only becomes meaningful when a part or a total is requested, which is .
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalDomain
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalDomain`
+- Kind: Type
+- Summary: Semantic family an interval belongs to.
+- Remarks: The two families are not interchangeable and must never be mixed by an optimization. A calendar month added to a date depends on the date it is added to, and a calendar day can be 23 or 25 hours long across a daylight saving transition, while a fixed duration of one day is always exactly 24 hours.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalExpression
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalExpression`
+- Kind: Type
+- Summary: An interval built from a scalar amount expressed in a known unit.
+- Remarks: Covers a duration column whose unit the mapping declares, a parameter, and a literal such as TimeSpan.FromHours(5). The unit is .Resolution - a single source of truth, so the value and its unit cannot drift apart.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalPartExpression`
+- Kind: Type
+- Summary: A component or a total of an interval, expressed in a requested unit.
+- Remarks: reproduces TimeSpan.Hours, truncating toward zero as CLR integer division does; reproduces TimeSpan.TotalHours and keeps the fraction. Provider division and modulo do not agree on negative values, so lowering must express the truncation explicitly rather than lean on the database's own rules.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalPartKind
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalPartKind`
+- Kind: Type
+- Summary: Which of the two different readings of an interval component is requested.
+- Remarks: The distinction is not cosmetic: for an interval of 90 minutes, of is 30, while is 90. Collapsing them is the bug behind translating TimeSpan.TotalHours into a date-part boundary count.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalType
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalType`
+- Kind: Type
+- Summary: Logical type of an interval expression: what it means, not how it is stored.
+- Remarks: Physical storage - a native INTERVAL, a BIGINT of ticks, a DECIMAL of seconds - is a separate concern, resolved from the mapping. Keeping the two apart is what lets the AST carry the intent through optimization and lower it per provider afterwards.
+- Parameters:
+  - `Domain`: Whether the interval is a fixed duration or a calendar interval.
+  - `Resolution`: Finest unit the interval can represent exactly. This is what makes precision loss computable: an operation whose exact result needs a finer unit than this cannot be translated and must be rejected rather than rounded.
+  - `IsSigned`: Whether the interval can represent negative values.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnit
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalUnit`
+- Kind: Type
+- Summary: Unit an interval operation is expressed in.
+- Remarks: This is a unit, not a type: it says what an amount is counted in, and says nothing about whether the interval is a fixed duration or a calendar interval - that is . The calendar units at the end of the list are only valid within . Members are ordered from the finest unit to the coarsest, but no arithmetic meaning is attached to the underlying values - do not compare them to decide which unit is finer.
+
+## LinqToDB.Internal.SqlQuery.SqlIntervalUnits
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlIntervalUnits`
+- Kind: Type
+- Summary: Exact conversions between interval units and ticks.
+- Remarks: The ratio is kept as a pair of integers rather than a single factor because nanoseconds are finer than a tick - one tick is 100 nanoseconds - so no integral "ticks per unit" exists for them. Keeping it rational lets every conversion stay in exact integer arithmetic; a floating factor would quietly lose the low digits of a large tick count.
+
+## LinqToDB.Internal.SqlQuery.SqlParameterCastExpression
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlParameterCastExpression`
+- Kind: Type
+- Summary: Marks one usage of a as needing an explicit type in the generated SQL.
+- Remarks: The need for a cast belongs to the position, not to the parameter: one instance is shared by every usage, so a flag on it could only cast everywhere or nowhere. Wrapping the usage keeps a single parameter - a single DECLARE - and casts only where the provider requires it. This is deliberately not a . It carries no target type of its own: the provider decides what to render (BasicSqlBuilder.GetParameterCastType), and several derive it from the value bound for the current execution - the length of the actual string, the facets of the actual decimal. Keeping it a separate node also means the code that reasons about real casts, such as the set-operation type correlation in BasicSqlOptimizer, never mistakes this marker for a cast whose type was chosen deliberately, and the cast folding in the optimizer cannot remove it.
+
 ## LinqToDB.Internal.SqlQuery.SqlPredicate.IsTrue
 
 - XML member: `T:LinqToDB.Internal.SqlQuery.SqlPredicate.IsTrue`
 - Kind: Type
 - Summary: '[NOT] Expr1 IS TRUE' predicate.
 
+## LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression`
+- Kind: Type
+- Summary: A temporal value shifted by an interval. The result is temporal, not an interval.
+- Remarks: Kept as its own node rather than a because that one carries its operation as a plain string and its type as a , neither of which has room for interval semantics - it would render as a literal infix and any optimizer would be free to treat it as ordinary arithmetic.
+
 ## LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor
 
 - XML member: `T:LinqToDB.Internal.SqlQuery.Visitors.QueryElementVisitor`
 - Kind: Type
 - Summary: Base visitor for all SQL AST visitors. Supports three visit modes, defined by enum.
+
+## LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.SetColumnSource
+
+- XML member: `T:LinqToDB.Internal.SqlQuery.Visitors.SelectQueryOptimizerVisitor.SetColumnSource`
+- Kind: Type
+- Summary: Where the column for one target position of a set operation comes from: a column the set query already projects, a shared stateless expression synthesised into every leg, or an expression each leg recomputes from what it projects itself. and build fresh columns, which carry no alias. For that is invisible while confines it to a recursive CTE body, where result names come from - widen that gate and the first leg's aliases start naming the result columns. is not gated and already synthesises alias-less columns for any UnionAll rewrite.
 
 ## LinqToDB.Internal.SqlQuery.Visitors.SqlNullsOrderingLoweringVisitor
 
@@ -39724,6 +41676,20 @@ Generated directly from the current package XML documentation. Use XML member id
 - Summary: Default value provider for specific type. Default value used for mapping from NULL database value to C# value.
 - Type parameters:
   - `T`: Type parameter.
+
+## LinqToDB.Mapping.DurationAttribute
+
+- XML member: `T:LinqToDB.Mapping.DurationAttribute`
+- Kind: Type
+- Summary: Declares that a column stores a duration, and in which unit.
+- Remarks: Without this attribute (or the equivalent fluent or mapping schema configuration) a column keeps its existing meaning, which is provider-defined and is a time of day rather than a duration on providers that map to a TIME column. Duration semantics are opt-in precisely so that existing mappings are not silently reinterpreted. The unit is what makes translation possible: a BIGINT column alone does not say whether it holds ticks or seconds, and guessing wrong is a silent factor-of-10000000 error. Applying this attribute to a class or interface has no effect.
+
+## LinqToDB.Mapping.DurationUnit
+
+- XML member: `T:LinqToDB.Mapping.DurationUnit`
+- Kind: Type
+- Summary: Unit in which a duration is stored in a database column.
+- Remarks: Calendar units such as month or year cannot be listed: a is a fixed-length duration and their length depends on the point in time they are applied to. The week is fixed-length and absent for a different reason - a duration is not usually stored counted in weeks - so it is left out until something asks for it rather than ruled out. Adding a unit is additive, and the lowering already knows the ratio. Members are ordered from the finest unit to the coarsest, but no arithmetic meaning is attached to the underlying values - do not compare them to decide which unit is finer.
 
 ## LinqToDB.Mapping.DynamicColumnAccessorAttribute
 
@@ -40412,6 +42378,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.WindowFunctionBuilder.IOrderByPart`1`
 - Kind: Type
 - Summary: Provides ORDER BY for the window function.
+- Remarks: A key that holds the same value for every row - a literal, or a captured local that reaches SQL as a parameter - orders nothing, so it is dropped. Where dropping would empty the clause and the provider requires an ordering inside OVER, the key comes back as a scalar subquery keeping its value, direction and NULLS position.
 
 ## LinqToDB.WindowFunctionBuilder.IOrderedSetFilter<T>
 
@@ -40484,6 +42451,7 @@ Generated directly from the current package XML documentation. Use XML member id
 - XML member: `T:LinqToDB.WindowFunctionBuilder.IThenOrderPart`1`
 - Kind: Type
 - Summary: Provides additional ORDER BY columns via ThenBy/ThenByDesc.
+- Remarks: As with , a key that is constant for every row is dropped rather than emitted.
 
 ## LinqToDB.WindowFunctionBuilder.IUseWindow<T>
 
