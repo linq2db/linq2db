@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading;
 using System.Threading.Channels;
@@ -9,12 +8,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace LinqToDB.Remote.SignalR
 {
-	[SuppressMessage("Design", "MA0048:File name must match type name")]
-	sealed class Container<T>(T @object)
-	{
-		public T Object { get; } = @object;
-	}
-
 	/// <summary>
 	/// Signal/R-base remote data context client.
 	/// <para>
@@ -32,7 +25,8 @@ namespace LinqToDB.Remote.SignalR
 		const string ExecuteReaderMethod   = "ExecuteReaderStream";
 		const string ExecuteBatchMethod    = "ExecuteBatchStream";
 
-		readonly HubConnection _hubConnection;
+		readonly HubConnection              _hubConnection;
+		readonly LinqToDBSignalRConnection? _connection;
 
 		/// <summary>
 		/// Signal/R-base remote data context client over a hub connection the caller starts, stops and disposes.
@@ -42,8 +36,22 @@ namespace LinqToDB.Remote.SignalR
 			_hubConnection = hubConnection;
 		}
 
+		/// <summary>
+		/// Signal/R-base remote data context client over a <see cref="LinqToDBSignalRConnection"/>, which is started
+		/// (or started again) before each call when it is not connected.
+		/// </summary>
+		public SignalRLinqServiceClient(LinqToDBSignalRConnection connection)
+		{
+			ArgumentNullException.ThrowIfNull(connection);
+
+			_connection    = connection;
+			_hubConnection = connection.HubConnection;
+		}
+
 		async Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
+			await EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
+
 			var reader = await _hubConnection.StreamAsChannelAsync<LinqServiceInfo>(GetInfoMethod, configuration, cancellationToken).ConfigureAwait(false);
 
 			return await ReadSingleAsync(reader, GetInfoMethod, cancellationToken).ConfigureAwait(false);
@@ -80,8 +88,15 @@ namespace LinqToDB.Remote.SignalR
 
 		string? ILinqService.RemoteClientTag { get; set; } = "Signal/R";
 
+		Task EnsureConnectedAsync(CancellationToken cancellationToken)
+		{
+			return _connection?.EnsureConnectedAsync(cancellationToken) ?? Task.CompletedTask;
+		}
+
 		async Task<ChannelReader<T>> StartAsync<T>(string methodName, string? configuration, string queryData, CancellationToken cancellationToken)
 		{
+			await EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
+
 			await HubConnectionInfo.Get(_hubConnection).CheckRequestSizeAsync(methodName, configuration, queryData, cancellationToken).ConfigureAwait(false);
 
 			return await _hubConnection.StreamAsChannelAsync<T>(methodName, configuration, queryData, cancellationToken).ConfigureAwait(false);
@@ -128,7 +143,8 @@ namespace LinqToDB.Remote.SignalR
 		}
 
 		// Deliberately does nothing: the hub connection is handed in, so it belongs to whoever created it -
-		// SignalRDataContext disposes it only when constructed with disposeHubConnection: true. RemoteDataContextBase.OwnsClient
+		// SignalRDataContext disposes it only when constructed with disposeHubConnection: true, and a
+		// LinqToDBSignalRConnection is disposed by its owner (the DI container). RemoteDataContextBase.OwnsClient
 		// is false for SignalRDataContext, so nothing releases this instance per query either.
 		public ValueTask DisposeAsync() => default;
 	}

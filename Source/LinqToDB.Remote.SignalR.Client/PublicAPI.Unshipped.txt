@@ -1,2 +1,18 @@
 ﻿#nullable enable
 LinqToDB.Remote.SignalR.SignalRDataContext.SignalRDataContext(Microsoft.AspNetCore.SignalR.Client.HubConnection! hubConnection, bool disposeHubConnection, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConfigureConnection.get -> System.Action<Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder!>?
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConfigureConnection.set -> void
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConfigureHttpConnection.get -> System.Action<Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions!>?
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConfigureHttpConnection.set -> void
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConnectTimeout.get -> System.TimeSpan
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.ConnectTimeout.set -> void
+LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions.LinqToDBSignalRClientOptions() -> void
+LinqToDB.Remote.SignalR.LinqToDBSignalRConnection
+LinqToDB.Remote.SignalR.LinqToDBSignalRConnection.Dispose() -> void
+LinqToDB.Remote.SignalR.LinqToDBSignalRConnection.DisposeAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.Remote.SignalR.LinqToDBSignalRConnection.EnsureConnectedAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+LinqToDB.Remote.SignalR.LinqToDBSignalRConnection.HubConnection.get -> Microsoft.AspNetCore.SignalR.Client.HubConnection!
+LinqToDB.Remote.SignalR.LinqToDBSignalRConnection.LinqToDBSignalRConnection(System.Uri! hubUrl, LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions? options = null) -> void
+LinqToDB.Remote.SignalR.SignalRLinqServiceClient.SignalRLinqServiceClient(LinqToDB.Remote.SignalR.LinqToDBSignalRConnection! connection) -> void
+static LinqToDB.Remote.SignalR.ServiceConfigurationExtensions.AddLinqToDBSignalRDataContext<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! services, System.Uri! hubUrl, System.Func<LinqToDB.Remote.SignalR.SignalRLinqServiceClient!, TContext!>! getContext, System.Action<LinqToDB.Remote.SignalR.LinqToDBSignalRClientOptions!>? configure = null) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
