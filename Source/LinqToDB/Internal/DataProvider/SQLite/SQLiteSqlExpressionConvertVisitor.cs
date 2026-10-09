@@ -51,6 +51,52 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return Factory.Multiply(longType, Factory.Cast(milliseconds, longType, true), TimeSpan.TicksPerMillisecond);
 		}
 
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: the shift spends the same Julian-day
+		/// arithmetic as <see cref="ElapsedTicks"/>, in reverse, so it needs no day/second/sub-second
+		/// decomposition of its own.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>julianday</c> arithmetic at millisecond resolution, then back through <c>strftime</c>
+		/// in the same text format this provider writes a <see cref="DateTime"/> literal in.
+		/// </summary>
+		/// <remarks>
+		/// <paramref name="element"/>'s interval is either an already-known tick count or a still-unlowered
+		/// difference/part node - either way it is spent as a number of ticks here, and the recursive <c>Visit</c>
+		/// this method's result goes through lowers whatever of that remains, exactly as <see cref="ElapsedTicks"/>
+		/// does for the read direction.
+		/// <para>
+		/// A <see cref="DateTimeOffset"/> is not shifted. <c>julianday</c> reads it as UTC and <c>strftime</c> writes
+		/// the result back with no offset, which one SQLite provider reads as local time and the other cannot read
+		/// at all, so it is left to be refused by name.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			if (Factory.GetDbDataType(element.Temporal).SystemType.ToUnderlying() == typeof(DateTimeOffset))
+				return null;
+
+			var doubleType = Factory.GetDbDataType(typeof(double));
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var stringType = Factory.GetDbDataType(typeof(string));
+
+			var ticks         = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var milliseconds  = Factory.Function(doubleType, "Round",
+				Factory.Multiply(doubleType, Factory.Cast(ticks, doubleType, true), 1.0 / TimeSpan.TicksPerMillisecond));
+			var days          = Factory.Multiply(doubleType, milliseconds, 1.0 / 86_400_000.0);
+			var shiftedJulian = Factory.Add(doubleType, JulianDay(element.Temporal), days);
+
+			// The result carries a time of day even when the date it started from did not, so it is not typed as a
+			// date: a comparison would read both sides through Date() and drop the time the shift added. Built from
+			// the CLR type, because a mapped DbType of Date marks it as a date just as well.
+			var resultType = new DbDataType(Factory.GetDbDataType(element.Temporal).SystemType, DataType.DateTime);
+
+			return Factory.Function(resultType, "Strftime", Factory.Value(stringType, "%Y-%m-%d %H:%M:%f"), shiftedJulian);
+		}
+
 		ISqlExpression JulianDay(ISqlExpression date)
 		{
 			return Factory.Function(Factory.GetDbDataType(typeof(double)), "JulianDay", date);
