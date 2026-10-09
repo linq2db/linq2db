@@ -793,14 +793,22 @@ namespace LinqToDB.Internal.SqlQuery
 
 			static DbDataType GetCoalesceExpressionType(SqlCoalesceExpression coalesce, HashSet<IQueryElement>? visited)
 			{
+				// TODO: v7 - type COALESCE by each database's own result-type rule (the new type mapping system), not by operand agreement
+				DbDataType? result = null;
+
 				foreach (var expression in coalesce.Expressions)
 				{
 					var type = GetDbDataTypeImpl(expression, visited);
-					if (type.DataType != DataType.Undefined)
-						return type;
+					if (type.DataType == DataType.Undefined)
+						continue;
+
+					if (result == null)
+						result = type;
+					else if (result.Value.DataType != type.DataType || !string.Equals(result.Value.DbType, type.DbType, StringComparison.Ordinal))
+						return new DbDataType(coalesce.SystemType ?? typeof(object));
 				}
 
-				return new DbDataType(coalesce.SystemType ?? typeof(object));
+				return result ?? new DbDataType(coalesce.SystemType ?? typeof(object));
 			}
 		}
 

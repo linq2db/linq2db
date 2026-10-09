@@ -2478,5 +2478,24 @@ DROP TABLE IF EXISTS TemporalTable3History
 			res[1].Text3.ShouldBe("Element тест1 Text3");
 			res[1].Text4.ShouldBe("Element тест2 Text4");
 		}
+
+		sealed class MixedCharsetCoalesceTable
+		{
+			[PrimaryKey]                                         public int     Id { get; set; }
+			[Column(DataType = DataType.VarChar,  Length = 10)]  public string? V  { get; set; }
+			[Column(DataType = DataType.NVarChar, Length = 100)] public string? N  { get; set; }
+		}
+
+		/// <summary>
+		/// A COALESCE of varchar and nvarchar is nvarchar, so the literal compared with it stays Unicode.
+		/// </summary>
+		[Test]
+		public void MixedCharsetCoalesceComparedWithUnicodeLiteral([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<MixedCharsetCoalesceTable>([new() { Id = 1, V = null, N = "Ж" }]);
+
+			tb.Count(r => (r.V ?? r.N) == "Ж").ShouldBe(1);
+		}
 	}
 }
