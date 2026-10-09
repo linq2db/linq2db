@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 							// materialise it here; CompiledTable carries the same values in its cache key.
 							// Resolved against newArgument rather than argument: PrepareForCache rebuilds a
 							// params array when any element folds, and leaves the ps-reading elements in place.
-							if (_parameterValues != null)
+							if (_parameterValues != null && argument.Type != typeof(FormattableString))
 							{
 								var resolved = ResolveCompiledQueryArguments(newArgument);
 
@@ -276,14 +276,29 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit } arguments] } create
 					&& create.Method == Methods.System.FormattableStringFactory_Create)
 				{
-					if (format.NodeType == ExpressionType.Constant || !IsCompilable(format))
+					if (format.NodeType == ExpressionType.Constant)
 						return argument;
 
-					return create.Update(null, [Expression.Constant(EvaluateExpression(format), typeof(string)), arguments]);
+					var resolvedFormat = ResolveCompiledQueryArguments(format);
+
+					if (!IsCompilable(resolvedFormat))
+						return argument;
+
+					if (!ReferenceEquals(resolvedFormat, format))
+						RecordMaterializedArgumentSlots(format);
+
+					return create.Update(null, [Expression.Constant(EvaluateExpression(resolvedFormat), typeof(string)), arguments]);
 				}
 
-				if (IsCompilable(argument) && EvaluateExpression(argument) is FormattableString formattable)
+				var resolvedArgument = ResolveCompiledQueryArguments(argument);
+
+				if (IsCompilable(resolvedArgument) && EvaluateExpression(resolvedArgument) is FormattableString formattable)
+				{
+					if (!ReferenceEquals(resolvedArgument, argument))
+						RecordMaterializedArgumentSlots(argument);
+
 					return DataExtensions.GenerateFormattableString(formattable);
+				}
 
 				return argument;
 			}

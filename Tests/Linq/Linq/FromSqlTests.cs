@@ -1229,6 +1229,21 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Captured_SqlExpressionArgumentChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<int> Query(FormattableString sql) =>
+				from p in db.Person
+				where p.ID.In(db.FromSqlScalar<int>(sql))
+				select p.ID;
+
+			Query($"SELECT {new SqlValue(1)} AS value").ToArray().ShouldBe([1]);
+			Query($"SELECT {new SqlValue(2)} AS value").ToArray().ShouldBe([2]);
+			Query($"SELECT {new SqlValue(1)} AS value").ToArray().ShouldBe([1]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
 		public void FromSql_Nested_FormatChanges([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1269,6 +1284,53 @@ namespace Tests.Linq
 			Query(1).ToArray().ShouldBe([1]);
 			Query(2L).ToArray().ShouldBe([2]);
 			Query(3, 4).ToArray().ShouldBe([3]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_Interpolated_ArgumentIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}").Select(p => p.ID));
+
+			query(db, 1).ToArray().ShouldBe([1]);
+			var sql = db.LastQuery;
+
+			query(db, 2).ToArray().ShouldBe([2]);
+			db.LastQuery.ShouldBe(sql);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Compiled_ArgumentIsParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.GetTable<Person>().Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value"))).Select(p => p.ID));
+
+			query(db, 1).ToArray().ShouldBe([1]);
+			var sql = db.LastQuery;
+
+			query(db, 2).ToArray().ShouldBe([2]);
+			db.LastQuery.ShouldBe(sql);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_FormattableStringArgument([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, FormattableString fs) =>
+				dc.FromSql<Person>(fs).Select(p => p.ID));
+
+			query(db, $"SELECT * FROM Person WHERE PersonID = {1}").ToArray().ShouldBe([1]);
+			var sql = db.LastQuery;
+
+			query(db, $"SELECT * FROM Person WHERE PersonID = {2}").ToArray().ShouldBe([2]);
+			db.LastQuery.ShouldBe(sql);
+
+			query(db, $"SELECT * FROM Person WHERE PersonID <> {1}").ToArray().ShouldNotContain(1);
 		}
 
 		sealed record Projection1(int i1, int i2);
