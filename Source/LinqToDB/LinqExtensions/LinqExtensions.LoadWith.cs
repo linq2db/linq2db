@@ -13,7 +13,7 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB
 {
-	public static partial class LinqExtensions
+	public partial class LinqExtensions
 	{
 		/// <summary>
 		/// Specifies associations, that should be loaded for each loaded record from current table.
@@ -45,7 +45,6 @@ namespace LinqToDB
 		/// <returns>Table-like query source.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
 		/// <para><b>LoadWith call graph:</b></para>
 		/// <code>
 		/// Queryable&lt;TEntity&gt;
@@ -58,17 +57,6 @@ namespace LinqToDB
 		///  │           └─ executes base query + additional association queries as needed
 		///  └─ LoadWith(selector, loadFunc)
 		///      └─ same chain as above
-		/// </code>
-		/// <para><b>AI agent state transitions:</b></para>
-		/// <code>
-		/// S0: IQueryable&lt;TEntity&gt;
-		///   - LoadWith(selector)             -&gt; S1: ILoadWithQueryable&lt;TEntity,TProperty&gt;
-		///   - LoadWith(selector, loadFunc)   -&gt; S1
-		///
-		/// S1:
-		///   - ThenLoad(...)                  -&gt; S1
-		///   - ThenLoad(..., loadFunc)        -&gt; S1
-		///   - Materialization / Enumeration  -&gt; execute
 		/// </code>
 		/// </remarks>
 		[LinqTunnel]
@@ -964,5 +952,5 @@ namespace LinqToDB
 		}
 
 		#endregion
+		}
 	}
-}

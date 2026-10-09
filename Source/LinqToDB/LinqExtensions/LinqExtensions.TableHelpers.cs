@@ -38,10 +38,6 @@ namespace LinqToDB
 		/// The <c>id</c> value is not emitted as SQL by itself. It is a translation-time key used
 		/// to resolve the exact alias, table name, or table specification generated for this table source.
 		/// </para>
-		/// <para>
-		/// The identifier affects SQL semantics and is emitted into SQL text according to provider rules when
-		/// resolved through <c>Sql.SqlID</c>.
-		/// </para>
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -63,7 +59,6 @@ namespace LinqToDB
 		/// <returns>Table-like query source with the overridden table name.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -95,7 +90,6 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// Execution is deferred and the method is composable.
-		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -121,7 +115,6 @@ namespace LinqToDB
 		/// Provider support: SQL Server, Informix, Oracle, SAP HANA2.
 		/// <para>
 		/// Execution is deferred and the method is composable.
-		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -147,7 +140,6 @@ namespace LinqToDB
 		/// Provider support: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.
 		/// <para>
 		/// Execution is deferred and the method is composable.
-		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -178,7 +170,6 @@ namespace LinqToDB
 		/// var tableWithHint = db.Table.WithTableExpression("{0} {1} with (UpdLock)");
 		/// </code>
 		/// Execution is deferred and the method is composable.
-		/// The template affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]

@@ -129,7 +129,7 @@ namespace LinqToDB.Data
 				? DefaultDataOptions
 				: ConnectionOptionsByConfigurationString
 					.GetOrAdd(
-						configurationString,
+						configurationString, 
 						static cs => new(new(cs))
 					)
 			)
@@ -1111,7 +1111,7 @@ namespace LinqToDB.Data
 		}
 
 		// TODO: Mark private in v7
-		[Obsolete("This API scheduled for removal in v7. Use TryGetConnection/OpenDbConnection or OpenDbConnectionAsync chained with CreateCommand call. Note that it is your responsibility to dispose such command after use."), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("This API scheduled for removal in v7. Use TryGetDbConnection/OpenDbConnection or OpenDbConnectionAsync chained with CreateCommand call. Note that it is your responsibility to dispose such command after use."), EditorBrowsable(EditorBrowsableState.Never)]
 		public DbCommand CreateCommand()
 		{
 			CheckAndThrowOnDisposed();

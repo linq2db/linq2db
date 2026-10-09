@@ -1835,7 +1835,6 @@ namespace LinqToDB
 		/// <returns>Number of updated records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		public static int Update<T>(this IQueryable<T> source, [InstantHandle] Expression<Func<T, T>> setter)
 		{
@@ -2058,7 +2057,6 @@ namespace LinqToDB
 		/// <returns>An updatable query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -2088,7 +2086,6 @@ namespace LinqToDB
 		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -2123,7 +2120,6 @@ namespace LinqToDB
 		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -2158,7 +2154,6 @@ namespace LinqToDB
 		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -2191,7 +2186,6 @@ namespace LinqToDB
 		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -2226,7 +2220,6 @@ namespace LinqToDB
 		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -2261,7 +2254,6 @@ namespace LinqToDB
 		/// <returns>An <see cref="IUpdatable{T}"/> query.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The update definition is represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]

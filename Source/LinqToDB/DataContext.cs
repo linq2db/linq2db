@@ -238,7 +238,7 @@ namespace LinqToDB
 		{
 			get => _keepConnectionAlive;
 			// TODO: Remove in v7
-			[Obsolete("This API scheduled for removal in v7. To set KeepAlive value use SetKeepAlive or SetKeepAliveAsync methods"), EditorBrowsable(EditorBrowsableState.Never)]
+			[Obsolete("This API scheduled for removal in v7. To set the value use SetKeepConnectionAlive or SetKeepConnectionAliveAsync"), EditorBrowsable(EditorBrowsableState.Never)]
 			set => SetKeepConnectionAlive(value);
 		}
 
@@ -821,15 +821,6 @@ namespace LinqToDB
 						throw new LinqToDBException("Invalid configuration. Configuration string or DataProvider is not provided.");
 				}
 
-				// Mapping schema selection follows the same three-branch pattern everywhere:
-				// 1. If an explicit MappingSchema is supplied, use it for this context.
-				// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
-				//    per-context overlay over the provider/default schema. Context-local
-				//    mapping additions then reset only the overlay id and don't mutate shared
-				//    provider schemas used by other contexts.
-				// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
-				//    attempts to edit it should fail.
-				// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 				if (options.MappingSchema != null)
 				{
 					dataContext.MappingSchema = options.MappingSchema;
@@ -882,23 +873,12 @@ namespace LinqToDB
 
 					dataContext.MappingSchema = dataContext.DataProvider.MappingSchema;
 
-					// Mapping schema selection follows the same three-branch pattern everywhere:
-					// 1. If an explicit MappingSchema is supplied, use it for this context.
-					// 2. Otherwise, if EnableContextSchemaEdit is enabled, create a writable
-					//    per-context overlay over the provider/default schema. Context-local
-					//    mapping additions then reset only the overlay id and don't mutate shared
-					//    provider schemas used by other contexts.
-					// 3. Otherwise, keep the provider/default schema as-is; if it is locked,
-					//    attempts to edit it should fail.
-					// See MappingSchema.IsLockable/IsLocked and IConfigurationID for the cache-identity reason behind this split.
 					if (options.MappingSchema != null)
 					{
 						dataContext.MappingSchema = options.MappingSchema;
 					}
 					else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
 					{
-						// The undo action below restores the previous schema, including any
-						// writable overlay that belonged to the outer context.
 						dataContext.MappingSchema = new (dataContext.MappingSchema);
 					}
 

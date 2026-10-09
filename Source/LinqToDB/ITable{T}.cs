@@ -7,6 +7,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Table-like query root for LINQ query construction (table, view, or table-valued function).
 	/// </summary>
+	/// <typeparam name="T">Record mapping type.</typeparam>
 	/// <remarks>
 	/// <para>
 	/// <see cref="ITable{T}"/> represents a mapped table-like source and participates
@@ -42,7 +43,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// May originate from mapping configuration. Interpreted by the active provider during SQL generation.
 		/// </remarks>
-		string? ServerName { get; }
+		string?      ServerName   { get; }
 
 		/// <summary>
 		/// Logical database name component of the mapped table source, if specified.
@@ -50,7 +51,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// May originate from mapping configuration. Interpreted by the active provider during SQL generation.
 		/// </remarks>
-		string? DatabaseName { get; }
+		string?      DatabaseName { get; }
 
 		/// <summary>
 		/// Logical schema name component of the mapped table source, if specified.
@@ -58,7 +59,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// May originate from mapping configuration. Interpreted by the active provider during SQL generation.
 		/// </remarks>
-		string? SchemaName { get; }
+		string?      SchemaName   { get; }
 
 		/// <summary>
 		/// Logical table name used during SQL generation.
@@ -67,7 +68,7 @@ namespace LinqToDB
 		/// May originate from mapping configuration and is interpreted by the active provider.
 		/// It does not necessarily correspond to a physical database object name without provider-specific context.
 		/// </remarks>
-		string TableName { get; }
+		string       TableName    { get; }
 
 		/// <summary>
 		/// Table-level translation flags affecting SQL generation and DDL behavior.
@@ -87,6 +88,6 @@ namespace LinqToDB
 		/// generated SQL identifiers; <c>TableID</c> itself is only the logical
 		/// lookup key. This identifier exists only within the translation scope of the query and is not a database object identifier.
 		/// </remarks>
-		string? TableID { get; }
+		string?      TableID      { get; }
 	}
 }
