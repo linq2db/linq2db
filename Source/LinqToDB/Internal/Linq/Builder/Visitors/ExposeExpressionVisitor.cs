@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -157,6 +158,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return Visit(newNode);
 			}
 
+			if (ConvertRawSqlString(node) is { } formattableCall)
+			{
+				return Visit(formattableCall);
+			}
+
 			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
 
 			if (dependentParameters != null)
@@ -190,7 +196,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						var argument = arguments[i];
 						if (argument.NodeType != ExpressionType.Constant)
 						{
-							var newArgument = attr.PrepareForCache(argument, this);
+							var newArgument = argument.Type == typeof(FormattableString)
+								? PrepareFormattableString(argument)
+								: attr.PrepareForCache(argument, this);
 
 							// A dependent argument taken from a compiled query's own arguments cannot be
 							// evaluated while ps is a free parameter, so it would reach the SQL as a parameter
@@ -228,6 +236,45 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 
 				return node;
+			}
+
+			// FromSql(sql, parameters) is FromSql(FormattableStringFactory.Create(sql.Format, parameters)),
+			// so both overloads reach the cache in one shape.
+			MethodCallExpression? ConvertRawSqlString(MethodCallExpression node)
+			{
+				if (!node.Method.IsGenericMethod || node.Method.GetGenericMethodDefinition() != DataExtensions.FromSqlRawMethodInfo)
+					return null;
+
+				var sql = node.Arguments[1];
+
+				if (!IsCompilable(sql))
+					return null;
+
+				var format = ((RawSqlString)EvaluateExpression(sql)!).Format;
+
+				return Expression.Call(
+					DataExtensions.FromSqlFormattableMethodInfo.MakeGenericMethod(node.Method.GetGenericArguments()),
+					node.Arguments[0],
+					DataExtensions.GenerateFormattableString(format, node.Arguments[2]));
+			}
+
+			// Only the format shapes the SQL, so only the format is evaluated; the arguments stay
+			// expressions and become parameters as they would in the outer query.
+			Expression PrepareFormattableString(Expression argument)
+			{
+				if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit } arguments] } create
+					&& create.Method.DeclaringType == typeof(FormattableStringFactory))
+				{
+					if (format.NodeType == ExpressionType.Constant || !IsCompilable(format))
+						return argument;
+
+					return create.Update(null, [Expression.Constant(EvaluateExpression(format), typeof(string)), arguments]);
+				}
+
+				if (IsCompilable(argument) && EvaluateExpression(argument) is FormattableString formattable)
+					return DataExtensions.GenerateFormattableString(formattable);
+
+				return argument;
 			}
 
 			Expression HandleSqlProperty(MethodCallExpression node)

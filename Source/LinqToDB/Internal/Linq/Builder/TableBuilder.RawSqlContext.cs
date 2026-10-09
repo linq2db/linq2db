@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
@@ -53,14 +52,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			PrepareRawSqlArguments(formatArg,
 				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
-				true,
-				out var format, out var arguments, out var cacheDependencies);
-
-			if (cacheDependencies != null)
-			{
-				foreach (var (expression, value) in cacheDependencies)
-					builder.ParametersContext.MarkAsValue(expression, value);
-			}
+				out var format, out var arguments);
 
 			var sqlArguments = new ISqlExpression[arguments.Count];
 
@@ -77,39 +69,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, entityType, isScalar.Value, format, sqlArguments));
 		}
 
-		// Accessors built over a captured argument array are typed by the build-time values, so a cached query
-		// is reusable only while the count, the runtime types and any inlined ISqlExpression stay the same.
-		// The count goes first: comparison stops at the first mismatch, before indexing a shorter array.
-		static void AddArgumentDependencies(ref List<(Expression expression, object? value)>? dependencies, Expression arrayExpr, object?[] array)
+		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IReadOnlyList<Expression> arguments)
 		{
-			dependencies ??= [];
-			dependencies.Add((Expression.ArrayLength(arrayExpr), array.Length));
-
-			for (var i = 0; i < array.Length; i++)
-			{
-				var itemExpr = Expression.ArrayIndex(arrayExpr, ExpressionInstances.Int32(i));
-				var typeExpr = Expression.Condition(
-					Expression.Equal(itemExpr, Expression.Constant(null)),
-					Expression.Constant(null, typeof(Type)),
-					Expression.Call(itemExpr, Methods.System.Object_GetType));
-
-				dependencies.Add((typeExpr, array[i]?.GetType()));
-
-				if (array[i] is ISqlExpression)
-					dependencies.Add((itemExpr, array[i]));
-			}
-		}
-
-		public static void PrepareRawSqlArguments(
-			Expression                                        formatArg,
-			Expression?                                       parametersArg,
-			bool                                              parameterizeCapturedArguments,
-			out string                                        format,
-			out IReadOnlyList<Expression>                     arguments,
-			out List<(Expression expression, object? value)>? cacheDependencies)
-		{
-			cacheDependencies = null;
-
 			// Consider that FormattableString is used
 			if (formatArg.NodeType == ExpressionType.Call)
 			{
@@ -130,43 +91,21 @@ namespace LinqToDB.Internal.Linq.Builder
 					format    = mc.Arguments[0].EvaluateExpression<string>()!;
 					arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 				}
-
-				// format text is baked into SQL, so a captured format must take part in cache comparison
-				if (mc.Arguments[0].Unwrap() is not ConstantExpression)
-					cacheDependencies = [(mc.Arguments[0], format)];
 			}
 			else
 			{
-				var isConstant   = formatArg.Unwrap() is ConstantExpression;
 				var evaluatedSql = formatArg.EvaluateExpression()!;
 				if (evaluatedSql is FormattableString formattable)
 				{
 					format     = formattable.Format;
 
-					var formattableExpr = formatArg.Type == typeof(FormattableString) ? formatArg : Expression.Convert(formatArg, typeof(FormattableString));
-
-					if (!isConstant)
-						cacheDependencies = [(Expression.Property(formattableExpr, nameof(FormattableString.Format)), format)];
-
 					var array = formattable.GetArguments();
 					var args   = new Expression[array.Length];
 
-					var argumentsExpr = parameterizeCapturedArguments && !isConstant ? Expression.Call(formattableExpr, Methods.System.FormattableString_GetArguments) : null;
-
-					if (argumentsExpr != null)
-						AddArgumentDependencies(ref cacheDependencies, argumentsExpr, array);
-
 					for (var i = 0; i < array.Length; i++)
 					{
-						var value = array[i];
-
-						if (argumentsExpr == null || value is null or ISqlExpression)
-						{
-							args[i] = Expression.Constant(value, value?.GetType() ?? typeof(object));
-							continue;
-						}
-
-						args[i] = Expression.Convert(Expression.ArrayIndex(argumentsExpr, ExpressionInstances.Int32(i)), value.GetType());
+						Expression expr = Expression.Constant(array[i], array[i]?.GetType() ?? typeof(object));
+						args[i] = expr;
 					}
 
 					arguments = args;
@@ -178,9 +117,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					format        = rawSqlString.Format;
 					var arrayExpr = parametersArg!;
 
-					if (!isConstant)
-						cacheDependencies = [(Expression.PropertyOrField(formatArg.Type == typeof(RawSqlString) ? formatArg : Expression.Convert(formatArg, typeof(RawSqlString)), nameof(RawSqlString.Format)), format)];
-
 					if (arrayExpr.NodeType == ExpressionType.NewArrayInit)
 					{
 						arguments = ((NewArrayExpression)arrayExpr).Expressions;
@@ -189,10 +125,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var array = arrayExpr.EvaluateExpression<object[]>()!;
 						var args  = new Expression[array.Length];
-
-						if (parameterizeCapturedArguments && arrayExpr.Unwrap() is not ConstantExpression)
-							AddArgumentDependencies(ref cacheDependencies, arrayExpr, array);
-
 						for (var i = 0; i < array.Length; i++)
 						{
 							var type = array[i]?.GetType() ?? typeof(object);

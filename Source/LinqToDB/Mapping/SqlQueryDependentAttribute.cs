@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
@@ -34,6 +36,9 @@ namespace LinqToDB.Mapping
 
 			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
 				return string.Equals(str1.Format, str2.Format, StringComparison.Ordinal);
+
+			if (obj1 is FormattableString fs1 && obj2 is FormattableString fs2)
+				return string.Equals(fs1.Format, fs2.Format, StringComparison.Ordinal) && ObjectsEqual(fs1.GetArguments(), fs2.GetArguments());
 
 			if (obj1 is not string and IEnumerable list1 && obj2 is IEnumerable list2)
 			{
@@ -70,7 +75,31 @@ namespace LinqToDB.Mapping
 		public virtual bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2,
 			Func<TContext, Expression, Expression, bool> comparer)
 		{
+			// FormattableStringFactory.Create(format, new object[] { ... }): the format is compared by value,
+			// the arguments as any other expression of the query.
+			if (TrySplitFormattableString(expr1, out var format1, out var arguments1) &&
+				TrySplitFormattableString(expr2, out var format2, out var arguments2))
+			{
+				return string.Equals(format1.EvaluateExpression<string>(), format2.EvaluateExpression<string>(), StringComparison.Ordinal)
+					&& comparer(context, arguments1, arguments2);
+			}
+
 			return ObjectsEqual(expr1.EvaluateExpression(), expr2.EvaluateExpression());
+		}
+
+		static bool TrySplitFormattableString(Expression expression, [NotNullWhen(true)] out Expression? format, [NotNullWhen(true)] out Expression? arguments)
+		{
+			if (expression is MethodCallExpression { Arguments: [var f, { NodeType: ExpressionType.NewArrayInit } a] } create
+				&& create.Method.DeclaringType == typeof(FormattableStringFactory))
+			{
+				format    = f;
+				arguments = a;
+				return true;
+			}
+
+			format    = null;
+			arguments = null;
+			return false;
 		}
 
 		/// <summary>

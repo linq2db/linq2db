@@ -12,5 +12,3 @@ override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertV
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
-static readonly LinqToDB.Internal.Reflection.Methods.System.FormattableString_GetArguments -> System.Reflection.MethodInfo!
-static readonly LinqToDB.Internal.Reflection.Methods.System.Object_GetType -> System.Reflection.MethodInfo!
