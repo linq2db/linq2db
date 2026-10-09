@@ -23,8 +23,8 @@ namespace SignalRClient
 
 			var app = builder.Build();
 
-			// Initialize linq2db Signal/R.
-			// This is required to be able to use linq2db Signal/R service.
+			// Start the connection and load the server's configuration up front. Optional: the first query
+			// does the same, and a query after the connection was lost starts it again.
 			//
 			await app.Services.InitSignalRAsync<IDemoDataModel>();
 

@@ -20,25 +20,32 @@ static async Task Main(string[] args)
 {
     var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-    // Add linq2db Signal/R service.
+    // Add linq2db Signal/R service. All contexts share one connection, which starts with the first query
+    // and is started again by the next query after it was lost.
     //
     builder.Services.AddLinqToDBSignalRDataContext<IDemoDataModel>(
-        builder.HostEnvironment.BaseAddress,
-        //"/hub/linq2db",
-        client => new DemoClientData(client));
+        new Uri(new Uri(builder.HostEnvironment.BaseAddress), "/hub/linq2db"),
+        client => new DemoClientData(client),
+        options =>
+        {
+            // Access token, headers, transports.
+            //
+            options.ConfigureHttpConnection = http => http.AccessTokenProvider = GetAccessTokenAsync;
+        });
 
     var app = builder.Build();
 
-    await app.Services.GetRequiredService<Container<HubConnection>>().Object.StartAsync();
-
-    // Initialize linq2db Signal/R.
-    // This is required to be able to use linq2db Signal/R service.
+    // Optional: start the connection and load the server's configuration up front.
     //
-    await app.Services.GetRequiredService<IDemoDataModel>().InitSignalRAsync();
+    await app.Services.InitSignalRAsync<IDemoDataModel>();
 
     await app.RunAsync();
 }
 ```
+
+Cancelling a query (the `CancellationToken` of `ToListAsync` and other async methods) cancels it on the server
+and in the database. Queries are never sent again after a lost connection: they fail, and the application decides
+whether to retry.
 
 ## Server
 
@@ -59,18 +66,21 @@ public static void Main(string[] args)
         .UseDefaultLogging(provider)),
         ServiceLifetime.Transient);
 
+    // Let up to 8 queries of one client connection run at the same time (by default one at a time), and send
+    // server errors to the client in development only.
+    //
+    builder.Services.Configure<LinqToDBHubOptions>(options =>
+    {
+        options.MaxConcurrentCallsPerConnection   = 8;
+        options.TransferInternalExceptionToClient = builder.Environment.IsDevelopment();
+    });
+
     builder.Services
-        // Adds SignalR services and configures the SignalR options.
-        //
         .AddLinqToDBService<IDemoDataModel>()
-        .AddSignalR(hubOptions =>
-        {
-            hubOptions.ClientTimeoutInterval               = TimeSpan.FromSeconds(60);
-            hubOptions.HandshakeTimeout                    = TimeSpan.FromSeconds(30);
-            hubOptions.MaximumParallelInvocationsPerClient = 30;
-            hubOptions.EnableDetailedErrors                = true;
-            hubOptions.MaximumReceiveMessageSize           = 1024 * 1024 * 1024;
-        })
+        .AddSignalR()
+        // The largest request the hub accepts (default 32 KB). Size it to the largest expected query.
+        //
+        .AddHubOptions<LinqToDBHub<IDemoDataModel>>(hubOptions => hubOptions.MaximumReceiveMessageSize = 1024 * 1024)
         ;
 
     // ...
@@ -86,4 +96,3 @@ public static void Main(string[] args)
     // ...
 }
 ```
-
