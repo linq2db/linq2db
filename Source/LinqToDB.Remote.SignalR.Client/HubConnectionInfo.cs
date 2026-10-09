@@ -71,9 +71,7 @@ namespace LinqToDB.Remote.SignalR
 			if (limit < 0)
 				return;
 
-			var size = RequestSize.Estimate(methodName, configuration, queryData, limit);
-
-			if (size > limit)
+			if (RequestSize.Exceeds(methodName, configuration, queryData, limit) is { } size)
 				throw new LinqToDBException(string.Create(CultureInfo.InvariantCulture,
 					$"The Signal/R request of about {size} bytes exceeds the maximum message size of {limit} bytes the hub accepts, so it was not sent (the server would close the connection). Raise HubOptions.MaximumReceiveMessageSize for the linq2db hub on the server (AddHubOptions<THub>)."));
 		}
