@@ -312,33 +312,6 @@
       <Build Solution="Testing|*" Project="false" />
     </Project>
   </Folder>
-  <Folder Name="/Source/Knowledge/">
-    <File Path="Source/Knowledge/README.md" />
-  </Folder>
-  <Folder Name="/Source/Knowledge/linq2db-expert/">
-    <File Path="Source/Knowledge/linq2db-expert/01-skill.md" />
-    <File Path="Source/Knowledge/linq2db-expert/02-coverage.md" />
-    <File Path="Source/Knowledge/linq2db-expert/03-overview-readme.md" />
-    <File Path="Source/Knowledge/linq2db-expert/04-api-discovery-and-extract.md" />
-    <File Path="Source/Knowledge/linq2db-expert/05-architecture.md" />
-    <File Path="Source/Knowledge/linq2db-expert/06-agent-antipatterns-and-ai-tags.md" />
-    <File Path="Source/Knowledge/linq2db-expert/07-provider-configuration.md" />
-    <File Path="Source/Knowledge/linq2db-expert/08-mapping.md" />
-    <File Path="Source/Knowledge/linq2db-expert/09-crud-and-merge.md" />
-    <File Path="Source/Knowledge/linq2db-expert/10-query-composition.md" />
-    <File Path="Source/Knowledge/linq2db-expert/11-hints.md" />
-    <File Path="Source/Knowledge/linq2db-expert/12-hints-api-map.md" />
-    <File Path="Source/Knowledge/linq2db-expert/13-extensions.md" />
-    <File Path="Source/Knowledge/linq2db-expert/14-translatable-methods.md" />
-    <File Path="Source/Knowledge/linq2db-expert/15-interceptors.md" />
-    <File Path="Source/Knowledge/linq2db-expert/16-xml-doc.md" />
-    <File Path="Source/Knowledge/linq2db-expert/17-associations.md" />
-    <File Path="Source/Knowledge/linq2db-expert/bundle-manifest.json" />
-    <File Path="Source/Knowledge/linq2db-expert/custom-gpt-instructions.md" />
-    <File Path="Source/Knowledge/linq2db-expert/MAINTENANCE.md" />
-    <File Path="Source/Knowledge/linq2db-expert/manifest.json" />
-    <File Path="Source/Knowledge/linq2db-expert/README.md" />
-  </Folder>
   <Folder Name="/Source/">
     <File Path="Source/BannedSymbols.txt" />
     <File Path="Source/CodeMetricsConfig.txt" />

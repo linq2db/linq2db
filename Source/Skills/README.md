@@ -14,7 +14,6 @@ package version they are shipped with.
 | `linq2db/SKILL.md` | Canonical agent entry point for linq2db package usage. |
 | `linq2db/docs/*.md` | Task-focused source-of-truth guides for package users and coding agents. |
 | `linq2db/docs/api.md` | Generated API discovery index from `linq2db.xml`; search it, do not read it sequentially. |
-| `../Knowledge/` | Versioned generated/assembled knowledge packs for hosted assistants; not shipped in NuGet. |
 
 ## Available Skills
 
@@ -34,8 +33,6 @@ skills/
 ```
 
 ## Maintenance
-
-Knowledge-pack maintenance lives in `../Knowledge/README.md`.
 
 - Keep skill-pack content versioned with the library code it describes.
 - Keep `linq2db/SKILL.md` as the canonical entry point for the linq2db skill.

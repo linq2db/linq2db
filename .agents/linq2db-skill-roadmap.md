@@ -3,11 +3,9 @@
 This repository-local file tracks coverage work for the NuGet-shipped linq2db skill pack.
 It is not package documentation, not Custom GPT instructions, and not a second source of truth.
 
-Canonical maintenance and layout references:
+Canonical maintenance and layout reference:
 
 - `Source/Skills/README.md` - shipped skill-pack layout and package rules.
-- `Source/Knowledge/README.md` - generated Expert knowledge-pack layout and source-of-truth rules.
-- `.agents/knowledge-pack-maintenance.md` - mechanical Expert pack rebuild and validation procedure.
 
 Use this file only to track planned, partial, completed, or deferred skill documentation areas.
 When an item becomes package guidance, write it under `Source/Skills/linq2db/` first and regenerate
