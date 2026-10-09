@@ -1,1 +1,22 @@
 ﻿#nullable enable
+*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteBatchAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
+*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteNonQueryAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
+*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteReaderAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string!>!
+*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteScalarAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string?>!
+*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.GetInfoAsync(string? configuration) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
+LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteBatchStream(string? configuration, string! queryData) -> System.Threading.Channels.ChannelReader<int>!
+LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteNonQueryStream(string? configuration, string! queryData) -> System.Threading.Channels.ChannelReader<int>!
+LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteReaderStream(string? configuration, string! queryData) -> System.Threading.Channels.ChannelReader<string!>!
+LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteScalarStream(string? configuration, string! queryData) -> System.Threading.Channels.ChannelReader<string!>!
+LinqToDB.Remote.SignalR.LinqToDBHub.GetInfoStream(string? configuration) -> System.Threading.Channels.ChannelReader<LinqToDB.Remote.LinqServiceInfo!>!
+LinqToDB.Remote.SignalR.LinqToDBHub.GetMaximumReceiveMessageSize() -> long
+LinqToDB.Remote.SignalR.LinqToDBHub.LinqToDBHub(Microsoft.Extensions.Options.IOptions<LinqToDB.Remote.SignalR.LinqToDBHubOptions!>! options) -> void
+LinqToDB.Remote.SignalR.LinqToDBHub<T>.LinqToDBHub(LinqToDB.Remote.ILinqService<T>! linqService, Microsoft.Extensions.Options.IOptions<LinqToDB.Remote.SignalR.LinqToDBHubOptions!>! options) -> void
+LinqToDB.Remote.SignalR.LinqToDBHubOptions
+LinqToDB.Remote.SignalR.LinqToDBHubOptions.LinqToDBHubOptions() -> void
+LinqToDB.Remote.SignalR.LinqToDBHubOptions.MaxConcurrentCalls.get -> int?
+LinqToDB.Remote.SignalR.LinqToDBHubOptions.MaxConcurrentCalls.set -> void
+LinqToDB.Remote.SignalR.LinqToDBHubOptions.MaxConcurrentCallsPerConnection.get -> int?
+LinqToDB.Remote.SignalR.LinqToDBHubOptions.MaxConcurrentCallsPerConnection.set -> void
+LinqToDB.Remote.SignalR.LinqToDBHubOptions.TransferInternalExceptionToClient.get -> bool
+LinqToDB.Remote.SignalR.LinqToDBHubOptions.TransferInternalExceptionToClient.set -> void
