@@ -58,8 +58,16 @@ namespace Tests.Linq
 		{
 			var t = db.CreateLocalTable<CoarseNullableEventRow>();
 
-			db.Insert(new CoarseNullableEventRow { Id = 1, StartedOn = CoarseStart,              FinishedOn = null                         });
-			db.Insert(new CoarseNullableEventRow { Id = 2, StartedOn = CoarseStart.AddHours(1), FinishedOn = CoarseStart.AddHours(3) });
+			try
+			{
+				db.Insert(new CoarseNullableEventRow { Id = 1, StartedOn = CoarseStart,              FinishedOn = null                         });
+				db.Insert(new CoarseNullableEventRow { Id = 2, StartedOn = CoarseStart.AddHours(1), FinishedOn = CoarseStart.AddHours(3) });
+			}
+			catch
+			{
+				t.Dispose();
+				throw;
+			}
 
 			return t;
 		}
