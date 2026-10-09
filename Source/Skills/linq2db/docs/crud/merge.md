@@ -11,7 +11,9 @@
 > **Async:** `.Merge()` has a `.MergeAsync(CancellationToken)` counterpart.
 > `MergeWithOutput` has `MergeWithOutputAsync` returning `IAsyncEnumerable<TOutput>`.
 > Examples use synchronous forms for brevity.
-> All async methods require `using LinqToDB.Async;`.
+> `MergeAsync` and the other async merge methods are in the `LinqToDB` namespace, like their synchronous forms;
+> `using LinqToDB.Async;` is needed only for async query materializers (`ToListAsync`,
+> `FirstOrDefaultAsync`, `CountAsync`, ...).
 
 > **Provider support:** MERGE is not universally available.
 > Check the `Merge` column in [`provider-capabilities.md`](../provider-capabilities.md).

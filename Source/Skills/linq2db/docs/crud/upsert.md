@@ -15,7 +15,9 @@
 
 > **Async:** All methods have `Async` counterparts accepting an optional `CancellationToken`.
 > Examples use synchronous forms for brevity; add `Async` suffix and `await` in async contexts.
-> Async methods require `using LinqToDB.Async;`.
+> The async DML methods are in the `LinqToDB` namespace, like their synchronous forms;
+> `using LinqToDB.Async;` is needed only for async query materializers (`ToListAsync`,
+> `FirstOrDefaultAsync`, `CountAsync`, ...).
 
 > **Provider support:** upsert behavior varies across databases.
 > Check the `Upsert` column in [`provider-capabilities.md`](../provider-capabilities.md) before using.

@@ -150,8 +150,10 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// Hint syntax and interpretation are provider-defined.
-		/// Tables that the query joins through association (navigation) properties do not receive the hint
-		/// (<see href="https://github.com/linq2db/linq2db/issues/4321">#4321</see>).
+		/// Tables that only the final projection of <paramref name="source"/> introduces (association properties
+		/// or subqueries inside its last <c>Select</c>) do not receive the hint
+		/// (<see href="https://github.com/linq2db/linq2db/issues/4321">#4321</see>); tables in <c>from</c>/<c>join</c>,
+		/// <c>Where</c> and <c>OrderBy</c> do.
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]

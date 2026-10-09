@@ -128,16 +128,18 @@ using LinqToDB;
 using LinqToDB.Data;
 ```
 
-Async query and DML extension methods (`ToListAsync`, `FirstOrDefaultAsync`, `SingleAsync`,
-`MaxAsync`, `InsertAsync`, `UpdateAsync`, `DeleteAsync`, `MergeAsync`, etc.) are in a separate
+Async query materializers and aggregates (`ToListAsync`, `ToArrayAsync`, `FirstOrDefaultAsync`,
+`SingleAsync`, `CountAsync`, `AnyAsync`, `MaxAsync`, `ForEachAsync`, etc.) are in a separate
 namespace:
 
 ```csharp
 using LinqToDB.Async;
 ```
 
-If the compiler does not find an async method, the missing `using LinqToDB.Async` is the most
-common cause.
+If the compiler does not find one of them, the missing `using LinqToDB.Async` is the most common
+cause. Async DML methods (`InsertAsync`, `UpdateAsync`, `DeleteAsync`, `MergeAsync`,
+`CreateTempTableAsync`, ...) are in `LinqToDB` like their synchronous forms; `BulkCopyAsync` is in
+`LinqToDB.Data`.
 
 ### Verify APIs before using them
 
@@ -183,8 +185,8 @@ Hints have the most typed, provider-specific API surface. The lookup order, with
 3. For a table hint, also look for the tables-in-scope form (`<Base>InScopeHint` /
    `With<Base>InScope`) and pick by whether the hint should affect one table or every table in the
    query scope. Apply a scope helper to the query that already contains the tables; it does not
-   reach tables joined through association properties
-   ([#4321](https://github.com/linq2db/linq2db/issues/4321)).
+   reach tables used only in the final `Select` (association properties or subqueries there,
+   [#4321](https://github.com/linq2db/linq2db/issues/4321); see [`docs/hints.md`](docs/hints.md#tables-in-scope-hints)).
 4. Do not build helper names by string concatenation; use only names found in the map or XML-doc.
 5. Generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`) come after the typed lookup
    finds nothing; `Sql.Expression`, raw SQL and interceptors come last.
@@ -252,6 +254,6 @@ Full wrong/correct code examples are in [`docs/agent-antipatterns.md`](docs/agen
 | API assumed missing because no guide mentions it | `linq2db.xml` is the version-matched API reference; search it before using generic fallbacks |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time - upsert requires a caller-supplied PK value; identity columns have none |
 | `string` / `decimal` column without explicit `Length` / `Precision` / `Scale` | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
-| `using LinqToDB.Async` missing | Async methods (`ToListAsync`, `InsertAsync`, `MergeAsync`, etc.) not found at compile time |
+| `using LinqToDB.Async` missing | Async materializers (`ToListAsync`, `FirstOrDefaultAsync`, `CountAsync`, etc.) not found at compile time |
 | Empty temporary table + separate `BulkCopy` as the default for existing rows | Lower-level pattern used instead of the source-shaped `CreateTempTable(items)` / `CreateTempTable(query)` overloads |
-| Scope hint expected to cover tables joined through associations | Those tables get no hint ([#4321](https://github.com/linq2db/linq2db/issues/4321)); join them explicitly |
+| Scope hint expected to cover tables used only in the final `Select` | Those tables get no hint ([#4321](https://github.com/linq2db/linq2db/issues/4321)); join them explicitly or hint the subquery's table |

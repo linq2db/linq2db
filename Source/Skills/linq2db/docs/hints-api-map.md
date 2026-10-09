@@ -55,7 +55,7 @@ How to use it:
    `TablesInScopeHint("...")`. Apply the typed `TablesInScope` helper to the query/subquery that
    already contains the table references to affect; applying it to only the first table before
    adding joins does not automatically include later joined tables. Scope helpers do not reach
-   tables joined through association (navigation) properties
+   tables used only in the final `Select` - association properties or subqueries there
    ([#4321](https://github.com/linq2db/linq2db/issues/4321)); see the scope rules in
    [`docs/hints.md`](hints.md#tables-in-scope-hints).
 6. Treat method-name patterns as lookup hints, not as proof of an API. Common shapes are

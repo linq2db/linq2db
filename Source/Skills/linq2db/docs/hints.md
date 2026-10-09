@@ -464,14 +464,31 @@ Scope boundaries matter:
 - A nested table/query expression with its own `TablesInScopeHint(...)` has its own scope.
 - Table-local hints are more specific than a scope-level hint: they are not removed by the scope
   hint and can coexist with it.
-- **Known limitation: tables reached through association (navigation) properties do not get the
-  scope hint** ([#4321](https://github.com/linq2db/linq2db/issues/4321)). In
-  `db.Child.Select(c => new { c.ChildID, c.Parent!.Name }).AsSqlServer().WithNoLockInScope()` the
-  `Child` table gets `WITH (NoLock)` but the `Parent` table joined for `c.Parent` does not. This
-  applies to `TablesInScopeHint(...)` and to every typed `*InScope*` helper, which are built on
-  it. Tables written explicitly in the scope - `from`/`join` sources and `GetTable<T>()` subqueries
-  such as `db.Product.Any(...)` - do get the hint. When every table must carry the hint, write the
-  related table as an explicit `join` instead of navigating to it, or check the generated SQL.
+- **Known limitation: tables used only in the final projection do not get the scope hint**
+  ([#4321](https://github.com/linq2db/linq2db/issues/4321)). The projection of the query the scope helper is applied to - its
+  last `Select` - is translated after the hint has been applied, so a table it introduces gets no
+  hint, whether it comes from an association (navigation) property or from a `GetTable<T>()`
+  subquery:
+
+  ```csharp
+  // Order gets WITH (NoLock); Customer and OrderLine do not - both are reached from the final Select
+  db.Order
+      .Select(o => new
+      {
+          o.OrderID,
+          o.Customer!.Name,                                          // association
+          HasLines = db.OrderLine.Any(l => l.OrderID == o.OrderID),  // subquery
+      })
+      .AsSqlServer()
+      .WithNoLockInScope();
+  ```
+
+  Tables used in `from`/`join` sources, `Where` and `OrderBy` - including association properties
+  and `GetTable<T>()` subqueries there - do get the hint. This applies to `TablesInScopeHint(...)`
+  and to every typed `*InScope*` helper, which are built on it. When a table reached from the
+  projection must carry the hint, join it explicitly (`join` / a second `from`) and project from
+  the joined row, or put a table-local hint on the subquery's table
+  (`db.OrderLine.AsSqlServer().WithNoLock().Any(...)`). Check the generated SQL when it matters.
 
 Provider SQL output differs. SQL Server emits per-table `WITH (...)` clauses, while Oracle and
 MySQL often collect table-scoped optimizer hints into provider-specific hint blocks. Use generated

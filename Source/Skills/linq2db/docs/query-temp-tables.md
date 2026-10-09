@@ -26,7 +26,8 @@
 ---
 
 > **Async:** All `CreateTempTable` extension methods have `CreateTempTableAsync` counterparts.
-> Async methods require `using LinqToDB.Async;`.
+> `CreateTempTable` / `CreateTempTableAsync` are in the `LinqToDB` namespace; `using LinqToDB.Async;`
+> is needed only for async query materializers such as `ToListAsync`.
 
 ---
 
@@ -141,7 +142,8 @@ Pass it via `CreateTempTableOptions` or the named `action:` parameter if this is
 Use `CreateTempTableAsync` to avoid blocking on `CREATE TABLE` or the initial BulkCopy.
 
 ```csharp
-using LinqToDB.Async;
+using LinqToDB;
+using LinqToDB.Data;
 
 await using var db    = new DataConnection(options);
 await using var table = await db.CreateTempTableAsync<Product>(products, cancellationToken: ct);

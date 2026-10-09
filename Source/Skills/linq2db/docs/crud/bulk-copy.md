@@ -20,7 +20,8 @@
 > **Async:** All `BulkCopy` methods have `BulkCopyAsync` counterparts accepting an optional `CancellationToken`.
 > Both `IEnumerable<T>` and `IAsyncEnumerable<T>` sources are supported by the async overloads.
 > Examples use synchronous forms for brevity; add `Async` suffix and `await` in async contexts.
-> Async methods require `using LinqToDB.Async;`.
+> `BulkCopy` / `BulkCopyAsync` are in the `LinqToDB.Data` namespace (`using LinqToDB.Data;`);
+> `using LinqToDB.Async;` is not needed for them.
 
 ---
 
@@ -82,7 +83,7 @@ BulkCopyRowsCopied result = table.BulkCopy(options, products);
 
 **Async with `IAsyncEnumerable<T>`:**
 ```csharp
-using LinqToDB.Async;
+using LinqToDB.Data;
 
 await foreach (var batch in streamingSource)
     /* ... */

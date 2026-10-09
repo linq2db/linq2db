@@ -293,8 +293,8 @@ Do not synthesize scope helper names by string concatenation; use the verified p
 `docs/hints-api-map.md` and XML-doc when needed.
 Apply scope helpers to the composed query/subquery that already contains the target tables; applying
 a `TablesInScope` helper to only the first table before adding joins will not cover later joined
-tables. Scope helpers also miss tables reached only through association (navigation) properties
-([#4321](https://github.com/linq2db/linq2db/issues/4321)); see `docs/hints.md`.
+tables. Scope helpers also miss tables used only in the final `Select` - association properties
+or subqueries there ([#4321](https://github.com/linq2db/linq2db/issues/4321)); see `docs/hints.md`.
 
 ---
 
