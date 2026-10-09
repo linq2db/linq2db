@@ -639,10 +639,42 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task ProjectDiscoveryDoesNotFollowDirectoryLinks()
+		{
+			var repo    = CreateRepository("5.0.0");
+			var foreign = Path.Combine(_directory, "foreign", "Foreign");
+
+			Directory.CreateDirectory(Path.Combine(foreign, "obj"));
+			File.WriteAllText(Path.Combine(foreign, "Foreign.csproj"), "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>");
+			File.WriteAllText(
+				Path.Combine(foreign, "obj", "project.assets.json"),
+				JsonSerializer.Serialize(new
+				{
+					version        = 3,
+					libraries      = new Dictionary<string, object> { ["linq2db/9.9.0"] = new { type = "package", path = "linq2db/9.9.0" } },
+					packageFolders = new Dictionary<string, object>(),
+				}));
+
+			// one link loops back to an ancestor, the other leads out of the repository
+			if (!TryCreateDirectoryLink(Path.Combine(repo.Root, "src", "loop"), repo.Root)
+				|| !TryCreateDirectoryLink(Path.Combine(repo.Root, "external"), Path.Combine(_directory, "foreign")))
+				Assert.Ignore("Symbolic links are not available.");
+
+			var result = await RunCli("skill", "install", "--project", repo.Root);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain("NuGet package linq2db 5.0.0");
+				result.Error.   ShouldNotContain("9.9.0");
+			}
+		}
+
+		[Test]
 		public async Task MsBuildThatDoesNotFinishIsKilledAfterTheTimeout()
 		{
-			if (OperatingSystem.IsWindows())
-				Assert.Ignore("Uses a shell script as the dotnet host.");
+			if (!OperatingSystem.IsLinux())
+				Assert.Ignore("Uses a shell script as the dotnet host and /proc to see whether its child is gone.");
 
 			var repo   = CreateRepository("5.0.0");
 			var marker = Path.Combine(_directory, "child-pid");
