@@ -134,7 +134,7 @@ comparison instead of a global setting change.
 
 ## API Lookup Anchors
 
-Search `docs/api.md` for:
+Search `lib/<TFM>/linq2db.xml` for:
 
 - `CompareNulls`
 - `LikeClr`

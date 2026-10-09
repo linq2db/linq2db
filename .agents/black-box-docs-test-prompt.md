@@ -31,7 +31,6 @@ under `<SOLUTION_ROOT>`:
 - `<SOLUTION_ROOT>/Source/Skills/linq2db/SKILL.md`
 - `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/*.md`
 - `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/**/*.md`
-- `<SOLUTION_ROOT>/Source/Skills/linq2db/docs/api.md`
 - `<SOLUTION_ROOT>/.build/bin/LinqToDB/**/linq2db.xml`
 
 The repo-local XML-doc path nests under `LinqToDB` by TFM, and sometimes also by configuration -

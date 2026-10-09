@@ -26,7 +26,7 @@ public members of the `Sql` static class that translate to SQL, plus explicit ca
 plausible-looking members that do **not** exist (`Sql.In`, `Sql.IsNull`, `Sql.Coalesce`,
 `Sql.Exists`). It does not enumerate niche/metadata helpers (`Sql.Row`, `Sql.Collate`,
 `Sql.GroupBy`/`Sql.Grouping`, `Sql.FieldName`/`Sql.TableName` and similar) or the full trig/rounding
-overload set. To verify whether a specific `Sql.*` member exists, search `docs/api.md` or
+overload set. To verify whether a specific `Sql.*` member exists, search `lib/<TFM>/linq2db.xml` or
 `Source/LinqToDB/Sql/Sql.cs` directly rather than assuming from this table's absence/presence alone.
 
 **Standard .NET methods** (String, Math, DateTime, Nullable, type conversions) - confirmed subset.
@@ -97,7 +97,7 @@ For the `Sql.*` helper API (functions with no standard .NET equivalent) see also
 
 ### String concatenation null semantics
 
-Use the XML-doc/API extract to distinguish the two concat APIs:
+Use XML-doc to distinguish the two concat APIs:
 
 - C# string concatenation (`a + b`) and `string.Concat(...)` use C# null-as-empty semantics.
   LinqToDB translates those expressions through its string translator and preserves that
@@ -221,7 +221,7 @@ to the equivalent `Sql.ConvertTo<T>.From(s)` cast.
 The `Sql` static class exposes functions with no direct .NET equivalent. This table lists the
 commonly used ones - it is **not** a closed enumeration; for niche/metadata helpers (`Sql.Row`,
 `Sql.Collate`, `Sql.GroupBy`/`Sql.Grouping`, `Sql.FieldName`/`Sql.TableName` and friends) search
-`docs/api.md` or `Source/LinqToDB/Sql/Sql.cs` directly.
+`lib/<TFM>/linq2db.xml` or `Source/LinqToDB/Sql/Sql.cs` directly.
 
 > `Sql.In`, `Sql.IsNull`, `Sql.Coalesce`, and `Sql.Exists` do **not** exist as members of `Sql` -
 > do not write code that calls them. Use the real equivalents instead:

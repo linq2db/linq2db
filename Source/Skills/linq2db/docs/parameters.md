@@ -110,7 +110,7 @@ must match exactly, or pass `DataType` explicitly.
 
 ## API Lookup Anchors
 
-Search `docs/api.md` for:
+Search `lib/<TFM>/linq2db.xml` for:
 
 - `DataParameter`
 - `ParameterDirection`

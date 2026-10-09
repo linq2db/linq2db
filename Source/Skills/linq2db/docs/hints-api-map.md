@@ -23,9 +23,9 @@ set instead of enumerating every possible setting or hint value.
 It is not a conceptual guide and not a substitute for XML-doc. For exact signatures, overloads, remarks, and package-version truth, inspect `lib/<TFM>/linq2db.xml`.
 
 Use this map to go from SQL/database wording to LinqToDB API. Search both `SQL hint` and `Search aliases`; aliases cover common user wording such as `MAX RECURSION` for `MAXRECURSION`, `NO LOCK` for `NOLOCK`, or underscore-separated hint names written with spaces.
-If the required SQL hint is absent here, search `docs/api.md` and raw XML-doc when needed before falling back to generic APIs; absence from this map alone is not proof that the API does not exist.
+If the required SQL hint is absent here, search XML-doc before falling back to generic APIs; absence from this map alone is not proof that the API does not exist.
 
-Negative lookup rule: do not say "this map has no typed helper" from memory, semantic retrieval, or a partial provider summary. First perform an exact lookup in this map for both the provider heading and the SQL/database term from the request, then search `docs/api.md` / `lib/<TFM>/linq2db.xml` for the provider `*Hints` type. A negative answer about typed hint API existence is valid only after both checks fail.
+Negative lookup rule: do not say "this map has no typed helper" from memory, semantic retrieval, or a partial provider summary. First perform an exact lookup in this map for both the provider heading and the SQL/database term from the request, then search `lib/<TFM>/linq2db.xml` for the provider `*Hints` type. A negative answer about typed hint API existence is valid only after both checks fail.
 
 Plain provider-neutral raw-text hint injectors such as `QueryHint(...)`, `TableHint(...)`,
 `TablesInScopeHint(...)`, `JoinHint(...)`, and `SubQueryHint(...)` are documented in

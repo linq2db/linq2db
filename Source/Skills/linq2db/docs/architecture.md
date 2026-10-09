@@ -186,10 +186,9 @@ Mapping configuration and metadata.
 Sql
 Helper API for SQL constructs.
 
-> **For AI agents:** Markdown docs provide orientation and scenario rules. `docs/api.md` is the
-> generated search index for public APIs. Raw XML-doc is the version-matched primary reference for
-> exact signatures, overloads, remarks, usage rules, lifetime constraints, and thread-safety details
-> when the generated extract is not detailed enough.
+> **For AI agents:** Markdown docs provide orientation and scenario rules. XML-doc
+> (`lib/<TFM>/linq2db.xml`) is the version-matched primary reference for exact signatures,
+> overloads, remarks, usage rules, lifetime constraints, and thread-safety details.
 
 ---
 
@@ -235,7 +234,6 @@ not as a completeness claim for every linq2db feature.
 |---|---|
 | `SKILL.md` | Canonical agent entry point and routing rules. |
 | `docs/coverage.md` | Covered and not-yet-covered topics. |
-| `docs/api.md` | Generated public API search/discovery index. |
 | `docs/architecture.md` | This architecture overview. |
 | `docs/agent-antipatterns.md` | Operational anti-patterns with code examples. |
 | `docs/ai-tags.md` | `[AiTags]` vocabulary and generated AI metadata semantics. |

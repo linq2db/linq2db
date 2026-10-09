@@ -383,7 +383,6 @@
   <Folder Name="/Source/Skills/linq2db/docs/">
     <File Path="Source/Skills/linq2db/docs/agent-antipatterns.md" />
     <File Path="Source/Skills/linq2db/docs/ai-tags.md" />
-    <File Path="Source/Skills/linq2db/docs/api.md" />
     <File Path="Source/Skills/linq2db/docs/architecture.md" />
     <File Path="Source/Skills/linq2db/docs/associations.md" />
     <File Path="Source/Skills/linq2db/docs/concurrency.md" />

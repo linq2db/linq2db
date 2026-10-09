@@ -294,7 +294,7 @@ versions unless a version-matched XML-doc/API entry explicitly states it.
 
 ## API Lookup Anchors
 
-Search `docs/api.md` for:
+Search `lib/<TFM>/linq2db.xml` for:
 
 - `UpdateOptimistic`
 - `UpdateOptimisticAsync`

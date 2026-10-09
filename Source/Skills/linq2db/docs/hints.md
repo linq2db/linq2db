@@ -31,15 +31,15 @@
 >   `AsClickHouse()`, etc. from the provider marker table, then call the typed helper.
 > - One provider marker call is enough for several consecutive typed hints for that provider.
 >   Call another marker only when switching to another provider's hint API.
-> - Before claiming that a provider-specific hint API does not exist, inspect the provider marker table below and the generated provider `*Hints` API entries.
-> - Do not choose plain `QueryHint(...)` or `TableHint(...)` only because it is documented; those are generic fallbacks after generated API/map lookup, with raw XML-doc confirmation when needed.
+> - Before claiming that a provider-specific hint API does not exist, inspect the provider marker table below and the provider `*Hints` entries in XML-doc.
+> - Do not choose plain `QueryHint(...)` or `TableHint(...)` only because it is documented; those are generic fallbacks after map and XML-doc lookup.
 > - Hint syntax and meaning are provider-defined. Do not assume the same hint text is valid across providers.
 > - Never build hint text from user input. Hint strings are SQL text, not query parameters.
 > - Hints are deferred and composable; they become SQL AST extensions and are emitted only during SQL generation.
 > - Provider-specific `AsXxx()` hint branches can be added to the same query. Only hints compatible with the active provider are emitted into SQL.
 > - Do not suggest `Sql.Table(...)`, `[Sql.Expression]`, SQL text rewriting, or interceptors for a hint until provider-specific and general hint APIs have been checked.
 > - For any provider-specific hint question, `docs/hints-api-map.md` and the provider `*Hints`
->   generated API surface are a required pre-answer gate, not optional follow-up material.
+>   entries in XML-doc are a required pre-answer gate, not optional follow-up material.
 > - Do not skip the hint map because a database feature is a table modifier, lock clause, query
 >   directive, or provider-specific SQL extension instead of a classic optimizer hint. If the user
 >   asks for it as a hint, run the hint lookup algorithm first.
@@ -50,7 +50,7 @@
 >   LinqToDB. It does not choose, recommend, or validate database tuning strategies.
 > - Do not claim that a typed hint API is absent from the map unless you have searched the map by
 >   exact provider and exact SQL/database term. If the exact map lookup is inconclusive, search
->   `docs/api.md` and XML-doc for the provider `*Hints` type before recommending a raw fallback.
+>   XML-doc for the provider `*Hints` type before recommending a raw fallback.
 
 ---
 
@@ -94,7 +94,7 @@ correct.
 
 Exception: some provider APIs intentionally expose an additional plain `IQueryable<T>` overload.
 For example, YDB `DistinctHint(...)` and `UniqueHint(...)` have overloads on both
-`IQueryable<T>` and `IYdbSpecificQueryable<T>`. When the generated API/map lists both receivers,
+`IQueryable<T>` and `IYdbSpecificQueryable<T>`. When XML-doc or the map lists both receivers,
 the plain `IQueryable<T>` overload is valid for that specific helper. Do not generalize this
 exception to other providers or helpers unless the installed package API lists the same receiver.
 
@@ -146,7 +146,7 @@ provider-specific SQL extensions that the user describes as hints, use this exac
    `TablesInScope` helper before answering. Some providers expose both table-local and scope-level
    forms, and the correct answer depends on whether the user needs one table source or all table
    references in a query scope.
-6. In `docs/api.md` and, when needed, raw XML-doc, verify the helper signature, receiver type,
+6. In XML-doc, verify the helper signature, receiver type,
    namespace, overloads, XML summary, and AI metadata such as `Groups=Hints; HintType=...`.
 7. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
    SQL hint text, provider namespace, receiver type, and likely helper-name fragments.
@@ -180,13 +180,13 @@ such as `Table` or by string concatenation; verify the real helper in `docs/hint
 XML-doc.
 
 If the answer recommends a fallback API for a provider-specific SQL hint, it must be because the
-exact map lookup, generated API lookup, and raw XML-doc confirmation failed to find a typed helper
+exact map lookup and XML-doc lookup failed to find a typed helper
 in the installed package version.
 Do not write "the map has no entry" unless that exact lookup was performed.
 
 Answering contract: for a concrete provider-specific hint, name the required provider marker, the
 found typed helper, and the helper receiver before showing code. If no typed helper exists,
-explicitly say whether exact map lookup, generated API lookup, and raw XML-doc confirmation found a
+explicitly say whether exact map lookup and XML-doc lookup found a
 provider-specific generic directive family before recommending raw `QueryHint`, `TableHint`,
 `TablesInScopeHint`, custom SQL, or interceptors.
 
@@ -292,7 +292,7 @@ Known provider gaps:
 | SAP HANA | Yes: `WITH HINT (...)` for DML statements. | No regular table/query/join hint API. | Do not invent `AsSapHana().XxxHint()`; HANA hints would need explicit provider builder support. |
 | Sybase | Needs provider-specific investigation. | No regular table/query/join hint API. | Do not invent provider-specific hint helpers. Verify dialect support before proposing docs or API. |
 
-Inspect `docs/api.md`, raw XML-doc when needed, or the provider namespace for the exact helper names. Generated helpers often use
+Inspect XML-doc or the provider namespace for the exact helper names. Generated helpers often use
 a `Hint` suffix, but naming is provider-specific and should not be guessed from SQL text alone.
 The XML-doc summary names the concrete SQL hint inside `<c>...</c>`; generated AI metadata and `HintType`
 classify the scope, not the exact hint name.
@@ -358,7 +358,7 @@ var query =
 ```
 
 The `<real ...>` marker above is intentionally non-compilable. Replace it with a real provider helper found in
-`docs/hints-api-map.md`, `docs/api.md`, or XML-doc. Examples of applicable API shapes include
+`docs/hints-api-map.md` or XML-doc. Examples of applicable API shapes include
 provider `SubQueryTableHint(...)` overloads, SQL Server `OptionTableHint(...)`, provider optimizer
 hints that accept `params Sql.SqlID[]`, and format-parameter hint APIs such as ClickHouse
 `SettingsHint(...)`.

@@ -13,7 +13,6 @@ package version they are shipped with.
 | `README.md` | Maintainer-facing overview for shipped skill packs. |
 | `linq2db/SKILL.md` | Canonical agent entry point for linq2db package usage. |
 | `linq2db/docs/*.md` | Task-focused source-of-truth guides for package users and coding agents. |
-| `linq2db/docs/api.md` | Generated API discovery index from `linq2db.xml`; search it, do not read it sequentially. |
 
 ## Available Skills
 
@@ -38,6 +37,5 @@ skills/
 - Keep `linq2db/SKILL.md` as the canonical entry point for the linq2db skill.
 - Treat everything under `linq2db/` as package-facing content shipped to NuGet.
 - Do not place maintainer prompts, roadmaps, test prompts, or internal notes under `linq2db/`.
-- Regenerate generated files, including `linq2db/docs/api.md`, when XML documentation changes.
 - Do not create a second agent entry point under `Source/LinqToDB`; `linq2db/SKILL.md` is canonical.
 - Preserve CRLF line endings and UTF-8 without BOM.

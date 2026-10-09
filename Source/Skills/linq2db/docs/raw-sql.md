@@ -233,7 +233,7 @@ the parameter handling has been verified.
 
 ## API Lookup Anchors
 
-Search `docs/api.md` for:
+Search `lib/<TFM>/linq2db.xml` for:
 
 - `FromSql`
 - `FromSqlScalar`

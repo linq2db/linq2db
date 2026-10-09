@@ -12,9 +12,8 @@ description: Use when writing or reviewing C# code that uses linq2db APIs, inclu
 This package includes a package-local AI agent skill:
 - `SKILL.md` is the canonical AI entry point.
 - `docs/*.md` contains task-specific skill references.
-- `docs/api.md` provides API discovery and generated AI metadata extracted from XML-doc.
 - `lib/<TFM>/linq2db.xml` is the version-matched primary reference for exact API facts when
-  the generated extract or markdown guidance is not enough.
+  markdown guidance is not enough.
 
 Navigation:
 - [Core reference](#core-reference) - **required** before writing any code; re-read for non-trivial tasks
@@ -32,7 +31,7 @@ These files define global rules that apply to every operation. Keep them in mind
 |---|---|
 | `docs/architecture.md` | Translation pipeline, entry points, connection model |
 | `docs/agent-antipatterns.md` | Common mistakes with WRONG/CORRECT code examples; quick symptom index at the top |
-| `docs/coverage.md` | Covered and not-yet-covered AI documentation areas; use it to decide when generated API lookup or raw XML-doc confirmation is required |
+| `docs/coverage.md` | Covered and not-yet-covered AI documentation areas; use it to decide when XML-doc lookup is required |
 | `docs/associations.md` | `[Association]`, fluent associations, `LoadWith` / `ThenLoad`, eager-loading strategies, and no-lazy-loading rules |
 
 ---
@@ -82,21 +81,20 @@ If it is missing, add it - do not assume it will be present at runtime.
 ### 2 - Use XML-doc as exact API reference when needed
 
 Markdown documentation is sufficient for most code generation scenarios.
-For exact public API facts, use `docs/api.md` first as a generated search index. Inspect raw
-XML-doc only when the generated extract or markdown guidance does not contain enough detail.
+For exact public API facts that markdown guidance does not cover, search the XML documentation.
 
 The XML documentation file ships with the package assembly:
 `lib/<TFM>/linq2db.xml`
 Use it for version-matched signatures, overloads, parameter documentation, return types, remarks,
 and custom AI metadata. Do not read it sequentially.
 
-### 3 - Use generated API discovery before raw XML-doc
+### 3 - Verify APIs before using them
 
 Do not invent APIs, overloads, options, XML-doc remarks, AI metadata, provider flags, or provider
 capabilities. Also do not assume an API is missing just because markdown docs do not mention it.
 
 Do not use `LinqToDB.Internal.*` APIs in application code. They are implementation details even
-when visible as public members in XML documentation or generated extracts.
+when visible as public members in XML documentation.
 
 Use outside knowledge only for the parts of the task that are not specific to LinqToDB. This can
 include database tuning, SQL concepts, .NET/C# behavior, business-domain reasoning, or any other
@@ -111,7 +109,7 @@ with LinqToDB correctly.
 For LinqToDB-specific decisions, this package is the source of truth: public API names and
 signatures, namespaces, receiver types, provider-specific helpers, fallback order, mapping rules,
 query composition rules, connection lifetime rules, and architecture constraints must be grounded
-in bundled markdown docs, `docs/api.md`, or `lib/<TFM>/linq2db.xml`. When outside knowledge suggests
+in bundled markdown docs or `lib/<TFM>/linq2db.xml`. When outside knowledge suggests
 a SQL feature or implementation strategy, map it to LinqToDB through this package before writing
 code. If no package-confirmed LinqToDB API path is found, say that and only then discuss fallbacks.
 
@@ -121,27 +119,21 @@ configuration, and DML/query extensions:
 1. First read the relevant markdown guide for concepts, boundaries, and common mistakes.
 2. Start with the narrowest applicable API surface: provider-specific guides, maps, namespaces,
    and typed helpers.
-3. Use `docs/api.md` as the curated API discovery extract when available. Do not read it
-   sequentially; it is a search index. Search its
-   `Search anchors:` lines first by task words, provider names, SQL keywords, likely member names,
-   receiver scope, and AI metadata.
-4. Use headings, summaries, and AI metadata to confirm likely candidates.
-5. When `docs/api.md` has a candidate entry, copy the `XML member` id from its table row and search
-   `lib/<TFM>/linq2db.xml` by that exact id for exact public API names, signatures, overloads,
-   parameters, return types, remarks, and AI metadata when those details are not clear from the
-   generated extract.
-6. Treat XML-doc as the version-matched primary reference for exact API facts on members that have
-   XML comments, but use it through `docs/api.md` whenever possible.
-7. Do not conclude that an API is unavailable until `docs/api.md` has been searched and raw
-   XML-doc has been searched when the generated extract is inconclusive.
-   A compact `docs/api.md` extract entry groups overload families; a missing overload in that
-   extract is not proof that the overload is absent.
-8. Prefer typed or provider-specific APIs found in XML-doc over generic string-based APIs.
-9. Use generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL only as
+3. Search `lib/<TFM>/linq2db.xml` by likely member names, type names, provider names, and SQL
+   keywords. Do not read it sequentially. Member ids have the form `M:Namespace.Type.Member(...)`
+   (`T:` for types, `P:` for properties, `F:` for fields), so a search for `.TypeName.MemberName`
+   finds every overload.
+4. Use summaries, parameter documentation, and remarks to confirm likely candidates.
+5. Treat XML-doc as the version-matched primary reference for exact public API names, signatures,
+   overloads, parameters, return types, and remarks on members that have XML comments.
+6. Do not conclude that an API is unavailable until XML-doc has been searched. Members without
+   XML comments are absent from it, so a missing entry is not proof that the API is absent.
+7. Prefer typed or provider-specific APIs found in XML-doc over generic string-based APIs.
+8. Use generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL only as
    fallbacks when no typed API exists or when the typed API does not cover the requested case.
-10. Use custom SQL, raw SQL, and interceptors only after typed and generic APIs do not cover the
+9. Use custom SQL, raw SQL, and interceptors only after typed and generic APIs do not cover the
    requested case.
-11. If markdown and XML-doc disagree, prefer XML-doc for exact API shape and state the discrepancy.
+10. If markdown and XML-doc disagree, prefer XML-doc for exact API shape and state the discrepancy.
 
 For SQL hint questions, use this mandatory lookup order before answering:
 
@@ -167,7 +159,7 @@ For SQL hint questions, use this mandatory lookup order before answering:
    receiver types, and AI metadata such as `Groups=Hints`.
 9. Prefer typed/provider-specific helpers found in the map or XML-doc.
 10. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
-   map, generated API lookup, and raw XML-doc confirmation fail to find a typed helper for the
+   map and XML-doc lookup fail to find a typed helper for the
    installed package version.
 11. Recommend `Sql.Expression`, raw SQL, or interceptors only after both typed and generic hint APIs
    do not cover the requested case.
@@ -175,13 +167,13 @@ For SQL hint questions, use this mandatory lookup order before answering:
 When answering a concrete provider-specific hint question, ground the answer in the API lookup
 result. If a typed helper is found, name the required provider marker, the typed helper, and its
 receiver before showing fallback APIs. If no typed helper is found, say that the exact map and
-generated API lookup and raw XML-doc confirmation did not find one before
+XML-doc lookup did not find one before
 recommending `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or
 interceptors.
 
 Do not answer a provider-specific hint question from the generic hints model alone.
 Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
-provider and exact SQL/database term, then searched `docs/api.md` and raw XML-doc, when needed, for the provider
+provider and exact SQL/database term, then searched XML-doc for the provider
 `*Hints` type, SQL term, likely helper fragments, and AI metadata such as `Groups=Hints`.
 Do not skip this lookup because the database feature is a table modifier, lock clause, query
 directive, or provider-specific SQL extension rather than a classic optimizer hint.
@@ -207,7 +199,7 @@ When a guide lists several possible implementation paths, the order is meaningfu
 the most specific package-version path first. Generic APIs, custom SQL, raw SQL, and interceptors
 are fallback paths unless the guide explicitly says otherwise.
 
-Types where raw XML-doc is often useful when `docs/api.md` is not enough:
+Types where XML-doc is often useful when markdown guidance is not enough:
 
 - `docs/architecture.md` - architecture overview, translation pipeline, and cross-references
 - `DataOptions` - MUST be created once per application and shared; DO NOT recreate per operation or per request
@@ -267,7 +259,6 @@ They may not match this package version. Always use the bundled files below:
 
 | File | When to read |
 |---|---|
-| `docs/api.md` | API discovery rules and curated extract entries; read before concluding that an API does not exist or before using generic fallbacks |
 | `docs/mapping.md` | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
 | `docs/associations.md` | Relationship metadata and eager loading - `[Association]`, fluent `.Association(...)`, `LoadWith`, `ThenLoad`, eager-loading strategies |
 | `docs/crud/crud.md` | All CRUD operations - SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
@@ -277,15 +268,15 @@ They may not match this package version. Always use the bundled files below:
 | `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; session-scoped tables need a kept-open connection |
 | `docs/null-semantics.md` | Why generated SQL for a null comparison looks more complex than expected - `CompareNulls`, `Sql.AsNotNull`, `IsDistinctFrom`, `Sql.ToNullable`/`Sql.AsNullable` |
 | `docs/parameters.md` | `DataParameter` construction, output/input-output procedure parameters, and forcing a value to be a bound parameter vs a SQL literal - `Sql.Parameter`, `Sql.Constant`, `InlineParameters` |
-| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and generated provider `*Hints` API entries |
-| `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in `docs/api.md` or raw XML-doc when needed |
+| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and the provider `*Hints` entries in XML-doc |
+| `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in XML-doc when needed |
 | `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
 | `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING - check provider support first |
 | `docs/raw-sql.md` | Raw SQL query roots and command execution - `FromSql`, `FromSqlScalar`, `RawSqlString`, `SetCommand`, `CommandInfo`, `ToSqlQuery`, `QuerySql` |
 | `docs/extensions.md` | Extension mechanisms - `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, and `IMemberTranslator` / `UseMemberTranslator` |
 | `docs/interceptors.md` | Choosing and registering interceptors; callback timing and supported use cases |
 | `docs/configuration.md` | Logging, retry, interceptors, `DataOptions` builder, `app.config`/`web.config`/JSON configuration |
-| `docs/coverage.md` | Coverage status for package-local AI guides; if a topic is not covered, search `docs/api.md` and raw XML-doc when needed |
+| `docs/coverage.md` | Coverage status for package-local AI guides; if a topic is not covered, search XML-doc when needed |
 
 > For any non-trivial code, transaction handling, lifetime issues, or unexpected exceptions - consult `docs/agent-antipatterns.md` (quick symptom index at the top) and `docs/architecture.md`.
 
@@ -301,8 +292,8 @@ Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
 | Provider driver package missing | Compiles; fails at runtime with assembly-not-found error |
 | `DataConnection` opened before `TransactionScope` created | Transaction not applied; data committed outside scope |
 | GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
-| API assumed missing because it is not in markdown | `docs/api.md` and raw XML-doc are the version-matched API reference; search them before using generic fallbacks |
-| Raw XML-doc not checked when generated docs are inconclusive | Exact signature, overload, lifetime, or remarks detail can be missed |
+| API assumed missing because it is not in markdown | `lib/<TFM>/linq2db.xml` is the version-matched API reference; search it before using generic fallbacks |
+| XML-doc not checked when markdown docs are inconclusive | Exact signature, overload, lifetime, or remarks detail can be missed |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time - upsert requires a caller-supplied PK value; identity columns have none |
 | `string` / `decimal` column without explicit `Length` / `Precision` / `Scale` | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
 | Self-chosen `Length` / `Precision` / `Scale` with no `TODO` comment | Assumption is invisible; cannot distinguish confirmed values from guesses - treat as incomplete |

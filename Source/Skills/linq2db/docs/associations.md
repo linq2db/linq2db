@@ -271,7 +271,7 @@ Use `Storage` when the public association member should expose a calculated or w
 `LoadWith` should assign to a backing member.
 
 For more advanced assignment, `AssociationSetterExpression` or `AssociationSetterExpressionMethod`
-can provide a setter expression. Verify exact signatures in `docs/api.md` / XML-doc before using
+can provide a setter expression. Verify exact signatures in XML-doc before using
 custom setters; most application mappings do not need them.
 
 ---
@@ -355,7 +355,7 @@ whole query into eager loading.
 
 ## API lookup anchors
 
-When exact signatures are needed, search [`api.md`](api.md) and then XML-doc for:
+When exact signatures are needed, search XML-doc (`lib/<TFM>/linq2db.xml`) for:
 
 - `AssociationAttribute`
 - `EntityMappingBuilder.Association`

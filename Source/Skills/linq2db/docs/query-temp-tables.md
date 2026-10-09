@@ -222,7 +222,7 @@ using var table = db.CreateTempTable<Product>(opts, products);
 ```
 
 > Provider support for specific `TableOptions` values varies.
-> Check the `TableOptions` XML-doc entries in `docs/api.md` or `linq2db.xml`
+> Check the `TableOptions` XML-doc entries in `lib/<TFM>/linq2db.xml`
 > before using flags beyond `IsTemporary`.
 
 ---

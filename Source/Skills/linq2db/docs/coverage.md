@@ -6,7 +6,7 @@
 > Do not continue without reading it.
 
 This file records which LinqToDB topics have package-local AI guidance and which topics still
-require generated API index lookup or raw XML-doc confirmation.
+require XML-doc lookup.
 
 ## Covered Topics
 
@@ -50,7 +50,7 @@ These areas are not yet covered by a dedicated AI guide or are covered only indi
 ## Recognized But Not Yet Guided
 
 These public or package-adjacent areas exist and should not be treated as unknown, but they do not
-yet have task-focused package-local AI guidance. For these topics, search `docs/api.md` and then
+yet have task-focused package-local AI guidance. For these topics, search
 `lib/<TFM>/linq2db.xml` for exact version-matched API details before answering:
 
 - compiled queries: `CompiledQuery`;
@@ -74,9 +74,8 @@ guidance from package-confirmed core `linq2db` facts.
 ## Rule For Uncovered Topics
 
 If a topic is not covered by markdown guidance, do not infer LinqToDB API shape or behavior from
-memory. Search `docs/api.md` by task terms, member names, provider names, receiver types, and
-AI metadata. Use `lib/<TFM>/linq2db.xml` as the version-matched primary reference only when the
-generated extract is inconclusive or exact signature/remarks detail is required.
+memory. Search `lib/<TFM>/linq2db.xml`, the version-matched primary reference, by member names,
+type names, provider names, and receiver types.
 
 Do not use `LinqToDB.Internal.*` APIs in application code while investigating uncovered topics.
 They are implementation details even when visible as public members.

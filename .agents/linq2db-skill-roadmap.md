@@ -8,8 +8,7 @@ Canonical maintenance and layout reference:
 - `Source/Skills/README.md` - shipped skill-pack layout and package rules.
 
 Use this file only to track planned, partial, completed, or deferred skill documentation areas.
-When an item becomes package guidance, write it under `Source/Skills/linq2db/` first and regenerate
-derived artifacts when needed.
+When an item becomes package guidance, write it under `Source/Skills/linq2db/`.
 
 ---
 ## Coverage Checklist
@@ -17,8 +16,7 @@ derived artifacts when needed.
 | Done | Area | Target doc | Priority | Status | Notes |
 |---|---|---|---|---|---|
 | [x] | Agent entry point | `Source/Skills/linq2db/SKILL.md` | Critical | Done | Mandatory package entry point for agents. |
-| [x] | Agent skill entry point | `Source/Skills/linq2db/SKILL.md` | Critical | Done | Compatibility entry point for agent skill systems; routes to `SKILL.md`, task guides, generated API discovery, and raw XML-doc confirmation when needed. |
-| [x] | API discovery | `Source/Skills/linq2db/docs/api.md` | Critical | Done | General rules for finding exact API members through the generated API index and raw XML-doc confirmation when needed. |
+| [x] | Agent skill entry point | `Source/Skills/linq2db/SKILL.md` | Critical | Done | Compatibility entry point for agent skill systems; routes to `SKILL.md`, task guides, and XML-doc lookup when needed. |
 | [x] | Architecture overview | `Source/Skills/linq2db/docs/architecture.md` | Critical | Done | Core reference; already linked from `SKILL.md`. |
 | [x] | Agent anti-patterns | `Source/Skills/linq2db/docs/agent-antipatterns.md` | Critical | Done | Quick symptom index and wrong/correct examples. |
 | [x] | AI metadata governance | `Source/Skills/linq2db/docs/ai-tags.md` | High | Done | Selective coverage policy is documented; generated API and Expert pack generators validate `<ai-tags />` / `<ai-tags-defaults />` keys and controlled values. |
