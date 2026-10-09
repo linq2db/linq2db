@@ -1907,6 +1907,45 @@ namespace Tests.Linq
 			cte.Count(c => c.Value == CoarseSubSecondBoundary).ShouldBe(0);
 		}
 
+		sealed class ShiftHourConverter() : ValueConverter<DateTime, DateTime>(v => v.AddHours(-1), v => v.AddHours(1), false);
+		sealed class ShiftDayConverter () : ValueConverter<DateTime, DateTime>(v => v.AddDays(-1),  v => v.AddDays(1),  false);
+
+		[Table]
+		sealed class CoarseConvertedRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime), ValueConverter(ConverterType = typeof(ShiftHourConverter))]
+			public DateTime Value { get; set; }
+
+			[Column(DataType = DataType.Date), ValueConverter(ConverterType = typeof(ShiftDayConverter))]
+			[Column(Configuration = ProviderName.ClickHouse, DataType = DataType.Date32)]
+			public DateTime Day { get; set; }
+		}
+
+		static readonly DateTime CoarseConvertedDay = CoarseValue.Date;
+
+		/// <summary>
+		/// A value compared with an aggregate over a coarse converted column still goes through the column's converter.
+		/// </summary>
+		[Test]
+		public void CoarseConvertedAggregateComparedWithValue([DataSources] string context)
+		{
+			var value = CoarseValue;
+			var day   = CoarseConvertedDay;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[] { new CoarseConvertedRow { Id = 1, Value = value, Day = day } });
+
+			t.Select(r => r.Value).Single().ShouldBe(value);
+			t.Count(r => r.Value == value).ShouldBe(1);
+
+			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == value).Count().ShouldBe(1);
+			t.GroupBy(r => r.Id).Where(g => g.Max(r => r.Value) == CoarseValue).Count().ShouldBe(1);
+			t.GroupBy(r => r.Id).Where(g => g.Min(r => r.Day)   == day).Count().ShouldBe(1);
+			t.GroupBy(r => r.Id).Where(g => g.Min(r => r.Day)   == CoarseConvertedDay).Count().ShouldBe(1);
+		}
+
 		[Test]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void NewDateTime3([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)

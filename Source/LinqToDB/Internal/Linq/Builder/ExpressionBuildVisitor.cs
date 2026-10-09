@@ -2981,7 +2981,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// A value computed from a coarse date/time column is not stored in it, so its coarse type is not lent to the
 			// other side, where it would drop a sub-second or time part.
-			if (descriptor != null && !IsStoredValue(placeholderTest.Sql))
+			if (descriptor is { ValueConverter: null } && !IsStoredValue(placeholderTest.Sql))
 			{
 				var columnType = descriptor.GetDbDataType(true);
 
