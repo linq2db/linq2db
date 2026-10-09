@@ -330,30 +330,58 @@ namespace Tests.Linq
 			t.Single().Value.ShouldBe(value);
 		}
 
-		// SignalRDataContext(HubConnection) builds the client itself, so the connection is the context's to
-		// dispose. It used to hand it to a client whose DisposeAsync did nothing at all, leaking the connection
-		// and its transport for the life of the process.
+		// With disposeHubConnection: true the caller hands the connection over, so the context disposes it.
 		[Test]
-		public async Task SignalRContextDisposesTheHubConnectionItCreated()
+		public async Task SignalRContextDisposesAnOwnedHubConnection()
 		{
 			var hubConnection = BuildUnstartedHubConnection();
 
-			await new SignalRDataContext(hubConnection).DisposeAsync();
+			await new SignalRDataContext(hubConnection, disposeHubConnection: true).DisposeAsync();
 
 			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
 		}
 
 		[Test]
-		public void SignalRContextDisposesTheHubConnectionItCreated_SyncDispose()
+		public void SignalRContextDisposesAnOwnedHubConnection_SyncDispose()
 		{
 			var hubConnection = BuildUnstartedHubConnection();
 
-			new SignalRDataContext(hubConnection).Dispose();
+			new SignalRDataContext(hubConnection, disposeHubConnection: true).Dispose();
 
 			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
 		}
 
-		// The other constructor takes a client the caller built, so the connection inside it stays the
+		// A hub connection is long-lived and meant to be shared: SignalRDataContext(HubConnection) leaves it to
+		// the caller, so disposing one context must not break another context on the same connection.
+		[Test]
+		public async Task SignalRContextLeavesACallerSuppliedHubConnectionAlone([Values] bool syncDispose)
+		{
+			var hubConnection = BuildUnstartedHubConnection();
+
+			var first  = new SignalRDataContext(hubConnection);
+			var second = new SignalRDataContext(hubConnection, disposeHubConnection: false);
+
+			if (syncDispose)
+			{
+				first.Dispose();
+				second.Dispose();
+			}
+			else
+			{
+				await first.DisposeAsync();
+				await second.DisposeAsync();
+			}
+
+			// Nothing listens on the port, so starting fails either way - what matters is that it fails for
+			// that reason and not because a context disposed the connection underneath its owner.
+			var error = Assert.CatchAsync(() => hubConnection.StartAsync());
+
+			Assert.That(error, Is.Not.InstanceOf<ObjectDisposedException>());
+
+			await hubConnection.DisposeAsync();
+		}
+
+		// The client constructor takes a client the caller built, so the connection inside it stays the
 		// caller's: disposing the context must not touch it.
 		[Test]
 		public async Task SignalRContextLeavesACallerSuppliedClientAlone()

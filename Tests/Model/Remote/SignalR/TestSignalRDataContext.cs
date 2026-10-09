@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Tests.Model.Remote.SignalR
 {
-	public class TestSignalRDataContext(HubConnection hubConnection, Func<DataOptions, DataOptions>? optionBuilder = null) : SignalRDataContext(hubConnection, optionBuilder), ITestDataContext
+	public class TestSignalRDataContext(HubConnection hubConnection, Func<DataOptions, DataOptions>? optionBuilder = null) : SignalRDataContext(hubConnection, disposeHubConnection: true, optionBuilder), ITestDataContext
 	{
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
 		public ITable<ComplexPerson>          ComplexPerson          => this.GetTable<ComplexPerson>();
