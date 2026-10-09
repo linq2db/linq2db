@@ -1148,6 +1148,25 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6007")]
+		public void NestedScalar_InToExists_SqlExpressionArgument([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(true));
+
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+			var alias = context.IsAnyOf(TestProvName.AllYdb) ? "`value`" : "\"value\"";
+
+			var sql = FormattableStringFactory.Create($"SELECT {id} AS {alias} FROM {table} WHERE {id} = {{0}}", new SqlValue(1));
+
+			for (var i = 0; i < 3; i++)
+			{
+				var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(sql)));
+
+				query.Select(p => p.ID).ToArray().ShouldBe([1]);
+			}
+		}
+
 		sealed record Projection1(int i1, int i2);
 
 		sealed record Projection2(int i);
