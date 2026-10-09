@@ -300,5 +300,149 @@ namespace Tests.Analyzers
 				""",
 				SqlServerKey);
 		}
+	
+
+		[Test]
+		public async Task NamedReorderedArgumentsUseTheBoundReceiver()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = LinqExtensions.[|TableHint(hint: "NOLOCK", table: t)|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				""",
+				SqlServerKey);
+		}
+
+		[Test]
+		public async Task GenericWithOnSqlServerReceiverOffersSqlCeToo()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().[|With("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlCe;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().AsSqlCe().WithNoLock();
+					}
+				}
+				""",
+				SqlCeKey);
+		}
+
+		[Test]
+		public async Task GenericWithOnSqlServerReceiverSqlServerChoice()
+		{
+			await VerifyAsync(
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().[|With("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsSqlServer().WithNoLock();
+					}
+				}
+				""",
+				SqlServerKey);
+		}
+
+		[Test]
+		public async Task NewUsingGoesAfterGlobalUsings()
+		{
+			await VerifyAsync(
+				"""
+				global using System.Collections.Generic;
+				using LinqToDB;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.[|TablesInScopeHint("NOLOCK")|];
+					}
+				}
+				""",
+				"""
+				global using System.Collections.Generic;
+				using System.Linq;
+				using LinqToDB;
+				using LinqToDB.DataProvider.SqlServer;
+
+				class Row { }
+
+				class C
+				{
+					void M(ITable<Row> t)
+					{
+						var r = t.AsQueryable().AsSqlServer().WithNoLockInScope();
+					}
+				}
+				""",
+				SqlServerKey);
+		}
 	}
 }

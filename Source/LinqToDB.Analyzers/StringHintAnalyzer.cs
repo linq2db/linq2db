@@ -19,10 +19,12 @@ namespace LinqToDB.Analyzers
 	/// </summary>
 	/// <remarks>
 	/// The generic overloads on <c>LinqExtensions</c> emit their text for every provider a query runs on, while a typed
-	/// helper emits only on its own provider. On a provider-specific receiver (<c>AsSqlServer().TableHint("NOLOCK")</c>)
-	/// the two are interchangeable, so the rule is a warning there. On a generic receiver the rewrite also restricts
-	/// the hint to the chosen provider, so the message names every provider that has the hint and the code fix offers
-	/// one rewrite per provider.
+	/// helper emits only on its own provider. A provider's own string overload (<c>AsSqlServer().TableHint("NOLOCK")</c>,
+	/// bound to <c>SqlServerHints.TableHint</c>) and the typed helper are interchangeable. A generic overload - even on a
+	/// provider-specific receiver, as in <c>AsSqlServer().With("NOLOCK")</c> - emits for every provider, so the rewrite
+	/// also restricts the hint to the chosen provider: the message names every provider that has the hint and the code
+	/// fix offers one rewrite per provider. Helpers that emit only from some database version on are not offered
+	/// (<see cref="VersionGatedHelpers"/>).
 	/// <para>
 	/// Typed helpers are found by the naming convention of the generated hint templates rather than by a hard-coded
 	/// table: a <c>const string</c> in a <c>Table</c>, <c>Query</c> or <c>Hint</c> class nested in a
@@ -46,8 +48,11 @@ namespace LinqToDB.Analyzers
 		/// <summary><see cref="Diagnostic.Properties"/> key: number of typed rewrites offered.</summary>
 		public const string FixCountKey = "FixCount";
 
-		/// <summary><see cref="Diagnostic.Properties"/> key: <c>"true"</c> when the receiver is not provider-specific, so a rewrite restricts the hint to one provider.</summary>
-		public const string GenericReceiverKey = "GenericReceiver";
+		/// <summary>
+		/// <see cref="Diagnostic.Properties"/> key: <c>"true"</c> when the call binds a generic overload on
+		/// <c>LinqExtensions</c>, which emits the text for every provider, so a rewrite restricts the hint to one provider.
+		/// </summary>
+		public const string GenericOverloadKey = "GenericOverload";
 
 		/// <summary>Per-rewrite property key prefixes; the rewrite index is appended (<c>Fix0.Helper</c>, ...).</summary>
 		public const string FixProviderKey    = ".Provider";
@@ -59,6 +64,28 @@ namespace LinqToDB.Analyzers
 		public const string FixAsQueryableKey = ".AsQueryable";
 		/// <summary>The typed helper method name.</summary>
 		public const string FixHelperKey      = ".Helper";
+
+		/// <summary>
+		/// Typed helpers (<c>&lt;provider namespace&gt;.&lt;helper&gt;</c>) that emit their hint only from some version of
+		/// the database on, while the string overload always emits it. Offering them as an equivalent would let a
+		/// rewrite silently drop the hint on an older server, so the rule does not report their text at all. The test
+		/// suite checks the list against the SQL every version of the provider generates, in both directions.
+		/// </summary>
+		public static ImmutableArray<string> VersionGatedHelpers
+		{
+			get { return _versionGatedHelpers; }
+		}
+
+		static readonly ImmutableArray<string> _versionGatedHelpers = ImmutableArray.Create(
+			"SqlServer.WithForceScan",
+			"SqlServer.WithForceScanInScope",
+			"SqlServer.WithSnapshot",
+			"SqlServer.WithSnapshotInScope",
+			"SqlServer.OptionForceScaleOutExecution",
+			"SqlServer.OptionDisableScaleOutExecution",
+			"SqlServer.OptionIgnoreNonClusteredColumnStoreIndex",
+			"SqlServer.OptionNoPerformanceSpool",
+			"SqlServer.OptionOptimizeForUnknown");
 
 		const string LinqExtensionsMetadataName = "LinqToDB.LinqExtensions";
 		const string ITableMetadataName         = "LinqToDB.ITable`1";
@@ -75,7 +102,7 @@ namespace LinqToDB.Analyzers
 		const string Description =
 			"A hint passed as text to TableHint, With, TablesInScopeHint or QueryHint has a typed helper that emits the same SQL. " +
 			"The typed helper is checked by the compiler and emits only on its own provider, while the generic text overloads emit their text for every provider the query runs on. " +
-			"On a receiver that is already provider-specific (AsSqlServer() and the like) the rewrite is exact. On a generic receiver it also restricts the hint to the chosen provider.";
+			"When the call binds a provider's own string overload (after AsSqlServer() and the like) the rewrite is exact. When it binds a generic overload the rewrite also restricts the hint to the chosen provider. Helpers that emit their hint only from some database version on are not offered.";
 
 		// RS1032 wants a multi-sentence message to end with a period. This one ends with the guide's package path
 		// instead, so the path can be copied as is; a trailing period would read as part of the file name.
@@ -152,9 +179,6 @@ namespace LinqToDB.Analyzers
 		{
 			readonly Dictionary<string, List<TypedHint>> _byKey = new(StringComparer.Ordinal);
 
-			// Provider-specific receiver interfaces (table and query forms) -> provider key.
-			readonly Dictionary<INamedTypeSymbol, string> _providerInterfaces = new(SymbolEqualityComparer.Default);
-
 			public static string Normalize(string hint)
 			{
 				return hint.Trim().ToUpperInvariant();
@@ -168,18 +192,6 @@ namespace LinqToDB.Analyzers
 			public IReadOnlyList<TypedHint>? Find(HintScope scope, string hint)
 			{
 				return _byKey.TryGetValue(Key(scope, Normalize(hint)), out var list) ? list : null;
-			}
-
-			public string? ProviderOf(ITypeSymbol type)
-			{
-				if (type is INamedTypeSymbol named && _providerInterfaces.TryGetValue(named.OriginalDefinition, out var provider))
-					return provider;
-
-				foreach (var iface in type.AllInterfaces)
-					if (_providerInterfaces.TryGetValue(iface.OriginalDefinition, out provider))
-						return provider;
-
-				return null;
 			}
 
 			public static HintCatalog Build(IAssemblySymbol linq2db, INamedTypeSymbol tableType)
@@ -225,12 +237,10 @@ namespace LinqToDB.Analyzers
 								{
 									var helper = FindHelper(helpers, scope, field.Name, tableType);
 
-									if (helper is null)
+									if (helper is null || _versionGatedHelpers.Contains(provider + "." + helper.Name))
 										continue;
 
 									var receiver = ((INamedTypeSymbol)helper.Parameters[0].Type).OriginalDefinition;
-
-									catalog._providerInterfaces[receiver] = provider;
 
 									var typed = new TypedHint(provider, displayName, ns, helper, receiver);
 
@@ -242,12 +252,6 @@ namespace LinqToDB.Analyzers
 							}
 						}
 					}
-
-					// Every provider-specific interface an As* method yields counts as that provider's receiver, even
-					// one no typed helper takes: a hint on such a receiver is already scoped to that provider.
-					foreach (var pair in asMethods)
-						if (!catalog._providerInterfaces.ContainsKey(pair.Key))
-							catalog._providerInterfaces[pair.Key] = provider;
 				}
 
 				// A stable order whatever the namespace enumeration order: the message and the fix list read the same
@@ -490,9 +494,9 @@ namespace LinqToDB.Analyzers
 				if (candidates is null)
 					return;
 
-				// The receiver as written, before the implicit conversion to the overload's parameter type: that is what
-				// says whether the query is already scoped to a provider (AsSqlServer().With("NOLOCK") binds the generic
-				// With through ITable<T>).
+				// The receiver as written, before the implicit conversion to the overload's parameter type: it decides
+				// whether a provider's As*() call has to be inserted. What the call emits is decided by the overload alone:
+				// AsSqlServer().With("NOLOCK") binds the generic With, which emits the text for every provider.
 				while (receiverValue is IConversionOperation { IsImplicit: true } conversion)
 					receiverValue = conversion.Operand;
 
@@ -501,14 +505,16 @@ namespace LinqToDB.Analyzers
 				if (receiverType is null)
 					return;
 
-				var receiverProvider = _catalog.Value.ProviderOf(receiverType);
+				// A provider overload (SqlServerHints.TableHint) emits on its own provider only, so only that provider's
+				// helper is equivalent; a generic overload is matched by every provider's helper.
+				var overloadNamespace = isGenericOverload ? null : definition.ContainingType.ContainingNamespace.ToDisplayString();
 				var properties       = ImmutableDictionary.CreateBuilder<string, string?>(StringComparer.Ordinal);
 				var equivalents      = new StringBuilder();
 				var count            = 0;
 
 				foreach (var candidate in candidates)
 				{
-					if (receiverProvider is not null && !string.Equals(receiverProvider, candidate.Provider, StringComparison.Ordinal))
+					if (overloadNamespace is not null && !string.Equals(overloadNamespace, candidate.Namespace, StringComparison.Ordinal))
 						continue;
 
 					var needsAs = !Implements(receiverType, candidate.ReceiverInterface);
@@ -541,7 +547,7 @@ namespace LinqToDB.Analyzers
 
 					equivalents.Append(candidate.Helper.Name).Append("()");
 
-					if (receiverProvider is null)
+					if (isGenericOverload)
 						equivalents.Append(" for ").Append(candidate.DisplayName);
 
 					count++;
@@ -551,7 +557,7 @@ namespace LinqToDB.Analyzers
 					return;
 
 				properties[FixCountKey]        = count.ToString(CultureInfo.InvariantCulture);
-				properties[GenericReceiverKey] = receiverProvider is null ? "true" : "false";
+				properties[GenericOverloadKey] = isGenericOverload ? "true" : "false";
 
 				context.ReportDiagnostic(Diagnostic.Create(
 					Rule,

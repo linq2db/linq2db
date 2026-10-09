@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace LinqToDB.Analyzers.CodeFixes
 {
@@ -62,7 +63,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			foreach (var fix in ReadFixes(diagnostic))
 			{
-				var title = fix.GenericReceiver
+				var title = fix.GenericOverload
 					? string.Format(CultureInfo.InvariantCulture, "Use {0} typed hint {1}() (applies to {0} only)", fix.Provider, fix.Helper)
 					: string.Format(CultureInfo.InvariantCulture, "Use typed hint {0}()", fix.Helper);
 
@@ -79,14 +80,14 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 		sealed class Fix
 		{
-			public Fix(string provider, string ns, string asMethod, bool asQueryable, string helper, bool genericReceiver)
+			public Fix(string provider, string ns, string asMethod, bool asQueryable, string helper, bool genericOverload)
 			{
 				Provider        = provider;
 				Namespace       = ns;
 				AsMethod        = asMethod;
 				AsQueryable     = asQueryable;
 				Helper          = helper;
-				GenericReceiver = genericReceiver;
+				GenericOverload = genericOverload;
 			}
 
 			public string Provider        { get; }
@@ -94,7 +95,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 			public string AsMethod        { get; }
 			public bool   AsQueryable     { get; }
 			public string Helper          { get; }
-			public bool   GenericReceiver { get; }
+			public bool   GenericOverload { get; }
 		}
 
 		static List<Fix> ReadFixes(Diagnostic diagnostic)
@@ -106,7 +107,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 				|| !int.TryParse(countText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var count))
 				return fixes;
 
-			properties.TryGetValue(StringHintAnalyzer.GenericReceiverKey, out var genericText);
+			properties.TryGetValue(StringHintAnalyzer.GenericOverloadKey, out var genericText);
 
 			var generic = string.Equals(genericText, "true", StringComparison.Ordinal);
 
@@ -204,10 +205,13 @@ namespace LinqToDB.Analyzers.CodeFixes
 				return current;
 			}
 
-			if (!isReducedCall && invocation.ArgumentList.Arguments.Count == 2)
+			if (!isReducedCall
+				&& model.GetOperation(invocation, cancellationToken) is IInvocationOperation operation
+				&& operation.Arguments.FirstOrDefault(a => a.Parameter?.Ordinal == 0)?.Syntax is ArgumentSyntax receiverArgument)
 			{
-				// Static form: the receiver is the first argument.
-				ExpressionSyntax current = invocation.ArgumentList.Arguments[0].Expression.WithoutTrivia();
+				// Static form: the receiver is the argument bound to the first parameter, which a named argument can
+				// put anywhere in the list (TableHint(hint: "NOLOCK", table: t)).
+				ExpressionSyntax current = receiverArgument.Expression.WithoutTrivia();
 
 				if (current is not (IdentifierNameSyntax or MemberAccessExpressionSyntax or InvocationExpressionSyntax or ElementAccessExpressionSyntax or ThisExpressionSyntax or ParenthesizedExpressionSyntax))
 					current = SyntaxFactory.ParenthesizedExpression(current);
@@ -265,10 +269,16 @@ namespace LinqToDB.Analyzers.CodeFixes
 			var usings = unit.Usings;
 			var index  = usings.Count;
 
+			// Global usings must precede every other using (CS8915), so the new directive never goes in front of one.
+			var firstLocal = 0;
+
+			while (firstLocal < usings.Count && usings[firstLocal].GlobalKeyword != default)
+				firstLocal++;
+
 			// Sorted position among the plain usings, when they are sorted; otherwise after the last one.
 			if (IsSorted(usings))
 			{
-				for (var i = 0; i < usings.Count; i++)
+				for (var i = firstLocal; i < usings.Count; i++)
 				{
 					if (usings[i].Alias is null && usings[i].StaticKeyword == default && usings[i].Name is { } name
 						&& string.CompareOrdinal(Normalize(name.ToString()), Normalize(ns)) > 0)
@@ -303,7 +313,7 @@ namespace LinqToDB.Analyzers.CodeFixes
 
 			foreach (var directive in usings)
 			{
-				if (directive.Alias is not null || directive.StaticKeyword != default || directive.Name is null)
+				if (directive.GlobalKeyword != default || directive.Alias is not null || directive.StaticKeyword != default || directive.Name is null)
 					continue;
 
 				var current = Normalize(directive.Name.ToString());

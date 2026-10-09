@@ -132,10 +132,13 @@ helper is checked by the compiler and emits only on its own provider. The rule r
 `TablesInScopeHint` and `QueryHint`. Hints that take a value, an index name or a table id, and text no typed
 helper produces, are not reported.
 
-On a receiver that is already provider-specific (after `AsSqlServer()` and the like) the rewrite is exact. On a
-generic receiver it also restricts the hint to the provider you pick, which is what you want when the query
-only ever runs there — and a change of behaviour if the same query also runs on another database that accepted
-the text. Each fix title says which provider it restricts the hint to. A tables-in-scope or query hint on a
+When the call binds a provider's own string overload (`AsSqlServer().TableHint("NOLOCK")`) the rewrite is exact.
+When it binds a generic overload — including `AsSqlServer().With("NOLOCK")`, since only the generic `With`
+exists — it also restricts the hint to the provider you pick, which is what you want when the query only ever
+runs there, and a change of behaviour if the same query also runs on another database that accepted the text.
+Each fix title says which provider it restricts the hint to. Typed helpers that emit their hint only from some
+server version on (`WithForceScan`, `WithSnapshot`, `OptionNoPerformanceSpool` and a few other SQL Server ones)
+are not offered: on an older server the rewrite would drop a hint the string still emits. A tables-in-scope or query hint on a
 table goes through `AsQueryable()` first, since `AsSqlServer()` on a table yields the table form.
 
 The message ends with the path of the hints guide inside the `linq2db` package (`skills/linq2db/docs/hints.md`).

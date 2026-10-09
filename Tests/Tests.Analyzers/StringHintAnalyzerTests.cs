@@ -97,20 +97,27 @@ namespace Tests.Analyzers
 		}
 
 		[Test]
-		public async Task SqlServerReceiver()
+		public async Task SqlServerOverloadIsExact()
 		{
 			await Verify.VerifyAsync(
 				Source(
 					"""
 					t.AsSqlServer().{|#0:TableHint("NOLOCK")|};
-					t.AsSqlServer().{|#1:With("NOLOCK")|};
-					q.AsSqlServer().{|#2:TablesInScopeHint("NOLOCK")|};
-					q.AsSqlServer().{|#3:QueryHint("RECOMPILE")|};
+					q.AsSqlServer().{|#1:TablesInScopeHint("NOLOCK")|};
+					q.AsSqlServer().{|#2:QueryHint("RECOMPILE")|};
 					"""),
 				Expected("NOLOCK",    "WithNoLock()",        0),
-				Expected("NOLOCK",    "WithNoLock()",        1),
-				Expected("NOLOCK",    "WithNoLockInScope()", 2),
-				Expected("RECOMPILE", "OptionRecompile()",   3));
+				Expected("NOLOCK",    "WithNoLockInScope()", 1),
+				Expected("RECOMPILE", "OptionRecompile()",   2));
+		}
+
+		[Test]
+		public async Task GenericOverloadOnSqlServerReceiverKeepsEveryProvider()
+		{
+			// SqlServerHints has no With: the call binds the generic LinqExtensions.With, which emits for every provider.
+			await Verify.VerifyAsync(
+				Source("""t.AsSqlServer().{|#0:With("NOLOCK")|};"""),
+				Expected("NOLOCK", "WithNoLock() for SQL Server, AsSqlCe().WithNoLock() for SQL Server CE"));
 		}
 
 		[Test]
@@ -132,7 +139,8 @@ namespace Tests.Analyzers
 		[Test]
 		public async Task TablesInScopeHintOnTableGoesThroughAsQueryable()
 		{
-			// AsSqlServer() on a table yields the table type, which the scope helper does not take.
+			// AsSqlServer() on a table yields the table type, which the scope helper does not take; the second call
+			// therefore binds the generic overload too.
 			await Verify.VerifyAsync(
 				Source(
 					"""
@@ -140,7 +148,7 @@ namespace Tests.Analyzers
 					t.AsSqlServer().{|#1:TablesInScopeHint("NOLOCK")|};
 					"""),
 				Expected("NOLOCK", "AsQueryable().AsSqlServer().WithNoLockInScope() for SQL Server, AsQueryable().AsSqlCe().WithNoLockInScope() for SQL Server CE", 0),
-				Expected("NOLOCK", "AsQueryable().AsSqlServer().WithNoLockInScope()", 1));
+				Expected("NOLOCK", "AsQueryable().AsSqlServer().WithNoLockInScope() for SQL Server, AsQueryable().AsSqlCe().WithNoLockInScope() for SQL Server CE", 1));
 		}
 
 		[Test]
@@ -209,6 +217,19 @@ namespace Tests.Analyzers
 				t.TableHint("INDEX");
 				t.TableHint("INDEX", "IX_Row");
 				t.TableHint("NOLOCK", 1);
+				"""));
+		}
+
+		[Test]
+		public async Task VersionGatedHelperIsNotOffered()
+		{
+			// The typed helpers emit only from SQL Server 2012 / 2014 / 2019 on; the string emits on every version.
+			await Verify.VerifyAsync(Source(
+				"""
+				t.TableHint("FORCESCAN");
+				q.TablesInScopeHint("SNAPSHOT");
+				q.QueryHint("NO_PERFORMANCE_SPOOL");
+				q.AsSqlServer().QueryHint("OPTIMIZE FOR UNKNOWN");
 				"""));
 		}
 
