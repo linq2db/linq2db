@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net462;net9.0;</TargetFrameworks>
+		<TargetFrameworks>$(NetFxTargetFramework);$(LatestTargetFramework)</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

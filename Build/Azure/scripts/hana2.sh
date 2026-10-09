@@ -72,32 +72,18 @@ docker logs hana2
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'nameserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'unload_trace'"'"','"'"'enable'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'indexserver.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'unload_trace'"'"','"'"'enable'"'"') = '"'"'false'"'"' WITH RECONFIGURE'
 
+# The driver path is only known once this script has unpacked the client, which is why this config is
+# generated rather than committed (Build/Azure/configs/hana2.json is a placeholder that hana2.tests.sh
+# replaces). Keyed on Azure.TestJob like every committed config, so it is target-framework-agnostic and
+# a new .NET version needs no edit here.
 cat <<-EOJSON > HanaDataProviders.json
 {
-    "BASE.Azure": {
-        "BasedOn": "AzureConnectionStrings",
-        "DefaultConfiguration": "SQLite.MS",
-        "TraceLevel": "Info",
+    "Azure.TestJob": {
         "Connections": {
             "SapHana.Odbc": {
                 "ConnectionString": "Driver=$HOME/linq2db_ci/providers/saphana/linux/ODBC/libodbcHDB.so;SERVERNODE=localhost:39017;CS=TESTDB;UID=SYSTEM;PWD=Passw0rd;"
             }
-        }
-    },
-    "NET80.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
-    },
-    "NET90.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
-    },
-    "NET100.Azure": {
-        "BasedOn": "BASE.Azure",
+        },
         "Providers": [
             "SapHana.Odbc"
         ]

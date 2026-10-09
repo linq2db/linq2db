@@ -358,12 +358,10 @@ namespace Tests
 		{
 #if NETFRAMEWORK
 			return "NETFX";
-#elif NET8_0
-			return "NET80";
-#elif NET9_0
-			return "NET90";
 #elif NET10_0
 			return "NET100";
+#elif NET11_0
+			return "NET110";
 #else
 #error Unknown framework
 #endif

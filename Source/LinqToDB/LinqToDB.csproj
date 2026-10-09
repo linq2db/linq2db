@@ -2,6 +2,14 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
+
+		<!--$(BaselineVersion) still ships net8.0 and net9.0, which this package no longer has, so every
+		    comparison against it resolves to netstandard2.0 and reports that surface as missing. Drop the
+		    baseline half only - in-package target-framework validation keeps running. With it off the whole
+		    suppression file matches nothing, which is an error of its own unless permitted. Both come off
+		    together once a released baseline no longer carries those two frameworks.-->
+		<DisablePackageBaselineValidation>true</DisablePackageBaselineValidation>
+		<ApiCompatPermitUnnecessarySuppressions>true</ApiCompatPermitUnnecessarySuppressions>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
