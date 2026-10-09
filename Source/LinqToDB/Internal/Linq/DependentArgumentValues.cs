@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Linq
 			var hash = _values.Length;
 
 			foreach (var value in _values)
-				hash = unchecked(hash * 397 + ValueHashCode(value));
+				hash = hash * 397 + ValueHashCode(value);
 
 			return hash;
 		}
@@ -80,14 +80,14 @@ namespace LinqToDB.Internal.Linq
 		static int ValueHashCode(object? value)
 		{
 			if (value is FormattableString fs)
-				return unchecked(StringComparer.Ordinal.GetHashCode(fs.Format) * 397 + ValueHashCode(fs.GetArguments()));
+				return StringComparer.Ordinal.GetHashCode(fs.Format) * 397 + ValueHashCode(fs.GetArguments());
 
 			if (value is not string and IEnumerable list)
 			{
 				var hash = 17;
 
 				foreach (var item in list)
-					hash = unchecked(hash * 397 + ValueHashCode(item));
+					hash = hash * 397 + ValueHashCode(item);
 
 				return hash;
 			}
