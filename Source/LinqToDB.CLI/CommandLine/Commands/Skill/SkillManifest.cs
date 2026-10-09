@@ -21,14 +21,14 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		public required string                     Source  { get; init; }
 		public required Dictionary<string, string> Files   { get; init; }
 
-		public static SkillManifest Create(SkillBundle bundle)
+		public static SkillManifest Create(SkillBundle bundle, IEnumerable<string> owned)
 		{
 			return new SkillManifest
 			{
 				Skill   = bundle.Name,
 				Version = bundle.Version,
 				Source  = bundle.IsEmbedded ? "embedded" : "package",
-				Files   = bundle.Hashes.OrderBy(static p => p.Key, StringComparer.Ordinal).ToDictionary(static p => p.Key, static p => p.Value, StringComparer.Ordinal),
+				Files   = owned.OrderBy(static p => p, StringComparer.Ordinal).ToDictionary(static p => p, p => bundle.Hashes[p], StringComparer.Ordinal),
 			};
 		}
 
@@ -53,7 +53,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				if (dto?.Skill == null || dto.Version == null || dto.Source == null || dto.Files == null)
 					return null;
 
-				if (dto.Files.Keys.Any(static p => !IsSafeRelativePath(p)))
+				if (dto.Files.Keys.Any(static p => !SkillPath.IsSafeRelative(p)))
 					return null;
 
 				return new SkillManifest
@@ -68,14 +68,6 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			{
 				return null;
 			}
-		}
-
-		private static bool IsSafeRelativePath(string path)
-		{
-			if (path.Length == 0 || path.StartsWith('/') || path.Contains('\\', StringComparison.Ordinal) || Path.IsPathRooted(path) || path.Contains(':', StringComparison.Ordinal))
-				return false;
-
-			return path.Split('/').All(static s => s.Length != 0 && !string.Equals(s, ".", StringComparison.Ordinal) && !string.Equals(s, "..", StringComparison.Ordinal));
 		}
 
 		private sealed record ManifestDto(string? Skill, string? Version, string? Source, Dictionary<string, string>? Files);

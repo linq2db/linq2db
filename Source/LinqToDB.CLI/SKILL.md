@@ -726,11 +726,11 @@ Use `dotnet linq2db skill install [--project <project file or directory>] [--roo
 
 Options:
 
-- `--project` is a project file or a directory to search for projects (default: current directory). Projects that reference different linq2db versions are an error; name the one to use.
+- `--project` is a project file or a directory to search for projects (default: current directory). Multi-targeted projects are supported. The project is evaluated with `dotnet msbuild`, which is stopped after 120 seconds (override with the `LINQ2DB_CLI_MSBUILD_TIMEOUT_SECONDS` environment variable). Projects that reference different linq2db versions are an error; name the one to use.
 - `--root` is the repository root that receives `.agents/` and `.claude/` (default: the git work tree root above the project, else the project directory).
 - `--check` writes nothing and exits with a non-zero code when an installed skill is missing, stale or edited. Use it in CI.
 - `--force` overwrites files that were edited locally or that the tool did not install.
 
-Each installed skill directory gets a `.linq2db-skill.json` manifest with a hash per file; hashes ignore CRLF versus LF, so a checkout that normalises line endings does not count as an edit. A later install replaces only files listed in the manifest that are unchanged, and refuses to continue (writing nothing) when a skill directory has no manifest or one of its files was edited, unless `--force` is passed. Files the tool did not install are never touched. The command never edits `AGENTS.md` or `CLAUDE.md`; when neither mentions the skill it prints a short block that can be pasted into `AGENTS.md`.
+Each installed skill directory gets a `.linq2db-skill.json` manifest with a hash per file; hashes ignore CRLF versus LF, so a checkout that normalises line endings does not count as an edit. A later install replaces only files listed in the manifest that are unchanged, and refuses to continue (writing nothing) when a skill directory has no manifest or one of its files was edited, unless `--force` is passed. Files the tool did not install are never touched, and the manifest lists only files the tool wrote. The command refuses to write or delete through symbolic links or junctions, and rejects package or manifest paths that would leave the skill directory. The command never edits `AGENTS.md` or `CLAUDE.md`; when neither mentions the skill it prints a short block that can be pasted into `AGENTS.md`.
 
 Keep this document synchronized with command behavior. When a command option, configuration rule, execute policy, or agent workflow changes, update `SKILL.md` and the `skill` command tests in the same change.

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -417,6 +419,306 @@ namespace Tests.LinqToDB.CLI
 			}
 		}
 
+		[Test]
+		public async Task PackageFileNameThatWouldLeaveTheSkillDirectoryIsRefused()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("A file name containing a backslash cannot exist on Windows.");
+
+			var repo = CreateRepository("5.0.0");
+
+			// on Linux this is one file name, which a naive separator conversion would turn into a traversal path
+			File.WriteAllText(Path.Combine(repo.Package, "skills", "linq2db", "..\\..\\..\\..\\..\\victim.md"), "x");
+
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("unsafe file path");
+				Directory.Exists(Path.Combine(repo.Root, ".agents")).ShouldBeFalse();
+				Directory.EnumerateFiles(_directory, "victim.md", SearchOption.AllDirectories).ShouldBeEmpty();
+			}
+		}
+
+		[TestCase("../../../victim.txt")]
+		[TestCase("docs/../../../../../victim.txt")]
+		[TestCase("..\\..\\..\\victim.txt")]
+		[TestCase("{victim}")]
+		public async Task ManifestListingPathsOutsideTheSkillDirectoryIsNotTrusted(string listed)
+		{
+			var repo   = CreateRepository("5.0.0");
+			var victim = Path.Combine(repo.Root, "victim.txt");
+			var skill  = Path.Combine(repo.Root, ".agents", "skills", "linq2db");
+
+			File.WriteAllText(victim, "keep");
+			Directory.CreateDirectory(skill);
+			File.WriteAllText(Path.Combine(skill, ".linq2db-skill.json"), JsonSerializer.Serialize(new { skill = "linq2db", version = "1", source = "package", files = new Dictionary<string, string> { [listed.Replace("{victim}", victim, StringComparison.Ordinal)] = SkillHashOf("keep") } }));
+
+			var refused = await RunCli("skill", "install", "--project", repo.Project);
+			var forced  = await RunCli("skill", "install", "--project", repo.Project, "--force");
+
+			using (Assert.EnterMultipleScope())
+			{
+				refused.ExitCode.ShouldBe(-3);
+				refused.Error.   ShouldContain("not installed by this tool");
+				forced.ExitCode. ShouldBe(0, forced.Error);
+				File.ReadAllText(victim).ShouldBe("keep");
+			}
+		}
+
+		[TestCase("not json")]
+		[TestCase("{}")]
+		[TestCase("{\"skill\":\"linq2db\",\"version\":\"1\",\"source\":\"package\"}")]
+		[TestCase("[]")]
+		public async Task MalformedManifestMakesTheDirectoryUnmanaged(string manifest)
+		{
+			var repo  = CreateRepository("5.0.0");
+			var skill = Path.Combine(repo.Root, ".agents", "skills", "linq2db");
+
+			Directory.CreateDirectory(skill);
+			File.WriteAllText(Path.Combine(skill, ".linq2db-skill.json"), manifest);
+
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("not installed by this tool");
+				File.ReadAllText(Path.Combine(skill, ".linq2db-skill.json")).ShouldBe(manifest);
+			}
+		}
+
+		[Test]
+		public async Task SymbolicLinkedSkillsRootIsRefused()
+		{
+			var repo    = CreateRepository("5.0.0");
+			var outside = Path.Combine(_directory, "outside");
+
+			Directory.CreateDirectory(outside);
+			Directory.CreateDirectory(Path.Combine(repo.Root, ".agents"));
+
+			if (!TryCreateDirectoryLink(Path.Combine(repo.Root, ".agents", "skills"), outside))
+				Assert.Ignore("Symbolic links are not available.");
+
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("symbolic link");
+				Directory.EnumerateFileSystemEntries(outside).ShouldBeEmpty();
+				Directory.Exists(Path.Combine(repo.Root, ".claude")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task SymbolicLinkInsideInstalledSkillIsNotFollowed()
+		{
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			var outside = Path.Combine(_directory, "outside");
+			var victim  = Path.Combine(outside, "crud-update.md");
+
+			Directory.CreateDirectory(outside);
+			File.WriteAllText(victim, "update guide\r\n");
+
+			var crud = Path.Combine(repo.Root, ".agents", "skills", "linq2db", "docs", "crud");
+			Directory.Delete(crud, true);
+
+			if (!TryCreateDirectoryLink(crud, outside))
+				Assert.Ignore("Symbolic links are not available.");
+
+			// the next version drops that file, which would delete it through the link
+			var next = CreateRepository("5.1.0", repo);
+			File.Delete(Path.Combine(next.Package, "skills", "linq2db", "docs", "crud", "crud-update.md"));
+
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("symbolic link");
+				File.Exists(victim).ShouldBeTrue();
+			}
+		}
+
+		[Test]
+		public async Task CaseOnlyRenameOfPackageFileLeavesManifestListingExistingFiles()
+		{
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			var next = CreateRepository("5.1.0", repo);
+			var docs = Path.Combine(next.Package, "skills", "linq2db", "docs", "crud");
+
+			File.Move(Path.Combine(docs, "crud-update.md"), Path.Combine(docs, "CRUD-Update.md"));
+
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+			var check  = await RunCli("skill", "install", "--project", repo.Project, "--check");
+
+			result.ExitCode.ShouldBe(0, result.Error);
+			check .ExitCode.ShouldBe(0, check.Error);
+
+			foreach (var root in new[] { ".agents", ".claude" })
+			{
+				var skill = Path.Combine(repo.Root, root, "skills", "linq2db");
+				var files = JsonDocument.Parse(File.ReadAllText(Path.Combine(skill, LibraryManifestFile))).RootElement.GetProperty("files").EnumerateObject().Select(p => p.Name);
+
+				foreach (var file in files)
+					File.Exists(Path.Combine(skill, file.Replace('/', Path.DirectorySeparatorChar))).ShouldBeTrue(file);
+
+				File.ReadAllText(Directory.EnumerateFiles(Path.Combine(skill, "docs", "crud")).Single(f => Path.GetFileName(f).EndsWith("-update.md", StringComparison.OrdinalIgnoreCase)), Encoding.UTF8).ShouldBe("update guide\r\n");
+			}
+		}
+
+		[Test]
+		public async Task UntrackedFileWithIdenticalContentIsNotClaimedByTheManifest()
+		{
+			var repo = CreateRepository("5.0.0");
+			await RunCli("skill", "install", "--project", repo.Project);
+
+			// the user already has a file the next version ships, with the very same content
+			var mine = Path.Combine(repo.Root, ".agents", "skills", "linq2db", "docs", "new.md");
+			File.WriteAllText(mine, "new guide\r\n");
+
+			var next = CreateRepository("5.1.0", repo);
+			File.WriteAllText(Path.Combine(next.Package, "skills", "linq2db", "docs", "new.md"), "new guide\r\n");
+
+			var first = await RunCli("skill", "install", "--project", repo.Project);
+
+			var manifest = File.ReadAllText(Path.Combine(repo.Root, ".agents", "skills", "linq2db", LibraryManifestFile));
+			var claimed  = File.ReadAllText(Path.Combine(repo.Root, ".claude", "skills", "linq2db", LibraryManifestFile));
+
+			// and the version after that no longer ships it
+			File.Delete(Path.Combine(next.Package, "skills", "linq2db", "docs", "new.md"));
+			CreateRepository("5.2.0", repo);
+
+			var second = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				first.ExitCode. ShouldBe(0, first.Error);
+				manifest.       ShouldNotContain("docs/new.md");
+				claimed.        ShouldContain("docs/new.md");
+				second.ExitCode.ShouldBe(0, second.Error);
+				File.Exists(mine).ShouldBeTrue();
+			}
+		}
+
+		[Test]
+		public async Task SeveralLinq2dbVersionsInOneProjectAreAnError()
+		{
+			var repo = CreateRepository("5.0.0");
+
+			// e.g. a per-target-framework condition on the package version
+			File.WriteAllText(
+				repo.Assets,
+				JsonSerializer.Serialize(new
+				{
+					version        = 3,
+					libraries      = new Dictionary<string, object>
+					{
+						["linq2db/5.0.0"] = new { type = "package", path = "linq2db/5.0.0" },
+						["linq2db/5.1.0"] = new { type = "package", path = "linq2db/5.1.0" },
+					},
+					packageFolders = new Dictionary<string, object> { [Path.Combine(_directory, "packages") + Path.DirectorySeparatorChar] = new { } },
+				}));
+
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(-3);
+				result.Error.   ShouldContain("different linq2db versions");
+				result.Error.   ShouldContain(": 5.0.0");
+				result.Error.   ShouldContain(": 5.1.0");
+				Directory.Exists(Path.Combine(repo.Root, ".agents")).ShouldBeFalse();
+			}
+		}
+
+		[Test]
+		public async Task MsBuildThatDoesNotFinishIsKilledAfterTheTimeout()
+		{
+			if (OperatingSystem.IsWindows())
+				Assert.Ignore("Uses a shell script as the dotnet host.");
+
+			var repo   = CreateRepository("5.0.0");
+			var marker = Path.Combine(_directory, "child-pid");
+			var script = Path.Combine(_directory, "fake-dotnet.sh");
+
+			// the script's own child is what a timeout has to reach too
+			File.WriteAllText(script, $"#!/bin/sh\nsleep 300 &\necho $! > '{marker}'\nwait\n");
+			File.SetUnixFileMode(script, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+
+			var environment = new TestCliEnvironment();
+			environment.EnvironmentVariables["DOTNET_HOST_PATH"]                    = script;
+			environment.EnvironmentVariables["LINQ2DB_CLI_MSBUILD_TIMEOUT_SECONDS"] = "2";
+
+			var watch    = Stopwatch.StartNew();
+			var exitCode = await new LinqToDBCliController().Execute(["skill", "install", "--project", repo.Project], environment);
+
+			using (Assert.EnterMultipleScope())
+			{
+				exitCode.                   ShouldBe(-3);
+				environment.ErrorOutput.    ShouldContain("did not finish in 2 seconds");
+				watch.Elapsed.TotalSeconds. ShouldBeLessThan(60);
+			}
+
+			var childPid = int.Parse(File.ReadAllText(marker).Trim(), System.Globalization.CultureInfo.InvariantCulture);
+			var deadline = DateTime.UtcNow.AddSeconds(10);
+
+			// a killed child may linger as a zombie until something reaps it; that is dead enough
+			bool IsRunning()
+			{
+				try
+				{
+					var stat = File.ReadAllText($"/proc/{childPid}/stat");
+
+					return stat[(stat.LastIndexOf(')') + 2)..][0] != 'Z';
+				}
+				catch (IOException)
+				{
+					return false;
+				}
+			}
+
+			while (IsRunning() && DateTime.UtcNow < deadline)
+				await Task.Delay(100);
+
+			IsRunning().ShouldBeFalse("the child of the timed-out MSBuild is still running");
+		}
+
+		[Test]
+		public async Task MultiTargetedProjectWithTransitiveReferenceIsRestoredAndFound()
+		{
+			var repo = await CreateRestoredRepository(frameworks: "net10.0;net10.0-windows", centralVersions: false);
+
+			var result = await RunCli("skill", "install", "--project", repo.Project);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain("NuGet package linq2db 5.0.0");
+				File.ReadAllText(Path.Combine(repo.Root, ".claude", "skills", "linq2db", "docs", "crud", "crud-update.md")).ShouldBe("update guide\r\n");
+			}
+		}
+
+		[Test]
+		public async Task CentralPackageManagementWithTransitiveReferenceIsFound()
+		{
+			var repo = await CreateRestoredRepository(frameworks: "net10.0", centralVersions: true);
+
+			var result = await RunCli("skill", "install", "--project", repo.ProjectDirectory);
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.ShouldBe(0, result.Error);
+				result.Output.  ShouldContain("NuGet package linq2db 5.0.0");
+			}
+		}
+
 		private Repository CreateRepository(string version, Repository? existing = null, bool withSkill = true, bool moveIntermediateOutput = false, string projectName = "App")
 		{
 			var root     = existing?.Root ?? Path.Combine(_directory, "repo");
@@ -468,6 +770,97 @@ namespace Tests.LinqToDB.CLI
 			}
 
 			return new Repository(root, projectFile, project, package, assets);
+		}
+
+		/// <summary>
+		/// A real restore against a local feed that holds a <c>linq2db</c> package carrying the skill and a wrapper package that only depends on it.
+		/// </summary>
+		private async Task<Repository> CreateRestoredRepository(string frameworks, bool centralVersions)
+		{
+			var root     = Path.Combine(_directory, "repo");
+			var feed     = Path.Combine(_directory, "feed");
+			var project  = Path.Combine(root, "App");
+			var packages = Path.Combine(_directory, "packages");
+
+			Directory.CreateDirectory(Path.Combine(root, ".git"));
+			Directory.CreateDirectory(project);
+			Directory.CreateDirectory(feed);
+
+			CreatePackage(feed, "linq2db", "5.0.0", null, ("skills/linq2db/SKILL.md", "---\r\nname: linq2db\r\ndescription: test skill\r\n---\r\n"), ("skills/linq2db/docs/crud/crud-update.md", "update guide\r\n"));
+			CreatePackage(feed, "Fake.Wrapper", "1.0.0", "linq2db");
+
+			File.WriteAllText(Path.Combine(project, "nuget.config"), $"""<configuration><packageSources><clear /><add key="local" value="{feed}" /></packageSources></configuration>""");
+
+			if (centralVersions)
+				File.WriteAllText(Path.Combine(project, "Directory.Packages.props"), "<Project><PropertyGroup><ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally></PropertyGroup><ItemGroup><PackageVersion Include=\"Fake.Wrapper\" Version=\"1.0.0\" /></ItemGroup></Project>");
+
+			var projectFile = Path.Combine(project, "App.csproj");
+
+			File.WriteAllText(
+				projectFile,
+				$"""
+				<Project Sdk="Microsoft.NET.Sdk">
+					<PropertyGroup>
+						{(frameworks.Contains(';', StringComparison.Ordinal) ? $"<TargetFrameworks>{frameworks}</TargetFrameworks>" : $"<TargetFramework>{frameworks}</TargetFramework>")}
+					</PropertyGroup>
+					<ItemGroup>
+						<PackageReference Include="Fake.Wrapper" {(centralVersions ? "" : "Version=\"1.0.0\"")} />
+					</ItemGroup>
+				</Project>
+				""");
+
+			var startInfo = new ProcessStartInfo("dotnet") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+
+			startInfo.ArgumentList.Add("restore");
+			startInfo.ArgumentList.Add(projectFile);
+			startInfo.Environment["NUGET_PACKAGES"]                    = packages;
+			startInfo.Environment["DOTNET_NOLOGO"]                     = "1";
+			startInfo.Environment["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1";
+
+			using var process = Process.Start(startInfo)!;
+			var output        = await Task.WhenAll(process.StandardOutput.ReadToEndAsync(), process.StandardError.ReadToEndAsync());
+
+			await process.WaitForExitAsync();
+			process.ExitCode.ShouldBe(0, string.Join(Environment.NewLine, output));
+
+			return new Repository(root, projectFile, project, string.Empty, Path.Combine(project, "obj", "project.assets.json"));
+		}
+
+		private static void CreatePackage(string feed, string id, string version, string? dependency, params (string Path, string Content)[] files)
+		{
+			var dependencies = dependency == null ? "" : $"""<dependencies><group targetFramework="net10.0"><dependency id="{dependency}" version="5.0.0" /></group></dependencies>""";
+
+			using var archive = ZipFile.Open(Path.Combine(feed, $"{id}.{version}.nupkg"), ZipArchiveMode.Create);
+
+			void Add(string name, string content)
+			{
+				using var writer = new StreamWriter(archive.CreateEntry(name).Open(), new UTF8Encoding(false));
+				writer.Write(content);
+			}
+
+			Add($"{id}.nuspec", $"""<?xml version="1.0"?><package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd"><metadata><id>{id}</id><version>{version}</version><authors>t</authors><description>t</description>{dependencies}</metadata></package>""");
+			Add("lib/net10.0/_._", "");
+
+			foreach (var (path, content) in files)
+				Add(path, content);
+		}
+
+		private static bool TryCreateDirectoryLink(string link, string target)
+		{
+			try
+			{
+				Directory.CreateSymbolicLink(link, target);
+				return true;
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+			{
+				return false;
+			}
+		}
+
+		private static string SkillHashOf(string content)
+		{
+			return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(content))).ToLowerInvariant();
 		}
 
 		private static Dictionary<string, string> ReadFrontmatter(string text)

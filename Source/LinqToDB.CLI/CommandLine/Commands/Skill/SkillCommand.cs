@@ -160,7 +160,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 			foreach (var project in projects)
 			{
-				var (assetsFile, assetsError) = await ProjectAssetsLocator.GetAssetsFile(project, cancellationToken);
+				var (assetsFile, assetsError) = await ProjectAssetsLocator.GetAssetsFile(environment, project, cancellationToken);
 
 				if (assetsFile == null)
 				{
@@ -173,7 +173,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 				restored++;
 
-				var (linq2db, readError) = ProjectAssetsLocator.ReadLinq2db(project, assetsFile);
+				var (resolved, readError) = ProjectAssetsLocator.ReadLinq2db(project, assetsFile);
 
 				if (readError != null)
 				{
@@ -181,8 +181,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
-				if (linq2db != null)
-					found.Add(linq2db);
+				found.AddRange(resolved);
 			}
 
 			if (projects.Count > 0 && restored == 0)
@@ -204,42 +203,52 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
-			// where the library skill comes from
-			SkillBundle library;
-			var         embedded = SkillSource.GetEmbeddedLibrarySkill();
+			SkillBundle   library;
+			SkillBundle[] bundles;
+			var           plans = new List<SkillInstallPlan>();
 
-			if (found.Count == 0)
+			try
 			{
-				await environment.Error.WriteLineAsync("Warning: no restored project referencing linq2db was found; using the linq2db skill embedded in the tool.");
-				library = embedded;
-			}
-			else
-			{
-				var linq2db = found[0];
-				var package = SkillSource.TryGetPackageLibrarySkill(linq2db);
+				// where the library skill comes from
+				var         embedded = SkillSource.GetEmbeddedLibrarySkill();
 
-				if (package != null)
+				if (found.Count == 0)
 				{
-					library = package;
+					await environment.Error.WriteLineAsync("Warning: no restored project referencing linq2db was found; using the linq2db skill embedded in the tool.");
+					library = embedded;
 				}
 				else
 				{
-					library = embedded;
-					await environment.Error.WriteLineAsync(
-						$"Warning: linq2db {linq2db.Version} package has no skill (it is not in the NuGet cache, or the version predates it); using the linq2db skill embedded in the tool.");
+					var linq2db = found[0];
+					var package = SkillSource.TryGetPackageLibrarySkill(linq2db);
+
+					if (package != null)
+					{
+						library = package;
+					}
+					else
+					{
+						library = embedded;
+						await environment.Error.WriteLineAsync(
+							$"Warning: linq2db {linq2db.Version} package has no skill (it is not in the NuGet cache, or the version predates it); using the linq2db skill embedded in the tool.");
+					}
+
+					if (!string.Equals(library.Version, linq2db.Version, StringComparison.OrdinalIgnoreCase))
+						await environment.Error.WriteLineAsync($"Warning: the project uses linq2db {linq2db.Version}, but the installed skill describes linq2db {library.Version}.");
 				}
 
-				if (!string.Equals(library.Version, linq2db.Version, StringComparison.OrdinalIgnoreCase))
-					await environment.Error.WriteLineAsync($"Warning: the project uses linq2db {linq2db.Version}, but the installed skill describes linq2db {library.Version}.");
+				bundles = [library, SkillSource.GetCliSkill()];
+
+				foreach (var skillRoot in _skillRoots)
+				{
+					foreach (var bundle in bundles)
+						plans.Add(SkillInstaller.Analyze(bundle, root, Path.Combine(root, skillRoot.Replace('/', Path.DirectorySeparatorChar), bundle.Name)));
+				}
 			}
-
-			var bundles = new[] { library, SkillSource.GetCliSkill() };
-			var plans   = new List<SkillInstallPlan>();
-
-			foreach (var skillRoot in _skillRoots)
+			catch (Exception ex) when (ex is InvalidDataException or InvalidOperationException)
 			{
-				foreach (var bundle in bundles)
-					plans.Add(SkillInstaller.Analyze(bundle, Path.Combine(root, skillRoot.Replace('/', Path.DirectorySeparatorChar), bundle.Name)));
+				await environment.Error.WriteLineAsync(ex.Message);
+				return StatusCodes.EXPECTED_ERROR;
 			}
 
 			await environment.Out.WriteLineAsync($"linq2db skill: {library.Origin}; linq2db-cli skill: {bundles[1].Origin}.");
@@ -306,7 +315,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 				{
 					SkillInstaller.Apply(plan);
 				}
-				catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+				catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
 				{
 					await environment.Error.WriteLineAsync($"Cannot write '{plan.Directory}': {ex.Message}");
 					return StatusCodes.EXPECTED_ERROR;

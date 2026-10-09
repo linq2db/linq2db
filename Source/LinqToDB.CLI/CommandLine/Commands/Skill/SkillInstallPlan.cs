@@ -8,6 +8,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 	internal sealed class SkillInstallPlan
 	{
 		public required SkillBundle       Bundle    { get; init; }
+		public required string            Root      { get; init; }
 		public required string            Directory { get; init; }
 		public required SkillInstallState State     { get; init; }
 		/// <summary>One-line explanation of a state other than <see cref="SkillInstallState.UpToDate"/>.</summary>
@@ -18,6 +19,8 @@ namespace LinqToDB.CommandLine.Commands.Skill
 		public List<string>               Deletes   { get; } = new();
 		/// <summary>Things that block the install unless forced.</summary>
 		public List<string>               Conflicts { get; } = new();
+		/// <summary>Files the manifest will list: the ones this run writes plus the ones an earlier run installed.</summary>
+		public HashSet<string>            Owned     { get; } = new(SkillPath.Comparer);
 		/// <summary>Whether the manifest has to be (re)written.</summary>
 		public bool                       WriteManifest { get; set; }
 	}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace LinqToDB.CommandLine.Commands.Skill
@@ -18,6 +19,12 @@ namespace LinqToDB.CommandLine.Commands.Skill
 			IsEmbedded = isEmbedded;
 			Origin     = origin;
 			Files      = files;
+
+			foreach (var file in files)
+			{
+				if (!SkillPath.IsSafeRelative(file.Path))
+					throw new InvalidDataException($"The {name} skill ({origin}) contains an unsafe file path '{file.Path}'.");
+			}
 		}
 
 		/// <summary>Skill name, which is also its directory name.</summary>

@@ -83,7 +83,7 @@ namespace LinqToDB.CommandLine.Commands.Skill
 
 				var files = Directory.EnumerateFiles(skillDirectory, "*", SearchOption.AllDirectories)
 					.OrderBy(static f => f, StringComparer.Ordinal)
-					.Select(f => new SkillFile(Path.GetRelativePath(skillDirectory, f).Replace('\\', '/'), File.ReadAllBytes(f)))
+					.Select(f => new SkillFile(Path.GetRelativePath(skillDirectory, f).Replace(Path.DirectorySeparatorChar, '/'), File.ReadAllBytes(f)))
 					.ToList();
 
 				return new SkillBundle(LibrarySkillName, linq2db.Version, false, $"NuGet package linq2db {linq2db.Version}", files);
