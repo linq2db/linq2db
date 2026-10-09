@@ -265,10 +265,12 @@ namespace LinqToDB.Remote.SignalR
 		}
 
 #if NET8_0_OR_GREATER
-		// HubOptions<THub> for the actual hub type: per-hub settings (AddHubOptions<THub>) override the global ones
-		// there, and hub types are only known at run time here.
-		[UnconditionalSuppressMessage("AOT", "IL3050", Justification = "HubOptions<THub> is instantiated over a reference type, so its shared code exists; the hub's own registration (MapHub<THub>) roots the same instantiation.")]
-		[UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "See IL3050: HubOptions<> and IOptions<> are kept by Signal/R itself.")]
+		// The options Signal/R applies to this hub: HubOptions<THub> when AddHubOptions<THub> configured them (it
+		// registers HubOptionsSetup<THub>, which copies the global values and marks the per-hub options as set),
+		// the global HubOptions otherwise. That is the rule Signal/R's connection handler follows, and it applies
+		// to every property at once. The hub type is only known at run time here.
+		[UnconditionalSuppressMessage("AOT", "IL3050", Justification = "The generic types are instantiated over reference types, so their shared code exists; the hub's own registration (MapHub<THub>, AddHubOptions<THub>) roots the same instantiations.")]
+		[UnconditionalSuppressMessage("Trimming", "IL2055", Justification = "See IL3050: HubOptions<>, HubOptionsSetup<>, IOptions<> and IConfigureOptions<> are kept by Signal/R and the options library.")]
 		HubOptions? ResolveHubOptions()
 		{
 			var services = Context.GetHttpContext()?.RequestServices;
@@ -276,13 +278,19 @@ namespace LinqToDB.Remote.SignalR
 			if (services == null)
 				return null;
 
-			var optionsType = typeof(IOptions<>).MakeGenericType(typeof(HubOptions<>).MakeGenericType(GetType()));
+			var hubType      = GetType();
+			var optionsType  = typeof(HubOptions<>).MakeGenericType(hubType);
+			var setupType    = typeof(HubOptionsSetup<>).MakeGenericType(hubType);
+			var configureAll = typeof(IEnumerable<>).MakeGenericType(typeof(IConfigureOptions<>).MakeGenericType(optionsType));
 
-			// Signal/R itself uses the per-hub options only when AddHubOptions<THub> configured them, and the global
-			// ones otherwise. The flag it checks is internal; per-hub options that were never configured are
-			// recognizable by their protocol list, which every configuration fills in.
-			if (services.GetService(optionsType) is IOptions<HubOptions> { Value: { SupportedProtocols: not null } hubOptions })
-				return hubOptions;
+			if (services.GetService(configureAll) is IEnumerable<object> configures)
+			{
+				foreach (var configure in configures)
+				{
+					if (configure.GetType() == setupType)
+						return (services.GetService(typeof(IOptions<>).MakeGenericType(optionsType)) as IOptions<HubOptions>)?.Value;
+				}
+			}
 
 			return services.GetService<IOptions<HubOptions>>()?.Value;
 		}

@@ -76,7 +76,7 @@ namespace LinqToDB.Remote.SignalR
 			EnsureStarted();
 
 			if (_items is { } items)
-				return new ValueTask<bool>(_index < items.Count);
+				return new ValueTask<bool>(HasMore(items));
 
 			return WaitToReadSlowAsync();
 		}
@@ -86,7 +86,17 @@ namespace LinqToDB.Remote.SignalR
 			// Rethrows the operation's exception, cancellation included, once the operation has finished.
 			await _task!.ConfigureAwait(false);
 
-			return _index < _items!.Count;
+			return HasMore(_items!);
+		}
+
+		bool HasMore(IReadOnlyList<T> items)
+		{
+			if (_index < items.Count)
+				return true;
+
+			// Also an empty result: no TryRead ever returns an item to complete it there.
+			_completion.TrySetResult(true);
+			return false;
 		}
 
 		public override ValueTask<T> ReadAsync(CancellationToken cancellationToken = default)
@@ -121,7 +131,12 @@ namespace LinqToDB.Remote.SignalR
 				// which Signal/R may call from the connection's message loop.
 				await Task.Yield();
 
-				_items = await _operation(_cts.Token).ConfigureAwait(false);
+				var items = await _operation(_cts.Token).ConfigureAwait(false);
+
+				if (items.Count == 0)
+					_completion.TrySetResult(true);
+
+				_items = items;
 			}
 			catch (Exception ex)
 			{
