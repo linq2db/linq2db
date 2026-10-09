@@ -677,6 +677,32 @@ namespace Tests.Linq
 				rows.ShouldAllBe(r => r.Shifted == new DateTime(MissedRowYear(context), 1, 11));
 		}
 
+		// A shift by a row value, which Informix cannot put inside an INTERVAL.
+		[Test]
+		public void DateShiftByColumnOverMissedLeftJoinReadsDefault([DataSources(TestProvName.AllInformix)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(TranslatedMemberEntity.Seed);
+
+			var rows =
+				(from e in table
+				 from j in table.LeftJoin(j => j.Id == e.Id + 1000)
+				 select new
+				 {
+					 e.Value1,
+					 Shifted = j.Date.AddDays(e.Value1),
+					 Year    = j.Date.AddDays(e.Value1).Year,
+					 Day     = j.Date.AddDays(e.Value1).Day,
+				 })
+				.ToArray();
+
+			rows.Length.ShouldBe(TranslatedMemberEntity.Seed.Length);
+			rows.ShouldAllBe(r => r.Year == MissedRowYear(context) && r.Day == 1 + r.Value1);
+
+			if (!context.IsAnyOf(TestProvName.AllAccess))
+				rows.ShouldAllBe(r => r.Shifted == new DateTime(MissedRowYear(context), 1, 1).AddDays(r.Value1));
+		}
+
 		// The group-join form reaches the missed row through DefaultIfEmpty rather than LeftJoin, and reads it alike.
 		[Test]
 		public void GroupJoinOverMissedRowReadsDefault([DataSources] string context, [Values] bool preferClient)
