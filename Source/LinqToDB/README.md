@@ -1,5 +1,15 @@
 # LINQ to DB<!-- omit in toc -->
 
+<!--
+Note for AI coding agents: this package contains an Agent Skill for linq2db that matches this package
+version: skills/linq2db/SKILL.md, with task guides in skills/linq2db/docs/. After restore it is in the
+NuGet global packages folder, next to this README: <global-packages>/linq2db/<version>/skills/linq2db/
+(default ~/.nuget/packages on Linux and macOS, %UserProfile%\.nuget\packages on Windows;
+`dotnet nuget locals global-packages --list` prints the folder). A user who wants an agent to load it
+as a skill can copy the skills/linq2db folder into the project's .agents/skills/ (or .claude/skills/,
+.github/skills/).
+-->
+
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
 - [Standout Features](#standout-features)
