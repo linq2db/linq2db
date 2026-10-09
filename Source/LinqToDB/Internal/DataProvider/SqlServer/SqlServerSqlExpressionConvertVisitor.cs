@@ -25,6 +25,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override SqlIntervalUnit? FinestDateUnit =>
 			_sqlServerVersion >= SqlServerVersion.v2008 ? SqlIntervalUnit.Nanosecond : SqlIntervalUnit.Millisecond;
 
+		/// <summary>
+		/// On 2005 the measurement stops at the millisecond, so a component asked for below one is identically zero
+		/// rather than merely imprecise - declined for the reason SQL CE and Sybase decline it.
+		/// </summary>
+		public override SqlIntervalUnit IntervalResolution =>
+			_sqlServerVersion >= SqlServerVersion.v2008 ? SqlIntervalUnit.Tick : SqlIntervalUnit.Millisecond;
+
 		static string? DatePartName(SqlIntervalUnit unit)
 		{
 			return unit switch
@@ -61,16 +68,134 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (part == null)
 				return null;
 
+			var partName = Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part);
+
 			// DateDiff_Big, not DateDiff: the 32-bit form overflows at about 24 days in milliseconds. Counting
 			// whole units keeps the number small, but the caller may ask for a fine unit over a long range.
-			return Factory.Function(Factory.GetDbDataType(typeof(long)), "DateDiff_Big",
-				Factory.NotNullExpression(Factory.GetDbDataType(typeof(string)), part), start, end);
+			if (_sqlServerVersion >= SqlServerVersion.v2016)
+				return Factory.Function(Factory.GetDbDataType(typeof(long)), "DateDiff_Big", partName, start, end);
+
+			// Before 2016 there is only the 32-bit form, so every window counted here is kept short enough for its
+			// unit - see ElapsedTicks. The count is widened because the arithmetic built on it is not: a day count
+			// scaled to ticks is past the INT range long before the day count itself is.
+			return Factory.Cast(
+				Factory.Function(Factory.GetDbDataType(typeof(int)), "DateDiff", partName, start, end),
+				Factory.GetDbDataType(typeof(long)), true);
 		}
 
 		/// <summary>
-		/// <c>DATEDIFF_BIG</c> arrived in 2016; earlier versions leave date subtraction to .NET.
+		/// Before 2016 the base decomposition cannot be used as it is once the finest unit is the nanosecond: it
+		/// counts the remainder after whole days in that unit, and a day is 8.64e13 nanoseconds against the
+		/// roughly 2.1e9 a 32-bit <c>DATEDIFF</c> holds. The remainder is split once more instead - whole seconds
+		/// within it, then the nanoseconds within the last second, at most 1e9 - so every count stays in range and
+		/// the result stays exact at the 100ns <c>datetime2</c> stores.
 		/// </summary>
-		public override bool CanLowerIntervalDifference => _sqlServerVersion >= SqlServerVersion.v2016;
+		/// <remarks>
+		/// Each count is the raw boundary count, measured from exactly where the previous shift landed, so an
+		/// overshoot at one step returns as a negative remainder at the next and the parts telescope, as in the base.
+		/// That needs the second shift to be exact, which two storage types do not give: <c>DATEADD</c> refuses a
+		/// second on a <c>date</c>, and rounds a <c>smalldatetime</c> to the minute. So the anchor is widened to
+		/// <c>datetime2</c> first, which holds either of them exactly - whatever the mapping declares, since that is
+		/// not what the column stores: a <c>date</c> column mapped as a plain <see cref="DateTime"/> is typed
+		/// <c>datetime2</c> here.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			if (_sqlServerVersion >= SqlServerVersion.v2016 || FinestDateUnit != SqlIntervalUnit.Nanosecond)
+				return base.ElapsedTicks(element);
+
+			var days = CountDateBoundaries(SqlIntervalUnit.Day, element.Start, element.End);
+			if (days == null)
+				return null;
+
+			var dayAnchor = ShiftDate(SqlIntervalUnit.Day, days, element.Start);
+			if (dayAnchor == null)
+				return null;
+
+			dayAnchor = AsDateTime2(dayAnchor);
+
+			var seconds = CountDateBoundaries(SqlIntervalUnit.Second, dayAnchor, element.End);
+			if (seconds == null)
+				return null;
+
+			var secondAnchor = ShiftDate(SqlIntervalUnit.Second, seconds, dayAnchor);
+			if (secondAnchor == null)
+				return null;
+
+			var nanoseconds = CountDateBoundaries(SqlIntervalUnit.Nanosecond, secondAnchor, element.End);
+			if (nanoseconds == null)
+				return null;
+
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// Scaled in factors that each fit in 32 bits, for the reason the base gives: a wider literal may be read
+			// as a decimal and take the whole expression with it.
+			var dayTicks = Factory.Multiply(longType,
+				Factory.Multiply(longType, days, (long)TimeSpan.TicksPerDay / TimeSpan.TicksPerSecond),
+				TimeSpan.TicksPerSecond);
+
+			var secondTicks = Factory.Multiply(longType, seconds, TimeSpan.TicksPerSecond);
+
+			var remainderTicks = Factory.Div(longType, nanoseconds, Factory.Value(longType, 100L));
+
+			return Factory.Add(longType, Factory.Add(longType, dayTicks, secondTicks), remainderTicks);
+		}
+
+		/// <summary>
+		/// Shifts as the base does - days, then seconds, then the rest in the finest unit - over the value widened to
+		/// <c>datetime2</c> first, or to <c>datetime</c> on 2005.
+		/// </summary>
+		/// <remarks>
+		/// <c>DATEADD</c> refuses the nanosecond the last step adds on a <c>date</c>, a <c>smalldatetime</c> and a
+		/// <c>datetime</c> - the common type before 2008, and what <c>GETDATE()</c> returns - and the first two would
+		/// not hold the time of day it adds anyway. The widening is applied whatever the mapping declares, for the
+		/// reason <see cref="ElapsedTicks"/> gives. 2005 has no <c>datetime2</c> and counts in milliseconds, which
+		/// <c>DATEADD</c> takes on a <c>datetime</c>; a <c>smalldatetime</c> is still widened there, since it keeps
+		/// no seconds and would round the result to the minute.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var widened = _sqlServerVersion >= SqlServerVersion.v2008
+				? AsDateTime2(element.Temporal)
+				: Widened(element.Temporal, DataType.DateTime);
+
+			return base.LowerTemporalArithmetic(
+				new SqlTemporalArithmeticExpression(widened, element.Interval, element.IsSubtract, element.Type));
+		}
+
+		/// <summary>
+		/// A date/time value cast to <c>datetime2</c>, which holds every other SQL Server date/time type exactly; a
+		/// zoned one as it is.
+		/// </summary>
+		ISqlExpression AsDateTime2(ISqlExpression value)
+		{
+			return Widened(value, DataType.DateTime2);
+		}
+
+		/// <summary>
+		/// A date/time value cast to <paramref name="target"/>; a zoned one as it is.
+		/// </summary>
+		/// <remarks>
+		/// The target is built from the CLR type alone, so no <c>DbType</c> of the mapping rides along and renders the
+		/// cast as the type it was meant to leave. The cast is mandatory: the declared type is not what the column
+		/// stores, and the optimizer would drop a cast it believes is a no-op. A <c>datetimeoffset</c> is not cast,
+		/// because <c>DATEADD</c> is exact on it and a cast would lose the offset.
+		/// </remarks>
+		ISqlExpression Widened(ISqlExpression value, DataType target)
+		{
+			var type = QueryHelper.GetDbDataType(value, MappingSchema);
+
+			if (type.DataType == DataType.DateTimeOffset || type.SystemType.ToUnderlying() != typeof(DateTime))
+				return value;
+
+			return Factory.Cast(value, new DbDataType(type.SystemType, target), true);
+		}
+
+		/// <summary>
+		/// Every version counts elapsed time: 2016 and later through <c>DATEDIFF_BIG</c>, earlier ones through the
+		/// 32-bit <c>DATEDIFF</c> over windows kept short enough for it.
+		/// </summary>
+		public override bool CanLowerIntervalDifference => true;
 
 		readonly SqlServerVersion _sqlServerVersion;
 
