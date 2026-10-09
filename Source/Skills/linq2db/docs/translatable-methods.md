@@ -266,7 +266,11 @@ etc.) see [`docs/null-semantics.md`](null-semantics.md). For forcing a value to 
 vs. a SQL literal (`Sql.Parameter`, `Sql.Constant`, `InlineParameters`) see
 [`docs/parameters.md`](parameters.md).
 
-For window / analytic functions (`Sql.Ext.Rank()`, `Sql.Ext.Sum()` etc.) and aggregate
+For window / analytic functions use `Sql.Window` - for example
+`Sql.Window.RowNumber(f => f.PartitionBy(t.Category).OrderBy(t.Id))` or
+`Sql.Window.Sum(t.Amount, f => f.PartitionBy(t.Category))`; search `linq2db.xml` for
+`WindowFunctionBuilder` for every function and clause. The `Sql.Ext.Rank()` / `Sql.Ext.Sum()`
+chains are the legacy API (analyzer `L2DB1001` suggests the `Sql.Window` form). For aggregate
 functions (`Sql.StringAggregate`, `Sql.ConcatStrings`) see the
 [Window Functions article](https://linq2db.github.io/articles/sql/Window-Functions-(Analytic-Functions).html)
 and the [`Sql` API reference](https://linq2db.github.io/api/LinqToDB.Sql.html).

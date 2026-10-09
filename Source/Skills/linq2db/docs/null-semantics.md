@@ -70,37 +70,59 @@ select e1
 ... WHERE e1.Value1 = e2.Value1 OR (e1.Value1 IS NULL AND e2.Value1 IS NULL)
 ```
 
+## Choosing the null behaviour
+
+Decide first which result the comparison should have when a value is null; the APIs follow.
+
+| Wanted behaviour | `null == null` | `null == 1` | How to get it | Use when |
+|---|---|---|---|---|
+| C# semantics (null-safe) | true | false | the default `CompareNulls.LikeClr`, or per comparison `a.IsNotDistinctFrom(b)` / `a.IsDistinctFrom(b)` | Nulls should match each other: optional values compared as values, change detection, joins on nullable keys where "both missing" counts as equal |
+| SQL three-valued logic | no match (`UNKNOWN`) | no match (`UNKNOWN`) | `Sql.AsNotNull(...)` on either side of one comparison, or `CompareNulls.LikeSql` for the whole context | Null means "unknown" and must never match, or the columns cannot be null in practice and simpler, index-friendly SQL is wanted |
+
+`IsDistinctFrom` / `IsNotDistinctFrom` are null-safe under every `CompareNulls` setting: they keep
+C# semantics for that one comparison even under `LikeSql`. They do not give SQL `UNKNOWN`
+semantics. `Sql.AsNotNull` and `LikeSql` do, and change which rows match when a value is null.
+
 ## Manual control
 
-Use these when the default `CompareNulls.LikeClr` expansion is unwanted for a specific comparison,
-without changing the setting globally.
+Use these to override the context setting for one comparison.
 
 | API | Effect |
 |---|---|
 | `Sql.AsNotNull(value)` / `Sql.AsNotNullable(value)` | Marks one side of a comparison as non-nullable for nullability analysis. Since the `OR (... IS NULL AND ...)` expansion only fires when **both** sides are classified nullable, marking either side non-nullable makes the comparison use the simpler form. |
-| `.IsDistinctFrom(other)` / `.IsNotDistinctFrom(other)` | Extension methods mapping to SQL `IS [NOT] DISTINCT FROM` (or its provider-specific equivalent) - a null-safe comparison for one specific expression, without touching the `CompareNulls` setting at all. |
+| `.IsDistinctFrom(other)` / `.IsNotDistinctFrom(other)` | Extension methods (in `LinqToDB.Sql`, available with `using LinqToDB;`) mapping to SQL `IS [NOT] DISTINCT FROM` or the provider's equivalent. Null-safe like C#: `null.IsNotDistinctFrom(null)` is `true`, `1.IsDistinctFrom(null)` is `true` - under any `CompareNulls` setting. |
 | `Sql.ToNullable(value)` (value types only) | Widens `T` to `T?` **as a real C# type change**, so the expression can be compared to `null` or assigned to a nullable-typed slot. Use this when the column's C# type will not otherwise let you write `== null`. |
 | `Sql.ToNotNull(value)` / `Sql.ToNotNullable(value)` (value types only) | The reverse narrowing, `T?` to `T`. |
 | `Sql.AsNullable(value)` | Annotates SQL-level nullability **without changing the C# type** (`T` in, `T` out - unlike `ToNullable`, which returns `T?`). Rarely needed directly; prefer `ToNullable` when you need the C# type itself to become nullable. |
 
-### `AsNotNull` example
+### The same comparison with each behaviour
 
 ```csharp
-// Wrong - relies on the default LikeClr expansion, unclear intent:
+// C# semantics (default LikeClr): rows where both Value1 are null match each other.
+// SQL: p1.Value1 = p2.Value1 OR (p1.Value1 IS NULL AND p2.Value1 IS NULL)
 from p1 in db.Parent
 from p2 in db.Parent
 where p1.Value1 == p2.Value1
 select p1;
 
-// Correct - explicit that a null on either side should not match, simpler generated SQL:
+// C# semantics, independent of the CompareNulls setting.
+// SQL: p1.Value1 IS NOT DISTINCT FROM p2.Value1 (or the provider's equivalent)
+from p1 in db.Parent
+from p2 in db.Parent
+where p1.Value1.IsNotDistinctFrom(p2.Value1)
+select p1;
+
+// SQL three-valued logic: a null on either side matches nothing. Fewer rows than above
+// whenever both values are null.
+// SQL: p1.Value1 = p2.Value1
 from p1 in db.Parent
 from p2 in db.Parent
 where Sql.AsNotNull(p1.Value1) == Sql.AsNotNull(p2.Value1)
 select p1;
 ```
 
-The second form is equivalent to filtering with `p1.Value1 != null && p1.Value1 == p2.Value1` on
-the client - either operand being null excludes the row, matching plain SQL equality.
+The last form returns the same rows as `p1.Value1 != null && p1.Value1 == p2.Value1`. Choose it
+because null must not match, not only because the SQL is shorter.
 
 ## Common Mistakes
 
@@ -114,9 +136,10 @@ where e1.Value1 == e2.Value1 && e1.Value1 != null
 ```
 
 Correct: recognize this is `CompareNulls.LikeClr` deliberately preserving C# null-equality
-semantics. If SQL `UNKNOWN`-based semantics are actually wanted, use `Sql.AsNotNull` on the
-specific comparison, `IsDistinctFrom`/`IsNotDistinctFrom`, or set `CompareNulls.LikeSql` for the
-whole query context - do not assume the current SQL is wrong.
+semantics. If SQL `UNKNOWN`-based semantics are actually wanted (nulls never match), use
+`Sql.AsNotNull` on the specific comparison or set `CompareNulls.LikeSql` for the whole context.
+Do not reach for `IsDistinctFrom`/`IsNotDistinctFrom` for that: they are null-safe and keep
+`null == null` true.
 
 ### Switching to `CompareNulls.LikeSql` without checking parameter-null handling
 
@@ -126,8 +149,9 @@ values via `IS NULL`.
 
 Correct: under `LikeSql`, a null-valued parameter compiles to `= @p` with standard SQL `UNKNOWN`
 semantics (never matches). Audit comparisons against nullable captured variables before switching
-away from `LikeClr`/`LikeSqlExceptParameters`, or use `Sql.AsNotNull`/`IsDistinctFrom` per
-comparison instead of a global setting change.
+away from `LikeClr`/`LikeSqlExceptParameters`. To change one comparison only, use `Sql.AsNotNull`
+(nulls never match) or `IsNotDistinctFrom` (nulls match each other) instead of a global setting
+change.
 
 ## API Lookup Anchors
 
