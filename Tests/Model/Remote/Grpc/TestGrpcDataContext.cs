@@ -16,11 +16,8 @@ namespace Tests.Model.Remote.Grpc
 {
 	public class TestGrpcDataContext : GrpcDataContext, ITestDataContext
 	{
-		// One HttpClient for every test context in the process. GrpcChannel does not dispose a
-		// caller-supplied HttpClient, so a client per context left its handler and HTTP/2
-		// connection open until finalization; with every provider's remote tests in one process
-		// that piles up thousands of connections to the test hosts. The handler pools one
-		// connection per host and port, so each test host still gets its own connection.
+		// Shared by every test context: GrpcChannel does not dispose a caller-supplied HttpClient, so one
+		// per context kept its handler and HTTP/2 connection open until finalization.
 #pragma warning disable MA0039 // Do not write your own certificate validation method
 		static readonly HttpClient _httpClient = new(new HttpClientHandler()
 		{

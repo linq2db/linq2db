@@ -13,11 +13,8 @@ namespace Tests.Model.Remote.SignalR
 {
 	public class TestSignalRDataContext : SignalRDataContext, ITestDataContext
 	{
-		// Started hub connections that no test context is using, per hub URL. A context leases one for
-		// its lifetime and gives it back on dispose, so sequential tests reuse a connection instead of
-		// a negotiate request plus a WebSocket per test, while contexts alive at the same time still
-		// get separate connections: the test hub runs one invocation per connection at a time, so a
-		// single shared connection would serialize concurrent remote tests.
+		// Started hub connections not leased by any context, per hub URL. Contexts alive at the same time get
+		// separate connections: the test hub runs one invocation per connection at a time.
 		static readonly Dictionary<string, Stack<PooledHubConnection>> _idleConnections = new(StringComparer.Ordinal);
 		static readonly Lock                                           _idleConnectionsLock = new();
 
@@ -42,10 +39,14 @@ namespace Tests.Model.Remote.SignalR
 		/// </summary>
 		public ILinqService LeasedClient => _lease;
 
+		/// <summary>
+		/// The pooled hub connection this context leased.
+		/// </summary>
+		public HubConnection HubConnection => _lease.Connection.Connection;
+
 		protected override ILinqService GetClient()
 		{
-			// null only if the base constructor asks for a client before this one has run
-			return (ILinqService?)_lease ?? base.GetClient();
+			return _lease;
 		}
 
 		public override void Dispose()
@@ -115,13 +116,9 @@ namespace Tests.Model.Remote.SignalR
 			connection.Dispose();
 		}
 
-		// One context's use of a pooled connection. Every call is admitted under the lease's lock, and the
-		// lease is returned under the same lock, so a call that starts after the return (from a query
-		// runner that outlived its context) fails instead of running on the next context's connection.
-		//
-		// The hub runs one invocation per connection at a time, and the server keeps running an invocation
-		// whose client call was cancelled. So the connection goes back to the pool only if no call is
-		// running and none was cancelled or failed; otherwise the next test could wait behind it.
+		// One context's use of a pooled connection. A call after Return is refused, and the connection is
+		// pooled again only if no call is running and none was cancelled or failed: the hub keeps running a
+		// cancelled invocation and runs one invocation per connection at a time.
 		sealed class Lease(string hubUrl, PooledHubConnection connection) : ILinqService
 		{
 			readonly Lock _lock = new();
