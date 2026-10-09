@@ -7,7 +7,6 @@ using JetBrains.Annotations;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 using LinqToDB.Remote;
 
@@ -85,7 +84,6 @@ namespace LinqToDB
 	/// (no state change needed).
 	/// </para>
 	/// </remarks>
-	[AiTags(Groups = AiGroup.Configuration, Affects = AiAffects.Configuration, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	public sealed class DataOptions : OptionsContainer<DataOptions>, IConfigurationID, IEquatable<DataOptions>, ICloneable
 	{
 		public DataOptions()

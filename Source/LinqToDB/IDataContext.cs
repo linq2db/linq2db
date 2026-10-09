@@ -10,7 +10,6 @@ using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 
@@ -47,7 +46,6 @@ namespace LinqToDB
 	/// and does not define implicit change tracking or unit-of-work semantics.
 	/// </para>
 	/// </remarks>
-	[AiTags(Groups = AiGroup.Connection, Affects = AiAffects.ExecutionContext, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public interface IDataContext : IConfigurationID, IDisposable, IAsyncDisposable
 	{

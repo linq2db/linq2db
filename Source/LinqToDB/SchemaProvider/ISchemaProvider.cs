@@ -1,5 +1,4 @@
 ﻿using LinqToDB.Data;
-using LinqToDB.Internal.Metadata;
 
 namespace LinqToDB.SchemaProvider
 {
@@ -21,7 +20,6 @@ namespace LinqToDB.SchemaProvider
 	/// when schema queries are issued inside a transaction.
 	/// </para>
 	/// </remarks>
-	[AiTags(Groups = AiGroup.Schema, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.SchemaResult, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	public interface ISchemaProvider
 	{
 		/// <summary>
@@ -39,7 +37,6 @@ namespace LinqToDB.SchemaProvider
 		/// - Sybase;
 		/// - DB2.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Schema, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.SchemaResult, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null);
 	}
 }

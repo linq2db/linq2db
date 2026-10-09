@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Remote;
@@ -33,7 +32,6 @@ namespace LinqToDB
 	/// <param name="MemberTranslators">
 	/// Gets custom member translators used during expression translation.
 	/// </param>
-	[AiTags(Groups = AiGroup.Configuration, Affects = AiAffects.Configuration, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText | AiPipeline.Execution, Provider = AiProvider.ProviderDefined)]
 	public sealed record DataContextOptions
 	(
 		int?                              CommandTimeout    = default,

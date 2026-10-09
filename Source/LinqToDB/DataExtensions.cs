@@ -15,7 +15,6 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -27,12 +26,6 @@ namespace LinqToDB
 	/// <summary>
 	/// Data context extension methods.
 	/// </summary>
-	/// <remarks>
-	/// Common metadata defaults for this API surface:
-	/// method-level <c>AiTags</c> attributes should specify only behavior-specific fields and override
-	/// defaults only when needed.
-	/// </remarks>
-	[AiTagsDefaults(Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public static partial class DataExtensions
 	{
@@ -48,7 +41,6 @@ namespace LinqToDB
 		/// Use to obtain a query root for a mapped table or view. Execution is deferred until enumeration
 		/// or explicit materialization.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
@@ -73,7 +65,6 @@ namespace LinqToDB
 		/// Use to create a query root for a table-valued function or a custom table expression.
 		/// Execution is deferred until enumeration or explicit materialization.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(
@@ -131,7 +122,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.QueryCompilation, Provider = AiProvider.ProviderAgnostic)]
 		public static Func<TDc,TResult> Compile<TDc,TResult>(
 			this IDataContext             dataContext,
 			Expression<Func<TDc,TResult>> query)
@@ -157,7 +147,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.QueryCompilation, Provider = AiProvider.ProviderAgnostic)]
 		public static Func<TDc,TArg1,TResult> Compile<TDc,TArg1, TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TResult>> query)
@@ -184,7 +173,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.QueryCompilation, Provider = AiProvider.ProviderAgnostic)]
 		public static Func<TDc,TArg1,TArg2,TResult> Compile<TDc,TArg1,TArg2,TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TArg2,TResult>> query)
@@ -212,7 +200,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Produces a reusable delegate for query execution with stable expression structure.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.QueryCompilation, Provider = AiProvider.ProviderAgnostic)]
 		public static Func<TDc,TArg1,TArg2,TArg3,TResult> Compile<TDc,TArg1,TArg2,TArg3,TResult>(
 			this IDataContext dataContext,
 			Expression<Func<TDc,TArg1,TArg2,TArg3,TResult>> query)
@@ -243,7 +230,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int Insert<T>(this IDataContext dataContext, T obj,
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 			where T : notnull
@@ -267,7 +253,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int Insert<T>(this IDataContext dataContext, T obj, InsertColumnFilter<T>? columnFilter,
 			string? tableName = default, string? databaseName = default, string? schemaName = default, string? serverName = default, TableOptions tableOptions = default)
 			where T : notnull
@@ -293,7 +278,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> InsertAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -325,7 +309,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> InsertAsync<T>(
 			this IDataContext dataContext,
 			T obj,
@@ -367,7 +350,6 @@ namespace LinqToDB
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
 			string?      tableName    = default,
 			string?      databaseName = default,
@@ -401,7 +383,6 @@ namespace LinqToDB
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int InsertOrReplace<T>(this IDataContext dataContext, T obj,
 			InsertOrUpdateColumnFilter<T>? columnFilter,
 			string?      tableName    = default,
@@ -437,7 +418,6 @@ namespace LinqToDB
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -475,7 +455,6 @@ namespace LinqToDB
 		/// For upsert with identity keys, generate the key value application-side and remove <see cref="IdentityAttribute"/> from the entity.
 		/// </para>
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> InsertOrReplaceAsync<T>(
 			this IDataContext              dataContext,
 			T                              obj,
@@ -512,7 +491,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static object InsertWithIdentity<T>(
 			this IDataContext dataContext,
 			T             obj,
@@ -543,7 +521,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static object InsertWithIdentity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -575,7 +552,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int InsertWithInt32Identity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -606,7 +582,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int InsertWithInt32Identity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -638,7 +613,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static long InsertWithInt64Identity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -669,7 +643,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static long InsertWithInt64Identity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -701,7 +674,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static decimal InsertWithDecimalIdentity<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -732,7 +704,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static decimal InsertWithDecimalIdentity<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -765,7 +736,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<object> InsertWithIdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -828,7 +798,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> InsertWithInt32IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -895,7 +864,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<long> InsertWithInt64IdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -963,7 +931,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<decimal> InsertWithDecimalIdentityAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1034,7 +1001,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int Update<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1065,7 +1031,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int Update<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -1098,7 +1063,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1131,7 +1095,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> UpdateAsync<T>(
 			this IDataContext      dataContext,
 			T                      obj,
@@ -1168,7 +1131,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static int Delete<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1200,7 +1162,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement)]
 		public static Task<int> DeleteAsync<T>(
 			this IDataContext dataContext,
 			T                 obj,
@@ -1244,7 +1205,6 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement | AiAffects.QueryRoot, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static ITable<T> CreateTable<T>(
 			this IDataContext dataContext,
 			string?           tableName       = default,
@@ -1284,7 +1244,6 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement | AiAffects.QueryRoot, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static ITable<T> CreateTable<T>(this IDataContext dataContext, CreateTableOptions tableOptions)
 			where T: notnull
 		{
@@ -1317,7 +1276,6 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement | AiAffects.QueryRoot, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static Task<ITable<T>> CreateTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName       = default,
@@ -1360,7 +1318,6 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// The schema command is executed first, then an <see cref="ITable{T}"/> query root is returned for further LINQ queries.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement | AiAffects.QueryRoot, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static Task<ITable<T>> CreateTableAsync<T>(this IDataContext dataContext, CreateTableOptions tableOptions, CancellationToken token = default)
 			where T : notnull
 		{
@@ -1391,7 +1348,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static void DropTable<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
@@ -1432,7 +1388,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static void DropTable<T>(
 			this ITable<T> table,
 			string?        tableName                 = default,
@@ -1476,7 +1431,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static Task DropTableAsync<T>(
 			this IDataContext dataContext,
 			string?           tableName                 = default,
@@ -1521,7 +1475,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DdlStatement, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText)]
 		public static Task DropTableAsync<T>(
 			this ITable<T>    table,
 			string?           tableName                 = default,
@@ -1561,7 +1514,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		public static IQueryable<T> GetCte<T>(
 			                this IDataContext                 dataContext,
 			[InstantHandle] Func<IQueryable<T>,IQueryable<T>> cteBody,
@@ -1629,7 +1581,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.QueryDirectives, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryStructure)]
 		public static IQueryable<T> GetCte<T>(
 			                this IDataContext                 dataContext,
 			                string?                           cteTableName,
@@ -1686,7 +1637,6 @@ namespace LinqToDB
 		/// </para>
 		/// </remarks>
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
 			this IDataContext dataContext,
@@ -1742,7 +1692,6 @@ namespace LinqToDB
 		/// </para>
 		/// </remarks>
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
 			this                     IDataContext      dataContext,
@@ -1797,7 +1746,6 @@ namespace LinqToDB
 		/// </para>
 		/// </remarks>
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
 			this IDataContext dataContext,
@@ -1847,7 +1795,6 @@ namespace LinqToDB
 		/// db.SelectQuery(() => Sql.CurrentTimeStamp);
 		/// </code>
 		/// </example>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		[Pure]
 		public static IQueryable<TEntity> SelectQuery<TEntity>(
 			                this IDataContext         dataContext,
@@ -1873,7 +1820,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		public static ITable<TResult> TableFromExpression<TResult>(
 			this IDataContext                 dataContext,
 			Expression<Func<ITable<TResult>>> expression)
@@ -1904,7 +1850,6 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Helpers, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.QueryRoot)]
 		public static IQueryable<TResult> QueryFromExpression<TResult>(
 			this IDataContext                     dataContext,
 			Expression<Func<IQueryable<TResult>>> expression)

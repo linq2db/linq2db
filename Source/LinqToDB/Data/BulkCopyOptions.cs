@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 
 namespace LinqToDB.Data
@@ -171,7 +170,6 @@ namespace LinqToDB.Data
 	/// See individual parameter documentation for provider support details.
 	/// </para>
 	/// </remarks>
-	[AiTags(Groups = AiGroup.Configuration, Affects = AiAffects.Configuration, Pipeline = AiPipeline.BulkInsert, Provider = AiProvider.ProviderDefined)]
 	public sealed record BulkCopyOptions
 	(
 		int?                        MaxBatchSize           = default,

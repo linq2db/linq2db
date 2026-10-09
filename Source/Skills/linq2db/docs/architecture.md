@@ -192,39 +192,6 @@ Helper API for SQL constructs.
 
 ---
 
-# Machine-Readable Documentation (AI-Tags)
-
-Some public APIs carry compact machine-readable metadata authored as internal attributes
-(`[AiTags]` / `[AiTagsDefaults]` in `LinqToDB.Internal.Metadata`).
-
-Format:
-
-```cs
-[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable)]
-```
-
-Generated docs render these attributes as `AI metadata`
-(e.g. `AI metadata: Groups=Hints; HintType=Query; Execution=Deferred; Composability=Composable;`).
-Multiple values within a single key are comma-separated (e.g. `Affects=DdlStatement,Data`).
-
-These tags describe:
-
-* logical API grouping
-* execution semantics
-* composability
-* SQL semantics affected
-* provider behavior
-
-AI metadata is intended for tooling and AI agents.
-
-They do not affect runtime behavior.
-
-The specification for these tags is described in:
-
-docs/ai-tags.md
-
----
-
 # Additional Documentation
 
 The NuGet package contains the following skill documents. Treat this list as package navigation,
@@ -236,7 +203,6 @@ not as a completeness claim for every linq2db feature.
 | `docs/coverage.md` | Covered and not-yet-covered topics. |
 | `docs/architecture.md` | This architecture overview. |
 | `docs/agent-antipatterns.md` | Operational anti-patterns with code examples. |
-| `docs/ai-tags.md` | `[AiTags]` vocabulary and generated AI metadata semantics. |
 | `docs/configuration.md` | `DataOptions`, tracing/logging, retry policies, interceptors, member translators. |
 | `docs/mapping.md` | Mapping attributes, fluent mapping, generated DDL metadata, value converters. |
 | `docs/provider-setup.md` | Provider setup methods, `ProviderName` constants, driver packages. |

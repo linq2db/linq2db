@@ -10,7 +10,6 @@ using JetBrains.Annotations;
 
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
@@ -44,8 +43,6 @@ namespace LinqToDB.Data
 	///   </item>
 	/// </list>
 	/// </remarks>
-	[AiTags(Groups = AiGroup.RawSQL | AiGroup.DML, Provider = AiProvider.ProviderDefined)]
-	[AiTagsDefaults(Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public static class DataContextExtensions
 	{
@@ -62,7 +59,6 @@ namespace LinqToDB.Data
 		/// or <c>ExecuteReader</c> (and their <c>Async</c> variants) on the returned <see cref="CommandInfo"/>
 		/// to materialize results or run DML.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.RawSQL, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.CommandBuilder, Pipeline = AiPipeline.SqlText)]
 		public static CommandInfo SetCommand(this IDataContext dataContext, string commandText)
 		{
 			return new CommandInfo(dataContext, commandText);
@@ -2424,7 +2420,6 @@ namespace LinqToDB.Data
 		/// (native bulk API or multi-row INSERT fallback, controlled by <see cref="BulkCopyOptions.BulkCopyType"/>).
 		/// Execution is immediate; does not use the LINQ translation pipeline.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.Data, Pipeline = AiPipeline.BulkInsert)]
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source)
 			where T : class
 		{
@@ -2584,7 +2579,6 @@ namespace LinqToDB.Data
 		/// Async variant of <see cref="BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/>.
 		/// Uses the most efficient insert path available for the configured provider.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.Data, Pipeline = AiPipeline.BulkInsert)]
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{

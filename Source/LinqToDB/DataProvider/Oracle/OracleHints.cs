@@ -8,7 +8,6 @@ using JetBrains.Annotations;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.DataProvider.Oracle;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -169,7 +168,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// LinqToDB exposes <c>OptParamHint</c> as the provider-specific family API for that
 		/// Oracle hint instead of enumerating every possible optimizer parameter value.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(OptParamHintImpl))]
 		public static IOracleSpecificQueryable<TSource> OptParamHint<TSource>(this IOracleSpecificQueryable<TSource> query, params string[] parameters)
 			where TSource : notnull
@@ -185,7 +183,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle query hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ContainersHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ContainersHint<TSource>(this IOracleSpecificQueryable<TSource> query, string hint)
 			where TSource : notnull
@@ -201,7 +198,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle query hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ParallelDefaultHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ParallelDefaultHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -217,7 +213,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle query hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ParallelAutoHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ParallelAutoHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -233,7 +228,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle query hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ParallelManualHintImpl))]
 		public static IOracleSpecificQueryable<TSource> ParallelManualHint<TSource>(this IOracleSpecificQueryable<TSource> query)
 			where TSource : notnull
@@ -249,7 +243,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle query hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ParallelHintImpl2))]
 		public static IOracleSpecificQueryable<TSource> ParallelHint<TSource>(this IOracleSpecificQueryable<TSource> query, int value)
 			where TSource : notnull
@@ -306,7 +299,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle table hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ParallelHintImpl3))]
 		public static IOracleSpecificTable<TSource> ParallelHint<TSource>(this IOracleSpecificTable<TSource> table, int value)
 			where TSource : notnull
@@ -322,7 +314,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle table hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ParallelDefaultHintImpl3))]
 		public static IOracleSpecificTable<TSource> ParallelDefaultHint<TSource>(this IOracleSpecificTable<TSource> table)
 			where TSource : notnull
@@ -358,7 +349,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle table hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(PQDistributeHintImpl))]
 		public static IOracleSpecificTable<TSource> PQDistributeHint<TSource>(this IOracleSpecificTable<TSource> table, string outerDistribution, string innerDistribution)
 			where TSource : notnull
@@ -374,7 +364,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle index hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(ParallelIndexHintImpl))]
 		public static IOracleSpecificTable<TSource> ParallelIndexHint<TSource>(this IOracleSpecificTable<TSource> table, params object[] values)
 			where TSource : notnull
@@ -390,7 +379,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle index hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Index, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(NoParallelIndexHintImpl))]
 		public static IOracleSpecificTable<TSource> NoParallelIndexHint<TSource>(this IOracleSpecificTable<TSource> table, params object[] values)
 			where TSource : notnull
@@ -406,7 +394,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <summary>
 		/// Adds an Oracle table hint.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[ExpressionMethod(nameof(DynamicSamplingHintImpl))]
 		public static IOracleSpecificTable<TSource> DynamicSamplingHint<TSource>(this IOracleSpecificTable<TSource> table, int value)
 			where TSource : notnull
@@ -430,7 +417,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -456,7 +442,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -485,7 +470,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Table, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -518,7 +502,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -545,7 +528,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -572,7 +554,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with join hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.TablesInScope, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
@@ -608,7 +589,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -633,7 +613,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -663,7 +642,6 @@ namespace LinqToDB.DataProvider.Oracle
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[AiTags(Groups = AiGroup.Hints, HintType = AiHintType.Query, Execution = AiExecution.Deferred, Composability = AiComposability.Composable, Affects = AiAffects.SqlSemantics, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]

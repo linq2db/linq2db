@@ -13,7 +13,6 @@ using LinqToDB.Data;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 
 namespace LinqToDB
@@ -97,7 +96,6 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// </remarks>
-	[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Composable, Affects = AiAffects.DdlStatement | AiAffects.Data, Pipeline = AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IQueryableWrapper<T>, IDisposable, IAsyncDisposable
 		where T : notnull

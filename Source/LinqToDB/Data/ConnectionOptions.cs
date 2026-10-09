@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Options;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
@@ -63,7 +62,6 @@ namespace LinqToDB.Data
 	/// Allows descriptor modification.
 	/// When not specified, application-wide callback <see cref="MappingSchema.EntityDescriptorCreatedCallback"/> called.
 	/// </param>
-	[AiTags(Groups = AiGroup.Configuration, Affects = AiAffects.ConnectionConfiguration, Pipeline = AiPipeline.Connection | AiPipeline.Execution, Provider = AiProvider.ProviderDefined)]
 	public sealed record ConnectionOptions
 	(
 		string?                                         ConfigurationString       = default,

@@ -31,7 +31,6 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 using LinqToDB.Reflection;
@@ -84,8 +83,6 @@ namespace LinqToDB.Data
 	/// No LINQ translation occurs; the caller provides SQL text and parameters directly.
 	/// </para>
 	/// </remarks>
-	[AiTags(Groups = AiGroup.RawSQL, Provider = AiProvider.ProviderDefined)]
-	[AiTagsDefaults(Groups = AiGroup.RawSQL, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public class CommandInfo
 	{
@@ -398,7 +395,6 @@ namespace LinqToDB.Data
 		/// Executes the SQL command immediately (opens the data reader), then materializes rows
 		/// lazily as the returned sequence is enumerated.
 		/// </remarks>
-		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public IEnumerable<T> Query<T>()
 		{
 			var dataConnection = GetDataConnection();
@@ -1099,7 +1095,6 @@ namespace LinqToDB.Data
 		/// Executes command and returns number of affected records.
 		/// </summary>
 		/// <returns>Number of records, affected by command execution.</returns>
-		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.Data)]
 		public int Execute()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecute);
@@ -1252,7 +1247,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Resulting value type.</typeparam>
 		/// <returns>Resulting value.</returns>
-		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public T Execute<T>()
 		{
 			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteT);
@@ -1432,7 +1426,6 @@ namespace LinqToDB.Data
 		/// The command executes immediately; use the returned <see cref="DataReaderAsync"/> to
 		/// iterate rows manually. Dispose the reader when done.
 		/// </remarks>
-		[AiTags(Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.QueryResult)]
 		public DataReaderAsync ExecuteReader()
 		{
 			var dataConnection = GetDataConnection();

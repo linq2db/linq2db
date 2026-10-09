@@ -504,5 +504,4 @@ This is the primary diagnostic tool for translation issues, unexpected query sha
 ## See also
 
 - [`docs/architecture.md`](architecture.md) - extended architectural model.
-- [`docs/ai-tags.md`](ai-tags.md) - machine-readable metadata specification.
 - [`docs/provider-capabilities.md`](provider-capabilities.md) - SQL feature support matrix per provider.

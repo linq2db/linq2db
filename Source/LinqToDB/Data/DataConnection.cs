@@ -18,7 +18,6 @@ using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Interceptors;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
@@ -99,7 +98,6 @@ namespace LinqToDB.Data
 	/// </para>
 	///
 	/// </remarks>
-	[AiTags(Groups = AiGroup.Connection, Affects = AiAffects.ExecutionContext, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 	[PublicAPI]
 	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
 	{
@@ -1564,7 +1562,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1606,7 +1603,6 @@ namespace LinqToDB.Data
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
 		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
-		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
 			CheckAndThrowOnDisposed();
@@ -1644,7 +1640,6 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Commits transaction (if any), associated with connection.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual void CommitTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1677,7 +1672,6 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Rollbacks transaction (if any), associated with connection.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual void RollbackTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1710,7 +1704,6 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Disposes transaction (if any), associated with connection.
 		/// </summary>
-		[AiTags(Groups = AiGroup.Connection, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Pipeline = AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public virtual void DisposeTransaction()
 		{
 			CheckAndThrowOnDisposed();

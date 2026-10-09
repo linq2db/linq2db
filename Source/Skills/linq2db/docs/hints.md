@@ -147,7 +147,7 @@ provider-specific SQL extensions that the user describes as hints, use this exac
    forms, and the correct answer depends on whether the user needs one table source or all table
    references in a query scope.
 6. In XML-doc, verify the helper signature, receiver type,
-   namespace, overloads, XML summary, and AI metadata such as `Groups=Hints; HintType=...`.
+   namespace, overloads, and XML summary.
 7. If the exact map lookup has no hit, search the provider `*Hints` XML-doc members directly by
    SQL hint text, provider namespace, receiver type, and likely helper-name fragments.
 8. Prefer the concrete typed/provider-specific helper when it exists.
@@ -167,8 +167,8 @@ provider-specific SQL extensions that the user describes as hints, use this exac
    interceptors. Treat those as last-resort fallbacks.
 
 For questions about applying a table hint to several tables, all tables, or the current query
-scope, search for `HintType=TablesInScope` and helper names containing `InScope` before suggesting
-`TablesInScopeHint("...")`. A generic scope hint is still a fallback when no typed scope helper
+scope, search `docs/hints-api-map.md` for rows whose `Hint type` is `TablesInScope` and helper
+names containing `InScope` before suggesting `TablesInScopeHint("...")`. A generic scope hint is still a fallback when no typed scope helper
 exists. Apply a `TablesInScope` helper to the query or subquery that already contains the table
 references you want to affect; do not attach it to the first table source before adding joins and
 expect later tables to be included.
@@ -190,14 +190,11 @@ explicitly say whether exact map lookup and XML-doc lookup found a
 provider-specific generic directive family before recommending raw `QueryHint`, `TableHint`,
 `TablesInScopeHint`, custom SQL, or interceptors.
 
-Generated API docs classify hint APIs with AI metadata and `HintType`
+`docs/hints-api-map.md` classifies hint APIs by `Hint type`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
-Agents should use those tags when choosing the correct overload or scope.
-For typed provider helpers, the XML-doc summary should also name the concrete SQL hint in `<c>...`,
+Use it when choosing the correct overload or scope.
+For typed provider helpers, the XML-doc summary also names the concrete SQL hint in `<c>...`,
 so agents do not need to infer it only from the method name.
-Generated provider-specific helpers get those tags from their T4 templates; update the `.tt`
-source first and then regenerate/check in the corresponding `.generated.cs` file.
-Handwritten provider-specific helpers carry the same tags directly in their XML docs.
 
 ---
 
@@ -294,8 +291,8 @@ Known provider gaps:
 
 Inspect XML-doc or the provider namespace for the exact helper names. Generated helpers often use
 a `Hint` suffix, but naming is provider-specific and should not be guessed from SQL text alone.
-The XML-doc summary names the concrete SQL hint inside `<c>...</c>`; generated AI metadata and `HintType`
-classify the scope, not the exact hint name.
+The XML-doc summary names the concrete SQL hint inside `<c>...</c>`; the map's `Hint type` column
+classifies the scope, not the exact hint name.
 
 ---
 
@@ -519,7 +516,7 @@ Use this workflow:
 4. If the next hint is for a different provider, call that provider's marker before using its
    helpers.
 5. Inspect the matching provider `*Hints` XML-doc surface and choose the helper whose XML summary
-   names the required SQL hint and whose `HintType` matches the required scope.
+   names the required SQL hint and whose scope (the map's `Hint type`) matches the required scope.
 6. Add only helpers that exist in the installed package version.
 
 During SQL generation, only hint extensions compatible with the active provider are emitted.

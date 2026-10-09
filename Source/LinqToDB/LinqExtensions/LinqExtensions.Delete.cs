@@ -11,7 +11,6 @@ using JetBrains.Annotations;
 using LinqToDB.Async;
 using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Metadata;
 using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB
@@ -39,7 +38,6 @@ namespace LinqToDB
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);
@@ -133,7 +131,6 @@ namespace LinqToDB
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Deferred, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		[Pure]
 		public static IEnumerable<TOutput> DeleteWithOutput<TSource,TOutput>(
 			this IQueryable<TSource>           source,
@@ -237,7 +234,6 @@ namespace LinqToDB
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource> source,
 			ITable<TOutput>          outputTable)
@@ -311,7 +307,6 @@ namespace LinqToDB
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource>          source,
 			ITable<TOutput>                   outputTable,
@@ -388,7 +383,6 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
-		[AiTags(Groups = AiGroup.DML, Execution = AiExecution.Immediate, Composability = AiComposability.Terminal, Affects = AiAffects.DmlStatement, Pipeline = AiPipeline.ExpressionTree | AiPipeline.SqlAST | AiPipeline.SqlText, Provider = AiProvider.ProviderDefined)]
 		public static int Delete<T>(this IQueryable<T> source)
 		{
 			ArgumentNullException.ThrowIfNull(source);

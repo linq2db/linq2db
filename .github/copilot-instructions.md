@@ -54,11 +54,3 @@ The `Source/Skills/linq2db/docs/` directory contains machine-readable references
 - **A translator registration changed** in `StringMemberTranslatorBase`, `MathMemberTranslatorBase`, `DateFunctionsTranslatorBase`, `ConvertMemberTranslatorDefault`, or any `*MemberTranslator*.cs` (method added, removed, or renamed): verify `Source/Skills/linq2db/docs/translatable-methods.md` reflects the change (table row added, removed, or updated).
 
 - **`DataOptionsExtensions.cs` changed** — a `UseXxx` method added, removed, or its behavior changed (connection, tracing, retry, interceptors, member translators): verify `Source/Skills/linq2db/docs/configuration.md` reflects the change.
-
-**AI metadata**
-
-- **`[AiTags(...)]` or `[AiTagsDefaults(...)]` attribute added or modified** (`LinqToDB.Internal.Metadata`, including in `.tt` templates): the compiler validates enum values, so check that `Source/Skills/linq2db/docs/ai-tags.md` still lists every value of the `Ai*` enums, and flag a value added to an enum without a matching entry there. Multi-value fields combine `[Flags]` values with `|` (`Affects = AiAffects.DdlStatement | AiAffects.Data`). Flag any reintroduced XML-doc `<ai-tags />` / `<ai-tags-defaults />` element - that form is retired and `Build/GenerateApiDocs.ps1` rejects it.
-
-- **Behaviour of an already-tagged API changes**: if `execution`, `composability`, `affects`, or `pipeline` semantics change in this PR (e.g., a deferred query becomes immediate, or DDL is added or removed), flag that the corresponding `[AiTags]` metadata needs updating.
-
-- **New public API added** that issues SQL directly or implements `IQueryable<T>` / `ITable<T>`: flag if no appropriate `[AiTags]` attribute (or type-level `[AiTagsDefaults]`) is present.

@@ -85,12 +85,12 @@ For exact public API facts that markdown guidance does not cover, search the XML
 
 The XML documentation file ships with the package assembly:
 `lib/<TFM>/linq2db.xml`
-Use it for version-matched signatures, overloads, parameter documentation, return types, remarks,
-and custom AI metadata. Do not read it sequentially.
+Use it for version-matched signatures, overloads, parameter documentation, return types, and
+remarks. Do not read it sequentially.
 
 ### 3 - Verify APIs before using them
 
-Do not invent APIs, overloads, options, XML-doc remarks, AI metadata, provider flags, or provider
+Do not invent APIs, overloads, options, XML-doc remarks, provider flags, or provider
 capabilities. Also do not assume an API is missing just because markdown docs do not mention it.
 
 Do not use `LinqToDB.Internal.*` APIs in application code. They are implementation details even
@@ -149,14 +149,14 @@ For SQL hint questions, use this mandatory lookup order before answering:
    tables-in-scope helper. Choose the table-local or scope-level helper based on whether the hint
    should affect one table source or all table references in the current query scope.
 6. For user wording such as "several tables", "all tables", "whole query", or "scope", search for
-   `HintType=TablesInScope` and provider helper names containing `InScope` before recommending
-   generic `TablesInScopeHint(...)`. Apply a `TablesInScope` helper to the query/subquery that
+   map rows whose `Hint type` is `TablesInScope` and provider helper names containing `InScope`
+   before recommending generic `TablesInScopeHint(...)`. Apply a `TablesInScope` helper to the query/subquery that
    already contains the tables to affect; do not apply it to the first table before composing joins.
 7. Use common name shapes only to guide search: `<Base>Hint` -> `<Base>InScopeHint` and
    `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
    concatenation; verify the exact API in the map and XML-doc.
-8. Search the provider `*Hints` API entries by SQL hint text, candidate helper names,
-   receiver types, and AI metadata such as `Groups=Hints`.
+8. Search the provider `*Hints` API entries by SQL hint text, candidate helper names, and
+   receiver types.
 9. Prefer typed/provider-specific helpers found in the map or XML-doc.
 10. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
    map and XML-doc lookup fail to find a typed helper for the
@@ -174,7 +174,7 @@ interceptors.
 Do not answer a provider-specific hint question from the generic hints model alone.
 Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
 provider and exact SQL/database term, then searched XML-doc for the provider
-`*Hints` type, SQL term, likely helper fragments, and AI metadata such as `Groups=Hints`.
+`*Hints` type, SQL term, and likely helper fragments.
 Do not skip this lookup because the database feature is a table modifier, lock clause, query
 directive, or provider-specific SQL extension rather than a classic optimizer hint.
 
