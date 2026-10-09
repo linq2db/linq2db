@@ -161,6 +161,7 @@ jobs:
 # the test phase went from 157.0 to 140.6 min with the leg work unchanged at 1153 and 1148 agent-
 # minutes, so the whole gain is packing - average parallelism 7.34 to 8.17. Durations drift, so
 # reletter when a leg has clearly outgrown its neighbours, and move its block to keep the file sorted.
+# z_ is the exception: it was the only free letter when the Jet leg was split, not a measured slot.
 #
 # Two things this cannot do, both measured rather than assumed:
 #   - Hide itself. The key is appended to the job name and a variable is not expanded in a job
@@ -174,11 +175,11 @@ jobs:
 # also shared the agent pool with another test-all run, so it proved neither way. Hence letters.
 #
 # Sorting scatters the provider families, so: Access is r_Access_MDB_Odbc, v_Access_ACE_Odbc,
-# x_Access_ACE_OleDb, y_Access_ACE_x64 and z_Access_MDB_OleDb. SQL Server is a_SqlServer2014, d_SqlServer2012,
-# e_SqlServer2008, f_SqlServer2016, l_SqlServer2017_2019, m_SqlServer2022_2025, n_SqlServer2019Extras
-# and o_SqlServer2005. Oracle is j_Oracle1819, q_Oracle2123 and t_Oracle1112. PostgreSQL is
-# c_PostgreSQL2 and i_PostgreSQL1. The rest are one entry each: b_ClickHouse, g_SqlCE, h_SAPHANA2,
-# k_Firebird, p_MySQL, s_SQLite, u_YdbSybase, w_DB2InformixDuckDB.
+# x_Access_ACE_OleDb, y_Access_ACE_x64 and z_Access_MDB_OleDb. SQL Server is a_SqlServer2014,
+# d_SqlServer2012, e_SqlServer2008, f_SqlServer2016, l_SqlServer2017_2019, m_SqlServer2022_2025,
+# n_SqlServer2019Extras and o_SqlServer2005. Oracle is j_Oracle1819, q_Oracle2123 and t_Oracle1112.
+# PostgreSQL is c_PostgreSQL2 and i_PostgreSQL1. The rest are one entry each: b_ClickHouse, g_SqlCE,
+# h_SAPHANA2, k_Firebird, p_MySQL, s_SQLite, u_YdbSybase, w_DB2InformixDuckDB.
 # 2008-2016 run one version per job. The original reason was that batching two versions in a single
 # netfx process exhausted memory (unbounded per-MappingSchema attribute cache). That no longer
 # reproduces: the merged 2017+2019 and 2022+2025 jobs put four providers through one netfx process and
