@@ -104,7 +104,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]
-		public void Issue2847Test([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool withIdentity)
+		public void Issue2847Test([IncludeDataSources(TestProvName.AllOracle11)] string context, [Values] bool withIdentity)
 		{
 			using var db = GetDataContext(context);
 
@@ -113,6 +113,36 @@ namespace Tests.xUpdate
 			table.Insert(() => new TestIdTrun { Field1 = 1m });
 
 			db.Execute("DROP SEQUENCE \"SIDENTITY_TestIdTrun\"");
+
+			if (withIdentity)
+			{
+				Assert.That(() => table.Truncate(withIdentity), Throws.Exception.With.Message.Contain("ORA-02289"));
+			}
+			else
+			{
+				table.Truncate(withIdentity);
+			}
+		}
+
+		[Table]
+		sealed class TestIdTrunSeq
+		{
+			[Column, PrimaryKey, SequenceName("SIDENTITY_TestIdTrunSeq")] public int     ID;
+			[Column]                                                     public decimal Field1;
+		}
+
+		// Oracle 12+ generates a native identity by default, where this scenario cannot arise - the generator is
+		// part of the table. SequenceName opts the table back onto the sequence and trigger, which brings it back.
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]
+		public void Issue2847SequenceIdentityTest([IncludeDataSources(TestProvName.AllOracle12Plus)] string context, [Values] bool withIdentity)
+		{
+			using var db = GetDataContext(context);
+
+			using var table = db.CreateLocalTable<TestIdTrunSeq>();
+
+			table.Insert(() => new TestIdTrunSeq { Field1 = 1m });
+
+			db.Execute("DROP SEQUENCE \"SIDENTITY_TestIdTrunSeq\"");
 
 			if (withIdentity)
 			{
