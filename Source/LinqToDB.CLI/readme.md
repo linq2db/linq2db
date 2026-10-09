@@ -109,6 +109,7 @@ Available commands:
 - `dotnet linq2db credentials <set|list|remove|clear> <options>`: manages encrypted credential profiles for connection configuration
 - `dotnet linq2db mcp <options>`: runs a STDIO Model Context Protocol server exposing `linq2db_info`, `linq2db_schema`, `linq2db_query`, `linq2db_execute`, and `linq2db_skill`
 - `dotnet linq2db skill`: prints agent-oriented CLI usage instructions
+- `dotnet linq2db skill install [--project <project file or directory>] [--root <directory>] [--check] [--force]`: copies the `linq2db` library skill (from the linq2db package the project references, or the copy embedded in the tool) and the `linq2db-cli` skill into `.agents/skills/` and `.claude/skills/` of the repository; `--check` only verifies them and fails when they are missing, stale or edited (for CI)
 
 For MCP-capable agent hosts, `mcp` is the intended integration mode. Use `query` for lighter direct invocation when MCP is unavailable, not allowed by policy, or not needed for a specific environment.
 
