@@ -499,6 +499,14 @@ jobs:
             9.x
             10.x
 
+      # Anonymous pulls hit Docker Hub's rate limit (#6008); a failed login falls back to them.
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        if: matrix.script_global != ''
+        continue-on-error: true
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Start the database
         if: matrix.script_global != ''
         working-directory: scripts
