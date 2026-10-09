@@ -121,8 +121,9 @@ configuration, and DML/query extensions:
    and typed helpers.
 3. Search `lib/<TFM>/linq2db.xml` by likely member names, type names, provider names, and SQL
    keywords. Do not read it sequentially. Member ids have the form `M:Namespace.Type.Member(...)`
-   (`T:` for types, `P:` for properties, `F:` for fields), so a search for `.TypeName.MemberName`
-   finds every overload.
+   (`T:` for types, `P:` for properties, `F:` for fields); generic types and methods carry a
+   backtick arity suffix (``ITable`1``, ``TableHint``1``), so search by member name rather than
+   by full signature to find every overload.
 4. Use summaries, parameter documentation, and remarks to confirm likely candidates.
 5. Treat XML-doc as the version-matched primary reference for exact public API names, signatures,
    overloads, parameters, return types, and remarks on members that have XML comments.
@@ -150,8 +151,9 @@ For SQL hint questions, use this mandatory lookup order before answering:
    should affect one table source or all table references in the current query scope.
 6. For user wording such as "several tables", "all tables", "whole query", or "scope", search for
    map rows whose `Hint type` is `TablesInScope` and provider helper names containing `InScope`
-   before recommending generic `TablesInScopeHint(...)`. Apply a `TablesInScope` helper to the query/subquery that
-   already contains the tables to affect; do not apply it to the first table before composing joins.
+   before recommending generic `TablesInScopeHint(...)`. Apply a `TablesInScope` helper to the
+   query/subquery that already contains the tables to affect; do not apply it to the first table
+   before composing joins.
 7. Use common name shapes only to guide search: `<Base>Hint` -> `<Base>InScopeHint` and
    `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
    concatenation; verify the exact API in the map and XML-doc.
