@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 using NUnit.Framework;
 
+using Tests.Model.Remote.SignalR;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -323,6 +325,28 @@ namespace Tests.Linq
 			new SignalRDataContext(hubConnection).Dispose();
 
 			Assert.ThrowsAsync<ObjectDisposedException>(() => hubConnection.StartAsync());
+		}
+
+		// The SignalR test context leases a pooled hub connection for its lifetime. A client it handed out
+		// must stop working when the context is disposed, rather than reach the connection that the pool
+		// gives to the next context.
+		[Test]
+		public async Task SignalRTestContextClientStopsAtDispose([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			ILinqService client;
+			string?      configuration;
+
+			using (var db = (TestSignalRDataContext)GetDataContext(context, transport: RemoteTransport.SignalR))
+			{
+				client        = db.LeasedClient;
+				configuration = db.ConfigurationString;
+
+				_ = await client.GetInfoAsync(configuration);
+			}
+
+			Assert.ThrowsAsync<ObjectDisposedException>(() => client.GetInfoAsync(configuration));
 		}
 
 		// The other constructor takes a client the caller built, so the connection inside it stays the
