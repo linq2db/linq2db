@@ -32,6 +32,19 @@ obsolete `DataOptions.UseCompareNullsAsValues(bool)` - `true` maps to `LikeClr`,
 | `CompareNulls.LikeSql` | Straight translation to SQL operators; nulls compare as `UNKNOWN` (three-valued logic), matching raw SQL semantics. Parameter values are **not** sniffed for null. |
 | `CompareNulls.LikeSqlExceptParameters` | Same as `LikeSql`, except a null-valued parameter still compiles to `IS NULL`. Kept for pre-6.0 backward compatibility; prefer `LikeSql` for new code. |
 
+To change the setting for a block of queries on an existing context, use a scoped override; the
+previous setting comes back when the scope ends:
+
+```csharp
+using (db.UseLinqOptions(o => o.WithCompareNulls(CompareNulls.LikeSql)))
+{
+    // queries here use SQL null semantics
+}
+```
+
+Setting `Configuration.Linq.CompareNulls` (a static default) does not change a context that already
+exists; see [`configuration.md`](configuration.md#static-configuration-settings).
+
 ## Why a null-valued parameter becomes `IS NULL`
 
 Under the default `LikeClr` (and under `LikeSqlExceptParameters`), linq2db inspects a captured

@@ -109,6 +109,11 @@ Rules that are easy to miss:
   When the task gives no limits, choose a bounded value from the field's meaning and flag it for
   review (a neutral `// TODO: confirm max length` or a note to the user); see
   [`docs/mapping.md`](docs/mapping.md#5-ddl-sensitive-column-metadata).
+- Change behaviour through `DataOptions` (`UseCommandTimeout`, `UseCompareNulls`, ...), not through
+  static `Configuration.*` settings, which do not affect a context that already exists. For a
+  temporary change on an existing context use `using (db.UseOptions(...))` or its typed forms
+  (`UseLinqOptions`, `UseDataContextOptions`); see
+  [`docs/configuration.md`](docs/configuration.md#temporary-context-options).
 
 XML-doc remarks on `DataOptions`, `DataConnection`, `DataContext`, `MappingSchema` and the provider
 `UseXxx` methods carry further lifetime and caching details.
@@ -237,7 +242,7 @@ Open a guide when the task touches its topic.
 | [`docs/raw-sql.md`](docs/raw-sql.md) | Raw SQL query roots and command execution - `FromSql`, `FromSqlScalar`, `RawSqlString`, `SetCommand`, `CommandInfo`, `ToSqlQuery`, `QuerySql` |
 | [`docs/extensions.md`](docs/extensions.md) | Extension mechanisms - `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, `IMemberTranslator` / `UseMemberTranslator` |
 | [`docs/interceptors.md`](docs/interceptors.md) | Choosing and registering interceptors; callback timing and supported use cases |
-| [`docs/configuration.md`](docs/configuration.md) | Logging, retry, interceptors, `DataOptions` builder, `app.config`/`web.config`/JSON configuration |
+| [`docs/configuration.md`](docs/configuration.md) | `DataOptions` builder, command timeout, logging, retry, interceptors, `app.config`/`web.config`/JSON configuration; temporary per-context overrides with `UseOptions` / `UseLinqOptions` / `UseDataContextOptions`; why changing static `Configuration.*` settings does not affect an existing context |
 | [`docs/coverage.md`](docs/coverage.md) | Which topics have a guide; for the rest, search `linq2db.xml` |
 
 ## Quick violation reference

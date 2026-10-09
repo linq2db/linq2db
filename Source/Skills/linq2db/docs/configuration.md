@@ -21,6 +21,7 @@ store as a singleton, and pass to every `DataConnection` / `DataContext` constru
 ```csharp
 static readonly DataOptions _options = new DataOptions()
     .UseSqlServer("connection string")   // provider + connection string
+    .UseCommandTimeout(45)               // optional: default command timeout, seconds
     .UseTracing(TraceLevel.Info, t =>    // optional: SQL logging
         Console.WriteLine(t.SqlText))
     .UseRetryPolicy(new TransientRetryPolicy()); // optional: auto-retry
@@ -124,6 +125,25 @@ options.UseTraceWith((message, category, level) =>
 
 ---
 
+## Command timeout
+
+Set the default command timeout (in seconds) for every context created from the options with
+`UseCommandTimeout`. `null` keeps the provider's default.
+
+```csharp
+var options = new DataOptions()
+    .UseSqlServer(connectionString)
+    .UseCommandTimeout(45);
+```
+
+`DataConnection.CommandTimeout` (and `ResetCommandTimeout()`) change one connection object only and
+stay changed until reset. For an application-wide default use `UseCommandTimeout`; for a temporary
+change on an existing context use
+`db.UseDataContextOptions(o => o.WithCommandTimeout(300))` in a `using` block (see
+[Temporary context options](#temporary-context-options)).
+
+---
+
 ## Retry policies
 
 LinqToDB does not retry by default. Use `UseRetryPolicy` to enable automatic retries for
@@ -135,9 +155,11 @@ var options = new DataOptions()
     .UseSqlServer(connectionString)
     .UseDefaultRetryPolicyFactory();
 
-// Built-in policy with custom parameters
+// Built-in policy with custom parameters: the factory enables the policy,
+// UseMaxRetryCount / UseMaxDelay only tune it
 var options = new DataOptions()
     .UseSqlServer(connectionString)
+    .UseDefaultRetryPolicyFactory()
     .UseMaxRetryCount(3)
     .UseMaxDelay(TimeSpan.FromSeconds(10));
 
@@ -146,6 +168,15 @@ var options = new DataOptions()
     .UseSqlServer(connectionString)
     .UseRetryPolicy(new MyRetryPolicy());
 ```
+
+`UseMaxRetryCount`, `UseMaxDelay` and the other retry parameters do nothing on their own: without
+`UseDefaultRetryPolicyFactory()` or `UseRetryPolicy(...)` no policy is created and no error is
+reported.
+
+The built-in factory returns a policy only for SQL Server (`SqlServerRetryPolicy`, using these
+parameters), ClickHouse with the Octonica driver (`ClickHouseRetryPolicy`, built-in parameters) and
+YDB (`YdbRetryPolicy`, uses `MaxRetryCount`). For every other provider it returns no policy; use
+`UseRetryPolicy(new TransientRetryPolicy(...))` or your own `IRetryPolicy` there.
 
 `IRetryPolicy` has four methods to implement: `Execute<TResult>(Func<TResult> operation)`,
 `Execute(Action operation)`, `ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = default)`,
@@ -324,6 +355,17 @@ overrides.
 
 `UseMappingSchema(mappingSchema)` is a convenience override for temporarily replacing the context
 mapping schema. It follows the same disposable-scope rule.
+
+`UseOptions` returns `null` when the new options equal the current ones; `using` handles that.
+
+### Static `Configuration.*` settings
+
+`LinqToDB.Common.Configuration.*` (for example `Configuration.Linq.*`, `Configuration.RetryPolicy.*`)
+are process-wide defaults. Options take them when they are first used, so changing a static later
+does not affect an existing context or options already in use - silently, without an error. Set
+behaviour on `DataOptions` (`UseCompareNulls`, `UseCommandTimeout`, `UseLinqOptions(...)`, ...)
+when building options, and use `UseOptions` / `UseLinqOptions` / `UseDataContextOptions` for a
+temporary change on an existing context.
 
 ---
 
