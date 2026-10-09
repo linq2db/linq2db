@@ -1,9 +1,6 @@
 # Optimistic Concurrency
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 Use this guide when updating or deleting one entity instance should include its current optimistic
 lock column value in the SQL filter.
@@ -217,7 +214,7 @@ optimistic lock attribute.
 
 `UpdateOptimistic(entity)` is for one mapped entity instance with primary key and lock-column
 values. For set-based updates that update all rows matching a predicate, use the normal update APIs
-from [`crud/crud-update.md`](crud/crud-update.md) and explicitly include whatever concurrency
+from [`crud/update.md`](crud/update.md) and explicitly include whatever concurrency
 predicate your application requires.
 
 ## Common Mistakes
@@ -294,7 +291,7 @@ versions unless a version-matched XML-doc/API entry explicitly states it.
 
 ## API Lookup Anchors
 
-Search `lib/<TFM>/linq2db.xml` for:
+Search `linq2db.xml` for:
 
 - `UpdateOptimistic`
 - `UpdateOptimisticAsync`

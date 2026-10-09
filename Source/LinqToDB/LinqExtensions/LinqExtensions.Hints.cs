@@ -51,7 +51,6 @@ namespace LinqToDB
 		/// <returns>Table-like query source with table hints.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -150,8 +149,11 @@ namespace LinqToDB
 		/// <returns>Query source with table hints.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
+		/// Tables that only the final projection of <paramref name="source"/> introduces (association properties
+		/// or subqueries inside its last <c>Select</c>) do not receive the hint
+		/// (<see href="https://github.com/linq2db/linq2db/issues/4321">#4321</see>); tables in <c>from</c>/<c>join</c>,
+		/// <c>Where</c> and <c>OrderBy</c> do.
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Oracle, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
@@ -248,7 +250,6 @@ namespace LinqToDB
 		/// <returns>Table-like query source with index hints.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -347,7 +348,6 @@ namespace LinqToDB
 		/// <returns>Query source with join hints.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -378,7 +378,6 @@ namespace LinqToDB
 		/// <returns>Query source with hints.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -473,7 +472,6 @@ namespace LinqToDB
 		/// <returns>Query source with hints.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]

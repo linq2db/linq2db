@@ -1600,7 +1600,7 @@ namespace LinqToDB
 			{
 				if (p == null)
 					return Expression.Constant(null, typeof(object));
-
+				
 				var argumentType    = p.GetType();
 				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
 				if (valueExpression.Type != typeof(object))

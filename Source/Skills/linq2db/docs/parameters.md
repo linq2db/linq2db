@@ -1,9 +1,6 @@
 # Parameters
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 Use this guide when constructing a typed parameter, reading a stored-procedure output parameter,
 or deciding whether a value should be sent to the database as a bound parameter or embedded as a
@@ -110,7 +107,7 @@ must match exactly, or pass `DataType` explicitly.
 
 ## API Lookup Anchors
 
-Search `lib/<TFM>/linq2db.xml` for:
+Search `linq2db.xml` for:
 
 - `DataParameter`
 - `ParameterDirection`

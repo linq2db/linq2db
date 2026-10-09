@@ -1,9 +1,6 @@
 # Translatable .NET Methods
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - use `String`, `Math`, `DateTime`, or `Nullable` methods inside a LINQ query
@@ -26,20 +23,16 @@ public members of the `Sql` static class that translate to SQL, plus explicit ca
 plausible-looking members that do **not** exist (`Sql.In`, `Sql.IsNull`, `Sql.Coalesce`,
 `Sql.Exists`). It does not enumerate niche/metadata helpers (`Sql.Row`, `Sql.Collate`,
 `Sql.GroupBy`/`Sql.Grouping`, `Sql.FieldName`/`Sql.TableName` and similar) or the full trig/rounding
-overload set. To verify whether a specific `Sql.*` member exists, search `lib/<TFM>/linq2db.xml` or
-`Source/LinqToDB/Sql/Sql.cs` directly rather than assuming from this table's absence/presence alone.
+overload set. To verify whether a specific `Sql.*` member exists, search `linq2db.xml` rather than
+assuming from this table's absence/presence alone.
 
 **Standard .NET methods** (String, Math, DateTime, Nullable, type conversions) - confirmed subset.
 The tables below list the most commonly used registrations, verified against source. They are not
 a closed enumeration of every supported overload:
 - **Absence from a table does not mean the method is unsupported.**
-- Method registrations are split across several places, not one file per category - check all of:
-  - `Source/LinqToDB/Internal/DataProvider/Translation/StringMemberTranslatorBase.cs`,
-    `MathMemberTranslatorBase.cs`, `DateFunctionsTranslatorBase.cs`, `GuidMemberTranslatorBase.cs`
-  - `Source/LinqToDB/Internal/DataProvider/Translation/ConvertMemberTranslatorDefault.cs` (`System.Convert.To*`, `Sql.Convert`/`Sql.ConvertTo<>.From` - not `.Parse` methods)
-  - `Source/LinqToDB/Linq/Expressions.cs` - the legacy expression map; covers `.Parse` methods (mapped to `Sql.ConvertTo<T>.From`), `Math.Floor`/`Math.Ceiling`/`Math.Truncate`, and other entries not yet migrated to the newer translator classes above
-  - `Source/LinqToDB/Internal/Linq/Builder/ExpressionBuildVisitor.cs` - some string methods (e.g. `Contains`/`StartsWith`/`EndsWith`) are hard-coded directly in the expression builder rather than registered in a translator
-  - Provider-specific translators under `Source/LinqToDB/Internal/DataProvider/<Provider>/Translation/`
+- Translations of .NET methods are registered inside linq2db (generic and per-provider translator
+  classes), not documented as members in `linq2db.xml`, so the XML docs cannot settle whether a
+  given .NET method translates. When it matters, run the query against the target provider.
 - If a method has no registration for the active provider, a `LinqToDBException` is thrown at
   query execution time - not at compile time.
 
@@ -221,7 +214,7 @@ to the equivalent `Sql.ConvertTo<T>.From(s)` cast.
 The `Sql` static class exposes functions with no direct .NET equivalent. This table lists the
 commonly used ones - it is **not** a closed enumeration; for niche/metadata helpers (`Sql.Row`,
 `Sql.Collate`, `Sql.GroupBy`/`Sql.Grouping`, `Sql.FieldName`/`Sql.TableName` and friends) search
-`lib/<TFM>/linq2db.xml` or `Source/LinqToDB/Sql/Sql.cs` directly.
+`linq2db.xml`.
 
 > `Sql.In`, `Sql.IsNull`, `Sql.Coalesce`, and `Sql.Exists` do **not** exist as members of `Sql` -
 > do not write code that calls them. Use the real equivalents instead:

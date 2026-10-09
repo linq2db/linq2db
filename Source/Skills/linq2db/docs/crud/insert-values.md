@@ -1,9 +1,6 @@
 # LinqToDB - Insert from Values / Object
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../../SKILL.md).
 
 > **You are here if** you need to:
 > - insert a single row from a C# object
@@ -13,14 +10,16 @@
 > - build the insert column-by-column in a fluent chain
 > - insert a row and receive the full inserted record back (`OUTPUT / RETURNING`)
 >
-> For `INSERT … SELECT` (source is a query) → [`crud-insert-select.md`](crud-insert-select.md)
-> For upsert → [`crud-upsert.md`](crud-upsert.md)
+> For `INSERT … SELECT` (source is a query) → [`insert-select.md`](insert-select.md)
+> For upsert → [`upsert.md`](upsert.md)
 
 ---
 
 > **Async:** All methods have `Async` counterparts accepting an optional `CancellationToken`.
 > Examples use synchronous forms for brevity; add `Async` suffix and `await` in async contexts.
-> Async methods require `using LinqToDB.Async;`.
+> The async DML methods are in the `LinqToDB` namespace, like their synchronous forms;
+> `using LinqToDB.Async;` is needed only for async query materializers (`ToListAsync`,
+> `FirstOrDefaultAsync`, `CountAsync`, ...).
 
 > **Table targeting:** `db.Insert`, `db.InsertWithInt32Identity`, etc. accept optional parameters
 > to override the target table derived from the `[Table]` mapping attribute:
@@ -171,7 +170,7 @@ Available on both `ITable<T>` (single-row setter) and `IValueInsertable<T>` (flu
 
 ## See also
 
-- [`crud-insert-select.md`](crud-insert-select.md) - `INSERT … SELECT` from a query
-- [`crud-upsert.md`](crud-upsert.md) - upsert (`InsertOrReplace`, `InsertOrUpdate`)
+- [`insert-select.md`](insert-select.md) - `INSERT … SELECT` from a query
+- [`upsert.md`](upsert.md) - upsert (`InsertOrReplace`, `InsertOrUpdate`)
 - [`provider-capabilities.md`](../provider-capabilities.md) - `OUTPUT / RETURNING` support per provider
 - [`agent-antipatterns.md`](../agent-antipatterns.md) - anti-pattern #9 (InsertOrReplace + Identity)

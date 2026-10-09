@@ -403,16 +403,16 @@
     <File Path="Source/Skills/linq2db/docs/translatable-methods.md" />
   </Folder>
   <Folder Name="/Source/Skills/linq2db/docs/crud/">
-    <File Path="Source/Skills/linq2db/docs/crud/crud-bulkcopy.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-delete.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-insert-select.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-insert-values.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-insert.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-merge.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-select.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-update.md" />
-    <File Path="Source/Skills/linq2db/docs/crud/crud-upsert.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/bulk-copy.md" />
     <File Path="Source/Skills/linq2db/docs/crud/crud.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/delete.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/insert-select.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/insert-values.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/insert.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/merge.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/select.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/update.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/upsert.md" />
   </Folder>
   <Folder Name="/Tests/">
     <File Path="DataProviders.json" />

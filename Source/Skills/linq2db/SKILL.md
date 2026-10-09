@@ -1,38 +1,24 @@
 ---
 name: linq2db
-description: Use when writing or reviewing C# code that uses linq2db APIs, including provider setup, mapping, queries, CRUD, Merge, temp tables, hints, raw SQL, interceptors, associations, concurrency, and exact package-version API lookup.
+description: Usage guide for LINQ to DB (linq2db), the .NET LINQ-to-SQL data access library; it ships inside the linq2db NuGet package and matches that package version. Use when writing, reviewing or debugging C# code that uses linq2db or the LinqToDB namespaces - DataConnection, DataContext, DataOptions and provider setup (UseSqlServer, UsePostgreSQL, UseSQLite and others), entity mapping (Table and Column attributes, fluent mapping, MappingSchema), ITable<T> LINQ queries, associations and LoadWith, Insert, Update, Delete, InsertOrReplace, Merge, BulkCopy, temporary tables, CTEs, query and table hints, raw SQL, interceptors, and exact API lookup in the package XML documentation.
 ---
 
 # linq2db Skill <!-- omit in toc -->
 
-> **This file is the mandatory entry point for AI agents.**
-> **Read this file in full before reading any other file from this package.**
-> Do not use public APIs from this package until this file has been read.
+This skill helps write correct code against LINQ to DB (`linq2db` package, `LinqToDB.*`
+namespaces). It covers the core `linq2db` package of the version it ships with:
 
-This package includes a package-local AI agent skill:
-- `SKILL.md` is the canonical AI entry point.
-- `docs/*.md` contains task-specific skill references.
-- `lib/<TFM>/linq2db.xml` is the version-matched primary reference for exact API facts when
-  markdown guidance is not enough.
+- `SKILL.md` (this file) - general rules and the guide index;
+- `docs/*.md` - task guides; open the ones the task needs (see [Guide index](#guide-index));
+- `linq2db.xml` - the package's XML documentation, the exact reference for public API names,
+  signatures and remarks (see [Exact API lookup](#exact-api-lookup-linq2dbxml)).
 
 Navigation:
-- [Core reference](#core-reference) - **required** before writing any code; re-read for non-trivial tasks
-- [When adding LinqToDB to a project](#when-adding-linqtodb-to-a-project) - **required** once per integration
-- [When writing queries and DML](#when-writing-queries-and-dml) - **required** for every implementation task
-
----
-
-## Core reference
-
-**Must read before writing any LinqToDB code.**
-These files define global rules that apply to every operation. Keep them in mind for every change.
-
-| File | Purpose |
-|---|---|
-| `docs/architecture.md` | Translation pipeline, entry points, connection model |
-| `docs/agent-antipatterns.md` | Common mistakes with WRONG/CORRECT code examples; quick symptom index at the top |
-| `docs/coverage.md` | Covered and not-yet-covered AI documentation areas; use it to decide when XML-doc lookup is required |
-| `docs/associations.md` | `[Association]`, fluent associations, `LoadWith` / `ThenLoad`, eager-loading strategies, and no-lazy-loading rules |
+- [Exact API lookup (`linq2db.xml`)](#exact-api-lookup-linq2dbxml)
+- [When adding LinqToDB to a project](#when-adding-linqtodb-to-a-project)
+- [When writing queries and DML](#when-writing-queries-and-dml)
+- [Guide index](#guide-index)
+- [Quick violation reference](#quick-violation-reference)
 
 ---
 
@@ -49,16 +35,45 @@ covered here and separate best-effort extension-package guidance from package-co
 
 ---
 
+## Exact API lookup (`linq2db.xml`)
+
+`linq2db.xml` is the XML documentation file of the `linq2db` assembly. It has the summary,
+parameters, return value and remarks of every documented public member, for exactly this package
+version. It lies next to the assembly in the restored NuGet package:
+
+```text
+<global-packages>/linq2db/<version>/lib/<tfm>/linq2db.xml
+```
+
+- `<global-packages>` - printed by `dotnet nuget locals global-packages --list`; by default
+  `~/.nuget/packages` on Linux and macOS, `%UserProfile%\.nuget\packages` on Windows
+  (the `NUGET_PACKAGES` environment variable overrides it).
+- `<version>` - the `linq2db` version the project references (its `PackageReference`, or the
+  resolved version in the project's `project.assets.json`).
+- `<tfm>` - the folder closest to the project's target framework: `net10.0`, `net9.0`, `net8.0`,
+  `netstandard2.0` or `net462`.
+
+When this skill is read from the package itself rather than from a copy in the project, the same
+file is `../../lib/<tfm>/linq2db.xml` relative to this file.
+
+Search it by member, type, provider name or SQL keyword; do not read it sequentially. Member ids
+have the form `M:Namespace.Type.Member(...)` (`T:` for types, `P:` for properties, `F:` for
+fields); generic types and methods carry a backtick arity suffix (``ITable`1``, ``TableHint``1``),
+so search by member name rather than by full signature to find every overload. Members without
+XML comments are absent from the file, so a missing entry does not prove that an API is absent.
+
+---
+
 ## When adding LinqToDB to a project
 
-Perform these steps once when integrating the library, not for every query or change.
+These steps apply once per integration, not to every query or change.
 
-### 1 - Verify provider runtime dependencies
+### 1 - Add the provider's ADO.NET driver
 
-`linq2db` does **NOT** bundle database drivers.
-**A project that only references `linq2db` will compile successfully but fail at runtime.**
+`linq2db` does not bundle database drivers. A project that references only `linq2db` compiles
+but fails at runtime when it opens a connection.
 
-Every provider requires a separate ADO.NET driver NuGet package:
+Every provider needs a separate ADO.NET driver NuGet package:
 
 | Provider | `DataOptions` method | Required NuGet package |
 |---|---|---|
@@ -73,168 +88,38 @@ Every provider requires a separate ADO.NET driver NuGet package:
 | Firebird | `UseFirebird(...)` | `FirebirdSql.Data.FirebirdClient` |
 | Sybase / SAP ASE | `UseAse(...)` | `AdoNetCore.AseClient` |
 
-See `docs/provider-setup.md` for the complete list including version requirements and dialect options.
+See [`docs/provider-setup.md`](docs/provider-setup.md) for the complete list including version
+requirements and dialect options. Check the project file for the driver package and add it if it
+is missing.
 
-**Check the project file** (`.csproj`) for the required driver package before writing any code.
-If it is missing, add it - do not assume it will be present at runtime.
+### 2 - Apply core configuration rules
 
-### 2 - Use XML-doc as exact API reference when needed
+Rules that are easy to miss:
 
-Markdown documentation is sufficient for most code generation scenarios.
-For exact public API facts that markdown guidance does not cover, search the XML documentation.
+- `DataOptions` - create once (`static readonly` or a singleton) and pass it to every
+  `DataConnection`; it is immutable, and building it does initialization work.
+- `MappingSchema` - create one only when custom mapping is needed; then create it once at startup
+  and attach it with `.UseMappingSchema(...)`. A new schema per connection destroys its caches.
+- `DataConnection` - create per unit of work (scoped) and dispose after use.
+- Temp tables, explicit transactions, session state - need a connection kept open across commands:
+  prefer `DataConnection` (a `DataContext` keeps temp tables and session state only with
+  `SetKeepConnectionAlive(true)`).
+- Entity columns used with any API or option that generates `CREATE TABLE` - specify `Length`,
+  `Precision` and `Scale` explicitly for provider-sensitive types (`string`, `decimal`, etc.).
+  When the task gives no limits, choose a bounded value from the field's meaning and flag it for
+  review (a neutral `// TODO: confirm max length` or a note to the user); see
+  [`docs/mapping.md`](docs/mapping.md#5-ddl-sensitive-column-metadata).
 
-The XML documentation file ships with the package assembly:
-`lib/<TFM>/linq2db.xml`
-Use it for version-matched signatures, overloads, parameter documentation, return types, and
-remarks. Do not read it sequentially.
-
-### 3 - Verify APIs before using them
-
-Do not invent APIs, overloads, options, XML-doc remarks, provider flags, or provider
-capabilities. Also do not assume an API is missing just because markdown docs do not mention it.
-
-Do not use `LinqToDB.Internal.*` APIs in application code. They are implementation details even
-when visible as public members in XML documentation.
-
-Use outside knowledge only for the parts of the task that are not specific to LinqToDB. This can
-include database tuning, SQL concepts, .NET/C# behavior, business-domain reasoning, or any other
-general knowledge needed to understand the user's problem. Do not treat this package as the source
-of truth for those non-LinqToDB topics.
-
-This package does not provide authoritative advice for non-LinqToDB topics. Do not cite package
-docs as the reason to choose a database tuning strategy, indexing strategy, business decision, or
-other non-LinqToDB approach. Use package docs only to explain how to implement the chosen approach
-with LinqToDB correctly.
-
-For LinqToDB-specific decisions, this package is the source of truth: public API names and
-signatures, namespaces, receiver types, provider-specific helpers, fallback order, mapping rules,
-query composition rules, connection lifetime rules, and architecture constraints must be grounded
-in bundled markdown docs or `lib/<TFM>/linq2db.xml`. When outside knowledge suggests
-a SQL feature or implementation strategy, map it to LinqToDB through this package before writing
-code. If no package-confirmed LinqToDB API path is found, say that and only then discuss fallbacks.
-
-For any API-level question, especially provider-specific APIs, hints, SQL extensions,
-configuration, and DML/query extensions:
-
-1. First read the relevant markdown guide for concepts, boundaries, and common mistakes.
-2. Start with the narrowest applicable API surface: provider-specific guides, maps, namespaces,
-   and typed helpers.
-3. Search `lib/<TFM>/linq2db.xml` by likely member names, type names, provider names, and SQL
-   keywords. Do not read it sequentially. Member ids have the form `M:Namespace.Type.Member(...)`
-   (`T:` for types, `P:` for properties, `F:` for fields); generic types and methods carry a
-   backtick arity suffix (``ITable`1``, ``TableHint``1``), so search by member name rather than
-   by full signature to find every overload.
-4. Use summaries, parameter documentation, and remarks to confirm likely candidates.
-5. Treat XML-doc as the version-matched primary reference for exact public API names, signatures,
-   overloads, parameters, return types, and remarks on members that have XML comments.
-6. Do not conclude that an API is unavailable until XML-doc has been searched. Members without
-   XML comments are absent from it, so a missing entry is not proof that the API is absent.
-7. Prefer typed or provider-specific APIs found in XML-doc over generic string-based APIs.
-8. Use generic APIs such as `QueryHint`, `TableHint`, `Sql.Expression`, or raw SQL only as
-   fallbacks when no typed API exists or when the typed API does not cover the requested case.
-9. Use custom SQL, raw SQL, and interceptors only after typed and generic APIs do not cover the
-   requested case.
-10. If markdown and XML-doc disagree, prefer XML-doc for exact API shape and state the discrepancy.
-
-For SQL hint questions, use this mandatory lookup order before answering:
-
-1. Read `docs/hints.md` for hint concepts and fallback rules.
-2. Search `docs/hints-api-map.md` by provider name, SQL hint text, and likely helper-name fragments.
-3. Treat map hits as candidate typed provider helpers, then verify the exact member in
-   `lib/<TFM>/linq2db.xml`.
-4. Typed provider helpers are not available directly on plain `ITable<T>` or `IQueryable<T>`.
-   Before calling a typed helper, call the provider marker method from `docs/hints.md`
-   (`AsSqlServer()`, `AsOracle()`, `AsClickHouse()`, etc.) to switch the receiver to the matching
-   provider-specific table/query interface.
-5. If a candidate is a table-local hint, also check whether the same provider and SQL hint has a
-   tables-in-scope helper. Choose the table-local or scope-level helper based on whether the hint
-   should affect one table source or all table references in the current query scope.
-6. For user wording such as "several tables", "all tables", "whole query", or "scope", search for
-   map rows whose `Hint type` is `TablesInScope` and provider helper names containing `InScope`
-   before recommending generic `TablesInScopeHint(...)`. Apply a `TablesInScope` helper to the
-   query/subquery that already contains the tables to affect; do not apply it to the first table
-   before composing joins.
-7. Use common name shapes only to guide search: `<Base>Hint` -> `<Base>InScopeHint` and
-   `With<Base>` -> `With<Base>InScope`. Do not invent unverified scope-helper names by string
-   concatenation; verify the exact API in the map and XML-doc.
-8. Search the provider `*Hints` API entries by SQL hint text, candidate helper names, and
-   receiver types.
-9. Prefer typed/provider-specific helpers found in the map or XML-doc.
-10. Recommend generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`, etc.) only after
-   map and XML-doc lookup fail to find a typed helper for the
-   installed package version.
-11. Recommend `Sql.Expression`, raw SQL, or interceptors only after both typed and generic hint APIs
-   do not cover the requested case.
-
-When answering a concrete provider-specific hint question, ground the answer in the API lookup
-result. If a typed helper is found, name the required provider marker, the typed helper, and its
-receiver before showing fallback APIs. If no typed helper is found, say that the exact map and
-XML-doc lookup did not find one before
-recommending `QueryHint`, `TableHint`, `TablesInScopeHint`, `Sql.Expression`, raw SQL, or
-interceptors.
-
-Do not answer a provider-specific hint question from the generic hints model alone.
-Do not claim that `docs/hints-api-map.md` lacks a typed helper unless you searched it by exact
-provider and exact SQL/database term, then searched XML-doc for the provider
-`*Hints` type, SQL term, and likely helper fragments.
-Do not skip this lookup because the database feature is a table modifier, lock clause, query
-directive, or provider-specific SQL extension rather than a classic optimizer hint.
-
-For temporary table questions, read `docs/query-temp-tables.md` before answering.
-Temporary tables are a common "known topic" where prior ORM knowledge easily selects a lower-level
-pattern than the current LinqToDB API. Choose the `CreateTempTable*` overload by source shape:
-
-1. Rows already available in C# memory -> prefer `CreateTempTable(items)` /
-   `CreateTempTableAsync(items)`.
-2. Rows come from an `IQueryable<T>` -> prefer `CreateTempTable(query)` /
-   `CreateTempTableAsync(query)`; LinqToDB populates the table with server-side
-   `INSERT ... SELECT`.
-3. Empty table first -> use `CreateTempTable<T>()` only when rows are not available at creation
-   time, load timing must be separated, or explicit post-create work is required.
-4. Anonymous-type projection -> specify a table name; use the `setTable` fluent mapping parameter
-   when anonymous `string` or `decimal` columns need length/precision metadata.
-5. In the answer, name the selected overload and source shape before showing code. Mention
-   `TempTable<T>` lifecycle (`using` / `await using` drops the backing table) when lifetime is
-   relevant.
-
-When a guide lists several possible implementation paths, the order is meaningful. Read and try
-the most specific package-version path first. Generic APIs, custom SQL, raw SQL, and interceptors
-are fallback paths unless the guide explicitly says otherwise.
-
-Types where XML-doc is often useful when markdown guidance is not enough:
-
-- `docs/architecture.md` - architecture overview, translation pipeline, and cross-references
-- `DataOptions` - MUST be created once per application and shared; DO NOT recreate per operation or per request
-- `DataConnection` - connection lifecycle, session semantics, when to use vs `DataContext`
-- `DataContext` - per-command connection, `TransactionScope` auto-enlist behaviour
-- `MappingSchema` - if custom mapping schema is needed, create it once; DO NOT recreate per connection - destroys internal caches
-- Provider `UseXxx` extension methods (e.g., `UseSqlServer`, `UseSQLite`) - exact overloads, version flags, options
-
-### 4 - Apply core configuration rules
-
-Key rules that are easy to miss:
-
-- `DataOptions` - create once (`static readonly`), pass to every `DataConnection` constructor
-- `MappingSchema` - only create when custom mapping is needed; then create once at startup and attach to `DataOptions` via `.UseMappingSchema(...)`
-- `DataConnection` - create per operation (scoped); dispose after use
-- Temp tables, explicit transactions, session state - need a connection kept open across commands: prefer `DataConnection` (a `DataContext` keeps temp tables and session state only with `SetKeepConnectionAlive(true)`)
-- Entity columns used with any LinqToDB API or option that generates a `CREATE TABLE` statement - specify `Length`, `Precision`, `Scale` explicitly for every provider-sensitive type (`string`, `decimal`, etc.).
-  If the task does not state exact limits, **both steps are required - not optional**:
-  1. choose a bounded value guided by field semantics;
-  2. add a `TODO` comment on the same line as the property, marking it as an AI agent assumption.
-  A field with a self-chosen size but no `TODO` is an incomplete implementation.
-  ```csharp
-  [Column(Length = 256)] public string Email { get; set; } = null!; // TODO: Confirm column length. 256 is an AI agent assumption.
-  ```
+XML-doc remarks on `DataOptions`, `DataConnection`, `DataContext`, `MappingSchema` and the provider
+`UseXxx` methods carry further lifetime and caching details.
 
 ---
 
 ## When writing queries and DML
 
-Use the relevant reference file for the operation you are implementing.
-Each file begins with a **"You are here if"** block.
+Each guide begins with a "You are here if" block that says what it covers.
 
-### Common namespace requirements
+### Namespaces
 
 Every file that uses LinqToDB needs at minimum:
 
@@ -243,61 +128,132 @@ using LinqToDB;
 using LinqToDB.Data;
 ```
 
-Async query and DML extension methods (`ToListAsync`, `FirstOrDefaultAsync`, `SingleAsync`,
-`MaxAsync`, `InsertAsync`, `UpdateAsync`, `DeleteAsync`, `MergeAsync`, etc.) are defined in a
-**separate namespace** and require an additional import:
+Async query materializers and aggregates (`ToListAsync`, `ToArrayAsync`, `FirstOrDefaultAsync`,
+`SingleAsync`, `CountAsync`, `AnyAsync`, `MaxAsync`, `ForEachAsync`, etc.) are in a separate
+namespace:
 
 ```csharp
 using LinqToDB.Async;
 ```
 
-If an async method is not found by the compiler, the missing `using LinqToDB.Async` is the
-most common cause. Each individual CRUD guide repeats this reminder in its async note.
+If the compiler does not find one of them, the missing `using LinqToDB.Async` is the most common
+cause. Async DML methods (`InsertAsync`, `UpdateAsync`, `DeleteAsync`, `MergeAsync`,
+`CreateTempTableAsync`, ...) are in `LinqToDB` like their synchronous forms; `BulkCopyAsync` is in
+`LinqToDB.Data`.
+
+### Verify APIs before using them
+
+The guides and `linq2db.xml` describe this package version. Prefer them over online docs or memory
+of other versions, which may not match. Do not invent APIs, overloads, options, provider flags or
+provider capabilities, and do not assume an API is missing only because no guide mentions it.
+
+Do not use `LinqToDB.Internal.*` APIs in application code. They are implementation details even
+when visible as public members in XML documentation.
+
+Outside knowledge is fine for whatever is not specific to LinqToDB (database tuning, SQL concepts,
+.NET/C# behavior, the user's domain); this skill gives no advice on those. For the LinqToDB side -
+API names and signatures, namespaces, receiver types, provider-specific helpers, mapping and query
+composition rules, connection lifetime - ground the code in the guides or `linq2db.xml`. If no
+LinqToDB API path is found, say so before discussing fallbacks.
+
+For an API-level question (provider-specific APIs, hints, SQL extensions, configuration, DML and
+query extensions):
+
+1. Read the relevant guide for concepts, boundaries and common mistakes.
+2. Start with the narrowest API surface: provider-specific guides, maps, namespaces, typed helpers.
+3. Search `linq2db.xml` by likely member names, type names, provider names and SQL keywords, and
+   confirm candidates by their summaries, parameters and remarks.
+4. Prefer typed or provider-specific APIs over generic string-based ones (`QueryHint`,
+   `TableHint`, `Sql.Expression`, raw SQL); use those when no typed API covers the case.
+5. Use custom SQL, raw SQL and interceptors only when typed and generic APIs do not cover the case.
+6. If a guide and `linq2db.xml` disagree, follow `linq2db.xml` for the exact API shape and mention
+   the discrepancy.
+
+When a guide lists several implementation paths, the order is meaningful: the most specific path
+comes first, and generic APIs, custom SQL, raw SQL and interceptors are fallbacks unless the guide
+says otherwise.
+
+### SQL hints
+
+Hints have the most typed, provider-specific API surface. The lookup order, with details in
+[`docs/hints.md`](docs/hints.md#hint-lookup-order):
+
+1. Search [`docs/hints-api-map.md`](docs/hints-api-map.md) by provider name, SQL hint text and
+   likely helper-name fragments; verify a hit in `linq2db.xml`.
+2. Typed provider helpers are not available on plain `ITable<T>` or `IQueryable<T>`: call the
+   provider marker first (`AsSqlServer()`, `AsOracle()`, `AsClickHouse()`, etc.).
+3. For a table hint, also look for the tables-in-scope form (`<Base>InScopeHint` /
+   `With<Base>InScope`) and pick by whether the hint should affect one table or every table in the
+   query scope. Apply a scope helper to the query that already contains the tables; it does not
+   reach tables used only in the final `Select` (association properties or subqueries there,
+   [#4321](https://github.com/linq2db/linq2db/issues/4321); see [`docs/hints.md`](docs/hints.md#tables-in-scope-hints)).
+4. Do not build helper names by string concatenation; use only names found in the map or XML-doc.
+5. Generic hint APIs (`QueryHint`, `TableHint`, `TablesInScopeHint`) come after the typed lookup
+   finds nothing; `Sql.Expression`, raw SQL and interceptors come last.
+
+When answering a provider-specific hint question, name the provider marker, the typed helper and
+its receiver before showing code; if none was found, say that the map and XML-doc lookup found
+none before showing a fallback.
+
+### Temporary tables
+
+Read [`docs/query-temp-tables.md`](docs/query-temp-tables.md). Prior ORM knowledge tends to pick a
+lower-level pattern than the current API. Choose the `CreateTempTable*` overload by source shape:
+
+1. Rows already in C# memory -> `CreateTempTable(items)` / `CreateTempTableAsync(items)`.
+2. Rows from an `IQueryable<T>` -> `CreateTempTable(query)` / `CreateTempTableAsync(query)`;
+   LinqToDB fills the table with server-side `INSERT ... SELECT`.
+3. Empty table first -> `CreateTempTable<T>()` only when rows are not available at creation time,
+   load timing must be separated, or explicit post-create work is required.
+4. Anonymous-type projection -> specify a table name; use the `setTable` fluent mapping parameter
+   when anonymous `string` or `decimal` columns need length/precision metadata.
+
+`TempTable<T>` drops the backing table on dispose (`using` / `await using`).
 
 ---
 
-**DO NOT use GitHub, online API docs, or memory of prior versions as primary sources.**
-They may not match this package version. Always use the bundled files below:
+## Guide index
+
+Open a guide when the task touches its topic.
 
 | File | When to read |
 |---|---|
-| `docs/mapping.md` | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
-| `docs/associations.md` | Relationship metadata and eager loading - `[Association]`, fluent `.Association(...)`, `LoadWith`, `ThenLoad`, eager-loading strategies |
-| `docs/crud/crud.md` | All CRUD operations - SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to the right guide |
-| `docs/concurrency.md` | Optimistic concurrency for entity update/delete - `UpdateOptimistic`, `DeleteOptimistic`, `WhereKeyOptimistic`, `OptimisticLockPropertyAttribute` |
-| `docs/query-cte.md` | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
-| `docs/query-joins.md` | Fluent `InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin`, association-driven joins, join translation failures, `RightJoin`/`FullJoin`/`APPLY` provider limitations |
-| `docs/query-temp-tables.md` | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; session-scoped tables need a kept-open connection |
-| `docs/null-semantics.md` | Why generated SQL for a null comparison looks more complex than expected - `CompareNulls`, `Sql.AsNotNull`, `IsDistinctFrom`, `Sql.ToNullable`/`Sql.AsNullable` |
-| `docs/parameters.md` | `DataParameter` construction, output/input-output procedure parameters, and forcing a value to be a bound parameter vs a SQL literal - `Sql.Parameter`, `Sql.Constant`, `InlineParameters` |
-| `docs/hints.md` | Query, table, index, join, subquery, provider-specific, and MERGE hints; before proposing raw SQL, `Sql.Expression`, or interceptors for a hint, check this guide, `docs/hints-api-map.md`, and the provider `*Hints` entries in XML-doc |
-| `docs/hints-api-map.md` | Reverse lookup from concrete provider SQL hint text to typed provider-specific helper APIs; use it as a search aid, then verify signatures in XML-doc when needed |
-| `docs/translatable-methods.md` | `String` / `Math` / `DateTime` methods in LINQ queries |
-| `docs/provider-capabilities.md` | MERGE, CTE, bulk copy, OUTPUT/RETURNING - check provider support first |
-| `docs/raw-sql.md` | Raw SQL query roots and command execution - `FromSql`, `FromSqlScalar`, `RawSqlString`, `SetCommand`, `CommandInfo`, `ToSqlQuery`, `QuerySql` |
-| `docs/extensions.md` | Extension mechanisms - `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, and `IMemberTranslator` / `UseMemberTranslator` |
-| `docs/interceptors.md` | Choosing and registering interceptors; callback timing and supported use cases |
-| `docs/configuration.md` | Logging, retry, interceptors, `DataOptions` builder, `app.config`/`web.config`/JSON configuration |
-| `docs/coverage.md` | Coverage status for package-local AI guides; if a topic is not covered, search XML-doc when needed |
-
-> For any non-trivial code, transaction handling, lifetime issues, or unexpected exceptions - consult `docs/agent-antipatterns.md` (quick symptom index at the top) and `docs/architecture.md`.
+| [`docs/architecture.md`](docs/architecture.md) | Translation pipeline, entry points, `DataConnection` vs `DataContext`, why an expression does or does not translate |
+| [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md) | Diagnosing unexpected behavior (symptom index at the top) or reviewing code: common mistakes with wrong/correct examples |
+| [`docs/mapping.md`](docs/mapping.md) | Entity mapping, `MappingSchema`, attributes/fluent mapping, schema/DDL-sensitive columns |
+| [`docs/associations.md`](docs/associations.md) | Relationship metadata and eager loading - `[Association]`, fluent `.Association(...)`, `LoadWith`, `ThenLoad`, eager-loading strategies; there is no lazy loading |
+| [`docs/crud/crud.md`](docs/crud/crud.md) | All CRUD operations - SELECT, INSERT, UPDATE, DELETE, upsert, bulk copy, MERGE; routes to `docs/crud/<operation>.md` |
+| [`docs/concurrency.md`](docs/concurrency.md) | Optimistic concurrency for entity update/delete - `UpdateOptimistic`, `DeleteOptimistic`, `WhereKeyOptimistic`, `OptimisticLockPropertyAttribute` |
+| [`docs/query-cte.md`](docs/query-cte.md) | CTEs, recursive queries - when `.AsCte()` or `db.GetCte<T>()` is needed |
+| [`docs/query-joins.md`](docs/query-joins.md) | Fluent `InnerJoin`/`LeftJoin`/`RightJoin`/`FullJoin`/`CrossJoin`, association-driven joins, join translation failures, `RightJoin`/`FullJoin`/`APPLY` provider limitations |
+| [`docs/query-temp-tables.md`](docs/query-temp-tables.md) | Temporary tables - `TempTable<T>`, `CreateTempTable`, `TableOptions`; session-scoped tables need a kept-open connection |
+| [`docs/null-semantics.md`](docs/null-semantics.md) | Why generated SQL for a null comparison looks more complex than expected - `CompareNulls`, `Sql.AsNotNull`, `IsDistinctFrom`, `Sql.ToNullable`/`Sql.AsNullable` |
+| [`docs/parameters.md`](docs/parameters.md) | `DataParameter` construction, output/input-output procedure parameters, bound parameter vs SQL literal - `Sql.Parameter`, `Sql.Constant`, `InlineParameters` |
+| [`docs/hints.md`](docs/hints.md) | Query, table, index, join, subquery, provider-specific and MERGE hints |
+| [`docs/hints-api-map.md`](docs/hints-api-map.md) | Reverse lookup from provider SQL hint text to typed provider-specific helper APIs |
+| [`docs/translatable-methods.md`](docs/translatable-methods.md) | `String` / `Math` / `DateTime` methods and `Sql.*` helpers in LINQ queries |
+| [`docs/provider-setup.md`](docs/provider-setup.md) | `UseXxx` methods, `ProviderName` constants, driver packages, dialect/version options per provider |
+| [`docs/provider-capabilities.md`](docs/provider-capabilities.md) | MERGE, CTE, bulk copy, OUTPUT/RETURNING support per provider - check before using them |
+| [`docs/raw-sql.md`](docs/raw-sql.md) | Raw SQL query roots and command execution - `FromSql`, `FromSqlScalar`, `RawSqlString`, `SetCommand`, `CommandInfo`, `ToSqlQuery`, `QuerySql` |
+| [`docs/extensions.md`](docs/extensions.md) | Extension mechanisms - `[Sql.Expression]`, `[Sql.Function]`, `[ExpressionMethod]`, `IMemberTranslator` / `UseMemberTranslator` |
+| [`docs/interceptors.md`](docs/interceptors.md) | Choosing and registering interceptors; callback timing and supported use cases |
+| [`docs/configuration.md`](docs/configuration.md) | Logging, retry, interceptors, `DataOptions` builder, `app.config`/`web.config`/JSON configuration |
+| [`docs/coverage.md`](docs/coverage.md) | Which topics have a guide; for the rest, search `linq2db.xml` |
 
 ## Quick violation reference
 
-Full WRONG/CORRECT code examples are in `docs/agent-antipatterns.md`.
+Full wrong/correct code examples are in [`docs/agent-antipatterns.md`](docs/agent-antipatterns.md).
 
 | Violation | Consequence |
 |---|---|
-| `SKILL.md` not read before task-specific docs | Task-specific guidance interpreted without global rules; likely lifetime, namespace, or schema violations |
-| `DataOptions` recreated per operation | Correctness violation; prohibited by package docs and `DataOptions` XML-doc |
+| `DataOptions` recreated per operation | Option initialization repeated per call; the `DataOptions` XML-doc asks for one shared instance |
 | `MappingSchema` recreated per connection | Destroys internal caches; severe performance degradation under load |
 | Provider driver package missing | Compiles; fails at runtime with assembly-not-found error |
 | `DataConnection` opened before `TransactionScope` created | Transaction not applied; data committed outside scope |
-| GitHub / online docs used as primary source | Version mismatch risk; bundled docs are the authoritative version-matched source |
-| API assumed missing because it is not in markdown | `lib/<TFM>/linq2db.xml` is the version-matched API reference; search it before using generic fallbacks |
-| XML-doc not checked when markdown docs are inconclusive | Exact signature, overload, lifetime, or remarks detail can be missed |
+| Online docs or memory of another version used for API shape | Version mismatch; the guides and `linq2db.xml` match this package |
+| API assumed missing because no guide mentions it | `linq2db.xml` is the version-matched API reference; search it before using generic fallbacks |
 | `InsertOrReplace` / `InsertOrReplaceAsync` used with `[Identity]` PK | `LinqToDBException` at query build time - upsert requires a caller-supplied PK value; identity columns have none |
 | `string` / `decimal` column without explicit `Length` / `Precision` / `Scale` | Provider fills in implicit defaults that differ across databases; schema becomes non-portable |
-| Self-chosen `Length` / `Precision` / `Scale` with no `TODO` comment | Assumption is invisible; cannot distinguish confirmed values from guesses - treat as incomplete |
-| `using LinqToDB.Async` missing | Async methods (`ToListAsync`, `InsertAsync`, `MergeAsync`, etc.) not found at compile time |
-| Empty temporary table + separate `BulkCopy` recommended as the default for existing rows | Lower-level pattern used instead of the source-shaped `CreateTempTable(items)` / `CreateTempTable(query)` overloads |
+| `using LinqToDB.Async` missing | Async materializers (`ToListAsync`, `FirstOrDefaultAsync`, `CountAsync`, etc.) not found at compile time |
+| Empty temporary table + separate `BulkCopy` as the default for existing rows | Lower-level pattern used instead of the source-shaped `CreateTempTable(items)` / `CreateTempTable(query)` overloads |
+| Scope hint expected to cover tables used only in the final `Select` | Those tables get no hint ([#4321](https://github.com/linq2db/linq2db/issues/4321)); join them explicitly or hint the subquery's table |

@@ -36,7 +36,6 @@ namespace LinqToDB
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
@@ -129,7 +128,6 @@ namespace LinqToDB
 		/// </list>
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		[Pure]
 		public static IEnumerable<TOutput> DeleteWithOutput<TSource,TOutput>(
@@ -232,7 +230,6 @@ namespace LinqToDB
 		/// </list>
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource> source,
@@ -305,7 +302,6 @@ namespace LinqToDB
 		/// </list>
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource>          source,
@@ -381,7 +377,6 @@ namespace LinqToDB
 		/// <returns>Number of deleted records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// </remarks>
 		public static int Delete<T>(this IQueryable<T> source)
 		{
@@ -395,7 +390,7 @@ namespace LinqToDB
 				currentSource.Expression);
 
 			return currentSource.Execute<int>(expr);
-		}
+	}
 
 		/// <summary>
 		/// Executes delete operation asynchronously, using source query as filter for records, that should be deleted.
@@ -417,7 +412,7 @@ namespace LinqToDB
 				currentSource.Expression);
 
 			return currentSource.ExecuteAsync<int>(expr, token);
-		}
+}
 
 		/// <summary>
 		/// Executes delete operation, using source query as initial filter for records, that should be deleted, and predicate expression as additional filter.

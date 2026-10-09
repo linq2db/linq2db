@@ -1,9 +1,6 @@
 # LinqToDB - Temporary Tables
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - create a table that is automatically dropped when your code is done with it
@@ -29,7 +26,8 @@
 ---
 
 > **Async:** All `CreateTempTable` extension methods have `CreateTempTableAsync` counterparts.
-> Async methods require `using LinqToDB.Async;`.
+> `CreateTempTable` / `CreateTempTableAsync` are in the `LinqToDB` namespace; `using LinqToDB.Async;`
+> is needed only for async query materializers such as `ToListAsync`.
 
 ---
 
@@ -144,7 +142,8 @@ Pass it via `CreateTempTableOptions` or the named `action:` parameter if this is
 Use `CreateTempTableAsync` to avoid blocking on `CREATE TABLE` or the initial BulkCopy.
 
 ```csharp
-using LinqToDB.Async;
+using LinqToDB;
+using LinqToDB.Data;
 
 await using var db    = new DataConnection(options);
 await using var table = await db.CreateTempTableAsync<Product>(products, cancellationToken: ct);
@@ -222,7 +221,7 @@ using var table = db.CreateTempTable<Product>(opts, products);
 ```
 
 > Provider support for specific `TableOptions` values varies.
-> Check the `TableOptions` XML-doc entries in `lib/<TFM>/linq2db.xml`
+> Check the `TableOptions` XML-doc entries in `linq2db.xml`
 > before using flags beyond `IsTemporary`.
 
 ---
@@ -356,6 +355,6 @@ Do **not** leave `string` / `decimal` columns without explicit `Length` / `Preci
 
 - [`docs/agent-antipatterns.md`](agent-antipatterns.md) - anti-pattern #10: unconstrained column types in schema generation.
 - [`docs/query-cte.md`](query-cte.md) - CTEs as a lightweight alternative for query composition that does not require DDL.
-- [`docs/crud/crud-bulkcopy.md`](crud/crud-bulkcopy.md) - `BulkCopyOptions` used by `CreateTempTable(items, ...)` and `Copy`.
+- [`docs/crud/bulk-copy.md`](crud/bulk-copy.md) - `BulkCopyOptions` used by `CreateTempTable(items, ...)` and `Copy`.
 - `TempTable<T>` - XML documentation for the full constructor and instance method reference.
 - `TableOptions` - XML documentation for provider support details per flag.

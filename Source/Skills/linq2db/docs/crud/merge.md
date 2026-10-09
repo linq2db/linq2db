@@ -1,9 +1,6 @@
 # LinqToDB - MERGE
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../../SKILL.md).
 
 > **You are here if** you need to:
 > - synchronize a target table from a source query or in-memory collection in one statement
@@ -14,7 +11,9 @@
 > **Async:** `.Merge()` has a `.MergeAsync(CancellationToken)` counterpart.
 > `MergeWithOutput` has `MergeWithOutputAsync` returning `IAsyncEnumerable<TOutput>`.
 > Examples use synchronous forms for brevity.
-> All async methods require `using LinqToDB.Async;`.
+> `MergeAsync` and the other async merge methods are in the `LinqToDB` namespace, like their synchronous forms;
+> `using LinqToDB.Async;` is needed only for async query materializers (`ToListAsync`,
+> `FirstOrDefaultAsync`, `CountAsync`, ...).
 
 > **Provider support:** MERGE is not universally available.
 > Check the `Merge` column in [`provider-capabilities.md`](../provider-capabilities.md).
@@ -437,7 +436,7 @@ Async counterparts (`MergeAsync`) accept the same parameters plus an optional `C
 
 ## See also
 
-- [`crud-upsert.md`](crud-upsert.md) - simple Insert-or-Update without a full MERGE builder
-- [`crud-update.md`](crud-update.md) - plain UPDATE
-- [`crud-delete.md`](crud-delete.md) - plain DELETE
+- [`upsert.md`](upsert.md) - simple Insert-or-Update without a full MERGE builder
+- [`update.md`](update.md) - plain UPDATE
+- [`delete.md`](delete.md) - plain DELETE
 - [`provider-capabilities.md`](../provider-capabilities.md) - MERGE support per provider

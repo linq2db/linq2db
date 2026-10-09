@@ -66,7 +66,7 @@ namespace LinqToDB
 		/// specific operation. Providers interpret the resulting concrete flags; they
 		/// do not replace <see cref="NotSet"/> with provider defaults.
 		/// </remarks>
-		NotSet = 0b000000000,
+		NotSet                     = 0b000000000,
 
 		/// <summary>
 		/// Explicitly specifies that no special table options apply.
@@ -76,24 +76,21 @@ namespace LinqToDB
 		/// The effective SQL is still provider- and mapping-dependent, but without
 		/// additional behavior implied by <see cref="TableOptions"/> flags.
 		/// </remarks>
-		None = 0b000000001,
-
+		None                       = 0b000000001,
 		/// <summary>
 		/// Use <c>CREATE ... IF NOT EXISTS</c> when supported by the provider.
 		/// </summary>
 		/// <remarks>
 		/// Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, Sybase ASE.
 		/// </remarks>
-		CreateIfNotExists = 0b000000010,
-
+		CreateIfNotExists          = 0b000000010,
 		/// <summary>
 		/// Use <c>DROP ... IF EXISTS</c> when supported by the provider.
 		/// </summary>
 		/// <remarks>
 		/// Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, Sybase ASE.
 		/// </remarks>
-		DropIfExists = 0b000000100,
-
+		DropIfExists               = 0b000000100,
 		/// <summary>
 		/// Source is a temporary table (not visible to other sessions) when supported.
 		/// </summary>
@@ -101,8 +98,7 @@ namespace LinqToDB
 		/// If a provider supports both global and local temporary tables, a local temporary table is used.
 		/// Supported by: DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite, SQL Server, SAP Hana, Sybase ASE.
 		/// </remarks>
-		IsTemporary = 0b000001000,
-
+		IsTemporary                = 0b000001000,
 		/// <summary>
 		/// Temporary table with session-scoped structure (DDL-level visibility limited to the session),
 		/// when supported by the provider.
@@ -111,8 +107,7 @@ namespace LinqToDB
 		/// Structure visibility does not define data visibility semantics.
 		/// Supported by: DB2, Informix, MySql, PostgreSQL, SQLite, SAP Hana, SQL Server, Sybase ASE.
 		/// </remarks>
-		IsLocalTemporaryStructure = 0b000010000,
-
+		IsLocalTemporaryStructure  = 0b000010000,
 		/// <summary>
 		/// Temporary table with globally visible structure (DDL-level visibility),
 		/// when supported by the provider.
@@ -123,7 +118,6 @@ namespace LinqToDB
 		/// Supported by: DB2, Firebird, Oracle, SAP Hana, SQL Server, Sybase ASE.
 		/// </remarks>
 		IsGlobalTemporaryStructure = 0b000100000,
-
 		/// <summary>
 		/// Temporary table with session-scoped data visibility,
 		/// when supported by the provider.
@@ -132,8 +126,7 @@ namespace LinqToDB
 		/// Data is not visible to other sessions.
 		/// Supported by: DB2, Informix, MySql, PostgreSQL, SQLite, SAP Hana, SQL Server, Sybase ASE.
 		/// </remarks>
-		IsLocalTemporaryData = 0b001000000,
-
+		IsLocalTemporaryData       = 0b001000000,
 		/// <summary>
 		/// Temporary table with data visibility semantics defined as "global"
 		/// in the provider abstraction.
@@ -144,8 +137,7 @@ namespace LinqToDB
 		/// remains session- or transaction-scoped despite globally visible structure.
 		/// Supported by: DB2, Firebird, Oracle, SAP Hana, SQL Server, Sybase ASE.
 		/// </remarks>
-		IsGlobalTemporaryData = 0b010000000,
-
+		IsGlobalTemporaryData      = 0b010000000,
 		/// <summary>
 		/// Temporary table with transaction-scoped data visibility,
 		/// when supported by the provider.
@@ -159,11 +151,11 @@ namespace LinqToDB
 		/// <summary>
 		/// Convenience flag: <see cref="CreateIfNotExists"/> | <see cref="DropIfExists"/>.
 		/// </summary>
-		CheckExistence = CreateIfNotExists | DropIfExists,
+		CheckExistence             = CreateIfNotExists | DropIfExists,
 
 		/// <summary>
 		/// Convenience flag: any temporary-related option is set.
 		/// </summary>
-		IsTemporaryOptionSet = IsTemporary | IsLocalTemporaryStructure | IsGlobalTemporaryStructure | IsLocalTemporaryData | IsGlobalTemporaryData | IsTransactionTemporaryData,
+		IsTemporaryOptionSet       = IsTemporary | IsLocalTemporaryStructure | IsGlobalTemporaryStructure | IsLocalTemporaryData | IsGlobalTemporaryData | IsTransactionTemporaryData,
 	}
 }

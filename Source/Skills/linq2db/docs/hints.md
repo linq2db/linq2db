@@ -1,9 +1,6 @@
 # Query, Table, and Join Hints
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > You are here if you need to:
 > - add optimizer, lock, table, index, join, subquery, or query hints
@@ -14,7 +11,7 @@
 
 ---
 
-> **Agent guidance:**
+> **Guidance:**
 > - Prefer provider-specific typed hint APIs when they exist. They encode provider syntax and are safer than raw SQL text.
 > - Some providers expose provider-specific generic directive families for large or evolving vendor-defined
 >   sets, for example ClickHouse `SETTINGS` or SQL Server `USE HINT`. Use those package-confirmed
@@ -38,8 +35,8 @@
 > - Hints are deferred and composable; they become SQL AST extensions and are emitted only during SQL generation.
 > - Provider-specific `AsXxx()` hint branches can be added to the same query. Only hints compatible with the active provider are emitted into SQL.
 > - Do not suggest `Sql.Table(...)`, `[Sql.Expression]`, SQL text rewriting, or interceptors for a hint until provider-specific and general hint APIs have been checked.
-> - For any provider-specific hint question, `docs/hints-api-map.md` and the provider `*Hints`
->   entries in XML-doc are a required pre-answer gate, not optional follow-up material.
+> - For a provider-specific hint, check [`hints-api-map.md`](hints-api-map.md) and the provider `*Hints`
+>   entries in XML-doc before answering.
 > - Do not skip the hint map because a database feature is a table modifier, lock clause, query
 >   directive, or provider-specific SQL extension instead of a classic optimizer hint. If the user
 >   asks for it as a hint, run the hint lookup algorithm first.
@@ -48,16 +45,15 @@
 >   confirmed through the package hint route before code is shown.
 > - This document explains how to express an already chosen SQL hint or provider directive through
 >   LinqToDB. It does not choose, recommend, or validate database tuning strategies.
-> - Do not claim that a typed hint API is absent from the map unless you have searched the map by
->   exact provider and exact SQL/database term. If the exact map lookup is inconclusive, search
->   XML-doc for the provider `*Hints` type before recommending a raw fallback.
+> - A typed hint API is absent only if a search of the map by exact provider and SQL/database term
+>   and a search of the provider `*Hints` type in XML-doc both come up empty.
 
 ---
 
 ## Pattern quick-reference
 
 For a concrete provider SQL keyword or directive, do not start from the general raw-text rows in
-this table. First run the [Required Hint Lookup Algorithm](#required-hint-lookup-algorithm).
+this table. First follow the [hint lookup order](#hint-lookup-order).
 
 | Scenario | Preferred pattern |
 |---|---|
@@ -74,7 +70,7 @@ this table. First run the [Required Hint Lookup Algorithm](#required-hint-lookup
 | General raw subquery hint | `query.SubQueryHint("...")` |
 | MySQL/PostgreSQL subquery table hint | `query.AsXxx().SubQueryTableHint("...", Sql.TableAlias("id"))` |
 | General raw query hint | `query.QueryHint("...")` |
-| MERGE hint | `target.Merge("...")`; see `docs/crud/crud-merge.md` |
+| MERGE hint | `target.Merge("...")`; see `docs/crud/merge.md` |
 
 ---
 
@@ -128,19 +124,20 @@ var query =
         .Where(p => p.IsActive);
 ```
 
-### Required Hint Lookup Algorithm
+### Hint lookup order
 
-For any hint question, including table modifiers, lock clauses, query directives, and
-provider-specific SQL extensions that the user describes as hints, use this exact order:
+For a hint question, including table modifiers, lock clauses, query directives, and
+provider-specific SQL extensions that the user describes as hints, this order finds the typed API
+when one exists:
 
 1. Identify the provider and the SQL hint text or database term from the user request.
 2. Search [`docs/hints-api-map.md`](hints-api-map.md) by provider name and exact SQL hint text or
    database term. Use likely helper-name fragments only as extra search terms, not as a substitute
    for the exact provider + SQL term lookup.
 3. If the map contains a candidate provider-specific helper, use it as the first candidate and
-   then verify the exact member in `lib/<TFM>/linq2db.xml`.
+   then verify the exact member in `linq2db.xml`.
 4. Verify the provider marker method needed to reach the helper. The marker is part of the
-   required API path: `AsSqlServer()` before `SqlServerHints`, `AsOracle()` before `OracleHints`,
+   API path: `AsSqlServer()` before `SqlServerHints`, `AsOracle()` before `OracleHints`,
    `AsClickHouse()` before `ClickHouseHints`, and so on from the provider marker table.
 5. If the candidate is a `Table` hint, also search the same provider and SQL hint text for a
    `TablesInScope` helper before answering. Some providers expose both table-local and scope-level
@@ -179,22 +176,19 @@ Use naming patterns only as search hints, never as invented API names. Common sh
 such as `Table` or by string concatenation; verify the real helper in `docs/hints-api-map.md` and
 XML-doc.
 
-If the answer recommends a fallback API for a provider-specific SQL hint, it must be because the
-exact map lookup and XML-doc lookup failed to find a typed helper
-in the installed package version.
-Do not write "the map has no entry" unless that exact lookup was performed.
+A fallback API for a provider-specific SQL hint is the right answer only when the map and XML-doc
+lookups found no typed helper in the installed package version.
 
-Answering contract: for a concrete provider-specific hint, name the required provider marker, the
-found typed helper, and the helper receiver before showing code. If no typed helper exists,
-explicitly say whether exact map lookup and XML-doc lookup found a
-provider-specific generic directive family before recommending raw `QueryHint`, `TableHint`,
+When answering about a concrete provider-specific hint, name the provider marker, the typed helper,
+and its receiver before showing code. If no typed helper exists, say so, and say whether a
+provider-specific directive family exists, before recommending raw `QueryHint`, `TableHint`,
 `TablesInScopeHint`, custom SQL, or interceptors.
 
 `docs/hints-api-map.md` classifies hint APIs by `Hint type`
 (`Table`, `TablesInScope`, `Index`, `Join`, `SubQuery`, `Query`, `Merge`, `TableName`).
 Use it when choosing the correct overload or scope.
 For typed provider helpers, the XML-doc summary also names the concrete SQL hint in `<c>...`,
-so agents do not need to infer it only from the method name.
+so it does not have to be inferred from the method name.
 
 ---
 
@@ -470,6 +464,31 @@ Scope boundaries matter:
 - A nested table/query expression with its own `TablesInScopeHint(...)` has its own scope.
 - Table-local hints are more specific than a scope-level hint: they are not removed by the scope
   hint and can coexist with it.
+- **Known limitation: tables used only in the final projection do not get the scope hint**
+  ([#4321](https://github.com/linq2db/linq2db/issues/4321)). The projection of the query the scope helper is applied to - its
+  last `Select` - is translated after the hint has been applied, so a table it introduces gets no
+  hint, whether it comes from an association (navigation) property or from a `GetTable<T>()`
+  subquery:
+
+  ```csharp
+  // Order gets WITH (NoLock); Customer and OrderLine do not - both are reached from the final Select
+  db.Order
+      .Select(o => new
+      {
+          o.OrderID,
+          o.Customer!.Name,                                          // association
+          HasLines = db.OrderLine.Any(l => l.OrderID == o.OrderID),  // subquery
+      })
+      .AsSqlServer()
+      .WithNoLockInScope();
+  ```
+
+  Tables used in `from`/`join` sources, `Where` and `OrderBy` - including association properties
+  and `GetTable<T>()` subqueries there - do get the hint. This applies to `TablesInScopeHint(...)`
+  and to every typed `*InScope*` helper, which are built on it. When a table reached from the
+  projection must carry the hint, join it explicitly (`join` / a second `from`) and project from
+  the joined row, or put a table-local hint on the subquery's table
+  (`db.OrderLine.AsSqlServer().WithNoLock().Any(...)`). Check the generated SQL when it matters.
 
 Provider SQL output differs. SQL Server emits per-table `WITH (...)` clauses, while Oracle and
 MySQL often collect table-scoped optimizer hints into provider-specific hint blocks. Use generated
@@ -543,7 +562,7 @@ db.GetTable<Product>()
 ```
 
 This is not the same API as `.TableHint(...)` or provider-specific `AsXxx()` query hints. Use it
-only for hints that belong to the generated MERGE statement. See `docs/crud/crud-merge.md`.
+only for hints that belong to the generated MERGE statement. See `docs/crud/merge.md`.
 
 ---
 
@@ -565,7 +584,7 @@ only for hints that belong to the generated MERGE statement. See `docs/crud/crud
 
 ## Related documentation
 
-- [`docs/crud/crud-merge.md`](crud/crud-merge.md) - MERGE builder and merge-specific hints.
+- [`docs/crud/merge.md`](crud/merge.md) - MERGE builder and merge-specific hints.
 - [`docs/hints-api-map.md`](hints-api-map.md) - reverse lookup from concrete provider SQL hint
   text to typed provider-specific helper APIs.
 - [`docs/provider-capabilities.md`](provider-capabilities.md) - provider feature support.

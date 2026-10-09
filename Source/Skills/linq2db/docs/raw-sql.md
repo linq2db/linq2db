@@ -1,9 +1,6 @@
 # Raw SQL
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 Use this guide when a task needs SQL text supplied by the application instead of SQL fully
 generated from a LINQ expression.
@@ -233,7 +230,7 @@ the parameter handling has been verified.
 
 ## API Lookup Anchors
 
-Search `lib/<TFM>/linq2db.xml` for:
+Search `linq2db.xml` for:
 
 - `FromSql`
 - `FromSqlScalar`

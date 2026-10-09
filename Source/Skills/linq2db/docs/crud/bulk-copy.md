@@ -1,9 +1,6 @@
 # LinqToDB - Bulk Copy
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../../SKILL.md).
 
 > **You are here if** you need to:
 > - insert a large number of rows as efficiently as possible
@@ -23,7 +20,8 @@
 > **Async:** All `BulkCopy` methods have `BulkCopyAsync` counterparts accepting an optional `CancellationToken`.
 > Both `IEnumerable<T>` and `IAsyncEnumerable<T>` sources are supported by the async overloads.
 > Examples use synchronous forms for brevity; add `Async` suffix and `await` in async contexts.
-> Async methods require `using LinqToDB.Async;`.
+> `BulkCopy` / `BulkCopyAsync` are in the `LinqToDB.Data` namespace (`using LinqToDB.Data;`);
+> `using LinqToDB.Async;` is not needed for them.
 
 ---
 
@@ -85,7 +83,7 @@ BulkCopyRowsCopied result = table.BulkCopy(options, products);
 
 **Async with `IAsyncEnumerable<T>`:**
 ```csharp
-using LinqToDB.Async;
+using LinqToDB.Data;
 
 await foreach (var batch in streamingSource)
     /* ... */
@@ -288,7 +286,7 @@ db.BulkCopy(options, source);
 ## See also
 
 - [`docs/provider-capabilities.md`](../provider-capabilities.md) - `Bulk Copy` column: provider support matrix.
-- [`docs/crud/crud-insert-values.md`](crud-insert-values.md) - single-row insert from C# objects.
-- [`docs/crud/crud-upsert.md`](crud-upsert.md) - insert-or-update semantics.
+- [`docs/crud/insert-values.md`](insert-values.md) - single-row insert from C# objects.
+- [`docs/crud/upsert.md`](upsert.md) - insert-or-update semantics.
 - `BulkCopyOptions` - XML documentation on the record type for full parameter details.
 - `BulkCopyType` - XML documentation on the enum for provider degradation rules.

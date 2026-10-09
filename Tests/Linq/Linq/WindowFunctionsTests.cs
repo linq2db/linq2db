@@ -48,7 +48,7 @@ namespace Tests.Linq
 				return $"Id: {Id}, Name: {Name}, CategoryId: {CategoryId}, Value: {Value}, Timestamp: {Timestamp}";
 			}
 
-			internal static WindowFunctionTestEntity[] Seed()
+			public static WindowFunctionTestEntity[] Seed()
 			{
 				WindowFunctionTestEntity[] data =
 				[

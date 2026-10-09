@@ -6,14 +6,11 @@
 
 	<PropertyGroup Label="Nuget">
 		<Title>LINQ to DB</Title>
-		<Description>
-			LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.
-			AI/LLM agents: read skills/linq2db/SKILL.md before using public APIs from this package.
-		</Description>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Product>$(Title)</Product>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
-
+	
 	<ItemGroup Label="Nuget">
 		<None Include="README.md" Pack="true" PackagePath="README.md" />
 		<None Include="..\Skills\linq2db\**\*.md" Pack="true" PackagePath="skills/linq2db/%(RecursiveDir)%(Filename)%(Extension)" />
@@ -62,32 +59,38 @@
 			<LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-		<Compile Update="DataProvider\ClickHouse\ClickHouseHints.generated.cs">
-			<DependentUpon>ClickHouseHints.tt</DependentUpon>
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-		</Compile>
 
 		<None Update="DataProvider\MySql\MySqlHints.tt">
 			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+
+		<Compile Update="Async\AsyncExtensions.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>AsyncExtensions.tt</DependentUpon>
+		</Compile>
+
+		<Compile Update="DataProvider\ClickHouse\ClickHouseHints.generated.cs">
+			<DependentUpon>ClickHouseHints.tt</DependentUpon>
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="DataProvider\MySql\MySqlHints.generated.cs">
 			<DependentUpon>MySqlHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
+		<Compile Update="Sql\Sql.Row.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Sql.Row.tt</DependentUpon>
+		</Compile>
 
 		<None Update="Sql\Sql.Row.tt">
-			<LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
-			<Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-
-		<Compile Update="Sql\Sql.Row.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Sql.Row.tt</DependentUpon>
-		</Compile>
 
 		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
 			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>
@@ -128,25 +131,25 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SqlServerHints.tt</DependentUpon>
 		</Compile>
-
 		<None Update="DataProvider\Ydb\YdbHints.tt">
-			<LastGenOutput>YdbHints.generated.cs</LastGenOutput>
-			<Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>YdbHints.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
 		</None>
+
 		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
-			<DependentUpon>YdbHints.tt</DependentUpon>
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
+		  <DependentUpon>YdbHints.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
 		</Compile>
 
 		<None Update="Async\AsyncExtensions.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
-		<Compile Update="Async\AsyncExtensions.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>AsyncExtensions.tt</DependentUpon>
+		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
+		  <AutoGen>True</AutoGen>
+		  <DesignTime>True</DesignTime>
+		  <DependentUpon>YdbHints.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
 

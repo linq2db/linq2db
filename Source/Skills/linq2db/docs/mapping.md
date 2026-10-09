@@ -1,9 +1,6 @@
 # LinqToDB Mapping
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
 > **You are here if** you need to:
 > - map CLR classes, records, or interfaces to database tables and columns
@@ -17,14 +14,14 @@ It affects query translation, DML column lists, schema creation, temporary table
 
 ---
 
-> **Agent guidance:**
+> **Guidance:**
 > - Use convention-based mapping for simple read/query types when database names match CLR names.
 > - Use explicit attributes or fluent mapping when table names, column names, keys, identities, nullability, or schema generation matter.
 > - Do not create a `MappingSchema` unless you need fluent mapping, custom conversions, or additional metadata readers.
 > - If a custom `MappingSchema` is needed, create it once at application startup and reuse it through `DataOptions.UseMappingSchema(...)`.
 > - Do not create a new custom `MappingSchema` per `DataConnection`, per request, or per operation.
 > - For any LinqToDB API or option that generates a `CREATE TABLE` statement, specify `Length`, `Precision`, and `Scale` for provider-sensitive columns (`string`, `decimal`, etc.).
-> - If a length or precision value is an agent assumption, put a `TODO` comment on the same line as the mapping.
+> - If the task does not give a length or precision, choose a bounded value from the field's meaning and flag it for review (see [section 5](#5-ddl-sensitive-column-metadata)).
 
 ---
 
@@ -274,7 +271,7 @@ public sealed class Product
     public int Id { get; set; }
 
     [Column(Length = 200), NotNull]
-    public string Name { get; set; } = null!; // TODO: Confirm max product name length. 200 is an AI agent assumption.
+    public string Name { get; set; } = null!; // TODO: confirm max length
 
     [Column(Precision = 18, Scale = 2)]
     public decimal Price { get; set; }
@@ -289,7 +286,9 @@ public string Name { get; set; } = null!; // wrong for schema creation: provider
 ```
 
 If exact limits are not provided by the task, choose a bounded value guided by field semantics and
-add a same-line `TODO` explaining that the value is an AI agent assumption.
+flag the placeholder for review: a neutral same-line `TODO` (as above) or a note to the user. Values
+taken from the task or from an established convention (for example `Length = 254` for an email
+address) need no flag.
 
 ---
 

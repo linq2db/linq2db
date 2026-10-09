@@ -1,12 +1,9 @@
-# AI Documentation Coverage
+# Guide Coverage
 
-> ⚠️ **Stop. This document is incomplete by itself.**
-> Before implementing anything, read [`SKILL.md`](../SKILL.md).
-> It contains global rules, required namespaces, architecture constraints, and documentation navigation.
-> Do not continue without reading it.
+> Part of the linq2db skill. General rules and the guide index are in [`SKILL.md`](../SKILL.md).
 
-This file records which LinqToDB topics have package-local AI guidance and which topics still
-require XML-doc lookup.
+This file records which LinqToDB topics have a guide in this skill and which topics still need an
+XML-doc lookup.
 
 ## Covered Topics
 
@@ -32,12 +29,13 @@ These areas have task-focused markdown guidance in this package:
 - `DataParameter` construction, output/input-output procedure parameters, and forcing a value to a
   bound parameter vs a SQL literal (`Sql.Parameter`, `Sql.Constant`, `InlineParameters`);
 - extension mechanisms: custom SQL expressions/functions and `IMemberTranslator` member translators;
+- interceptors;
 - built-in translatable .NET methods;
 - common anti-patterns and symptom-based checks.
 
 ## Not Yet Covered In Depth
 
-These areas are not yet covered by a dedicated AI guide or are covered only indirectly:
+These areas are not yet covered by a dedicated guide or are covered only indirectly:
 
 - stored procedures and functions in depth;
 - schema provider APIs;
@@ -50,8 +48,8 @@ These areas are not yet covered by a dedicated AI guide or are covered only indi
 ## Recognized But Not Yet Guided
 
 These public or package-adjacent areas exist and should not be treated as unknown, but they do not
-yet have task-focused package-local AI guidance. For these topics, search
-`lib/<TFM>/linq2db.xml` for exact version-matched API details before answering:
+yet have a task-focused guide in this skill. For these topics, search
+`linq2db.xml` for exact version-matched API details before answering:
 
 - compiled queries: `CompiledQuery`;
 - metrics and activity instrumentation: `Metrics`, `ActivityService`, `IActivity`;
@@ -74,7 +72,7 @@ guidance from package-confirmed core `linq2db` facts.
 ## Rule For Uncovered Topics
 
 If a topic is not covered by markdown guidance, do not infer LinqToDB API shape or behavior from
-memory. Search `lib/<TFM>/linq2db.xml`, the version-matched primary reference, by member names,
+memory. Search `linq2db.xml`, the version-matched primary reference, by member names,
 type names, provider names, and receiver types.
 
 Do not use `LinqToDB.Internal.*` APIs in application code while investigating uncovered topics.

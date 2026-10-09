@@ -38,8 +38,6 @@ namespace LinqToDB
 	///       <b>Query translation directives</b>:
 	///       methods that annotate a query or its nodes to influence SQL semantics
 	///       without forcing immediate execution.
-	///       These directives are represented in the SQL AST and emitted into SQL text
-	///       according to provider rules.
 	///     </description>
 	///   </item>
 	///   <item>
