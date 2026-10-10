@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
@@ -11,6 +12,8 @@ using Microsoft.Extensions.Options;
 
 #if NET8_0_OR_GREATER
 using Microsoft.AspNetCore.Http;
+#else
+using System.Reflection;
 #endif
 
 namespace LinqToDB.Remote.SignalR
@@ -35,14 +38,19 @@ namespace LinqToDB.Remote.SignalR
 		/// </summary>
 		internal const int ResultChunkSize = 32 * 1024;
 
-		static readonly LinqToDBHubOptions _defaultOptions = new();
+		static readonly LinqToDBHubOptions _defaultOptions     = new();
 		static readonly object             _connectionStateKey = new();
+
+		// MaxConcurrentCalls: one semaphore per hub type and limit for the whole process, since Signal/R creates a hub
+		// for every call and a hub may create its options itself. Never disposed: without AvailableWaitHandle a
+		// SemaphoreSlim holds no unmanaged resources, and an operation finishing late may still release it.
+		static readonly ConcurrentDictionary<(Type HubType, int MaxConcurrentCalls),SemaphoreSlim> _globalLimiters = new();
 
 		readonly LinqToDBHubOptions? _options;
 
 		/// <summary>
-		/// Creates a hub with default <see cref="LinqToDBHubOptions"/>. On .NET 8+ servers the hub uses the
-		/// options registered in the request's services when there are any.
+		/// Creates a hub that uses the <see cref="LinqToDBHubOptions"/> registered in the services
+		/// (<c>services.Configure&lt;LinqToDBHubOptions&gt;</c>), or the default options when none are registered.
 		/// </summary>
 		public LinqToDBHub()
 		{
@@ -147,31 +155,18 @@ namespace LinqToDB.Remote.SignalR
 			return new LinqService { AllowUpdates = false, RemoteClientTag = "Signal/R" };
 		}
 
-		LinqToDBHubOptions Options
-		{
-			get
-			{
-				if (_options != null)
-					return _options;
-
-#if NET8_0_OR_GREATER
-				if (Context.GetHttpContext()?.RequestServices.GetService<IOptions<LinqToDBHubOptions>>() is { } options)
-					return options.Value;
-#endif
-
-				return _defaultOptions;
-			}
-		}
-
 		ChannelReader<T> StartOperation<T>(Func<ILinqService,CancellationToken,Task<IReadOnlyList<T>>> operation)
 		{
 			// Everything that needs the hub is read now: the reader runs the operation after this method returns.
 			var service    = LinqService;
-			var options    = Options;
-			var connection = GetConnectionState(options);
+			var connection = GetConnectionState();
+			var options    = _options ?? connection.Options;
+			var global     = options.MaxConcurrentCalls is { } max
+				? _globalLimiters.GetOrAdd((GetType(), max), static key => new SemaphoreSlim(key.MaxConcurrentCalls, key.MaxConcurrentCalls))
+				: null;
 
 			return new OperationChannelReader<T>(
-				cancellationToken => RunAsync(service, options, connection, operation, cancellationToken),
+				cancellationToken => RunAsync(service, options, connection, global, operation, cancellationToken),
 				Context.ConnectionAborted);
 		}
 
@@ -179,6 +174,7 @@ namespace LinqToDB.Remote.SignalR
 			ILinqService                                              service,
 			LinqToDBHubOptions                                        options,
 			ConnectionState                                           connection,
+			SemaphoreSlim?                                            global,
 			Func<ILinqService,CancellationToken,Task<IReadOnlyList<T>>> operation,
 			CancellationToken                                         cancellationToken)
 		{
@@ -189,8 +185,6 @@ namespace LinqToDB.Remote.SignalR
 				// SemaphoreSlim completes a cancelled wait asynchronously, so a slot freed in that window is still granted
 				// to the waiter: a call cancelled while it was queued must not run all the same.
 				cancellationToken.ThrowIfCancellationRequested();
-
-				var global = options.GetGlobalLimiter();
 
 				if (global != null)
 					await global.WaitAsync(cancellationToken).ConfigureAwait(false);
@@ -238,7 +232,7 @@ namespace LinqToDB.Remote.SignalR
 			return chunks;
 		}
 
-		ConnectionState GetConnectionState(LinqToDBHubOptions? options = null)
+		ConnectionState GetConnectionState()
 		{
 			var items = Context.Items;
 
@@ -247,15 +241,16 @@ namespace LinqToDB.Remote.SignalR
 				if (items.TryGetValue(_connectionStateKey, out var value) && value is ConnectionState state)
 					return state;
 
-				state = CreateConnectionState(options ?? Options);
+				state = CreateConnectionState();
 				items[_connectionStateKey] = state;
 
 				return state;
 			}
 		}
 
-		ConnectionState CreateConnectionState(LinqToDBHubOptions options)
+		ConnectionState CreateConnectionState()
 		{
+			var options       = _options ?? ResolveRegisteredOptions() ?? _defaultOptions;
 			var perConnection = options.MaxConcurrentCallsPerConnection;
 			var maxMessage    = -1L;
 
@@ -267,8 +262,47 @@ namespace LinqToDB.Remote.SignalR
 			}
 #endif
 
-			return new ConnectionState(Math.Max(perConnection ?? 1, 1), maxMessage);
+			return new ConnectionState(options, Math.Max(perConnection ?? 1, 1), maxMessage);
 		}
+
+		// The options registered in the services, for a hub that was not given options by its constructor.
+		LinqToDBHubOptions? ResolveRegisteredOptions()
+		{
+#if NET8_0_OR_GREATER
+			return Context.GetHttpContext()?.RequestServices.GetService<IOptions<LinqToDBHubOptions>>()?.Value;
+#else
+			try
+			{
+				return (GetRequestServices()?.GetService(typeof(IOptions<LinqToDBHubOptions>)) as IOptions<LinqToDBHubOptions>)?.Value;
+			}
+			catch (Exception ex) when (ex is ObjectDisposedException or TargetInvocationException)
+			{
+				// The legacy long polling transport may keep the services of a request that has ended.
+				return null;
+			}
+#endif
+		}
+
+#if !NET8_0_OR_GREATER
+		const string HttpContextFeatureName = "Microsoft.AspNetCore.Http.Connections.Features.IHttpContextFeature";
+
+		// The legacy server's GetHttpContext() is in Microsoft.AspNetCore.SignalR, which this package does not
+		// reference (it needs Microsoft.AspNetCore.SignalR.Core only); it reads the connection feature below.
+		IServiceProvider? GetRequestServices()
+		{
+			foreach (var feature in Context.Features)
+			{
+				if (!string.Equals(feature.Key.FullName, HttpContextFeatureName, StringComparison.Ordinal))
+					continue;
+
+				var httpContext = feature.Key.GetProperty("HttpContext")?.GetValue(feature.Value);
+
+				return httpContext?.GetType().GetProperty("RequestServices")?.GetValue(httpContext) as IServiceProvider;
+			}
+
+			return null;
+		}
+#endif
 
 #if NET8_0_OR_GREATER
 		// The options Signal/R applies to this hub: HubOptions<THub> when AddHubOptions<THub> configured them (it
@@ -305,8 +339,12 @@ namespace LinqToDB.Remote.SignalR
 		/// <summary>
 		/// Per-connection state, kept in the connection's items.
 		/// </summary>
-		sealed class ConnectionState(int maxConcurrentCalls, long maximumReceiveMessageSize)
+		sealed class ConnectionState(LinqToDBHubOptions options, int maxConcurrentCalls, long maximumReceiveMessageSize)
 		{
+			// The options the connection's first call resolved: the registered ones for a hub that was not given options
+			// by its constructor.
+			public LinqToDBHubOptions Options { get; } = options;
+
 			// Never disposed: a SemaphoreSlim holds no unmanaged resources without AvailableWaitHandle, and an
 			// operation that finishes after the connection is gone still releases it.
 			public SemaphoreSlim Calls                     { get; } = new(maxConcurrentCalls, maxConcurrentCalls);

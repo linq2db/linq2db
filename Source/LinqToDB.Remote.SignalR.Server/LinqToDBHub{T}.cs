@@ -13,7 +13,8 @@ namespace LinqToDB.Remote.SignalR
 		readonly ILinqService<T> _linqService;
 
 		/// <summary>
-		/// Creates a hub with default <see cref="LinqToDBHubOptions"/>.
+		/// Creates a hub that uses the <see cref="LinqToDBHubOptions"/> registered in the services, or the default
+		/// options when none are registered.
 		/// </summary>
 		/// <param name="linqService">Service that executes remote calls.</param>
 		public LinqToDBHub(ILinqService<T> linqService)
