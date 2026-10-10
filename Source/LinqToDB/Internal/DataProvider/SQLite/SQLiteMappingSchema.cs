@@ -15,11 +15,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT           = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
 		private static readonly CompositeFormat DATETIME_FORMAT       = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
-		private static readonly CompositeFormat DATETIMEOFFSET_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'");
+		private static readonly CompositeFormat DATETIMEOFFSET_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.FFFFFFFzzz}'");
 #else
 		private  const string DATE_FORMAT           = "'{0:yyyy-MM-dd}'";
 		private  const string DATETIME_FORMAT       = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
-		private  const string DATETIMEOFFSET_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fffzzz}'";
+		private  const string DATETIMEOFFSET_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.FFFFFFFzzz}'";
 #endif
 
 		SQLiteMappingSchema() : base(ProviderName.SQLite)

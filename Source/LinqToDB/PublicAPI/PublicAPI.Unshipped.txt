@@ -7,6 +7,7 @@ override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+override LinqToDB.Internal.DataProvider.SQLite.SQLiteSqlExpressionConvertVisitor.VisitInListPredicate(LinqToDB.Internal.SqlQuery.SqlPredicate.InList! predicate) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.ElapsedTicks(LinqToDB.Internal.SqlQuery.SqlIntervalDifferenceExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.IntervalResolution.get -> LinqToDB.Internal.SqlQuery.SqlIntervalUnit
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?

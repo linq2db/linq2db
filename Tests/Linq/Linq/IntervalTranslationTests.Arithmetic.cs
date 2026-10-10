@@ -1546,13 +1546,11 @@ namespace Tests.Linq
 		/// A <see cref="DateTimeOffset"/> shifted by a computed difference, answered as the same instant or refused.
 		/// </summary>
 		/// <remarks>
-		/// SQLite refuses: its date functions work in UTC and write the result back without an offset, which one of
-		/// its providers reads as local time and the other cannot read at all. Both offsets are the same here, so the
+		/// SQLite preserves the original offset at millisecond resolution. Both offsets are the same here, so the
 		/// difference itself is not what is being asked. Firebird is not asked, for the reason
 		/// <see cref="SupportsDateTimeOffsetContextAttribute"/> gives: its client refuses the offset on write.
 		/// </remarks>
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_Interval_Shift)]
 		public void AComputedShiftOfADateTimeOffset(
 			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllYdb)] string context)
 		{
