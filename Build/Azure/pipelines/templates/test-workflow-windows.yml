@@ -156,6 +156,16 @@ steps:
   condition: and(variables.title, succeeded())
   displayName: Extract test configs
 
+# Anonymous pulls hit Docker Hub's rate limit (build 23999). Fork PR builds can't use the service
+# connection, so a failed login falls back to anonymous pulls.
+- task: Docker@2
+  displayName: Auth on hub.docker.com
+  inputs:
+    command: login
+    containerRegistry: dockerhub
+  condition: and(variables.title, variables.script_global, succeeded())
+  continueOnError: true
+
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_global)'
