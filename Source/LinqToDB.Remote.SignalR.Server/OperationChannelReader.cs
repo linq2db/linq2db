@@ -142,8 +142,12 @@ namespace LinqToDB.Remote.SignalR
 			{
 				if (ex is OperationCanceledException)
 					_completion.TrySetCanceled();
-				else
-					_completion.TrySetException(ex);
+				else if (_completion.TrySetException(ex))
+				{
+					// No Signal/R server reads Completion (the error reaches it through the reads): mark the fault
+					// observed, or every failed call raises TaskScheduler.UnobservedTaskException.
+					_ = _completion.Task.Exception;
+				}
 
 				throw;
 			}
