@@ -496,9 +496,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			}
 
 			[Wrapper]
-			internal sealed class MySqlTransaction
-			{
-			}
+			internal sealed class MySqlTransaction;
 
 			#region BulkCopy
 			[Wrapper]

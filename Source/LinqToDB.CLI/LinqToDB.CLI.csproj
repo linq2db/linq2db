@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<RootNamespace>LinqToDB.CLI</RootNamespace>
+		<RootNamespace>LinqToDB.CommandLine</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
 		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<SignAssembly>False</SignAssembly>
@@ -42,25 +43,66 @@
 		<PackageProjectUrl>https://linq2db.github.io/</PackageProjectUrl>
 
 		<EnablePackageValidation>false</EnablePackageValidation>
+
+		<!--
+		NU5118: SDK 10.0.400 (dotnet/sdk#55107) packs the RID pointer package's DotnetToolSettings.xml
+		at a TFM-agnostic tools/any/any/ path, but PackTool runs once per TFM - so all three of our
+		TFMs emit that same package path and NuGet reports a collision (fatal under
+		TreatWarningsAsErrors). The three generated files are byte-identical: the pointer settings
+		carry only ToolCommandName plus the per-RID sub-package ids, nothing TFM-specific. So NuGet
+		keeping the first and skipping the rest is lossless, and the emitted package is exactly the
+		single-settings-file layout the new SDK intends. Scoped to the pointer package so the per-RID
+		packs keep NU5118 enforcement. Remove once the SDK stops emitting one copy per TFM.
+		-->
+		<NoWarn Condition="'$(RuntimeIdentifier)' == ''">$(NoWarn);NU5118</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md"             Pack="true" PackagePath="readme.md"        />
 		<None Include="..\..\Nuget\icon.png"  Pack="true" PackagePath="icon.png"         />
+
+		<!--
+		Two items, because a tool package needs the notices in two places and Pack alone reaches only one
+		of them. PackAsTool publishes the whole dependency closure into tools/<tfm>/<rid>/, so this package
+		physically redistributes ~90 third-party components that its MIT expression does not cover.
+
+		 * Pack="true"                -> the package root, next to readme.md. Each RID sub-package is a full
+		                                 Pack, so this lands in all of them and in the pointer package.
+		 * CopyToPublishDirectory     -> the tool payload. The RID payload is literally $(PublishDir)/**/*
+		                                 (Microsoft.NET.PackTool.targets), so the file has to reach publish
+		                                 output to end up beside the installed tool. Pack="true" does not
+		                                 put anything in publish output.
+
+		Generated from Build/licenses/components.json; see Build/licenses/README.md.
+		-->
+		<None Include="..\..\Build\licenses\generated\THIRD-PARTY-NOTICES.linq2db.cli.txt"
+		      Pack="true" PackagePath="THIRD-PARTY-NOTICES.txt" Visible="false" />
+		<None Include="..\..\Build\licenses\generated\THIRD-PARTY-NOTICES.linq2db.cli.txt"
+		      Link="THIRD-PARTY-NOTICES.txt" Pack="false" Visible="false"
+		      CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Template.tt" />
+		<!-- The tool assembly is not a referenceable library API. -->
+		<PackageReference Remove="Microsoft.CodeAnalysis.PublicApiAnalyzers" />
+
+		<EmbeddedResource Include="Template.tt" LogicalName="LinqToDB.CLI.Template.tt" />
+		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
 
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
+		<PackageReference Include="ModelContextProtocol" />
 		<PackageReference Include="Mono.TextTemplating" />
 
 		<!--providers-->
 		<PackageReference Include="Microsoft.Data.SQLite" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Microsoft.SqlServer.Types" />
+		<PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="MySqlConnector" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
@@ -72,7 +114,5 @@
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="DuckDB.NET.Data.Full" />
 		<PackageReference Include="Ydb.Sdk" />
-
-		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>

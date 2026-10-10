@@ -22,38 +22,35 @@ namespace Tests.Linq
 			[Sql.Expression("DATE()", ServerSideOnly = true)]
 			public static DateTime DateExpr(DataConnection db, ExpressionTestsFakeType fake)
 			{
-				throw new NotImplementedException();
+				throw new ServerSideOnlyException(nameof(DateExpr));
 			}
 
 			[Sql.Expression("DATE({1})", ServerSideOnly = true)]
 			public static DateTime DateExprKind(DataConnection db, string kind, ExpressionTestsFakeType fake)
 			{
-				throw new NotImplementedException();
+				throw new ServerSideOnlyException(nameof(DateExprKind));
 			}
 
 			[Sql.Function("DATE", ArgIndices = new[] { 1 }, ServerSideOnly = true)]
 			public static DateTime DateFuncKind(DataConnection db, string kind, ExpressionTestsFakeType fake)
 			{
-				throw new NotImplementedException();
+				throw new ServerSideOnlyException(nameof(DateFuncKind));
 			}
 
 			[Sql.Function("DATE", ServerSideOnly = true)]
 			public static DateTime DateFuncFail(DataConnection db, ExpressionTestsFakeType fake)
 			{
-				throw new NotImplementedException();
+				throw new ServerSideOnlyException(nameof(DateFuncFail));
 			}
 
 			[Sql.Expression("DATE({2})", ServerSideOnly = true)]
 			public static DateTime DateExprKindFail(DataConnection db, string kind, ExpressionTestsFakeType fake)
 			{
-				throw new NotImplementedException();
+				throw new ServerSideOnlyException(nameof(DateExprKindFail));
 			}
 		}
 
-		public class ExpressionTestsFakeType
-		{
-
-		}
+		public class ExpressionTestsFakeType;
 
 		[Table]
 		private sealed class ExpressionTestClass
@@ -392,11 +389,11 @@ namespace Tests.Linq
 		#endregion
 
 		[ExpressionMethod(nameof(GetValueNullableExpr))]
-		static int? GetValue(int? value) => throw new InvalidOperationException();
+		static int? GetValue(int? value) => throw new ServerSideOnlyException(nameof(GetValue));
 
 		// this function should be a blackbox for linq2db
 		[Sql.Expression("IIF({0} IS NULL, -1, {0} + 1)", ServerSideOnly = true)]
-		static int GetValueFinal(int value) => throw new InvalidOperationException();
+		static int GetValueFinal(int value) => throw new ServerSideOnlyException(nameof(GetValueFinal));
 
 		static Expression<Func<int?, int?>> GetValueNullableExpr()
 		{
@@ -404,7 +401,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true, IgnoreGenericParameters = true)]
-		static T Wrap<T>(T value) => throw new InvalidOperationException();
+		static T Wrap<T>(T value) => throw new ServerSideOnlyException(nameof(Wrap));
 
 		[Test]
 		//public void Test_ConditionalExpressionOptimization([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
@@ -432,10 +429,10 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("PersonID", IsPure = true, ServerSideOnly = true)]
-		static int PureRandom() => throw new InvalidOperationException();
+		static int PureRandom() => throw new ServerSideOnlyException(nameof(PureRandom));
 
 		[Sql.Expression("PersonID", IsPure = false, ServerSideOnly = true)]
-		static int ImpureRandom() => throw new InvalidOperationException();
+		static int ImpureRandom() => throw new ServerSideOnlyException(nameof(ImpureRandom));
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5166")]
 		public void PureExpressionDetection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
@@ -471,21 +468,19 @@ namespace Tests.Linq
 		[LinqToDB.Sql.ExpressionAttribute("{0} = ANY({1})", ServerSideOnly = true, IsPredicate = true)]
 		static bool IsAnyOf2<T>(T left, T[] right) => throw new ServerSideOnlyException(nameof(IsAnyOf2));
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
 		public void CollectionParameterTranslation_IReadOnlyList([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			IReadOnlyList<int> ids = [10, 20];
 
 			db.Person.Where(p => IsAnyOf1(p.ID, ids)).Delete();
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
 		public void CollectionParameterTranslation_Array([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			int[] ids = [10, 20];
 
 			db.Person.Where(p => IsAnyOf2(p.ID, ids)).Delete();

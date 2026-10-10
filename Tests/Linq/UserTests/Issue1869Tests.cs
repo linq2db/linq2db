@@ -12,9 +12,7 @@ namespace Tests.UserTests
 {
 	public class Issue1869Tests : TestBase
 	{
-		public class PropertyChangedNotifier
-		{
-		}
+		public class PropertyChangedNotifier;
 
 		[Table(Name = "tblFtq")]
 		public class FtqData : PropertyChangedNotifier

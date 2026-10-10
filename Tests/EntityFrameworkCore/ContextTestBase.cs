@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
+using Npgsql;
+
 using Tests;
 
 #if NETFRAMEWORK
@@ -21,22 +23,22 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 	public abstract class ContextTestBase<TContext> : TestBase
 		where TContext: DbContext
 	{
-		protected virtual DbContextOptionsBuilder<TContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<TContext> optionsBuilder)
+		protected virtual DbContextOptionsBuilder<TContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<TContext> optionsBuilder, bool useNodaTime)
 		{
 			return provider switch
 			{
+				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) && !useNodaTime
+					=> optionsBuilder.UseNpgsql(connectionString),
 				// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
 					=> optionsBuilder
 					.UseNpgsql(connectionString, o => o.UseNodaTime())
 					.UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
-#if !NET10_0
 				_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
 #if !NETFRAMEWORK
 					.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
 #else
 					.UseMySql(connectionString),
-#endif
 #endif
 				_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
 				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),
@@ -55,6 +57,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var _ = new DisableBaseline("create db");
 
 			context.Database.EnsureDeleted();
+
+			// DROP DATABASE WITH (FORCE) kills pooled connections of contexts that don't share this context's data source
+			if (provider.IsAnyOf(TestProvName.AllPostgreSQL))
+				NpgsqlConnection.ClearAllPools();
+
 			context.Database.EnsureCreated();
 
 			TestContextTracker.LastContexts[connectionString] = typeof(TContext);
@@ -79,7 +86,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 #endif
 		}
 
-		protected TContext CreateContext(string provider, Func<DataOptions, DataOptions>? optionsSetter = null, Func<DbContextOptionsBuilder<TContext>, DbContextOptionsBuilder<TContext>>? optionsBuilderSetter = null)
+		protected TContext CreateContext(string provider, Func<DataOptions, DataOptions>? optionsSetter = null, Func<DbContextOptionsBuilder<TContext>, DbContextOptionsBuilder<TContext>>? optionsBuilderSetter = null, bool useNodaTime = true)
 		{
 			var connectionString = GetConnectionString(provider);
 
@@ -89,7 +96,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			// 20 cached contexts is not enough for us when tests run for multiple providers
 			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
-			optionsBuilder = ProviderSetup(provider, connectionString, optionsBuilder);
+			optionsBuilder = ProviderSetup(provider, connectionString, optionsBuilder, useNodaTime);
 
 			if (optionsSetter! != null)
 				optionsBuilder.UseLinqToDB(builder => builder.AddCustomOptions(optionsSetter));

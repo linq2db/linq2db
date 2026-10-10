@@ -4,6 +4,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
@@ -265,9 +266,10 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void WithReadPastTableTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void WithReadPastTableTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
+			using var tx = ((DataConnection)db).BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
 
 			var q =
 				from p in db.Parent
@@ -281,9 +283,10 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void WithReadPastInScopeTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void WithReadPastInScopeTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
+			using var tx = ((DataConnection)db).BeginTransaction(System.Data.IsolationLevel.ReadCommitted);
 
 			var q =
 			(

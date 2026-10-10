@@ -36,6 +36,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".CompareTo(1),  TranslateCompareTo);
 
 			// ReSharper disable ReturnValueOfPureMethodIsNotUsed
+			// The lambdas below are expression trees that only name a method for the registry; none is invoked,
+			// so there is no return value to use.
+#pragma warning disable MA0060 // The return value of method is not used
 			Registration.RegisterMethod(() => "".Replace("", ""), TranslateStringReplace);
 			Registration.RegisterMethod(() => "".Replace(' ', ' '), TranslateStringReplace);
 
@@ -85,6 +88,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<int>()),                                    TranslateConcatWithoutNullList, isGenericTypeMatch: true);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<string?>()),                                        TranslateConcatNullableList);
 			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<object?>()),                                        TranslateConcatNullableList);
+#pragma warning restore MA0060 // The return value of method is not used
 		}
 
 		/// <summary>

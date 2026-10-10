@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.Linq
 {
@@ -70,7 +71,7 @@ namespace LinqToDB.Internal.Linq
 				get
 				{
 					if (_enumerator == null)
-						throw new InvalidOperationException("Enumeration not started.");
+						throw new InvalidOperationException(ErrorHelper.Error_EnumerationNotStarted);
 
 					return _enumerator.Current;
 				}

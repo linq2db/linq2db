@@ -25,7 +25,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			return provider switch
 			{
 				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => new PostgreSQL.Models.ForMapping.ForMappingContext(options),
-				_ when provider.IsAnyOf(TestProvName.AllMySql) => new Pomelo.Models.ForMapping.ForMappingContext(options),
+				_ when provider.IsAnyOf(TestProvName.AllMySql) => new MySql.Models.ForMapping.ForMappingContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSQLite) => new SQLite.Models.ForMapping.ForMappingContext(options),
 				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => new SqlServer.Models.ForMapping.ForMappingContext(options),
 				_ => throw new InvalidOperationException($"{nameof(CreateProviderContext)} is not implemented for provider {provider}")

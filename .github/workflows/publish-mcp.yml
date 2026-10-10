@@ -1,0 +1,112 @@
+# MCP Registry publication for linq2db.cli.
+#
+# Hooked to release publication rather than the `release` branch push. The registry verifies
+# ownership by reading the *published* nupkg's README - Azure's nuget-job.yml owns that push - so
+# the package must be live and served by nuget.org before this can succeed.
+#
+# The wait step polls exactly what the registry's validator reads: the ReadmeUriTemplate/6.13.0
+# resource resolved from nuget.org's service index. A green poll therefore means publication will
+# not fail on "wait for validation to complete".
+#
+# Actions are pinned by SHA and limited to GitHub-owned ones, matching the repository's
+# `allowed_actions: selected` + `github_owned_allowed` policy. mcp-publisher is not an action; it
+# is fetched from its GitHub release at a pinned tag rather than `latest`.
+name: publish-mcp
+
+on:
+  release:
+    types: [published]
+  # Recovery path. If the automatic run fails - nuget.org lag beyond the poll budget, a transient
+  # registry error - re-run it here rather than falling back to the interactive Owner device flow.
+  # The tag supplies the version; nothing else is read from the tag's tree, so dispatching from
+  # the default branch is correct.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish, e.g. v6.5.0.
+        required: true
+
+permissions:
+  contents: read
+  id-token: write # github-oidc grants io.github.<owner>/* from the repository_owner claim
+
+jobs:
+  publish:
+    name: Publish to MCP Registry
+    runs-on: ubuntu-24.04
+    # A prerelease must not claim the registry version. A manual dispatch is always deliberate.
+    if: ${{ github.event_name == 'workflow_dispatch' || !github.event.release.prerelease }}
+    timeout-minutes: 40
+
+    env:
+      PUBLISHER_VERSION: v1.8.1
+      PACKAGE_ID: linq2db.cli
+      SERVER_NAME: io.github.linq2db/linq2db.cli
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Resolve release version
+        env:
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          if [ -z "$TAG" ]; then
+            echo "No release tag resolved from either the release event or the dispatch input."
+            exit 1
+          fi
+          echo "VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      # The schema rejects a floating version, so both fields have to carry a literal one. They are
+      # committed as 0.0.0 and populated here from the tag, so nothing has to remember to bump them
+      # and an unedited manual publish fails loudly instead of re-registering a stale version.
+      - name: Set version in server.json
+        run: |
+          jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' \
+            Source/LinqToDB.CLI/server.json > server.tmp
+          mv server.tmp Source/LinqToDB.CLI/server.json
+          cat Source/LinqToDB.CLI/server.json
+
+      # Substring match is deliberate: this is a readiness gate, not the ownership check. The
+      # authoritative boundary-anchored match is the publisher's, and it fails loudly if the marker
+      # is ever glued to a trailing character.
+      - name: Wait for nuget.org to serve the package README
+        run: |
+          TEMPLATE=$(curl -fsSL https://api.nuget.org/v3/index.json \
+            | jq -r '.resources[] | select(."@type" == "ReadmeUriTemplate/6.13.0") | ."@id"')
+          if [ -z "$TEMPLATE" ]; then
+            echo "ReadmeUriTemplate/6.13.0 is missing from the nuget.org service index."
+            exit 1
+          fi
+          LOWER_ID=$(printf '%s' "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
+          LOWER_VER=$(printf '%s' "$VERSION"   | tr '[:upper:]' '[:lower:]')
+          URL=${TEMPLATE//\{lower_id\}/$LOWER_ID}
+          URL=${URL//\{lower_version\}/$LOWER_VER}
+          echo "Polling $URL"
+          for i in $(seq 1 60); do
+            if curl -fsSL "$URL" -o readme.published; then
+              if grep -Fq "mcp-name: $SERVER_NAME" readme.published; then
+                echo "README served with marker present after attempt $i."
+                exit 0
+              fi
+              echo "Attempt $i: README served, marker absent."
+            else
+              echo "Attempt $i: README not served yet."
+            fi
+            sleep 30
+          done
+          echo "Timed out waiting for $URL to carry 'mcp-name: $SERVER_NAME'."
+          exit 1
+
+      - name: Install mcp-publisher
+        run: |
+          curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/download/${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz" \
+            | tar xz mcp-publisher
+
+      - name: Validate manifest
+        run: ./mcp-publisher validate Source/LinqToDB.CLI/server.json
+
+      - name: Authenticate to MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish Source/LinqToDB.CLI/server.json

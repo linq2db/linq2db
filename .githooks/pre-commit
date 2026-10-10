@@ -1,0 +1,34 @@
+#!/bin/sh
+# Two guards, both about the .claude/ agent-instruction corpus (a git submodule of
+# github.com/linq2db/agents). Both are deliberate-action gates: override with
+#   git commit --no-verify
+#
+# 1. Refuse a staged .claude gitlink bump. Corpus changes belong in the corpus repo;
+#    a bumped pointer would leak corpus churn into linq2db's history. Compared via
+#    `git ls-files -s` rather than `git diff`, because submodule.ignore=all mutes diff.
+#
+# 2. Refuse staged edits to the root AGENTS.md / CLAUDE.md trampolines. They are pointers
+#    into the corpus; the rules themselves are edited in .claude/. (Legitimate exception:
+#    adding a new always-loaded corpus file to CLAUDE.md's import list - use --no-verify.)
+
+# No HEAD yet (brand-new repo) - nothing to compare against.
+git rev-parse --verify HEAD >/dev/null 2>&1 || exit 0
+
+staged_link=$(git ls-files -s -- .claude | awk '{print $2}')
+head_link=$(git rev-parse -q --verify HEAD:.claude)
+
+if [ -n "$staged_link" ] && [ -n "$head_link" ] && [ "$staged_link" != "$head_link" ]; then
+  echo "pre-commit: refusing to commit a .claude submodule pointer bump." >&2
+  echo "  The gitlink is a bootstrap pointer, not a version pin - corpus commits go to" >&2
+  echo "  github.com/linq2db/agents (git -C .claude commit && git -C .claude push)." >&2
+  echo "  Override intentionally with: git commit --no-verify" >&2
+  exit 1
+fi
+
+if ! git diff --cached --quiet -- AGENTS.md CLAUDE.md; then
+  echo "pre-commit: refusing to commit an edit to AGENTS.md / CLAUDE.md." >&2
+  echo "  Those are trampolines into the corpus; edit .claude/AGENTS.md or .claude/CLAUDE.md." >&2
+  echo "  Override intentionally with: git commit --no-verify" >&2
+  exit 1
+fi
+exit 0

@@ -335,9 +335,9 @@ namespace LinqToDB.Remote
 		{
 			public object Resource = null!;
 
-			public sealed class Create : ResourceAction {}
-			public sealed class Delete : ResourceAction {}
-			public sealed class Reset  : ResourceAction {}
+			public sealed class Create : ResourceAction;
+			public sealed class Delete : ResourceAction;
+			public sealed class Reset  : ResourceAction;
 
 			public sealed class Update : ResourceAction
 			{

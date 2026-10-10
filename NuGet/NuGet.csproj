@@ -19,7 +19,7 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="System.Data.SQLite" />
-		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
+		<PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" GeneratePathProperty="true" />
 		<PackageReference Include="Microsoft.SqlServer.Types" GeneratePathProperty="true" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 

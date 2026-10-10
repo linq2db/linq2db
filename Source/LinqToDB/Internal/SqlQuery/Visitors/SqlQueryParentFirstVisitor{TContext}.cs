@@ -29,6 +29,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			_action  = null!;
 			_context = default!;
+			_visited = null;
 
 			base.Cleanup();
 		}

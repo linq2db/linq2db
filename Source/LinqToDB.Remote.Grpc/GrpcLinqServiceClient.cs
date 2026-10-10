@@ -6,8 +6,6 @@ using Grpc.Net.Client;
 
 using LinqToDB.Remote.Grpc.Dto;
 
-using ProtoBuf.Grpc.Client;
-
 namespace LinqToDB.Remote.Grpc
 {
 	/// <summary>
@@ -21,7 +19,8 @@ namespace LinqToDB.Remote.Grpc
 		public GrpcLinqServiceClient(GrpcChannel channel)
 		{
 			_channel = channel;
-			_client  = channel.CreateGrpcService<IGrpcLinqService>();
+			// through the generated factory rather than CreateGrpcService(), whose proxy is reflection-built
+			_client  = GrpcLinqServiceProxies.Instance.CreateClient<IGrpcLinqService>(channel.CreateCallInvoker());
 		}
 
 		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)

@@ -39,7 +39,7 @@ namespace Tests.Tools.Mapper
 			public TTo   To   = default!;
 		}
 
-		sealed class TestMap {}
+		sealed class TestMap;
 
 		[Test]
 		public void ActionExpressionTest()
@@ -402,7 +402,7 @@ namespace Tests.Tools.Mapper
 			Assert.That(map.To.Class, Is.SameAs(map.To.Class.Class.Class));
 		}
 
-		sealed class Cl1 {}
+		sealed class Cl1;
 		sealed class Cl2 { public Cl1 Class1 = new Cl1(); }
 		sealed class Cl3 { public Cl1 Class1 = new Cl1(); }
 		sealed class Cl4 { public Cl1 Class1 = new Cl1(); public Cl2? Class2 = new Cl2(); public Cl3 Class3 = new Cl3(); }

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AssemblyName>linq2db.CLI.Tests</AssemblyName>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<EnableNUnitRunner>true</EnableNUnitRunner>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="$(MSBuildThisFileDirectory)..\..\Source\Shared\*.cs" />
+
+		<ProjectReference Include="..\..\Source\LinqToDB.CLI\LinqToDB.CLI.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit.Analyzers" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Shouldly" />
+		<PackageReference Include="Microsoft.Testing.Platform.MSBuild" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
+		<PackageReference Include="Microsoft.Testing.Extensions.HangDump" />
+		<PackageReference Include="Microsoft.Testing.Extensions.Retry" />
+	</ItemGroup>
+</Project>

@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
@@ -14,6 +15,108 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		}
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// Elapsed ticks from <c>DATEDIFF</c> at millisecond resolution, which Firebird answers with one decimal
+		/// place.
+		/// </summary>
+		/// <remarks>
+		/// That tenth of a millisecond is exactly what a Firebird timestamp stores - its resolution is a hundred
+		/// microseconds - so scaling the count to ticks loses nothing, and the scaled value is always whole.
+		/// <para>
+		/// Every version comes through here, including 2.5 - this class is what <c>FirebirdSqlOptimizer</c> builds,
+		/// and the later ones derive from it - so the count is taken at whatever fidelity the version offers rather
+		/// than being asked for by version. From 3 on the answer carries that tenth and is exact against what the
+		/// timestamp stores. On 2.5 it is truncated to a whole millisecond, which is what
+		/// <see cref="IntervalResolution"/> below declares.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var tenthsType   = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
+			var milliseconds = Factory.Function(tenthsType, "DateDiff", Factory.Fragment("millisecond"), element.Start, element.End);
+
+			// Taken to a whole number of tenths before it is widened to ticks. Scaled while it is still a decimal, the
+			// count is held with its decimal place as a 64-bit integer, and before 4 that overflows past about 2,900
+			// years. The product is cast back as well: from 4 on a BIGINT product is an INT128.
+			var tenths = Factory.Cast(Factory.Multiply(tenthsType, milliseconds, 10), longType, true);
+
+			return Factory.Cast(Factory.Multiply(longType, tenths, TimeSpan.TicksPerMillisecond / 10), longType, true);
+		}
+
+		/// <inheritdoc />
+		/// <remarks>
+		/// Lowered below without going through <c>FinestDateUnit</c>: <c>DATEADD</c> takes a millisecond amount
+		/// directly.
+		/// </remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>DATEADD(day, days, date)</c>, then <c>DATEADD(millisecond, rest, ...)</c> by what is left
+		/// of the last day.
+		/// </summary>
+		/// <remarks>
+		/// Split at the day because 2.5 takes a 32-bit amount, which a millisecond count passes after 25 days; a day
+		/// count and the milliseconds of one day both fit it on every version.
+		/// <para>
+		/// From 3 on the remainder keeps a tenth of a millisecond, what a <c>TIMESTAMP</c> stores, as a
+		/// <c>decimal(18,1)</c> - the type <see cref="ElapsedTicks"/> counts in - since an integer division would drop
+		/// the fraction. 2.5 measures whole milliseconds only (<see cref="IntervalResolution"/>), and its remainder is
+		/// divided as an integer.
+		/// </para>
+		/// <para>
+		/// A <see cref="DateTime"/> is cast to <c>TIMESTAMP</c> first, whatever its mapping declares: a <c>DATE</c>
+		/// has no time of day, and shifting it by milliseconds keeps none, while a <c>DATE</c> column mapped as a
+		/// plain <see cref="DateTime"/> is not declared as one. The target is built from the CLR type, so a mapped
+		/// <c>DbType</c> does not render the cast as the type it was meant to leave; over a <c>TIMESTAMP</c> the
+		/// cast changes nothing.
+		/// </para>
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType   = Factory.GetDbDataType(typeof(long));
+			var tenthsType = Factory.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1);
+
+			var ticks        = element.IsSubtract ? Factory.Multiply(longType, element.Interval, -1L) : element.Interval;
+			var days         = TruncateDivide(ticks, TimeSpan.TicksPerDay);
+			var rest         = TruncateRemainder(ticks, TimeSpan.TicksPerDay);
+			var milliseconds = IntervalResolution == SqlIntervalUnit.Millisecond
+				? Factory.Div(longType, rest, TimeSpan.TicksPerMillisecond)
+				: Factory.Div(tenthsType,
+					Factory.Cast(Factory.Div(longType, rest, TimeSpan.TicksPerMillisecond / 10), tenthsType, true),
+					10);
+
+			var temporal     = element.Temporal;
+			var temporalType = Factory.GetDbDataType(temporal);
+
+			if (temporalType.SystemType.ToUnderlying() == typeof(DateTime))
+			{
+				temporalType = new DbDataType(temporalType.SystemType, DataType.DateTime);
+				temporal     = Factory.Cast(temporal, temporalType, true);
+			}
+
+			var shifted = Factory.Function(temporalType, "DateAdd", Factory.Fragment("day"), days, temporal);
+
+			return Factory.Function(temporalType, "DateAdd", Factory.Fragment("millisecond"), milliseconds, shifted);
+		}
+
+		/// <summary>
+		/// 2.5 truncates the count to a whole millisecond, so a component asked for below one is identically zero
+		/// rather than merely imprecise, and is declined here instead. Overridden back to
+		/// <see cref="SqlIntervalUnit.Tick"/> on <see cref="Firebird3SqlExpressionConvertVisitor"/>, which is what
+		/// the provider builds from version 3 up.
+		/// </summary>
+		/// <remarks>
+		/// Measured rather than taken from the release notes: against engine 2.5.9 and 3.0.10, a gap of 0.4 ms
+		/// answers <c>0</c> and <c>0.4</c> respectively, and 1.5 ms answers <c>1</c> and <c>1.5</c>. The hundred
+		/// microseconds a <c>TIMESTAMP</c> stores has been so since 2.5 - what arrived later is the fractional
+		/// <c>DATEDIFF</c>, and it arrived in 3.
+		/// </remarks>
+		public override SqlIntervalUnit IntervalResolution => SqlIntervalUnit.Millisecond;
 
 		#region LIKE
 

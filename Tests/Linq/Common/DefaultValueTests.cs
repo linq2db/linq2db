@@ -6,7 +6,10 @@ using NUnit.Framework;
 
 namespace Tests.Common
 {
-	[TestFixture]
+	// NonParallelizable: mutates the process-global DefaultValue<T> registry, which ConvertBuilder bakes
+	// into a compiled converter as a constant on first use - so a converter built concurrently with the
+	// mutation window keeps the wrong default for the rest of the process, surviving the restore here.
+	[TestFixture, NonParallelizable]
 	public class DefaultValueTests : TestBase
 	{
 		[Test]

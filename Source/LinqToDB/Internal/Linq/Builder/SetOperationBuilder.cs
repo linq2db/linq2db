@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
@@ -108,6 +109,76 @@ namespace LinqToDB.Internal.Linq.Builder
 			SqlPlaceholderExpression?     _setIdPlaceholder;
 			Expression?                   _setIdReference;
 
+			/// <summary>
+			/// Paths whose two branches store the value in different terms, so one column cannot be read for both.
+			/// </summary>
+			/// <remarks>
+			/// Recorded while the branches are paired up, which is the only moment the two sides are still told
+			/// apart: from then on a branch is named by the member path it fills, and that path reads the same on
+			/// both sides. Kept as the set of paths rather than one flag so the answer stays available per member to
+			/// whoever needs it later.
+			/// </remarks>
+			HashSet<Expression[]>?        _divergentPaths;
+
+			/// <summary>
+			/// Whether the branches keep this member in a column each rather than meeting in one.
+			/// </summary>
+			/// <remarks>
+			/// Only <see cref="SetOperation.UnionAll"/> reads a row as belonging to one branch. Every other set
+			/// operation compares or removes rows by the values themselves, in the database, so a member the
+			/// branches store on different terms is refused outright rather than split - and splitting it would
+			/// change what the operation compares.
+			/// </remarks>
+			bool IsKeptApart(Expression[] path)
+			{
+				return _setOperation == SetOperation.UnionAll && _divergentPaths?.Contains(path) == true;
+			}
+
+			/// <summary>
+			/// The members <see cref="_divergentPaths"/> holds, written the way the query names them, for a refusal to
+			/// quote back.
+			/// </summary>
+			/// <remarks>
+			/// A path is a sequence of constants describing how the value is reached - a marker, the constructed type,
+			/// the member taken from it - repeated once per level, so the member names alone spell the reachable path
+			/// and everything else is scaffolding. A projection that is a bare value carries no member at all, and
+			/// there the type is all there is to say.
+			/// <para>
+			/// The constructed type is skipped by asking for a property or a field rather than for a member, because
+			/// <see cref="Type"/> is itself a <see cref="MemberInfo"/> and would otherwise put the generated name of an
+			/// anonymous projection in front of every member it holds. A step that arrived as a member access rather
+			/// than as a constant answers from the member it reads, so either spelling names the same thing.
+			/// </para>
+			/// </remarks>
+			string DescribeDivergentMembers(Expression fallbackPath)
+			{
+				var names = (_divergentPaths ?? Enumerable.Empty<Expression[]>())
+					.Select(p => string.JoinStrings('.', p
+						.Select(e => e switch
+						{
+							ConstantExpression { Value: PropertyInfo or FieldInfo } c => ((MemberInfo)c.Value).Name,
+							MemberExpression m                                        => m.Member.Name,
+							_                                                         => null,
+						})
+						.OfType<string>()))
+					.Where(n => n.Length > 0)
+					.Distinct(StringComparer.Ordinal)
+					.OrderBy(n => n, StringComparer.Ordinal)
+					.ToList();
+
+				return names.Count == 0
+					? $"'{fallbackPath.Type.Name}'"
+					: string.Join(", ", names.Select(n => $"'{n}'"));
+			}
+
+			/// <summary>
+			/// The place the second branch fills for a member the branches keep apart.
+			/// </summary>
+			static Expression[] SecondBranchPath(Expression[] path)
+			{
+				return [.. path, SecondBranchMarker];
+			}
+
 			int?                          _leftSetId;
 			int?                          _rightSetId;
 
@@ -157,7 +228,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (flags.IsKeys() && projection2 is not SqlErrorExpression)
 						{
-							return RemapPathToPlaceholders(projection2, _pathMapping!);
+							return RemapPathToPlaceholders(projection2);
 						}
 
 						projection1 = Builder.Project(this, path, null, 0, flags, _projection1, false);
@@ -170,7 +241,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (flags.IsKeys() && projection1 is not SqlErrorExpression)
 						{
-							return RemapPathToPlaceholders(projection1, _pathMapping!);
+							return RemapPathToPlaceholders(projection1);
 						}
 
 						projection2 = Builder.Project(this, path, null, 0, flags, _projection2, false);
@@ -203,19 +274,34 @@ namespace LinqToDB.Internal.Linq.Builder
 				var projection = MergeProjections(path, projection1, projection2, flags);
 
 				// remap fields
-				var result = RemapPathToPlaceholders(projection, _pathMapping!);
+				var result = RemapPathToPlaceholders(projection);
 
 				return result;
 			}
 
-			static Expression RemapPathToPlaceholders(Expression expression,
-				Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)> pathMapping)
+			/// <summary>
+			/// Replaces the member paths of a projection with the columns that carry them.
+			/// </summary>
+			/// <param name="expression">Projection to rewrite.</param>
+			/// <param name="second">
+			/// Whether the projection is being read for a row that came from the second branch. It only makes a
+			/// difference for a member the branches keep apart, and there it names that branch's own place.
+			/// </param>
+			/// <remarks>
+			/// Everywhere else both branches meet in one column, so both answers are the same placeholder, and the
+			/// conditional a caller wraps around the two readings collapses on its own.
+			/// </remarks>
+			Expression RemapPathToPlaceholders(Expression expression, bool second = false)
 			{
 				var result = expression.Transform(e =>
 				{
 					if (e is SqlPathExpression pathExpression)
 					{
-						if (!pathMapping!.TryGetValue(pathExpression.Path, out var pair))
+						var lookup = second && IsKeptApart(pathExpression.Path)
+							? SecondBranchPath(pathExpression.Path)
+							: pathExpression.Path;
+
+						if (!_pathMapping!.TryGetValue(lookup, out var pair))
 						{
 							throw new InvalidOperationException("Could not find required path for projection.");
 						}
@@ -232,7 +318,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (e is SqlEagerLoadExpression eager)
 					{
-						return eager.Update(RemapPathToPlaceholders(eager.SequenceExpression, pathMapping), eager.Predicate);
+						return eager.Update(RemapPathToPlaceholders(eager.SequenceExpression, second), eager.Predicate);
 					}
 
 					return e;
@@ -270,25 +356,94 @@ namespace LinqToDB.Internal.Linq.Builder
 				return false;
 			}
 
+			/// <summary>
+			/// Whether one column can be read for both branches, or each branch has to be read its own way.
+			/// </summary>
+			/// <remarks>
+			/// Answered from what was worked out while the branches were paired up, not from the projections in
+			/// hand: by this point a branch is named by the member path it fills, and that path is the same text on
+			/// both sides, so nothing here can tell a duration in seconds from one in ticks.
+			/// </remarks>
+			bool BranchesReadTheSameWay(Expression projection1, Expression projection2)
+			{
+				if (_divergentPaths == null)
+					return true;
+
+				// A projection that is a path answers for itself. Anything composite is refused whole: what it holds
+				// is described by paths that read alike on both sides, so nothing here can tell them apart - the
+				// marking made while pairing is where that distinction survives.
+				return projection1 is SqlPathExpression path && !_divergentPaths.Contains(path.Path);
+			}
+
+			/// <summary>
+			/// Whether the two sides of one path store the value on the same terms.
+			/// </summary>
+			/// <remarks>
+			/// The branches meet in a single output column, so the reader applies one conversion to every row of it.
+			/// That holds only while the branches agree on what the stored value means. A duration held in seconds
+			/// meeting one held in ticks does not agree, and neither does a column with a value converter meeting one
+			/// converted differently - reading either through the other's conversion is silently wrong, and no
+			/// arithmetic on the SQL side can reconcile a conversion that is not arithmetic to begin with.
+			/// <para>
+			/// The declared duration unit is compared rather than the converter derived from it: two columns
+			/// declaring the same unit get equivalent converters that are not the same object.
+			/// </para>
+			/// </remarks>
+			static bool ReadsTheSameWay(SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)
+			{
+				// A NULL holds no stored value, so it has no terms to disagree in: the branch that does have one
+				// still decides how the shared column is read, and the padded row reads as absent under any
+				// conversion. Asked before the descriptors because a NULL has none, and answering from that absence
+				// refuses a branch that merely supplies nothing - which is what padding a set operation is. The same
+				// pairing is filled in by hand below for a member only one branch has, and MergeProjectionHelper
+				// merges it outright.
+				if (QueryHelper.UnwrapNullablity(placeholder1.Sql).IsNullValue || QueryHelper.UnwrapNullablity(placeholder2.Sql).IsNullValue)
+					return true;
+
+				var descriptor1 = QueryHelper.GetColumnDescriptor(placeholder1.Sql);
+				var descriptor2 = QueryHelper.GetColumnDescriptor(placeholder2.Sql);
+
+				// One side without a conversion of its own is only safe against another that has none either: a
+				// branch is a stored value, so an unknown here is a value whose terms are not declared anywhere.
+				if (descriptor1 == null || descriptor2 == null)
+					return SequenceHelper.ConvertTheSameWay((descriptor1 ?? descriptor2)?.ValueConverter, null);
+
+				return SequenceHelper.ReadTheSameWay(descriptor1, descriptor2);
+			}
+
 			Expression MergeProjections(Expression path, Expression projection1, Expression projection2, ProjectFlags flags)
 			{
-				var helper = new MergeProjectionHelper(Builder, MappingSchema, TryMergeViaDifferencePredicate);
+				var sameWay = BranchesReadTheSameWay(projection1, projection2);
 
-				if (helper.TryMergeProjections(projection1, projection2, flags, out var merged))
-					return merged;
+				if (sameWay)
+				{
+					var helper = new MergeProjectionHelper(Builder, MappingSchema, TryMergeViaDifferencePredicate);
 
-				if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
-					return merged;
+					if (helper.TryMergeProjections(projection1, projection2, flags, out var merged))
+					{
+						return merged;
+					}
+
+					if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
+					{
+						return merged;
+					}
+				}
 
 				if (_setOperation != SetOperation.UnionAll)
 				{
-					throw new LinqToDBException(
-						$"Could not decide which construction type to use `query.Select(x => new {projection1.Type.Name} {{ ... }})` to specify projection.");
+					// Only UNION ALL can be read a branch at a time. Every other set operation compares or removes
+					// rows by the values themselves, in the database, where branches that store the same thing
+					// differently are not comparable at all.
+					throw new LinqToDBException(sameWay
+						? $"Could not decide which construction type to use `query.Select(x => new {projection1.Type.Name} {{ ... }})` to specify projection."
+						: $"Branches of {_setOperation} store {DescribeDivergentMembers(path)} in different terms, so the operation would compare values that do not mean the same thing. Project both branches to one representation first.");
 				}
 
-				EnsureSetIdFieldCreated();
-
-				var sequenceLeftSetId = _leftSetId!.Value;
+				// Whichever way the row is told apart - a constant that differs between the branches, a column one
+				// branch cannot fill, or the anchor field as a last resort.
+				var testExpr = GetLeftSetPredicate()
+					?? throw new InvalidOperationException("No way to distinguish difference between two different sets.");
 
 				if (projection1.Type != path.Type)
 				{
@@ -300,10 +455,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					projection2 = Expression.Convert(projection2, path.Type);
 				}
 
+				// Each side is resolved as its own branch reads it, which is what keeps the two apart: a divergent
+				// member answers with that branch's column, everything else with the column both share. Resolving
+				// the whole conditional at once would give both sides the first branch's answer, and a conditional
+				// whose arms are equal is folded away before the test is ever asked for.
 				var resultExpr = Expression.Condition(
-					Expression.Equal(_setIdReference!, Expression.Constant(sequenceLeftSetId)),
-					projection1,
-					projection2
+					testExpr,
+					RemapPathToPlaceholders(projection1),
+					RemapPathToPlaceholders(projection2, second : true)
 				);
 
 				return resultExpr;
@@ -391,7 +550,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var predicate = GetDifferencePredicateConstants(isLeft) ?? GetDifferencePredicateViaNotNullable(isLeft);
 				if (predicate != null)
 				{
-					predicate = RemapPathToPlaceholders(predicate, _pathMapping);
+					predicate = RemapPathToPlaceholders(predicate);
 					return predicate;
 				}
 
@@ -449,18 +608,37 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var helper = new MergeProjectionHelper(Builder, MappingSchema);
 
-				if (!helper.BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
+				// Both branches are read as the element type, so that is what names the place a value occupies - a
+				// branch projecting a derived type pairs with one projecting the base whether or not it carries a
+				// conversion saying so. `baseQuery.Concat(derivedQuery)` binds through IEnumerable<T> covariance
+				// and produces no conversion node at all.
+				if (!helper.BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error, ElementType))
 					return false;
 
 				var ref2 = new ContextRefExpression(ElementType, _sequence2);
 
-				if (!helper.BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
+				if (!helper.BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error, ElementType))
 					return false;
 
 				_projection1 = projection1;
 				_projection2 = projection2;
 
 				var pathMapping = new Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)>(PathComparer.Instance);
+
+				// Settled before anything is built, because it decides whether the two sides are the same member at
+				// all. Two branches are matched by the place a value occupies in the projection, and that place says
+				// nothing about what the value means - a duration in seconds and one in ticks sit at the same place
+				// and are not the same thing.
+				foreach (var (candidate1, path) in placeholders1)
+				{
+					var (candidate2, _) = placeholders2.Find(p2 => PathComparer.Instance.Equals(p2.path, path));
+
+					if (candidate2 != null && !ReadsTheSameWay(candidate1, candidate2))
+					{
+						_divergentPaths ??= new HashSet<Expression[]>(PathComparer.Instance);
+						_divergentPaths.Add(path);
+					}
+				}
 
 				switch (_setOperation)
 				{
@@ -488,7 +666,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var placeholder1 = placeholder;
 
-					var (placeholder2, _) = placeholders2.Find(p2 => PathComparer.Instance.Equals(p2.path, path));
+					// Left unpaired on purpose where the branches keep the member apart, so it falls into the shape
+					// below - the one a member the second branch does not have at all already takes.
+					SqlPlaceholderExpression? placeholder2 = null;
+
+					if (!IsKeptApart(path))
+						placeholder2 = placeholders2.Find(p2 => PathComparer.Instance.Equals(p2.path, path)).placeholder;
+
 					if (placeholder2 == null)
 					{
 						placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2,
@@ -512,9 +696,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
 					placeholder1 = placeholder1.WithPath(placeholderPath).WithAlias(alias);
 
-					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
-
 					placeholder2 = placeholder2.WithPath(placeholderPath).WithAlias(alias);
+
+					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
 					var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
 
 					pathMapping.Add(path, (column1, column2));
@@ -524,13 +708,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					foreach (var (placeholder, path) in placeholders2)
 					{
-						if (pathMapping.ContainsKey(path))
+						// A member kept apart is registered under a place of its own, because a placeholder is
+						// identified by the place it fills: sharing the first branch's place would make the second
+						// branch's column the same placeholder with different SQL behind it, and the reader would
+						// never tell the two apart.
+						var mappedPath = IsKeptApart(path) ? SecondBranchPath(path) : path;
+
+						if (pathMapping.ContainsKey(mappedPath))
 							continue;
 
 						var placeholder2 = Builder.UpdateNesting(_sequence2, placeholder);
 						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 
-						var placeholderPath = new SqlPathExpression(path, placeholder2.Type);
+						var placeholderPath = new SqlPathExpression(mappedPath, placeholder2.Type);
 						var alias           = GenerateColumnAlias(placeholderPath);
 
 						placeholder2 = placeholder2.WithAlias(alias);
@@ -540,7 +730,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var column2 = Builder.MakeColumn(SelectQuery, placeholder2, true);
 
-						pathMapping.Add(path, (column1, column2));
+						// Nothing to compare here: the first branch has no value of its own at this place, so its side
+						// is a typed NULL rather than a stored value with a conversion of its own.
+						pathMapping.Add(mappedPath, (column1, column2));
 					}
 				}
 
@@ -624,6 +816,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				return alias;
 			}
 
+			/// <summary>
+			/// Distinguishes the second branch's own column from the one both branches share, by naming a path
+			/// nothing else can name - the same trick <c>ExpressionPathVisitor</c> uses to tell the two arms of a
+			/// conditional apart.
+			/// </summary>
+			static readonly Expression SecondBranchMarker = Expression.Constant("__set_operand_2__");
+
 			const string ProjectionSetIdFieldName = "__projection__set_id__";
 
 			Expression GetSetIdReference()
@@ -666,341 +865,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew : true);
 
 				_setIdPlaceholder = leftIdPlaceholder.WithPath(setIdReference).WithTrackingPath(setIdReference);
-			}
-
-			sealed class ExpressionOptimizerVisitor : ExpressionVisitorBase
-			{
-				protected override Expression VisitConditional(ConditionalExpression node)
-				{
-					var newNode = base.VisitConditional(node);
-					if (!ReferenceEquals(newNode, node))
-						return Visit(newNode);
-
-					if (node.IfTrue is ConditionalExpression condTrue                        &&
-					    ExpressionEqualityComparer.Instance.Equals(node.Test, condTrue.Test) &&
-					    ExpressionEqualityComparer.Instance.Equals(node.IfFalse, condTrue.IfFalse))
-					{
-						return condTrue;
-					}
-
-					return node;
-				}
-			}
-
-			sealed class ExpressionPathVisitor : ExpressionVisitorBase
-			{
-				Stack<Expression> _stack = new();
-
-				bool _isDictionary;
-
-				public List<(SqlPlaceholderExpression placeholder, Expression[] path)> FoundPlaceholders { get; } = new();
-
-				public List<SqlEagerLoadExpression> FoundEager { get; } = new();
-
-				protected override Expression VisitConditional(ConditionalExpression node)
-				{
-					_stack.Push(Expression.Constant("?"));
-					_stack.Push(Visit(node.Test));
-
-					_stack.Push(Expression.Constant(true));
-					var ifTrue = Visit(node.IfTrue);
-					_stack.Pop();
-
-					_stack.Push(Expression.Constant(false));
-					var ifFalse = Visit(node.IfFalse);
-					_stack.Pop();
-
-					var test = _stack.Pop();
-					_stack.Pop();
-
-					return node.Update(test, ifTrue, ifFalse);
-				}
-
-				protected override Expression VisitBinary(BinaryExpression node)
-				{
-					_stack.Push(Expression.Constant("binary"));
-					_stack.Push(Expression.Constant(node.NodeType));
-					_stack.Push(Visit(node.Left));
-					_stack.Push(Visit(node.Right));
-
-					var right = _stack.Pop();
-					var left  = _stack.Pop();
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return node.Update(left, node.Conversion, right);
-				}
-
-				public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
-				{
-					var stack = _stack.ToArray();
-					Array.Reverse(stack);
-
-					FoundPlaceholders.Add((node, stack));
-
-					return new SqlPathExpression(stack, node.Type);
-				}
-
-				public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
-				{
-					_stack.Push(Expression.Constant("construct"));
-					_stack.Push(Expression.Constant(node.Type));
-
-					if (node.Assignments.Count > 0)
-					{
-						var newAssignments = new List<SqlGenericConstructorExpression.Assignment>(node.Assignments.Count);
-
-						foreach(var a in node.Assignments)
-						{
-							var memberInfo = a.MemberInfo.DeclaringType?.GetMemberEx(a.MemberInfo) ?? a.MemberInfo;
-
-							var assignmentExpression = a.Expression;
-
-							_stack.Push(Expression.Constant(memberInfo));
-							newAssignments.Add(a.WithExpression(Visit(assignmentExpression)));
-							_stack.Pop();
-						}
-
-						node = node.ReplaceAssignments(newAssignments.AsReadOnly());
-					}
-
-					if (node.Parameters.Count > 0)
-					{
-						var newParameters = new List<SqlGenericConstructorExpression.Parameter>(node.Parameters.Count);
-						for (var index = 0; index < node.Parameters.Count; index++)
-						{
-							var param = node.Parameters[index];
-
-							var paramExpression = param.Expression;
-
-							if (param.MemberInfo != null)
-							{
-								// mimic assignment
-								var memberInfo = param.MemberInfo.DeclaringType?.GetMemberEx(param.MemberInfo) ?? param.MemberInfo;
-
-								_stack.Push(Expression.Constant(memberInfo));
-								newParameters.Add(param.WithExpression(Visit(paramExpression)));
-								_stack.Pop();
-							}
-							else
-							{
-								_stack.Push(Expression.Constant(index));
-								newParameters.Add(param.WithExpression(Visit(paramExpression)));
-								_stack.Pop();
-							}
-						}
-
-						node = node.ReplaceParameters(newParameters.AsReadOnly());
-					}
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return node;
-				}
-
-				public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
-				{
-					_stack.Push(Expression.Constant("default_if_empty"));
-
-					var newNode = base.VisitSqlDefaultIfEmptyExpression(node);
-
-					_stack.Pop();
-
-					return newNode;
-				}
-
-				protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
-				{
-					_stack.Push(Expression.Constant(node.BindingType));
-					_stack.Push(Expression.Constant(node.Member));
-
-					var newNode = base.VisitMemberAssignment(node);
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return newNode;
-				}
-
-				protected override MemberBinding VisitMemberBinding(MemberBinding node)
-				{
-					_stack.Push(Expression.Constant(node.BindingType));
-					_stack.Push(Expression.Constant(node.Member));
-
-					var newNode = base.VisitMemberBinding(node);
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return newNode;
-				}
-
-				protected override MemberListBinding VisitMemberListBinding(MemberListBinding node)
-				{
-					_stack.Push(Expression.Constant(node.BindingType));
-					_stack.Push(Expression.Constant(node.Member));
-
-					var newNode = base.VisitMemberListBinding(node);
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return newNode;
-				}
-
-				protected override Expression VisitMemberInit(MemberInitExpression node)
-				{
-					_stack.Push(Expression.Constant("init"));
-					_stack.Push(Expression.Constant(node.NewExpression.Constructor));
-
-					var newExpr = base.VisitMemberInit(node);
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return newExpr;
-				}
-
-				protected override ElementInit VisitElementInit(ElementInit node)
-				{
-					_stack.Push(Expression.Constant(node.AddMethod));
-
-					var arguments = new List<Expression>(node.Arguments.Count);
-
-					for (int i = 0; i < node.Arguments.Count; i++)
-					{
-						_stack.Push(Expression.Constant(i));
-
-						var nodeArgument = node.Arguments[i];
-
-						var arg = Visit(nodeArgument);
-
-						_stack.Pop();
-
-						arguments.Add(arg);
-					}
-
-					var newNode = node.Update(arguments);
-
-					_stack.Pop();
-
-					return newNode;
-				}
-
-				protected override Expression VisitListInit(ListInitExpression node)
-				{
-					_stack.Push(Expression.Constant("list init"));
-
-					var initializers = new List<ElementInit>(node.Initializers.Count);
-
-					var saveIDictionary = _isDictionary;
-					_isDictionary = typeof(IDictionary<,>).IsSameOrParentOf(node.Type);
-
-					for (int i = 0; i < node.Initializers.Count; i++)
-					{
-						_stack.Push(Expression.Constant(i));
-						initializers.Add(VisitElementInit(node.Initializers[i]));
-						_stack.Pop();
-					}
-
-					_isDictionary = saveIDictionary;
-
-					var newExpr = node.Update((NewExpression)Visit(node.NewExpression), initializers);
-
-					_stack.Pop();
-
-					return newExpr;
-				}
-
-				protected override Expression VisitNew(NewExpression node)
-				{
-					_stack.Push(Expression.Constant("new"));
-					_stack.Push(Expression.Constant(node.Constructor));
-
-					var args = new List<Expression>(node.Arguments.Count);
-
-					for (int i = 0; i < node.Arguments.Count; i++)
-					{
-						_stack.Push(Expression.Constant(i));
-						args.Add(Visit(node.Arguments[i]));
-						_stack.Pop();
-					}
-
-					var newNode = node.Update(args);
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return newNode;
-				}
-
-				protected override Expression VisitNewArray(NewArrayExpression node)
-				{
-					_stack.Push(Expression.Constant("new array"));
-					_stack.Push(Expression.Constant(node.Type));
-
-					var args = new List<Expression>(node.Expressions.Count);
-
-					for (int i = 0; i < node.Expressions.Count; i++)
-					{
-						_stack.Push(Expression.Constant(i));
-						args.Add(Visit(node.Expressions[i]));
-						_stack.Pop();
-					}
-
-					var newNode = node.Update(args);
-
-					_stack.Pop();
-					_stack.Pop();
-
-					return newNode;
-				}
-
-				protected override Expression VisitMethodCall(MethodCallExpression node)
-				{
-					_stack.Push(Expression.Constant("call"));
-
-					var obj = Visit(node.Object);
-					if (obj != null)
-						_stack.Push(Expression.Constant(obj));
-
-					_stack.Push(Expression.Constant(node.Method));
-
-					var args = new List<Expression>(node.Arguments.Count);
-
-					for (var index = 0; index < node.Arguments.Count; index++)
-					{
-						var arg = node.Arguments[index];
-						_stack.Push(Expression.Constant(index));
-						args.Add(Visit(arg));
-						_stack.Pop();
-					}
-
-					_stack.Pop();
-
-					if (obj != null)
-						_stack.Pop();
-
-					_stack.Pop();
-
-					return node.Update(obj, args);
-				}
-
-				internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
-				{
-					var saveStack = _stack;
-					_stack = new();
-
-					var newEager  = node.Update(Visit(node.SequenceExpression), Visit(node.Predicate));
-
-					_stack = saveStack;
-
-					FoundEager.Add(newEager);
-
-					return newEager;
-				}
 			}
 
 			public override IBuildContext Clone(CloningContext context)

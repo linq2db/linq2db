@@ -19,7 +19,7 @@
 	</ItemGroup>
 	
 	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" PrivateAssets="contentfiles;build" />
 
 		<PackageReference Include="Microsoft.Extensions.Http" />
 		<PackageReference Include="System.Net.Http.Json" Condition="$(TargetFramework) == 'net462' OR $(TargetFramework) == 'netstandard2.0'" />

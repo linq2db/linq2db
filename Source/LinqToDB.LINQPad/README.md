@@ -1,17 +1,18 @@
 # LINQ to DB LINQPad Driver
 
-This nuget package is a driver for [LINQPad](http://www.linqpad.net). Support for older versions of LINQPad is available via older versions drivers.
+This nuget package is a driver for [LINQPad](http://www.linqpad.net) 8 and newer, on Windows and macOS (LINQPad 9 recommended). LINQPad 5 is supported by the `.lpx` plugin published with each [release](https://github.com/linq2db/linq2db/releases). Support for older LINQPad versions is available in older driver versions.
 
 Following databases supported:
 
 * **ClickHouse**: using Binary, HTTP and MySQL interfaces
-* **DB2** (LUW, z/OS, iSeries): x64-bit version of LINQPad only
+* **DB2** (LUW, z/OS, iSeries): 64-bit LINQPad only — the LINQPad 5 `.lpx` also supports 32-bit
 * **DB2 iSeries**: check release notes to see which version supports this database
+* **DuckDB**
 * **Firebird**
-* **Informix**: x64-bit version of LINQPad only
-* **Microsoft Access**: both OLE DB and ODBC drivers
+* **Informix**: 64-bit LINQPad only — the LINQPad 5 `.lpx` also supports 32-bit
+* **Microsoft Access**: both OLE DB and ODBC drivers *(Windows only)*
 * **Microsoft SQL Server** 2005+ *(including **Microsoft SQL Azure**)*
-* **Microsoft SQL Server Compact (SQL CE)**
+* **Microsoft SQL Server Compact (SQL CE)** *(Windows only)*
 * **MariaDB**
 * **MySql**
 * **Oracle**
@@ -19,6 +20,7 @@ Following databases supported:
 * **SAP HANA** *(client software must be installed, supports both Native and ODBC providers)*
 * **SAP/Sybase ASE**
 * **SQLite**
+* **YDB**
 
 ## Installation
 
@@ -29,3 +31,34 @@ Following databases supported:
 * In the "Choose Data Context" dialog, select the "LINQ to DB" driver and click the "Next" button.
 * In the "LINQ to DB connection" dialog, supply your connection information.
 * You're done.
+
+## Database clients
+
+This nuget package doesn't bundle database client libraries. LINQPad downloads the client of a database when a connection to it is first used, so using a database type for the first time needs an internet connection. A static data context selects its provider itself, so the driver cannot detect which client it needs: such a connection downloads all of them unless you pick its database in the "Database" field of the connection dialog. Note that a context assembly which references a client library must be able to load it from its own folder, because the connection dialog inspects that assembly before any client has been downloaded. A `dotnet publish` folder has the client next to the assembly, and so does the build output of an application referencing it; the build output of a class library does not, because the .NET SDK doesn't copy NuGet dependencies there unless the project sets `CopyLocalLockFileAssemblies` to `true`. If the client cannot be loaded, the context classes that don't need it are still listed and the rest is reported in the log; the "Context" field is editable so the class name can be typed in either case.
+
+The LINQPad 5 `.lpx` plugin is unaffected by any of this — it ships every client in the bundle.
+
+## Licensing
+
+The MIT license this package declares covers LINQ to DB's own code. The nuget package itself bundles no
+third-party binary — the database clients above arrive as ordinary NuGet dependencies under their own
+licenses.
+
+The LINQPad 5 `.lpx` plugin is different: it bundles every client, so it redistributes third-party
+software directly. Its `THIRD-PARTY-NOTICES.txt`, inside the plugin archive, lists every bundled
+component and reproduces its terms.
+
+## macOS
+
+Databases that need Windows-only components — Microsoft Access and SQL Server Compact — are not offered on macOS. Everything else uses the macOS build of its client, including IBM DB2 and Informix. SQL Server spatial values (`geometry`, `geography`, `hierarchyid`) are handled by the managed [dotMorten.Microsoft.SqlServer.Types](https://www.nuget.org/packages/dotMorten.Microsoft.SqlServer.Types) implementation, as Microsoft's package ships its native spatial library for Windows only.
+
+## Troubleshooting
+
+Driver errors are written to `linq2db.LINQPad.log`, in the `Logs.LINQPad<version>` folder of LINQPad's application data directory:
+
+* Windows: `%localappdata%\LINQPad`
+* macOS: `~/Library/Application Support/LINQPad`
+
+On macOS, errors raised outside of the connection dialog go to that log only, without a message box: LINQPad renders a driver's dialogs through Avalonia XPF there, and XPF is available to a driver just while its own dialog is open, so anything reported from elsewhere has nowhere to draw. On Windows they are shown in a message box as well.
+
+Failures the driver recovers from go to the log on either system, without a message box. Reading the age of a connection's schema is one: LINQPad asks for it before it has downloaded that connection's database client, so it cannot be answered yet, and the schema is built and queried normally straight afterwards.

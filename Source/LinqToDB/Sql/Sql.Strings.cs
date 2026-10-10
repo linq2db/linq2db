@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 using PN = LinqToDB.ProviderName;
 
@@ -85,6 +86,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// LEGACY. Use <c>string.Join(separator, source.Where(s => s != null))</c> or <c>Sql.ConcatStrings(separator, source)</c> (both forms support client or server execution).
 		/// </remarks>
+		[ServerSideOnly]
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			this IEnumerable<string?> source,
 			string separator)
@@ -100,6 +102,7 @@ namespace LinqToDB
 		/// <remarks>
 		/// LEGACY. Use <c>string.Join(separator, source.Select(selector).Where(s => s != null))</c> or <c>Sql.ConcatStrings(separator, source.Select(selector))</c> (both client/server capable).
 		/// </remarks>
+		[ServerSideOnly]
 		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
 			this IEnumerable<T> source,
 			string              separator,

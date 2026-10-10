@@ -168,6 +168,9 @@ namespace LinqToDB.Async
 			if (source is IAsyncEnumerable<TSource> asyncQuery)
 				return asyncQuery;
 
+			if (source.AsLinqToDBQuery() is { } query)
+				return query;
+
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.AsAsyncEnumerable(source);
 
@@ -212,7 +215,7 @@ namespace LinqToDB.Async
 			this IQueryable<TSource> source, Action<TSource> action,
 			CancellationToken token = default)
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 				return query.GetForEachAsync(action, token);
 
 			if (LinqExtensions.ExtensionsAdapter != null)
@@ -245,7 +248,7 @@ namespace LinqToDB.Async
 			this IQueryable<TSource> source, Func<TSource,bool> func,
 			CancellationToken token = default)
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 				return query.GetForEachUntilAsync(func, token);
 
 			return Task.Run(
@@ -278,7 +281,7 @@ namespace LinqToDB.Async
 			this IQueryable<TSource> source,
 			CancellationToken token = default)
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var list = new List<TSource>();
 				await query.GetForEachAsync(list.Add, token).ConfigureAwait(false);
@@ -306,7 +309,7 @@ namespace LinqToDB.Async
 			this IQueryable<TSource> source,
 			CancellationToken token = default)
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var list = new List<TSource>();
 				await query.GetForEachAsync(list.Add, token).ConfigureAwait(false);
@@ -338,7 +341,7 @@ namespace LinqToDB.Async
 			CancellationToken        token   = default)
 			where TKey : notnull
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var dic = new Dictionary<TKey,TSource>();
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token).ConfigureAwait(false);
@@ -368,7 +371,7 @@ namespace LinqToDB.Async
 			CancellationToken        token = default)
 			where TKey : notnull
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var dic = new Dictionary<TKey,TSource>(comparer);
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token).ConfigureAwait(false);
@@ -399,7 +402,7 @@ namespace LinqToDB.Async
 			CancellationToken        token = default)
 			where TKey : notnull
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var dic = new Dictionary<TKey,TElement>();
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token).ConfigureAwait(false);
@@ -432,7 +435,7 @@ namespace LinqToDB.Async
 			CancellationToken        token = default)
 			where TKey : notnull
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var dic = new Dictionary<TKey,TElement>(comparer);
 				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token).ConfigureAwait(false);
@@ -492,7 +495,7 @@ namespace LinqToDB.Async
 			CancellationToken        token = default)
 			where TKey : notnull
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var lookup = new Lookup<TKey,TSource>(comparer);
 				await query.GetForEachAsync(item => lookup.AddItem(keySelector(item), item), token).ConfigureAwait(false);
@@ -551,7 +554,7 @@ namespace LinqToDB.Async
 			CancellationToken        token = default)
 			where TKey : notnull
 		{
-			if (source is ExpressionQuery<TSource> query)
+			if (source.AsLinqToDBQuery() is { } query)
 			{
 				var lookup = new Lookup<TKey,TElement>(comparer);
 				await query.GetForEachAsync(item => lookup.AddItem(keySelector(item), elementSelector(item)), token).ConfigureAwait(false);

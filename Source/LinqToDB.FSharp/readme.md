@@ -13,6 +13,21 @@ Supported features:
   options over a scalar element type are auto-mapped. The column's DB type (including facets such as
   decimal precision/scale and string length) is resolved from the element type against the connection's
   provider mapping schema, so it matches the non-option column of the same element type.
+- Query translation of F# `option` / `voption` member access: `.IsSome` / `.IsNone` translate to
+  `IS NOT NULL` / `IS NULL` and `.Value` to the underlying column, so option members can be used directly
+  in `where` and `select`. The `voption` case testers `.IsValueSome` / `.IsValueNone` translate as well.
+  Because `.Value` becomes the column itself, selecting it from a row whose column is `NULL` reads back
+  the element's default instead of raising the way `Option.get None` does - the same as `Nullable<T>.Value`.
+- Automatic mapping of single-case scalar discriminated unions (e.g. `type UserId = UserId of int`): the
+  column stores the wrapped value and reads back as the reconstructed union, and equality against a union
+  literal (`x.Key = UserId 10`) translates to a comparison on the wrapped value. `UserId option` is
+  supported too, storing the "none" case as `NULL`.
+
+  A non-struct single-case union is a reference type, so reading a `NULL` into one yields `null` - for
+  example on the unmatched row of a `LEFT JOIN`. A `[<Struct>]` single-case union is a value type and so
+  cannot hold `null`: reading a `NULL` into one yields the union wrapping the element's default, so for
+  `[<Struct>] type Age = Age of int` that is `Age 0`, the same way a plain `int` member reads `NULL` as
+  `0`. Use `option` when the column is nullable.
 
 More features planned for future releases.
 

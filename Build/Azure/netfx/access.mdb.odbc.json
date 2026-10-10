@@ -1,0 +1,8 @@
+{
+	"NETFX.Azure": {
+		// One Jet provider per run - see the Access_MDB_* entries in test-matrix.yml for why they are split.
+		"Providers": [
+			"Access.Jet.Odbc"
+		]
+	}
+}

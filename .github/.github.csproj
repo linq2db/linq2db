@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
+	<!--
+	Solution-visibility project only: no code, nothing to compile or pack.
+	Globs .github/ so its content shows up in Solution Explorer without a
+	per-file list here - replaces the old hand-maintained <File Path> entries
+	that used to live directly in linq2db.slnx.
+	-->
+	<PropertyGroup>
+		<TargetFrameworks />
+		<TargetFramework>net10.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!--drop everything Directory.Build.props injects (analyzers, polyfills, SourceLink, the Source/Shared Compatibility linkbase) - none of it applies to a docs-only glue project-->
+		<PackageReference Remove="@(PackageReference)" />
+		<Compile Remove="@(Compile)" />
+	</ItemGroup>
+</Project>

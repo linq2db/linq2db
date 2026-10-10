@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -324,6 +324,143 @@ namespace Tests.xUpdate
 		public class SimpleBulkCopyTable
 		{
 			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table]
+		public class WideBulkCopyTable
+		{
+			[PrimaryKey]           public int     Id    { get; set; }
+			[Column(Length = 200)] public string? Value { get; set; }
+		}
+
+		// MaxSqlLengthForBatch is honored in shared BasicBulkCopy code, so it does not need the whole provider
+		// matrix. These three cover every distinct statement shape the splitter has to survive:
+		//   SQLite     - MultipleRowsCopy1, plain INSERT INTO ... VALUES (row), (row) (same path as SqlServer/MySql/ClickHouse)
+		//   PostgreSQL - MultipleRowsCopy1 plus a GetMultipleRowsSuffix (ON CONFLICT DO NOTHING, which only
+		//                ConflictAction.Ignore turns on) that must be re-emitted on every batch.
+		//                9.5+ only: ON CONFLICT does not exist before that, and this test always asks for it
+		//   Firebird   - MultipleRowsCopy2 (SELECT ... UNION ALL) and the only provider with Cast*OnUnionAll,
+		//                where the first row of each batch renders differently from the rest
+		// Oracle has its own coverage in OracleTests.BulkCopyMultipleRowsCrossesSqlLengthLimit.
+		[Test]
+		public void MaxSqlLengthForBatchSplitsStatements(
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllPostgreSQL95Plus, TestProvName.AllFirebird)] string context,
+			[Values]                                                                                                 bool   useParameters,
+			[Values]                                                                                                 bool   viaDataOptions)
+		{
+			const int maxSqlLength = 4096;
+			const int rowCount     = 1000;
+			const int valueLength  = 200;
+
+			using var _ = new DisableBaseline("generated statement volume is the subject of the test");
+			var       queries = new SaveQueriesInterceptor();
+
+			// the limit is reachable both per-call and connection-wide; cover both entry points
+			using var db = viaDataOptions
+				? GetDataConnection(context, o => o
+					.UseBulkCopyType(BulkCopyType.MultipleRows)
+					.UseBulkCopyMaxSqlLengthForBatch(maxSqlLength)
+					.UseBulkCopyMaxBatchSize(rowCount * 10)
+					.UseBulkCopyUseParameters(useParameters)
+					.UseBulkCopyConflictAction(ConflictAction.Ignore))
+				: GetDataConnection(context);
+
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<WideBulkCopyTable>();
+
+			var rows = Enumerable.Range(1, rowCount)
+				.Select(i => new WideBulkCopyTable { Id = i, Value = new string((char)('a' + i % 26), valueLength) })
+				.ToList();
+
+			// MaxBatchSize is deliberately larger than rowCount, but it is not the only clamp: Firebird's
+			// MaxMultipleRows (254; 127 on 2.5) overrides it inside MultipleRowsCopy2, and with useParameters the
+			// batch is additionally capped at MaxParameters/columns (499 on SQLite).
+			BulkCopyRowsCopied copied;
+
+			if (viaDataOptions)
+			{
+				copied = table.BulkCopy(rows);
+			}
+			else
+			{
+				copied = db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType         = BulkCopyType.MultipleRows,
+						MaxBatchSize         = rowCount * 10,
+						MaxSqlLengthForBatch = maxSqlLength,
+						UseParameters        = useParameters,
+						ConflictAction       = ConflictAction.Ignore,
+					},
+					rows);
+			}
+
+			var loaded = table.OrderBy(r => r.Id).ToArray();
+
+			// the splitter rewinds the overflowing row out of the flushed batch and re-adds it to the next one;
+			// a rewind that leaves the row behind writes it twice, which ConflictAction.Ignore swallows and the
+			// round-trip assertions below cannot see. RowsCopied counts rows emitted into statements, so it can.
+			copied.RowsCopied.ShouldBe(rowCount);
+
+			loaded.Select(r => r.Id).   ShouldBe(rows.Select(r => r.Id));
+			loaded.Select(r => r.Value).ShouldBe(rows.Select(r => r.Value));
+
+			var inserts = queries.Queries
+				.Where(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase))
+				.ToList();
+
+			// the option must actually split. Decisive only on PostgreSQL and on SQLite in literal mode - see the
+			// clamps noted above, which already split the batch on the other legs.
+			inserts.Count.ShouldBeGreaterThan(1);
+			// the overflowing row is rewound out of the flushed batch, so a statement exceeds the cap only by the
+			// trailing separator plus any GetMultipleRowsSuffix (~25 chars). The unbounded case is the opposite
+			// one: a single row longer than the cap is emitted whole.
+			inserts.Max(q => q.Length).ShouldBeLessThan(maxSqlLength + 4 * valueLength);
+
+			// PostgreSQL is the only provider here with a GetMultipleRowsSuffix; the suffix is appended after the
+			// length check, so a batch could lose it without any of the assertions above noticing
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL))
+			{
+				inserts.Count(q => q.Contains("ON CONFLICT", StringComparison.OrdinalIgnoreCase)).ShouldBe(inserts.Count);
+			}
+		}
+
+		// MaxParametersForBatch is substituted into the per-row guard, not only into the initial batch-size
+		// estimate, so it overrides the provider limit in both directions. SQLiteBulkCopy.MaxParameters is 998:
+		// without the option 1000 rows x 2 columns close a batch every 499 rows, and raising it packs them into
+		// one statement of 2000 parameters.
+		[Test]
+		public void MaxParametersForBatchRaisesProviderLimit([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			const int rowCount = 1000;
+
+			using var _  = new DisableBaseline("generated statement volume is the subject of the test");
+			using var db = GetDataConnection(context);
+
+			var queries = new SaveQueriesInterceptor();
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<WideBulkCopyTable>();
+
+			var rows = Enumerable.Range(1, rowCount)
+				.Select(i => new WideBulkCopyTable { Id = i, Value = "v" })
+				.ToList();
+
+			var copied = db.BulkCopy(
+				new BulkCopyOptions
+				{
+					BulkCopyType          = BulkCopyType.MultipleRows,
+					MaxBatchSize          = rowCount * 10,
+					UseParameters         = true,
+					MaxParametersForBatch = 4000,
+				},
+				rows);
+
+			copied.RowsCopied.ShouldBe(rowCount);
+			table.OrderBy(r => r.Id).Select(r => r.Id).ToArray().ShouldBe(rows.Select(r => r.Id));
+
+			queries.Queries.Count(q => q.Contains("INSERT", StringComparison.OrdinalIgnoreCase)).ShouldBe(1);
 		}
 
 #if SUPPORTS_DATEONLY
@@ -1166,9 +1303,59 @@ namespace Tests.xUpdate
 			[Column(SkipOnInsert = true)] public int? Id { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb])]
+		// No per-provider split is possible here, and the reason is worth recording. The generated statement has
+		// an empty column list, so almost every provider reports a syntax error at the closing parenthesis - in
+		// its own words - while SQL Server, ClickHouse and MySqlConnector ALSO produce a second, unrelated
+		// failure over the same providers ("Sequence contains no elements", "SourceOrdinal is an invalid value").
+		// The two axes overlap, so no Configuration separates them.
+		//
+		// The copy modes do separate them, and a gate cannot target a [Values] argument, so each mode gets its own
+		// method: DB2 answers its native path, and Informix answers everything except the batched one.
+		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+			Details = "no-declaration: Issue number taken from the test's own Description, which the bare attribute did not carry. Twenty-two wordings over two overlapping failure modes; see the comment above. Informix is absent: it inserts the row on the default path.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
-		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		public void BulkCopyAutoOnlyDefault([DataSources(false)] string context)
+		{
+			BulkCopyAutoOnlyCore(context, BulkCopyType.Default);
+		}
+
+		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+			Details = "no-declaration: as BulkCopyAutoOnlyDefault - the batched mode is the one every named provider still gets wrong.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnlyMultipleRows([DataSources(false)] string context)
+		{
+			BulkCopyAutoOnlyCore(context, BulkCopyType.MultipleRows);
+		}
+
+		[ActiveIssue(4615, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB, TestProvName.AllYdb],
+			Details = "no-declaration: as BulkCopyAutoOnlyDefault, minus DB2 and Informix - both answer their native bulk-copy path.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnlyProviderSpecific([DataSources(false)] string context)
+		{
+			BulkCopyAutoOnlyCore(context, BulkCopyType.ProviderSpecific);
+		}
+
+		// RowByRow inserts a row at a time, but with nothing to insert it still emits DEFAULT VALUES - the same
+		// gap as the batched modes, in a different spelling. The providers that take DEFAULT VALUES pass; these
+		// do not, and ClickHouse needs a declaration-free gate because its three drivers word it two ways.
+		[ActiveIssue(4615, Configuration = TestProvName.AllClickHouse,
+			Details = "no-declaration: a server syntax error on the MySql and Driver clients, a dropped connection on Octonica.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllSapHana,
+			ErrorMessage = "incorrect syntax near \"VALUES\"",
+			Details = "no-issue: HANA has no DEFAULT VALUES. Type-less because the ODBC and native drivers raise their own.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Status: GenericError", Details = "no-issue: as the HANA half.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "no-issue: as the HANA half.")]
+		[ActiveIssue(4615, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+			ErrorMessage = "There was an error parsing the query.", Details = "no-issue: as the HANA half; the token offset differs per test, so the message stops before it.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnlyRowByRow([DataSources(false)] string context)
+		{
+			BulkCopyAutoOnlyCore(context, BulkCopyType.RowByRow);
+		}
+
+		void BulkCopyAutoOnlyCore(string context, BulkCopyType copyType)
 		{
 			var data = new IdentityOnlyField[]
 			{
@@ -1186,9 +1373,43 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB])]
+		[ActiveIssue(4615, Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB],
+			Details = "no-declaration: as BulkCopyAutoOnly - the same empty column list, the same overlapping pair of failure modes.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
-		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		public void BulkCopySkipOnly(
+			[DataSources(false)] string context,
+			[Values(BulkCopyType.Default, BulkCopyType.MultipleRows)] BulkCopyType copyType)
+		{
+			BulkCopySkipOnlyCore(context, copyType);
+		}
+
+		// ProviderSpecific splits off for the same reason as its BulkCopyAutoOnly sibling: DB2's native path
+		// inserts the row rather than building the empty column list, and a gate cannot target a [Values] argument.
+		[ActiveIssue(4615, Configurations = [TestProvName.AllYdb, TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllDuckDB],
+			Details = "no-declaration: as BulkCopySkipOnly, minus DB2.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopySkipOnlyProviderSpecific([DataSources(false)] string context)
+		{
+			BulkCopySkipOnlyCore(context, BulkCopyType.ProviderSpecific);
+		}
+
+		[ActiveIssue(4615, Configuration = TestProvName.AllClickHouse,
+			Details = "no-declaration: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllSapHana,
+			ErrorMessage = "incorrect syntax near \"VALUES\"", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllYdb, ErrorTypeName = "Ydb.Sdk.Ado.YdbException",
+			ErrorMessage = "Status: GenericError", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			ErrorMessage = "A syntax error has occurred.", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
+		[ActiveIssue(4615, Configuration = ProviderName.SqlCe, ErrorTypeName = "System.Data.SqlServerCe.SqlCeException",
+			ErrorMessage = "There was an error parsing the query.", Details = "no-issue: as BulkCopyAutoOnlyRowByRow.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopySkipOnlyRowByRow([DataSources(false)] string context)
+		{
+			BulkCopySkipOnlyCore(context, BulkCopyType.RowByRow);
+		}
+
+		void BulkCopySkipOnlyCore(string context, BulkCopyType copyType)
 		{
 			var data = new SkipOnlyField[]
 			{

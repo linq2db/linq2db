@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -28,15 +29,29 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	{
 	}
 
+#if !NETFRAMEWORK
+	// native provider assembly is supplied by the user (provider path), only ODBC needs a package from us
+	public override IEnumerable<(string Id, string Version)> GetNuGetPackages(string providerName)
+	{
+		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
+			return [("System.Data.Odbc", NuGetPackageVersions.System_Data_Odbc)];
+
+		return [];
+	}
+#endif
+
 	public override string? GetProviderDownloadUrl(string? providerName)
 	{
 		return "https://tools.hana.ondemand.com/#hanatools";
 	}
 
+	// the ODBC client is touched from its own non-inlined method: the assembly is loaded when a method
+	// referencing its types is JIT-compiled, and the native variant provisions no package at all
+	// (see GetNuGetPackages), so a shared body would load System.Data.Odbc for it too
 	public override void ClearAllPools(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
-			OdbcConnection.ReleaseObjectPool();
+			ReleaseOdbcPool();
 		else if (string.Equals(providerName, ProviderName.SapHanaNative, StringComparison.Ordinal))
 		{
 			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
@@ -47,6 +62,9 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 		}
 	}
 
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void ReleaseOdbcPool() => OdbcConnection.ReleaseObjectPool();
+
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
 	{
 		using var db = new LINQPadDataConnection(settings);
@@ -56,7 +74,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 	public override DbProviderFactory? GetProviderFactory(string providerName)
 	{
 		if (string.Equals(providerName, ProviderName.SapHanaOdbc, StringComparison.Ordinal))
-			return OdbcFactory.Instance;
+			return GetOdbcFactory();
 
 		foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
 		{
@@ -69,6 +87,9 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 
 		return null;
 	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static DbProviderFactory GetOdbcFactory() => OdbcFactory.Instance;
 
 #if !NETFRAMEWORK
 	public override bool IsProviderPathSupported(string providerName)

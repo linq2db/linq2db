@@ -10,6 +10,8 @@ using Shouldly;
 
 namespace Tests.Mapping
 {
+	// mutates the global Configuration.UseNullableTypesMetadata flag and clears the mapping cache
+	[NonParallelizable]
 	public class CanBeNullTests : TestBase
 	{
 		[TearDown]

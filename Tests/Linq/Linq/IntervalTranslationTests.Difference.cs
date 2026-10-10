@@ -1,0 +1,1329 @@
+using System;
+using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
+
+using Shouldly;
+
+namespace Tests.Linq
+{
+	public partial class IntervalTranslationTests
+	{
+		/// <summary>
+		/// A difference between two <see cref="DateTimeOffset"/> values measures the instants, not the local
+		/// readings - as CLR subtraction does, which compares <c>UtcDateTime</c>.
+		/// </summary>
+		/// <remarks>
+		/// Worth pinning separately from the <see cref="DateTime"/> case because the failure is silent: a provider
+		/// that measures the stored local representation returns a plausible number for two marks that are actually
+		/// the same instant, and every total or component taken from that difference inherits the error. The two
+		/// rows are chosen so that reading the offset and ignoring it give different answers in both directions -
+		/// one is zero only if offsets are honoured, the other is non-zero only if they are.
+		/// </remarks>
+		// The two providers fail on different rows, so they carry different declarations: SQLite reads row 1 as zero,
+		// Oracle reads row 0 as two hours.
+		[ActiveIssue(5797, Configuration = TestProvName.AllSQLiteClassic, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2d{1}but was",
+			Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
+		[ActiveIssue(5797, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}0d{1}but was",
+			Details = "Every Oracle version loses the zone in the CAST(x AS timestamp) the elapsed lowering uses, so the same instant written in two zones reads two hours apart.")]
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ZonedDifferenceMeasuresInstantsNotLocalTime(
+			[SupportsDateTimeOffsetContext] string context)
+		{
+			// Same instant, written down in two zones: 12:00Z and 14:00+02:00.
+			var sameInstantStart = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
+			var sameInstantEnd   = new DateTimeOffset(2026, 1, 1, 14, 0, 0, TimeSpan.FromHours(2));
+
+			// Same local reading in two zones: the +02:00 one is the earlier instant by two hours.
+			var sameLocalStart = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.FromHours(2));
+			var sameLocalEnd   = new DateTimeOffset(2026, 1, 1, 12, 0, 0, TimeSpan.Zero);
+
+			// The CLR contract this pins, asserted before the database is asked at all.
+			(sameInstantEnd - sameInstantStart).ShouldBe(TimeSpan.Zero);
+			(sameLocalEnd   - sameLocalStart).ShouldBe(TimeSpan.FromHours(2));
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ZonedEventRow>();
+
+			db.Insert(new ZonedEventRow { Id = 1, StartedOn = sameInstantStart, FinishedOn = sameInstantEnd });
+			db.Insert(new ZonedEventRow { Id = 2, StartedOn = sameLocalStart,   FinishedOn = sameLocalEnd   });
+
+			// Asked first, and deliberately: if the storage did not keep the instant, every difference below is
+			// measuring something other than what was written, and blaming the interval translation for it would
+			// be wrong. Compared with UtcDateTime because a provider may normalise the offset it hands back while
+			// still denoting the same moment - that is faithful storage, a changed instant is not.
+			var stored = t
+				.OrderBy(r => r.Id)
+				.Select(r => new { r.StartedOn, r.FinishedOn })
+				.ToList();
+
+			stored[0].StartedOn.UtcDateTime.ShouldBe(sameInstantStart.UtcDateTime);
+			stored[0].FinishedOn.UtcDateTime.ShouldBe(sameInstantEnd.UtcDateTime);
+			stored[1].StartedOn.UtcDateTime.ShouldBe(sameLocalStart.UtcDateTime);
+			stored[1].FinishedOn.UtcDateTime.ShouldBe(sameLocalEnd.UtcDateTime);
+
+			var rows = t
+				.OrderBy(r => r.Id)
+				.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours))
+				.ToList();
+
+			rows[0].ShouldBe(0d);
+			rows[1].ShouldBe(2d);
+		}
+
+		/// <summary>
+		/// Every <see cref="TimeSpan"/> member of a difference between two <see cref="DateTimeOffset"/> values,
+		/// against the CLR.
+		/// </summary>
+		/// <remarks>
+		/// The two marks are the same instant written in different zones - <see cref="DateTimeOffset.ToOffset"/>
+		/// changes the local reading and keeps the instant - so the expected difference is exactly the one built
+		/// here. That makes one test carry both questions: a provider that measured the local readings would be
+		/// two hours out on every member at once, and a member that lowers wrongly is off on its own.
+		/// <para>
+		/// The amount is exact at one microsecond, which both a SQL Server <c>datetimeoffset</c> and a PostgreSQL
+		/// <c>timestamptz</c> can hold, so the expectation needs no per-provider tolerance.
+		/// </para>
+		/// </remarks>
+		// The zone loss shows up on a different member per provider - SQLite drops the whole two days, Oracle keeps
+		// them and is two hours out - so each half declares the member that fails first.
+		[ActiveIssue(5797, Configuration = TestProvName.AllSQLiteClassic, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2{1}but was",
+			Details = "The storage keeps the instant - the round-trip guard inside the test passes - but the difference is measured on the local reading: SQLite's julianday ignores the offset suffix, so Days is zero. A wrong number rather than a refusal, so it is recorded rather than skipped.")]
+		[ActiveIssue(5797, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}3{1}but was",
+			Details = "Every Oracle version loses the zone in the CAST(x AS timestamp) the elapsed lowering uses, so Hours is five where three is due - the offset added back on top of the difference.")]
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ZonedDifferenceMembersMatchClr(
+			[SupportsDateTimeOffsetContext] string context)
+		{
+			// 2 days 3 hours 4 minutes 5 seconds 6 milliseconds, exact at one millisecond. Members finer than that
+			// have their own test, which derives its expectation from the round trip because a storage that truncates
+			// and a member that lies both show up as a zero.
+			var expected = new TimeSpan(2, 3, 4, 5, 6);
+
+			var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+			var end   = (start + expected).ToOffset(TimeSpan.FromHours(2));
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ZonedEventRow>();
+
+			db.Insert(new ZonedEventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var row = t
+				.Select(r => new
+				{
+					Days              = Sql.AsSql((r.FinishedOn - r.StartedOn).Days),
+					Hours             = Sql.AsSql((r.FinishedOn - r.StartedOn).Hours),
+					Minutes           = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
+					Seconds           = Sql.AsSql((r.FinishedOn - r.StartedOn).Seconds),
+
+					Ticks             = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+					TotalDays         = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalDays),
+					TotalHours        = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours),
+					TotalMinutes      = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes),
+					TotalSeconds      = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds),
+					TotalMilliseconds = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMilliseconds),
+				})
+				.Single();
+
+			row.Days.ShouldBe(expected.Days);
+			row.Hours.ShouldBe(expected.Hours);
+			row.Minutes.ShouldBe(expected.Minutes);
+			row.Seconds.ShouldBe(expected.Seconds);
+
+			// Ticks is integral and must match exactly. Every Total* is a double the server divides in its own
+			// order of operations, so the last bit need not agree with the CLR's - PostgreSQL returns
+			// 51.06805734888889 where .NET gives 51.068057348888885. The tolerance is relative because the
+			// members span eight orders of magnitude, from days to milliseconds.
+			row.Ticks.ShouldBe(expected.Ticks);
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.TotalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+			row.TotalMinutes.ShouldBe(expected.TotalMinutes, Tolerance(expected.TotalMinutes));
+			row.TotalSeconds.ShouldBe(expected.TotalSeconds, Tolerance(expected.TotalSeconds));
+			row.TotalMilliseconds.ShouldBe(expected.TotalMilliseconds, Tolerance(expected.TotalMilliseconds));
+		}
+
+#if NET8_0_OR_GREATER
+		/// <summary>
+		/// The sub-second components of a zoned difference, where a provider can express them at all.
+		/// </summary>
+		/// <remarks>
+		/// The expectation is taken from what the storage actually kept, not from what was written. That is the
+		/// difference between a test and a green light: a provider whose timestamp stops at the second truly has
+		/// no microseconds to report, and answering zero there is correct - while a provider that <em>does</em>
+		/// hold them and still answers zero is lying, and only an expectation derived from the stored value can
+		/// tell those two apart. Excluding the coarse storages instead would have hidden the second case.
+		/// <para>
+		/// PostgreSQL answers these away from the <c>EXTRACT</c> shortcut: that names no field below the second, so
+		/// the member falls to the shared decomposition, which is exact here because this provider sums the
+		/// interval's own fields into a tick count rather than dividing an epoch.
+		/// </para>
+		/// </remarks>
+		// Oracle joins SQLite here rather than carrying a gate: it measures to the microsecond, so the nanosecond
+		// member is refused by design and never reaches #5797's zone question at all. SQL Server 2005 counts no finer
+		// than the millisecond, so it refuses the same way. The message's placeholders absorb the differing
+		// resolutions.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllSqlServer2005, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ZonedDifferenceSubMillisecondMembersMatchClr(
+			[SupportsDateTimeOffsetContext] string context)
+		{
+			var written = TimeSpan.FromTicks(TimeSpan.TicksPerMillisecond * 6 + 4560);
+
+			var start = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.Zero);
+			var end   = (start + written).ToOffset(TimeSpan.FromHours(2));
+
+			// 456 microseconds within the millisecond, and nothing finer - no storage in the matrix goes below the
+			// microsecond, so a value that did could never round-trip anywhere.
+			written.Microseconds.ShouldBe(456);
+			written.Nanoseconds.ShouldBe(0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<ZonedEventRow>();
+
+			db.Insert(new ZonedEventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var stored = t
+				.Select(r => new { r.StartedOn, r.FinishedOn })
+				.Single();
+
+			// What the database really holds. Where the storage truncated, this is coarser than `written`, and the
+			// members below are expected to agree with the truncation rather than with the original.
+			var expected = stored.FinishedOn - stored.StartedOn;
+
+			var row = t
+				.Select(r => new
+				{
+					Microseconds      = Sql.AsSql((r.FinishedOn - r.StartedOn).Microseconds),
+					Nanoseconds       = Sql.AsSql((r.FinishedOn - r.StartedOn).Nanoseconds),
+					TotalMicroseconds = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMicroseconds),
+					TotalNanoseconds  = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalNanoseconds),
+				})
+				.Single();
+
+			row.Microseconds.ShouldBe(expected.Microseconds);
+			row.Nanoseconds.ShouldBe(expected.Nanoseconds);
+			row.TotalMicroseconds.ShouldBe(expected.TotalMicroseconds, Tolerance(expected.TotalMicroseconds));
+			row.TotalNanoseconds.ShouldBe(expected.TotalNanoseconds, Tolerance(expected.TotalNanoseconds));
+		}
+#endif
+
+		/// <summary>
+		/// A difference measured from <see cref="DateTime.Now"/> - the server's clock where the provider translates it,
+		/// the client's elsewhere.
+		/// </summary>
+		/// <remarks>
+		/// Where <see cref="DateTime.Now"/> translates to a server-side call - <c>now()</c> on ClickHouse, for
+		/// instance - it is a distinct operand shape from a literal or a parameter: some providers give it a coarser or
+		/// otherwise different declared type than the one a mapped column or a client value carries, and the
+		/// elapsed-time lowering has to cope with that mismatch rather than assuming every operand shares one type.
+		/// The providers listed below read it on the client instead. The rows sit years away from the run date on
+		/// both sides, so the sign and rough size of each member stay stable regardless of clock skew between the
+		/// test host and the server.
+		/// </remarks>
+		[ActiveIssue(5955, Configuration = TestProvName.AllClickHouse, ErrorMessage = "toUnixTimestamp64Nano",
+			Details = "now() is a plain DateTime, which toUnixTimestamp64Nano refuses; the difference does not coerce its operands to DateTime64 yet.")]
+		[Test]
+		public void DateDifferenceFromServerNow([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			// These providers read DateTime.Now on the client and send it as a parameter or, on Firebird and YDB, as
+			// a literal, so no two runs - and not the direct and the remote one - record the same statement. The
+			// rest call the server's clock and keep their baselines.
+			using var noBaseline = context.IsAnyOf(
+				TestProvName.AllFirebird,
+				TestProvName.AllYdb,
+				TestProvName.AllSqlServer,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllMySql,
+				TestProvName.AllDB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase,
+				TestProvName.AllSapHana)
+				? new DisableBaseline("Current datetime parameters used")
+				: null;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (DateTime.Now - r.ClosedOn).TotalDays > 300).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (DateTime.Now - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays = Sql.AsSql((DateTime.Now - r.ClosedOn).TotalDays),
+					Hours     = Sql.AsSql((DateTime.Now - r.ClosedOn).Hours),
+				})
+				.Single();
+
+			row.TotalDays.ShouldBeGreaterThan(300);
+
+			// Both members come from one reading of the clock, so the component has to agree with the total.
+			row.Hours.ShouldBe(TimeSpan.FromDays(row.TotalDays).Hours);
+		}
+
+		/// <summary>
+		/// A difference measured from a fixed date that reaches the query as a parameter - a variable or an
+		/// argument - on either side of the subtraction.
+		/// </summary>
+		/// <remarks>
+		/// A filter and an ordering have nowhere to fall back to, so an operand refused for being a parameter
+		/// fails them outright rather than moving the work to .NET.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameter([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = new DateTime(2026, 1, 1, 10, 0, 0), FinishedOn = new DateTime(2026, 1, 5,  0, 0, 0) });
+			db.Insert(new EventRow { Id = 2, StartedOn = new DateTime(2026, 1, 3,  0, 0, 0), FinishedOn = new DateTime(2026, 1, 3, 20, 0, 0) });
+
+			t.Where(r => (asOf - r.StartedOn).TotalHours > 24).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.FinishedOn - asOf).TotalHours > 24).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (asOf - r.StartedOn).TotalMinutes).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays = Sql.AsSql((asOf - r.StartedOn).TotalDays),
+					Hours     = Sql.AsSql((asOf - r.StartedOn).Hours),
+				})
+				.Single();
+
+			var expected = asOf - new DateTime(2026, 1, 1, 10, 0, 0);
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.Hours.ShouldBe(expected.Hours);
+		}
+
+		/// <summary>
+		/// A parameter operand against a column mapped with the default date/time type rather than a tick-precise one.
+		/// </summary>
+		/// <remarks>
+		/// A provider that types a parameter from the call it appears in can settle on something else against a
+		/// coarser column. DuckDB left it undecided against a <c>TIMESTAMP</c> column, where the <c>TIMESTAMP_NS</c>
+		/// column of <see cref="DateDifferenceFromParameter"/> settled it, and the value then reached the server as
+		/// text formatted in the client's culture, which it refused to read as a timestamp.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameterOverDefaultMapping([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf = new DateTime(2026, 1, 10, 8, 15, 30);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (asOf - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.ClosedOn - asOf).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([2]);
+			t.OrderBy(r => (asOf - r.ClosedOn).TotalMinutes).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			var totalHours = t
+				.Where(r => r.Id == 1)
+				.Select(r => Sql.AsSql((r.ClosedOn - asOf).TotalHours))
+				.Single();
+
+			var expected = ClosedPeriods[0].ClosedOn - asOf;
+
+			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+		}
+
+		/// <summary>
+		/// A difference with no column in it is computed on the client, exact to the tick, on every provider.
+		/// </summary>
+		/// <remarks>
+		/// The client already has both values. Sent to the database, the difference would be measured again at the
+		/// provider's own resolution - whole milliseconds on several, a microsecond on others - and come back short of
+		/// what .NET answers. A shift by such a difference is a client value as a whole, too, so it needs no provider
+		/// that can shift a date.
+		/// <para>
+		/// The projection combines the member with a column. Projected alone, the difference is read back from the
+		/// database as a <see cref="TimeSpan"/> parameter and the member is taken from what returns, which is limited
+		/// by how each provider stores a time of day rather than by the translation of the difference.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void DateDifferenceOfTwoClientValuesIsExact([DataSources] string context)
+		{
+			var earlier = new DateTime(2026, 1, 3, 13, 30, 0);
+			var later   = earlier.AddTicks(1234);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = earlier, FinishedOn = earlier.AddHours(1) });
+
+			var row = t
+				.Select(r => new
+				{
+					Ticks        = (later - earlier).Ticks + r.Id,
+					// Converted on the server: a CLR cast to double is dropped, and DB2 and SAP HANA then type the
+					// parameter from the integer column and answer 1.
+					Milliseconds = (later - earlier).TotalMilliseconds + Sql.ConvertTo<double>.From(r.Id),
+				})
+				.Single();
+
+			row.Ticks.ShouldBe(1235);
+			row.Milliseconds.ShouldBe(1.1234, 1e-12);
+
+			t.Where(r => (later - earlier).Ticks == 1234).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (later - earlier).TotalMilliseconds > 0.1233).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => r.FinishedOn > later + (later - earlier)).Select(r => r.Id).ToList().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class MeasuredPeriodRow
+		{
+			[PrimaryKey] public int      Id       { get; set; }
+			[Column]     public DateTime ClosedOn { get; set; }
+			[Column]     public double   Elapsed  { get; set; }
+		}
+
+		/// <summary>
+		/// A difference from a parameter, assigned to a number column and compared with one.
+		/// </summary>
+		/// <remarks>
+		/// The column a value is assigned to or compared with types the parameters on the other side. Both operands
+		/// of a difference are dates, though, so a parameter among them has to keep its own type rather than take
+		/// the number's - on either side of the subtraction.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceFromParameterAssignedToANumber([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var asOf     = new DateTime(2026, 1, 10, 8, 15, 30);
+			var closedOn = new DateTime(2026, 1, 1, 3, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new MeasuredPeriodRow { Id = 1, ClosedOn = closedOn }]);
+
+			var expected = asOf - closedOn;
+
+			t.Where(r => r.Id == 1).Set(r => r.Elapsed, r => (asOf - r.ClosedOn).TotalDays).Update();
+			t.Single().Elapsed.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+
+			t.Where(r => r.Elapsed < (asOf - r.ClosedOn).TotalHours).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			t.Where(r => r.Id == 1).Set(r => r.Elapsed, r => (r.ClosedOn - asOf).TotalHours).Update();
+			t.Single().Elapsed.ShouldBe(-expected.TotalHours, Tolerance(expected.TotalHours));
+
+			t.Where(r => r.Elapsed < (r.ClosedOn - asOf).TotalDays).Select(r => r.Id).ToList().ShouldBe([1]);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void DateDifferenceComponentsMatchClr(
+			[DataSources] string context,
+			[Values(1, -1)] int direction)
+		{
+			// 2 days 3 hours 30 minutes, taken in both directions. The negative case is where a native interval
+			// type is most likely to disagree with the CLR - PostgreSQL reports it as "-2 days -03:30:00", so the
+			// components come back negative as .NET gives them, but that has to be verified, not assumed.
+			var earlier = new DateTime(2026, 1, 1, 10,  0, 0);
+			var later   = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var elapsed = end - start;
+
+			elapsed.Days.ShouldBe(2 * direction);
+			elapsed.Hours.ShouldBe(3 * direction);
+
+			var row = t.Select(r => new
+			{
+				Days       = Sql.AsSql((r.FinishedOn - r.StartedOn).Days),
+				Hours      = Sql.AsSql((r.FinishedOn - r.StartedOn).Hours),
+				Minutes    = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
+				TotalHours = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours),
+			}).Single();
+
+			row.Days.ShouldBe(elapsed.Days);
+			row.Hours.ShouldBe(elapsed.Hours);
+			row.Minutes.ShouldBe(elapsed.Minutes);
+			row.TotalHours.ShouldBe(elapsed.TotalHours, 1e-9);
+		}
+
+#if NET8_0_OR_GREATER
+		/// <summary>
+		/// A member a provider cannot express, projected from an operand of a set operation rather than from a
+		/// terminal <c>Select</c>.
+		/// </summary>
+		/// <remarks>
+		/// Such a member is refused only where SQL is required, so a plain projection reads both dates and answers
+		/// it in .NET. A set operand's projection is built asking translators for strict SQL, which took that answer
+		/// away and failed the whole query instead - for a member the same projection answers everywhere else, on
+		/// every provider measuring elapsed time no finer than the millisecond, which is most of the matrix.
+		/// <para>
+		/// Asserted against the terminal projection rather than against a computed expectation, because what the
+		/// two must agree on is the answer the provider can give: where the member translates the comparison holds
+		/// server-side, and where it does not both sides read the stored dates and compute it in .NET.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ADifferenceMemberReadableInAProjectionIsReadableInsideASetOperation([DataSources] string context)
+		{
+			var start = new DateTime(2026, 1, 1, 10, 0, 0);
+			var end   = start.AddTicks(TimeSpan.TicksPerMillisecond * 6 + 4560);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var terminal = t.Select(r => (r.FinishedOn - r.StartedOn).Microseconds).ToArray();
+
+			var setOperand = t.Where(r => r.Id >  0).Select(r => (r.FinishedOn - r.StartedOn).Microseconds)
+				.Concat  (t.Where(r => r.Id <= 0).Select(r => (r.FinishedOn - r.StartedOn).Microseconds))
+				.ToArray();
+
+			setOperand.ShouldBe(terminal);
+		}
+#endif
+
+		/// <summary>
+		/// A total the provider cannot reach at all, asked for in a plain projection.
+		/// </summary>
+		/// <remarks>
+		/// Access counts elapsed seconds and its <c>DateDiff</c> is a 32-bit count, so a tick count is out of reach
+		/// and no date part names anything finer than a second. Every lowering therefore declines, and the part node
+		/// reached the SQL builder - whose only answer is to throw, which fails the whole query rather than the one
+		/// member. Left untranslated instead, the projection reads both dates and computes the member in .NET,
+		/// exactly, which is what this provider answered before a tick total was translated at all.
+		/// <para>
+		/// Where SQL is genuinely required the member still cannot be answered, so it is refused there by name -
+		/// both halves are asserted, because the whole point of the distinction is that the same member behaves
+		/// differently according to what the caller asked for.
+		/// </para>
+		/// <para>
+		/// A total the provider <em>can</em> reach is asserted beside them, because the guard is keyed on the
+		/// resolution and must not reach <c>TotalSeconds</c>, which Access names as a date part.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void ATickTotalTheProviderCannotReachStaysReadable([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		{
+			var start = new DateTime(2026, 1, 1, 10, 0, 0);
+			var end   = new DateTime(2026, 1, 1, 11, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			t.Select(r => (r.FinishedOn - r.StartedOn).Ticks).Single().ShouldBe((end - start).Ticks);
+			t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds)).Single().ShouldBe((end - start).TotalSeconds);
+
+			var forced = () => t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).ToArray();
+
+			forced.ShouldThrow<LinqToDBException>().Message.ShouldContain(ErrorHelper.Error_Interval_Member);
+		}
+
+		/// <summary>
+		/// A component below the provider's measurement resolution, asked for in a plain projection.
+		/// </summary>
+		/// <remarks>
+		/// The component is declined rather than built, because the count it would be taken from was rounded to a
+		/// coarser unit first and the answer would be identically zero. Declining names the unit and the resolution
+		/// where SQL is required - and leaves the member readable where it is not, which is the half that was
+		/// missing: an error expression refuses everywhere, so a projection lost the exact .NET answer along with
+		/// the SQL one.
+		/// <para>
+		/// The expected value is taken from the dates the query read back rather than from the ones inserted, so
+		/// the assertion does not depend on what this provider's storage keeps of a fraction of a second.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void AComponentBelowTheResolutionStaysReadable([IncludeDataSources(false, TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow
+			{
+				Id         = 1,
+				StartedOn  = new DateTime(2026, 1, 1, 10, 0, 0),
+				FinishedOn = new DateTime(2026, 1, 1, 11, 0, 0),
+			});
+
+			var row = t.Select(r => new
+			{
+				r.StartedOn,
+				r.FinishedOn,
+				Milliseconds = (r.FinishedOn - r.StartedOn).Milliseconds,
+			}).Single();
+
+			row.Milliseconds.ShouldBe((row.FinishedOn - row.StartedOn).Milliseconds);
+
+			var forced = () => t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds)).ToArray();
+
+			forced.ShouldThrow<LinqToDBException>().Message.ShouldContain("is always zero and is not translated");
+		}
+
+		/// <summary>
+		/// A span longer than sixty-eight years measures what it measures in the CLR.
+		/// </summary>
+		/// <remarks>
+		/// Sixty-eight years is not an arbitrary length to pick: it is two to the thirty-first seconds, and it was
+		/// the ceiling. The decomposition anchors the start by shifting it forward by the whole units it counted,
+		/// and a shift takes a 32-bit amount on the providers that lower a difference this way - so counting those
+		/// whole units in seconds capped the whole thing at that many. Past it SQL Server answered <em>arithmetic
+		/// overflow error converting expression to data type int</em>, and the age of anyone born before about
+		/// 1958 is already past it. Counting the whole part in days instead puts the ceiling beyond what a date
+		/// can hold at all, which is what makes the range match the CLR's rather than merely being large.
+		/// <para>
+		/// The span deliberately ends part-way through a day. A whole number of days would answer correctly even
+		/// if the remainder were dropped entirely, and the remainder is the half of the decomposition the anchor
+		/// exists for. It is a whole number of seconds, so that a provider keeping less than tick resolution still
+		/// answers exactly rather than approximately.
+		/// </para>
+		/// <para>
+		/// Taken in both directions, and the reverse is not symmetry for its own sake. A tick count reached by
+		/// dividing rather than by decomposing carries a relative error, and where the result is then floored the
+		/// error stops cancelling and starts costing a whole tick - on PostgreSQL that made every negative span
+		/// wrong, down to one of a single second, while the positive half only went wrong past sixty-three years.
+		/// A test that asked one direction would have found half of that.
+		/// </para>
+		/// <para>
+		/// The dates sit inside the narrowest window any tested provider offers: YDB stores a timestamp as
+		/// microseconds after the Unix epoch, so nothing earlier than 1970 can be written there at all, which is
+		/// a limit of the storage rather than of the arithmetic - see the companion test on a wider column.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), NoTickTotalProviders, ErrorMessage = ErrorHelper.Error_Interval_Member)]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void LongSpanMatchesClr([DataSources] string context, [Values(1, -1)] int direction)
+		{
+			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
+			var later   = new DateTime(2045, 6, 5, 4, 3, 2);
+
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
+
+			var expected = end - start;
+
+			// The guard against the test quietly ceasing to test anything: if these dates are ever brought closer
+			// together, the shape stops crossing the boundary it exists for.
+			Math.Abs(expected.TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var row = t.Select(r => new
+			{
+				Ticks     = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+				TotalDays = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalDays),
+			}).Single();
+
+			row.Ticks.ShouldBe(expected.Ticks);
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+		}
+
+		/// <summary>
+		/// A span past the range of a second counter, asked only for members that counting can answer.
+		/// </summary>
+		/// <remarks>
+		/// Holds the totals and components of a seventy-five year span against the CLR. Access is what the unit list
+		/// is chosen for: it is the one provider that answers members by counting units rather than by dividing a tick
+		/// count, so its totals are bounded by the width of the counter rather than by the width of a tick. A count of
+		/// seconds is 32-bit and runs out after about sixty-eight years, which is inside a human lifetime, and a
+		/// difference between two columns has no .NET fallback to reach for.
+		/// <para>
+		/// <c>Ticks</c> is left out, which is what separates this from <see cref="LongSpanMatchesClr"/>: Access has no
+		/// tick count to give and declares that refusal by name, so a case opening on <c>Ticks</c> stops there and
+		/// says nothing about the totals behind it.
+		/// </para>
+		/// <para>
+		/// Every provider runs it, not Access alone: the members are ordinary ones, and a total that agrees with the
+		/// CLR over a span this long is worth holding everywhere.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ALongSpanIsMeasuredWhereCountingAnswersIt([DataSources] string context, [Values(1, -1)] int direction)
+		{
+			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
+			var later   = new DateTime(2045, 6, 5, 4, 3, 2);
+
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
+
+			var expected = end - start;
+
+			// The same guard the test above carries: brought closer together, these dates stop crossing the boundary
+			// the case exists for.
+			Math.Abs(expected.TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var row = t.Select(r => new
+			{
+				TotalDays    = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalDays),
+				TotalHours   = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalHours),
+				TotalMinutes = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes),
+				TotalSeconds = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds),
+				Days         = Sql.AsSql((r.FinishedOn - r.StartedOn).Days),
+				Hours        = Sql.AsSql((r.FinishedOn - r.StartedOn).Hours),
+				Minutes      = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
+			}).Single();
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.TotalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+			row.TotalMinutes.ShouldBe(expected.TotalMinutes, Tolerance(expected.TotalMinutes));
+			row.TotalSeconds.ShouldBe(expected.TotalSeconds, Tolerance(expected.TotalSeconds));
+
+			row.Days.ShouldBe(expected.Days);
+			row.Hours.ShouldBe(expected.Hours);
+			row.Minutes.ShouldBe(expected.Minutes);
+		}
+
+		/// <summary>
+		/// Components of a span far past the range of the counters they are formed with.
+		/// </summary>
+		/// <remarks>
+		/// Access counts and shifts in 32-bit values and reduces with <c>MOD</c>, which coerces both its operands
+		/// before dividing - so a component formed over the whole span runs out after about sixty-eight years, which
+		/// is inside a human lifetime. The reduction takes the elapsed count whole, so no split made inside the
+		/// component reaches past that.
+		/// <para>
+		/// It is formed over the last day of the span instead, which is exact rather than an approximation: a
+		/// component wraps at a divisor of a day, so whole days contribute nothing to it. Every provider runs this,
+		/// not Access alone - the members are ordinary ones, and a component that agrees with the CLR over a span
+		/// this long is worth holding everywhere.
+		/// </para>
+		/// <para>
+		/// Both directions, because the day count the anchor is taken from is signed, and the modulo keeps whatever
+		/// sign reaches it. The shorter span is asked through the same expression, so a component broken outright
+		/// could not pass as one that merely reaches far.
+		/// </para>
+		/// </remarks>
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void ComponentsHoldPastTheRangeOfTheirCounters([DataSources] string context, [Values(1, -1)] int direction)
+		{
+			var earlier = new DateTime(1970, 1, 2, 0, 0, 0);
+			var later   = new DateTime(2045, 6, 5, 4, 3, 2);
+
+			var start = direction > 0 ? earlier : later;
+			var end   = direction > 0 ? later   : earlier;
+
+			var expected = end - start;
+
+			// The guard against the case quietly ceasing to test anything: brought closer together, these dates stop
+			// crossing the range the components are formed with.
+			Math.Abs(expected.TotalSeconds).ShouldBeGreaterThan((double)int.MaxValue);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = start,   FinishedOn = end });
+			db.Insert(new EventRow { Id = 2, StartedOn = earlier, FinishedOn = earlier.AddSeconds(125) });
+
+			// One member per query rather than three in one projection. Forming a component this way costs a
+			// corrected day count, a shift and a correction of its own, and Access answers "Query is too complex"
+			// when three of them meet in a single SELECT - a limit of that parser, not of the arithmetic.
+			var shortSpan = TimeSpan.FromSeconds(125);
+
+			var hours = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Hours)).ToList();
+
+			hours[0].ShouldBe(expected.Hours);
+			hours[1].ShouldBe(shortSpan.Hours);
+
+			var minutes = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes)).ToList();
+
+			minutes[0].ShouldBe(expected.Minutes);
+			minutes[1].ShouldBe(shortSpan.Minutes);
+
+			var seconds = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Seconds)).ToList();
+
+			seconds[0].ShouldBe(expected.Seconds);
+			seconds[1].ShouldBe(shortSpan.Seconds);
+		}
+
+		/// <summary>
+		/// Carries dates on a column wide enough for the whole CLR range, which on YDB is not the default.
+		/// </summary>
+		[Table]
+		sealed class WideEventRow
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Timestamp64)] public DateTime StartedOn  { get; set; }
+			[Column(DataType = DataType.Timestamp64)] public DateTime FinishedOn { get; set; }
+		}
+
+		/// <summary>
+		/// Given a column that can hold them, the whole CLR range measures what it measures in the CLR.
+		/// </summary>
+		/// <remarks>
+		/// The companion to the span test above, and the point is to separate two limits that look like one. YDB
+		/// maps a <see cref="DateTime"/> to <c>Timestamp</c>, which counts microseconds after the Unix epoch and
+		/// is unsigned, so a date before 1970 cannot be written and one after 2105 is refused - and the failure
+		/// arrives from the driver while binding the insert, before any query is built. That is easy to mistake
+		/// for the difference arithmetic being unable to reach far, which it is not.
+		/// <para>
+		/// Declaring the columns <c>Timestamp64</c> - signed, and spanning years 1 through 9999 - the same
+		/// untouched lowering answers exactly across the entire CLR range, in both directions. So the boundary
+		/// belongs to the storage type alone, and this pins that: should YDB's default ever widen, the arithmetic
+		/// is already known to be ready for it.
+		/// </para>
+		/// <para>
+		/// Whole seconds, because <c>Timestamp64</c> keeps microseconds rather than ticks.
+		/// </para>
+		/// </remarks>
+		[Test]
+		public void FullClrRangeMatchesClrOnAWideColumn(
+			[IncludeDataSources(TestProvName.AllYdb)] string context,
+			[Values(1, -1)] int direction)
+		{
+			var earliest = DateTime.MinValue;
+			var latest   = new DateTime(9999, 12, 31, 23, 59, 59);
+
+			var start = direction > 0 ? earliest : latest;
+			var end   = direction > 0 ? latest   : earliest;
+
+			var expected = end - start;
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<WideEventRow>();
+
+			db.Insert(new WideEventRow { Id = 1, StartedOn = start, FinishedOn = end });
+
+			var ticks = t.Select(r => Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks)).Single();
+
+			ticks.ShouldBe(expected.Ticks);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void DifferenceSurvivesAsASubqueryColumn([DataSources] string context)
+		{
+			// AsSubQuery keeps the nesting, so the difference really becomes a column of an inner SELECT and the
+			// outer query meets a column reference rather than the difference node itself. Without it the
+			// optimizer folds the projection away and the lowering never sees that shape at all.
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
+			db.Insert(new EventRow { Id = 2, StartedOn = started, FinishedOn = started.AddHours(1) });
+
+			var inner =
+				(from r in t
+				 select new { r.Id, Taken = r.FinishedOn - r.StartedOn })
+				.AsSubQuery();
+
+			var rows = inner
+				.Where(x => x.Taken.TotalHours > 3)
+				.OrderBy(x => x.Id)
+				.ToArray();
+
+			rows.Length.ShouldBe(1);
+			rows[0].Id.ShouldBe(1);
+			rows[0].Taken.ShouldBe(TimeSpan.FromHours(5));
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void DifferenceFromASubqueryFiltersOnItsParts([DataSources] string context)
+		{
+			// The difference is computed in one query and a part of it is taken in the enclosing one, so the
+			// lowering meets a column reference where it usually meets the difference node itself.
+			var started  = new DateTime(2026, 1, 1, 10, 0, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddHours(5) });
+			db.Insert(new EventRow { Id = 2, StartedOn = started, FinishedOn = started.AddHours(1) });
+
+			var elapsed =
+				from r in t
+				select new { r.Id, Taken = r.FinishedOn - r.StartedOn };
+
+			elapsed
+				.Where(x => x.Taken.TotalHours > 3)
+				.Select(x => x.Id)
+				.ToArray()
+				.ShouldBe([1]);
+			elapsed
+				.Where(x => x.Taken.Hours == 1)
+				.Select(x => x.Id)
+				.ToArray()
+				.ShouldBe([2]);
+			elapsed
+				.OrderByDescending(x => x.Taken)
+				.Select(x => x.Id)
+				.ToArray()
+				.ShouldBe([1, 2]);
+
+			// And the interval itself comes back, not only the rows it selected: filtering on a part says nothing
+			// about whether the value survives the trip out of the subquery.
+			elapsed
+				.OrderBy(x => x.Id)
+				.Select(x => x.Taken)
+				.ToArray()
+				.ShouldBe([TimeSpan.FromHours(5), TimeSpan.FromHours(1)]);
+
+			var whole = elapsed
+				.OrderBy(x => x.Id)
+				.ToArray();
+
+			whole[0].Taken.ShouldBe(TimeSpan.FromHours(5));
+			whole[1].Taken.ShouldBe(TimeSpan.FromHours(1));
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void DateDifferenceIsElapsedTime([DataSources] string context)
+		{
+			// Elapsed, not a boundary count. 10:59 -> 11:01 is two minutes; Sql.DateDiff(hour, ...) would say one,
+			// and that difference is the whole reason this does not reuse the DateDiff builders.
+			var started  = new DateTime(2026, 1, 1, 10, 59, 0);
+			var finished = new DateTime(2026, 1, 1, 11,  1, 0);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = finished });
+
+			var elapsed = finished - started;
+
+			var row = t
+				.Select(r => new
+				{
+					TotalMinutes = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalMinutes),
+					Minutes      = Sql.AsSql((r.FinishedOn - r.StartedOn).Minutes),
+				})
+				.Single();
+
+			row.TotalMinutes.ShouldBe(elapsed.TotalMinutes);
+			row.Minutes.ShouldBe(elapsed.Minutes);
+		}
+
+		/// <summary>
+		/// A difference finer than a millisecond survives the round trip and the lowering.
+		/// </summary>
+		/// <remarks>
+		/// Scoped by what the storage can hold, which is the whole point of the test - a provider whose timestamp
+		/// stops at the second or the millisecond has nothing sub-millisecond to measure, and asserting against it
+		/// would be testing the column type. The excluded set was read off a run rather than assumed: SQLite and
+		/// MySQL return whole seconds here, DuckDB and DB2 stop at ten microseconds, ClickHouse and Oracle round,
+		/// and Access refuses the member outright.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceKeepsSubSecondPrecision(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			// A millisecond-resolution DATEDIFF would report zero here. This is the case the review of #5739 called
+			// out as translator-induced precision loss.
+			var started = new DateTime(2026, 1, 1);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = started.AddTicks(9999) });
+
+			// Read against the stored value, not against 9999: the difference cannot be finer than what the column
+			// holds, and the storage quantum differs - datetime2 keeps 100ns where a PostgreSQL timestamp keeps a
+			// microsecond. What is being pinned is that the difference loses nothing beyond that.
+			var row = t
+				.Select(r => new
+				{
+					Ticks  = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+					Stored = r.FinishedOn,
+				})
+				.Single();
+
+			var ticks = row.Ticks;
+
+			ticks.ShouldBe((row.Stored - started).Ticks);
+
+			// And that what remains is genuinely sub-millisecond, so the assertion above cannot be satisfied by a
+			// provider that rounded the stored value to a whole millisecond in the first place.
+			(ticks % TimeSpan.TicksPerMillisecond).ShouldNotBe(0L);
+		}
+
+		/// <summary>
+		/// Sub-second components of a plain <see cref="DateTime"/> difference agree with what the storage kept.
+		/// </summary>
+		/// <remarks>
+		/// The detector for a component that reports zero while the column holds a value. Runs everywhere and needs
+		/// no per-provider expectation, because the expectation is read back rather than assumed: a storage that
+		/// truncates to the second genuinely has no milliseconds and answering zero is right, while a storage that
+		/// kept them and still answers zero is wrong. Excluding the coarse providers - the obvious way to make this
+		/// green - would remove exactly the second case from view.
+		/// <para>
+		/// The <see cref="DateTimeOffset"/> twin cannot cover these providers: several have no offset-carrying
+		/// column type at all, so they are out of its scope entirely.
+		/// </para>
+		/// <para>
+		/// Two providers refuse rather than answer, and the difference between them is worth keeping in mind.
+		/// Access has no sub-second date part to extract at all. PostgreSQL does - <c>EXTRACT(MILLISECONDS ...)</c>
+		/// exists - but it returns the whole seconds field scaled, not the part within the second, so mapping it
+		/// would need a truncation and a modulus rather than a name. That is unimplemented, not impossible.
+		/// </para>
+		/// </remarks>
+		[Test]
+		// PostgreSQL is absent here although EXTRACT names no field below the second: the components are reached
+		// from its own exact tick count instead, so it answers them like everyone else.
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Interval_ComponentBelowResolution)]
+		[ThrowsForProvider(typeof(LinqToDBException), UnsupportedDifferenceProviders, ErrorMessage = ErrorHelper.Error_Interval_Difference)]
+		public void DateDifferenceSubSecondComponentsAgreeWithStorage([DataSources] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 20, 30);
+
+			// Milliseconds, microseconds and sub-microsecond ticks all non-zero, so a component that survives the
+			// storage cannot be confused with one that is legitimately zero.
+			var written = started.AddTicks(TimeSpan.TicksPerMillisecond * 123 + 4567);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable<EventRow>();
+
+			db.Insert(new EventRow { Id = 1, StartedOn = started, FinishedOn = written });
+
+			var stored   = t.Select(r => r.FinishedOn).Single();
+			var expected = stored - started;
+
+			var row = t
+				.Select(r => new
+				{
+					Milliseconds = Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds),
+					Seconds      = Sql.AsSql((r.FinishedOn - r.StartedOn).Seconds),
+				})
+				.Single();
+
+			row.Seconds.ShouldBe(expected.Seconds);
+			row.Milliseconds.ShouldBe(expected.Milliseconds);
+		}
+
+		[Table]
+		sealed class ClosedPeriodRow
+		{
+			[PrimaryKey] public int       Id               { get; set; }
+			[Column]     public DateTime  OpenedOn         { get; set; }
+			[Column]     public DateTime  ClosedOn         { get; set; }
+			[Column]     public DateTime? ClosedOnNullable { get; set; }
+		}
+
+		// One row well in the past and one well in the future, whole hours from any midnight, so the answers below
+		// do not move with the clock, the storage precision or the day the test runs.
+		static readonly ClosedPeriodRow[] ClosedPeriods =
+		[
+			new() { Id = 1, OpenedOn = new DateTime(2019, 12, 20, 15, 30, 0), ClosedOn = new DateTime(2020, 1, 1, 3, 0, 0), ClosedOnNullable = new DateTime(2020, 1, 1, 3, 0, 0) },
+			new() { Id = 2, OpenedOn = new DateTime(2099, 5, 1),              ClosedOn = new DateTime(2099, 6, 1),          ClosedOnNullable = null                            },
+		];
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void DateDifferenceFromToday([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			// DateTime.Today is read on the client, so the statement carries the run date and changes every day.
+			using var noBaseline = new DisableBaseline("Current datetime parameters used");
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).TotalMinutes > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOn).Days > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (DateTime.Today - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			t.OrderBy(r => (DateTime.Today - r.ClosedOn).TotalDays).Select(r => r.Id).ToList().ShouldBe([2, 1]);
+
+			// YDB writes a local DateTime - which DateTime.Today is - as the UTC instant it stands for, and an
+			// unspecified one, as every value in the table is, as UTC already, so it measures from today's UTC reading.
+			var today  = context.IsAnyOf(TestProvName.AllYdb) ? DateTime.Today.ToUniversalTime() : DateTime.Today;
+			var totals = t.OrderBy(r => r.Id).Select(r => Sql.AsSql((DateTime.Today - r.ClosedOn).TotalDays)).ToList();
+
+			for (var i = 0; i < ClosedPeriods.Length; i++)
+			{
+				var expected = (today - ClosedPeriods[i].ClosedOn).TotalDays;
+
+				totals[i].ShouldBe(expected, Tolerance(expected));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void DateDifferenceBetweenColumns([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (r.ClosedOn - r.OpenedOn).TotalDays < 12).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.OrderBy(r => (r.ClosedOn - r.OpenedOn).TotalHours).Select(r => r.Id).ToList().ShouldBe([1, 2]);
+
+			var row = t
+				.Where(r => r.Id == 1)
+				.Select(r => new
+				{
+					TotalDays    = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalDays),
+					TotalHours   = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalHours),
+					TotalMinutes = Sql.AsSql((r.ClosedOn - r.OpenedOn).TotalMinutes),
+					Days         = Sql.AsSql((r.ClosedOn - r.OpenedOn).Days),
+					Hours        = Sql.AsSql((r.ClosedOn - r.OpenedOn).Hours),
+				})
+				.Single();
+
+			var expected = ClosedPeriods[0].ClosedOn - ClosedPeriods[0].OpenedOn;
+
+			row.TotalDays.ShouldBe(expected.TotalDays, Tolerance(expected.TotalDays));
+			row.TotalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+			row.TotalMinutes.ShouldBe(expected.TotalMinutes, Tolerance(expected.TotalMinutes));
+			row.Days.ShouldBe(expected.Days);
+			row.Hours.ShouldBe(expected.Hours);
+		}
+
+		/// <summary>
+		/// A member of a difference with a nullable operand, read through <c>.Value</c> or a cast back to
+		/// <see cref="TimeSpan"/>, answers wherever the member of a non-nullable difference does.
+		/// </summary>
+		/// <remarks>
+		/// The subtraction is lifted to a nullable <see cref="TimeSpan"/>, so the member is taken from the value
+		/// access rather than from the subtraction itself. Access lowers a member of a difference but not the bare
+		/// difference, so recognising the subtraction under the access is its only route to the member.
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5988")]
+		public void DateDifferenceMemberThroughNullableValue([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(ClosedPeriods);
+
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => ((TimeSpan)(r.ClosedOnNullable - r.OpenedOn)!).TotalHours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			// A fixed date rather than DateTime.Today, which would put the run date into the statement.
+			var asOf = new DateTime(2026, 1, 3, 13, 30, 0);
+
+			t.Where(r => (asOf - r.ClosedOnNullable)!.Value.TotalDays > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			var totalHours = t
+				.Where(r => r.Id == 1)
+				.Select(r => Sql.AsSql((r.ClosedOnNullable - r.OpenedOn)!.Value.TotalHours))
+				.Single();
+
+			var expected = ClosedPeriods[0].ClosedOn - ClosedPeriods[0].OpenedOn;
+
+			totalHours.ShouldBe(expected.TotalHours, Tolerance(expected.TotalHours));
+
+			// A whole-unit component is counted with an anchor compared against the end, so the NULL row reaches
+			// that comparison too - in a filter and in a projection alike.
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.Days > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+			t.Where(r => (r.ClosedOnNullable - r.OpenedOn)!.Value.Hours > 0).Select(r => r.Id).ToList().ShouldBe([1]);
+
+			var components = t
+				.OrderBy(r => r.Id)
+				.Select(r => new
+				{
+					Days  = Sql.AsSql((int?)(r.ClosedOnNullable - r.OpenedOn)!.Value.Days),
+					Hours = Sql.AsSql((int?)(r.ClosedOnNullable - r.OpenedOn)!.Value.Hours),
+				})
+				.ToList();
+
+			components[0].Days.ShouldBe(expected.Days);
+			components[0].Hours.ShouldBe(expected.Hours);
+			components[1].Days.ShouldBeNull();
+			components[1].Hours.ShouldBeNull();
+		}
+
+		/// <summary>
+		/// A member of a difference whose operand an outer join leaves absent on an unmatched row.
+		/// </summary>
+		/// <remarks>
+		/// The column itself cannot be null, but the join makes it so. Access refuses a null that <c>DateAdd</c> or
+		/// <c>DateDiff</c> derived once it is passed on, so the operand has to be recognised as one that can be null.
+		/// </remarks>
+		[Test]
+		public void DateDifferenceAcrossAnOuterJoin([DataSources(UnsupportedDifferenceProviders)] string context)
+		{
+			var started = new DateTime(2026, 1, 1, 10, 0, 0);
+			var amount  = new TimeSpan(2, 3, 15, 0);
+
+			using var db    = GetDataContext(context);
+			using var left  = db.CreateLocalTable("OuterJoinLeft",  [new EventRow { Id = 1, StartedOn = started, FinishedOn = started }, new EventRow { Id = 2, StartedOn = started, FinishedOn = started }]);
+			using var right = db.CreateLocalTable("OuterJoinRight", [new EventRow { Id = 1, StartedOn = started, FinishedOn = started + amount }]);
+
+			var joined =
+				from a in left
+				from b in right.Where(x => x.Id == a.Id).DefaultIfEmpty()
+				select new { a, b };
+
+			// One member per query: Access lowers each member of a difference in full and refuses a statement past a
+			// size it calls "too complex", which a projection of several members reaches.
+			var ordered = joined.OrderBy(x => x.a.Id);
+
+			var totalDays = ordered.Select(x => Sql.AsSql((double?)(x.b!.FinishedOn - x.a.StartedOn).TotalDays)).ToList();
+			totalDays[0]!.Value.ShouldBe(amount.TotalDays, Tolerance(amount.TotalDays));
+			totalDays[1].ShouldBeNull();
+
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Days)).ToList().ShouldBe([amount.Days, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Hours)).ToList().ShouldBe([amount.Hours, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.b!.FinishedOn - x.a.StartedOn).Minutes)).ToList().ShouldBe([amount.Minutes, null]);
+			ordered.Select(x => Sql.AsSql((int?)(x.a.StartedOn - x.b!.FinishedOn).Hours)).ToList().ShouldBe([-amount.Hours, null]);
+
+			var reversed = ordered.Select(x => Sql.AsSql((double?)(x.a.StartedOn - x.b!.FinishedOn).TotalHours)).ToList();
+			reversed[0]!.Value.ShouldBe(-amount.TotalHours, Tolerance(amount.TotalHours));
+			reversed[1].ShouldBeNull();
+
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).TotalDays > 1).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).Hours == amount.Hours).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.b!.FinishedOn - x.a.StartedOn).Minutes == amount.Minutes).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.a.StartedOn - x.b!.FinishedOn).TotalHours < -1).Select(x => x.a.Id).ToList().ShouldBe([1]);
+			joined.Where(x => (x.a.StartedOn - x.b!.FinishedOn).Hours == -amount.Hours).Select(x => x.a.Id).ToList().ShouldBe([1]);
+		}
+
+		[Table]
+		sealed class CoarseDateRow
+		{
+			[PrimaryKey]                                           public int      Id      { get; set; }
+			[Column(DataType = DataType.Date)]                     public DateTime OnDate  { get; set; }
+			[Column(DataType = DataType.SmallDateTime)]            public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime End     { get; set; }
+		}
+
+		/// <summary>
+		/// SQL Server before 2016 counts the part of a difference below a day in two steps, shifting the start by
+		/// whole seconds in between - which <c>DATEADD</c> refuses on a <c>date</c> and rounds to the minute on a
+		/// <c>smalldatetime</c>. The end has seconds and a sub-second part, so neither can pass by luck.
+		/// </summary>
+		/// <remarks>
+		/// The widening this test pins - <c>date</c> and <c>smalldatetime</c> cast up to <c>datetime2</c> before the
+		/// second shift - is a detail of the pre-2016 three-step decomposition. 2016 and later anchor on whole days too
+		/// but count the rest in a single <c>DATEDIFF_BIG</c>, so they never reach the widening; they run here because
+		/// no other test measures a difference from a <c>date</c> or a <c>smalldatetime</c> on them. 2005 is not
+		/// asked: its <c>datetime</c> cannot hold the end's 100ns part.
+		/// <para>
+		/// The same columns are read through two more mappings, because the widening cannot trust the type a mapping
+		/// declares: a plain <see cref="DateTime"/> - the scaffolder's default - which declares neither, and one that
+		/// declares a <c>DbType</c> as well, which the cast must not take over.
+		/// </para>
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void DateDifferenceFromCoarseSqlServerTypes(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var start = new DateTime(2020, 1, 1, 3, 0, 0);
+			var end   = new DateTime(2026, 9, 29, 10, 20, 30).AddTicks(1234567);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new CoarseDateRow { Id = 1, OnDate = start.Date, OnSmall = start, End = end }]);
+
+			var row = t
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			row.FromDate.ShouldBe((end - start.Date).Ticks);
+			row.FromSmall.ShouldBe((end - start).Ticks);
+
+			var plain = db.GetTable<CoarseDateAsDateTimeRow>().TableName(t.TableName)
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			plain.FromDate.ShouldBe((end - start.Date).Ticks);
+			plain.FromSmall.ShouldBe((end - start).Ticks);
+
+			var withDbType = db.GetTable<CoarseDateWithDbTypeRow>().TableName(t.TableName)
+				.Select(r => new
+				{
+					FromDate  = Sql.AsSql((r.End - r.OnDate).Ticks),
+					FromSmall = Sql.AsSql((r.End - r.OnSmall).Ticks),
+				})
+				.Single();
+
+			withDbType.FromDate.ShouldBe((end - start.Date).Ticks);
+			withDbType.FromSmall.ShouldBe((end - start).Ticks);
+		}
+
+		[Table]
+		sealed class CoarseDateAsDateTimeRow
+		{
+			[PrimaryKey]                                           public int      Id      { get; set; }
+			[Column]                                               public DateTime OnDate  { get; set; }
+			[Column]                                               public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)] public DateTime End     { get; set; }
+		}
+
+		[Table]
+		sealed class CoarseDateWithDbTypeRow
+		{
+			[PrimaryKey]                                                          public int      Id      { get; set; }
+			[Column(DataType = DataType.Date,          DbType = "date")]          public DateTime OnDate  { get; set; }
+			[Column(DataType = DataType.SmallDateTime, DbType = "smalldatetime")] public DateTime OnSmall { get; set; }
+			[Column(DataType = DataType.DateTime2, Precision = 7)]                public DateTime End     { get; set; }
+		}
+
+		/// <summary>
+		/// A negative difference with a sub-second remainder, on the pre-2016 dialects that decompose it in three
+		/// steps - whole days, then whole seconds within the remainder, then nanoseconds within the last second.
+		/// </summary>
+		/// <remarks>
+		/// 2016 and later count the sub-day remainder in one <c>DATEDIFF_BIG</c> instead and answer the same question.
+		/// <para>
+		/// The end is earlier than the start by a little over an hour and both carry a sub-second part, so the
+		/// difference and its remainder below the second are both negative. Asked once within a day and once across
+		/// midnight, where the whole-day step counts a day boundary backwards and the remainder has to make up for it.
+		/// </para>
+		/// </remarks>
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5777")]
+		public void NegativeDifferenceWithSubSecondRemainder(
+			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context,
+			[Values] bool acrossMidnight)
+		{
+			var start = acrossMidnight
+				? new DateTime(2026, 3, 2,  0, 20, 30).AddTicks(1234567)
+				: new DateTime(2026, 3, 1, 10, 20, 30).AddTicks(1234567);
+			var end   = acrossMidnight
+				? new DateTime(2026, 3, 1, 23, 19, 28).AddTicks(7654321)
+				: new DateTime(2026, 3, 1,  9, 19, 28).AddTicks(7654321);
+
+			var expected = end - start;
+
+			expected.ShouldBeLessThan(TimeSpan.Zero);
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable([new EventRow { Id = 1, StartedOn = start, FinishedOn = end }]);
+
+			var row = t
+				.Select(r => new
+				{
+					Ticks        = Sql.AsSql((r.FinishedOn - r.StartedOn).Ticks),
+					TotalSeconds = Sql.AsSql((r.FinishedOn - r.StartedOn).TotalSeconds),
+					Milliseconds = Sql.AsSql((r.FinishedOn - r.StartedOn).Milliseconds),
+				})
+				.Single();
+
+			row.Ticks.ShouldBe(expected.Ticks);
+			row.TotalSeconds.ShouldBe(expected.TotalSeconds, Tolerance(expected.TotalSeconds));
+			row.Milliseconds.ShouldBe(expected.Milliseconds);
+		}
+	}
+}

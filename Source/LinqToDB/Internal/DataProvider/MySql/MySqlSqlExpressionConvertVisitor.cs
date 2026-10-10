@@ -1,4 +1,7 @@
-﻿using LinqToDB.Internal.Extensions;
+﻿using System;
+
+using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
@@ -12,6 +15,61 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		}
 
 		protected override bool ConcatRequiresExplicitStringCast => false;
+
+		/// <summary>
+		/// <c>DIV</c>, because MySQL's <c>/</c> is a decimal division even between two integers.
+		/// </summary>
+		protected override ISqlExpression TruncateDivide(ISqlExpression value, long divisor)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			return Factory.Expression(longType, Precedence.Multiplicative, "{0} DIV {1}", value, Factory.Value(longType, divisor));
+		}
+
+		/// <inheritdoc />
+		public override bool CanLowerIntervalDifference => true;
+
+		/// <summary>
+		/// Elapsed ticks from <c>TIMESTAMPDIFF</c> at microsecond resolution.
+		/// </summary>
+		/// <remarks>
+		/// A microsecond is the finest unit MySQL stores, so the count is exact and scaling it to ticks - ten of
+		/// them to the microsecond - loses nothing. The result is a <c>BIGINT</c> of microseconds, which runs out
+		/// far beyond any range <see cref="TimeSpan"/> can hold.
+		/// </remarks>
+		protected override ISqlExpression? ElapsedTicks(SqlIntervalDifferenceExpression element)
+		{
+			var longType     = Factory.GetDbDataType(typeof(long));
+			var microseconds = Factory.Function(longType, "TimestampDiff", Factory.Fragment("Microsecond"), element.Start, element.End);
+
+			return Factory.Multiply(longType, microseconds, TimeSpan.TicksPerMillisecond / 1000);
+		}
+
+		/// <inheritdoc />
+		/// <remarks>Lowered below without going through <c>FinestDateUnit</c>, which the default reads.</remarks>
+		public override bool CanLowerIntervalShift => true;
+
+		/// <summary>
+		/// Shifts through <c>DATE_ADD</c> at microsecond resolution - the interval's own unit here.
+		/// </summary>
+		/// <remarks>
+		/// The amount is an expression rather than a literal, and MySQL takes it as written, so the whole tick
+		/// count converts in one step with no decomposition into coarser units.
+		/// </remarks>
+		protected override ISqlExpression? LowerTemporalArithmetic(SqlTemporalArithmeticExpression element)
+		{
+			var longType = Factory.GetDbDataType(typeof(long));
+
+			// Through the truncating divide, for the reason TruncateDivide states above: MySQL's / is a decimal
+			// division even between two integers, so a tick count that is not a whole number of microseconds would
+			// reach INTERVAL as a fraction rather than truncating toward zero the way the rest of the lowering does.
+			var microseconds = TruncateDivide(element.Interval, TimeSpan.TicksPerMillisecond / 1000);
+
+			return Factory.Function(Factory.GetDbDataType(element.Temporal),
+				element.IsSubtract ? "Date_Sub" : "Date_Add",
+				element.Temporal,
+				Factory.Expression(longType.WithDataType(DataType.Interval), "Interval {0} Microsecond", microseconds));
+		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{

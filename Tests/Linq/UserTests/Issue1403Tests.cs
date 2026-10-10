@@ -10,9 +10,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1403Tests : TestBase
 	{
-		public abstract class ModelBase
-		{
-		}
+		public abstract class ModelBase;
 
 		[Table("Issue1403Tests_1")]
 		public class MyClass1 : ModelBase

@@ -21,12 +21,10 @@ using NUnit.Framework;
 
 using Tests;
 
-#if !NET10_0
 #if NETFRAMEWORK
 using MySqlConnectionStringBuilder = MySql.Data.MySqlClient.MySqlConnectionStringBuilder;
 #else
 using MySqlConnectionStringBuilder = MySqlConnector.MySqlConnectionStringBuilder;
-#endif
 #endif
 
 namespace LinqToDB.EntityFrameworkCore.Tests
@@ -74,6 +72,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				TestUtils.Log(ex);
 				throw;
 			}
+		}
+
+		[SetUp]
+		public virtual void OnBeforeTest()
+		{
+			// establish a fresh per-test context; EF tests never use the remote (LinqService) path
+			CustomTestContext.Begin(false, null);
 		}
 
 		[TearDown]
@@ -198,7 +203,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						connectionString = cnb.ConnectionString;
 						break;
 					}
-#if !NET10_0
 					case var _ when provider.IsAnyOf(TestProvName.AllMySql):
 					{
 						var cnb = new MySqlConnectionStringBuilder(connectionString);
@@ -207,7 +211,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						connectionString = cnb.ConnectionString;
 						break;
 					}
-#endif
 					case var _ when provider.IsAnyOf(TestProvName.AllSQLite):
 					{
 						// EF tests use their own per-TFM DB file. The SQLite base connection string may be

@@ -221,7 +221,7 @@ namespace Tests.xUpdate
 
 			var rows = table
 					.Merge()
-					.Using(GetSource2(db).ToList().Select(_ => new
+					.Using(GetSource2(db).ToList().OrderBy(r => r.OtherId).Select(_ => new
 					{
 						INSERT = _.OtherId,
 						insert = _.OtherField2

@@ -17,8 +17,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	// Feel free to add more overloads as needed.
 
 	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
-	sealed class BuildsAnyAttribute : Attribute
-	{ }
+	sealed class BuildsAnyAttribute : Attribute;
 
 	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
 	sealed class BuildsExpressionAttribute : Attribute

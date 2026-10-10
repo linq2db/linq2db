@@ -12,9 +12,14 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public void AddValue(SqlParameter parameter, object? providerValue, object? clientValue, DbDataType dbDataType)
 		{
+			AddValue(parameter, providerValue, clientValue, dbDataType, false);
+		}
+
+		internal void AddValue(SqlParameter parameter, object? providerValue, object? clientValue, DbDataType dbDataType, bool isDbDataTypeExplicit)
+		{
 			_valuesByParameter ??= new ();
 
-			var parameterValue = new SqlParameterValue(providerValue, clientValue, dbDataType);
+			var parameterValue = new SqlParameterValue(providerValue, clientValue, dbDataType, isDbDataTypeExplicit);
 
 			_valuesByParameter.Remove(parameter);
 			_valuesByParameter.Add(parameter, parameterValue);
@@ -38,7 +43,7 @@ namespace LinqToDB.Internal.SqlQuery
 			else
 			{
 				_valuesByParameter.Remove(parameter);
-				_valuesByParameter.Add(parameter, new SqlParameterValue(providerValue, clientValue, parameterValue.DbDataType));
+				_valuesByParameter.Add(parameter, new SqlParameterValue(providerValue, clientValue, parameterValue.DbDataType, parameterValue.IsDbDataTypeExplicit));
 			}
 
 			if (parameter.AccessorId != null)
@@ -52,7 +57,7 @@ namespace LinqToDB.Internal.SqlQuery
 				else
 				{
 					_valuesByAccessor.Remove(parameter.AccessorId.Value);
-					_valuesByAccessor.Add(parameter.AccessorId.Value, new SqlParameterValue(providerValue, clientValue, parameterValue.DbDataType));
+					_valuesByAccessor.Add(parameter.AccessorId.Value, new SqlParameterValue(providerValue, clientValue, parameterValue.DbDataType, parameterValue.IsDbDataTypeExplicit));
 				}
 			}
 		}

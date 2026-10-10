@@ -34,10 +34,10 @@ namespace LinqToDB.Internal.SqlQuery
 		public bool?                     CanBeNullNullable { get; private set; }
 		public ParametersNullabilityType NullabilityType   { get; }
 
-		public bool IsAggregate      => (Flags & SqlFlags.IsAggregate) != 0;
-		public bool IsPure           => (Flags & SqlFlags.IsPure) != 0;
-		public bool IsPredicate      => (Flags & SqlFlags.IsPredicate) != 0;
-		public bool IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
+		public bool IsAggregate      => Flags.HasFlag(SqlFlags.IsAggregate);
+		public bool IsPure           => Flags.HasFlag(SqlFlags.IsPure);
+		public bool IsPredicate      => Flags.HasFlag(SqlFlags.IsPredicate);
+		public bool IsWindowFunction => Flags.HasFlag(SqlFlags.IsWindowFunction);
 
 		public bool CanBeNull
 		{

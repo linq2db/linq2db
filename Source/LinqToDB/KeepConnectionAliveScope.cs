@@ -36,9 +36,9 @@ namespace LinqToDB
 			_dataContext.SetKeepConnectionAlive(_savedValue);
 		}
 
-		public async ValueTask DisposeAsync()
+		public ValueTask DisposeAsync()
 		{
-			await _dataContext.SetKeepConnectionAliveAsync(_savedValue).ConfigureAwait(false);
+			return _dataContext.SetKeepConnectionAliveAsync(_savedValue);
 		}
 	}
 }

@@ -469,7 +469,10 @@ namespace Tests.SchemaProvider
 		{
 			using var db = GetDataConnection(context);
 
-			var suffix       = TestUtils.GetNext();
+			// Fixed per test rather than TestUtils.GetNext(): the suffix reaches the captured DDL, so a
+			// process-wide counter makes the baseline depend on how many tests ran before this one. The
+			// five Issue5628 tests each own a number, which is all the uniqueness they need.
+			var suffix       = 1;
 			var tableName    = $"issue5628_sample_messages_{suffix}";
 			var codeSequence = $"issue5628_code_seq_{suffix}";
 			var itemSequence = $"issue5628_item_id_seq_{suffix}";
@@ -515,7 +518,7 @@ namespace Tests.SchemaProvider
 		{
 			using var db = GetDataConnection(context);
 
-			var suffix       = TestUtils.GetNext();
+			var suffix       = 2;
 			var tableName    = $"issue5628_parenthesized_default_{suffix}";
 			var itemSequence = $"issue5628_item_id_seq_{suffix}";
 
@@ -558,7 +561,7 @@ namespace Tests.SchemaProvider
 		{
 			using var db = GetDataConnection(context);
 
-			var suffix       = TestUtils.GetNext();
+			var suffix       = 3;
 			var tableName    = $"issue5628_two_defaults_pk_{suffix}";
 			var codeSequence = $"issue5628_code_seq_{suffix}";
 			var itemSequence = $"issue5628_item_id_seq_{suffix}";
@@ -600,7 +603,7 @@ namespace Tests.SchemaProvider
 		{
 			using var db = GetDataConnection(context);
 
-			var suffix       = TestUtils.GetNext();
+			var suffix       = 4;
 			var tableName    = $"issue5628_two_defaults_no_pk_{suffix}";
 			var codeSequence = $"issue5628_code_seq_{suffix}";
 			var itemSequence = $"issue5628_item_id_seq_{suffix}";
@@ -641,7 +644,7 @@ namespace Tests.SchemaProvider
 		{
 			using var db = GetDataConnection(context);
 
-			var suffix       = TestUtils.GetNext();
+			var suffix       = 5;
 			var tableName    = $"issue5628_real_identity_{suffix}";
 			var codeSequence = $"issue5628_code_seq_{suffix}";
 

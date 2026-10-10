@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" PrivateAssets="contentfiles;build" />
 
 		<PackageReference Include="System.Configuration.ConfigurationManager" />
 

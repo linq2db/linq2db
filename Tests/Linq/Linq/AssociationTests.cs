@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -171,9 +171,12 @@ namespace Tests.Linq
 				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p });
 		}
 
-		[ActiveIssue(5597, Configuration = TestProvName.AllYdb, Details = "YDB-only [PrimaryKey] on Parent.ParentID (added for YDB's mandatory-PK DDL requirement) is seen by the optimizer as a unique key, so grouping by the Parent entity reduces it to the PK and drops the projected Value1 column. Needs DDL-only PK handling or an optimizer fix.")]
+		// YDB excluded rather than gated: this hangs there rather than failing, and a test that never returns has no
+		// outcome to declare - on CI the hang dump kills the whole leg. The underlying gap is #5597: the YDB-only
+		// [PrimaryKey] on Parent.ParentID (added for YDB's mandatory-PK DDL requirement) is seen by the optimizer as
+		// a unique key, so grouping by the Parent entity reduces it to the PK and drops the projected Value1 column.
 		[Test]
-		public void GroupBy1([DataSources] string context)
+		public void GroupBy1([DataSources(TestProvName.AllYdb)] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -1838,7 +1841,8 @@ namespace Tests.Linq
 
 		#endregion
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022")]
+		// mutates the global Configuration.Sql.AssociationAlias
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022"), NonParallelizable]
 		public void TestAssociationAliasEscaping([DataSources(false)] string context)
 		{
 			var old = LinqToDB.Common.Configuration.Sql.AssociationAlias;
@@ -2066,7 +2070,8 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children != null' could not be converted to SQL.",
+			Details = "YDB swallows the correlated-subquery rejection into a generic conversion error. ClickHouse was dropped from the scope: the sweep ran it with the gate open and it did not fail, so the claim that it returns wrong results is stale.")]
 		public void ManyAssociationEmptyCheck1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2078,7 +2083,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllClickHouse, TestProvName.AllYdb }, Details = "Correlated-subquery gaps: YDB swallows the rejection reason into a generic 'could not be converted to SQL' error; ClickHouse runs the EXISTS but returns wrong results.")]
+		[ActiveIssue(5590, Configurations = new[] { TestProvName.AllYdb }, ErrorTypeName = "LinqToDB.LinqToDBException", ErrorMessage = "The LINQ expression 'p.Children == null' could not be converted to SQL.",
+			Details = "as ManyAssociationEmptyCheck1, with the equality direction. ClickHouse dropped from the scope for the same reason.")]
 		public void ManyAssociationEmptyCheck2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2141,7 +2147,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ChildPredicateMethodImpl))]
 		public static bool ChildPredicateMethod(this Child child)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(ChildPredicateMethod));
 		}
 
 		static Expression<Func<Child,bool>> ChildPredicateMethodImpl()
@@ -2190,7 +2196,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(ChildrenExpression))]
 		public static IQueryable<AssociationTests.ComplexChild> Children(this AssociationTests.ComplexParent p)
 		{
-			throw new InvalidOperationException();
+			throw new ServerSideOnlyException(nameof(Children));
 		}
 
 		private static Expression<Func<AssociationTests.ComplexParent, IQueryable<AssociationTests.ComplexChild>>> ChildrenExpression()

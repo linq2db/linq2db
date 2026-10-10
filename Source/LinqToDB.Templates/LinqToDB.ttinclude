@@ -53,6 +53,8 @@ string SchemaNameSuffix                    { get { return ModelGenerator.SchemaN
 string SchemaDataContextTypeName           { get { return ModelGenerator.SchemaDataContextTypeName;           } set { ModelGenerator.SchemaDataContextTypeName           = value; } }
 bool   GenerateNameOf                      { get { return ModelGenerator.GenerateNameOf;                      } set { ModelGenerator.GenerateNameOf                      = value; } }
 
+bool   GenerateSqlServerDecimalOverflowProtection { get { return ModelGenerator.GenerateSqlServerDecimalOverflowProtection; } set { ModelGenerator.GenerateSqlServerDecimalOverflowProtection = value; } }
+
 public Dictionary<string,string>                              SchemaNameMapping     { get { return ModelGenerator.SchemaNameMapping;     } set { ModelGenerator.SchemaNameMapping     = value; } }
 public Func<string,string,Func<IMethod>,IEnumerable<IMethod>> GetConstructors       { get { return ModelGenerator.GetConstructors;       } set { ModelGenerator.GetConstructors       = value; } }
 public Func<IColumn,string,string,bool,string>                BuildColumnComparison { get { return ModelGenerator.BuildColumnComparison; } set { ModelGenerator.BuildColumnComparison = value; } }

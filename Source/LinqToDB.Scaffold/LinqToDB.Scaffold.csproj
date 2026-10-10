@@ -18,7 +18,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" PrivateAssets="contentfiles;build" />
 
 		<PackageReference Include="Humanizer.Core" />
 

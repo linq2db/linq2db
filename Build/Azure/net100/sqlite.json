@@ -1,4 +1,4 @@
-﻿{
+{
 	"NET100.Azure": {
 		"Providers": [
 			// not sqlite, but should go somewhere
@@ -6,7 +6,9 @@
 			"SQLite.Classic",
 			"Northwind.SQLite",
 			"SQLite.MS",
-			"Northwind.SQLite.MS"
+			"Northwind.SQLite.MS",
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM"
 		]
 	}
 }

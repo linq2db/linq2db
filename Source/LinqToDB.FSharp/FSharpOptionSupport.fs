@@ -5,6 +5,8 @@ open System.Collections.Concurrent
 open System.Linq.Expressions
 open System.Reflection
 
+open LinqToDB.Internal.Common
+open LinqToDB.Internal.Extensions
 open LinqToDB.Mapping
 open LinqToDB.Metadata
 
@@ -26,11 +28,16 @@ type internal FSharpOptionSupport =
     static let build (optionType: Type) : IValueConverter =
         let elementType   = optionType.GetGenericArguments().[0]
         let isValueOption = optionType.GetGenericTypeDefinition() = typedefof<_ voption>
+        // An option over a single-case scalar union ('UserId option') stores the union's *wrapped scalar*,
+        // so every decision below is driven by that scalar rather than by the union; the union is unwrapped
+        // on the way out and reconstructed on the way in.
+        let duElement      = if FSharpSingleCaseUnionSupport.IsScalarSingleCaseUnion elementType then ValueSome elementType else ValueNone
+        let scalarType     = match duElement with ValueSome du -> (FSharpSingleCaseUnionSupport.WrappedField du).PropertyType | ValueNone -> elementType
         // Wrap only a non-nullable value element; a reference or already-Nullable<_> element already
         // carries null itself. The Nullable check also guards Nullable<Nullable<_>>, which MakeGenericType
         // rejects (e.g. a 'Nullable<int> option' column).
-        let wrapInNullable = elementType.IsValueType && isNull (Nullable.GetUnderlyingType elementType)
-        let providerType   = if wrapInNullable then typedefof<Nullable<_>>.MakeGenericType(elementType) else elementType
+        let wrapInNullable = scalarType.IsValueType && isNull (Nullable.GetUnderlyingType scalarType)
+        let providerType   = if wrapInNullable then typedefof<Nullable<_>>.MakeGenericType(scalarType) else scalarType
 
         let valueProp = optionType.GetProperty("Value") |> nonNull
         // "some" factory and "none" value differ between the reference option (None is a null reference,
@@ -49,7 +56,11 @@ type internal FSharpOptionSupport =
 
         // ToProvider: fun (o: option) -> if isSome o then (provider) o.Value else default(provider)
         let oParam     = Expression.Parameter(optionType, "o")
-        let someValue  = Expression.Property(oParam, valueProp) :> Expression
+        let optValue   = Expression.Property(oParam, valueProp) :> Expression
+        let someValue  =
+            match duElement with
+            | ValueSome du -> Expression.Property(optValue, FSharpSingleCaseUnionSupport.WrappedField du) :> Expression
+            | ValueNone    -> optValue
         let someStored = if wrapInNullable then Expression.Convert(someValue, providerType) :> Expression else someValue
         let toProvider =
             Expression.Lambda(
@@ -59,17 +70,19 @@ type internal FSharpOptionSupport =
         // FromProvider: fun (p: provider) -> if p has value then someFactory(elementOf p) else none
         let pParam   = Expression.Parameter(providerType, "p")
         let hasValue : Expression =
-            if elementType.IsValueType then Expression.Property(pParam, "HasValue") :> Expression
+            if scalarType.IsValueType then Expression.Property(pParam, "HasValue") :> Expression
             else Expression.ReferenceNotEqual(pParam, Expression.Constant(null, providerType)) :> Expression
-        let element  : Expression =
+        let scalar   : Expression =
             if wrapInNullable then Expression.Property(pParam, "Value") :> Expression else pParam :> Expression
+        let element  : Expression =
+            match duElement with
+            | ValueSome du -> Expression.Call(FSharpSingleCaseUnionSupport.CaseConstructor du, scalar) :> Expression
+            | ValueNone    -> scalar
         let fromProvider =
             Expression.Lambda(Expression.Condition(hasValue, Expression.Call(someFactory, element), noneExpr), pParam)
 
         let converterType = typedefof<ValueConverter<_, _>>.MakeGenericType(optionType, providerType)
-        match Activator.CreateInstance(converterType, [| box toProvider; box fromProvider; box true |]) with
-        | :? IValueConverter as c -> c
-        | _ -> raise (InvalidOperationException $"Failed to create F# option value converter for '{optionType}'")
+        ActivatorExt.CreateInstance<IValueConverter>(converterType, [| box toProvider; box fromProvider; box true |])
 
     /// Returns <c>true</c> when <paramref name="t"/> is <c>FSharpOption&lt;_&gt;</c> or <c>FSharpValueOption&lt;_&gt;</c>.
     static member IsOption(t: Type) =
@@ -77,9 +90,14 @@ type internal FSharpOptionSupport =
         (let d = t.GetGenericTypeDefinition() in d = typedefof<_ option> || d = typedefof<_ voption>)
 
     /// Returns <c>true</c> when <paramref name="t"/> is an option type whose element is a scalar (column)
-    /// type. An option over a complex/entity element is not treated as a column.
+    /// type, or a single-case union over one. An option over a complex/entity element is not treated as a
+    /// column.
     static member IsScalarOption(t: Type) =
-        FSharpOptionSupport.IsOption t && MappingSchema.Default.IsScalarType(t.GetGenericArguments().[0])
+        FSharpOptionSupport.IsOption t &&
+        // TODO: switch to the callsite's MappingSchema once metadata readers are schema-aware (#5675);
+        // Default misses scalar types registered on the context's own schema.
+        (let e = t.GetGenericArguments().[0] in
+         MappingSchema.Default.IsScalarType e || FSharpSingleCaseUnionSupport.IsScalarSingleCaseUnion e)
 
     /// Returns the cached <see cref="IValueConverter"/> for a closed option type.
     static member GetConverter(optionType: Type) : IValueConverter =
@@ -88,12 +106,6 @@ type internal FSharpOptionSupport =
 /// Supplies a <see cref="ValueConverterAttribute"/> for every scalar <c>'T option</c> / <c>'T voption</c>
 /// member encountered, so option columns are recognised and converted during entity-descriptor construction.
 type internal FSharpOptionMetadataReader() =
-
-    static let memberType (mi: MemberInfo) : Type =
-        match mi with
-        | :? PropertyInfo as p -> p.PropertyType
-        | :? FieldInfo    as f -> f.FieldType
-        | _                    -> typeof<obj>
 
     interface IMetadataReader with
         // Mark an option type as scalar (only when its element is itself scalar) so option members are
@@ -106,7 +118,7 @@ type internal FSharpOptionMetadataReader() =
                 Array.empty<MappingAttribute>
 
         member _.GetAttributes(_type: Type, memberInfo: MemberInfo) =
-            let mt = memberType memberInfo
+            let mt = memberInfo.GetMemberType()
             if FSharpOptionSupport.IsScalarOption mt then
                 // An option column is always nullable (the "none" case maps to NULL). A reference option is
                 // nullable by virtue of its type, but a struct value-option ('T voption) is a non-nullable

@@ -377,7 +377,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsExpand()))
 				{
-					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, !flags.IsExpression() ? BuildFlags.ForKeys : BuildFlags.None);
+					// Use Expand only for a member-root navigation off a non-scalar key (g.Key.<association>),
+					// so the key's associations are built and the navigation resolves. Whole-entity key
+					// materialization must stay Sql: under Expand a ForKeys build loses the Keys flag in
+					// GetProjectFlags, so the key would select every column instead of reducing to its PK
+					// (the Value1 over-fetch). A scalar key stays Sql too — under Expand a bare scalar comes
+					// back as an unresolved column reference, breaking eager-load correlation
+					// (detail.Where(d => d.X == g.Key)).
+					var keyPurpose = flags.IsExpand() && flags.IsMemberRoot() && !Builder.MappingSchema.IsScalarType(Body.Type)
+						? BuildPurpose.Expand
+						: BuildPurpose.Sql;
+
+					result = Builder.BuildSqlExpression(this, result, keyPurpose, !flags.IsExpression() ? BuildFlags.ForKeys : BuildFlags.None);
 
 					if (result is SqlErrorExpression)
 						return SqlErrorExpression.EnsureError(result, path.Type);
@@ -474,13 +485,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (isSameContext)
 				{
-					if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsExtractProjection())
+					if (flags.IsRoot() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsExtractProjection())
 						return path;
 				}
 
 				if (isSameContext)
 				{
-					if (flags.IsExpand() && !flags.IsSql())
+					if (flags.IsExpand())
 					{
 						if (flags.IsMemberRoot())
 							return path;
@@ -743,7 +754,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						get
 						{
 							if (_grouped == null)
-								throw new InvalidOperationException("Enumeration not started.");
+								throw new InvalidOperationException(ErrorHelper.Error_EnumerationNotStarted);
 
 							if (_current == null)
 								throw new InvalidOperationException("Enumeration returned no result.");

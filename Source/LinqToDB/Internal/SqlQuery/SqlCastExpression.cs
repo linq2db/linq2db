@@ -58,7 +58,15 @@ namespace LinqToDB.Internal.SqlQuery
 			if (other is not SqlCastExpression otherCast)
 				return false;
 
-			return ToType.Equals(otherCast.ToType) && Expression.Equals(otherCast.Expression, comparer);
+			// Every component GetElementHashCode() hashes has to be compared here too, or two casts differing
+			// only in FromType or IsMandatory are Equals-equal with different hash codes and any hash-keyed
+			// dedup treats them as distinct. EnsureParameterCast promotes casts via MakeMandatory, so
+			// mandatory/non-mandatory pairs over the same operand are routine on the providers that wrap
+			// parameter usages.
+			return ToType.Equals(otherCast.ToType)
+				&& IsMandatory == otherCast.IsMandatory
+				&& (FromType == null ? otherCast.FromType == null : otherCast.FromType != null && FromType.Equals(otherCast.FromType, comparer))
+				&& Expression.Equals(otherCast.Expression, comparer);
 		}
 
 		[DebuggerStepThrough]

@@ -103,7 +103,7 @@ namespace Tests.Linq
 		[ExpressionMethod(nameof(PositionFilterImplementation))]
 		static bool PositionFilter(Vector3 position, Vector2[] example)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(PositionFilter));
 		}
 
 		static Expression<Func<Vector3, Vector2[], bool>> PositionFilterImplementation()

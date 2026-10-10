@@ -936,7 +936,7 @@ namespace Tests.UserTests.VeryLongRunning
 		[Sql.Expression("TRY_CAST({0} AS DECIMAL({1}, {2}))", ServerSideOnly = true, InlineParameters = true)]
 		public static decimal? TryCastToDecimal(object value, int precision, int scale)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(TryCastToDecimal));
 		}
 
 		[ExpressionMethod(nameof(Extension4Impl))]

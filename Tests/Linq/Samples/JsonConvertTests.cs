@@ -20,9 +20,7 @@ using NUnit.Framework;
 namespace Tests.Samples
 {
 	[AttributeUsage(AttributeTargets.Property)]
-	public class JsonContentAttribute : Attribute
-	{
-	}
+	public class JsonContentAttribute : Attribute;
 
 	public static class MappingHelper
 	{
@@ -149,7 +147,7 @@ namespace Tests.Samples
 		[Sql.Extension("JSON_VALUE({field}, {propPath})", Precedence = Precedence.Primary, BuilderType = typeof(JsonValueBuilder), ServerSideOnly = true, CanBeNull = false)]
 		public static string Value(object? path)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(Value));
 		}
 	}
 

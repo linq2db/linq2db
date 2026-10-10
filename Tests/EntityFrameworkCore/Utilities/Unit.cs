@@ -1,6 +1,4 @@
 ﻿namespace LinqToDB.EntityFrameworkCore.Tests
 {
-	public class Unit
-	{
-	}
+	public class Unit;
 }

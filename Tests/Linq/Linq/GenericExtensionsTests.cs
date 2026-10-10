@@ -94,7 +94,7 @@ namespace Tests.Linq
 			[ExprParameter("first")]  TFirstValue value,
 			[ExprParameter("second")] TSecondValue secondValue)
 		{
-			throw new InvalidOperationException("Server-side call failed");
+			throw new ServerSideOnlyException(nameof(TestGenericExpression));
 		}
 	}
 

@@ -31,9 +31,7 @@ namespace Tests.Tools
 			public override void M() {}
 		}
 
-		sealed class C : A
-		{
-		}
+		sealed class C : A;
 
 		[Test]
 		public void InheritedMember0Test()
@@ -179,9 +177,7 @@ namespace Tests.Tools
 			}
 		}
 
-		sealed class NoMemberClass
-		{
-		}
+		sealed class NoMemberClass;
 
 		[Test]
 		public void NoMemberTest()
@@ -290,9 +286,7 @@ namespace Tests.Tools
 		}
 
 		[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-		sealed class IdentifierAttribute : Attribute
-		{
-		}
+		sealed class IdentifierAttribute : Attribute;
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
 		sealed class TestClass2

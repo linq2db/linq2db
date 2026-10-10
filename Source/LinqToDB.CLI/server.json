@@ -1,0 +1,51 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.linq2db/linq2db.cli",
+  "title": "LINQ to DB",
+  "description": "Inspect database schemas and execute SQL queries across multiple database providers with LINQ to DB.",
+  "repository": {
+    "url": "https://github.com/linq2db/linq2db",
+    "source": "github",
+    "id": "1916228",
+    "subfolder": "Source/LinqToDB.CLI"
+  },
+  "version": "0.0.0",
+  "packages": [
+    {
+      "registryType": "nuget",
+      "registryBaseUrl": "https://api.nuget.org/v3/index.json",
+      "identifier": "linq2db.cli",
+      "version": "0.0.0",
+      "runtimeHint": "dnx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        },
+        {
+          "type": "named",
+          "name": "--config",
+          "description": "Absolute path to a local linq2db query/MCP configuration file containing database profiles.",
+          "format": "filepath",
+          "isRequired": true
+        },
+        {
+          "type": "named",
+          "name": "--profile",
+          "description": "Default database profile from the configuration file.",
+          "format": "string"
+        },
+        {
+          "type": "named",
+          "name": "--enable-execute-tool",
+          "description": "Register the write-capable tool. Execution also requires enableExecute=true in the selected profile.",
+          "format": "boolean",
+          "default": "false"
+        }
+      ]
+    }
+  ]
+}

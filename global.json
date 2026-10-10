@@ -1,7 +1,8 @@
 {
 	"sdk": {
-		"version": "10.0.200",
-		"rollForward": "minor",
+		"//": "latestFeature, not minor: 'minor' prefers the highest patch of the requested feature band (10.0.2xx) over rolling forward, so on a machine that has 10.0.2xx and 10.0.4xx side by side it picks the 2xx - whose Roslyn is 5.3, while CodeGenerators is built against 5.6 and fails to load with CS9057. latestFeature takes the newest 10.0.x installed instead.",
+		"version": "10.0.100",
+		"rollForward": "latestFeature",
 		"allowPrerelease": false
 	},
 	"test": {

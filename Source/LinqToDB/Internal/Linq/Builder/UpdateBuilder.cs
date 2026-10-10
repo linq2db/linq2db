@@ -520,8 +520,12 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (valueConverter.ToProviderExpression.Parameters.Count != 1)
 								throw new InvalidOperationException("ToProviderExpression should have exactly one parameter.");
 
-							sqlExpr = valueConverter.ToProviderExpression.GetBody(value);
-							sqlExpr = builder.BuildSqlExpression(valuesContext, sqlExpr, BuildPurpose.Sql, buildFlags);
+							var converted = valueConverter.ToProviderExpression.GetBody(value);
+							converted = builder.BuildSqlExpression(valuesContext, converted, BuildPurpose.Sql, buildFlags);
+
+							// a conversion SQL cannot express leaves a server-side value unconverted
+							if (converted is SqlPlaceholderExpression)
+								sqlExpr = converted;
 						}
 					}
 				}
@@ -578,7 +582,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		static void ParseSet(
 			ExpressionBuilder           builder,
 			IBuildContext               buildContext,
-			Expression                  targetPath,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes,
@@ -606,8 +609,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				foreach (var (f, v) in pairs)
 				{
-					var currentPath = Expression.MakeMemberAccess(targetPath, f.MemberInfo);
-					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
+					ParseSet(builder, buildContext, f.Expression, v.Expression, envelopes, false);
 				}
 			}
 			else
@@ -623,8 +625,29 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<SetExpressionEnvelope> envelopes,
 			bool                        forceParameters)
 		{
-			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes, forceParameters);
+			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, fieldExpression, valueExpression, envelopes, forceParameters);
 		}
+
+		/// <summary>
+		/// Retypes <paramref name="target"/> to <paramref name="memberInfo"/>'s declaring type when the
+		/// member is declared on a subtype of what the target currently carries.
+		/// </summary>
+		/// <remarks>
+		/// A setter may construct a type derived from the table's entity type, as in
+		/// <c>GetTable&lt;Base&gt;().Insert(() =&gt; new Derived { ... })</c>; an output projection over an
+		/// inheritance root carries the subtypes' columns for the same reason. Either way the member is
+		/// declared on a subtype while the target carries the table's type, a pairing
+		/// <see cref="Expression.MakeMemberAccess(Expression, MemberInfo)"/> rejects. Retyping is enough for
+		/// the column to resolve in the reported shape: the subtype's <see cref="ColumnDescriptor"/> is
+		/// merged into the base entity descriptor unless its member name collides with an already-merged
+		/// one, and the field lookup compares members by name and declaring-type relationship rather than
+		/// by the target's type. Requiring a same-or-parent relation rather than plain name equality is
+		/// also what keeps two sibling-declared members of the same name from matching each other.
+		/// </remarks>
+		static Expression EnsureDeclaringType(Expression target, MemberInfo memberInfo)
+			=> memberInfo.DeclaringType?.IsAssignableFrom(target.Type) == false
+				? SequenceHelper.EnsureType(target, memberInfo.DeclaringType)
+				: target;
 
 		internal static void ParseSetter(
 			ExpressionBuilder           builder,
@@ -646,18 +669,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					foreach (var assignment in generic.Assignments)
 					{
-						var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
+						var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef, assignment.MemberInfo), assignment.MemberInfo);
 
-						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
+						ParseSet(builder, sourceRef.BuildContext, memberAccess, assignment.Expression, envelopes, false);
 					}
 
 					foreach (var parameter in generic.Parameters)
 					{
 						if (parameter.MemberInfo != null)
 						{
-							var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+							var memberAccess = Expression.MakeMemberAccess(EnsureDeclaringType(targetRef, parameter.MemberInfo), parameter.MemberInfo);
 
-							ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+							ParseSet(builder, sourceRef.BuildContext, memberAccess, parameter.Expression, envelopes, false);
 						}
 					}
 
@@ -930,7 +953,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						updateExpr      = SequenceHelper.PrepareBody(lambda, sequence);
 					}
 
-					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions, forceParameters);
+					ParseSet(builder, sequence, extractExpr, updateExpr, updateContext.SetExpressions, forceParameters);
 				}
 
 				return BuildSequenceResult.FromContext(updateContext);

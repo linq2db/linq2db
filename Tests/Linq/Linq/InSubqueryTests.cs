@@ -24,14 +24,14 @@ namespace Tests.Linq
 		static bool UseInQuery<T>(T? value, bool compareNullsAsValues)
 			where T: struct
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(UseInQuery));
 		}
 
 		[ExpressionMethod(nameof(UseInQueryImpl))]
 		static bool UseInQuery<T>(T value, bool compareNullsAsValues)
 			where T: struct
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(UseInQuery));
 		}
 
 		static Expression<Func<T?, bool, bool>> UseInQueryNullableImpl<T>()

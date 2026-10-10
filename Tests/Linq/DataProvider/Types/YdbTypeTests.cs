@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -28,7 +28,7 @@ namespace Tests.DataProvider
 		}
 
 		[Sql.Expression("ListHas({1}, {0})", IsPredicate = true, ServerSideOnly = true)]
-		static bool InList(object? field, object? list) => throw new InvalidOperationException();
+		static bool InList(object? field, object? list) => throw new ServerSideOnlyException(nameof(InList));
 
 		protected override IQueryable<TypeTable<TType, TNullableType>> MakeListFilter<TType, TNullableType>(TempTable<TypeTable<TType, TNullableType>> table, object? columnValue, object? nullableColumnValue)
 		{
@@ -317,7 +317,9 @@ namespace Tests.DataProvider
 			await TestInteger<float>(context, DataType.Double, float.MinValue, float.MaxValue);
 		}
 
-		[ActiveIssue("https://github.com/ydb-platform/ydb-dotnet-sdk/issues/331")]
+		[ActiveIssue("https://github.com/ydb-platform/ydb-dotnet-sdk/issues/331",
+			ErrorTypeName = "Ydb.Sdk.Ado.YdbException", ErrorMessage = "Uncompatible types in compare: DyNumber '==' Decimal(22,9)",
+			Details = "the SDK sends the parameter as Decimal(22,9), so the server refuses to compare it with the DyNumber column - the driver-side gap the SDK issue tracks.")]
 		[Test]
 		public async ValueTask TestDyNumber([YdbDataSources] string context)
 		{

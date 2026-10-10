@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildDistinctByViaRowNumber<T>(ExpressionBuilder builder, IBuildContext sequence, Expression[] partitionPart, (Expression expr, bool descending, Sql.NullsPosition nulls)[] orderByPart)
 		{
-			var           contextRef = new ContextRefExpression(typeof(IQueryable<T>), sequence);
+			var           contextRef = new ContextRefExpression(typeof(IQueryable<T>), new SourceAnchorContext(sequence));
 			IQueryable<T> query      = new ExpressionQueryImpl<T>(builder.DataContext, contextRef);
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
@@ -143,6 +143,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
+				// The captured ordering is consumed twice below — as the OVER clause's partition order, and re-applied
+				// to the outer result — so the sequence's own OrderBy clause is redundant from here on. Left in place,
+				// SqlQueryOrderByOptimizer redistributes it onto the outer query: an emulated NULLS position is not a
+				// plain column there, so it gets materialized as an extra projected column and appended as a trailing
+				// sort key that merely repeats the leading one. A limited sequence keeps its ordering — there it
+				// decides which rows survive, and the optimizer leaves such a sequence alone anyway.
+				if (!sequence.SelectQuery.IsLimited)
+					sequence.SelectQuery.OrderBy.Items.Clear();
+
 				var partitionBody = SequenceHelper.PrepareBody(selector, sequence);
 
 				var partitionPart = ExpressionHelpers.CollectMembers(partitionBody).ToArray();
@@ -184,6 +193,43 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return BuildSequenceResult.NotSupported();
+		}
+
+		/// <summary>
+		/// Anchors the already-built source sequence for the ROW_NUMBER rewrite. Re-entering
+		/// <c>TryBuildSequence</c> with a bare <see cref="ContextRefExpression"/> resolves it through
+		/// <see cref="ProjectFlags.Subquery"/> first, and <see cref="SubQueryContext.MakeExpression"/> answers
+		/// that with a reference to its own inner context — repeatedly, until the reference names the innermost
+		/// table context. Everything the peeled wrappers carried is then lost (a preceding <c>Where</c> above
+		/// all), and the OVER-clause placeholders captured against them are left dangling, which surfaces as
+		/// "Table not found for '...'" at SQL-build time.
+		/// <para>
+		/// The descend must not be suppressed in <see cref="SubQueryContext"/> itself: it is what decides which
+		/// query an aggregate is attached to, and short-circuiting it moves a grouping aggregate into a
+		/// correlated subquery while its arguments stay bound to the outer grouped query — invalid SQL for
+		/// ordered-set aggregates (<c>PERCENTILE_DISC ... WITHIN GROUP (ORDER BY &lt;non-grouped column&gt;)</c>).
+		/// Hence the anchor is applied here, at the only re-entry site that hands back a reference to an
+		/// already-built sequence, rather than globally.
+		/// </para>
+		/// </summary>
+		sealed class SourceAnchorContext : PassThroughContext
+		{
+			public SourceAnchorContext(IBuildContext context) : base(context)
+			{
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (flags.IsSubquery() && SequenceHelper.IsSameContext(path, this))
+					return path;
+
+				return base.MakeExpression(path, flags);
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new SourceAnchorContext(context.CloneContext(Context));
+			}
 		}
 
 		/// <summary>

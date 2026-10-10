@@ -415,6 +415,11 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 			protected override bool IsPercentileDiscSupported       => false;
 			protected override bool IsLeadLagNullTreatmentSupported => true;
 			protected override bool IsValueNullTreatmentSupported   => true;
+			// FIRST_VALUE/LAST_VALUE work, but not over a boolean: Informix resolves the frame comparison to a
+			// "lessthanorequal" routine that has no boolean overload, so even FIRST_VALUE(<bool column>) fails with
+			// "Routine (lessthanorequal) can not be resolved". Reject it at translation time with a clear message
+			// instead of letting that reach the user.
+			protected override bool IsFirstLastValueBooleanSupported => false;
 			// Sample-vs-population on Informix is non-obvious — verified empirically against IDS 14 (Informix.DB2
 			// connection), because the published docs are self-contradictory (they label STDEV/VARIANCE as the
 			// "population" estimate yet quote an N-1 sample formula):

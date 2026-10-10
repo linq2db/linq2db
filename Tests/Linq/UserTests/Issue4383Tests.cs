@@ -55,14 +55,10 @@ namespace Tests.UserTests
 		}
 
 		[Table("PUMPLINE_CHAINS")]
-		public class SewerPumpLineChainTest : PumpLineChainTest<SewerChainTest>
-		{
-		}
+		public class SewerPumpLineChainTest : PumpLineChainTest<SewerChainTest>;
 
 		[Table("PUMPLINES")]
-		public class SewerPumpLineTest : PumpLineTest<SewerChainTest, SewerPumpLineChainTest>
-		{
-		}
+		public class SewerPumpLineTest : PumpLineTest<SewerChainTest, SewerPumpLineChainTest>;
 
 		[Test]
 		public void Test([DataSources(TestProvName.AllAccess)] string context)

@@ -1,0 +1,6 @@
+#!/bin/sh
+# After a rebase / amend (post-merge does not fire for those), refresh .claude.
+# Must drain stdin: git feeds this hook the rewritten-commit list.
+cat >/dev/null
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+exec "$(dirname "$0")/_refresh-corpus.sh"

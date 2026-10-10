@@ -26,7 +26,7 @@ namespace Tests.UserTests
 			[Column                                                     ] public int?         OrganizationId { get; set; }
 
 			[ExpressionMethod(nameof(InYourOrganizationSelector))]
-			public bool InYourOrganization(User callingUser) => throw new NotImplementedException();
+			public bool InYourOrganization(User callingUser) => throw new ServerSideOnlyException(nameof(InYourOrganization));
 
 			static Expression<Func<User, User, bool>> InYourOrganizationSelector()
 			{

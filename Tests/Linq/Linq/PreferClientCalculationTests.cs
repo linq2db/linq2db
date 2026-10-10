@@ -35,7 +35,7 @@ namespace Tests.Linq
 		// lets it move client-side when client calculation is preferred.
 		[Sql.Function("ABS", PreferServerSide = true )] static int PreferServer(int value) => Math.Abs(value);
 		[Sql.Function("ABS", PreferServerSide = false)] static int PreferClient(int value) => Math.Abs(value);
-		[Sql.Function("ABS", ServerSideOnly   = true )] static int ServerOnly  (int value) => throw new InvalidOperationException();
+		[Sql.Function("ABS", ServerSideOnly   = true )] static int ServerOnly  (int value) => throw new ServerSideOnlyException(nameof(ServerOnly));
 
 		// No SQL mapping — forces client-side evaluation, used to exercise the Sql.ToNullable translator's
 		// "argument can't be turned into SQL" fall-through (it returns null and the call stays client-side).
@@ -219,9 +219,35 @@ namespace Tests.Linq
 
 			// A server-side-only API inside a conditional must stay in SQL even when client calculation is
 			// preferred (the IsServerSideOnly gate) — otherwise it would be illegally evaluated on the client.
-			query.GetSelectQuery().Find(e => e is SqlFunction { Name: "ABS" }).ShouldNotBeNull();
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.Find(e => e is SqlFunction { Name: "ABS" }).ShouldNotBeNull();
+
+			// The conditional AROUND it has to stay in SQL too. Emitting the three operands as separate columns and
+			// picking a branch on the client keeps ABS in the query (so the check above still passes) but evaluates
+			// the server-side-only call for every row, not just the matching ones.
+			selectQuery.Find(e => e is SqlConditionExpression).ShouldNotBeNull();
+			selectQuery.Select.Columns.Count.ShouldBe(1);
 
 			_ = query.ToArray(); // must not throw
+		}
+
+		[Test]
+		public void ServerSideOnlyAggregateStaysInSql([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool preferClient)
+		{
+			using var db    = GetDataContext(context, o => o.UsePreferClientCalculation(preferClient));
+			using var table = db.CreateLocalTable(ClientCalcEntity.Seed);
+
+			var query =
+				from e in table
+				group e by e.Id > 1 into g
+				select new { Names = g.StringAggregate(", ", e => e.Name).ToValue() };
+
+			// Executing is the assertion: StringAggregate's IEnumerable overload is a throw-only stub, so a
+			// client fold would throw rather than return rows. Measured: this passes with the [ServerSideOnly]
+			// marker removed too - the aggregate is claimed by the translator before any fold decision, so the
+			// marker is inert here. Kept as coverage that the aggregate survives both option settings.
+			_ = query.ToArray();
 		}
 
 		[Test]

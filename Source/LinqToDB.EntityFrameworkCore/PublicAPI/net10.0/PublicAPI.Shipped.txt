@@ -4,6 +4,7 @@ static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsNoTrac
 static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsSingleQueryMethodInfo -> System.Reflection.MethodInfo!
 static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsSplitQueryMethodInfo -> System.Reflection.MethodInfo!
 static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsSqlServerTable -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.IgnoreQueryFiltersByKeyMethodInfo -> System.Reflection.MethodInfo!
 static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalAll -> System.Reflection.MethodInfo!
 static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalAsOfTable -> System.Reflection.MethodInfo!
 static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalBetween -> System.Reflection.MethodInfo!

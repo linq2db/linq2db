@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if ((flags.IsRoot() || flags.IsExtractProjection() || flags.IsExpand() || flags.IsSubquery() || flags.IsAggregationRoot() || flags.IsExpand())
+					if ((flags.IsRoot() || flags.IsExtractProjection() || flags.IsExpand() || flags.IsSubquery() || flags.IsAggregationRoot())
 					    && !path.Type.IsAssignableFrom(ElementType))
 					{
 						var result = GetGroupJoinCall();

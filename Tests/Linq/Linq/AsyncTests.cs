@@ -1,15 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.DuckDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.Async;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 using Tests.UserTests;
@@ -20,6 +29,7 @@ namespace Tests.Linq
 	public class AsyncTests : TestBase
 	{
 		[Test]
+		[UsesRemoteContext]
 		public async Task Test([DataSources(false)] string context)
 		{
 			await TestImpl(context);
@@ -38,6 +48,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[UsesRemoteContext]
 		public void Test1([DataSources(false)] string context)
 		{
 			if (TestConfiguration.DisableRemoteContext)
@@ -49,6 +60,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[UsesRemoteContext]
 		public async Task TestForEach([DataSources(false)] string context)
 		{
 			await TestForEachImpl(context);
@@ -274,6 +286,138 @@ namespace Tests.Linq
 			});
 		}
 
+		// The enumerator for a linq2db query creates its underlying enumerator lazily, on the first
+		// MoveNextAsync, so disposing before that must be a no-op.
+		// https://github.com/linq2db/linq2db/discussions/5891
+		[Test]
+		public async Task DisposeAsyncWithoutMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			await enumerator.DisposeAsync();
+		}
+
+		[Test]
+		public async Task DisposeAsyncTwiceWithoutMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			await using var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			await enumerator.DisposeAsync();
+		}
+
+		[Test]
+		public async Task DisposeAsyncTwiceAfterEnumerationTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			var count = 0;
+			while (await enumerator.MoveNextAsync())
+				count++;
+
+			count.ShouldBe(Parent.Count());
+
+			await enumerator.DisposeAsync();
+			await enumerator.DisposeAsync();
+		}
+
+		[Test]
+		public async Task CurrentBeforeMoveNextTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			await using var enumerator = db.Parent.AsAsyncEnumerable().GetAsyncEnumerator();
+
+			Action act = () => { _ = enumerator.Current; };
+			act.ShouldThrow<InvalidOperationException>();
+		}
+
+		// MaskingChild maps to a table that does not exist, so the eager-load preamble fails inside the
+		// enumerator's initializer while its inner enumerator is still null. A query without preambles
+		// runs nothing there that can fail, so it cannot reach this path.
+		[Test]
+		public async Task DisposeAsyncDoesNotMaskInitFailureTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Func<Task> act = async () =>
+			{
+				await using var enumerator = db.GetTable<MaskingParent>()
+					.LoadWith(p => p.Children)
+					.AsAsyncEnumerable()
+					.GetAsyncEnumerator();
+
+				await enumerator.MoveNextAsync();
+			};
+
+			var ex = await act.ShouldThrowAsync<Exception>();
+			ex.ShouldNotBeOfType<NullReferenceException>();
+		}
+
+		// ForEachUntilAsync stops when the callback returns false, per its own documentation and per
+		// the non-linq2db source path asserted here as the control.
+		[Test]
+		public async Task ForEachUntilAsyncStopsOnFalseTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = new List<int>();
+			await Parent.OrderBy(p => p.ParentID).AsQueryable().ForEachUntilAsync(p =>
+			{
+				expected.Add(p.ParentID);
+				return expected.Count < 2;
+			});
+
+			var all = new List<int>();
+			await db.Parent.OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				all.Add(p.ParentID);
+				return true;
+			});
+
+			var stopped = new List<int>();
+			await db.Parent.OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				stopped.Add(p.ParentID);
+				return stopped.Count < 2;
+			});
+
+			// an implementation that always stopped on the first row would satisfy `stopped` by
+			// accident, so pin that the two arms can differ at all
+			expected.Count.ShouldBe(2);
+			all.Count.ShouldBeGreaterThan(expected.Count);
+
+			stopped.ShouldBe(expected);
+		}
+
+		[Test]
+		public async Task ForEachUntilAsyncEagerLoadTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// each arm must build its own query: sharing one lets the second arm read the preamble
+			// results the first one cached, hiding whether it initializes them itself
+			var expected = await db.Parent.LoadWith(p => p.Children).OrderBy(p => p.ParentID).ToListAsync();
+
+			var actual = new List<Parent>();
+			await db.Parent.LoadWith(p => p.Children).OrderBy(p => p.ParentID).ForEachUntilAsync(p =>
+			{
+				actual.Add(p);
+				return true;
+			});
+
+			// without eager-loaded children the child-count comparison below could not fail
+			expected.Sum(p => p.Children.Count).ShouldBeGreaterThan(0);
+
+			actual.Select(p => p.ParentID).ShouldBe(expected.Select(p => p.ParentID));
+			actual.Select(p => p.Children.Count).ShouldBe(expected.Select(p => p.Children.Count));
+		}
+
 		[Test]
 		public async Task ToLookupAsyncTest([DataSources] string context)
 		{
@@ -310,6 +454,127 @@ namespace Tests.Linq
 
 			foreach (var g in g1)
 				AreEqual(g1[g.Key], g2[g.Key]);
+		}
+
+		// Queries, returned by LoadWith/database-specific extensions or by temporary table creation, are wrappers
+		// over linq2db query. Materialization extensions below must recognize them, otherwise query is executed
+		// synchronously on a thread pool thread instead of using async ADO.NET API.
+		[Test]
+		public async Task LoadWithQueryMaterializedAsynchronously([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db = GetDataConnection(context, interceptor: interceptor);
+
+			var records = await db.Child.LoadWith(c => c.Parent).ToListAsync();
+
+			records.ShouldNotBeEmpty();
+			records.ShouldAllBe(c => c.Parent != null);
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		[Test]
+		public async Task TempTableMaterializedAsynchronously([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db    = GetDataConnection(context, interceptor: interceptor);
+			using var table = db.CreateLocalTable(new[] { new AsyncMaterializationRecord { Id = 1 } });
+
+			interceptor.Reset();
+
+			var records = await table.ToListAsync();
+
+			records.ShouldHaveSingleItem();
+
+			var asyncRecords = new List<AsyncMaterializationRecord>();
+
+			await foreach (var record in table.AsAsyncEnumerable())
+				asyncRecords.Add(record);
+
+			asyncRecords.ShouldHaveSingleItem();
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		[Test]
+		public async Task DatabaseSpecificTableMaterializedAsynchronously([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db = GetDataConnection(context, interceptor: interceptor);
+
+			var records = await db.Child.AsSQLite().ToListAsync();
+
+			records.ShouldNotBeEmpty();
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		// AsDuckDB over IQueryable (rather than ITable) is the only shape that produces
+		// DatabaseSpecificQueryable; SQLite has no such overload.
+		[Test]
+		public async Task DatabaseSpecificQueryableMaterializedAsynchronously([IncludeDataSources(TestProvName.AllDuckDB)] string context)
+		{
+			var interceptor = new DataReaderApiInterceptor();
+
+			using var db = GetDataConnection(context, interceptor: interceptor);
+
+			var records = await db.Child.Where(c => c.ChildID > 0).AsDuckDB().ToListAsync();
+
+			records.ShouldNotBeEmpty();
+
+			interceptor.AsyncCalls.ShouldBeGreaterThan(0);
+			interceptor.SyncCalls.ShouldBe(0);
+		}
+
+		[Table]
+		sealed class AsyncMaterializationRecord
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table("Parent")]
+		sealed class MaskingParent
+		{
+			[PrimaryKey] public int ParentID { get; set; }
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID")]
+			public List<MaskingChild> Children { get; set; } = null!;
+		}
+
+		[Table("NoSuchTable5891")]
+		sealed class MaskingChild
+		{
+			[PrimaryKey] public int ParentID { get; set; }
+		}
+
+		sealed class DataReaderApiInterceptor : CommandInterceptor
+		{
+			public int SyncCalls  { get; private set; }
+			public int AsyncCalls { get; private set; }
+
+			public void Reset()
+			{
+				SyncCalls  = 0;
+				AsyncCalls = 0;
+			}
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				SyncCalls++;
+				return base.ExecuteReader(eventData, command, commandBehavior, result);
+			}
+
+			public override Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
+			{
+				AsyncCalls++;
+				return base.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken);
+			}
 		}
 	}
 }

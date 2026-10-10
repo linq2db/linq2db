@@ -1,0 +1,32 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<!--
+	Shared settings for the two linq2db.Analyzers Roslyn-component projects (the analyzer and the code-fix
+	package). Imported by each project's Directory.Build.props AFTER the root props, so it overrides the
+	root's multi-TFM list. Order-safe content only (properties + PackageReference): the `Compile Remove` of
+	the shared compat sources stays in each csproj, because a Directory.Build.props-level import is evaluated
+	before the SDK's default Compile glob and a Remove here would be a no-op.
+	-->
+
+	<PropertyGroup>
+		<!-- Roslyn components must be netstandard2.0; clear the inherited multi-TFM list. -->
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks></TargetFrameworks>
+
+		<IsRoslynComponent>true</IsRoslynComponent>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<RunApiAnalyzersDuringBuild>false</RunApiAnalyzersDuringBuild>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Enabled Polyfills">
+		<Polyfill></Polyfill>
+		<Polyfill>$(Polyfill)|T:System.HashCode</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IsExternalInit</Polyfill>
+		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+	</ItemGroup>
+
+</Project>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -39,7 +40,17 @@ namespace Tests
 				&& Environment.GetEnvironmentVariable("CI")       == null;
 		}
 
-		protected static string? LastQuery { get; set; }
+		// Per-test (stored in CustomTestContext) so parallel tests don't clobber each other's
+		// last-executed-query; the trace sink writes it and tests read it back on their own thread.
+		protected static string? LastQuery
+		{
+			get => CustomTestContext.Get().Get<string?>(CustomTestContext.LASTQUERY);
+			set => CustomTestContext.Get().Set(CustomTestContext.LASTQUERY, value);
+		}
+
+		// Set when the parallel dispatcher is installed (TestsInitialization). Gates the
+		// per-provider database-readiness wait below, so a serial run is unaffected.
+		public static bool ParallelExecutionEnabled;
 
 		static TestBase()
 		{
@@ -154,6 +165,37 @@ namespace Tests
 		[SetUp]
 		public virtual void OnBeforeTest()
 		{
+			var test = TestExecutionContext.CurrentContext.CurrentTest;
+			var (provider, isRemote) = NUnitUtils.GetContext(test);
+
+			// Drop any server-provider marker left on this thread. It is set on the LinqService server's
+			// execution flow and CustomTestContext.Get consults it *before* the current test id, so a stale
+			// value would misroute this test's traces and baselines. Today every transport answers on a
+			// thread-pool thread, whose ExecutionContext is reset per work item, so none can survive - but
+			// lane threads are dedicated and outlive the item that ran on them, so an in-process transport
+			// would leave one set on a lane for the rest of the run.
+			CustomTestContext.SetServerProvider(null);
+
+			// establish a fresh per-test context before anything in setup/test can log
+			CustomTestContext.Begin(isRemote, provider);
+
+			// Under parallel execution, wait until this provider's database has been created
+			// (CreateDatabase runs off-lane and signals readiness). A serial run skips this; providers
+			// that get no CreateDatabase case are pre-marked ready in TestsInitialization, so only
+			// providers this run actually creates are waited on.
+			if (ParallelExecutionEnabled && provider != null)
+			{
+				if (!NUnitUtils.IsCreateDatabase(test))
+				{
+					var signaled = CustomTestContext.AwaitDatabaseReady(provider);
+
+					// Backstop: if the wait timed out (no CreateDatabase ever signalled it), release the
+					// other waiters so they don't each pay the full timeout — one wait per provider, not per test.
+					if (!signaled)
+						CustomTestContext.MarkDatabaseReady(provider);
+				}
+			}
+
 			// SequentialAccess for the SqlServer.SA provider is now a per-context option set in the
 			// GetDataConnection/GetDataContext factory, so parallel lanes don't share a process-global toggle.
 		}
@@ -161,10 +203,16 @@ namespace Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
+			var test = TestExecutionContext.CurrentContext.CurrentTest;
+			var (provider, isRemote) = NUnitUtils.GetContext(test);
+
+			// release any tests waiting on this provider's database: signalled after CreateDatabase
+			// runs (here, not inside the try, so a failed CreateDatabase still unblocks waiters)
+			if (provider != null && NUnitUtils.IsCreateDatabase(test))
+				CustomTestContext.MarkDatabaseReady(provider);
+
 			try
 			{
-				var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-
 				if (provider?.IsAnyOf(TestProvName.AllSapHana) == true)
 				{
 					using (new DisableLogging())

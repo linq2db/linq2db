@@ -20,9 +20,7 @@ namespace Tests.UserTests
 			public string? Str;
 		}
 
-		public struct DataPack
-		{
-		}
+		public struct DataPack;
 
 		[Test]
 		public void TestRefTypeDoNotThrow([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
