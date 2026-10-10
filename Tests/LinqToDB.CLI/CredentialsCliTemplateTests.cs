@@ -28,8 +28,8 @@ namespace Tests.LinqToDB.CLI
 
 		// A fake secret-tool: items are directories under $FAKE_STATE/items with one file per attribute. "search --all"
 		// prints the item header and secret on stdout and the attributes on stderr, like the real tool; a "locked" file
-		// makes the keyring locked (no secret lines, lookup/store fail). "search --unlock" unlocks it, as a user answering
-		// the unlock prompt does.
+		// makes the keyring locked (no secret lines, lookup fails). "search --unlock" and "store" unlock it, as libsecret does
+		// with a prompt that a user answers; "store" also leaves a "prompted" file, since nobody may be there to answer.
 		const string FakeSecretTool = """
 			#!/bin/sh
 			set -u
@@ -58,7 +58,7 @@ namespace Tests.LinqToDB.CLI
 			locked() { [ -e "$FAKE_STATE/locked" ]; }
 			case $cmd in
 				store)
-					locked && { echo 'secret-tool: Cannot create an item in a locked collection' >&2; exit 1; }
+					if locked; then : > "$FAKE_STATE/prompted"; rm -f "$FAKE_STATE/locked"; fi
 					secret=$(cat; printf x); secret=${secret%x}
 					item=''
 					for d in "$FAKE_STATE"/items/*; do [ -d "$d" ] && matches "$d" && item=$d; done
@@ -179,7 +179,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("gpg")]
 		public void RoundTripWithHostileValues(string store)
 		{
-			var cli = CreateStore(store);
+			var cli = CreateStore(store, interactive: true);
 
 			cli.TryStore(HostileTarget.Substring("linq2db/".Length), HostileUser, HostilePassword, out var error).ShouldBeTrue(error);
 
@@ -207,7 +207,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("gpg")]
 		public void StoreReplacesWithDifferentUser(string store)
 		{
-			var cli = CreateStore(store);
+			var cli = CreateStore(store, interactive: true);
 
 			cli.TryStore("a", "first",  "p1", out var error).ShouldBeTrue(error);
 			cli.TryStore("a", "second", "p2", out error).ShouldBeTrue(error);
@@ -224,7 +224,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("gpg")]
 		public void EmptyPasswordRoundTrips(string store)
 		{
-			var cli = CreateStore(store);
+			var cli = CreateStore(store, interactive: true);
 
 			cli.TryStore("empty", "u", string.Empty, out var error).ShouldBeTrue(error);
 
@@ -240,7 +240,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("gpg")]
 		public void ClearRemovesAll(string store)
 		{
-			var cli = CreateStore(store);
+			var cli = CreateStore(store, interactive: true);
 
 			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
 			cli.TryStore("b", "u", "p", out error).ShouldBeTrue(error);
@@ -258,7 +258,7 @@ namespace Tests.LinqToDB.CLI
 		{
 			// pass keeps the password on line 1 and "user: <name>" on line 2; a password of that shape must not be read as
 			// the user name.
-			var cli = CreateStore(store);
+			var cli = CreateStore(store, interactive: true);
 
 			cli.TryStore("a", "app=reader", "user: TOPSECRET", out var error).ShouldBeTrue(error);
 
@@ -273,9 +273,10 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void SecretToolLockedKeyringIsAFailureNotNotFound()
 		{
-			var cli = CreateStore("keyring");
+			CreateStore("keyring", interactive: true).TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			File.Delete(Path.Combine(_state, "argv.log"));
 
-			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			var cli = CreateStore("keyring");
 
 			File.WriteAllText(Path.Combine(_state, "locked"), string.Empty);
 
@@ -291,8 +292,31 @@ namespace Tests.LinqToDB.CLI
 			cli.TryStore("b", "u", "p", out error).ShouldBeFalse();
 			error.ShouldNotBeNull().ShouldContain("failed with exit code 1");
 
-			// Nobody can answer an unlock prompt: none is raised.
+			// Nobody can answer an unlock prompt: none is raised, not even by storing a new record.
 			ArgvLog.ShouldNotContain("--unlock");
+			File.Exists(Path.Combine(_state, "prompted")).ShouldBeFalse();
+			File.Exists(Path.Combine(_state, "locked")).ShouldBeTrue();
+		}
+
+		[Test]
+		public void SecretToolNonInteractiveStoreNeedsAnUnlockedItem()
+		{
+			// Without a prompt the script cannot tell an empty keyring from a locked one: the first record is stored from a
+			// terminal; after that an unlocked item of ours shows the keyring unlocked.
+			var cli = CreateStore("keyring");
+
+			// A password long enough for the client to remove it from standard error and show the reason.
+			cli.TryStore("a", "u", "secret-value", out var error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("cannot tell without a prompt whether the keyring is locked");
+
+			CreateStore("keyring", interactive: true).TryStore("a", "u", "p", out error).ShouldBeTrue(error);
+
+			cli.TryStore("b", "v", "q", out error).ShouldBeTrue(error);
+			cli.TryRead("linq2db/b", out var user, out var password, out error).ShouldBeTrue(error);
+			user.    ShouldBe("v");
+			password.ShouldBe("q");
+
+			File.Exists(Path.Combine(_state, "prompted")).ShouldBeFalse();
 		}
 
 		[Test]
@@ -367,7 +391,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("gpg")]
 		public void EveryAnswerStartsWithTheHeader(string store)
 		{
-			var runner = CreateRunner(store);
+			var runner = CreateRunner(store, interactive: true);
 
 			string Answer(string verb, params string[] keys)
 			{
@@ -384,8 +408,11 @@ namespace Tests.LinqToDB.CLI
 			Answer("list").ShouldBe("protocol=1\nstatus=ok\n\ntarget=linq2db/a\nusername=u\n\ntarget=linq2db/b\nusername=v\n");
 			Answer("erase", "target=linq2db/a").ShouldBe("protocol=1\nstatus=ok\n");
 
-			// A failing backend: the answer is still framed, as an error.
+			// A failing backend: the answer is still framed, as an error. Non-interactive: a keyring would be unlocked by a
+			// user answering the prompt.
 			File.WriteAllText(Path.Combine(_state, store == "keyring" ? "locked" : "fail"), string.Empty);
+
+			runner = CreateRunner(store);
 
 			var failed = runner.Run("get", CredentialsCliTestSupport.Request("protocol=1", "verb=get", "target=linq2db/b"));
 

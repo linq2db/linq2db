@@ -377,7 +377,10 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
 
 - `--store keyring`: your Linux desktop keyring (GNOME Keyring or KWallet) through `secret-tool` (package
   `libsecret-tools` on Debian/Ubuntu); Linux with a desktop session. Items carry the attributes `service=linq2db-cli`,
-  `target`, `user`.
+  `target`, `user`. When nobody can answer a prompt (`LINQ2DB_CREDENTIAL_INTERACTIVE=0`) the script never raises the
+  keyring's unlock prompt: a locked keyring is an error, and since `secret-tool` cannot tell an empty keyring from a
+  locked one without a prompt, a new record is stored only when another linq2db item shows the keyring unlocked; store
+  the first record from a terminal.
 - `--store gpg`: [pass](https://www.passwordstore.org/), one GPG-encrypted file per password in `~/.password-store`;
   servers, SSH, WSL, macOS; needs a GPG key and an initialized store (`pass init <gpg-id>`). Entries are
   `linq2db-cli/<target>` with the password on the first line and `user: <name>` on the second.
