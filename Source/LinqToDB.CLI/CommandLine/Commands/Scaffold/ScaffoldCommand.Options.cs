@@ -313,7 +313,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					!_defaultOptions.CodeGeneration.ClassPerFile,
-					!_t4ModeOptions.CodeGeneration.ClassPerFile);
+					!_t4ModeOptions.CodeGeneration.ClassPerFile)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Single-file generation mode option.
@@ -704,7 +705,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasDefaultConstructor,
-					_t4ModeOptions.DataModel.HasDefaultConstructor);
+					_t4ModeOptions.DataModel.HasDefaultConstructor)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Data context contructor with configuration parameter generation option.
@@ -718,7 +720,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasConfigurationConstructor,
-					_t4ModeOptions.DataModel.HasConfigurationConstructor);
+					_t4ModeOptions.DataModel.HasConfigurationConstructor)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Data context contructor with non-generic options parameter generation option.
@@ -732,7 +735,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor,
-					_t4ModeOptions.DataModel.HasUntypedOptionsConstructor);
+					_t4ModeOptions.DataModel.HasUntypedOptionsConstructor)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Data context contructor with generic options parameter generation option.
@@ -746,7 +750,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor,
-					_t4ModeOptions.DataModel.HasTypedOptionsConstructor);
+					_t4ModeOptions.DataModel.HasTypedOptionsConstructor)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Data context class name option.
@@ -835,7 +840,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateAssociationExtensions,
-					_t4ModeOptions.DataModel.GenerateAssociationExtensions);
+					_t4ModeOptions.DataModel.GenerateAssociationExtensions)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Type of association return type for association back reference with many cardinality option.
@@ -988,7 +994,8 @@ static class CustomFluentExtensions
 					null,
 					null,
 					_defaultOptions.DataModel.GenerateIEquatable,
-					_t4ModeOptions.DataModel.GenerateIEquatable);
+					_t4ModeOptions.DataModel.GenerateIEquatable)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Generate Find extension method for entity option.

@@ -77,12 +77,9 @@ namespace LinqToDB.CommandLine.Commands.Scaffold
 				if (string.Equals(settings.CodeGeneration.Indent, "\t", StringComparison.Ordinal))
 					settings.CodeGeneration.Indent = "    ";
 
-				// TODO(#1553): incremental F# parity. These C#-shaped features are not yet emitted for F#;
-				// they will be re-enabled one by one as the F# code generator gains support for each
-				// (Find methods as module functions, records' structural equality, associations as record
-				// fields, a single primary constructor). Until then, restrict F# to the record + context core.
-				// F# records are structurally value-equal already, so the C#-style IEquatable comparer is not
-				// emitted (it would conflict with the compiler-generated equality)
+				// C#-shaped features F# doesn't emit; the matching options are TargetLanguages.CSharp, so these only
+				// override defaults. F# records are structurally value-equal already, so the C#-style IEquatable
+				// comparer is not emitted (it would conflict with the compiler-generated equality)
 				settings.DataModel.GenerateIEquatable                = false;
 				// associations become extra record fields with [<Association>] attributes (namespace rec covers
 				// the mutual references); association *extension* methods remain gated off for now
