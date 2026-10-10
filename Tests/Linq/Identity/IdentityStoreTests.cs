@@ -8,8 +8,11 @@ using LinqToDB.Async;
 using LinqToDB.Identity;
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Identity
 {
@@ -68,6 +71,92 @@ namespace Tests.Identity
 
 			Assert.That((await store.DeleteAsync(byEmail)).Succeeded, Is.True);
 			Assert.That(await store.FindByIdAsync(user.Id), Is.Null);
+		}
+
+		// CreateTable emits no foreign keys, so nothing cascades: the store itself has to remove the dependents
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		public async Task UserDeleteRemovesDependents([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var user = NewUser("gone");
+			var role = NewRole("gone-role");
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+			await users.AddToRoleAsync(user, "GONE-ROLE");
+			await users.AddClaimsAsync(user, [new Claim("scope", "read")]);
+			await users.AddLoginAsync(user, new UserLoginInfo("google", "key-gone", "Google"));
+			await users.SetTokenAsync(user, "google", "refresh", "tok", default);
+
+			(await users.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+
+			ctx.GetTable<IdentityUserClaim<string>>().Count(r => r.UserId == user.Id).ShouldBe(0);
+			ctx.GetTable<IdentityUserLogin<string>>().Count(r => r.UserId == user.Id).ShouldBe(0);
+			ctx.GetTable<IdentityUserToken<string>>().Count(r => r.UserId == user.Id).ShouldBe(0);
+			ctx.GetTable<IdentityUserRole <string>>().Count(r => r.UserId == user.Id).ShouldBe(0);
+
+			// the same external account can sign up again
+			var again = NewUser("again");
+			await users.CreateAsync(again);
+			await users.AddLoginAsync(again, new UserLoginInfo("google", "key-gone", "Google"));
+			(await users.FindByLoginAsync("google", "key-gone")).ShouldNotBeNull().Id.ShouldBe(again.Id);
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		public async Task RoleDeleteRemovesDependents([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+			var roles = new RoleStore<IdentityRole>(ctx);
+
+			var user = NewUser("member");
+			var role = NewRole("doomed");
+			await users.CreateAsync(user);
+			await roles.CreateAsync(role);
+			await users.AddToRoleAsync(user, "DOOMED");
+			await roles.AddClaimAsync(role, new Claim("perm", "all"));
+
+			(await roles.DeleteAsync(role)).Succeeded.ShouldBeTrue();
+
+			ctx.GetTable<IdentityUserRole <string>>().Count(r => r.RoleId == role.Id).ShouldBe(0);
+			ctx.GetTable<IdentityRoleClaim<string>>().Count(r => r.RoleId == role.Id).ShouldBe(0);
+		}
+
+		// a delete that loses the optimistic check must not have removed the dependents either
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllYdb,        Details = YdbGate)]
+		public async Task UserDeleteConflictKeepsDependents([DataSources] string context)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			var users = new UserStore<IdentityUser>(ctx);
+
+			var user = NewUser("kept");
+			await users.CreateAsync(user);
+			await users.AddClaimsAsync(user, [new Claim("scope", "read")]);
+
+			var stale = (await users.FindByIdAsync(user.Id)).ShouldNotBeNull();
+			(await users.UpdateAsync(user)).Succeeded.ShouldBeTrue();
+
+			(await users.DeleteAsync(stale)).Succeeded.ShouldBeFalse();
+
+			(await users.FindByIdAsync(user.Id)).ShouldNotBeNull();
+			(await users.GetClaimsAsync(user)).Select(c => c.Value).ShouldBe(["read"]);
 		}
 
 		[Test]
@@ -354,6 +443,33 @@ namespace Tests.Identity
 
 			await store.RemovePasskeyAsync(user, credId, default);
 			Assert.That(await store.FindPasskeyAsync(user, credId, default), Is.Null);
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = ClickHouseGate)]
+		[ActiveIssue(Configuration = TestProvName.AllInformix,   Details = InformixPasskeyGate)]
+		public async Task UserDeleteRemovesPasskeys([DataSources] string context, [Values] bool schemaV3)
+		{
+			using var setup  = GetSetup(context);
+			using var schema = new Schema(setup);
+			using var ctx    = GetDataContext(context, setup.MappingSchema);
+
+			// without Version3 the store must not touch AspNetUserPasskeys - the table doesn't exist in older schemas
+			var options = schemaV3 ? Options.Create(new IdentityOptions { Stores = { SchemaVersion = IdentitySchemaVersions.Version3 } }) : null;
+			var store   = new UserStore<IdentityUser>(ctx, options: options);
+			var user    = NewUser("ivan");
+			await store.CreateAsync(user);
+
+			var passkey = new UserPasskeyInfo(
+				[7, 7, 7], [9, 9], DateTimeOffset.UtcNow, signCount: 1,
+				transports: ["internal"], isUserVerified: true, isBackupEligible: false,
+				isBackedUp: false, attestationObject: [5], clientDataJson: [6]);
+
+			await store.AddOrUpdatePasskeyAsync(user, passkey, default);
+
+			(await store.DeleteAsync(user)).Succeeded.ShouldBeTrue();
+
+			ctx.GetTable<IdentityUserPasskey<string>>().Count(r => r.UserId == user.Id).ShouldBe(schemaV3 ? 0 : 1);
 		}
 #endif
 	}

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB.Async;
 using LinqToDB.Concurrency;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace LinqToDB.Identity
 {
@@ -22,7 +23,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-		public UserOnlyStore(IDataContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserOnlyStore(IDataContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
 	}
 
 	/// <summary>
@@ -39,7 +41,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-		public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
 	}
 
 	/// <summary>
@@ -58,7 +61,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-		public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
 	}
 
 	/// <summary>
@@ -101,15 +105,23 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The context used to access the store.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
-		public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null) : base(describer ?? new IdentityErrorDescriber())
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserOnlyStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(describer ?? new IdentityErrorDescriber())
 		{
-			Context = context ?? throw new ArgumentNullException(nameof(context));
+			Context       = context ?? throw new ArgumentNullException(nameof(context));
+			SchemaVersion = options?.Value.Stores.SchemaVersion ?? IdentitySchemaVersions.Version1;
 		}
 
 		/// <summary>
 		/// Gets the database context for this store.
 		/// </summary>
 		public virtual TContext Context { get; }
+
+		/// <summary>
+		/// Gets the identity schema version (<see cref="StoreOptions.SchemaVersion"/>), <see cref="IdentitySchemaVersions.Version1"/> when no options were supplied.
+		/// The passkey table exists only from <see cref="IdentitySchemaVersions.Version3"/>.
+		/// </summary>
+		protected Version SchemaVersion { get; }
 
 		/// <inheritdoc cref="Users"/>
 		public override IQueryable<TUser>        Users      => Context.GetTable<TUser>();
@@ -161,7 +173,19 @@ namespace LinqToDB.Identity
 
 			var result = await Context.DeleteOptimisticAsync(user, cancellationToken).ConfigureAwait(false);
 
-			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
+			if (result != 1)
+				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
+
+			// CreateTable emits no foreign keys, so nothing cascades from the user row (EF Core relies on ON DELETE CASCADE)
+			await UserClaims.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
+			await UserLogins.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
+			await UserTokens.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
+#if NET10_0_OR_GREATER
+			if (SchemaVersion >= IdentitySchemaVersions.Version3)
+				await UserPasskeys.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
+#endif
+
+			return IdentityResult.Success;
 		}
 
 		/// <inheritdoc cref="FindByIdAsync(string, CancellationToken)"/>

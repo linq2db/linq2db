@@ -137,7 +137,14 @@ namespace LinqToDB.Identity
 
 			var result = await Context.DeleteOptimisticAsync(role, cancellationToken).ConfigureAwait(false);
 
-			return result == 1 ? IdentityResult.Success : IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
+			if (result != 1)
+				return IdentityResult.Failed(ErrorDescriber.ConcurrencyFailure());
+
+			// CreateTable emits no foreign keys, so nothing cascades from the role row (EF Core relies on ON DELETE CASCADE)
+			await Context.GetTable<TUserRole>().Where(e => e.RoleId.Equals(role.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
+			await RoleClaims                   .Where(e => e.RoleId.Equals(role.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
+
+			return IdentityResult.Success;
 		}
 
 		/// <inheritdoc cref="DeleteAsync(TRole, CancellationToken)"/>

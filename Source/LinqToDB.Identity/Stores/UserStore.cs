@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using LinqToDB.Async;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 
 namespace LinqToDB.Identity
 {
@@ -19,7 +20,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-		public UserStore(IDataContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserStore(IDataContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
 	}
 
 	/// <summary>
@@ -34,7 +36,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-		public UserStore(IDataContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserStore(IDataContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
 	}
 
 	/// <summary>
@@ -53,7 +56,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-		public UserStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
 	}
 
 	/// <summary>
@@ -75,7 +79,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The <see cref="IDataContext"/>.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/>.</param>
-		public UserStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer) { }
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options) { }
 	}
 
 	/// <summary>
@@ -108,7 +113,8 @@ namespace LinqToDB.Identity
 		/// </summary>
 		/// <param name="context">The context used to access the store.</param>
 		/// <param name="describer">The <see cref="IdentityErrorDescriber"/> used to describe store errors.</param>
-		public UserStore(TContext context, IdentityErrorDescriber? describer = null) : base(context, describer)
+		/// <param name="options">The identity options; only <see cref="StoreOptions.SchemaVersion"/> is used.</param>
+		public UserStore(TContext context, IdentityErrorDescriber? describer = null, IOptions<IdentityOptions>? options = null) : base(context, describer, options)
 		{
 		}
 
@@ -134,6 +140,17 @@ namespace LinqToDB.Identity
 				UserId = user.Id,
 				RoleId = role.Id,
 			};
+		}
+
+		/// <inheritdoc cref="DeleteAsync(TUser, CancellationToken)"/>
+		public override async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken = default)
+		{
+			var result = await base.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
+
+			if (result.Succeeded)
+				await UserRoles.Where(e => e.UserId.Equals(user.Id)).DeleteAsync(cancellationToken).ConfigureAwait(false);
+
+			return result;
 		}
 
 		// These IUserRoleStore methods deliberately mirror Microsoft's UserStoreBase signatures - the

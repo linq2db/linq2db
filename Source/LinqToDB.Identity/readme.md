@@ -65,6 +65,19 @@ matching `UserStore` / `RoleStore` — or a `UserOnlyStore` when no role type is
 Creating the schema (e.g. in tests or first-run setup) is ordinary linq2db DDL — `CreateTable<IdentityUser>()`,
 `CreateTable<IdentityRole>()`, and so on for the seven (eight on .NET 10 with passkeys) `AspNet*` tables.
 
+linq2db DDL creates no foreign keys, so `DeleteAsync` removes a deleted user's claims, logins, tokens and role
+memberships (and a deleted role's memberships and claims) itself, where EF Core relies on `ON DELETE CASCADE`.
+
+### Identity options
+
+The stores read **only** `IdentityOptions.Stores.SchemaVersion` (injected as `IOptions<IdentityOptions>`; pass it to
+the store constructor when creating a store by hand). It decides whether `DeleteAsync` also removes the user's
+passkeys: only at `IdentitySchemaVersions.Version3`, the first schema version with the `AspNetUserPasskeys` table —
+the same rule EF Core applies. Without options the stores behave as `Version1`.
+
+No other option is applied — `Stores.MaxLengthForKeys` and `Stores.ProtectPersonalData` included. If you need one,
+please open a [feature request](https://github.com/linq2db/linq2db/issues/new/choose).
+
 ## The identity context
 
 `IdentityDataConnection` / `IdentityDataContext` (and their generic `<TUser, TRole, TKey, …>` forms) apply the default
