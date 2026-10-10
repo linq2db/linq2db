@@ -175,7 +175,15 @@ namespace LinqToDB.Remote.SignalR
 			{
 				using var timeout = new CancellationTokenSource(_connectTimeout);
 
-				await HubConnection.StartAsync(timeout.Token).ConfigureAwait(false);
+				try
+				{
+					await HubConnection.StartAsync(timeout.Token).ConfigureAwait(false);
+				}
+				catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+				{
+					// Every caller sharing this start sees the same exception, whatever its own deadline.
+					throw new TimeoutException($"The Signal/R connection was not established within {_connectTimeout}.");
+				}
 
 #if !NET8_0_OR_GREATER
 				lock (_sync)
@@ -246,20 +254,62 @@ namespace LinqToDB.Remote.SignalR
 #endif
 
 		/// <summary>
-		/// Stops and disposes the hub connection.
+		/// Stops and disposes the hub connection. On .NET Framework / .NET Standard a start still in progress is not
+		/// waited for (that client cannot cancel it): the connection is disposed when the start ends.
 		/// </summary>
 		public async ValueTask DisposeAsync()
 		{
+#if !NET8_0_OR_GREATER
+			Task? start;
+#endif
+
 			lock (_sync)
 			{
 				if (_disposed)
 					return;
 
 				_disposed = true;
+#if !NET8_0_OR_GREATER
+				start     = _startTask;
+#endif
 			}
+
+#if !NET8_0_OR_GREATER
+			// The legacy client ignores the start's token and holds its connection lock until the start ends (minutes
+			// against a server that never answers), and its disposal waits for that lock. Do not wait for a start the
+			// callers have given up on: dispose the connection once the start ends.
+			if (start is { IsCompleted: false })
+			{
+				_ = DisposeAfterStartAsync(start);
+				return;
+			}
+#endif
 
 			await HubConnection.DisposeAsync().ConfigureAwait(false);
 		}
+
+#if !NET8_0_OR_GREATER
+		async Task DisposeAfterStartAsync(Task start)
+		{
+			try
+			{
+				await start.ConfigureAwait(false);
+			}
+			catch
+			{
+				// The callers waiting for the start have seen its failure.
+			}
+
+			try
+			{
+				await HubConnection.DisposeAsync().ConfigureAwait(false);
+			}
+			catch
+			{
+				// Nobody waits for this disposal to report a failure to.
+			}
+		}
+#endif
 
 		/// <summary>
 		/// Stops and disposes the hub connection. Blocks until the connection is stopped.

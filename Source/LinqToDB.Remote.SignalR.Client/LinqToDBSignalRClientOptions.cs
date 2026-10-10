@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 using Microsoft.AspNetCore.Http.Connections.Client;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -25,8 +26,20 @@ namespace LinqToDB.Remote.SignalR
 
 		/// <summary>
 		/// How long a query waits for the connection to start or to reconnect before it fails with a
-		/// <see cref="TimeoutException"/>. The default is 30 seconds.
+		/// <see cref="TimeoutException"/>. The default is 30 seconds; <see cref="Timeout.InfiniteTimeSpan"/> waits
+		/// without a limit.
 		/// </summary>
-		public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(30);
+		/// <exception cref="ArgumentOutOfRangeException">The value is neither positive nor <see cref="Timeout.InfiniteTimeSpan"/>.</exception>
+		public TimeSpan ConnectTimeout
+		{
+			get;
+			set
+			{
+				if (value <= TimeSpan.Zero && value != Timeout.InfiniteTimeSpan)
+					throw new ArgumentOutOfRangeException(nameof(value), value, "The value must be positive or Timeout.InfiniteTimeSpan.");
+
+				field = value;
+			}
+		} = TimeSpan.FromSeconds(30);
 	}
 }
