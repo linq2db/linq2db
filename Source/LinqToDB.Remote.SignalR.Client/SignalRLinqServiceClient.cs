@@ -48,54 +48,81 @@ namespace LinqToDB.Remote.SignalR
 			_hubConnection = connection.HubConnection;
 		}
 
-		async Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
+		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
-			await EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
-
-			var reader = await _hubConnection.StreamAsChannelAsync<LinqServiceInfo>(GetInfoMethod, configuration, cancellationToken).ConfigureAwait(false);
-
-			return await ReadSingleAsync(reader, GetInfoMethod, cancellationToken).ConfigureAwait(false);
+			return StreamAsync<LinqServiceInfo,LinqServiceInfo>(GetInfoMethod, configuration, null,
+				static (reader, token) => ReadSingleAsync(reader, GetInfoMethod, token),
+				cancellationToken);
 		}
 
-		async Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var reader = await StartAsync<int>(ExecuteNonQueryMethod, configuration, queryData, cancellationToken).ConfigureAwait(false);
-
-			return await ReadSingleAsync(reader, ExecuteNonQueryMethod, cancellationToken).ConfigureAwait(false);
+			return StreamAsync<int,int>(ExecuteNonQueryMethod, configuration, queryData,
+				static (reader, token) => ReadSingleAsync(reader, ExecuteNonQueryMethod, token),
+				cancellationToken);
 		}
 
-		async Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var reader = await StartAsync<string>(ExecuteScalarMethod, configuration, queryData, cancellationToken).ConfigureAwait(false);
-
-			return await ReadStringAsync(reader, cancellationToken).ConfigureAwait(false);
+			return StreamAsync<string,string?>(ExecuteScalarMethod, configuration, queryData,
+				static (reader, token) => ReadStringAsync(reader, token),
+				cancellationToken);
 		}
 
 		async Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var reader = await StartAsync<string>(ExecuteReaderMethod, configuration, queryData, cancellationToken).ConfigureAwait(false);
-
-			return await ReadStringAsync(reader, cancellationToken).ConfigureAwait(false)
+			return await StreamAsync<string,string?>(ExecuteReaderMethod, configuration, queryData,
+				static (reader, token) => ReadStringAsync(reader, token),
+				cancellationToken).ConfigureAwait(false)
 				?? throw new LinqToDBException($"The Signal/R hub returned no result for {ExecuteReaderMethod}.");
 		}
 
-		async Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var reader = await StartAsync<int>(ExecuteBatchMethod, configuration, queryData, cancellationToken).ConfigureAwait(false);
-
-			return await ReadSingleAsync(reader, ExecuteBatchMethod, cancellationToken).ConfigureAwait(false);
+			return StreamAsync<int,int>(ExecuteBatchMethod, configuration, queryData,
+				static (reader, token) => ReadSingleAsync(reader, ExecuteBatchMethod, token),
+				cancellationToken);
 		}
 
 		string? ILinqService.RemoteClientTag { get; set; } = "Signal/R";
 
-		Task EnsureConnectedAsync(CancellationToken cancellationToken)
+		// Signal/R registers a callback on the token of a stream and never removes it, so with the caller's token every
+		// finished call would stay on it, and cancelling a long-lived token later would send a cancellation for each
+		// of them. A token of the call's own, released when the call ends, leaves nothing behind.
+		async Task<TResult> StreamAsync<T,TResult>(
+			string                                                 methodName,
+			string?                                                configuration,
+			string?                                                queryData,
+			Func<ChannelReader<T>,CancellationToken,Task<TResult>> read,
+			CancellationToken                                      cancellationToken)
 		{
-			return _connection?.EnsureConnectedAsync(cancellationToken) ?? Task.CompletedTask;
+			if (!cancellationToken.CanBeCanceled)
+			{
+				var reader = await StartAsync<T>(methodName, configuration, queryData, cancellationToken).ConfigureAwait(false);
+
+				return await read(reader, cancellationToken).ConfigureAwait(false);
+			}
+
+			using var call = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+			var callReader = await StartAsync<T>(methodName, configuration, queryData, call.Token).ConfigureAwait(false);
+
+			return await read(callReader, call.Token).ConfigureAwait(false);
 		}
 
-		async Task<ChannelReader<T>> StartAsync<T>(string methodName, string? configuration, string queryData, CancellationToken cancellationToken)
+		async Task<ChannelReader<T>> StartAsync<T>(string methodName, string? configuration, string? queryData, CancellationToken cancellationToken)
 		{
-			await EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
+			if (_connection != null)
+				await _connection.EnsureConnectedAsync(cancellationToken).ConfigureAwait(false);
+
+			return await SendAsync<T>(methodName, configuration, queryData, cancellationToken).ConfigureAwait(false);
+		}
+
+		// queryData is null for GetInfoStream, which takes the configuration only.
+		async Task<ChannelReader<T>> SendAsync<T>(string methodName, string? configuration, string? queryData, CancellationToken cancellationToken)
+		{
+			if (queryData == null)
+				return await _hubConnection.StreamAsChannelAsync<T>(methodName, configuration, cancellationToken).ConfigureAwait(false);
 
 			await HubConnectionInfo.Get(_hubConnection).CheckRequestSizeAsync(methodName, configuration, queryData, cancellationToken).ConfigureAwait(false);
 
