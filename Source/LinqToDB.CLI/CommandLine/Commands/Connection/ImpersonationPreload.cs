@@ -35,9 +35,11 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	{
 		/// <summary>
 		/// How long the command waits for the warm-up connection. Some clients open synchronously or ignore
-		/// cancellation, so the bound does not rely on them.
+		/// cancellation, so the bound does not rely on them. The warm-up is there to load what connecting needs,
+		/// not to connect, so the bound is short; it still leaves time for the network and TLS round trips that
+		/// precede login, where clients load their authentication libraries.
 		/// </summary>
-		internal static TimeSpan WarmUpTimeout { get; set; } = TimeSpan.FromSeconds(30);
+		internal static TimeSpan WarmUpTimeout { get; set; } = TimeSpan.FromSeconds(5);
 
 		/// <summary>
 		/// Pooling keywords of the connection string, by connection type, for clients that pool connections.
