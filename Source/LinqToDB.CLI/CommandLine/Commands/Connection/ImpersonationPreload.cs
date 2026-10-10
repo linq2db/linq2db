@@ -35,8 +35,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 		static bool                                      _applicationAssembliesLoaded;
 		static bool                                      _configurationRead;
+		static bool                                      _symbolReaderLoaded;
 		static readonly HashSet<Assembly>                _referencesLoaded      = new();
-		static readonly HashSet<(Assembly, string)>      _nativeLibrariesLoaded = new();
+		static readonly HashSet<Assembly>                _nativeImportsLoaded   = new();
 		static readonly HashSet<(Assembly, string)>      _satellitesLoaded      = new();
 		static readonly ConcurrentDictionary<Type, bool> _clientsInitialized    = new();
 
@@ -70,13 +71,15 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 				ReadApplicationConfiguration();
 				LoadReferencedAssemblies();
+				LoadNativeLibraries();
+				LoadSymbolReader();
 				LoadSatelliteAssemblies(CultureInfo.CurrentUICulture);
 			}
 		}
 
 		/// <summary>
-		/// Runs the ADO.NET client's first-use initialization and loads the native libraries it and the assemblies it
-		/// references import. The native libraries of a client are loaded once.
+		/// Runs the ADO.NET client's first-use initialization once per client and loads what it needs from disk: the
+		/// assemblies it references and the native libraries they import.
 		/// </summary>
 		public static void InitializeClient(IDataProvider dataProvider, string connectionString)
 		{
@@ -89,15 +92,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (!_clientsInitialized.TryAdd(connection.GetType(), true))
 				return;
 
+			// A client picked by version detection in the session may not have been initialized by Run.
+			//
 			lock (_lock)
 			{
-				// Native libraries are loaded on the first call into them: the SQL Server network interface on
-				// Windows, the TLS and GSSAPI shims of the .NET runtime on Linux and macOS. Only libraries imported by
-				// the client and the assemblies it references are loaded, not those of every provider shipped with the
-				// tool.
-				//
-				foreach (var assembly in GetReferenceClosure(connection.GetType().Assembly, new HashSet<Assembly>()))
-					LoadImportedLibraries(assembly);
+				LoadReferencedAssemblies();
+				LoadNativeLibraries();
 			}
 		}
 
@@ -135,16 +135,15 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		static void LoadReferencedAssemblies()
 		{
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				GetReferenceClosure(assembly, _referencesLoaded);
+				LoadReferenceClosure(assembly, _referencesLoaded);
 		}
 
 		/// <summary>
-		/// Loads the assemblies <paramref name="root"/> references, transitively, and returns those not in
-		/// <paramref name="visited"/> yet.
+		/// Loads the assemblies <paramref name="root"/> references, transitively, skipping those in
+		/// <paramref name="visited"/>.
 		/// </summary>
-		static List<Assembly> GetReferenceClosure(Assembly root, HashSet<Assembly> visited)
+		static void LoadReferenceClosure(Assembly root, HashSet<Assembly> visited)
 		{
-			var closure = new List<Assembly>();
 			var pending = new Stack<Assembly>();
 
 			pending.Push(root);
@@ -156,16 +155,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				if (assembly.IsDynamic || !visited.Add(assembly))
 					continue;
 
-				closure.Add(assembly);
-
 				var context = AssemblyLoadContext.GetLoadContext(assembly) ?? AssemblyLoadContext.Default;
 
 				foreach (var reference in assembly.GetReferencedAssemblies())
 					if (TryLoad(context, reference) is { } referenced)
 						pending.Push(referenced);
 			}
-
-			return closure;
 		}
 
 		static Assembly? TryLoad(AssemblyLoadContext context, AssemblyName name)
@@ -180,6 +175,26 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				// that needs it fails the same way later.
 				return null;
 			}
+		}
+
+		/// <summary>
+		/// Loads the native libraries that loaded assemblies import and that ship with the tool, a provider or the .NET
+		/// runtime. Native libraries are loaded on the first call into them: the SQL Server network interface and spatial
+		/// library on Windows, the native SQLite and DuckDB engines, the TLS and GSSAPI shims of the .NET runtime on Linux
+		/// and macOS. Each assembly is examined once.
+		/// </summary>
+		/// <remarks>
+		/// The libraries of every loaded assembly are loaded, not only those of the client and the assemblies it
+		/// references: while reading data, a client can load by name an assembly it does not reference. Microsoft.Data.SqlClient
+		/// resolves the user-defined type of a <c>geography</c> column to Microsoft.SqlServer.Types, which loads its native
+		/// spatial library when the first value is read. The tool ships few native libraries, so loading all of them once
+		/// costs less than tracking which provider can reach which.
+		/// </remarks>
+		static void LoadNativeLibraries()
+		{
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+				if (_nativeImportsLoaded.Add(assembly))
+					LoadImportedLibraries(assembly);
 		}
 
 		/// <summary>
@@ -198,9 +213,6 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			for (var row = 1; row <= reader.GetTableRowCount(TableIndex.ModuleRef); row++)
 			{
 				var name = reader.GetString(reader.GetModuleReference(MetadataTokens.ModuleReferenceHandle(row)).Name);
-
-				if (!_nativeLibrariesLoaded.Add((assembly, name)))
-					continue;
 
 				if (directories.Exists(directory => GetNativeLibraryFileNames(name).Any(file => File.Exists(Path.Combine(directory, file)))))
 					NativeLibrary.TryLoad(name, assembly, null, out _);
@@ -225,6 +237,35 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				directories.AddRange(searchDirectories.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries));
 
 			return directories;
+		}
+
+		/// <summary>
+		/// On Windows, the runtime reads file and line information for a stack trace frame through the native symbol
+		/// reader it ships (Microsoft.DiaSymReader.Native) when the frame's assembly has no portable PDB, as
+		/// Oracle.ManagedDataAccess does not. The runtime loads the reader on first use, so a client that formats a stack
+		/// trace on its error path would load it in the session. The runtime loads it from its own folder, where it is
+		/// found already loaded.
+		/// </summary>
+		static void LoadSymbolReader()
+		{
+			if (_symbolReaderLoaded)
+				return;
+
+			_symbolReaderLoaded = true;
+
+			if (!OperatingSystem.IsWindows())
+				return;
+
+			var architecture = RuntimeInformation.ProcessArchitecture switch
+			{
+				Architecture.X64   => "amd64",
+				Architecture.X86   => "x86",
+				Architecture.Arm64 => "arm64",
+				_                  => null,
+			};
+
+			if (architecture != null)
+				NativeLibrary.TryLoad(Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), $"Microsoft.DiaSymReader.Native.{architecture}.dll"), out _);
 		}
 
 		static IEnumerable<string> GetNativeLibraryFileNames(string name)
