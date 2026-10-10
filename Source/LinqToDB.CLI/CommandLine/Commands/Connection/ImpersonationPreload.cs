@@ -43,9 +43,10 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 		/// <summary>
 		/// Loads everything the provider named in <paramref name="settings"/> needs, without connecting to the
-		/// database.
+		/// database. A shipped native library that fails to load is reported to <paramref name="environment"/> and
+		/// tried again by the next call.
 		/// </summary>
-		public static void Run(ConnectionSettings settings)
+		public static void Run(ConnectionSettings settings, ICliEnvironment environment)
 		{
 			lock (_lock)
 			{
@@ -61,7 +62,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 					var dataProvider = DataConnection.GetDataProvider(settings.Provider, connectionString: null!);
 
 					if (dataProvider != null)
-						InitializeClient(dataProvider, settings.ConnectionString);
+						InitializeClient(dataProvider, settings.ConnectionString, environment);
 				}
 				catch (Exception)
 				{
@@ -71,8 +72,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 				ReadApplicationConfiguration();
 				LoadReferencedAssemblies();
-				LoadNativeLibraries();
-				LoadSymbolReader();
+				LoadNativeLibraries(environment);
+				LoadSymbolReader(environment);
 				LoadSatelliteAssemblies(CultureInfo.CurrentUICulture);
 			}
 		}
@@ -81,7 +82,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// Runs the ADO.NET client's first-use initialization once per client and loads what it needs from disk: the
 		/// assemblies it references and the native libraries they import.
 		/// </summary>
-		public static void InitializeClient(IDataProvider dataProvider, string connectionString)
+		public static void InitializeClient(IDataProvider dataProvider, string connectionString, ICliEnvironment environment)
 		{
 			// Creating (not opening) a connection and a command runs the client's static constructors and loads the
 			// assemblies that run them.
@@ -97,7 +98,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			lock (_lock)
 			{
 				LoadReferencedAssemblies();
-				LoadNativeLibraries();
+				LoadNativeLibraries(environment);
 			}
 		}
 
@@ -181,7 +182,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// Loads the native libraries that loaded assemblies import and that ship with the tool, a provider or the .NET
 		/// runtime. Native libraries are loaded on the first call into them: the SQL Server network interface and spatial
 		/// library on Windows, the native SQLite and DuckDB engines, the TLS and GSSAPI shims of the .NET runtime on Linux
-		/// and macOS. Each assembly is examined once.
+		/// and macOS. An assembly is examined again until all of its shipped libraries have loaded.
 		/// </summary>
 		/// <remarks>
 		/// The libraries of every loaded assembly are loaded, not only those of the client and the assemblies it
@@ -190,51 +191,93 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// spatial library when the first value is read. The tool ships few native libraries, so loading all of them once
 		/// costs less than tracking which provider can reach which.
 		/// </remarks>
-		static void LoadNativeLibraries()
+		static void LoadNativeLibraries(ICliEnvironment environment)
 		{
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				if (_nativeImportsLoaded.Add(assembly))
-					LoadImportedLibraries(assembly);
+				if (!_nativeImportsLoaded.Contains(assembly) && LoadImportedLibraries(assembly, environment))
+					_nativeImportsLoaded.Add(assembly);
 		}
 
 		/// <summary>
 		/// Loads the native libraries that <paramref name="assembly"/> imports and that ship with the tool, the
 		/// provider or the .NET runtime. Libraries of the operating system are left to the system loader: every account
-		/// can read them, and trying to load all of them would load unrelated ones (e.g. the Windows UI libraries).
+		/// can read them, and trying to load all of them would load unrelated ones (e.g. the Windows UI libraries). A
+		/// library that is not shipped for this platform is skipped.
 		/// </summary>
-		static unsafe void LoadImportedLibraries(Assembly assembly)
+		/// <returns>
+		/// <see langword="false"/> when a shipped library failed to load; the failure has been reported.
+		/// </returns>
+		static unsafe bool LoadImportedLibraries(Assembly assembly, ICliEnvironment environment)
 		{
 			if (assembly.IsDynamic || !assembly.TryGetRawMetadata(out var blob, out var length))
-				return;
+				return true;
 
 			var reader      = new MetadataReader(blob, length);
 			var directories = GetNativeLibraryDirectories(assembly);
+			var loaded      = true;
 
 			for (var row = 1; row <= reader.GetTableRowCount(TableIndex.ModuleRef); row++)
 			{
 				var name = reader.GetString(reader.GetModuleReference(MetadataTokens.ModuleReferenceHandle(row)).Name);
 
-				if (directories.Exists(directory => GetNativeLibraryFileNames(name).Any(file => File.Exists(Path.Combine(directory, file)))))
-					NativeLibrary.TryLoad(name, assembly, null, out _);
+				if (FindNativeLibrary(name, directories) is { } path && !TryLoadNativeLibrary(path, environment))
+					loaded = false;
 			}
+
+			return loaded;
 		}
 
+		/// <summary>
+		/// Returns the full path of the file the runtime would load for the native library <paramref name="name"/>
+		/// from <paramref name="directories"/>, or <see langword="null"/> when none of them has it.
+		/// </summary>
+		static string? FindNativeLibrary(string name, List<string> directories)
+		{
+			foreach (var directory in directories)
+				foreach (var file in GetNativeLibraryFileNames(name))
+				{
+					var path = Path.Combine(directory, file);
+
+					if (File.Exists(path))
+						return Path.GetFullPath(path);
+				}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Loads the file at <paramref name="path"/> itself, never a library of that name found elsewhere, and reports a
+		/// failure: the command goes on, but whatever needs the library loads it in the session.
+		/// </summary>
+		static bool TryLoadNativeLibrary(string path, ICliEnvironment environment)
+		{
+			if (environment.TryLoadNativeLibrary(path, out var error))
+				return true;
+
+			environment.Error.WriteLine($"Warning: cannot load native library '{path}' before impersonating: {error} If the command needs it, it is loaded as the impersonated user, who may not be able to read it.");
+
+			return false;
+		}
+
+		/// <summary>
+		/// Directories the runtime looks in for a native library imported by <paramref name="assembly"/>, in the order it
+		/// looks in them, so that the file found here is the one the runtime would load.
+		/// </summary>
 		static List<string> GetNativeLibraryDirectories(Assembly assembly)
 		{
-			var directories = new List<string>
-			{
-				AppContext.BaseDirectory,
-				RuntimeEnvironment.GetRuntimeDirectory(),
-			};
+			var directories = new List<string>();
+
+			// The runtime finds native assets of a framework-dependent application through the native search paths
+			// in its dependency manifest (the application folder, e.g. runtimes/win-x64/native, and the framework).
+			//
+			if (AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES") is string searchDirectories)
+				directories.AddRange(searchDirectories.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries));
 
 			if (Path.GetDirectoryName(assembly.Location) is { Length: > 0 } assemblyDirectory)
 				directories.Add(assemblyDirectory);
 
-			// The runtime finds native assets of a framework-dependent application through the native search paths
-			// in its dependency manifest (e.g. runtimes/win-x64/native).
-			//
-			if (AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES") is string searchDirectories)
-				directories.AddRange(searchDirectories.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries));
+			directories.Add(AppContext.BaseDirectory);
+			directories.Add(RuntimeEnvironment.GetRuntimeDirectory());
 
 			return directories;
 		}
@@ -244,16 +287,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// reader it ships (Microsoft.DiaSymReader.Native) when the frame's assembly has no portable PDB, as
 		/// Oracle.ManagedDataAccess does not. The runtime loads the reader on first use, so a client that formats a stack
 		/// trace on its error path would load it in the session. The runtime loads it from its own folder, where it is
-		/// found already loaded.
+		/// found already loaded. A runtime that does not ship it needs nothing; a reader that fails to load is reported
+		/// and tried again by the next call.
 		/// </summary>
-		static void LoadSymbolReader()
+		static void LoadSymbolReader(ICliEnvironment environment)
 		{
 			if (_symbolReaderLoaded)
-				return;
-
-			_symbolReaderLoaded = true;
-
-			if (!OperatingSystem.IsWindows())
 				return;
 
 			var architecture = RuntimeInformation.ProcessArchitecture switch
@@ -264,8 +303,12 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				_                  => null,
 			};
 
-			if (architecture != null)
-				NativeLibrary.TryLoad(Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), $"Microsoft.DiaSymReader.Native.{architecture}.dll"), out _);
+			var path = OperatingSystem.IsWindows() && architecture != null
+				? Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), $"Microsoft.DiaSymReader.Native.{architecture}.dll")
+				: null;
+
+			if (path == null || !File.Exists(path) || TryLoadNativeLibrary(path, environment))
+				_symbolReaderLoaded = true;
 		}
 
 		static IEnumerable<string> GetNativeLibraryFileNames(string name)

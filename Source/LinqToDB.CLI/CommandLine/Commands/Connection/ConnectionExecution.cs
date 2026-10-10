@@ -43,14 +43,14 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			try
 			{
-				ImpersonationPreload.Run(settings);
+				ImpersonationPreload.Run(settings, environment);
 
 				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
 
 				// The preload has normally initialized this client already; this covers a detection that picked another one.
 				//
 				if (dataProvider != null)
-					ImpersonationPreload.InitializeClient(dataProvider, settings.ConnectionString);
+					ImpersonationPreload.InitializeClient(dataProvider, settings.ConnectionString, environment);
 
 				var result = CreateScope(settings, dataProvider, session);
 

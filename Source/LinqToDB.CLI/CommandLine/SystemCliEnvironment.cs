@@ -106,5 +106,10 @@ namespace LinqToDB.CommandLine
 		{
 			return WindowsImpersonation.Logon(user, password, mode);
 		}
+
+		public bool TryLoadNativeLibrary(string path, out string? error)
+		{
+			return NativeLibraryLoader.TryLoad(path, out error);
+		}
 	}
 }

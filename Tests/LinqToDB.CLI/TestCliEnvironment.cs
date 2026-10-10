@@ -133,6 +133,25 @@ namespace Tests.LinqToDB.CLI
 			return session;
 		}
 
+		/// <summary>Returns why loading a native library fails, or <see langword="null"/> to load it.</summary>
+		public Func<string, string?>? NativeLibraryLoadError { get; init; }
+
+		/// <summary>Native libraries the preload asked to load, in order.</summary>
+		public List<string> NativeLibraryLoads { get; } = new();
+
+		public bool TryLoadNativeLibrary(string path, out string? error)
+		{
+			lock (NativeLibraryLoads)
+				NativeLibraryLoads.Add(path);
+
+			error = NativeLibraryLoadError?.Invoke(path);
+
+			if (error != null)
+				return false;
+
+			return NativeLibraryLoader.TryLoad(path, out error);
+		}
+
 		private sealed class TestFileWriter(Action<string> save) : StringWriter
 		{
 			private bool _saved;
