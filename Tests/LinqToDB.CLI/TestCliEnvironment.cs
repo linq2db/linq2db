@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Credentials;
+using LinqToDB.CommandLine.Commands.QueryExecution;
 
 namespace Tests.LinqToDB.CLI
 {
@@ -21,6 +22,9 @@ namespace Tests.LinqToDB.CLI
 		public Queue<string> InputLines { get; } = new();
 
 		public Exception? WriteAllTextException { get; init; }
+
+		/// <summary>Impersonation sessions started by commands, in order.</summary>
+		public List<RecordingImpersonationSession> ImpersonationSessions { get; } = new();
 
 		public TextWriter Out   => _output;
 		public TextWriter Error => _error;
@@ -108,6 +112,28 @@ namespace Tests.LinqToDB.CLI
 		public string? ReadLine()
 		{
 			return InputLines.TryDequeue(out var line) ? line : null;
+		}
+
+		/// <summary>Called when an impersonated run starts, before anything runs in it.</summary>
+		public Action? ImpersonatedRunStarting { get; init; }
+
+		/// <summary>Thrown by <see cref="StartImpersonation"/> instead of starting a session, to simulate a failed logon.</summary>
+		public Exception? StartImpersonationException { get; init; }
+
+		/// <summary>
+		/// Returns a session that records what each impersonated run saw, without changing identity.
+		/// </summary>
+		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
+		{
+			if (StartImpersonationException != null)
+				throw StartImpersonationException;
+
+			var session = new RecordingImpersonationSession(user, password, mode, _error.ToString, ImpersonatedRunStarting);
+
+			lock (ImpersonationSessions)
+				ImpersonationSessions.Add(session);
+
+			return session;
 		}
 
 		private sealed class TestFileWriter(Action<string> save) : StringWriter

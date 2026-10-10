@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.CommandLine.Commands.SchemaInspection
@@ -18,7 +17,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 	/// <summary>
 	/// Provider-aware schema inspection execution logic.
 	/// </summary>
-	internal sealed class SchemaInspectionExecutor(SchemaInspectionSettings settings)
+	internal sealed class SchemaInspectionExecutor(ICliEnvironment environment, SchemaInspectionSettings settings)
 	{
 		sealed class SchemaOutputLimitExceededException(int maxOutputBytes) : Exception
 		{
@@ -70,25 +69,35 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			WriteIndented        = false,
 		};
 
-		readonly SchemaInspectionSettings _settings = settings;
+		readonly ICliEnvironment          _environment = environment;
+		readonly SchemaInspectionSettings _settings    = settings;
 
 		public async ValueTask<SchemaInspectionResult> Execute(TextWriter outputWriter, CancellationToken cancellationToken)
 		{
 			try
 			{
-				var result = await ConnectionExecution.RunAsync(
-					_settings.Connection,
-					ExecuteSchemaRead,
-					cancellationToken);
+				cancellationToken.ThrowIfCancellationRequested();
 
-				if (result.Error != null)
-					return new SchemaInspectionResult(result.StatusCode, $"Schema inspection failed: {result.Error}");
+				var connection = await ConnectionExecution.OpenAsync(_environment, _settings.Connection, cancellationToken);
+
+				if (connection.Error != null)
+					return new SchemaInspectionResult(connection.StatusCode, $"Schema inspection failed: {connection.Error}");
+
+				using var scope = connection.Value!;
+
+				// Only the database read runs in the optional impersonation scope; option and filter setup
+				// and result mapping run under the original process account.
+				//
+				var schemaOptions  = CreateSchemaOptions(_settings.Options);
+				var schemaProvider = scope.DataProvider.GetSchemaProvider();
+				var schema         = await scope.RunAsync(() => ReadSchema(scope.DataOptions, schemaProvider, schemaOptions, cancellationToken));
+				var result         = MapSchema(schema);
 
 				if (_settings.MaxOutputBytes is { } maxOutputBytes)
 				{
 					using var outputStream = new BoundedMemoryStream(maxOutputBytes);
 
-					JsonSerializer.Serialize(outputStream, result.Value, _jsonOptions);
+					JsonSerializer.Serialize(outputStream, result, _jsonOptions);
 
 					await outputWriter.WriteAsync(
 						Encoding.UTF8.GetString(outputStream.GetBuffer(), 0, checked((int)outputStream.Length)).AsMemory(),
@@ -96,7 +105,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 				}
 				else
 				{
-					await outputWriter.WriteAsync(JsonSerializer.Serialize(result.Value, _jsonOptions).AsMemory(), cancellationToken);
+					await outputWriter.WriteAsync(JsonSerializer.Serialize(result, _jsonOptions).AsMemory(), cancellationToken);
 				}
 
 				await outputWriter.FlushAsync(cancellationToken);
@@ -123,18 +132,16 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			}
 		}
 
-		Task<object> ExecuteSchemaRead(DataOptions dataOptions, IDataProvider dataProvider, CancellationToken cancellationToken)
+		static Task<DatabaseSchema> ReadSchema(DataOptions dataOptions, ISchemaProvider schemaProvider, GetSchemaOptions schemaOptions, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
 			using var dataConnection = new DataConnection(dataOptions);
-			var schemaOptions        = CreateSchemaOptions(_settings.Options);
-			var schemaProvider       = dataProvider.GetSchemaProvider();
 			var schema               = schemaProvider.GetSchema(dataConnection, schemaOptions);
 
 			cancellationToken.ThrowIfCancellationRequested();
 
-			return Task.FromResult(MapSchema(schema));
+			return Task.FromResult(schema);
 		}
 
 		static GetSchemaOptions CreateSchemaOptions(SchemaInspectionEffectiveOptions options)

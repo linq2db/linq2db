@@ -9,39 +9,70 @@ using LinqToDB.DataProvider;
 namespace LinqToDB.CommandLine.Commands.Connection
 {
 	/// <summary>
-	/// Shared provider loading, DataOptions creation, and optional impersonation boundary.
+	/// Shared provider loading, DataOptions creation, and the optional impersonation boundary.
 	/// </summary>
 	internal static class ConnectionExecution
 	{
-		public static async Task<ConnectionExecutionResult<T>> RunAsync<T>(
-			ConnectionSettings settings,
-			Func<DataOptions, IDataProvider, CancellationToken, Task<T>> action,
-			CancellationToken cancellationToken)
+		/// <summary>
+		/// Loads the provider, creates <see cref="DataOptions"/> and, when impersonation is enabled, logs on as the
+		/// resolved Windows user.
+		/// </summary>
+		/// <remarks>
+		/// <para>
+		/// The impersonated identity may not be able to read anything on this machine, so everything that is loaded
+		/// from disk is loaded first, under the original process account: external provider assemblies, whatever the
+		/// client loads to open a connection (a warm-up connection is opened and closed, its errors ignored), the
+		/// tool's assemblies and their references, and satellite resources (see <see cref="ImpersonationPreload"/>).
+		/// </para>
+		/// <para>
+		/// Resolving the provider can open a connection to detect the server version. That is database work, so with
+		/// impersonation it runs as the impersonated identity, after the preload.
+		/// </para>
+		/// </remarks>
+		public static async Task<ConnectionExecutionResult<ConnectionScope>> OpenAsync(ICliEnvironment environment, ConnectionSettings settings, CancellationToken cancellationToken)
 		{
-			cancellationToken.ThrowIfCancellationRequested();
-
 			if (!ExternalProviderLoader.LoadExternalProvider(settings.Provider, settings.ProviderLocation, out var error))
-				return new ConnectionExecutionResult<T>(StatusCodes.EXPECTED_ERROR, error, default);
+				return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.EXPECTED_ERROR, error, null);
 
-			var dataProvider = DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString);
+			if (!settings.Impersonate)
+				return CreateScope(settings, DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString), null);
 
+			// Logging on only returns a token: nothing runs as the impersonated user before the session runs it. Logging
+			// on first reports a failed logon (or an unsupported platform) without paying for the preload.
+			//
+			var session = environment.StartImpersonation(settings.User!, settings.Password!, settings.ImpersonateMode);
+
+			try
+			{
+				await ImpersonationPreload.RunAsync(settings, cancellationToken);
+
+				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
+
+				var result = CreateScope(settings, dataProvider, session);
+
+				if (result.Value == null)
+					session.Dispose();
+
+				return result;
+			}
+			catch
+			{
+				session.Dispose();
+				throw;
+			}
+		}
+
+		static ConnectionExecutionResult<ConnectionScope> CreateScope(ConnectionSettings settings, IDataProvider? dataProvider, IImpersonationSession? session)
+		{
 			if (dataProvider == null)
-				return new ConnectionExecutionResult<T>(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(settings.Provider), default);
+				return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.EXPECTED_ERROR, CreateProviderCreationError(settings.Provider), null);
 
 			var dataOptions = new DataOptions().UseConnectionString(dataProvider, settings.ConnectionString);
 
 			if (settings.CommandTimeout > 0)
 				dataOptions = dataOptions.UseCommandTimeout(settings.CommandTimeout);
 
-			var result = settings.Impersonate
-				? await WindowsImpersonation.RunAsync(
-					settings.User!,
-					settings.Password!,
-					settings.ImpersonateMode,
-					() => action(dataOptions, dataProvider, cancellationToken))
-				: await action(dataOptions, dataProvider, cancellationToken);
-
-			return new ConnectionExecutionResult<T>(StatusCodes.SUCCESS, null, result);
+			return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.SUCCESS, null, new ConnectionScope(dataOptions, dataProvider, session));
 		}
 
 		static string CreateProviderCreationError(string provider)
