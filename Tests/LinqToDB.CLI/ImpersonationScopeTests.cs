@@ -39,6 +39,8 @@ namespace Tests.LinqToDB.CLI
 		const string UnreachablePostgreSql = "Host=127.0.0.1;Port=1;Username=user;Password=x;Timeout=2";
 		const string UnreachableOracle     = "Data Source=127.0.0.1:1/XE;User Id=user;Password=x;Connection Timeout=2";
 		const string UnreachableDB2        = "Server=127.0.0.1:1;Database=x;UID=user;PWD=x;Connect Timeout=2";
+		const string UnreachableMySql      = "Server=127.0.0.1;Port=1;User Id=user;Password=x;Connection Timeout=2";
+		const string UnreachableFirebird   = "DataSource=127.0.0.1;Port=1;Database=x.fdb;User=user;Password=x;Connection Timeout=2";
 
 		// Optional: a reachable SQL Server connection string, and the path to IBM.Data.Db2.dll with its clidriver folder
 		// next to it. Cases that need them are ignored when they are not set.
@@ -199,23 +201,31 @@ namespace Tests.LinqToDB.CLI
 		/// </summary>
 		static readonly Dictionary<string, string[]> _coldCases = new(StringComparer.Ordinal)
 		{
-			["SQLite query"]                     = ["query",   "--provider", "SQLite",         "--connection-string", "Data Source=%DATABASE%;Pooling=False", "--output", "json", "--sql", "select Id, Name from Person"],
-			["SQLite execute"]                   = ["execute", "--config",   "%CONFIG%",       "--output", "json-table", "--sql", "update Person set Name = 'updated' where Id = 1"],
-			["SQLite schema"]                    = ["schema",  "--provider", "SQLite",         "--connection-string", "Data Source=%DATABASE%;Pooling=False"],
-			["SqlServer query"]                  = ["query",   "--provider", "SqlServer",      "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
-			["SqlServer.2022 query"]             = ["query",   "--provider", "SqlServer.2022", "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
-			["SqlServer.2022 query, de-DE"]      = ["query",   "--provider", "SqlServer.2022", "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
-			["SqlServer schema"]                 = ["schema",  "--provider", "SqlServer",      "--connection-string", UnreachableSqlServer],
-			["PostgreSQL query"]                 = ["query",   "--provider", "PostgreSQL",     "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
-			["PostgreSQL.15 query"]              = ["query",   "--provider", "PostgreSQL.15",  "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
-			["Oracle.Managed query"]             = ["query",   "--provider", "Oracle.Managed", "--connection-string", UnreachableOracle, "--sql", "select 1 as Value from dual"],
-			["DB2 query"]                        = ["query",   "--provider", "DB2",            "--provider-location", "%DB2%", "--connection-string", UnreachableDB2, "--sql", "select 1 as Value from sysibm.sysdummy1"],
-			["SqlServer.2022 geography"]         = ["query",   "--provider", "SqlServer.2022", "--connection-string", "%SQLSERVER%", "--sql", "select geography::Point(1, 1, 4326) as Value"],
+			["SQLite query"]                     = ["query",   "--provider", "SQLite",              "--connection-string", "Data Source=%DATABASE%;Pooling=False", "--output", "json", "--sql", "select Id, Name from Person"],
+			["SQLite execute"]                   = ["execute", "--config",   "%CONFIG%",            "--output", "json-table", "--sql", "update Person set Name = 'updated' where Id = 1"],
+			["SQLite schema"]                    = ["schema",  "--provider", "SQLite",              "--connection-string", "Data Source=%DATABASE%;Pooling=False"],
+			["SqlServer query"]                  = ["query",   "--provider", "SqlServer",           "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
+			["SqlServer.2022 query"]             = ["query",   "--provider", "SqlServer.2022",      "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
+			["SqlServer.2022 query, de-DE"]      = ["query",   "--provider", "SqlServer.2022",      "--connection-string", UnreachableSqlServer, "--sql", "select 1 as Value"],
+			["SqlServer schema"]                 = ["schema",  "--provider", "SqlServer",           "--connection-string", UnreachableSqlServer],
+			["PostgreSQL query"]                 = ["query",   "--provider", "PostgreSQL",          "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
+			["PostgreSQL.15 query"]              = ["query",   "--provider", "PostgreSQL.15",       "--connection-string", UnreachablePostgreSql, "--sql", "select 1 as Value"],
+			["Oracle.Managed query"]             = ["query",   "--provider", "Oracle.Managed",      "--connection-string", UnreachableOracle, "--sql", "select 1 as Value from dual"],
+			["DB2 query"]                        = ["query",   "--provider", "DB2",                 "--provider-location", "%DB2%", "--connection-string", UnreachableDB2, "--sql", "select 1 as Value from sysibm.sysdummy1"],
+			["DuckDB query"]                     = ["query",   "--provider", "DuckDB",              "--connection-string", "Data Source=:memory:", "--sql", "select 1 as Value"],
+			["MySql query"]                      = ["query",   "--provider", "MySql",               "--connection-string", UnreachableMySql, "--sql", "select 1 as Value"],
+			["Firebird query"]                   = ["query",   "--provider", "Firebird",            "--connection-string", UnreachableFirebird, "--sql", "select 1 as Value from rdb$database"],
+			["ClickHouse.Driver query"]          = ["query",   "--provider", "ClickHouse.Driver",   "--connection-string", "Host=127.0.0.1;Port=1;Username=user;Password=x", "--sql", "select 1 as Value"],
+			["ClickHouse.Octonica query"]        = ["query",   "--provider", "ClickHouse.Octonica", "--connection-string", "Host=127.0.0.1;Port=1;User=user;Password=x", "--sql", "select 1 as Value"],
+			["SqlServer query, reachable"]       = ["query",   "--provider", "SqlServer",           "--connection-string", "%SQLSERVER%", "--sql", "select 1 as Value"],
+			["SqlServer.2022 geography"]         = ["query",   "--provider", "SqlServer.2022",      "--connection-string", "%SQLSERVER%", "--sql", "select geography::Point(1, 1, 4326) as Value"],
 		};
 
 		static bool IsColdSuccessCase(string coldCase)
 		{
-			return coldCase.StartsWith("SQLite", StringComparison.Ordinal) || _coldCases[coldCase].Contains("%SQLSERVER%");
+			return coldCase.StartsWith("SQLite", StringComparison.Ordinal)
+				|| coldCase.StartsWith("DuckDB", StringComparison.Ordinal)
+				|| _coldCases[coldCase].Contains("%SQLSERVER%");
 		}
 
 		static IEnumerable<string> ColdCases => _coldCases.Keys;
