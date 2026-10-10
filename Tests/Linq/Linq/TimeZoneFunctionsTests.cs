@@ -108,6 +108,24 @@ namespace Tests.Linq
 		}
 
 		/// <summary>
+		/// The same attach on a provider with no type that can carry the zone's offset. Answering the instant at
+		/// +00:00 is a different value from the one .NET gives; the <see cref="DateTimeOffset"/> overload is refused
+		/// by name there for exactly that reason, so a refusal would be as acceptable as the right offset.
+		/// </summary>
+		[Test]
+		public void AtTimeZoneWallClockKeepsTheZoneOffsetWhereNoTypeCarriesOne([IncludeDataSources(false, OffsetlessProviders)] string context)
+		{
+			var zone = PragueZone(context);
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Rows(Value));
+
+			var result = table.Select(r => Sql.AsSql(Sql.AtTimeZone(r.Dto.DateTime, zone))).Single();
+
+			result!.Value.Offset.ShouldBe(TimeSpan.FromHours(2));
+		}
+
+		/// <summary>
 		/// Reading a component through the conversion, which is the case that works on a provider with no type able
 		/// to carry the target zone's offset - the value never has to be materialised there.
 		/// </summary>
