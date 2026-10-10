@@ -450,6 +450,34 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void LockFailureOtherThanContentionIsReportedAtOnce()
+		{
+			// The lock path cannot be opened for a reason other than another holder (here a dangling symbolic link, standing
+			// for a read-only or failing file system): no wait for the lock timeout, and no blame on another process.
+			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+			File.Delete(LockPath);
+
+			try
+			{
+				File.CreateSymbolicLink(LockPath, Path.Combine(_root, "missing", "credentials.lock"));
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				Assert.Ignore($"Cannot create a symbolic link here: {ex.Message}");
+			}
+
+			var timeout   = TimeSpan.FromSeconds(3);
+			var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+			CreateStore(timeout).TryStore("b", "u", "p", out error).ShouldBeFalse();
+
+			stopwatch.Stop();
+
+			error.ShouldNotBeNull().ShouldNotContain("another linq2db-cli process");
+			stopwatch.Elapsed.ShouldBeLessThan(timeout);
+		}
+
+		[Test]
 		public void StaleTemporaryFilesAreDeleted()
 		{
 			CreateStore().TryStore("a", "u", "p", out var error).ShouldBeTrue(error);

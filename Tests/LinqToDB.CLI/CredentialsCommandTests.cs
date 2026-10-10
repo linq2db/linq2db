@@ -447,6 +447,41 @@ namespace Tests.LinqToDB.CLI
 			error.   ShouldContain(message);
 		}
 
+		[TestCase("set",    TestName = "OldProfileSpellingForSetNamesTheCredentialsOption")]
+		[TestCase("remove", TestName = "OldProfileSpellingForRemoveNamesTheCredentialsOption")]
+		public async Task OldProfileSpellingNamesTheCredentialsOption(string operation)
+		{
+			// A 6.5 command line: --profile named the record linq2db/<name>.
+			var environment = new TestCliEnvironment();
+
+			var (exitCode, _, error) = operation == "set"
+				? await RunCli(environment, "credentials", "set", "--profile", "project-a/production", "--user", "u")
+				: await RunCli(environment, "credentials", "remove", "--profile", "project-a/production");
+
+			exitCode.ShouldBe(-1);
+			error.   ShouldContain("--credentials linq2db/");
+		}
+
+		[TestCase("linq2db/a//b",    TestName = "CredentialManagerRecordWithEmptySegmentCanBeRemoved")]
+		[TestCase("linq2db/../prod", TestName = "CredentialManagerRecordWithDotDotSegmentCanBeRemoved")]
+		[TestCase("linq2db/a/./b",   TestName = "CredentialManagerRecordWithDotSegmentCanBeRemoved")]
+		public async Task CredentialManagerRecordFromVersion65CanBeRemoved(string target)
+		{
+			if (!OperatingSystem.IsWindows())
+				Assert.Ignore("Before 6.6 records were stored only in Windows Credential Manager.");
+
+			// 6.5 accepted these names (credentials set --profile a//b); the record must stay manageable one by one.
+			var environment = new TestCliEnvironment();
+			environment.Credentials.Add(target, ("u", "p"));
+			environment.Credentials.Add("linq2db/other", ("u", "p"));
+
+			var (exitCode, _, error) = await RunCli(environment, "credentials", "remove", "--credentials", target);
+
+			exitCode.ShouldBe(0, error);
+			environment.Credentials.ShouldNotContainKey(target);
+			environment.Credentials.ShouldContainKey("linq2db/other");
+		}
+
 		static async Task<(int ExitCode, string Output, string Error)> RunCli(TestCliEnvironment environment, params string[] args)
 		{
 			var exitCode = await new global::LinqToDB.CommandLine.LinqToDBCliController().Execute(args, environment);

@@ -105,6 +105,19 @@ namespace Tests.LinqToDB.CLI
 			error.ShouldBe("Credentials CLI 'fake-cli' failed with exit code 1: the keyring is locked");
 		}
 
+		[TestCase("not-a-protocol-line-but-a-raw-password\n", TestName = "RawPasswordOnFirstLineDoesNotRevealItsLength")]
+		[TestCase("protocol=1\nstatus=raw-password-12345\n",   TestName = "RawPasswordAsStatusDoesNotRevealItsLength")]
+		public void InvalidAnswerDoesNotRevealOutputLength(string output)
+		{
+			// A program that is not a credentials CLI (an existing script printing the password) must not leak anything
+			// derived from its output, its length included: the message also reaches MCP tool responses.
+			var runner = new FakeRunner().Answer(output);
+
+			Store(runner).TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
+
+			error.ShouldNotBeNull().ShouldNotContain("characters");
+		}
+
 		[Test]
 		public void GetSendsForeignTargetVerbatim()
 		{
