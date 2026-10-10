@@ -155,6 +155,31 @@ namespace Tests.Remote
 			service.Calls.ShouldBe(1);
 		}
 
+		// A finished call leaves nothing on the caller's token: cancelling a long-lived token afterwards must not send
+		// a cancellation for every call it was ever passed to.
+		[Test]
+		public async Task FinishedCallsLeaveNothingOnTheCallersToken()
+		{
+			var service = new ScriptedLinqService { Behavior = static (query, _) => Task.FromResult(query) };
+			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service));
+
+			var log           = new LogEventCounter("SendingCancellation");
+			var hubConnection = await host.ConnectAsync(logger: log);
+			await using var owner = Own(hubConnection);
+
+			var client = (ILinqService)new SignalRLinqServiceClient(hubConnection);
+
+			using var cts = new CancellationTokenSource();
+
+			for (var i = 0; i < 20; i++)
+				(await client.ExecuteReaderAsync(Configuration, "query", cts.Token)).ShouldBe("query");
+
+			cts.Cancel();
+			await Task.Delay(500);
+
+			log.Count.ShouldBe(0, "finished calls were cancelled again");
+		}
+
 		// Signal/R disposes the hub's service scope when the stream ends; the stream must not end before the
 		// operation has finished with the scoped service, even when the operation ignores its token for a while.
 		[Test]
@@ -207,10 +232,15 @@ namespace Tests.Remote
 
 				error.ShouldBeAssignableTo<OperationCanceledException>();
 
-				// Wait for the server to give up on the reader.
+				// Wait for the server to give up on the reader, then check it really stopped: one that kept reading
+				// would still be adding rows (at most one per millisecond, so a row-count bound alone cannot tell).
 				await database.WaitIdleAsync(Prompt + Prompt);
 
-				database.RowsRead.ShouldBeLessThan(SqliteDatabase.ProbeRowCount / 10, "the server kept reading rows after the call was cancelled");
+				var rowsRead = database.RowsRead;
+				await Task.Delay(500);
+
+				database.RowsRead.ShouldBe(rowsRead, "the server kept reading rows after the call was cancelled");
+				rowsRead.ShouldBeLessThan(SqliteDatabase.ProbeRowCount / 10);
 				sw.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(10));
 			}
 		}
@@ -247,6 +277,52 @@ namespace Tests.Remote
 
 			(await reader.WaitToReadAsync()).ShouldBeFalse();
 			(await WaitAsync(reader.Completion, Prompt)).ShouldBeTrue("the stream never completed");
+		}
+
+		// Signal/R reads a stream through TryRead / WaitToReadAsync / ReadAsync and never looks at its Completion: a
+		// failed operation must not leave a faulted task behind that nobody observes.
+		[Test]
+		public void FailedStreamLeavesNoUnobservedTask()
+		{
+			var marker     = Guid.NewGuid().ToString();
+			var unobserved = 0;
+
+			void OnUnobserved(object? sender, UnobservedTaskExceptionEventArgs e)
+			{
+				if (e.Exception.Flatten().InnerExceptions.Any(ex => ex.Message == marker))
+					Interlocked.Increment(ref unobserved);
+			}
+
+			TaskScheduler.UnobservedTaskException += OnUnobserved;
+
+			try
+			{
+				ReadFailingStream(marker);
+
+				for (var i = 0; i < 3; i++)
+				{
+					GC.Collect();
+					GC.WaitForPendingFinalizers();
+				}
+
+				Volatile.Read(ref unobserved).ShouldBe(0);
+			}
+			finally
+			{
+				TaskScheduler.UnobservedTaskException -= OnUnobserved;
+			}
+
+			// A frame of its own, so nothing in the test keeps the reader alive when it collects.
+			[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+			static void ReadFailingStream(string marker)
+			{
+				var readerType = typeof(LinqToDBHub).Assembly.GetType("LinqToDB.Remote.SignalR.OperationChannelReader`1", throwOnError: true)!.MakeGenericType(typeof(string));
+				Func<CancellationToken, Task<IReadOnlyList<string>>> operation = _ => throw new InvalidOperationException(marker);
+
+				var reader = (ChannelReader<string>)Activator.CreateInstance(readerType, operation, CancellationToken.None)!;
+
+				CatchAsync(async () => await reader.WaitToReadAsync()).GetAwaiter().GetResult().ShouldBeOfType<InvalidOperationException>();
+			}
 		}
 
 		#endregion
@@ -312,6 +388,36 @@ namespace Tests.Remote
 			service.MaxConcurrency.ShouldBe(2);
 		}
 
+		// The global limit holds across all connections also for a hub that is given its options directly: Signal/R
+		// creates a hub for every call.
+		[Test]
+		public async Task MaxConcurrentCallsLimitsAllConnectionsWhenTheHubCreatesItsOptions()
+		{
+			var service = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(200) };
+			using var host = TestHost.Start<OwnOptionsHub>(services => services.AddSingleton<ILinqService>(service));
+
+			await RunConcurrentCallsAsync(host, connections: 3, callsPerConnection: 2);
+
+			service.MaxConcurrency.ShouldBe(1);
+		}
+
+		// Options registered in the services apply to a hub written before 6.6.0, which does not pass them to its
+		// base constructor, on every server.
+		[Test]
+		public async Task RegisteredOptionsApplyToAHubWithoutAnOptionsConstructor()
+		{
+			var service = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(200) };
+			using var host = TestHost.Start<PlainConstructorHub>(services =>
+			{
+				services.AddSingleton<ILinqService>(service);
+				services.Configure<LinqToDBHubOptions>(o => o.MaxConcurrentCallsPerConnection = 3);
+			});
+
+			await RunConcurrentCallsAsync(host, connections: 1, callsPerConnection: 8);
+
+			service.MaxConcurrency.ShouldBe(3);
+		}
+
 		// A call waiting for a slot is cancelled while it waits: it never runs, and the slot holder is unaffected.
 		[Test]
 		public async Task QueuedCallCanBeCancelled()
@@ -333,12 +439,18 @@ namespace Tests.Remote
 
 			service.Calls.ShouldBe(1);
 
+			// Once the slot is free, a queued call whose cancellation never reached the server would run.
+			service.Behavior = static (query, _) => Task.FromResult(query);
+
 			holder.Cancel();
 			(await CatchAsync(() => running)).ShouldBeAssignableTo<OperationCanceledException>();
+
+			(await client.ExecuteReaderAsync(Configuration, "third")).ShouldBe("third");
+			service.Calls.ShouldBe(2);
 		}
 
-		// A permit released after its connection is gone must not fail (the per-connection semaphore is never
-		// disposed), and the hub keeps serving new connections.
+		// A call finishing after its connection is gone releases its permit: with a global limit of one call, the
+		// hub serves the next connection only if the late call gave its permit back.
 		[Test]
 		public async Task CallFinishingAfterDisconnectReleasesItsSlot()
 		{
@@ -353,7 +465,11 @@ namespace Tests.Remote
 				},
 			};
 
-			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service));
+			using var host = TestHost.Start<ScriptedHub>(services =>
+			{
+				services.AddSingleton<ILinqService>(service);
+				services.Configure<LinqToDBHubOptions>(o => o.MaxConcurrentCalls = 1);
+			});
 
 			var first = await host.ConnectAsync();
 			var call  = ((ILinqService)new SignalRLinqServiceClient(first)).ExecuteReaderAsync(Configuration, "query");
@@ -365,14 +481,16 @@ namespace Tests.Remote
 
 			release.SetResult(true);
 			(await service.WaitFinishedAsync(Prompt)).ShouldBeTrue();
-			service.Failures.ShouldBeEmpty();
 
 			service.Behavior = static (_, _) => Task.FromResult("next");
 
 			var second = await host.ConnectAsync();
 			await using var owner = Own(second);
 
-			(await ((ILinqService)new SignalRLinqServiceClient(second)).ExecuteReaderAsync(Configuration, "query")).ShouldBe("next");
+			var next = ((ILinqService)new SignalRLinqServiceClient(second)).ExecuteReaderAsync(Configuration, "query");
+
+			(await WaitAsync(next, Prompt + Prompt)).ShouldBeTrue("the late call kept its permit");
+			(await next).ShouldBe("next");
 		}
 
 		#endregion
@@ -501,6 +619,44 @@ namespace Tests.Remote
 			service.MaxConcurrency.ShouldBe(2);
 		}
 
+#if NET9_0_OR_GREATER
+		// With tracing on, the .NET 9+ client adds trace context headers to every invocation. A request the size check
+		// lets through must still fit with them, or the server closes the connection after all. Untraced, the same
+		// request fits.
+		[Test]
+		public async Task RequestSizeCheckLeavesRoomForTraceHeaders([Values] bool traced)
+		{
+			var queryData = new string('a', 20_000);
+			var frame     = new System.Buffers.ArrayBufferWriter<byte>();
+
+			// The longest invocation id the client generates: a request of exactly this frame passes the check.
+			new JsonHubProtocol().WriteMessage(new StreamInvocationMessage("2147483647", "ExecuteNonQueryStream", [Configuration, queryData]), frame);
+
+			var service = new ScriptedLinqService { Behavior = static (query, _) => Task.FromResult(query) };
+			using var host = TestHost.Start<ScriptedHub>(services => services.AddSingleton<ILinqService>(service), perHub: hub => hub.MaximumReceiveMessageSize = frame.WrittenCount);
+
+			// Traces this test's calls only.
+			using var trace    = new Activity(nameof(RequestSizeCheckLeavesRoomForTraceHeaders)).SetIdFormat(ActivityIdFormat.W3C).Start();
+			var       traceId  = trace.TraceId;
+			using var listener = new ActivityListener
+			{
+				ShouldListenTo = static source => source.Name == "Microsoft.AspNetCore.SignalR.Client",
+				Sample         = (ref options) => traced && options.Parent.TraceId == traceId ? ActivitySamplingResult.AllDataAndRecorded : ActivitySamplingResult.None,
+			};
+
+			ActivitySource.AddActivityListener(listener);
+
+			var hubConnection = await host.ConnectAsync();
+			await using var owner = Own(hubConnection);
+
+			var error = await CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteNonQueryAsync(Configuration, queryData));
+
+			// Refused before sending, or sent within the limit; never a closed connection.
+			(error is null or LinqToDBException).ShouldBeTrue(error?.ToString());
+			hubConnection.State.ShouldBe(HubConnectionState.Connected);
+		}
+#endif
+
 #endif
 
 		// The bound counts six bytes for every non-ASCII character, but the JSON protocol writes them as UTF-8: a
@@ -533,6 +689,7 @@ namespace Tests.Remote
 			var error = await CallAsync(host);
 
 			error.ShouldBeOfType<HubException>().Message.ShouldNotContain("secret detail");
+			service.Calls.ShouldBe(1);
 		}
 
 		[Test]
@@ -690,6 +847,46 @@ namespace Tests.Remote
 			(await CatchAsync(() => connection.EnsureConnectedAsync())).ShouldBeOfType<ObjectDisposedException>();
 		}
 
+		// A start that runs out of time fails every caller waiting for it with TimeoutException, including one that
+		// joined the start later and has time left of its own.
+		[Test]
+		public async Task ConnectTimeoutFailsEveryWaitingCallerWithTimeoutException()
+		{
+			// Takes connections into its backlog and never answers them, so the start hangs until the timeout.
+			var listener = new TcpListener(IPAddress.Loopback, 0);
+			listener.Start();
+
+			try
+			{
+				var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+				var sw   = Stopwatch.StartNew();
+
+				var connection = new LinqToDBSignalRConnection(
+					new Uri($"http://127.0.0.1:{port}{HubPath}"),
+					new LinqToDBSignalRClientOptions { ConnectTimeout = TimeSpan.FromSeconds(2) });
+
+				var first = CatchAsync(() => connection.EnsureConnectedAsync());
+
+				// The second caller's own deadline is a second after the start's.
+				await Task.Delay(1000);
+
+				var second = CatchAsync(() => connection.EnsureConnectedAsync());
+
+				(await first).ShouldBeOfType<TimeoutException>();
+				(await second).ShouldBeOfType<TimeoutException>();
+				sw.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(6), "the callers waited past the connect timeout");
+
+				// The timed-out start does not hold up the disposal either.
+				sw.Restart();
+				await connection.DisposeAsync();
+				sw.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(5), "disposal waited for the timed-out start");
+			}
+			finally
+			{
+				listener.Stop();
+			}
+		}
+
 #if !NETFRAMEWORK
 		// Access token and authorization: the DI helper's options reach the HTTP connection.
 		[Test]
@@ -774,6 +971,43 @@ namespace Tests.Remote
 			}
 		}
 
+		// A read cancelled while the rows come in cancels the command and fails with OperationCanceledException, not
+		// with the error the provider reports for the cancelled command.
+		[Test]
+		public async Task CancelledRowReadFailsWithOperationCanceledException([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var noBaseline = new DisableBaseline("the number of rows read before the cancellation depends on timing");
+			using var cts        = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+
+			await using var db = new InProcessConfigurationContext(context);
+
+			// Rows trickle in at about one per millisecond, so the token fires while they are read.
+			var query = CatchAsync(() => db.FromSql<SleepRow>("SELECT g AS \"Value\", pg_sleep(0.001)::text AS \"Sleep\" FROM generate_series(1, 1000000) g").ToListAsync(cts.Token));
+
+			(await WaitAsync(query, TimeSpan.FromSeconds(20))).ShouldBeTrue("the server kept reading rows after the call was cancelled");
+
+			var error = await query;
+			error.ShouldBeAssignableTo<OperationCanceledException>(error?.ToString());
+		}
+
+		sealed class InProcessConfigurationContext(string target) : RemoteDataContextBase(new DataOptions().UseConfiguration(Configuration + ".InProcess"))
+		{
+			protected override ILinqService GetClient()
+			{
+				return new TargetLinqService(target);
+			}
+
+			protected override string ContextIDPrefix => "InProcessConfiguration";
+
+			sealed class TargetLinqService(string target) : LinqService
+			{
+				public override DataConnection CreateDataContext(string? configuration)
+				{
+					return new DataConnection(new DataOptions().UseConfiguration(target));
+				}
+			}
+		}
+
 		sealed class SleepRow
 		{
 			[Column] public int Value { get; set; }
@@ -817,6 +1051,40 @@ namespace Tests.Remote
 			public async ValueTask DisposeAsync()
 			{
 				await hubConnection.DisposeAsync();
+			}
+		}
+
+		// Counts the log events of one name, e.g. those the Signal/R client writes for the messages it sends.
+		sealed class LogEventCounter(string eventName) : ILoggerProvider, ILogger, IDisposable
+		{
+			int _count;
+
+			public int Count => Volatile.Read(ref _count);
+
+			public ILogger CreateLogger(string categoryName)
+			{
+				return this;
+			}
+
+			public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+			{
+				if (eventId.Name == eventName)
+					Interlocked.Increment(ref _count);
+			}
+
+			public bool IsEnabled(LogLevel logLevel)
+			{
+				return true;
+			}
+
+			public IDisposable BeginScope<TState>(TState state)
+				where TState : notnull
+			{
+				return this;
+			}
+
+			public void Dispose()
+			{
 			}
 		}
 
@@ -1005,6 +1273,22 @@ namespace Tests.Remote
 		}
 
 		sealed class ScriptedHub(ILinqService service, IOptions<LinqToDBHubOptions> options) : LinqToDBHub(options)
+		{
+			protected override ILinqService CreateLinqService()
+			{
+				return service;
+			}
+		}
+
+		sealed class OwnOptionsHub(ILinqService service) : LinqToDBHub(Options.Create(new LinqToDBHubOptions { MaxConcurrentCalls = 1 }))
+		{
+			protected override ILinqService CreateLinqService()
+			{
+				return service;
+			}
+		}
+
+		sealed class PlainConstructorHub(ILinqService service) : LinqToDBHub
 		{
 			protected override ILinqService CreateLinqService()
 			{
@@ -1314,15 +1598,19 @@ namespace Tests.Remote
 				return new TestHost(actualPort, host);
 			}
 
-			public async Task<HubConnection> ConnectAsync(string? accessToken = null)
+			public async Task<HubConnection> ConnectAsync(string? accessToken = null, ILoggerProvider? logger = null)
 			{
-				var hubConnection = new HubConnectionBuilder()
+				var builder = new HubConnectionBuilder()
 					.WithUrl(HubUrl, http =>
 					{
 						if (accessToken != null)
 							http.AccessTokenProvider = () => Task.FromResult<string?>(accessToken);
-					})
-					.Build();
+					});
+
+				if (logger != null)
+					builder.ConfigureLogging(logging => logging.AddProvider(logger).SetMinimumLevel(LogLevel.Trace));
+
+				var hubConnection = builder.Build();
 
 				await hubConnection.StartAsync();
 
