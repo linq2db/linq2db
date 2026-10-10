@@ -70,10 +70,10 @@ namespace Tests.Linq
 			var declaredType = new DbDataType(typeof(string), DataType.NVarChar, null, 100, null, null);
 			var argument     = new SqlValue(argumentType, "x");
 
-			foreach (var name in new[] { "MIN", "MAX" })
+			foreach (var name in new[] { "MIN", "MAX", "LAG", "LEAD", "FIRST_VALUE", "LAST_VALUE", "NTH_VALUE" })
 			{
 				var aggregate = new SqlExtendedFunction(declaredType, name, [new SqlFunctionArgument(argument)], [true],
-					isAggregate: true, argumentDomain: SqlArgumentDomain.Element);
+					isAggregate: true, argumentDomain: SqlArgumentDomains.ForAggregate(name));
 
 				QueryHelper.GetDbDataType(aggregate, MappingSchema.Default).ShouldBe(argumentType);
 			}
@@ -81,7 +81,7 @@ namespace Tests.Linq
 			// SUM answers in the argument's terms but can outgrow the width it is declared with, so it keeps its
 			// own type. This half fails for an arm that takes the argument's type for every aggregate.
 			var sum = new SqlExtendedFunction(declaredType, "SUM", [new SqlFunctionArgument(argument)], [true],
-				isAggregate: true, argumentDomain: SqlArgumentDomain.SameKind);
+				isAggregate: true, argumentDomain: SqlArgumentDomains.ForAggregate("SUM"));
 
 			QueryHelper.GetDbDataType(sum, MappingSchema.Default).ShouldBe(declaredType);
 		}
