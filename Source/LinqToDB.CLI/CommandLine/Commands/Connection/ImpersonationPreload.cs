@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,6 @@ using System.Threading.Tasks;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.SqlServer;
 
 namespace LinqToDB.CommandLine.Commands.Connection
@@ -31,11 +31,43 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// connection with the command's own provider and connection string, so that the client loads what connecting
 	/// needs, and loads the managed code that running the command needs beyond that.
 	/// </remarks>
-	internal static class ImpersonationPreload
+	internal static partial class ImpersonationPreload
 	{
-		// Bounds a warm-up whose client does not apply its own connect timeout.
-		//
-		static readonly TimeSpan _warmUpTimeout = TimeSpan.FromSeconds(30);
+		/// <summary>
+		/// How long the command waits for the warm-up connection. Some clients open synchronously or ignore
+		/// cancellation, so the bound does not rely on them.
+		/// </summary>
+		internal static TimeSpan WarmUpTimeout { get; set; } = TimeSpan.FromSeconds(30);
+
+		/// <summary>
+		/// Pooling keywords of the connection string, by connection type, for clients that pool connections.
+		/// </summary>
+		static readonly Dictionary<string, string> _poolingKeywords = new(StringComparer.Ordinal)
+		{
+			["Microsoft.Data.SqlClient.SqlConnection"]           = "Pooling",
+			["System.Data.SqlClient.SqlConnection"]              = "Pooling",
+			["Npgsql.NpgsqlConnection"]                          = "Pooling",
+			["MySqlConnector.MySqlConnection"]                   = "Pooling",
+			["MySql.Data.MySqlClient.MySqlConnection"]           = "Pooling",
+			["Oracle.ManagedDataAccess.Client.OracleConnection"] = "Pooling",
+			["Oracle.DataAccess.Client.OracleConnection"]        = "Pooling",
+			["FirebirdSql.Data.FirebirdClient.FbConnection"]     = "Pooling",
+			["Microsoft.Data.Sqlite.SqliteConnection"]           = "Pooling",
+			["System.Data.SQLite.SQLiteConnection"]              = "Pooling",
+			["AdoNetCore.AseClient.AseConnection"]               = "Pooling",
+			["Sybase.Data.AseClient.AseConnection"]              = "Pooling",
+			["IBM.Data.Db2.DB2Connection"]                       = "Pooling",
+			["IBM.Data.DB2.Core.DB2Connection"]                  = "Pooling",
+			["IBM.Data.DB2.DB2Connection"]                       = "Pooling",
+			["IBM.Data.Informix.IfxConnection"]                  = "Pooling",
+			["Sap.Data.Hana.HanaConnection"]                     = "Pooling",
+		};
+
+		/// <summary>
+		/// Static methods by which a connection type that is not in <see cref="_poolingKeywords"/> shows that its client
+		/// pools connections (System.Data.Odbc, System.Data.OleDb, Ydb).
+		/// </summary>
+		static readonly string[] _poolMethods = ["ClearPool", "ClearPools", "ClearAllPools", "ReleaseObjectPool"];
 
 		static readonly Lock _lock = new();
 
@@ -48,7 +80,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// <summary>
 		/// Loads everything the command described by <paramref name="settings"/> needs.
 		/// </summary>
-		public static async Task RunAsync(ConnectionSettings settings)
+		public static async Task RunAsync(ConnectionSettings settings, CancellationToken cancellationToken)
 		{
 			IDataProvider? dataProvider;
 
@@ -59,7 +91,16 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			}
 
 			if (dataProvider != null)
-				await WarmUpConnectionAsync(dataProvider, settings.ConnectionString);
+			{
+				// The warm-up runs on its own task, as the process account. If it is still running when the bound
+				// expires, the command goes on without it, and it finishes, disposing its connection, in the background.
+				//
+				await Task.WhenAny(
+					Task.Run(() => WarmUpConnectionAsync(dataProvider, settings.ConnectionString, cancellationToken), CancellationToken.None),
+					Task.Delay(WarmUpTimeout, cancellationToken));
+
+				cancellationToken.ThrowIfCancellationRequested();
+			}
 
 			lock (_lock)
 			{
@@ -103,16 +144,22 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// </summary>
 		/// <remarks>
 		/// Failing is expected: the process account may have no access to the database. The error is not reported, so
-		/// nothing from the connection string reaches the output. The pool is cleared afterwards, so that the session
-		/// never gets a connection opened as the process account, and the client cannot keep a pooled error for it.
+		/// nothing from the connection string reaches the output. The connection is never pooled, so no request can get
+		/// a connection opened as the process account: a client that pools gets its pooling keyword turned off, and a
+		/// client that pools by other means is not warmed up.
 		/// </remarks>
-		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, string connectionString)
+		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, string connectionString, CancellationToken cancellationToken)
 		{
-			using var timeout = new CancellationTokenSource(_warmUpTimeout);
+			using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+			timeout.CancelAfter(WarmUpTimeout);
 
 			try
 			{
-				await using var db = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString));
+				if (GetUnpooledConnectionString(dataProvider, connectionString) is not { } warmUpConnectionString)
+					return;
+
+				await using var db = new DataConnection(new DataOptions().UseConnectionString(dataProvider, warmUpConnectionString));
 
 				await db.OpenDbConnectionAsync(timeout.Token);
 			}
@@ -120,31 +167,33 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			{
 				// Expected when the process account cannot connect; see remarks.
 			}
-			finally
-			{
-				ClearPool(dataProvider, connectionString);
-			}
 		}
 
 		/// <summary>
-		/// Clears the client's pool for <paramref name="connectionString"/> through the static <c>ClearPool</c> method of
-		/// its connection type, which the pooling ADO.NET clients have (SqlClient, Npgsql, MySqlConnector, ODP.NET,
-		/// FirebirdClient, Microsoft.Data.Sqlite). A client without it is left alone.
+		/// Returns <paramref name="connectionString"/> with the client's pooling turned off, the string itself for a
+		/// client that does not pool, or <see langword="null"/> for a client that pools by means this does not know.
 		/// </summary>
-		static void ClearPool(IDataProvider dataProvider, string connectionString)
+		static string? GetUnpooledConnectionString(IDataProvider dataProvider, string connectionString)
 		{
-			try
-			{
-				using var connection = dataProvider.CreateConnection(connectionString);
+			using var connection = dataProvider.CreateConnection(connectionString);
 
-				var clearPool = connection.GetType().GetMethod("ClearPool", BindingFlags.Public | BindingFlags.Static, [connection.GetType()]);
+			var type = connection.GetType();
 
-				clearPool?.InvokeExt(null, [connection]);
-			}
-			catch (Exception)
+			if (_poolingKeywords.TryGetValue(type.FullName!, out var keyword))
 			{
-				// Nothing was pooled if the connection cannot even be created.
+				var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
+
+				builder[keyword] = "false";
+
+				return builder.ConnectionString;
 			}
+
+			var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
+
+			if (Array.Exists(methods, method => _poolMethods.Contains(method.Name, StringComparer.Ordinal)))
+				return null;
+
+			return connectionString;
 		}
 
 		/// <summary>

@@ -78,7 +78,7 @@ namespace LinqToDB.CommandLine.Commands.SchemaInspection
 			{
 				cancellationToken.ThrowIfCancellationRequested();
 
-				var connection = await ConnectionExecution.OpenAsync(_environment, _settings.Connection);
+				var connection = await ConnectionExecution.OpenAsync(_environment, _settings.Connection, cancellationToken);
 
 				if (connection.Error != null)
 					return new SchemaInspectionResult(connection.StatusCode, $"Schema inspection failed: {connection.Error}");

@@ -14,7 +14,7 @@ namespace Tests.LinqToDB.CLI
 	/// happened when the run started and which assemblies were loaded inside it. <see cref="Current"/> flows with
 	/// the run like a Windows impersonation token does, so observers can tell whether an event happened inside.
 	/// </summary>
-	internal sealed class RecordingImpersonationSession(string user, string password, WindowsImpersonationMode mode, Func<string> errorOutput) : IImpersonationSession
+	internal sealed class RecordingImpersonationSession(string user, string password, WindowsImpersonationMode mode, Func<string> errorOutput, Action? runStarting = null) : IImpersonationSession
 	{
 		static readonly AsyncLocal<RecordingImpersonationSession?> _current = new();
 
@@ -30,6 +30,8 @@ namespace Tests.LinqToDB.CLI
 		public async Task<T> RunAsync<T>(Func<Task<T>> action)
 		{
 			ObjectDisposedException.ThrowIf(Disposed, this);
+
+			runStarting?.Invoke();
 
 			var run = new ImpersonatedRun(
 				errorOutput(),

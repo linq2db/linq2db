@@ -395,7 +395,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 					_settings.ImpersonateMode,
 					null);
 
-				var connection = await ConnectionExecution.OpenAsync(_environment, connectionSettings);
+				var connection = await ConnectionExecution.OpenAsync(_environment, connectionSettings, cancellationToken);
 
 				if (connection.Error != null)
 					return new QueryExecutionResult(connection.StatusCode, connection.Error, false);

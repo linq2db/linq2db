@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.CommandLine;
+using LinqToDB.CommandLine.Commands.Connection;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internal.DataProvider.SQLite;
 
 using NUnit.Framework;
 
@@ -561,6 +567,134 @@ namespace Tests.LinqToDB.CLI
 				result.Error.      ShouldContain("Cannot create database provider 'NoSuchProvider'");
 				session.Runs.Count.ShouldBe(1);
 				session.Disposed.  ShouldBeTrue();
+			}
+		}
+
+		[Test]
+		public async Task WarmUpConnectionIsNotPooled()
+		{
+			if (!OperatingSystem.IsLinux())
+				Assert.Ignore("Counts open files through /proc/self/fd.");
+
+			var database = CreateSqliteDatabase();
+
+			try
+			{
+				// Microsoft.Data.Sqlite keeps the database file open for a pooled connection.
+				//
+				int? openAtEntry = null;
+
+				var environment = new TestCliEnvironment { ImpersonatedRunStarting = () => openAtEntry ??= CountOpenHandles(database) };
+
+				var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", $"Data Source={database};Pooling=True", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.ShouldBe(0, result.Error);
+					openAtEntry.    ShouldBe(0);
+				}
+			}
+			finally
+			{
+				File.Delete(database);
+			}
+
+			static int CountOpenHandles(string path)
+			{
+				return Directory.GetFiles("/proc/self/fd").Count(fd => new FileInfo(fd).LinkTarget == path);
+			}
+		}
+
+		[Test]
+		public async Task WarmUpStopsWaitingAtItsBound()
+		{
+			var database = CreateSqliteDatabase();
+			var provider = new BlockingWarmUpProvider();
+			var previous = ImpersonationPreload.WarmUpTimeout;
+
+			DataConnection.AddDataProvider(provider);
+			ImpersonationPreload.WarmUpTimeout = TimeSpan.FromSeconds(1);
+
+			try
+			{
+				var environment = new TestCliEnvironment();
+				var stopwatch   = Stopwatch.StartNew();
+
+				var result = await RunCli(environment, "query", "--provider", provider.Name, "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person");
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.          ShouldBe(0, result.Error);
+					provider.WarmUpOpenStarted.ShouldBeTrue();
+					stopwatch.Elapsed.        ShouldBeLessThan(TimeSpan.FromSeconds(30));
+				}
+			}
+			finally
+			{
+				provider.Release();
+				ImpersonationPreload.WarmUpTimeout = previous;
+				File.Delete(database);
+			}
+		}
+
+		/// <summary>
+		/// SQLite provider whose connections block in a synchronous open, as clients without a real asynchronous open do,
+		/// until <see cref="Release"/>; only the warm-up gets them, as it opens first.
+		/// </summary>
+		sealed class BlockingWarmUpProvider() : SQLiteDataProvider("BlockingWarmUpTest", SQLiteProvider.Microsoft)
+		{
+			readonly ManualResetEventSlim _release = new();
+
+			public bool WarmUpOpenStarted { get; private set; }
+
+			public void Release()
+			{
+				_release.Set();
+			}
+
+			protected override DbConnection CreateConnectionInternal(string connectionString)
+			{
+				if (!WarmUpOpenStarted)
+					return new BlockingConnection(this);
+
+				return base.CreateConnectionInternal(connectionString);
+			}
+
+			sealed class BlockingConnection(BlockingWarmUpProvider provider) : DbConnection
+			{
+				[System.Diagnostics.CodeAnalysis.AllowNull]
+				public override string ConnectionString { get; set; } = "";
+				public override string Database      => "";
+				public override string DataSource    => "";
+				public override string ServerVersion => "";
+				public override ConnectionState State => ConnectionState.Closed;
+
+				public override void Open()
+				{
+					provider.WarmUpOpenStarted = true;
+					provider._release.Wait(TimeSpan.FromMinutes(1));
+
+					throw new InvalidOperationException("The blocked warm-up open was released.");
+				}
+
+				public override void Close()
+				{
+				}
+
+				public override void ChangeDatabase(string databaseName)
+				{
+					throw new NotSupportedException();
+				}
+
+				protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
+				{
+					throw new NotSupportedException();
+				}
+
+				protected override DbCommand CreateDbCommand()
+				{
+					throw new NotSupportedException();
+				}
 			}
 		}
 

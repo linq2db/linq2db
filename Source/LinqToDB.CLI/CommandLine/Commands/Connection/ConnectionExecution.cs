@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.QueryExecution;
@@ -28,7 +29,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// impersonation it runs as the impersonated identity, after the preload.
 		/// </para>
 		/// </remarks>
-		public static async Task<ConnectionExecutionResult<ConnectionScope>> OpenAsync(ICliEnvironment environment, ConnectionSettings settings)
+		public static async Task<ConnectionExecutionResult<ConnectionScope>> OpenAsync(ICliEnvironment environment, ConnectionSettings settings, CancellationToken cancellationToken)
 		{
 			if (!ExternalProviderLoader.LoadExternalProvider(settings.Provider, settings.ProviderLocation, out var error))
 				return new ConnectionExecutionResult<ConnectionScope>(StatusCodes.EXPECTED_ERROR, error, null);
@@ -43,7 +44,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			try
 			{
-				await ImpersonationPreload.RunAsync(settings);
+				await ImpersonationPreload.RunAsync(settings, cancellationToken);
 
 				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
 
