@@ -1,5 +1,4 @@
 using System;
-using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -263,8 +262,8 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
 			}
-			// only a provider error means "no such table"; anything else is a broken connection, not a clean state
-			catch (DbException)
+			// not every provider's "no such table" error is a DbException (AseClient, Octonica)
+			catch
 			{
 				tableExists = false;
 			}
@@ -322,8 +321,8 @@ namespace Tests.xUpdate
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: true);
 			}
-			// only a provider error means "no such table"; anything else is a broken connection, not a clean state
-			catch (DbException)
+			// not every provider's "no such table" error is a DbException (AseClient, Octonica)
+			catch
 			{
 				tableExists = false;
 			}
