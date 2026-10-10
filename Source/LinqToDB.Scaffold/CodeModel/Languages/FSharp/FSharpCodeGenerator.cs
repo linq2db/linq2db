@@ -86,6 +86,10 @@ namespace LinqToDB.CodeModel
 		private bool   _currentIsExtensionType;
 		// file imports, emitted after the `namespace` declaration (F# requires namespace before `open`)
 		private IReadOnlyList<CodeImport>? _fileImports;
+		// types rendered as F# modules; nested types of any other class are lifted out of it
+		private readonly HashSet<IType>    _moduleTypes = new();
+		// static auto-properties of the current class rendered over a `static let` backing value
+		private HashSet<CodeProperty>?     _staticBackedProperties;
 
 		public FSharpCodeGenerator(
 			ILanguageProvider                                                      languageProvider,
@@ -150,6 +154,12 @@ namespace LinqToDB.CodeModel
 			// F# requires the `namespace` declaration before any `open` statements, so imports are emitted by
 			// the namespace visitor rather than here.
 			_fileImports = file.Imports;
+
+			foreach (var @namespace in file.Items.OfType<CodeNamespace>())
+				foreach (var @class in EnumerateAllClasses(@namespace.Members))
+					if (@class.Attributes.HasFlag(Modifiers.Module))
+						_moduleTypes.Add(@class.Type);
+
 			VisitList(file);
 		}
 
@@ -505,8 +515,8 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeTypeInitializer cctor)
 		{
-			// F# uses 'static do' / static let for type initialization; not emitted by the F# model path yet
-			throw new NotImplementedException("Static type initializers are not yet supported by F# code generator");
+			// rendered as part of the owning class (see WriteTypeInitializer)
+			throw new InvalidOperationException("Static type initializer must be rendered by its class");
 		}
 
 		protected override void Visit(CodeConstructor ctor)
@@ -581,7 +591,28 @@ namespace LinqToDB.CodeModel
 			// initializer, so emit the property initializer if present, otherwise Unchecked.defaultof<_>.
 			var isAuto = property.Getter == null && property.Setter == null;
 
-			if (isAuto)
+			if (isAuto && _staticBackedProperties?.Contains(property) == true)
+			{
+				Write("static member ");
+				WriteAccessibility(property.Attributes);
+				Visit(property.Name);
+				Write(" with get() : ");
+				Visit(property.Type);
+				Write(" = ");
+				WriteStaticBackingName(property);
+
+				if (property.HasSetter)
+				{
+					Write(" and set (value : ");
+					Visit(property.Type);
+					Write(") = ");
+					WriteStaticBackingName(property);
+					Write(" <- value");
+				}
+
+				WriteLine();
+			}
+			else if (isAuto)
 			{
 				Write(property.Attributes.HasFlag(Modifiers.Static) ? "static member val " : "member val ");
 				WriteAccessibility(property.Attributes);
@@ -679,6 +710,9 @@ namespace LinqToDB.CodeModel
 			var isRecord        = @class.Attributes.HasFlag(Modifiers.Record);
 			// a static (non-record) class is rendered as an F# [<Extension>] type holding static members
 			var isExtensionType = !isRecord && @class.Attributes.HasFlag(Modifiers.Static);
+
+			if ((isRecord || isExtensionType) && @class.TypeInitializer != null)
+				throw new NotSupportedException($"Static type initializer on F# {(isRecord ? "record" : "extension type")} '{@class.Name.Name}' is not supported");
 
 			if (@class.XmlDoc != null)
 				Visit(@class.XmlDoc);
@@ -798,6 +832,12 @@ namespace LinqToDB.CodeModel
 					WriteLine();
 				}
 
+				var oldStaticBacked = _staticBackedProperties;
+				_staticBackedProperties = null;
+
+				if (@class.TypeInitializer?.Body?.Items.Count > 0)
+					WriteTypeInitializer(@class);
+
 				// instance fields become `let`-bound values and must precede the constructor `do` bindings
 				foreach (var fieldGroup in @class.Members.OfType<FieldGroup>())
 					VisitList(fieldGroup.Members);
@@ -816,6 +856,8 @@ namespace LinqToDB.CodeModel
 				// render remaining members (constructors are the primary constructor above; field groups are the
 				// `let` bindings above)
 				WriteMemberGroups(@class.Members.Where(g => g is not ConstructorGroup and not FieldGroup).ToList());
+
+				_staticBackedProperties = oldStaticBacked;
 
 				DecreaseIdent();
 			}
@@ -902,6 +944,54 @@ namespace LinqToDB.CodeModel
 
 		// name of the [<Extension>] type synthesized inside a schema module to hold its extension methods
 		private const string DataModelConstants_FSharpSchemaExtensionsType = "Extensions";
+
+		/// <summary>
+		/// Renders the static constructor as a <c>static do</c> block. F# runs <c>static do</c> before
+		/// <c>static member val</c> initializers (accessing one fails static initialization), so initialized static
+		/// auto-properties are moved to <c>static let</c> values, which run first, behind getter properties.
+		/// </summary>
+		private void WriteTypeInitializer(CodeClass @class)
+		{
+			_staticBackedProperties = new();
+
+			foreach (var property in @class.Members.EnumerateMembers<PropertyGroup, CodeProperty>())
+			{
+				if (!property.Attributes.HasFlag(Modifiers.Static) || property.Getter != null || property.Setter != null || property.Initializer == null)
+					continue;
+
+				_staticBackedProperties.Add(property);
+
+				Write(property.HasSetter ? "static let mutable " : "static let ");
+				WriteStaticBackingName(property);
+				Write(" : ");
+				Visit(property.Type);
+				Write(" = ");
+				Visit(property.Initializer);
+				WriteLine();
+			}
+
+			WriteLine("static do");
+			IncreaseIdent();
+
+			foreach (var stmt in @class.TypeInitializer!.Body!.Items)
+			{
+				WriteTrivia(stmt.Before);
+				Visit(stmt);
+				// fluent builder calls return the builder, and F# rejects an implicitly discarded value
+				if (stmt is CodeCallStatement)
+					Write(" |> ignore");
+				WriteLine();
+				WriteTrivia(stmt.After);
+			}
+
+			DecreaseIdent();
+		}
+
+		private void WriteStaticBackingName(CodeProperty property)
+		{
+			Write('_');
+			Write(property.Name.Name);
+		}
 
 		/// <summary>
 		/// Determines whether a primary-constructor body statement references the instance. An instance-field
@@ -1065,11 +1155,26 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeTypeCast expression)
 		{
-			Write('(');
-			Visit(expression.Value);
-			Write(" :> ");
-			Visit(expression.Type);
-			Write(')');
+			// the model casts object values (tuple-result fields) to the target type: unbox, and wrap
+			// option-typed targets explicitly, since a boxed value is never a boxed option
+			var type = expression.Type.Type;
+
+			if (type.IsNullable && (type.IsValueType || string.Equals(_languageProvider.GetAlias(type.WithNullability(false)), "string", StringComparison.Ordinal)))
+			{
+				Write("(match ");
+				Visit(expression.Value);
+				Write(" with null -> None | value -> Some (unbox<");
+				RenderType(type.WithNullability(false), null, true);
+				Write("> value))");
+			}
+			else
+			{
+				Write("(unbox<");
+				RenderType(type.WithNullability(false), null, true);
+				Write("> ");
+				Visit(expression.Value);
+				Write(')');
+			}
 		}
 
 		protected override void Visit(CodeAsOperator expression)
@@ -1525,8 +1630,26 @@ namespace LinqToDB.CodeModel
 
 					if (type.Parent != null && !nested)
 					{
-						RenderTypeName(type.Parent, null, typeOnlyContext);
-						Write('.');
+						// nested types are lifted out of every class except modules, so only a module qualifies
+						var qualifier = type.Parent;
+						while (qualifier != null && !_moduleTypes.Contains(qualifier))
+							qualifier = qualifier.Parent;
+
+						var inQualifier = false;
+						for (var t = _currentType; t != null && qualifier != null; t = t.Parent)
+						{
+							if (t == qualifier)
+							{
+								inQualifier = true;
+								break;
+							}
+						}
+
+						if (qualifier != null && !inQualifier)
+						{
+							RenderTypeName(qualifier, null, typeOnlyContext);
+							Write('.');
+						}
 					}
 					else
 					{
