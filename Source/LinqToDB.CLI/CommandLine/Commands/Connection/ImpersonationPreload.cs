@@ -356,10 +356,20 @@ namespace LinqToDB.CommandLine.Commands.Connection
 					.SelectMany(variant => directories.Select(directory => Path.Combine(directory, variant)))
 					.FirstOrDefault(File.Exists);
 
+				// The library's own dependencies (e.g. the C runtime) are looked up only in its folder and in System32,
+				// never in the current directory or PATH. The result is not checked; see above.
+				//
 				if (path != null)
-					NativeLibrary.TryLoad(Path.GetFullPath(path), out _);
+					LoadLibraryEx(Path.GetFullPath(path), IntPtr.Zero, LoadLibrarySearchDllLoadDir | LoadLibrarySearchSystem32);
 			}
 		}
+
+		const uint LoadLibrarySearchDllLoadDir = 0x00000100;
+		const uint LoadLibrarySearchSystem32   = 0x00000800;
+
+		[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
+		[LibraryImport("kernel32.dll", EntryPoint = "LoadLibraryExW", StringMarshalling = StringMarshalling.Utf16)]
+		private static partial IntPtr LoadLibraryEx(string fileName, IntPtr file, uint flags);
 
 		static Assembly? TryLoad(AssemblyLoadContext context, AssemblyName name)
 		{
