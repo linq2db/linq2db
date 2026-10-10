@@ -64,6 +64,11 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// <summary>The credentials directory.</summary>
 		public string Directory => _directory;
 
+		/// <summary>
+		/// Test hook: runs while the data file is open for reading, so a test can replace the file under an open reader.
+		/// </summary>
+		internal Action? DataFileOpenedForRead { get; init; }
+
 		/// <summary>Set when the last operation created the key, which is when the store comes into existence.</summary>
 		public bool KeyCreated { get; private set; }
 
@@ -418,7 +423,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			if (fileError != null)
 				return fileError;
 
-			var data = ReadAllBytesShared(DataPath);
+			var data = ReadAllBytesShared(DataPath, DataFileOpenedForRead);
 
 			if (data.Length < _header.Length || !data.AsSpan(0, _header.Length - 1).SequenceEqual(_header.AsSpan(0, _header.Length - 1)))
 				return $"'{DataPath}' is not a linq2db local store file, or it is truncated.";
@@ -536,7 +541,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 				return false;
 			}
 
-			var bytes = ReadAllBytesShared(KeyPath);
+			var bytes = ReadAllBytesShared(KeyPath, null);
 
 			if (OperatingSystem.IsWindows())
 			{
@@ -606,9 +611,11 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		/// Reads a whole file while letting a writer replace it: a read can run without the lock (when no lock file exists
 		/// yet), and on Windows an open handle without delete sharing would make the writer's replacing move fail.
 		/// </summary>
-		static byte[] ReadAllBytesShared(string path)
+		static byte[] ReadAllBytesShared(string path, Action? opened)
 		{
 			using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+
+			opened?.Invoke();
 
 			var result = new byte[stream.Length];
 			stream.ReadExactly(result);

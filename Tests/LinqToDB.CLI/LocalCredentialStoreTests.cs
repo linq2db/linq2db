@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.CommandLine.Commands.Credentials;
@@ -498,38 +497,35 @@ namespace Tests.LinqToDB.CLI
 		[Test]
 		public void ReaderWithoutLockFileDoesNotBlockAWriter()
 		{
-			// A store whose lock file is gone (deleted by hand): readers run without the lock, and must still let a writer
-			// replace the data file (on Windows a reader's handle without delete sharing would make the replace fail).
+			// A store whose lock file is gone (deleted by hand): a reader runs without the lock, so a writer can replace the
+			// data file while the reader holds it open. On Windows that replace fails unless the reader's handle shares
+			// delete access; elsewhere a rename over an open file always succeeds.
 			CreateStore().TryStore("seed", "u", "p", out var error).ShouldBeTrue(error);
 			File.Delete(LockPath);
 
-			var errors = new System.Collections.Concurrent.ConcurrentQueue<string>();
-			var reader = CreateStore(TimeSpan.FromSeconds(30));
-			var done   = false;
+			var writer = CreateStore();
+			var stored = false;
 
-			var readers = Task.Run(() =>
+			var reader = new LocalCredentialStore(_directory, _root)
 			{
-				while (!Volatile.Read(ref done))
+				DataFileOpenedForRead = () =>
 				{
-					if (!reader.TryGetCount(out _, out var readError))
-						errors.Enqueue(readError!);
-				}
-			});
+					// Once only: the writer runs its own reads through another instance, without this hook.
+					if (!stored)
+					{
+						stored = true;
+						writer.TryStore("written", "u", "p", out var writerError).ShouldBeTrue(writerError);
+					}
+				},
+			};
 
-			var writer = CreateStore(TimeSpan.FromSeconds(30));
+			reader.TryGetCount(out var count, out error).ShouldBeTrue(error);
 
-			for (var i = 0; i < 25; i++)
-			{
-				if (!writer.TryStore($"w/{i}", "u", "p", out var storeError))
-					errors.Enqueue(storeError!);
-			}
+			stored.ShouldBeTrue("the reader did not open the data file");
+			count.ShouldBe(1);
 
-			Volatile.Write(ref done, true);
-			readers.Wait(TimeSpan.FromSeconds(60)).ShouldBeTrue("the reader did not finish");
-
-			errors.ShouldBeEmpty();
-			CreateStore().TryGetCount(out var count, out error).ShouldBeTrue(error);
-			count.ShouldBe(26);
+			CreateStore().TryGetCount(out count, out error).ShouldBeTrue(error);
+			count.ShouldBe(2);
 		}
 
 		[Test]
