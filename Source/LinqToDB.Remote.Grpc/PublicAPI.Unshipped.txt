@@ -1,2 +1,4 @@
 #nullable enable
 LinqToDB.Remote.Grpc.GrpcDataContext.GrpcDataContext(Grpc.Net.Client.GrpcChannel! channel, System.Func<LinqToDB.DataOptions!, LinqToDB.DataOptions!>? optionBuilder = null) -> void
+override LinqToDB.Remote.Grpc.GrpcDataContext.Dispose() -> void
+override LinqToDB.Remote.Grpc.GrpcDataContext.DisposeAsync() -> System.Threading.Tasks.ValueTask
