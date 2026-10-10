@@ -186,6 +186,10 @@ namespace LinqToDB.Remote.SignalR
 
 			try
 			{
+				// SemaphoreSlim completes a cancelled wait asynchronously, so a slot freed in that window is still granted
+				// to the waiter: a call cancelled while it was queued must not run all the same.
+				cancellationToken.ThrowIfCancellationRequested();
+
 				var global = options.GetGlobalLimiter();
 
 				if (global != null)
@@ -193,6 +197,8 @@ namespace LinqToDB.Remote.SignalR
 
 				try
 				{
+					cancellationToken.ThrowIfCancellationRequested();
+
 					return await operation(service, cancellationToken).ConfigureAwait(false);
 				}
 				catch (Exception exception) when (options.TransferInternalExceptionToClient && exception is not OperationCanceledException and not HubException)
