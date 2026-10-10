@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Internal.Linq
 {
 	/// <summary>
@@ -56,7 +58,7 @@ namespace LinqToDB.Internal.Linq
 				return false;
 
 			if (value1 is FormattableString fs1 && value2 is FormattableString fs2)
-				return string.Equals(fs1.Format, fs2.Format, StringComparison.Ordinal) && ValuesEqual(fs1.GetArguments(), fs2.GetArguments());
+				return FormattableStringHelper.AreEqual(fs1, fs2, ValuesEqual);
 
 			if (value1 is not string and IEnumerable list1 && value2 is not string and IEnumerable list2)
 			{
@@ -80,7 +82,7 @@ namespace LinqToDB.Internal.Linq
 		static int ValueHashCode(object? value)
 		{
 			if (value is FormattableString fs)
-				return StringComparer.Ordinal.GetHashCode(fs.Format) * 397 + ValueHashCode(fs.GetArguments());
+				return FormattableStringHelper.ComputeHashCode(fs, ValueHashCode);
 
 			if (value is not string and IEnumerable list)
 			{

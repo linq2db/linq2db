@@ -2653,7 +2653,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (string.Equals(node.Method.Name, "Format", StringComparison.Ordinal))
 				{
 					var format = node.Arguments[0].EvaluateExpression<string>();
-					if (format == null)
+					if (format == null || FormattableStringHelper.ParseFormatItems(format)?.Any(static i => i.HasAlignment) == true)
 						return false;
 
 					var (inputArguments, startIndex) = node.Arguments switch

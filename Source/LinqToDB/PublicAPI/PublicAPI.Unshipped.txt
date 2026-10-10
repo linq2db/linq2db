@@ -1,5 +1,15 @@
 ﻿#nullable enable
 *REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
+LinqToDB.Internal.Common.FormattableStringHelper
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.FormatItem() -> void
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.FormatItem(int start, int length, int index, int indexStart, int indexLength, bool hasAlignment) -> void
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.HasAlignment.get -> bool
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.Index.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.IndexLength.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.IndexStart.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.Length.get -> int
+LinqToDB.Internal.Common.FormattableStringHelper.FormatItem.Start.get -> int
 const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
@@ -12,3 +22,13 @@ override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertV
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.Internal.Common.FormattableStringHelper.AreEqual(System.FormattableString! value1, System.FormattableString! value2, System.Func<object?, object?, bool>! argumentsEqual) -> bool
+static LinqToDB.Internal.Common.FormattableStringHelper.ComputeHashCode(System.FormattableString! value, System.Func<object?, int>! argumentsHashCode) -> int
+static LinqToDB.Internal.Common.FormattableStringHelper.CreateArgumentsExpression(object?[]! arguments) -> System.Linq.Expressions.NewArrayExpression!
+static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(System.FormattableString! value) -> System.Linq.Expressions.MethodCallExpression!
+static LinqToDB.Internal.Common.FormattableStringHelper.CreateExpression(string! format, System.Linq.Expressions.Expression! arguments) -> System.Linq.Expressions.MethodCallExpression!
+static LinqToDB.Internal.Common.FormattableStringHelper.GetReferencedArguments(string! format, int count) -> bool[]?
+static LinqToDB.Internal.Common.FormattableStringHelper.ParseFormatItems(string! format) -> System.Collections.Generic.IReadOnlyList<LinqToDB.Internal.Common.FormattableStringHelper.FormatItem>?
+static LinqToDB.Internal.Common.FormattableStringHelper.PrepareRawSqlArguments(System.Linq.Expressions.Expression! formatArg, System.Linq.Expressions.Expression? parametersArg, bool keepUnreferenced, out string! format, out System.Collections.Generic.IReadOnlyList<System.Linq.Expressions.Expression!>! arguments) -> void
+static LinqToDB.Internal.Common.FormattableStringHelper.TrySplit(System.Linq.Expressions.Expression! expression, out System.Linq.Expressions.Expression? format, out System.Linq.Expressions.NewArrayExpression? arguments) -> bool
+static LinqToDB.Internal.Common.FormattableStringHelper.Unescape(string! format, int start, int length) -> string!

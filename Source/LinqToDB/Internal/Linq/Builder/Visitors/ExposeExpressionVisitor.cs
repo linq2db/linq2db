@@ -264,7 +264,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				var format    = ((RawSqlString)EvaluateExpression(sql)!).Format;
 				var arguments = node.Arguments.Take(node.Arguments.Count - 2).ToList();
 
-				arguments.Add(DataExtensions.GenerateFormattableString(format, node.Arguments[^1]));
+				arguments.Add(FormattableStringHelper.CreateExpression(format, node.Arguments[^1]));
 
 				return Expression.Call(formattableMethod.MakeGenericMethod(node.Method.GetGenericArguments()), arguments);
 			}
@@ -273,8 +273,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			// expressions and become parameters as they would in the outer query.
 			Expression PrepareFormattableString(Expression argument)
 			{
-				if (argument is MethodCallExpression { Arguments: [var format, { NodeType: ExpressionType.NewArrayInit } arguments] } create
-					&& create.Method == Methods.System.FormattableStringFactory_Create)
+				if (FormattableStringHelper.TrySplit(argument, out var format, out var arguments))
 				{
 					if (format.NodeType == ExpressionType.Constant)
 						return argument;
@@ -287,7 +286,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					if (!ReferenceEquals(resolvedFormat, format))
 						RecordMaterializedArgumentSlots(format);
 
-					return create.Update(null, [Expression.Constant(EvaluateExpression(resolvedFormat), typeof(string)), arguments]);
+					return FormattableStringHelper.CreateExpression((string)EvaluateExpression(resolvedFormat)!, arguments);
 				}
 
 				var resolvedArgument = ResolveCompiledQueryArguments(argument);
@@ -297,7 +296,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					if (!ReferenceEquals(resolvedArgument, argument))
 						RecordMaterializedArgumentSlots(argument);
 
-					return DataExtensions.GenerateFormattableString(formattable);
+					return FormattableStringHelper.CreateExpression(formattable);
 				}
 
 				return argument;

@@ -534,8 +534,9 @@ namespace LinqToDB
 		{
 			public void Build(ISqlExtensionBuilder builder)
 			{
-				Internal.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
+				Internal.Common.FormattableStringHelper.PrepareRawSqlArguments(builder.Arguments[0],
 					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,
+					builder.DataContext.SqlProviderFlags.IsParameterOrderDependent,
 					out var format, out var arguments);
 
 				var memberType = builder.Member.GetMemberType();

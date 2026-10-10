@@ -11,12 +11,12 @@ using JetBrains.Annotations;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Options;
-using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -1443,34 +1443,6 @@ namespace LinqToDB
 
 		#region FromSql
 
-		static Expression GenerateArray(object?[] arguments)
-		{
-			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
-			{
-				if (p == null)
-					return Expression.Constant(null, typeof(object));
-				
-				var argumentType    = p.GetType();
-				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
-				if (valueExpression.Type != typeof(object))
-					valueExpression = Expression.Convert(valueExpression, typeof(object));
-
-				return valueExpression;
-			}));
-
-			return argumentsExpr;
-		}
-
-		internal static MethodCallExpression GenerateFormattableString(FormattableString sql)
-		{
-			return GenerateFormattableString(sql.Format, GenerateArray(sql.GetArguments()));
-		}
-
-		internal static MethodCallExpression GenerateFormattableString(string format, Expression arguments)
-		{
-			return Expression.Call(null, Methods.System.FormattableStringFactory_Create, Expression.Constant(format), arguments);
-		}
-
 		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on an interpolated string representing a SQL query.
@@ -1504,7 +1476,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql)));
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql)));
 		}
 
 		/// <summary>
@@ -1546,7 +1518,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					SqlQueryRootExpression.Create(dataContext), GenerateFormattableString(sql)));
+					SqlQueryRootExpression.Create(dataContext), FormattableStringHelper.CreateExpression(sql)));
 		}
 
 		/// <summary>
@@ -1582,7 +1554,7 @@ namespace LinqToDB
 		{
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			var paramsExpr = GenerateArray(parameters);
+			var paramsExpr = FormattableStringHelper.CreateArgumentsExpression(parameters);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,

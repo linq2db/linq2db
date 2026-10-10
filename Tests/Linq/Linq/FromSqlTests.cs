@@ -1432,6 +1432,69 @@ namespace Tests.Linq
 			Query(FormattableStringFactory.Create("SELECT {0} AS value", 2)).ToArray().ShouldBe([2]);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void UnreferencedArgumentIsNotSent([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var table = QuoteTableName("Person",   context);
+			var id    = QuoteTableName("PersonID", context);
+			var alias = context.IsAnyOf(TestProvName.AllYdb) ? "`value`" : "\"value\"";
+
+			var fs = FormattableStringFactory.Create($"SELECT {id} AS {alias} FROM {table} WHERE {id} = {{0}}", 1, 99);
+
+			var query = db.Person.Where(p => p.ID.In(db.FromSqlScalar<int>(fs)));
+
+			query.AsEnumerable().Select(p => p.ID).ToArray().ShouldBe([1]);
+			query.ToSqlQuery().Parameters.ShouldNotContain(p => Equals(p.Value, 99));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void UnreferencedExprArgumentIsNotSent([DataSources(TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.Informix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var fs = FormattableStringFactory.Create("({0})", 1, 99);
+
+			var query = db.Person.Where(p => p.ID == Sql.Expr<int>(fs));
+
+			query.AsEnumerable().Select(p => p.ID).ToArray().ShouldBe([1]);
+			query.ToSqlQuery().Parameters.ShouldNotContain(p => Equals(p.Value, 99));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void ArgumentReferencedByNameIsSent([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var prefix = context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllPostgreSQL) ? ":" : "@";
+			var sql    = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {prefix}p";
+
+			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void ArgumentReferencedByAlternateNameIsSent([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var prefix = context.IsAnyOf(TestProvName.AllPostgreSQL) ? "@" : "?";
+			var sql    = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = {prefix}p";
+
+			db.FromSql<Person>(sql, new DataParameter("p", 2, DataType.Int32)).Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/6008")]
+		public void ArgumentReferencedByPositionIsSent([IncludeDataSources(true, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLiteClassic, TestProvName.AllMySql)] string context, [Values] bool dataParameter)
+		{
+			using var db = GetDataContext(context);
+
+			var sql      = $"SELECT * FROM {QuoteTableName("Person", context)} WHERE {QuoteTableName("PersonID", context)} = ?";
+			var argument = dataParameter ? new DataParameter("p", 2, DataType.Int32) : (object)2;
+
+			db.FromSql<Person>(sql, argument).Select(p => p.ID).ToArray().ShouldBe([2]);
+		}
+
 		sealed record Projection1(int i1, int i2);
 
 		sealed record Projection2(int i);
