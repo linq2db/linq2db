@@ -29,6 +29,14 @@ namespace Tests.Linq
 		// one. A row whose offset matches the container's would let every one of these tests pass while broken.
 		static readonly DateTimeOffset Value = new (2020, 6, 15, 12, 00, 00, TimeSpan.FromMinutes(40));
 
+		[Table]
+		sealed class DateRow
+		{
+			[PrimaryKey]                          public int      Id { get; set; }
+			// A DATE on Oracle, which is how a DateTime is commonly stored there.
+			[Column(DataType = DataType.DateTime)] public DateTime Dt { get; set; }
+		}
+
 		static ZonedRow[] Rows(params DateTimeOffset[] values)
 			=> values.Select((v, i) => new ZonedRow { Id = i + 1, Dto = v }).ToArray();
 
@@ -581,6 +589,23 @@ namespace Tests.Linq
 				.Single();
 
 			built.ShouldBe(new DateTimeOffset(stored.DateTime, TimeSpan.FromMinutes(-90)));
+			built.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
+		}
+
+		/// <summary>
+		/// The same constructor over a column whose storage type is not a timestamp. A plain projection - no
+		/// <c>AsSql</c> - because before the constructor was translated this shape evaluated in .NET and answered.
+		/// </summary>
+		[Test]
+		public void ConstructorOverADateColumn([IncludeDataSources(false, ZonedProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new DateRow { Id = 1, Dt = new DateTime(2020, 6, 15, 12, 0, 0) } });
+
+			var stored = table.Select(r => r.Dt).Single();
+			var built  = table.Select(r => new DateTimeOffset(r.Dt, TimeSpan.FromMinutes(-90))).Single();
+
+			built.ShouldBe(new DateTimeOffset(stored, TimeSpan.FromMinutes(-90)));
 			built.Offset.ShouldBe(TimeSpan.FromMinutes(-90));
 		}
 
