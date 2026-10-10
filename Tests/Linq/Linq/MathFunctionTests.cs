@@ -464,6 +464,34 @@ namespace Tests.Linq
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1230m, -1230m, 1220m, -1220m });
 		}
 
+		sealed class RoundNegativeNearLimit
+		{
+			[PrimaryKey                       ] public int     Id { get; set; }
+			[Column(Precision = 35, Scale = 2)] public decimal D  { get; set; }
+		}
+
+		// A negative precision on a type with no spare digits must still gain the scale 10^p needs.
+		[Test]
+		public void Round19([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegativeNearLimit { Id = 1, D =  1234.56m },
+				new RoundNegativeNearLimit { Id = 2, D =  1499.99m },
+				new RoundNegativeNearLimit { Id = 3, D =  2500.00m },
+				new RoundNegativeNearLimit { Id = 4, D = -2500.00m },
+				new RoundNegativeNearLimit { Id = 5, D =  3500.00m },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, -3)), Even = Sql.AsSql(Sql.RoundToEven(r.D, -3)) }).ToArray();
+
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1000m, 1000m, 3000m, -3000m, 4000m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1000m, 1000m, 2000m, -2000m, 4000m });
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{

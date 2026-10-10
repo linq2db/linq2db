@@ -802,7 +802,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				else if (p > 0)
 					intDigits += p.Value;
 				else
-					scale = Math.Min(scale - p.Value, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
+					scale = Math.Min(scale - p.Value, YdbMappingSchema.MAX_DECIMAL_PRECISION);
 
 				intDigits     = Math.Min(intDigits, YdbMappingSchema.MAX_DECIMAL_PRECISION - scale);
 
