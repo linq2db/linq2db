@@ -34,11 +34,31 @@ namespace LinqToDB
 		#region source/target configuration
 
 		/// <summary>
-		/// Starts merge operation definition from a subquery. If the query is not a table or a cte, it will be converted into a cte as the merge target.
+		/// Starts merge operation definition from a subquery. If the query is not a table or a CTE, it will be converted into a CTE as the merge target.
 		/// </summary>
 		/// <typeparam name="TTarget">Target record type.</typeparam>
-		/// <param name="target">Target table.</param>
+		/// <param name="target">Target query.</param>
 		/// <returns>Returns merge command builder, that contains only target.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// <para><b>Merge call graph:</b></para>
+		/// <code>
+		/// Merge(ITable&lt;TTarget&gt;)
+		///  └─ Using(...) / UsingTarget()
+		///      └─ On(...) / OnTargetKey() [OnTargetKey available only for UsingTarget]
+		///          └─ Operations (1..N)
+		///              ├─ InsertWhenNotMatched*
+		///              ├─ UpdateWhenMatched*
+		///              ├─ DeleteWhenMatched*
+		///              ├─ UpdateWhenNotMatchedBySource* [SQL Server]
+		///              ├─ DeleteWhenNotMatchedBySource* [SQL Server]
+		///              └─ UpdateWhenMatchedThenDelete*  [Oracle]
+		///                  └─ Terminal
+		///                      ├─ Merge() / MergeAsync()
+		///                      ├─ MergeWithOutput*()
+		///                      └─ MergeWithOutputInto*()
+		/// </code>
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			 this IQueryable<TTarget> target)
@@ -60,6 +80,26 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <returns>Returns merge command builder, that contains only target.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// <para><b>Merge call graph:</b></para>
+		/// <code>
+		/// Merge(ITable&lt;TTarget&gt;)
+		///  └─ Using(...) / UsingTarget()
+		///      └─ On(...) / OnTargetKey() [OnTargetKey available only for UsingTarget]
+		///          └─ Operations (1..N)
+		///              ├─ InsertWhenNotMatched*
+		///              ├─ UpdateWhenMatched*
+		///              ├─ DeleteWhenMatched*
+		///              ├─ UpdateWhenNotMatchedBySource* [SQL Server]
+		///              ├─ DeleteWhenNotMatchedBySource* [SQL Server]
+		///              └─ UpdateWhenMatchedThenDelete*  [Oracle]
+		///                  └─ Terminal
+		///                      ├─ Merge() / MergeAsync()
+		///                      ├─ MergeWithOutput*()
+		///                      └─ MergeWithOutputInto*()
+		/// </code>
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			 this ITable<TTarget> target)
@@ -83,6 +123,26 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="hint">Database-specific merge hint.</param>
 		/// <returns>Returns merge command builder, that contains only target.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// <para><b>Merge call graph:</b></para>
+		/// <code>
+		/// Merge(ITable&lt;TTarget&gt;)
+		///  └─ Using(...) / UsingTarget()
+		///      └─ On(...) / OnTargetKey() [OnTargetKey available only for UsingTarget]
+		///          └─ Operations (1..N)
+		///              ├─ InsertWhenNotMatched*
+		///              ├─ UpdateWhenMatched*
+		///              ├─ DeleteWhenMatched*
+		///              ├─ UpdateWhenNotMatchedBySource* [SQL Server]
+		///              ├─ DeleteWhenNotMatchedBySource* [SQL Server]
+		///              └─ UpdateWhenMatchedThenDelete*  [Oracle]
+		///                  └─ Terminal
+		///                      ├─ Merge() / MergeAsync()
+		///                      ├─ MergeWithOutput*()
+		///                      └─ MergeWithOutputInto*()
+		/// </code>
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			                    this ITable<TTarget> target,
@@ -107,8 +167,11 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="source">Source data query.</param>
-		/// <param name="target">Target query. If the query is not a table or a cte, it will be converted into a cte as the merge target.</param>
+		/// <param name="target">Target query. If the query is not a table or a CTE, it will be converted into a CTE as the merge target.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			 this IQueryable<TSource> source,
@@ -134,6 +197,9 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="target">Target table.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			 this IQueryable<TSource> source,
@@ -161,6 +227,9 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="hint">Database-specific merge hint.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> MergeInto<TTarget, TSource>(
 			                    this IQueryable<TSource> source,
@@ -189,6 +258,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder.</param>
 		/// <param name="source">Source data query.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
 			 this IMergeableUsing<TTarget> merge,
@@ -215,6 +287,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder.</param>
 		/// <param name="source">Source data collection.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TSource> Using<TTarget, TSource>(
 			      this IMergeableUsing<TTarget> merge,
@@ -248,6 +323,9 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="merge">Merge command builder.</param>
 		/// <returns>Returns merge command builder with source and target set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableOn<TTarget, TTarget> UsingTarget<TTarget>(
 			 this IMergeableUsing<TTarget> merge)
@@ -276,6 +354,9 @@ namespace LinqToDB
 		/// <param name="targetKey">Target record match key definition.</param>
 		/// <param name="sourceKey">Source record match key definition.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource, TKey>(
 			                this IMergeableOn<TTarget, TSource>  merge,
@@ -304,6 +385,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder.</param>
 		/// <param name="matchCondition">Rule to match/join target and source records.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TSource> On<TTarget, TSource>(
 			                this IMergeableOn<TTarget, TSource>           merge,
@@ -328,6 +412,9 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="merge">Merge command builder.</param>
 		/// <returns>Returns merge command builder with source, target and match (ON) set.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableSource<TTarget, TTarget> OnTargetKey<TTarget>(
 			 this IMergeableOn<TTarget, TTarget> merge)
@@ -354,6 +441,9 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatched<TTarget>(
 			 this IMergeableSource<TTarget, TTarget> merge)
@@ -380,6 +470,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over source record.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> InsertWhenNotMatchedAnd<TTarget>(
 			                this IMergeableSource<TTarget, TTarget> merge,
@@ -406,9 +499,14 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="setter">Create record expression using source record. Expression should be a call to target
-		/// record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Create record expression using source record. Expression should be a call to target record constructor
+		/// with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatched<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -437,9 +535,14 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over source record.</param>
-		/// <param name="setter">Create record expression using source record. Expression should be a call to target
-		/// record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Create record expression using source record. Expression should be a call to target record constructor
+		/// with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> InsertWhenNotMatchedAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -470,6 +573,9 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target and source records type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatched<TTarget>(
 			 this IMergeableSource<TTarget, TTarget> merge)
@@ -496,6 +602,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAnd<TTarget>(
 			                this IMergeableSource<TTarget, TTarget>       merge,
@@ -522,9 +631,14 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="setter">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Update record expression using target and source records.
+		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatched<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>          merge,
@@ -553,9 +667,14 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
-		/// <param name="setter">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Update record expression using target and source records.
+		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>          merge,
@@ -589,6 +708,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedThenDelete<TTarget>(
 			                this IMergeableSource<TTarget, TTarget>       merge,
@@ -620,6 +742,9 @@ namespace LinqToDB
 		/// <param name="searchCondition">Update execution condition over target and source records.</param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TTarget> UpdateWhenMatchedAndThenDelete<TTarget>(
 			                this IMergeableSource<TTarget, TTarget>       merge,
@@ -650,10 +775,15 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="setter">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Update record expression using target and source records.
+		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedThenDelete<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>          merge,
@@ -686,10 +816,15 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Update execution condition over target and source records.</param>
-		/// <param name="setter">Update record expression using target and source records.
-		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Update record expression using target and source records.
+		/// Expression should be a call to target record constructor with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <param name="deleteCondition">Delete execution condition over updated target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenMatchedAndThenDelete<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>          merge,
@@ -723,6 +858,9 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatched<TTarget, TSource>(
 			 this IMergeableSource<TTarget, TSource> merge)
@@ -749,6 +887,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target and source records.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenMatchedAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource>       merge,
@@ -778,9 +919,14 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
-		/// <param name="setter">Update record expression using target record. Expression should be a call to
-		/// target record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Update record expression using target record. Expression should be a call to target record constructor
+		/// with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySource<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -810,9 +956,14 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target record.</param>
-		/// <param name="setter">Update record expression using target record. Expression should be a call to
-		/// target record constructor with field/properties initializers to be recognized by API.</param>
+		/// <param name="setter">
+		/// Update record expression using target record. Expression should be a call to target record constructor
+		/// with field/properties initializers to be recognized by API.
+		/// </param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> UpdateWhenNotMatchedBySourceAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -845,6 +996,9 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySource<TTarget, TSource>(
 			 this IMergeableSource<TTarget, TSource> merge)
@@ -872,6 +1026,9 @@ namespace LinqToDB
 		/// <param name="merge">Merge command builder interface.</param>
 		/// <param name="searchCondition">Operation execution condition over target record.</param>
 		/// <returns>Returns new merge command builder with new operation.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeable<TTarget, TSource> DeleteWhenNotMatchedBySourceAnd<TTarget, TSource>(
 			                this IMergeableSource<TTarget, TSource> merge,
@@ -900,6 +1057,10 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// Availability and exact SQL semantics are provider-defined.
+		/// </remarks>
 		public static int Merge<TTarget, TSource>(
 			 this IMergeable<TTarget, TSource> merge)
 		{
@@ -923,17 +1084,21 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
-		/// <param name="outputExpression">Output record constructor expression.
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
 		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter; and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget, TSource>                     merge,
@@ -961,17 +1126,21 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
-		/// <param name="outputExpression">Output record constructor expression.
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
 		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <returns>Sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter; and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
@@ -999,17 +1168,21 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.        		
-		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter; and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget,TSource>                 merge,
@@ -1037,17 +1210,21 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
-		/// <param name="outputExpression">Output record constructor expression.
-		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.        		
-		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
+		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
-		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
+		/// <item>Firebird 3+ (doesn't support "action" parameter; and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> MergeWithOutputAsync<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
@@ -1076,15 +1253,19 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
-		/// <param name="outputExpression">Output record constructor expression.
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
 		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
-        /// Expression supports only record new expression with field initializers.</param>
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static int MergeWithOutputInto<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                 merge,
@@ -1118,15 +1299,19 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
-		/// <param name="outputExpression">Output record constructor expression.
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
 		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
-        /// Expression supports only record new expression with field initializers.</param>
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static int MergeWithOutputInto<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
@@ -1160,9 +1345,11 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
-		/// <param name="outputExpression">Output record constructor expression.
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
 		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
@@ -1170,6 +1357,8 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static Task<int> MergeWithOutputIntoAsync<TTarget, TSource, TOutput>(
 			this IMergeable<TTarget, TSource>                merge,
@@ -1205,9 +1394,11 @@ namespace LinqToDB
 		/// <typeparam name="TOutput">Output table record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="outputTable">Table which should handle output result.</param>
-		/// <param name="outputExpression">Output record constructor expression.
+		/// <param name="outputExpression">
+		/// Output record constructor expression.
 		/// Parameters passed are as follows: string merge action, <typeparamref name="TTarget"/> old, <typeparamref name="TTarget"/> new, <typeparamref name="TSource"/> source.
-		/// Expression supports only record new expression with field initializers.</param>
+		/// Expression supports only record new expression with field initializers.
+		/// </param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
 		/// <remarks>
@@ -1215,6 +1406,8 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
 		/// </remarks>
 		public static Task<int> MergeWithOutputIntoAsync<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                         merge,
@@ -1253,6 +1446,10 @@ namespace LinqToDB
 		/// <param name="merge">Merge command definition.</param>
 		/// <param name="token">Asynchronous operation cancellation token.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// Availability and exact SQL semantics are provider-defined.
+		/// </remarks>
 		public static Task<int> MergeAsync<TTarget, TSource>(
 			 this IMergeable<TTarget, TSource> merge,
 			               CancellationToken   token = default)

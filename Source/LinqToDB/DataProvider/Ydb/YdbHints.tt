@@ -18,10 +18,13 @@ namespace LinqToDB.DataProvider.Ydb
 	public static partial class YdbHints
 	{
 <#
-	void Gen(string name)
+	void Gen(string name, string sqlHint = null)
 	{
 #>
 		// 1) IYdbSpecificQueryable<T>
+		/// <summary>
+		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
+		/// </summary>
 		[ExpressionMethod(nameof(<#= name #>HintImpl))]
 		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
 			this IYdbSpecificQueryable<TSource> query,
@@ -37,6 +40,9 @@ namespace LinqToDB.DataProvider.Ydb
 		}
 
 		// 2) IQueryable<T>
+		/// <summary>
+		/// Adds a YDB <c><#= sqlHint ?? name #></c> query hint.
+		/// </summary>
 		[ExpressionMethod(nameof(<#= name #>HintQImpl))]
 		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
 			this IQueryable<TSource> query,
@@ -54,8 +60,8 @@ namespace LinqToDB.DataProvider.Ydb
 
 <#
 	}
-	Gen("Unique");
-	Gen("Distinct");
+	Gen("Unique",   "unique");
+	Gen("Distinct", "distinct");
 #>
 	}
 }

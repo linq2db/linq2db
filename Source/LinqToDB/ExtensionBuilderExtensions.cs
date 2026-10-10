@@ -38,8 +38,8 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Builds a strict-null <see cref="SqlConcatExpression"/> (any-NULL operand → NULL result).
-		/// Use this from <see cref="Sql.IExtensionCallBuilder"/> implementations instead of building
+		/// Builds a strict-null <c>SqlConcatExpression</c> (any-NULL operand → NULL result).
+		/// Use this from <c>Sql.IExtensionCallBuilder</c> implementations instead of building
 		/// a binary <c>+</c> on string-typed operands.
 		/// </summary>
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
@@ -49,7 +49,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Builds a strict-null <see cref="SqlConcatExpression"/> over <paramref name="expressions"/>
+		/// Builds a strict-null <c>SqlConcatExpression</c> over <c>expressions</c>
 		/// (any-NULL operand → NULL result).
 		/// </summary>
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
@@ -62,9 +62,9 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Builds a <see cref="SqlConcatExpression"/> with the specified <paramref name="preserveNull"/>
-		/// semantic — <see langword="true"/> for strict any-NULL → NULL (e.g. <c>Sql.Concat</c>);
-		/// <see langword="false"/> for null-as-empty (operands wrapped in <c>Coalesce(.., '')</c> at the
+		/// Builds a <c>SqlConcatExpression</c> with the specified <c>preserveNull</c>
+		/// semantic — preserveNull enabled for strict any-NULL → NULL (e.g. <c>Sql.Concat</c>);
+		/// preserveNull disabled for null-as-empty (operands wrapped in <c>Coalesce(.., '')</c> at the
 		/// lowering layer; <c>string.Concat</c>).
 		/// </summary>
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]

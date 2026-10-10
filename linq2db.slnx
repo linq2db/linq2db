@@ -378,6 +378,46 @@
     <File Path="Source/Shared/JetBrains.Annotations.cs" />
     <File Path="Source/Shared/SharedAssemblyInfo.cs" />
   </Folder>
+  <Folder Name="/Source/Skills/">
+    <File Path="Source/Skills/README.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/">
+    <File Path="Source/Skills/linq2db/SKILL.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/docs/">
+    <File Path="Source/Skills/linq2db/docs/agent-antipatterns.md" />
+    <File Path="Source/Skills/linq2db/docs/architecture.md" />
+    <File Path="Source/Skills/linq2db/docs/associations.md" />
+    <File Path="Source/Skills/linq2db/docs/concurrency.md" />
+    <File Path="Source/Skills/linq2db/docs/configuration.md" />
+    <File Path="Source/Skills/linq2db/docs/coverage.md" />
+    <File Path="Source/Skills/linq2db/docs/extensions.md" />
+    <File Path="Source/Skills/linq2db/docs/hints-api-map.md" />
+    <File Path="Source/Skills/linq2db/docs/hints.md" />
+    <File Path="Source/Skills/linq2db/docs/interceptors.md" />
+    <File Path="Source/Skills/linq2db/docs/mapping.md" />
+    <File Path="Source/Skills/linq2db/docs/null-semantics.md" />
+    <File Path="Source/Skills/linq2db/docs/parameters.md" />
+    <File Path="Source/Skills/linq2db/docs/provider-capabilities.md" />
+    <File Path="Source/Skills/linq2db/docs/provider-setup.md" />
+    <File Path="Source/Skills/linq2db/docs/query-cte.md" />
+    <File Path="Source/Skills/linq2db/docs/query-joins.md" />
+    <File Path="Source/Skills/linq2db/docs/query-temp-tables.md" />
+    <File Path="Source/Skills/linq2db/docs/raw-sql.md" />
+    <File Path="Source/Skills/linq2db/docs/translatable-methods.md" />
+  </Folder>
+  <Folder Name="/Source/Skills/linq2db/docs/crud/">
+    <File Path="Source/Skills/linq2db/docs/crud/bulk-copy.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/crud.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/delete.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/insert-select.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/insert-values.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/insert.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/merge.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/select.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/update.md" />
+    <File Path="Source/Skills/linq2db/docs/crud/upsert.md" />
+  </Folder>
   <Folder Name="/Tests/">
     <File Path="DataProviders.json" />
     <File Path="Tests/BannedSymbols.txt" />
