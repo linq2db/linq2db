@@ -999,7 +999,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(5965, Configurations = [TestProvName.AllOracle, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T10:00:00.2260000")]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllOracle, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T10:00:00.2260000{1}but was")]
 		public void DateAddMillisecondOverASecondPrecisionColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
 			var value = CoarseValue;
@@ -1017,7 +1017,7 @@ namespace Tests.Linq
 		/// </summary>
 		[Test]
 		[ActiveIssue(5965, Configuration = TestProvName.AllSqlServer2008Plus, ErrorMessage = "is not supported by date function dateadd for data type date")]
-		[ActiveIssue(5965, Configurations = [TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T00:00:00.2260000")]
+		[ActiveIssue(5965, Configurations = [TestProvName.AllFirebird, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllYdb], ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}2026-06-01T00:00:00.2260000{1}but was")]
 		[ActiveIssue(5965, Configuration = TestProvName.AllDB2, ErrorMessage = "SQL0182N")]
 		public void DateAddMillisecondOverADateColumn([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql)] string context)
 		{
@@ -1052,7 +1052,7 @@ namespace Tests.Linq
 		/// date - a ClickHouse <c>DateTime</c> starts at 1970.
 		/// </remarks>
 		[Test]
-		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500{1}but was")]
 		public void DatePartMillisecondBeforeTheEpoch([DataSources(TestProvName.AllInformix, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllMySql, TestProvName.AllYdb)] string context)
 		{
 			var wide = new DateTime(1969, 1, 1, 0, 0, 0, 500);
@@ -1829,7 +1829,7 @@ namespace Tests.Linq
 		/// A literal compared with a computed date keeps its sub-second part, whatever type the computed side reports.
 		/// </summary>
 		[Test]
-		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}12")]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}12{1}but was")]
 		// PostgreSQL 9.4+ (make_timestamp)
 		public void MakeDateTimeComparedWithSubSecondLiteral([DataSources(TestProvName.AllPostgreSQL93Minus)] string context)
 		{
@@ -1848,7 +1848,7 @@ namespace Tests.Linq
 		/// A cast that coarsens a column's type is a computed value too: the literal beside it keeps its sub-second part.
 		/// </summary>
 		[Test]
-		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1")]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1{1}but was")]
 		public void CoarseningCastComparedWithSubSecondLiteral([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1863,7 +1863,7 @@ namespace Tests.Linq
 		/// An aggregate over a coarse column is a computed value too: the literal beside it keeps its time part.
 		/// </summary>
 		[Test]
-		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1")]
+		[ActiveIssue(5998, Configuration = TestProvName.AllAccessOdbc, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}1{1}but was")]
 		public void CoarseAggregateComparedWithFinerLiteral([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

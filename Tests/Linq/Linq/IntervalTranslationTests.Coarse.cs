@@ -198,7 +198,7 @@ namespace Tests.Linq
 		/// </remarks>
 		[Test]
 		[ThrowsCannotBeConverted(UnsupportedDifferenceProviders)]
-		[ActiveIssue(5965, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}15d")]
+		[ActiveIssue(5965, Configuration = TestProvName.AllSybase, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}15d{1}but was")]
 		public void DifferenceAgainstTheDatePartMatchesClr([DataSources] string context)
 		{
 			var finished = CoarseStart.AddHours(5);
