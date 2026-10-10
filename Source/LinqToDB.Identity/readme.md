@@ -91,17 +91,15 @@ constructor and are not exposed separately.
 
 To customize, override `ConfigureMappings` (it is `protected virtual`): call `base.ConfigureMappings(ms)` first,
 then run a second `FluentMappingBuilder` over the same schema. The later pass wins and inherits what the defaults
-already set, so a rename keeps the default length and nullability. For example, the .NET 10 passkey `Data` column
-defaults to an unbounded `NVarChar` (`nvarchar(max)` on SQL Server); on Oracle, where `NVARCHAR2` is capped at 4000
-bytes, map it to `DataType.NText` (`NCLOB`):
+already set, so a rename keeps the default length and nullability:
 
 ```csharp
 protected override void ConfigureMappings(MappingSchema ms)
 {
     base.ConfigureMappings(ms);
     new FluentMappingBuilder(ms)
-        .Entity<IdentityUserPasskey<string>>()
-            .Property(e => e.Data).HasDataType(DataType.NText)
+        .Entity<IdentityUser>()
+            .Property(e => e.Email).HasColumnName("EmailAddress")
         .Build();
 }
 ```
@@ -115,7 +113,8 @@ defaults outrank anything supplied that way.
 * **A column the defaults pin for a specific provider cannot be renamed on that provider by an unscoped mapping.**
   `AspNetUserTokens.UserId` / `LoginProvider` / `Name` on Firebird 2.5, and `AspNetUserPasskeys.CredentialId` on
   Access, Informix and Firebird 2.5, carry provider-scoped mappings that drop a primary key those engines cannot
-  index. A provider-scoped mapping outranks an unscoped one, so the rename is dropped with no error. Scope your own
+  index; `AspNetUserPasskeys.Data` on MySQL, Oracle, Firebird and Access carries one that widens it to a text/CLOB
+  column. A provider-scoped mapping outranks an unscoped one, so the rename is dropped with no error. Scope your own
   mapping to the same provider to override it.
 * **Extra properties on a subclass become columns.** `class AppUser : IdentityUser<string> { public string Tenant { get; set; } }`
   maps `Tenant` as a column, so `CreateTable` emits it and inserts include it — the same as EF Core, but the table is

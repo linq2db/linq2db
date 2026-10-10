@@ -343,6 +343,17 @@ namespace LinqToDB.Identity
 			(ProviderName.Firebird25, null),
 		];
 
+		// A real credential's JSON is ~1 KB, which overruns the width an unbounded NVarChar renders as on these
+		// (MySQL/Firebird/Access 255, Oracle 2000). A scoped ColumnAttribute, as DataTypeAttribute cannot override the
+		// unscoped DataType - and NText also makes the parameter bind as a CLOB, not only the DDL.
+		private static readonly (string Configuration, string? DbType)[] _passkeyDataAsText =
+		[
+			(ProviderName.MySql,    null                ),
+			(ProviderName.Oracle,   null                ),
+			(ProviderName.Firebird, "BLOB SUB_TYPE TEXT"),
+			(ProviderName.Access,   "LongText"          ),
+		];
+
 		public static void SetupIdentityUserPasskey<TKey>(FluentMappingBuilder mappings)
 			where TKey : IEquatable<TKey>
 		{
@@ -359,10 +370,13 @@ namespace LinqToDB.Identity
 					.HasConversionFunc(SerializePasskeyData, DeserializePasskeyData)
 					// The converter targets string; the column's DB type must be stated explicitly for DDL/schema.
 					// Unbounded NVarChar -> nvarchar(max) on SQL Server, matching EF Core's ComplexProperty(Data).ToJson().
-					// Providers with a bounded NVARCHAR (e.g. Oracle NVARCHAR2, 4000 bytes) need a CLOB/NText override
-					// for large passkey JSON - a provider-specific follow-up (passkeys are .NET 10 only).
 					.HasDataType(DataType.NVarChar)
 				;
+
+			foreach (var (configuration, dbType) in _passkeyDataAsText)
+				mappings.Entity<IdentityUserPasskey<TKey>>()
+					.Property(e => e.Data)
+						.HasAttribute(new ColumnAttribute { Configuration = configuration, DataType = DataType.NText, DbType = dbType });
 
 			// add length
 			if (IsStringKey<TKey>())

@@ -416,12 +416,21 @@ namespace Tests.Identity
 			var user  = NewUser("heidi");
 			await store.CreateAsync(user);
 
+			// sizes of a real P-256 registration with "none" attestation - the stored JSON comes to ~900 characters
 			var credId = new byte[] { 1, 2, 3, 4 };
 			var passkey = new UserPasskeyInfo(
-				credId, new byte[] { 9, 9 }, DateTimeOffset.UtcNow, signCount: 1,
-				transports: new[] { "internal" }, isUserVerified: true, isBackupEligible: false,
-				isBackedUp: false, attestationObject: new byte[] { 5 }, clientDataJson: new byte[] { 6 })
+				credId, Bytes(77), DateTimeOffset.UtcNow, signCount: 1,
+				transports: new[] { "internal", "hybrid" }, isUserVerified: true, isBackupEligible: false,
+				isBackedUp: false, attestationObject: Bytes(220), clientDataJson: Bytes(200))
 			{ Name = "key1" };
+
+			static byte[] Bytes(int length)
+			{
+				var bytes = new byte[length];
+				for (var i = 0; i < length; i++)
+					bytes[i] = (byte)(i * 7 + 1);
+				return bytes;
+			}
 
 			await store.AddOrUpdatePasskeyAsync(user, passkey, default);
 
@@ -431,6 +440,9 @@ namespace Tests.Identity
 			var found = await store.FindPasskeyAsync(user, credId, default);
 			Assert.That(found,           Is.Not.Null);
 			Assert.That(found!.SignCount, Is.EqualTo((uint)1));
+			found.PublicKey        .ShouldBe(passkey.PublicKey);
+			found.AttestationObject.ShouldBe(passkey.AttestationObject);
+			found.ClientDataJson   .ShouldBe(passkey.ClientDataJson);
 
 			// update (SignCount/Name are the mutable-after-creation fields)
 			passkey.SignCount = 5;
