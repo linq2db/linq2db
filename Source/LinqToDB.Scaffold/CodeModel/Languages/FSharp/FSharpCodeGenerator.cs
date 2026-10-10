@@ -714,6 +714,10 @@ namespace LinqToDB.CodeModel
 			if ((isRecord || isExtensionType) && @class.TypeInitializer != null)
 				throw new NotSupportedException($"Static type initializer on F# {(isRecord ? "record" : "extension type")} '{@class.Name.Name}' is not supported");
 
+			// F# records cannot inherit, and interface implementations can't come from a partial class
+			if (isRecord && (@class.Inherits != null || @class.Implements.Count > 0))
+				throw new NotSupportedException($"F# record '{@class.Name.Name}' cannot inherit a base type or implement interfaces");
+
 			if (@class.XmlDoc != null)
 				Visit(@class.XmlDoc);
 

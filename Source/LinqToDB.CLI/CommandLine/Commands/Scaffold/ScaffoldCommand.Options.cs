@@ -516,7 +516,8 @@ If you don't specify some property, CLI will use default value for current optio
 						"{ \"dataModel\": { \"base-entity\": \"My.Namespace.ParentClass+MyBaseNestedEntity\" } }",
 					},
 					null,
-					null);
+					null)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Enables partial class modifier on entity mapping classes.

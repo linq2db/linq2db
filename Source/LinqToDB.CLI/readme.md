@@ -227,7 +227,7 @@ F# generation emits idiomatic code:
 Generated F# records rely on the `linq2db.FSharp` package: the consuming application must call
 `DataOptions.UseFSharp()` so that records and `option`-typed columns materialize correctly.
 
-Some options apply to C# only (partial classes / methods, `IEquatable` entities, association extension methods,
+Some options apply to C# only (partial classes / methods, entity base class, `IEquatable` entities, association extension methods,
 data context constructor selection, multi-file output, xml-doc warning suppression); the `help scaffold` output
 shows a `Supported in:` line for such options, and specifying one together with `--target-language f#` is
 rejected. F# generation is not available in T4 template mode (`-t t4`).
