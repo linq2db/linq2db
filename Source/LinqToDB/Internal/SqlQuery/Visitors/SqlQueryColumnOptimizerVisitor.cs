@@ -69,6 +69,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
 			var prevInExpression = _inExpression;
+
+			if (element.DataModification != null)
+			{
+				// The data-modifying statement is visited as a statement root: INSERT ... SELECT maps select columns
+				// to target columns by position, so none of them may be removed (e.g. a sequence identity column).
+				_inExpression = true;
+				element.DataModification = (SqlInsertStatement)Visit(element.DataModification);
+			}
+
 			_inExpression = false;
 
 			List<SqlColumn>? originalColumns = null;

@@ -544,6 +544,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		EagerLoadingStrategy ResolveStrategy(IBuildContext buildContext)
 		{
+			// Default and CteUnion re-query the main query, which would run its data-modifying CTE again.
+			// KeyedQuery matches children to the buffered main rows instead.
+			if (HasInsertOutputQuery)
+				return EagerLoadingStrategy.KeyedQuery;
+
 			var strategy = buildContext.TranslationModifier.EagerLoadingStrategy
 			            ?? DataContext.Options.LinqOptions.DefaultEagerLoadingStrategy;
 
@@ -675,6 +680,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				(fallbackChain ??= new()).Add((strategy, attempt.FallbackReason));
 
 				localPreambles.RemoveRange(preambleSnapshot, localPreambles.Count - preambleSnapshot);
+
+				if (HasInsertOutputQuery)
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_EagerLoad);
 
 				strategy = strategy switch
 				{

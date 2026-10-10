@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				tableField.CteField = (SqlCteField?)Visit(tableField.CteField);
 			}
 
-			newCteClause.DataModification = (SqlStatementWithQueryBase?)dataModification;
+			newCteClause.DataModification = (SqlInsertStatement?)dataModification;
 			newCteClause.Body             = (SelectQuery?)body;
 			newElement.Cte                = newCteClause;
 

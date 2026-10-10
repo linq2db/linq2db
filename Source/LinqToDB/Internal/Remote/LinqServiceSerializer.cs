@@ -2694,7 +2694,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var objectType       = ReadType()!;
 							var fields           = ReadArray<SqlCteField>()!;
 							var isRecursive      = ReadBool();
-							var dataModification = Read<SqlStatementWithQueryBase>();
+							var dataModification = Read<SqlInsertStatement>();
 
 							var c = new CteClause(body, fields, objectType, isRecursive, name)
 							{

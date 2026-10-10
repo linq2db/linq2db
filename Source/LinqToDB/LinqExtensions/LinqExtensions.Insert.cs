@@ -1150,6 +1150,14 @@ namespace LinqToDB
 		/// <remarks>
 		/// Rendered as a data-modifying common table expression, e.g. <c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>.
 		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
+		/// Project the output with <c>Select</c> in the consuming query; only the columns it reads are returned.
+		/// <para>
+		/// The consuming query must read the output. A query whose SQL does not reference it (e.g. the member reading it
+		/// is not projected) throws <see cref="LinqToDBException"/> when built, as the insert would not be executed.
+		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
+		/// regardless of the configured strategy) and without an implicit transaction; child queries that cannot be keyed
+		/// to the output throw <see cref="LinqToDBException"/>.
+		/// </para>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>PostgreSQL</item>
@@ -1177,49 +1185,6 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Creates a query source over the projection of the record inserted into <paramref name="target"/> table.
-		/// The insert and the consuming query are executed as a single SQL statement when the returned query
-		/// (or a query composed from it) is executed. The insert is executed once per execution of the consuming query.
-		/// </summary>
-		/// <typeparam name="TTarget">Inserted record type.</typeparam>
-		/// <typeparam name="TOutput">Output record type.</typeparam>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression over inserted record.</param>
-		/// <returns>Composable query over the output records.</returns>
-		/// <remarks>
-		/// Rendered as a data-modifying common table expression, e.g. <c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>.
-		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>PostgreSQL</item>
-		/// </list>
-		/// Other databases throw <see cref="LinqToDBException"/> when the query is built.
-		/// </remarks>
-		[Pure]
-		public static IQueryable<TOutput> InsertWithOutputQuery<TTarget,TOutput>(
-			this ITable<TTarget>              target,
-			Expression<Func<TTarget>>         setter,
-			Expression<Func<TTarget,TOutput>> outputExpression)
-			where TTarget : notnull
-		{
-			ArgumentNullException.ThrowIfNull(target);
-			ArgumentNullException.ThrowIfNull(setter);
-			ArgumentNullException.ThrowIfNull(outputExpression);
-
-			var query = target.GetLinqToDBSource();
-
-			var expr = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(InsertWithOutputQuery, target, setter, outputExpression),
-				query.Expression,
-				Expression.Quote(setter),
-				Expression.Quote(outputExpression));
-
-			return query.CreateQuery<TOutput>(WrapOutputSource<TOutput>(expr));
-		}
-
-		/// <summary>
 		/// Creates a query source over the records inserted from <paramref name="source"/> query into <paramref name="target"/> table.
 		/// The insert and the consuming query are executed as a single SQL statement when the returned query
 		/// (or a query composed from it) is executed. The insert is executed once per execution of the consuming query.
@@ -1234,6 +1199,14 @@ namespace LinqToDB
 		/// <remarks>
 		/// Rendered as a data-modifying common table expression, e.g. <c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>.
 		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
+		/// Project the output with <c>Select</c> in the consuming query; only the columns it reads are returned.
+		/// <para>
+		/// The consuming query must read the output. A query whose SQL does not reference it (e.g. the member reading it
+		/// is not projected) throws <see cref="LinqToDBException"/> when built, as the insert would not be executed.
+		/// Eager loading over the output loads child records by key from the returned rows (<see cref="EagerLoadingStrategy.KeyedQuery"/>,
+		/// regardless of the configured strategy) and without an implicit transaction; child queries that cannot be keyed
+		/// to the output throw <see cref="LinqToDBException"/>.
+		/// </para>
 		/// Database support:
 		/// <list type="bullet">
 		/// <item>PostgreSQL</item>
@@ -1261,55 +1234,6 @@ namespace LinqToDB
 				Expression.Quote(setter));
 
 			return currentSource.CreateQuery<TTarget>(WrapOutputSource<TTarget>(expr));
-		}
-
-		/// <summary>
-		/// Creates a query source over the projection of the records inserted from <paramref name="source"/> query into <paramref name="target"/> table.
-		/// The insert and the consuming query are executed as a single SQL statement when the returned query
-		/// (or a query composed from it) is executed. The insert is executed once per execution of the consuming query.
-		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <typeparam name="TTarget">Target table record type.</typeparam>
-		/// <typeparam name="TOutput">Output record type.</typeparam>
-		/// <param name="source">Source query, that returns data for insert operation.</param>
-		/// <param name="target">Target table.</param>
-		/// <param name="setter">Inserted record constructor expression.
-		/// Expression supports only target table record new expression with field initializers.</param>
-		/// <param name="outputExpression">Output record constructor expression over inserted record.</param>
-		/// <returns>Composable query over the output records.</returns>
-		/// <remarks>
-		/// Rendered as a data-modifying common table expression, e.g. <c>WITH t AS (INSERT ... RETURNING ...) SELECT ... FROM t</c>.
-		/// Target table changes are not visible to the rest of the statement: read inserted values through the returned query.
-		/// Database support:
-		/// <list type="bullet">
-		/// <item>PostgreSQL</item>
-		/// </list>
-		/// Other databases throw <see cref="LinqToDBException"/> when the query is built.
-		/// </remarks>
-		[Pure]
-		public static IQueryable<TOutput> InsertWithOutputQuery<TSource,TTarget,TOutput>(
-			this IQueryable<TSource>          source,
-			ITable<TTarget>                   target,
-			Expression<Func<TSource,TTarget>> setter,
-			Expression<Func<TTarget,TOutput>> outputExpression)
-			where TTarget : notnull
-		{
-			ArgumentNullException.ThrowIfNull(source);
-			ArgumentNullException.ThrowIfNull(target);
-			ArgumentNullException.ThrowIfNull(setter);
-			ArgumentNullException.ThrowIfNull(outputExpression);
-
-			var currentSource = source.GetLinqToDBSource();
-
-			var expr = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(InsertWithOutputQuery, source, target, setter, outputExpression),
-				currentSource.Expression,
-				((IQueryable<TTarget>)target).Expression,
-				Expression.Quote(setter),
-				Expression.Quote(outputExpression));
-
-			return currentSource.CreateQuery<TOutput>(WrapOutputSource<TOutput>(expr));
 		}
 
 		/// <summary>

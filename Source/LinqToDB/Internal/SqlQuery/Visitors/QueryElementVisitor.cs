@@ -181,14 +181,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				case VisitMode.Modify:
 				{
-					element.DataModification = (SqlStatementWithQueryBase?)Visit(element.DataModification);
+					element.DataModification = (SqlInsertStatement?)Visit(element.DataModification);
 					element.Body             = (SelectQuery?)Visit(element.Body);
 					break;
 				}
 
 				case VisitMode.Transform:
 				{
-					var dataModification = (SqlStatementWithQueryBase?)Visit(element.DataModification);
+					var dataModification = (SqlInsertStatement?)Visit(element.DataModification);
 					var body             = (SelectQuery?)Visit(element.Body);
 					var newFields        = VisitElements(element.Fields, VisitMode.Transform);
 

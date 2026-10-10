@@ -86,7 +86,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// Applies statement-level finalization to data-modifying statements nested in CTEs
-		/// (<see cref="CteClause.DataModification"/>), which are not reached by the top-level finalization.
+		/// (<see cref="CteClause.DataModification"/>), which are not reached by the top-level finalization,
+		/// and sets their output clause to the CTE body columns that remain after column optimization.
 		/// </summary>
 		void FinalizeDataModificationCtes(SqlStatement statement)
 		{
@@ -95,8 +96,17 @@ namespace LinqToDB.Internal.SqlProvider
 
 			foreach (var cte in clauses)
 			{
-				if (cte.DataModification != null)
-					cte.DataModification = (SqlStatementWithQueryBase)FinalizeInsert(cte.DataModification);
+				if (cte.DataModification == null)
+					continue;
+
+				var insertStatement = (SqlInsertStatement)FinalizeInsert(cte.DataModification);
+
+				// CTE body columns are the output expressions over the Inserted anchor: they become the RETURNING/OUTPUT list.
+				// Column optimization keeps at least one body column, so the output clause is never empty.
+				insertStatement.Output          = new SqlOutputClause { OutputColumns = cte.Body!.Select.Columns.Select(static c => c.Expression).ToList() };
+				insertStatement.ParentStatement = statement;
+
+				cte.DataModification = insertStatement;
 			}
 		}
 
@@ -767,8 +777,8 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 			{
 				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
-				if (!SqlProviderFlags.IsOutputAsSourceSupported && foundCtes.Keys.Any(static c => c.DataModification != null))
-					throw new LinqToDBException(ErrorHelper.Error_OutputAsSource_NotSupported);
+				if (!SqlProviderFlags.IsInsertOutputQuerySupported && foundCtes.Keys.Any(static c => c.DataModification != null))
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
 
 				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");

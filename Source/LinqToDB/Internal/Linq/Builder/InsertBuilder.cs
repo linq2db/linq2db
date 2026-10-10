@@ -71,7 +71,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				nameof(LinqExtensions.InsertWithIdentity)   => InsertContext.InsertTypeEnum.InsertWithIdentity,
 				nameof(LinqExtensions.InsertWithOutput)     => InsertContext.InsertTypeEnum.InsertOutput,
 				nameof(LinqExtensions.InsertWithOutputInto)  => InsertContext.InsertTypeEnum.InsertOutputInto,
-				nameof(LinqExtensions.InsertWithOutputQuery) => InsertContext.InsertTypeEnum.InsertOutputSource,
+				nameof(LinqExtensions.InsertWithOutputQuery) => InsertContext.InsertTypeEnum.InsertOutputQuery,
 				_ => InsertContext.InsertTypeEnum.Insert,
 			};
 
@@ -195,13 +195,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						insertContext.SetExpressions);
 				}
 
-				if (insertType is InsertContext.InsertTypeEnum.InsertOutputSource)
+				if (insertType is InsertContext.InsertTypeEnum.InsertOutputQuery)
 				{
-					// Output rows are consumed as a query source (data-modifying CTE): no output clause on the statement.
-					// The SQL builder renders the CTE body projection as the RETURNING/OUTPUT list (see CteClause.DataModification).
-					outputExpression =
-						methodCall.GetArgumentByName("outputExpression")?.UnwrapLambda()
-						?? BuildDefaultOutputExpression(genericArguments[^1]);
+					// Output rows are consumed as a query source (data-modifying CTE): the output clause is set by the optimizer
+					// from the CTE body columns that remain (see CteClause.DataModification).
+					// The output is the whole inserted record: consumers project it with Select.
+					outputExpression = BuildDefaultOutputExpression(genericArguments[^1]);
 				}
 				else if (insertType is InsertContext.InsertTypeEnum.InsertOutput or InsertContext.InsertTypeEnum.InsertOutputInto)
 				{
@@ -259,15 +258,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			insertStatement.Insert.WithIdentity = insertType is InsertContext.InsertTypeEnum.InsertWithIdentity;
 
-			if (insertType is InsertContext.InsertTypeEnum.InsertOutputSource)
+			if (insertType is InsertContext.InsertTypeEnum.InsertOutputQuery)
 			{
 				var insertedTable = (insertContext.Into == null ? null : SequenceHelper.GetTableContext(insertContext.Into)?.SqlTable)
 					?? throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
-				// Stand-in for the inserted rows. The SQL builder re-targets its fields to the INSERT target table
-				// when rendering the RETURNING/OUTPUT list.
-				var standInContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), new SqlTable(insertedTable), false);
-				var outputContext  = new SelectContext(buildInfo.Parent, outputExpression!, false, standInContext);
+				// Inserted rows, as for InsertWithOutput: output expressions are target table fields under the Inserted anchor.
+				// They become the CTE body columns; the optimizer copies the remaining ones into the RETURNING/OUTPUT list.
+				var outputTableContext = new TableBuilder.TableContext(builder.GetTranslationModifier(), builder, sequence.MappingSchema, new SelectQuery(), insertedTable, false);
+				var outputAnchor       = new AnchorContext(buildInfo.Parent, outputTableContext, SqlAnchor.AnchorKindEnum.Inserted);
+				var outputContext      = new SelectContext(buildInfo.Parent, outputExpression!, false, outputAnchor);
 
 				return BuildSequenceResult.FromContext(new DataModificationOutputContext(outputContext, insertStatement));
 			}
@@ -289,7 +289,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				InsertWithIdentity,
 				InsertOutput,
 				InsertOutputInto,
-				InsertOutputSource,
+				InsertOutputQuery,
 			}
 
 			public InsertContext(IBuildContext querySequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
@@ -446,19 +446,19 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region DataModificationOutputContext
 
 		/// <summary>
-		/// Output rows of a data-modifying statement used as a query source.
+		/// Output rows of an INSERT statement used as a query source.
 		/// Built only as a CTE body (see <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>);
 		/// <see cref="CteContext"/> attaches <see cref="Statement"/> to <see cref="CteClause.DataModification"/>.
 		/// </summary>
 		internal sealed class DataModificationOutputContext : PassThroughContext
 		{
-			public DataModificationOutputContext(IBuildContext outputContext, SqlStatementWithQueryBase statement)
+			public DataModificationOutputContext(IBuildContext outputContext, SqlInsertStatement statement)
 				: base(outputContext)
 			{
 				Statement = statement;
 			}
 
-			public SqlStatementWithQueryBase Statement { get; }
+			public SqlInsertStatement Statement { get; }
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
