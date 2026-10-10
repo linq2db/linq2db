@@ -855,6 +855,88 @@ namespace Tests.Remote
 			(await CatchAsync(() => connection.EnsureConnectedAsync())).ShouldBeOfType<ObjectDisposedException>();
 		}
 
+		// The synchronous Dispose stops the connection before it returns, and the connection is not started again.
+		[Test]
+		public async Task SyncDisposeStopsTheConnection()
+		{
+			using var database = new SqliteDatabase();
+			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
+
+			var connection = new LinqToDBSignalRConnection(new Uri(host.HubUrl));
+			var closed     = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+			connection.HubConnection.Closed += _ =>
+			{
+				closed.TrySetResult(true);
+				return Task.CompletedTask;
+			};
+
+			await connection.EnsureConnectedAsync();
+
+			connection.Dispose();
+
+#if !NETFRAMEWORK
+			connection.HubConnection.State.ShouldBe(HubConnectionState.Disconnected);
+#endif
+			(await WaitAsync(closed.Task, WaitLimit)).ShouldBeTrue("the connection was not stopped");
+			(await CatchAsync(() => connection.EnsureConnectedAsync())).ShouldBeOfType<ObjectDisposedException>();
+
+			// A second disposal does nothing.
+			connection.Dispose();
+		}
+
+		// ConfigureConnection reaches the hub connection builder: a logger set there sees the connection start.
+		[Test]
+		public async Task ConfigureConnectionTakesEffect()
+		{
+			using var database = new SqliteDatabase();
+			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
+
+			var log = new LogEventCounter("Started");
+
+			await using var provider = BuildClientServices(host.Port, options =>
+				options.ConfigureConnection = builder => builder.ConfigureLogging(logging => logging.AddProvider(log).SetMinimumLevel(LogLevel.Trace)));
+
+			await using (var scope = provider.CreateAsyncScope())
+				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+
+			log.Count.ShouldBeGreaterThan(0, "the logger set by ConfigureConnection saw nothing");
+		}
+
+#if !NETFRAMEWORK
+		// A reconnect policy set by ConfigureConnection replaces the automatic reconnect the connection is built with.
+		[Test]
+		public async Task ConfigureConnectionReplacesTheReconnectPolicy()
+		{
+			using var database = new SqliteDatabase();
+
+			var policy = new RecordingRetryPolicy();
+			var host   = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
+
+			await using var provider = BuildClientServices(host.Port, options =>
+				options.ConfigureConnection = builder => builder.WithAutomaticReconnect(policy));
+
+			using (host)
+			{
+				await using var scope = provider.CreateAsyncScope();
+				(await scope.ServiceProvider.GetRequiredService<ClientContext>().GetTable<Item>().CountAsync()).ShouldBe(0);
+			}
+
+			(await WaitAsync(policy.Called.Task, WaitLimit)).ShouldBeTrue("the connection did not use the reconnect policy");
+		}
+
+		sealed class RecordingRetryPolicy : IRetryPolicy
+		{
+			public TaskCompletionSource<bool> Called { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+			public TimeSpan? NextRetryDelay(RetryContext retryContext)
+			{
+				Called.TrySetResult(true);
+				return null;
+			}
+		}
+#endif
+
 		// A start that runs out of time fails every caller waiting for it with TimeoutException, including one that
 		// joined the start later and has time left of its own.
 		[Test]
