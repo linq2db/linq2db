@@ -228,6 +228,8 @@ jobs:
             exe: linq2db.CLI.Tests
           - os: windows-2025
             exe: linq2db.CLI.Tests.exe
+          - os: macos-15
+            exe: linq2db.CLI.Tests
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
