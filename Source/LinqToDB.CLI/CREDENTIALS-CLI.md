@@ -23,7 +23,7 @@ standard input, reads the answer from its standard output, and waits for it to e
 12. [Promises](#12-promises)
 13. [Security](#13-security)
 14. [The credentials command](#14-the-credentials-command)
-15. [Generated scripts: keyring and gpg](#15-generated-scripts-keyring-and-gpg)
+15. [Generated scripts: keyring, gpg and vault](#15-generated-scripts-keyring-gpg-and-vault)
 16. [Example credentials CLI](#16-example-credentials-cli)
 
 ## 1. Stores
@@ -34,6 +34,7 @@ standard input, reads the answer from its standard output, and waits for it to e
 | Windows Credential Manager | `@credential-manager` | Windows | the Windows store; the default on Windows |
 | keyring | `@keyring` | Linux (any system with libsecret's `secret-tool` and a Secret Service) | your desktop keyring (GNOME Keyring or KWallet) through `secret-tool`, by a generated script (section 15) |
 | gpg | `@gpg` | Linux, macOS, WSL | `pass`: one GPG-encrypted file per password in `~/.password-store`, by a generated script (section 15) |
+| vault | `@vault` | Linux, macOS, WSL | HashiCorp Vault through the `vault` CLI: one KV secret per record, by a generated script (section 15) |
 | credentials CLI | `"<program> [arguments]"` | all | any program speaking the protocol of sections 6 to 12 |
 
 ## 2. Which store is used
@@ -49,8 +50,8 @@ Every command that needs credentials (`query`, `execute`, `schema`, `mcp`, `cred
 | Windows | Windows Credential Manager | that store |
 | Linux, macOS | the built-in local store | that store |
 
-The generated `keyring` and `gpg` scripts are never picked automatically: they are used only when named (`@keyring`,
-`@gpg`). There is no fallback from one store to another.
+The generated `keyring`, `gpg` and `vault` scripts are never picked automatically: they are used only when named
+(`@keyring`, `@gpg`, `@vault`). There is no fallback from one store to another.
 
 `dotnet linq2db credentials` commands print the store and where the choice came from on standard error (never on
 standard output, which carries the result), for example:
@@ -348,7 +349,7 @@ credentials set    [--config <file> [--profile <p>] | --credentials linq2db/<nam
 credentials remove [--config <file> [--profile <p>] | --credentials linq2db/<name>]               [--credentials-cli "<value>"]
 credentials list   [--config <file> [--profile <p>]]                                             [--credentials-cli "<value>"]
 credentials clear  [--config <file> [--profile <p>]] [--force]                                   [--credentials-cli "<value>"]
-credentials cli init --store <keyring|gpg|local> [--output <file>] [--config <file>] [--force]
+credentials cli init --store <keyring|gpg|vault|local> [--output <file>] [--config <file>] [--force]
 ```
 
 - `--profile` selects a profile of `--config`, as for `query` (default `default`); it requires `--config`. The store is
@@ -365,7 +366,7 @@ dotnet linq2db credentials set --config .agents/linq2db-query.json --profile pro
 dotnet linq2db credentials list --credentials-cli @gpg
 ```
 
-## 15. Generated scripts: keyring and gpg
+## 15. Generated scripts: keyring, gpg and vault
 
 On Linux and macOS, `credentials cli init` writes a credentials CLI script over a secret store's command-line tool. The
 script contains no secrets; it is yours to review and edit.
@@ -385,6 +386,13 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
 - `--store gpg`: [pass](https://www.passwordstore.org/), one GPG-encrypted file per password in `~/.password-store`;
   servers, SSH, WSL, macOS; needs a GPG key and an initialized store (`pass init <gpg-id>`). Entries are
   `linq2db-cli/<target>` with the password on the first line and `user: <name>` on the second.
+- `--store vault`: [HashiCorp Vault](https://developer.hashicorp.com/vault) through the `vault` CLI, which finds the
+  server and the token as usual (`VAULT_ADDR`; `VAULT_TOKEN` or the token helper of `vault login`). One KV secret per
+  record at the record's target, `linq2db/<name>`, with the fields `username` and `password`, in the KV mount
+  `$LINQ2DB_VAULT_MOUNT` (default `secret`; KV version 1 or 2). `get` needs read access to the secret, `store` write
+  access, `erase` delete access to its metadata (KV version 2: every version is removed), and `list` list access under
+  `linq2db/`. The data goes to `vault kv put` on standard input, never in its arguments. A secret written by other
+  tooling may leave out `username`.
 - `--store local`: the built-in store of section 4; `init` creates the directory and the key at once, so problems show
   up now. It never replaces an existing key.
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another
@@ -393,7 +401,7 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
   bit (the script's directory, an ancestor of its real path, or a directory holding a symbolic link on the way) is refused, and a group-writable script directory gives a
   warning.
 - With `--config <file>` the store is recorded as `credentialsCli` in that file's `default` profile (the file is created
-  when missing): `@keyring`/`@gpg`/`@local` for the default location, otherwise the script's path (quoted when it has
+  when missing): `@keyring`/`@gpg`/`@vault`/`@local` for the default location, otherwise the script's path (quoted when it has
   spaces). A different existing value is replaced only with `--force`. The script and the configuration change
   together: if the configuration cannot be written, the script is left as it was; if the script cannot be put in place,
   the configuration is restored. Without `--config`, `init` prints how to name the store.

@@ -101,6 +101,72 @@ namespace Tests.LinqToDB.CLI
 			esac
 			""";
 
+		// A fake vault CLI (kv get/put/list/delete and metadata delete): a secret at <mount>/<path> is the directory
+		// $FAKE_STATE/vault/<mount>/<path> with a ".secret" marker and one dot file per field. "kv put <path> -" reads the
+		// JSON object that the script writes. A "fail" file makes every request fail like a refused token.
+		const string FakeVault = """
+			#!/bin/sh
+			set -u
+			export LC_ALL=C
+			for a in "$@"; do printf '%s\n' "$a" >> "$FAKE_STATE/argv.log"; done
+			[ "$1" = kv ] || exit 1; shift
+			cmd=$1; shift
+			if [ "$cmd" = metadata ]; then cmd=metadata-$1; shift; fi
+			mount=''; field=''
+			while [ $# -gt 0 ]; do
+				case $1 in
+					-mount=*)  mount=${1#-mount=} ;;
+					-field=*)  field=${1#-field=} ;;
+					-format=*) ;;
+					--) shift; break ;;
+					*) break ;;
+				esac
+				shift
+			done
+			path=$1
+			if [ -e "$FAKE_STATE/fail" ]; then
+				printf 'Error making API request.\n\nURL: GET http://127.0.0.1:8200/v1/%s\nCode: 403. Errors:\n\n* permission denied\n' "$path" >&2
+				exit 2
+			fi
+			root=$FAKE_STATE/vault/$mount
+			item=$root/${path%/}
+			case $cmd in
+				get)
+					[ -f "$item/.secret" ] || { printf 'No value found at %s/data/%s\n' "$mount" "$path" >&2; exit 2; }
+					[ -f "$item/.$field" ] || { printf 'Field "%s" not present in secret\n' "$field" >&2; exit 1; }
+					cat "$item/.$field"
+					;;
+				put)
+					[ "${2-}" = - ] || { echo 'the fake reads the data only from stdin' >&2; exit 1; }
+					data=$(cat; printf x); data=${data%x}
+					rest=${data#'{"username":"'}
+					user=${rest%%'","password":"'*}
+					secret=${rest#*'","password":"'}; secret=${secret%'"}'}
+					unescape() { printf '%s' "$1" | sed 's/\\\(.\)/\1/g'; }
+					mkdir -p "$item"
+					unescape "$user" > "$item/.username"; unescape "$secret" > "$item/.password"; : > "$item/.secret"
+					printf '== Secret Path ==\n%s/data/%s\n' "$mount" "$path"
+					;;
+				list)
+					found=0
+					for d in "$item"/*/; do
+						[ -d "$d" ] || continue
+						n=$(basename "$d")
+						[ ! -f "$d/.secret" ] || { [ $found = 1 ] || printf 'Keys\n----\n'; found=1; printf '%s\n' "$n"; }
+						if [ -n "$(find "$d" -mindepth 2 -name .secret)" ]; then
+							[ $found = 1 ] || printf 'Keys\n----\n'; found=1; printf '%s/\n' "$n"
+						fi
+					done
+					[ $found = 1 ] || { printf 'No value found at %s/metadata/%s\n' "$mount" "$path" >&2; exit 2; }
+					;;
+				metadata-delete|delete)
+					rm -f "$item/.secret" "$item/.username" "$item/.password"
+					while [ "$item" != "$root" ] && rmdir "$item" 2>/dev/null; do item=$(dirname "$item"); done
+					printf 'Success! Data deleted (if it existed) at: %s/metadata/%s\n' "$mount" "$path"
+					;;
+			esac
+			""";
+
 		// A fake pass: entries are plain files under $PASSWORD_STORE_DIR (no gpg); a "fail" file makes every decryption
 		// fail like gpg without a pinentry.
 		const string FakePass = """
@@ -142,6 +208,7 @@ namespace Tests.LinqToDB.CLI
 
 			WriteExecutable(Path.Combine(_bin, "secret-tool"), FakeSecretTool);
 			WriteExecutable(Path.Combine(_bin, "pass"),        FakePass);
+			WriteExecutable(Path.Combine(_bin, "vault"),       FakeVault);
 		}
 
 		[TearDown]
@@ -185,6 +252,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void RoundTripWithHostileValues(string store)
 		{
 			var cli = CreateStore(store, interactive: true);
@@ -213,6 +281,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void StoreReplacesWithDifferentUser(string store)
 		{
 			var cli = CreateStore(store, interactive: true);
@@ -230,6 +299,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void EmptyPasswordRoundTrips(string store)
 		{
 			var cli = CreateStore(store, interactive: true);
@@ -246,6 +316,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void ClearRemovesAll(string store)
 		{
 			var cli = CreateStore(store, interactive: true);
@@ -262,6 +333,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void PasswordLookingLikeUserMetadataStaysThePassword(string store)
 		{
 			// pass keeps the password on line 1 and "user: <name>" on line 2; a password of that shape must not be read as
@@ -399,6 +471,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void UnsupportedVerbAndProtocol(string store)
 		{
 			var runner = CreateRunner(store);
@@ -409,6 +482,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void EveryAnswerStartsWithTheHeader(string store)
 		{
 			var runner = CreateRunner(store, interactive: true);
@@ -445,8 +519,59 @@ namespace Tests.LinqToDB.CLI
 			Encoding.UTF8.GetString(failed.Output).ShouldBe("protocol=1\nstatus=error\n");
 		}
 
+		[Test]
+		public void VaultListsNestedRecordsOfTheDefaultMount()
+		{
+			var cli = CreateStore("vault");
+
+			cli.TryStore("a/b/c", "u1", "p1", out var error).ShouldBeTrue(error);
+			cli.TryStore("a/d",   "u2", "p2", out error).ShouldBeTrue(error);
+			cli.TryStore("e",     "u3", "p3", out error).ShouldBeTrue(error);
+
+			File.Exists(Path.Combine(_state, "vault", "secret", "linq2db", "a", "b", "c", ".secret")).ShouldBeTrue();
+
+			cli.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			profiles.ShouldBe([new CredentialProfile("a/b/c", "u1"), new CredentialProfile("a/d", "u2"), new CredentialProfile("e", "u3")], ignoreOrder: true);
+
+			cli.TryRemove("a/b/c", out var removed, out error).ShouldBeTrue(error);
+			removed.ShouldBeTrue();
+
+			cli.TryList(out profiles, out _, out error).ShouldBeTrue(error);
+			profiles.ShouldBe([new CredentialProfile("a/d", "u2"), new CredentialProfile("e", "u3")], ignoreOrder: true);
+		}
+
+		[Test]
+		public void VaultSecretWithoutUserNameOrPassword()
+		{
+			// A secret written by other tooling: the user name is optional, the password is not.
+			var item = Directory.CreateDirectory(Path.Combine(_state, "vault", "secret", "linq2db", "nouser")).FullName;
+			File.WriteAllText(Path.Combine(item, ".secret"),   string.Empty);
+			File.WriteAllText(Path.Combine(item, ".password"), "pw");
+
+			var cli = CreateStore("vault");
+
+			cli.TryRead("linq2db/nouser", out var user, out var password, out var error).ShouldBeTrue(error);
+			user.    ShouldBe(string.Empty);
+			password.ShouldBe("pw");
+
+			File.Delete(Path.Combine(item, ".password"));
+
+			cli.TryRead("linq2db/nouser", out _, out _, out error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("has no password field");
+		}
+
+		[Test]
+		public void VaultErrorIsShownOnOneLine()
+		{
+			File.WriteAllText(Path.Combine(_state, "fail"), string.Empty);
+
+			CreateStore("vault").TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("vault kv get failed: Error making API request. Code: 403. Errors: * permission denied");
+		}
+
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void ShellCheckIsClean(string store)
 		{
 			var shellcheck = FindOnPath("shellcheck");

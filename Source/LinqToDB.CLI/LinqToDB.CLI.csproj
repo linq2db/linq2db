@@ -92,6 +92,7 @@
 		<EmbeddedResource Include="SKILL.md"     LogicalName="LinqToDB.CLI.SKILL.md"   />
 		<EmbeddedResource Include="CredentialsCli\credentials-keyring.sh" LogicalName="LinqToDB.CLI.CredentialsCli.credentials-keyring.sh" />
 		<EmbeddedResource Include="CredentialsCli\credentials-gpg.sh"     LogicalName="LinqToDB.CLI.CredentialsCli.credentials-gpg.sh"     />
+		<EmbeddedResource Include="CredentialsCli\credentials-vault.sh"   LogicalName="LinqToDB.CLI.CredentialsCli.credentials-vault.sh"   />
 
 		<!-- The example credentials CLI is a standalone file-based app run with dotnet run, not part of the tool. -->
 		<Compile Remove="CredentialsCli\**" />

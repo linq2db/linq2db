@@ -296,7 +296,7 @@ namespace Tests.LinqToDB.CLI
 		[TestCase("\"credentialsCli\": { \"command\": \"h\" }",    "credentialsCli is a string: the program and its arguments", TestName = "ConfigCredentialsCliObject")]
 		[TestCase("\"credentialsCli\": \"  \"",                    "is empty",                                                  TestName = "ConfigCredentialsCliEmpty")]
 		[TestCase("\"credentialsCli\": \"\\\"/opt/h --x\"",        "unterminated quote",                                        TestName = "ConfigCredentialsCliUnterminatedQuote")]
-		[TestCase("\"credentialsCli\": \"@vault\"",                "Unknown credential store '@vault'",                         TestName = "ConfigCredentialsCliUnknownReservedValue")]
+		[TestCase("\"credentialsCli\": \"@hsm\"",                  "Unknown credential store '@hsm'",                           TestName = "ConfigCredentialsCliUnknownReservedValue")]
 		[TestCase("\"credentialHelper\": \"h\"",                   "contains unknown property 'credentialHelper'",              TestName = "ConfigOldCredentialHelperKeyIsUnknown")]
 		public async Task ConfigCredentialsCliValidation(string property, string message)
 		{

@@ -54,7 +54,7 @@ namespace Tests.LinqToDB.CLI
 		static void RequirePosix()
 		{
 			if (OperatingSystem.IsWindows())
-				Assert.Ignore("The keyring and gpg stores are POSIX sh scripts.");
+				Assert.Ignore("The keyring, gpg and vault stores are POSIX sh scripts.");
 		}
 
 		static string RecordedValue(TestCliEnvironment environment, string config)
@@ -64,6 +64,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring", "secret-tool")]
 		[TestCase("gpg",     "pass")]
+		[TestCase("vault",   "vault")]
 		public async Task ScriptStoreWritesTheDefaultScript(string store, string tool)
 		{
 			RequirePosix();
@@ -455,6 +456,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public async Task ScriptStoresAreRefusedOnWindows(string store)
 		{
 			if (!OperatingSystem.IsWindows())
@@ -468,7 +470,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[TestCase(new[] { "credentials", "cli", "init" },                                          "Option '--store' must be specified for credentials cli init: keyring", TestName = "InitRequiresStore")]
-		[TestCase(new[] { "credentials", "cli", "init", "--store", "vault" },                      "unknown value 'vault'",                                           TestName = "InitRejectsUnknownStore")]
+		[TestCase(new[] { "credentials", "cli", "init", "--store", "hsm" },                        "unknown value 'hsm'",                                             TestName = "InitRejectsUnknownStore")]
 		[TestCase(new[] { "credentials", "cli", "init", "--store", "gpg", "--profile", "x" },      "accepts only '--store', '--output', '--config', and '--force'",    TestName = "InitRejectsProfile")]
 		[TestCase(new[] { "credentials", "cli", "init", "--store", "gpg", "--credentials-cli", "x" }, "accepts only '--store', '--output', '--config', and '--force'", TestName = "InitRejectsCredentialsCli")]
 		[TestCase(new[] { "credentials", "cli", "remove" },                                        "Unknown credentials cli operation 'remove'",                      TestName = "CliUnknownOperation")]

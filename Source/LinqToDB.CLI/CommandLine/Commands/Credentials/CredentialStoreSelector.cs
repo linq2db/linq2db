@@ -16,6 +16,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		public const string CredentialManager = "@credential-manager";
 		public const string Keyring           = "@keyring";
 		public const string Gpg               = "@gpg";
+		public const string Vault             = "@vault";
 
 		public const string OptionSource    = "option";
 		public const string OsDefaultSource = "default for this OS";
@@ -55,13 +56,13 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		{
 			if (string.IsNullOrWhiteSpace(value))
 			{
-				error = $"The credentials CLI value is empty: it names a store ({Local}, {CredentialManager}, {Keyring}, {Gpg}) or a program and its arguments.";
+				error = $"The credentials CLI value is empty: it names a store ({Local}, {CredentialManager}, {Keyring}, {Gpg}, {Vault}) or a program and its arguments.";
 				return false;
 			}
 
-			if (value.TrimStart(' ', '\t').StartsWith('@') && value.Trim() is not (Local or CredentialManager or Keyring or Gpg))
+			if (value.TrimStart(' ', '\t').StartsWith('@') && value.Trim() is not (Local or CredentialManager or Keyring or Gpg or Vault))
 			{
-				error = $"Unknown credential store '{value}'. Expected {Local}, {CredentialManager}, {Keyring}, {Gpg}, or a command line; write a program whose name starts with '@' with a path, for example ./@name.";
+				error = $"Unknown credential store '{value}'. Expected {Local}, {CredentialManager}, {Keyring}, {Gpg}, {Vault}, or a command line; write a program whose name starts with '@' with a path, for example ./@name.";
 				return false;
 			}
 
@@ -130,11 +131,14 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				case Gpg:
 					return TrySelectScript("gpg", source, isWindows, getVariable, out choice, out error);
+
+				case Vault:
+					return TrySelectScript("vault", source, isWindows, getVariable, out choice, out error);
 			}
 
 			if (value.TrimStart(' ', '\t').StartsWith('@'))
 			{
-				error = $"Unknown credential store '{value}' ({source}). Expected {Local}, {CredentialManager}, {Keyring}, {Gpg}, or a command line; write a program whose name starts with '@' with a path, for example ./@name.";
+				error = $"Unknown credential store '{value}' ({source}). Expected {Local}, {CredentialManager}, {Keyring}, {Gpg}, {Vault}, or a command line; write a program whose name starts with '@' with a path, for example ./@name.";
 				return false;
 			}
 

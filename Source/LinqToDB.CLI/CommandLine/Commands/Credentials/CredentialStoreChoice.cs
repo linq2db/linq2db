@@ -13,7 +13,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		public string? Directory { get; init; }
 		/// <summary>The credentials CLI to run.</summary>
 		public CredentialsCliSettings? Cli { get; init; }
-		/// <summary>The generated script a reserved <c>@keyring</c>/<c>@gpg</c> value names.</summary>
+		/// <summary>The generated script a reserved <c>@keyring</c>/<c>@gpg</c>/<c>@vault</c> value names.</summary>
 		public string? Script { get; init; }
 		/// <summary>Whether nothing named the store: the OS default is used.</summary>
 		public bool IsOsDefault { get; init; }

@@ -86,12 +86,13 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("@keyring")]
 		[TestCase("@gpg")]
+		[TestCase("@vault")]
 		public void GeneratedScriptsOnWindowsAreAnError(string value)
 		{
 			SelectError(value, true, Variables(("LOCALAPPDATA", @"C:\Users\u\AppData\Local"))).ShouldContain("generated sh script for Linux and macOS");
 		}
 
-		[TestCase("@vault")]
+		[TestCase("@hsm")]
 		[TestCase(" @local2")]
 		public void UnknownReservedValueIsAnError(string value)
 		{
@@ -274,6 +275,7 @@ namespace Tests.LinqToDB.CLI
 
 		[TestCase("keyring")]
 		[TestCase("gpg")]
+		[TestCase("vault")]
 		public void GeneratedScriptIsUsedWhenNamed(string store)
 		{
 			if (OperatingSystem.IsWindows())

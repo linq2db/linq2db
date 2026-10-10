@@ -75,7 +75,7 @@ namespace Tests.LinqToDB.CLI
 			document.ShouldContain("(CredentialsCli/secrethelper.cs)");
 			File.Exists(Path.Combine(directory, "secrethelper.cs")).ShouldBeTrue();
 
-			foreach (var text in new[] { "`get`", "`store`", "`erase`", "`list`", "status=unsupported", "status=not-found", "protocol=2", "LINQ2DB_CREDENTIAL_INTERACTIVE", "@local", "@credential-manager", "@keyring", "@gpg", "LINQ2DB_CREDENTIALS_DIR" })
+			foreach (var text in new[] { "`get`", "`store`", "`erase`", "`list`", "status=unsupported", "status=not-found", "protocol=2", "LINQ2DB_CREDENTIAL_INTERACTIVE", "@local", "@credential-manager", "@keyring", "@gpg", "@vault", "LINQ2DB_CREDENTIALS_DIR" })
 				document.ShouldContain(text);
 
 			document.ShouldNotContain("credential helper", Case.Insensitive);

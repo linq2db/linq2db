@@ -69,7 +69,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 		/// <summary>
 		/// Credential store for <see cref="Credentials"/> targets and the <c>credentials</c> command: a reserved store name
-		/// (<c>@local</c>, <c>@credential-manager</c>, <c>@keyring</c>, <c>@gpg</c>) or a credentials CLI command line. Never
+		/// (<c>@local</c>, <c>@credential-manager</c>, <c>@keyring</c>, <c>@gpg</c>, <c>@vault</c>) or a credentials CLI command line. Never
 		/// expanded.
 		/// </summary>
 		public string? CredentialsCli { get; private set; }
@@ -346,7 +346,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 
 						if (string.IsNullOrWhiteSpace(credentialsCli))
 						{
-							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' is empty: it names a store (@local, @credential-manager, @keyring, @gpg) or a program and its arguments.";
+							error = $"Configuration file '{fileName}' profile '{profileName}' property '{property.Name}' is empty: it names a store (@local, @credential-manager, @keyring, @gpg, @vault) or a program and its arguments.";
 							return false;
 						}
 
