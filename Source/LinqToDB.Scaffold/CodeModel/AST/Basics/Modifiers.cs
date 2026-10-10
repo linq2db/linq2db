@@ -84,7 +84,7 @@ namespace LinqToDB.CodeModel
 		Record    = 0x4000,
 		/// <summary>
 		/// Marks a type as a grouping module. Only honored by language generators that group nested types under
-		/// a module (F# emits <c>module rec X = ...</c> so per-schema types stay isolated instead of being
+		/// a module (F# emits <c>module X = ...</c> so per-schema types stay isolated instead of being
 		/// lifted to namespace level); ignored by the C# generator.
 		/// </summary>
 		Module    = 0x8000,
