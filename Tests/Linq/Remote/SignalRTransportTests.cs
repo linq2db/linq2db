@@ -946,8 +946,9 @@ namespace Tests.Remote
 			await using (Own(hubConnection))
 			await using (var db = new SignalRDataContext(hubConnection, o => o.UseConfiguration(Configuration + ".PostgreSQL")))
 			{
-				using var admin = GetDataConnection(context);
-				using var cts   = new CancellationTokenSource();
+				using var noBaseline = new DisableBaseline("polls pg_stat_activity: the number of polls depends on timing");
+				using var admin      = GetDataConnection(context);
+				using var cts        = new CancellationTokenSource();
 
 				const string SleepingQuery = "SELECT count(*)::int FROM pg_stat_activity WHERE state = 'active' AND query LIKE '%pg_sleep(10)%' AND pid <> pg_backend_pid()";
 
