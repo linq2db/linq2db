@@ -423,21 +423,41 @@ namespace LinqToDB.CodeModel
 
 		protected override void Visit(CodeParameter parameter)
 		{
-			// F# parameter: name : type. out/ref parameters (e.g. sync stored procedures with output
-			// parameters) are rendered as byref<T>, which supports the `param <- value` mutation the body uses.
-			var byRef = parameter.Direction is CodeParameterDirection.Out or CodeParameterDirection.Ref;
+			// F# parameter: name : type. out parameters are rendered as outref<T> (C# callers see `out`), ref
+			// parameters as byref<T>; both support the `param <- value` mutation the body uses.
+			switch (parameter.DefaultValue)
+			{
+				case null:
+					break;
+				case CodeDefault { Type.Type.IsValueType: true }:
+					// [<Optional>] without a value passes default(T) for value types (e.g. CancellationToken)
+					Write("[<System.Runtime.InteropServices.Optional>] ");
+					break;
+				case CodeDefault:
+					Write("[<System.Runtime.InteropServices.Optional; System.Runtime.InteropServices.DefaultParameterValue(null)>] ");
+					break;
+				default:
+					Write("[<System.Runtime.InteropServices.Optional; System.Runtime.InteropServices.DefaultParameterValue(");
+					Visit(parameter.DefaultValue);
+					Write(")>] ");
+					break;
+			}
 
 			Visit(parameter.Name);
 			Write(" : ");
-			if (byRef)
-				Write("byref<");
-			Visit(parameter.Type);
-			if (byRef)
-				Write(">");
 
-			// C# default parameter values (e.g. CancellationToken = default) have no direct F# member-parameter
-			// equivalent; the parameter is emitted as required. The produced method is fully usable, callers just
-			// pass the argument explicitly.
+			var refType = parameter.Direction switch
+			{
+				CodeParameterDirection.Out => "outref<",
+				CodeParameterDirection.Ref => "byref<",
+				_                          => null,
+			};
+
+			if (refType != null)
+				Write(refType);
+			Visit(parameter.Type);
+			if (refType != null)
+				Write('>');
 		}
 
 		protected override void Visit(CodeXmlComment doc)
