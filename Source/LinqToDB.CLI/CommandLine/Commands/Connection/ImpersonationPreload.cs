@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.Metadata.Ecma335;
+using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,8 +38,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		static readonly Lock _lock = new();
 
 		static bool                                 _applicationAssembliesLoaded;
-		static readonly HashSet<Assembly>           _referencesLoaded = new();
-		static readonly HashSet<(Assembly, string)> _satellitesLoaded = new();
+		static readonly HashSet<Assembly>           _referencesLoaded     = new();
+		static readonly HashSet<Assembly>           _runtimeImportsLoaded = new();
+		static readonly HashSet<(Assembly, string)> _satellitesLoaded     = new();
 
 		/// <summary>
 		/// Loads everything the command described by <paramref name="settings"/> needs.
@@ -57,6 +61,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			lock (_lock)
 			{
 				LoadReferencedAssemblies();
+				LoadRuntimeNativeLibraries();
 				LoadSatelliteAssemblies(CultureInfo.CurrentUICulture);
 			}
 		}
@@ -199,6 +204,48 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				foreach (var reference in assembly.GetReferencedAssemblies())
 					if (TryLoad(context, reference) is { } referenced)
 						pending.Push(referenced);
+			}
+		}
+
+		/// <summary>
+		/// Loads the native shims of the .NET runtime (compression, cryptography, networking) that loaded .NET assemblies
+		/// import. Like the managed references, they can be needed only past the warm-up connection: a client may
+		/// decompress a response only when the command reads it (ClickHouse.Driver loads the compression shim then). Only
+		/// libraries in the runtime folder are loaded, by name and for the importing assembly, as the runtime would load
+		/// them on the first call.
+		/// </summary>
+		static unsafe void LoadRuntimeNativeLibraries()
+		{
+			var runtimeDirectory = RuntimeEnvironment.GetRuntimeDirectory();
+
+			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+			{
+				if (assembly.IsDynamic
+					|| !_runtimeImportsLoaded.Add(assembly)
+					|| !string.Equals(Path.GetFullPath(Path.GetDirectoryName(assembly.Location) + Path.DirectorySeparatorChar), Path.GetFullPath(runtimeDirectory), StringComparison.OrdinalIgnoreCase)
+					|| !assembly.TryGetRawMetadata(out var blob, out var length))
+				{
+					continue;
+				}
+
+				var reader = new MetadataReader(blob, length);
+
+				for (var row = 1; row <= reader.GetTableRowCount(TableIndex.ModuleRef); row++)
+				{
+					var name = reader.GetString(reader.GetModuleReference(MetadataTokens.ModuleReferenceHandle(row)).Name);
+
+					if (IsInRuntimeDirectory(name))
+						NativeLibrary.TryLoad(name, assembly, null, out _);
+				}
+			}
+
+			bool IsInRuntimeDirectory(string name)
+			{
+				foreach (var file in new[] { name, name + ".dll", name + ".so", "lib" + name + ".so", name + ".dylib", "lib" + name + ".dylib" })
+					if (File.Exists(Path.Combine(runtimeDirectory, file)))
+						return true;
+
+				return false;
 			}
 		}
 
