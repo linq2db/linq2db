@@ -253,6 +253,23 @@ namespace Tests.Linq
 			Query(1, 3).ToArray().ShouldBe([1]);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Compiled_Interpolated_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.GetTable<Model.Person>().Where(p => p.ID == Sql.Expr<int>($"{id}")).Select(p => p.ID));
+
+			var query1 = query(db, 1);
+			query1.ToArray().ShouldBe([1]);
+
+			var query2 = query(db, 2);
+			query2.ToArray().ShouldBe([2]);
+
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
 		public class FreeTextKey<T>
 		{
 			public T   Key = default!;

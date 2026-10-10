@@ -1333,6 +1333,40 @@ namespace Tests.Linq
 			query(db, $"SELECT * FROM Person WHERE PersonID <> {1}").ToArray().ShouldNotContain(1);
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSql_Compiled_Interpolated_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.FromSql<Person>($"SELECT * FROM Person WHERE PersonID = {id}").Select(p => p.ID));
+
+			var query1 = query(db, 1);
+			query1.ToArray().ShouldBe([1]);
+
+			var query2 = query(db, 2);
+			query2.ToArray().ShouldBe([2]);
+
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void FromSqlScalar_Nested_Compiled_BuildsOnce([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = CompiledQuery.Compile((IDataContext dc, int id) =>
+				dc.GetTable<Person>().Where(p => p.ID.In(dc.FromSqlScalar<int>($"SELECT {id} AS value"))).Select(p => p.ID));
+
+			var query1 = query(db, 1);
+			query1.ToArray().ShouldBe([1]);
+
+			var query2 = query(db, 2);
+			query2.ToArray().ShouldBe([2]);
+
+			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
 		sealed record Projection1(int i1, int i2);
 
 		sealed record Projection2(int i);

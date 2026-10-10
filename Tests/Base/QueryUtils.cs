@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -131,6 +132,22 @@ namespace Tests
 		public static void ClearCache<T>(this IQueryable<T> _)
 		{
 			Query<T>.ClearCache();
+		}
+
+		/// <summary>
+		/// Returns the built query a compiled query's result carries: two invocations that reused one build return the same instance.
+		/// </summary>
+		public static object GetCompiledQueryInfo<T>(this IQueryable<T> query)
+		{
+			for (var type = query.GetType(); type != null; type = type.BaseType)
+			{
+				var field = type.GetField("Info", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+
+				if (field != null)
+					return field.GetValue(query) ?? throw new InvalidOperationException("Query is not a compiled query result.");
+			}
+
+			throw new InvalidOperationException("Query is not a compiled query result.");
 		}
 
 		public static SqlParameter[] CollectParameters(this SqlStatement statement)
