@@ -657,9 +657,21 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					return StatusCodes.EXPECTED_ERROR;
 				}
 
-				var error = output == null
-					? (CredentialsDirectory.TryEnsure(directory, out var ensureError) ? null : ensureError)
-					: null;
+				string? error = null;
+
+				if (output == null)
+				{
+					if (!CredentialsDirectory.TryEnsure(directory, out var ensureError))
+						error = ensureError;
+				}
+				else if (!OperatingSystem.IsWindows())
+				{
+					// A path the user chose gets the ancestor rule of the credentials directory: the script receives passwords.
+					if (!CredentialsDirectory.CheckScriptDirectory(scriptPath!, out var warning, out var checkError))
+						error = checkError;
+					else if (warning != null)
+						await environment.Error.WriteLineAsync(warning);
+				}
 
 				error ??= TryWriteTemporaryScript(scriptPath!, CredentialsCliTemplates.Get(store)!, out temporaryScript);
 

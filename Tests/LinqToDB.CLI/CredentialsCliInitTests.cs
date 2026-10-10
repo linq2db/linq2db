@@ -126,6 +126,53 @@ namespace Tests.LinqToDB.CLI
 			File.GetUnixFileMode(script).ShouldBe(Owner700);
 		}
 
+		[TestCase("shared",       TestName = "OutputInWorldWritableDirectoryIsRefused")]
+		[TestCase("shared/mine",  TestName = "OutputUnderWorldWritableDirectoryIsRefused")]
+		public async Task OutputWhereEveryUserCanReplaceTheScriptIsRefused(string relative)
+		{
+			// The script receives passwords: a directory every user can write to (without the sticky bit) lets any of them
+			// replace it, whether it holds the script or is an ancestor of the script's directory.
+			RequirePosix();
+
+			var shared = Directory.CreateDirectory(Path.Combine(_root, "shared")).FullName;
+			File.SetUnixFileMode(shared, Owner700 | UnixFileMode.GroupRead | UnixFileMode.GroupWrite | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherWrite | UnixFileMode.OtherExecute);
+
+			var directory = Directory.CreateDirectory(Path.Combine(_root, relative)).FullName;
+
+			if (directory != shared)
+				File.SetUnixFileMode(directory, Owner700);
+
+			var script = Path.Combine(directory, "h.sh");
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", script, "--config", "new.json");
+
+			exitCode.ShouldBe(-3);
+			error.ShouldContain($"inside '{shared}', which every user can write to without the sticky bit");
+			File.Exists(script).ShouldBeFalse();
+		}
+
+		[TestCase(UnixFileMode.GroupWrite, true,  TestName = "OutputInGroupWritableDirectoryWarns")]
+		[TestCase(UnixFileMode.StickyBit | UnixFileMode.GroupWrite | UnixFileMode.OtherWrite, false, TestName = "OutputInStickyDirectoryIsAccepted")]
+		public async Task OutputInDirectoryOthersCanWriteTo(UnixFileMode extra, bool warns)
+		{
+			RequirePosix();
+
+			var directory = Directory.CreateDirectory(Path.Combine(_root, "team")).FullName;
+			File.SetUnixFileMode(directory, Owner700 | UnixFileMode.GroupRead | UnixFileMode.GroupExecute | UnixFileMode.OtherRead | UnixFileMode.OtherExecute | extra);
+
+			var script = Path.Combine(directory, "h.sh");
+
+			var (exitCode, _, error) = await RunCli(CreateEnvironment(), "credentials", "cli", "init", "--store", "gpg", "-o", script);
+
+			exitCode.ShouldBe(0, error);
+			File.Exists(script).ShouldBeTrue();
+
+			if (warns)
+				error.ShouldContain($"Warning: '{directory}' is writable by its group");
+			else
+				error.ShouldNotContain("is writable by its group");
+		}
+
 		// Test names and arguments stay free of quotes: a failed test is re-run by a filter built from its name.
 		[TestCase('"',  TestName = "OutputWithDoubleQuoteIsRefused")]
 		[TestCase('\'', TestName = "OutputWithSingleQuoteIsRefused")]

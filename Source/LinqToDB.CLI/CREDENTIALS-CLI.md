@@ -384,7 +384,10 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
 - `--store local`: the built-in store of section 4; `init` creates the directory and the key at once, so problems show
   up now. It never replaces an existing key.
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another
-  path, owner-only (`0700`). An existing script is replaced only with `--force`.
+  path, owner-only (`0700`). An existing script is replaced only with `--force`. Whoever can replace the script receives
+  the passwords given to it, so an `--output` path inside a directory that every user can write to without the sticky
+  bit (the script's directory or an ancestor of its real path) is refused, and a group-writable script directory gives a
+  warning.
 - With `--config <file>` the store is recorded as `credentialsCli` in that file's `default` profile (the file is created
   when missing): `@keyring`/`@gpg`/`@local` for the default location, otherwise the script's path (quoted when it has
   spaces). A different existing value is replaced only with `--force`. The script and the configuration change

@@ -185,6 +185,53 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		}
 
 		/// <summary>
+		/// Checks the directory of a script written to a path the user chose (<c>credentials cli init --output</c>): another
+		/// user who can replace the script receives the passwords it is given. Refuses a directory whose real path, or an
+		/// ancestor of it, every user can write to without the sticky bit, as for the credentials directory's ancestors.
+		/// A group-writable script directory is the user's choice (<c>~/bin</c> is often <c>0775</c> with umask <c>002</c>),
+		/// so it only gives a <paramref name="warning"/>. Directories that do not exist yet are skipped: they are created
+		/// owner-only.
+		/// </summary>
+		[UnsupportedOSPlatform("windows")]
+		public static bool CheckScriptDirectory(string script, out string? warning, out string? error)
+		{
+			warning = null;
+
+			try
+			{
+				var nearest = true;
+
+				for (var directory = new DirectoryInfo(GetRealPath(Path.GetDirectoryName(script)!)); directory != null; directory = directory.Parent)
+				{
+					if (!directory.Exists)
+						continue;
+
+					var mode = directory.UnixFileMode;
+
+					if (mode.HasFlag(UnixFileMode.OtherWrite) && !mode.HasFlag(UnixFileMode.StickyBit))
+					{
+						error = $"Cannot write '{script}': it would be inside '{directory.FullName}', which every user can write to without the sticky bit; another user could replace the script and receive the passwords given to it. Choose another --output or run: chmod o-w '{directory.FullName}'";
+						return false;
+					}
+
+					// Group write on an ancestor is accepted, as for the credentials directory.
+					if (nearest && mode.HasFlag(UnixFileMode.GroupWrite) && !mode.HasFlag(UnixFileMode.StickyBit))
+						warning = $"Warning: '{directory.FullName}' is writable by its group; a member of the group could replace '{script}' and receive the passwords given to it.";
+
+					nearest = false;
+				}
+
+				error = null;
+				return true;
+			}
+			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+			{
+				error = $"Cannot check the directory of '{script}': {ex.Message}{AccessHint(ex)}";
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Resolves symbolic links in every component of an absolute Unix path (like realpath; components that do not exist
 		/// are kept as written). Gives up after 40 links, as the kernel does.
 		/// </summary>
