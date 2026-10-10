@@ -30,6 +30,11 @@ namespace Tests.Model.Remote.Grpc
 		{
 		}
 
+		/// <summary>
+		/// Address of the test server this context talks to.
+		/// </summary>
+		public string ServerAddress => Address;
+
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
 		public ITable<ComplexPerson>          ComplexPerson          => this.GetTable<ComplexPerson>();
 		public ITable<Patient>                Patient                => this.GetTable<Patient>();
