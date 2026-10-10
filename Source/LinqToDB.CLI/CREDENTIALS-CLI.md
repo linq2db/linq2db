@@ -25,6 +25,7 @@ standard input, reads the answer from its standard output, and waits for it to e
 14. [The credentials command](#14-the-credentials-command)
 15. [Generated scripts: keyring, gpg and vault](#15-generated-scripts-keyring-gpg-and-vault)
 16. [Example credentials CLI](#16-example-credentials-cli)
+17. [Connecting popular stores](#17-connecting-popular-stores)
 
 ## 1. Stores
 
@@ -392,7 +393,7 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
   `$LINQ2DB_VAULT_MOUNT` (default `secret`; KV version 1 or 2). `get` needs read access to the secret, `store` write
   access, `erase` delete access to its metadata (KV version 2: every version is removed), and `list` list access under
   `linq2db/`. The data goes to `vault kv put` on standard input, never in its arguments. A secret written by other
-  tooling may leave out `username`.
+  tooling may leave out `username`; its path must be in lower case, as `linq2db/` targets are (section 8).
 - `--store local`: the built-in store of section 4; `init` creates the directory and the key at once, so problems show
   up now. It never replaces an existing key.
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another
@@ -438,3 +439,202 @@ dotnet linq2db credentials list --credentials-cli /home/me/.local/lib/linq2db-se
 
 The file is `$SECRETHELPER_FILE`, or `~/.linq2db-secrethelper.json` by default. The example builds without warnings
 (`WarningLevel=0`) because `dotnet run` prints build warnings on standard output.
+
+## 17. Connecting popular stores
+
+The programs below read credentials from team and cloud vaults. Each is the skeleton plus the `fetch` function of one
+store: a `get`-only credentials CLI. Other verbs answer `status=unsupported`, so `credentials set`, `list`, `remove` and
+`clear` say the store does not support them; manage the records with the store's own tools. HashiCorp Vault has a
+generated script with every verb instead (section 15).
+
+**Not tested against the real services.** These programs follow each CLI's documentation and are tested only against
+fake CLIs that answer as documented. Try one by hand before relying on it, for example
+`printf 'protocol=1\nverb=get\ntarget=linq2db/project-a/prod\n' | ./linq2db-1password.sh`.
+
+To use one, save the skeleton as a file, replace the marked line with the store's `fetch` function, make it executable
+(`chmod 700`) and name it: `"credentialsCli": "/home/me/bin/linq2db-1password.sh"`. Each `fetch` maps the record name
+(`$name`, the target without `linq2db/`) to the store's item; edit that mapping freely. Targets under `linq2db/` arrive
+in lower case (section 8), so name the items in lower case where the store tells case apart; any other target arrives
+as written (`"credentials": "Private/prod-db"`) and is used whole. The programs run the store's
+CLI, which must be signed in already: when nobody can answer a prompt (`LINQ2DB_CREDENTIAL_INTERACTIVE=0`, for example
+under the MCP server) a sign-in or unlock prompt makes the request fail or time out.
+
+The skeleton:
+
+```sh
+#!/bin/sh
+# linq2db credentials CLI (protocol 1), get only. See CREDENTIALS-CLI.md, "Connecting popular stores".
+set -eu
+umask 077
+
+answered=0
+errors=''
+answer() {
+    answered=1
+    printf 'protocol=1\nstatus=%s\n' "$1"
+}
+trap '[ -z "$errors" ] || rm -f "$errors"; [ "$answered" = 1 ] || printf "protocol=1\nstatus=error\n"' EXIT
+
+# Reports a failure on one line: $1, then the first non-empty line the store's CLI wrote to $errors.
+reason() {
+    printf '%s: %s\n' "$1" "$(LC_ALL=C sed -n '/[^[:space:]]/{p;q;}' "$errors")" >&2
+}
+
+protocol=''
+verb=''
+target=''
+while IFS= read -r line || [ -n "$line" ]; do
+    case ${line%%=*} in
+        protocol) protocol=${line#*=} ;;
+        verb)     verb=${line#*=} ;;
+        target)   target=${line#*=} ;;
+        *) ;;
+    esac
+done
+
+if [ "$protocol" != 1 ] || [ "$verb" != get ]; then
+    answer unsupported
+    exit 0
+fi
+
+errors=$(mktemp)
+# shellcheck disable=SC2034 # the record name; a fetch that looks the target up whole does not use it
+name=${target#linq2db/}
+user=''
+secret=''
+
+# fetch sets $user and $secret. It returns 1 when the store has no such record, and 2 on any other failure, after
+# reporting it.
+# >>> the fetch function of your store <<<
+
+rc=0
+fetch </dev/null || rc=$?
+if [ "$rc" = 1 ]; then
+    answer not-found
+    exit 0
+fi
+[ "$rc" = 0 ] || exit 1
+answer ok
+printf 'username=%s\npassword=%s\n' "$user" "$secret"
+```
+
+### Azure Key Vault
+
+The secret named after the record, with each `/` written as `--` (Key Vault names allow only letters, digits and
+`-`), in the key vault `$LINQ2DB_AZURE_VAULT`; the password is the secret's value and the user name its tag `username`
+(`az keyvault secret set --vault-name myvault --name project-a--prod --file pw.txt --tags username=app_reader`, with the
+password in a file rather than on the command line). Sign in first with `az login` (or a managed identity).
+
+```sh
+# fetch: Azure Key Vault (az)
+fetch() {
+    vault=${LINQ2DB_AZURE_VAULT:?set LINQ2DB_AZURE_VAULT to the key vault name}
+    secret_name=$(printf '%s' "$name" | LC_ALL=C sed 's#/#--#g')
+    if ! secret=$(az keyvault secret show --vault-name "$vault" --name "$secret_name" --query value --output tsv 2>"$errors"); then
+        if LC_ALL=C grep -q 'SecretNotFound' "$errors"; then
+            return 1
+        fi
+        reason 'az keyvault secret show failed'
+        return 2
+    fi
+    if ! user=$(az keyvault secret show --vault-name "$vault" --name "$secret_name" --query tags.username --output tsv 2>"$errors"); then
+        reason 'az keyvault secret show failed'
+        return 2
+    fi
+}
+```
+
+### 1Password
+
+The record `linq2db/<vault>/<item>` is the item `<item>` in the vault `<vault>`, with the fields `username` and
+`password` (a Login item). Sign in first: the 1Password app integration, `op signin`, or a service account
+(`OP_SERVICE_ACCOUNT_TOKEN`).
+
+```sh
+# fetch: 1Password (op)
+fetch() {
+    if ! secret=$(op read --no-newline "op://$name/password" 2>"$errors"); then
+        if LC_ALL=C grep -q "isn't an item" "$errors"; then
+            return 1
+        fi
+        reason 'op read failed'
+        return 2
+    fi
+    if ! user=$(op read --no-newline "op://$name/username" 2>"$errors"); then
+        if ! LC_ALL=C grep -q "isn't a field" "$errors"; then
+            reason 'op read failed'
+            return 2
+        fi
+        user=''
+    fi
+}
+```
+
+### AWS Secrets Manager
+
+The secret named like the target (`linq2db/<name>`), a JSON object with `username` and `password` (the layout AWS uses
+for database credentials). Needs `jq`. Credentials and region as for any `aws` command.
+
+```sh
+# fetch: AWS Secrets Manager (aws, jq)
+fetch() {
+    if ! json=$(AWS_PAGER='' aws secretsmanager get-secret-value --secret-id "$target" --query SecretString --output text 2>"$errors"); then
+        if LC_ALL=C grep -q 'ResourceNotFoundException' "$errors"; then
+            return 1
+        fi
+        reason 'aws secretsmanager get-secret-value failed'
+        return 2
+    fi
+    if ! user=$(printf '%s' "$json" | jq -r '.username // ""' 2>"$errors") \
+        || ! secret=$(printf '%s' "$json" | jq -er '.password' 2>"$errors"); then
+        reason "the secret $target is not a JSON object with a password"
+        return 2
+    fi
+}
+```
+
+### Bitwarden
+
+The login item named like the target (`linq2db/<name>`). Unlock the vault first and export the session for the
+programs started from that shell: `export BW_SESSION="$(bw unlock --raw)"`.
+
+```sh
+# fetch: Bitwarden (bw)
+fetch() {
+    if ! secret=$(bw --nointeraction get password "$target" 2>"$errors"); then
+        if LC_ALL=C grep -q '^Not found' "$errors"; then
+            return 1
+        fi
+        reason 'bw get password failed'
+        return 2
+    fi
+    if ! user=$(bw --nointeraction get username "$target" 2>"$errors"); then
+        reason 'bw get username failed'
+        return 2
+    fi
+}
+```
+
+### KeePassXC
+
+The entry at the path `<name>` (groups separated by `/`) in the database `$LINQ2DB_KEEPASS_DB`, opened with the key file
+`$LINQ2DB_KEEPASS_KEYFILE` and no password: the database password could only be typed at a prompt, which the program
+cannot show. Create such a database (or add a key file to one) in KeePassXC.
+
+```sh
+# fetch: KeePassXC (keepassxc-cli)
+fetch() {
+    database=${LINQ2DB_KEEPASS_DB:?set LINQ2DB_KEEPASS_DB to the database file}
+    key_file=${LINQ2DB_KEEPASS_KEYFILE:?set LINQ2DB_KEEPASS_KEYFILE to the key file of the database}
+    if ! values=$(keepassxc-cli show -q --no-password --key-file "$key_file" -a UserName -a Password "$database" "/$name" 2>"$errors"); then
+        if LC_ALL=C grep -q 'Could not find entry' "$errors"; then
+            return 1
+        fi
+        reason 'keepassxc-cli show failed'
+        return 2
+    fi
+    # One line per attribute, in the order asked for.
+    user=$(printf '%s\n' "$values" | LC_ALL=C sed -n '1p')
+    secret=$(printf '%s\n' "$values" | LC_ALL=C sed -n '2p')
+}
+```
