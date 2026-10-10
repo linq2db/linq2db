@@ -610,7 +610,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			// Fail softly: projection merging probes construction without materializing anything.
 			if (dynamicProperties != null && ed.DynamicColumnSetter == null)
 			{
-				failureReason = $"Type '{typeAccessor.Type.Name}' is materialized with dynamic column(s) {string.Join(", ", dynamicProperties.Select(static d => d.MemberInfo.Name))}, but has no member marked with {nameof(DynamicColumnsStoreAttribute)}.";
+				failureReason = $"Type '{typeAccessor.Type.Name}' is materialized with dynamic column(s) {string.Join(", ", dynamicProperties.Select(static d => d.MemberInfo.Name))}, but has no dynamic column setter. Add a member marked with {nameof(DynamicColumnsStoreAttribute)}, or configure a setter through {nameof(DynamicColumnAccessorAttribute)} or {nameof(EntityMappingBuilder<>.DynamicPropertyAccessors)}.";
 				return null;
 			}
 
