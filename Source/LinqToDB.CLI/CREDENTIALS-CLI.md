@@ -32,7 +32,7 @@ standard input, reads the answer from its standard output, and waits for it to e
 | --- | --- | --- | --- |
 | local | `@local` | all | linq2db's own built-in encrypted store (section 4); the default on Linux and macOS |
 | Windows Credential Manager | `@credential-manager` | Windows | the Windows store; the default on Windows |
-| keyring | `@keyring` | Linux | your desktop keyring (GNOME Keyring or KWallet) through `secret-tool`, by a generated script (section 15) |
+| keyring | `@keyring` | Linux (any system with libsecret's `secret-tool` and a Secret Service) | your desktop keyring (GNOME Keyring or KWallet) through `secret-tool`, by a generated script (section 15) |
 | gpg | `@gpg` | Linux, macOS, WSL | `pass`: one GPG-encrypted file per password in `~/.password-store`, by a generated script (section 15) |
 | credentials CLI | `"<program> [arguments]"` | all | any program speaking the protocol of sections 6 to 12 |
 
