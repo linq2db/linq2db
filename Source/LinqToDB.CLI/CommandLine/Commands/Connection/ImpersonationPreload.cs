@@ -69,12 +69,26 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// </summary>
 		static readonly string[] _poolMethods = ["ClearPool", "ClearPools", "ClearAllPools", "ReleaseObjectPool"];
 
+		/// <summary>
+		/// Connection types whose client shares what a connection opens across connections by other means than a pool
+		/// with a keyword: DuckDB.NET keeps a process-wide database cache keyed by file name, so a database opened by the
+		/// warm-up (or still being opened by one that outlived its bound) could be used by the impersonated work.
+		/// </summary>
+		/// <remarks>
+		/// ClickHouse.Driver shares HTTP connections, but it authenticates every request with the command's credentials
+		/// and no state of the OS account is attached to a socket; Octonica.ClickHouseClient opens its own connection.
+		/// </remarks>
+		static readonly HashSet<string> _sharedStateClients = new(StringComparer.Ordinal)
+		{
+			"DuckDB.NET.Data.DuckDBConnection",
+		};
+
 		static readonly Lock _lock = new();
 
 		static bool                                 _applicationAssembliesLoaded;
-		static bool                                 _spatialLibrariesLoaded;
 		static readonly HashSet<Assembly>           _referencesLoaded     = new();
 		static readonly HashSet<Assembly>           _runtimeImportsLoaded = new();
+		static readonly HashSet<Assembly>           _clientImportsLoaded  = new();
 		static readonly HashSet<(Assembly, string)> _satellitesLoaded     = new();
 
 		/// <summary>
@@ -90,13 +104,22 @@ namespace LinqToDB.CommandLine.Commands.Connection
 				dataProvider = TryGetDataProvider(settings.Provider);
 			}
 
-			if (dataProvider != null)
+			var connectionType = dataProvider == null ? null : TryGetConnectionType(dataProvider, settings.ConnectionString);
+
+			if (connectionType != null && _sharedStateClients.Contains(connectionType.FullName!))
+			{
+				// Not warmed up; its native libraries are loaded without opening anything.
+				//
+				lock (_lock)
+					LoadClientNativeLibraries(connectionType);
+			}
+			else if (dataProvider != null && connectionType != null)
 			{
 				// The warm-up runs on its own task, as the process account. If it is still running when the bound
 				// expires, the command goes on without it, and it finishes, disposing its connection, in the background.
 				//
 				await Task.WhenAny(
-					Task.Run(() => WarmUpConnectionAsync(dataProvider, settings.ConnectionString, cancellationToken), CancellationToken.None),
+					Task.Run(() => WarmUpConnectionAsync(dataProvider, connectionType, settings.ConnectionString, cancellationToken), CancellationToken.None),
 					Task.Delay(WarmUpTimeout, cancellationToken));
 
 				cancellationToken.ThrowIfCancellationRequested();
@@ -135,6 +158,24 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		}
 
 		/// <summary>
+		/// Returns the client's connection type, or <see langword="null"/> when the client cannot create a connection
+		/// for <paramref name="connectionString"/> (the command then fails the same way in the session).
+		/// </summary>
+		static Type? TryGetConnectionType(IDataProvider dataProvider, string connectionString)
+		{
+			try
+			{
+				using var connection = dataProvider.CreateConnection(connectionString);
+
+				return connection.GetType();
+			}
+			catch (Exception)
+			{
+				return null;
+			}
+		}
+
+		/// <summary>
 		/// Opens and closes a connection with the command's client and connection string as the process account. Opening
 		/// runs the client's connection code up to where it fails or succeeds, which loads what that code needs: the
 		/// client's assemblies, native libraries (the SQL Server network interface, native SQLite or DuckDB, the TLS
@@ -148,7 +189,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// a connection opened as the process account: a client that pools gets its pooling keyword turned off, and a
 		/// client that pools by other means is not warmed up.
 		/// </remarks>
-		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, string connectionString, CancellationToken cancellationToken)
+		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, Type connectionType, string connectionString, CancellationToken cancellationToken)
 		{
 			using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
@@ -156,7 +197,7 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			try
 			{
-				if (GetUnpooledConnectionString(dataProvider, connectionString) is not { } warmUpConnectionString)
+				if (GetUnpooledConnectionString(connectionType, connectionString) is not { } warmUpConnectionString)
 					return;
 
 				await using var db = new DataConnection(new DataOptions().UseConnectionString(dataProvider, warmUpConnectionString));
@@ -173,12 +214,8 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// Returns <paramref name="connectionString"/> with the client's pooling turned off, the string itself for a
 		/// client that does not pool, or <see langword="null"/> for a client that pools by means this does not know.
 		/// </summary>
-		static string? GetUnpooledConnectionString(IDataProvider dataProvider, string connectionString)
+		static string? GetUnpooledConnectionString(Type type, string connectionString)
 		{
-			using var connection = dataProvider.CreateConnection(connectionString);
-
-			var type = connection.GetType();
-
 			if (_poolingKeywords.TryGetValue(type.FullName!, out var keyword))
 			{
 				var builder = new DbConnectionStringBuilder { ConnectionString = connectionString };
@@ -309,20 +346,50 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// Loads the native libraries Microsoft.SqlServer.Types imports (SqlServerSpatial*.dll, shipped for Windows
 		/// only). SqlClient resolves the user-defined type of a <c>geography</c> or <c>geometry</c> column to that
 		/// assembly by name, and it loads its native library when the first value is read, so neither the warm-up
-		/// connection nor the reference closure reaches it. Each library is loaded from the file the runtime would
-		/// resolve, by its full path; a library that fails to load is left alone, and a spatial read then fails as it
-		/// would without impersonation.
+		/// connection nor the reference closure reaches it.
 		/// </summary>
-		static unsafe void LoadSpatialNativeLibraries()
+		static void LoadSpatialNativeLibraries()
 		{
-			if (_spatialLibrariesLoaded || !OperatingSystem.IsWindows())
-				return;
-
-			_spatialLibrariesLoaded = true;
-
 			var assembly = Array.Find(AppDomain.CurrentDomain.GetAssemblies(), static a => string.Equals(a.GetName().Name, "Microsoft.SqlServer.Types", StringComparison.Ordinal));
 
-			if (assembly == null || assembly.IsDynamic || !assembly.TryGetRawMetadata(out var blob, out var length))
+			if (assembly != null)
+				LoadNativeImports(assembly, "SqlServerSpatial");
+		}
+
+		/// <summary>
+		/// Loads the native libraries of a client that is not warmed up (see <see cref="_sharedStateClients"/>): those
+		/// imported by its assembly and by the assemblies it references that do not come with .NET (DuckDB.NET.Bindings).
+		/// </summary>
+		static void LoadClientNativeLibraries(Type connectionType)
+		{
+			var runtimeDirectory = Path.GetFullPath(RuntimeEnvironment.GetRuntimeDirectory());
+			var assemblies       = new List<Assembly> { connectionType.Assembly };
+
+			foreach (var reference in connectionType.Assembly.GetReferencedAssemblies())
+			{
+				var context = AssemblyLoadContext.GetLoadContext(connectionType.Assembly) ?? AssemblyLoadContext.Default;
+
+				if (TryLoad(context, reference) is { IsDynamic: false } referenced
+					&& !Path.GetFullPath(referenced.Location).StartsWith(runtimeDirectory, StringComparison.OrdinalIgnoreCase))
+				{
+					assemblies.Add(referenced);
+				}
+			}
+
+			foreach (var assembly in assemblies)
+				LoadNativeImports(assembly, null);
+		}
+
+		/// <summary>
+		/// Loads the native libraries <paramref name="assembly"/> imports (those whose name starts with
+		/// <paramref name="namePrefix"/>, when given) that ship with the application or next to the assembly, each from
+		/// the file the runtime would resolve, by its full path. Libraries of the operating system are not found there
+		/// and are left alone. A library that fails to load is left alone too: the code that needs it then fails as it
+		/// would without impersonation.
+		/// </summary>
+		static unsafe void LoadNativeImports(Assembly assembly, string? namePrefix)
+		{
+			if (assembly.IsDynamic || !_clientImportsLoaded.Add(assembly) || !assembly.TryGetRawMetadata(out var blob, out var length))
 				return;
 
 			// The runtime looks for a DllImport library in the native search directories of the dependency manifest
@@ -342,25 +409,92 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			{
 				var name = reader.GetString(reader.GetModuleReference(MetadataTokens.ModuleReferenceHandle(row)).Name);
 
-				if (!name.StartsWith("SqlServerSpatial", StringComparison.OrdinalIgnoreCase))
+				if (namePrefix != null && !name.StartsWith(namePrefix, StringComparison.OrdinalIgnoreCase))
 					continue;
 
-				// The runtime's name variants on Windows: the name, then the name with .dll unless it has an extension
-				// the loader keeps. Each variant is looked up in every directory before the next one.
+				// Each name variant is looked up in every directory before the next one, as the runtime does.
 				//
-				string[] variants = name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || name.EndsWith('.')
-					? [name]
-					: [name, name + ".dll"];
-
-				var path = variants
+				var path = GetNativeLibraryFileNames(name)
 					.SelectMany(variant => directories.Select(directory => Path.Combine(directory, variant)))
 					.FirstOrDefault(File.Exists);
 
-				// The library's own dependencies (e.g. the C runtime) are looked up only in its folder and in System32,
-				// never in the current directory or PATH. The result is not checked; see above.
+				if (path == null)
+					continue;
+
+				path = Path.GetFullPath(path);
+
+				// On Windows the library's own dependencies (e.g. the C runtime) are looked up only in its folder and in
+				// System32, never in the current directory or PATH; dlopen of a path does not search the current
+				// directory either. The result is not checked; see above.
 				//
-				if (path != null)
-					LoadLibraryEx(Path.GetFullPath(path), IntPtr.Zero, LoadLibrarySearchDllLoadDir | LoadLibrarySearchSystem32);
+				if (OperatingSystem.IsWindows())
+					LoadLibraryEx(path, IntPtr.Zero, LoadLibrarySearchDllLoadDir | LoadLibrarySearchSystem32);
+				else
+					NativeLibrary.TryLoad(path, out _);
+			}
+		}
+
+		/// <summary>
+		/// The file names the runtime tries for the native library <paramref name="name"/>, in its order.
+		/// </summary>
+		static IEnumerable<string> GetNativeLibraryFileNames(string name)
+		{
+			var isRelative = !Path.IsPathRooted(name);
+
+			if (OperatingSystem.IsWindows())
+			{
+				yield return name;
+
+				if (isRelative
+					&& !name.EndsWith('.')
+					&& !name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+					&& !name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+				{
+					yield return name + ".dll";
+				}
+
+				yield break;
+			}
+
+			if (!isRelative)
+			{
+				yield return name;
+				yield break;
+			}
+
+			// A suffix inside the name counts when a version may follow it (libicuuc.so.57); no prefix is added to a
+			// name with a directory.
+			//
+			const string prefix = "lib";
+
+			var suffix         = OperatingSystem.IsMacOS() || OperatingSystem.IsMacCatalyst() ? ".dylib" : ".so";
+			var suffixIndex    = name.IndexOf(suffix, StringComparison.Ordinal);
+			var containsSuffix = suffixIndex >= 0 && (suffixIndex + suffix.Length == name.Length || name[suffixIndex + suffix.Length] == '.');
+			var addPrefix      = !name.Contains('/', StringComparison.Ordinal);
+
+			if (containsSuffix)
+			{
+				yield return name;
+
+				if (addPrefix)
+					yield return prefix + name;
+
+				yield return name + suffix;
+
+				if (addPrefix)
+					yield return prefix + name + suffix;
+			}
+			else
+			{
+				yield return name + suffix;
+
+				if (addPrefix)
+					yield return prefix + name + suffix;
+
+				yield return name;
+
+				if (addPrefix)
+					yield return prefix + name;
 			}
 		}
 

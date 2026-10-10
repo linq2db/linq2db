@@ -606,6 +606,40 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public async Task DuckDBIsNotWarmedUp()
+		{
+			if (RuntimeInformation.ProcessArchitecture is not (Architecture.X64 or Architecture.Arm64))
+				Assert.Ignore("DuckDB ships its native library only for x64 and arm64 processes.");
+
+			// DuckDB.NET shares an opened database file across connections; a warm-up would create this one as the
+			// process account before the session starts.
+			//
+			var directory = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"impersonation-duckdb-{Guid.NewGuid():N}");
+			var database  = Path.Combine(directory, "new.duckdb");
+
+			Directory.CreateDirectory(directory);
+
+			try
+			{
+				bool? existedAtEntry = null;
+
+				var environment = new TestCliEnvironment { ImpersonatedRunStarting = () => existedAtEntry ??= File.Exists(database) };
+
+				var result = await RunCli(environment, "query", "--provider", "DuckDB", "--connection-string", $"Data Source={database}", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select 1 as Value");
+
+				using (Assert.EnterMultipleScope())
+				{
+					result.ExitCode.ShouldBe(0, result.Error);
+					existedAtEntry. ShouldBe(false);
+				}
+			}
+			finally
+			{
+				Directory.Delete(directory, true);
+			}
+		}
+
+		[Test]
 		public async Task WarmUpStopsWaitingAtItsBound()
 		{
 			var database = CreateSqliteDatabase();
