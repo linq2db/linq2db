@@ -261,7 +261,7 @@ namespace Tests.LinqToDB.CLI
 
 			Store(runner).TryRead("linq2db/a", out _, out _, out var error).ShouldBeFalse();
 
-			error.ShouldBe("Credentials CLI 'fake-cli' returned an invalid answer to 'get': the first line is not protocol=1 (10 characters).");
+			error.ShouldBe("Credentials CLI 'fake-cli' returned an invalid answer to 'get': the first line is not protocol=1.");
 			error.ShouldNotBeNull().ShouldNotContain(Secret);
 		}
 
@@ -289,7 +289,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[TestCase("protocol=1\nusername=u\n",                         "the second line is not status=",   TestName = "MissingStatusIsInvalid")]
-		[TestCase("protocol=1\nstatus=found\n",                       "unknown status (5 characters)",    TestName = "UnknownStatusIsInvalid")]
+		[TestCase("protocol=1\nstatus=found\n",                       "unknown status; expected ok",      TestName = "UnknownStatusIsInvalid")]
 		[TestCase("protocol=1\nstatus=ok\nstatus=ok\nusername=u\npassword=p\n", "'status' appears more than once", TestName = "StatusRepeatedIsInvalid")]
 		[TestCase("protocol=1\nstatus=ok\nprotocol=1\nusername=u\npassword=p\n", "'protocol' appears more than once", TestName = "ProtocolRepeatedIsInvalid")]
 		[TestCase("protocol=1\nstatus=not-found\nusername=u\n",       "status=not-found must not be followed by other lines", TestName = "TrailingKeysAfterNotFoundAreInvalid")]

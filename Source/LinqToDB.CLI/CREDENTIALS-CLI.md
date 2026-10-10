@@ -201,7 +201,7 @@ Answer (standard output): line 1 `protocol=<N>`, line 2 `status=<ok|not-found|un
 - `protocol` and `status` appear exactly once. After `status=not-found`, `status=unsupported` or `status=error` only
   empty lines may follow.
 - The client never shows standard output (it can hold secrets). A bad header is reported by its kind: standard output
-  is empty, the first line is not `protocol=1` (with its length), or the first line looks like build output (shown up to
+  is empty, the first line is not `protocol=1`, or the first line looks like build output (shown up to
   the diagnostic code, for example `` `vault.cs(3,1): warning CS8321` ``).
 - A program that does not speak protocol 1 answers `protocol=<its version>` and `status=unsupported`; the client
   reports "the credentials CLI speaks protocol N, linq2db-cli speaks 1". An incompatible change is version 2 and is

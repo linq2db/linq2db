@@ -356,7 +356,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				error = match.Success
 					? $"the first line looks like build output (diagnostic {match.Groups["code"].Value}); a program run through dotnet run must build without warnings."
-					: $"the first line is not protocol={ProtocolVersion.ToString(CultureInfo.InvariantCulture)} ({lines[0].Length.ToString(CultureInfo.InvariantCulture)} characters).";
+					: $"the first line is not protocol={ProtocolVersion.ToString(CultureInfo.InvariantCulture)}.";
 				return false;
 			}
 
@@ -370,7 +370,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 			if (status is not (StatusOk or StatusNotFound or StatusUnsupported or StatusError))
 			{
-				error = $"the second line has an unknown status ({status.Length.ToString(CultureInfo.InvariantCulture)} characters); expected ok, not-found, unsupported or error.";
+				error = "the second line has an unknown status; expected ok, not-found, unsupported or error.";
 				status = string.Empty;
 				return false;
 			}
