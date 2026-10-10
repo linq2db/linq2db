@@ -1090,6 +1090,22 @@ namespace Tests.Linq
 			sqlServer.ShouldBeOfType<SqlValue>().Value.ShouldBeOfType<DateTime>().ShouldBe(default(DateTime));
 		}
 
+#if !NETFRAMEWORK
+		// YDB writes a DateTimeOffset mapped to DateTz through LocalDateTime, so the clamped 1970-01-01 must not move with the
+		// process time zone. Red only on a host east of UTC.
+		[Test]
+		public void DateTzDefaultIsWrittenAtTheClamp()
+		{
+			var ydb     = YdbTools.GetDataProvider();
+			var lowered = LowerDefault(ydb, typeof(DateTimeOffset), DataType.DateTz);
+			var sql     = new StringBuilder();
+
+			ydb.CreateSqlBuilder(ydb.MappingSchema, new DataOptions()).BuildExpression(sql, lowered, false);
+
+			sql.ToString().ShouldContain("1970-01-01");
+		}
+#endif
+
 		static ISqlExpression LowerDefault(IDataProvider dataProvider, Type systemType, DataType dataType)
 		{
 			var dataOptions  = new DataOptions();
