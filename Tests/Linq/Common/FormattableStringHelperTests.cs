@@ -197,6 +197,12 @@ namespace Tests.Common
 		}
 
 		[Test]
+		public void PrepareRawSqlArguments_NoFormatItems()
+		{
+			Prepare("x = ?", false, Element(2, typeof(int))).ShouldAllBe(a => !IsDropped(a));
+		}
+
+		[Test]
 		public void PrepareRawSqlArguments_InvalidFormat()
 		{
 			Prepare("{a}", false, Element(1, typeof(int)), Element(99, typeof(int))).ShouldAllBe(a => !IsDropped(a));

@@ -232,7 +232,7 @@ namespace LinqToDB.Internal.Common
 
 		/// <summary>
 		/// Splits raw SQL argument of <c>FromSql</c> / <c>Sql.Expr</c> into the format and argument expressions.
-		/// An argument the format does not reference by a format item is replaced with <see langword="null"/>,
+		/// When the format has format items, an argument none of them references is replaced with <see langword="null"/>,
 		/// unless it can hold a <see cref="DataParameter"/> (referenced by name or position instead),
 		/// is an <see cref="ISqlExpression"/>, or <paramref name="keepUnreferenced"/> is set.
 		/// </summary>
@@ -324,16 +324,22 @@ namespace LinqToDB.Internal.Common
 		}
 
 		// an argument is built into SQL even when the format does not reference it, registering a parameter
-		// some providers (Sybase ASE) reject
+		// some providers (Sybase ASE) reject; a format without items binds its arguments by name or position
 		static IReadOnlyList<Expression> ReplaceUnreferencedArguments(string format, IReadOnlyList<Expression> arguments)
 		{
 			if (arguments.Count == 0)
 				return arguments;
 
-			var referenced = GetReferencedArguments(format, arguments.Count);
+			var items = ParseFormatItems(format);
 
-			if (referenced == null)
+			if (items == null || items.Count == 0)
 				return arguments;
+
+			var referenced = new bool[arguments.Count];
+
+			foreach (var item in items)
+				if (item.Index < referenced.Length)
+					referenced[item.Index] = true;
 
 			Expression[]? result = null;
 
