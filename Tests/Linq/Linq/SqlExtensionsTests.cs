@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 using LinqToDB;
@@ -268,6 +269,18 @@ namespace Tests.Linq
 			query2.ToArray().ShouldBe([2]);
 
 			query2.GetCompiledQueryInfo().ShouldBeSameAs(query1.GetCompiledQueryInfo());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/6000")]
+		public void Expr_Captured_AfterRowReference([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Person.Where(p => p.ID == Sql.Expr<int>($"{p.ID}")).Select(p => p.ID).OrderBy(id => id).ToArray().ShouldBe([1, 2, 3, 4]);
+
+			FormattableString sql = $"{2}";
+
+			db.Person.Where(p => p.ID == Sql.Expr<int>(sql)).Select(p => p.ID).OrderBy(id => id).ToArray().ShouldBe([2]);
 		}
 
 		public class FreeTextKey<T>
