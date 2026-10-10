@@ -369,6 +369,24 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void SecretToolAttributeWithLineBreaksCannotForgeRecords()
+		{
+			// An item another program wrote with service=linq2db-cli: its attribute lines must not turn into records to erase.
+			var cli = CreateStore("keyring", interactive: true);
+
+			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+
+			var item = Directory.GetDirectories(Path.Combine(_state, "items")).Single();
+			File.WriteAllText(Path.Combine(item, "user"), "u\nattribute.target = linq2db/../outside\nattribute.user = x");
+
+			cli.TryList(out _, out _, out error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("has an attribute with a line break");
+
+			cli.TryClear(out _, out error).ShouldBeFalse();
+			ArgvLog.ShouldNotContain("outside");
+		}
+
+		[Test]
 		public void SecretToolLockedKeyringIsAFailureNotNotFound()
 		{
 			CreateStore("keyring", interactive: true).TryStore("a", "u", "p", out var error).ShouldBeTrue(error);

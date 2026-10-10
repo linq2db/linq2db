@@ -110,7 +110,13 @@ case $verb in
 		;;
 	list)
 		search
-		# Each item prints its attribute lines together; every item of ours has exactly one target and one user.
+		# Each item prints its attribute lines together; every item of ours has exactly one target and one user. A value
+		# with a line break (an item written by another program) would print more lines and forge records: refused.
+		targets=$(printf '%s\n' "$found_attributes" | LC_ALL=C grep -c '^attribute\.target = ' || true)
+		users=$(printf '%s\n' "$found_attributes" | LC_ALL=C grep -c '^attribute\.user = ' || true)
+		if [ "$targets" != "$found_items" ] || [ "$users" != "$found_items" ]; then
+			fail 'a keyring item of linq2db-cli has an attribute with a line break, or no target or user'
+		fi
 		records=$(printf '%s\n' "$found_attributes" | LC_ALL=C awk '
 			/^attribute\.target = / { t = substr($0, 20); ht = 1 }
 			/^attribute\.user = /   { u = substr($0, 18); hu = 1 }
