@@ -79,10 +79,5 @@ namespace LinqToDB.CommandLine.Commands.Mcp
 		{
 			return _inner.StartImpersonation(user, password, mode);
 		}
-
-		public bool TryLoadNativeLibrary(string path, out string? error)
-		{
-			return _inner.TryLoadNativeLibrary(path, out error);
-		}
 	}
 }

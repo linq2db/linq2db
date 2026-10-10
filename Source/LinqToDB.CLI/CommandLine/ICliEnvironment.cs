@@ -48,10 +48,5 @@ namespace LinqToDB.CommandLine
 		/// tool's files: the impersonated identity usually cannot access them.
 		/// </summary>
 		IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode);
-		/// <summary>
-		/// Loads the native library at a fully qualified path before impersonating (see <see cref="NativeLibraryLoader.TryLoad"/>).
-		/// Returns <see langword="false"/>, with the reason in <paramref name="error"/>, when it cannot be loaded.
-		/// </summary>
-		bool TryLoadNativeLibrary(string path, out string? error);
 	}
 }

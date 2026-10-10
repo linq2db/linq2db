@@ -159,10 +159,12 @@ namespace Tests.LinqToDB.CLI
 				result.ExitCode.ShouldBe(-3);
 				result.Error.   ShouldContain("SQL execution failed:");
 
-				// One open for version detection (during provider resolution), one for execution.
+				// The warm-up open before the session, as the process account; then one open for version detection
+				// (during provider resolution) and one for execution, both in the session.
 				//
-				opens.Sessions.Count.ShouldBe(2);
-				opens.Sessions.ShouldAllBe(s => s == session);
+				opens.Sessions.Count.ShouldBe(3);
+				opens.Sessions[0].ShouldBeNull();
+				opens.Sessions.Skip(1).ShouldAllBe(s => s == session);
 			}
 		}
 
@@ -395,53 +397,6 @@ namespace Tests.LinqToDB.CLI
 					result.Error.ShouldContain("SQL Server", Case.Sensitive);
 					result.Error.ShouldNotContain("A network-related or instance-specific error", Case.Sensitive);
 				}
-			}
-		}
-
-		/// <summary>
-		/// Runs <see cref="NativePreloadFailureProcess"/> in a new process: the preload state is per process, and in
-		/// this one native SQLite has been loaded already.
-		/// </summary>
-		[Test]
-		public async Task NativePreloadFailureIsReportedAndRetried()
-		{
-			await RunInNewProcess(nameof(NativePreloadFailureProcess), "native preload failure");
-		}
-
-		[Test, Explicit("Started in a new process by NativePreloadFailureIsReportedAndRetried.")]
-		public async Task NativePreloadFailureProcess()
-		{
-			var database = Environment.GetEnvironmentVariable(ColdDatabaseVariable);
-
-			if (database == null)
-				Assert.Ignore($"Runs only from {nameof(NativePreloadFailureIsReportedAndRetried)}.");
-
-			string[] arguments = ["query", "--provider", "SQLite", "--connection-string", $"Data Source={database};Pooling=False", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select Id from Person"];
-
-			// The first command cannot load native SQLite before impersonating; the second one can.
-			//
-			var first  = new TestCliEnvironment { NativeLibraryLoadError = static path => IsSqliteNative(path) ? "Simulated load failure." : null };
-			var second = new TestCliEnvironment();
-
-			var firstResult  = await RunCli(first,  arguments);
-			var secondResult = await RunCli(second, arguments);
-
-			var firstSession = first.ImpersonationSessions.ShouldHaveSingleItem();
-
-			using (Assert.EnterMultipleScope())
-			{
-				firstResult.ExitCode.ShouldBe(0, firstResult.Error);
-
-				// Reported before anything runs in the session.
-				//
-				firstSession.Runs[0].ErrorOutputAtEntry.ShouldContain("Warning: cannot load native library");
-				firstSession.Runs[0].ErrorOutputAtEntry.ShouldContain("Simulated load failure.");
-
-				// Not remembered as loaded: the next command tries again.
-				//
-				second.NativeLibraryLoads.Any(IsSqliteNative).ShouldBeTrue();
-				secondResult.ExitCode.ShouldBe(0, secondResult.Error);
-				secondResult.Error.ShouldNotContain("Warning: cannot load native library");
 			}
 		}
 

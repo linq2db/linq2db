@@ -1,15 +1,11 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
 using System.Runtime.Loader;
 using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -26,79 +22,116 @@ namespace LinqToDB.CommandLine.Commands.Connection
 	/// installation folder, the .NET installation (a per-user install lives in the user profile) or the provider's
 	/// folder. Code that runs in the session loads assemblies lazily (the JIT loads an assembly on the first method
 	/// that references it), loads native libraries on first P/Invoke call, reads satellite resource assemblies for
-	/// error messages and reads application configuration files on the client's first use. Each step below moves
-	/// one of those reads before the session; none of them executes database work.
+	/// error messages and reads application configuration files on the client's first use. The preload opens a
+	/// connection with the command's own provider and connection string, so that the client loads what connecting
+	/// needs, and loads the managed code that running the command needs beyond that.
 	/// </remarks>
 	internal static class ImpersonationPreload
 	{
+		// Bounds a warm-up whose client does not apply its own connect timeout.
+		//
+		static readonly TimeSpan _warmUpTimeout = TimeSpan.FromSeconds(30);
+
 		static readonly Lock _lock = new();
 
-		static bool                                      _applicationAssembliesLoaded;
-		static bool                                      _configurationRead;
-		static bool                                      _symbolReaderLoaded;
-		static readonly HashSet<Assembly>                _referencesLoaded      = new();
-		static readonly HashSet<Assembly>                _nativeImportsLoaded   = new();
-		static readonly HashSet<(Assembly, string)>      _satellitesLoaded      = new();
-		static readonly ConcurrentDictionary<Type, bool> _clientsInitialized    = new();
+		static bool                                 _applicationAssembliesLoaded;
+		static readonly HashSet<Assembly>           _referencesLoaded = new();
+		static readonly HashSet<(Assembly, string)> _satellitesLoaded = new();
 
 		/// <summary>
-		/// Loads everything the provider named in <paramref name="settings"/> needs, without connecting to the
-		/// database. A shipped native library that fails to load is reported to <paramref name="environment"/> and
-		/// tried again by the next call.
+		/// Loads everything the command described by <paramref name="settings"/> needs.
 		/// </summary>
-		public static void Run(ConnectionSettings settings, ICliEnvironment environment)
+		public static async Task RunAsync(ConnectionSettings settings)
 		{
+			IDataProvider? dataProvider;
+
 			lock (_lock)
 			{
 				LoadApplicationAssemblies();
+				dataProvider = TryGetDataProvider(settings.Provider);
+			}
 
-				// Resolving the provider without a connection string never connects: version detection needs one, so
-				// it falls back to the default dialect. That provider uses the same ADO.NET client as the provider
-				// resolved later in the session (only the dialect version differs), so its client, the provider's
-				// adapter and the detection code all initialize here, as the process account.
-				//
-				try
-				{
-					var dataProvider = DataConnection.GetDataProvider(settings.Provider, connectionString: null!);
+			if (dataProvider != null)
+				await WarmUpConnectionAsync(dataProvider, settings.ConnectionString);
 
-					if (dataProvider != null)
-						InitializeClient(dataProvider, settings.ConnectionString, environment);
-				}
-				catch (Exception)
-				{
-					// The provider or its client cannot be created as the process account either; the resolution in
-					// the session fails the same way and reports it.
-				}
-
-				ReadApplicationConfiguration();
+			lock (_lock)
+			{
 				LoadReferencedAssemblies();
-				LoadNativeLibraries(environment);
-				LoadSymbolReader(environment);
 				LoadSatelliteAssemblies(CultureInfo.CurrentUICulture);
 			}
 		}
 
 		/// <summary>
-		/// Runs the ADO.NET client's first-use initialization once per client and loads what it needs from disk: the
-		/// assemblies it references and the native libraries they import.
+		/// Resolves the provider without a connection string, which never connects: version detection needs one, so
+		/// it falls back to the default dialect. That provider uses the same ADO.NET client as the provider resolved
+		/// later in the session (only the dialect version differs), so the server version is still detected as the
+		/// impersonated user.
 		/// </summary>
-		public static void InitializeClient(IDataProvider dataProvider, string connectionString, ICliEnvironment environment)
+		static IDataProvider? TryGetDataProvider(string provider)
 		{
-			// Creating (not opening) a connection and a command runs the client's static constructors and loads the
-			// assemblies that run them.
-			//
-			using var connection = dataProvider.CreateConnection(connectionString);
-			using var command    = connection.CreateCommand();
-
-			if (!_clientsInitialized.TryAdd(connection.GetType(), true))
-				return;
-
-			// A client picked by version detection in the session may not have been initialized by Run.
-			//
-			lock (_lock)
+			try
 			{
-				LoadReferencedAssemblies();
-				LoadNativeLibraries(environment);
+				return DataConnection.GetDataProvider(provider, connectionString: null!);
+			}
+			catch (Exception)
+			{
+				// The provider or its client cannot be created as the process account either; the resolution in the
+				// session fails the same way and reports it.
+				return null;
+			}
+		}
+
+		/// <summary>
+		/// Opens and closes a connection with the command's client and connection string as the process account. Opening
+		/// runs the client's connection code up to where it fails or succeeds, which loads what that code needs: the
+		/// client's assemblies, native libraries (the SQL Server network interface, native SQLite or DuckDB, the TLS
+		/// and GSSAPI shims of the .NET runtime), configuration files, and, on failure, message resources and whatever
+		/// the client's error path loads (e.g. the runtime's native symbol reader for a stack trace of a client without
+		/// a portable PDB).
+		/// </summary>
+		/// <remarks>
+		/// Failing is expected: the process account may have no access to the database. The error is not reported, so
+		/// nothing from the connection string reaches the output. The pool is cleared afterwards, so that the session
+		/// never gets a connection opened as the process account, and the client cannot keep a pooled error for it.
+		/// </remarks>
+		static async Task WarmUpConnectionAsync(IDataProvider dataProvider, string connectionString)
+		{
+			using var timeout = new CancellationTokenSource(_warmUpTimeout);
+
+			try
+			{
+				await using var db = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString));
+
+				await db.OpenDbConnectionAsync(timeout.Token);
+			}
+			catch (Exception)
+			{
+				// Expected when the process account cannot connect; see remarks.
+			}
+			finally
+			{
+				ClearPool(dataProvider, connectionString);
+			}
+		}
+
+		/// <summary>
+		/// Clears the client's pool for <paramref name="connectionString"/> through the static <c>ClearPool</c> method of
+		/// its connection type, which the pooling ADO.NET clients have (SqlClient, Npgsql, MySqlConnector, ODP.NET,
+		/// FirebirdClient, Microsoft.Data.Sqlite). A client without it is left alone.
+		/// </summary>
+		static void ClearPool(IDataProvider dataProvider, string connectionString)
+		{
+			try
+			{
+				using var connection = dataProvider.CreateConnection(connectionString);
+
+				var clearPool = connection.GetType().GetMethod("ClearPool", BindingFlags.Public | BindingFlags.Static, [connection.GetType()]);
+
+				clearPool?.InvokeExt(null, [connection]);
+			}
+			catch (Exception)
+			{
+				// Nothing was pooled if the connection cannot even be created.
 			}
 		}
 
@@ -133,6 +166,11 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// dependencies of an external provider. References are resolved in the load context of the referencing
 		/// assembly, as the runtime does.
 		/// </summary>
+		/// <remarks>
+		/// The warm-up connection runs only the client's connection code; running the command (executing it, reading
+		/// rows, mapping values, formatting output) and the client's paths past a login the process account was refused
+		/// use code that it never reaches.
+		/// </remarks>
 		static void LoadReferencedAssemblies()
 		{
 			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -179,148 +217,6 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		}
 
 		/// <summary>
-		/// Loads the native libraries that loaded assemblies import and that ship with the tool, a provider or the .NET
-		/// runtime. Native libraries are loaded on the first call into them: the SQL Server network interface and spatial
-		/// library on Windows, the native SQLite and DuckDB engines, the TLS and GSSAPI shims of the .NET runtime on Linux
-		/// and macOS. An assembly is examined again until all of its shipped libraries have loaded.
-		/// </summary>
-		/// <remarks>
-		/// The libraries of every loaded assembly are loaded, not only those of the client and the assemblies it
-		/// references: while reading data, a client can load by name an assembly it does not reference. Microsoft.Data.SqlClient
-		/// resolves the user-defined type of a <c>geography</c> column to Microsoft.SqlServer.Types, which loads its native
-		/// spatial library when the first value is read. The tool ships few native libraries, so loading all of them once
-		/// costs less than tracking which provider can reach which.
-		/// </remarks>
-		static void LoadNativeLibraries(ICliEnvironment environment)
-		{
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-				if (!_nativeImportsLoaded.Contains(assembly) && LoadImportedLibraries(assembly, environment))
-					_nativeImportsLoaded.Add(assembly);
-		}
-
-		/// <summary>
-		/// Loads the native libraries that <paramref name="assembly"/> imports and that ship with the tool, the
-		/// provider or the .NET runtime. Libraries of the operating system are left to the system loader: every account
-		/// can read them, and trying to load all of them would load unrelated ones (e.g. the Windows UI libraries). A
-		/// library that is not shipped for this platform is skipped.
-		/// </summary>
-		/// <returns>
-		/// <see langword="false"/> when a shipped library failed to load; the failure has been reported.
-		/// </returns>
-		static unsafe bool LoadImportedLibraries(Assembly assembly, ICliEnvironment environment)
-		{
-			if (assembly.IsDynamic || !assembly.TryGetRawMetadata(out var blob, out var length))
-				return true;
-
-			var reader      = new MetadataReader(blob, length);
-			var directories = GetNativeLibraryDirectories(assembly);
-			var loaded      = true;
-
-			for (var row = 1; row <= reader.GetTableRowCount(TableIndex.ModuleRef); row++)
-			{
-				var name = reader.GetString(reader.GetModuleReference(MetadataTokens.ModuleReferenceHandle(row)).Name);
-
-				if (FindNativeLibrary(name, directories) is { } path && !TryLoadNativeLibrary(path, environment))
-					loaded = false;
-			}
-
-			return loaded;
-		}
-
-		/// <summary>
-		/// Returns the full path of the file the runtime would load for the native library <paramref name="name"/>
-		/// from <paramref name="directories"/>, or <see langword="null"/> when none of them has it.
-		/// </summary>
-		static string? FindNativeLibrary(string name, List<string> directories)
-		{
-			foreach (var directory in directories)
-				foreach (var file in GetNativeLibraryFileNames(name))
-				{
-					var path = Path.Combine(directory, file);
-
-					if (File.Exists(path))
-						return Path.GetFullPath(path);
-				}
-
-			return null;
-		}
-
-		/// <summary>
-		/// Loads the file at <paramref name="path"/> itself, never a library of that name found elsewhere, and reports a
-		/// failure: the command goes on, but whatever needs the library loads it in the session.
-		/// </summary>
-		static bool TryLoadNativeLibrary(string path, ICliEnvironment environment)
-		{
-			if (environment.TryLoadNativeLibrary(path, out var error))
-				return true;
-
-			environment.Error.WriteLine($"Warning: cannot load native library '{path}' before impersonating: {error} If the command needs it, it is loaded as the impersonated user, who may not be able to read it.");
-
-			return false;
-		}
-
-		/// <summary>
-		/// Directories the runtime looks in for a native library imported by <paramref name="assembly"/>, in the order it
-		/// looks in them, so that the file found here is the one the runtime would load.
-		/// </summary>
-		static List<string> GetNativeLibraryDirectories(Assembly assembly)
-		{
-			var directories = new List<string>();
-
-			// The runtime finds native assets of a framework-dependent application through the native search paths
-			// in its dependency manifest (the application folder, e.g. runtimes/win-x64/native, and the framework).
-			//
-			if (AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES") is string searchDirectories)
-				directories.AddRange(searchDirectories.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries));
-
-			if (Path.GetDirectoryName(assembly.Location) is { Length: > 0 } assemblyDirectory)
-				directories.Add(assemblyDirectory);
-
-			directories.Add(AppContext.BaseDirectory);
-			directories.Add(RuntimeEnvironment.GetRuntimeDirectory());
-
-			return directories;
-		}
-
-		/// <summary>
-		/// On Windows, the runtime reads file and line information for a stack trace frame through the native symbol
-		/// reader it ships (Microsoft.DiaSymReader.Native) when the frame's assembly has no portable PDB, as
-		/// Oracle.ManagedDataAccess does not. The runtime loads the reader on first use, so a client that formats a stack
-		/// trace on its error path would load it in the session. The runtime loads it from its own folder, where it is
-		/// found already loaded. A runtime that does not ship it needs nothing; a reader that fails to load is reported
-		/// and tried again by the next call.
-		/// </summary>
-		static void LoadSymbolReader(ICliEnvironment environment)
-		{
-			if (_symbolReaderLoaded)
-				return;
-
-			var architecture = RuntimeInformation.ProcessArchitecture switch
-			{
-				Architecture.X64   => "amd64",
-				Architecture.X86   => "x86",
-				Architecture.Arm64 => "arm64",
-				_                  => null,
-			};
-
-			var path = OperatingSystem.IsWindows() && architecture != null
-				? Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), $"Microsoft.DiaSymReader.Native.{architecture}.dll")
-				: null;
-
-			if (path == null || !File.Exists(path) || TryLoadNativeLibrary(path, environment))
-				_symbolReaderLoaded = true;
-		}
-
-		static IEnumerable<string> GetNativeLibraryFileNames(string name)
-		{
-			yield return name;
-
-			foreach (var prefix in new[] { "", "lib" })
-				foreach (var suffix in new[] { ".dll", ".so", ".dylib" })
-					yield return prefix + name + suffix;
-		}
-
-		/// <summary>
 		/// Loads the satellite resource assemblies of the current UI culture and its parent cultures, so that messages
 		/// from the client (e.g. SQL Server errors) keep the user's language: a resource manager in the session finds
 		/// them already loaded. Only satellites that exist are loaded (next to the assembly, or in the application folder
@@ -355,37 +251,6 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 				return File.Exists(Path.Combine(AppContext.BaseDirectory, culture.Name, fileName))
 					|| Path.GetDirectoryName(assembly.Location) is { Length: > 0 } directory && File.Exists(Path.Combine(directory, culture.Name, fileName));
-			}
-		}
-
-		/// <summary>
-		/// ADO.NET clients read their sections from the application configuration file on first use
-		/// (Microsoft.Data.SqlClient reads its authentication providers and retry logic sections when the first
-		/// connection opens). The configuration system reads and caches the machine, application and user configuration
-		/// files on its first call, so any section read here moves those file reads out of the session.
-		/// </summary>
-		static void ReadApplicationConfiguration()
-		{
-			if (_configurationRead)
-				return;
-
-			_configurationRead = true;
-
-			// Only clients that depend on System.Configuration.ConfigurationManager use it; the tool does not reference
-			// it directly, so it is looked up among the assemblies loaded above.
-			//
-			var getSection = AppDomain.CurrentDomain.GetAssemblies()
-				.FirstOrDefault(static a => string.Equals(a.GetName().Name, "System.Configuration.ConfigurationManager", StringComparison.Ordinal))
-				?.GetType("System.Configuration.ConfigurationManager")
-				?.GetMethod("GetSection", BindingFlags.Public | BindingFlags.Static, [typeof(string)]);
-
-			try
-			{
-				getSection?.InvokeExt(null, ["SqlClientAuthenticationProviders"]);
-			}
-			catch (Exception)
-			{
-				// An invalid configuration file; the client reports it when it reads the file.
 			}
 		}
 	}

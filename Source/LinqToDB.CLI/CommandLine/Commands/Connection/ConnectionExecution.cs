@@ -19,9 +19,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 		/// <remarks>
 		/// <para>
 		/// The impersonated identity may not be able to read anything on this machine, so everything that is loaded
-		/// from disk is loaded first, under the original process account: external provider assemblies, the tool's
-		/// assemblies and their references, the client library's initialization, native libraries, satellite resources
-		/// and configuration files (see <see cref="ImpersonationPreload"/>).
+		/// from disk is loaded first, under the original process account: external provider assemblies, whatever the
+		/// client loads to open a connection (a warm-up connection is opened and closed, its errors ignored), the
+		/// tool's assemblies and their references, and satellite resources (see <see cref="ImpersonationPreload"/>).
 		/// </para>
 		/// <para>
 		/// Resolving the provider can open a connection to detect the server version. That is database work, so with
@@ -43,14 +43,9 @@ namespace LinqToDB.CommandLine.Commands.Connection
 
 			try
 			{
-				ImpersonationPreload.Run(settings, environment);
+				await ImpersonationPreload.RunAsync(settings);
 
 				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
-
-				// The preload has normally initialized this client already; this covers a detection that picked another one.
-				//
-				if (dataProvider != null)
-					ImpersonationPreload.InitializeClient(dataProvider, settings.ConnectionString, environment);
 
 				var result = CreateScope(settings, dataProvider, session);
 
