@@ -36,12 +36,15 @@ namespace LinqToDB.CommandLine.Commands.Connection
 			if (!settings.Impersonate)
 				return CreateScope(settings, DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString), null);
 
-			ImpersonationPreload.Run(settings);
-
+			// Logging on only returns a token: nothing runs as the impersonated user before the session runs it. Logging
+			// on first reports a failed logon (or an unsupported platform) without paying for the preload.
+			//
 			var session = environment.StartImpersonation(settings.User!, settings.Password!, settings.ImpersonateMode);
 
 			try
 			{
+				ImpersonationPreload.Run(settings);
+
 				var dataProvider = await session.RunAsync(() => Task.FromResult(DataConnection.GetDataProvider(settings.Provider, settings.ConnectionString)));
 
 				// The preload has normally initialized this client already; this covers a detection that picked another one.
