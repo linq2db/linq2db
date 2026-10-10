@@ -206,6 +206,21 @@ namespace Tests.Linq
 			sql.ShouldContain("UNION ALL");
 		}
 
+		/// <summary>The source is built once per branch, as a hand-written <c>Concat</c> builds it, and no more.</summary>
+		[Test]
+		public void UnpivotBuildsTheSourceOncePerBranch([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(QuarterlySales.Data);
+
+			_ = t
+				.TagQuery("unpivot-tag")
+				.Unpivot((row, quarter, amount) => new { row.Id, Quarter = quarter, Amount = amount }, x => x.Q1)
+				.ToArray();
+
+			LastQuery!.Split(new[] { "unpivot-tag" }, System.StringSplitOptions.None).Length.ShouldBe(2);
+		}
+
 		[Table]
 		sealed class MonthlySales
 		{

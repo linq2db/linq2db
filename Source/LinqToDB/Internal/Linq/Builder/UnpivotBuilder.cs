@@ -29,13 +29,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			var info = UnpivotInfo.Parse(methodCall);
 
 			// Resolve the name column through the source's own mapping schema rather than the context's: build it
-			// ahead of the lowering for that, with its own SelectQuery so the throwaway build stays out of ours.
+			// ahead of the lowering for that, and reuse it as the first branch's source - building it a second
+			// time would repeat builder-wide state such as query tags and hints.
 			var sourceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, info.Source, new SelectQuery()));
 
 			if (sourceResult.BuildContext == null)
 				return sourceResult;
 
-			var lowered = BuildLoweredExpression(info, sourceResult.BuildContext.MappingSchema);
+			var lowered = BuildLoweredExpression(info, sourceResult.BuildContext);
 
 			return BuildSequenceResult.FromContext(builder.BuildSequence(new BuildInfo(buildInfo, lowered)));
 		}
@@ -92,8 +93,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region Portable lowering
 
-		static Expression BuildLoweredExpression(UnpivotInfo info, MappingSchema mappingSchema)
+		static Expression BuildLoweredExpression(UnpivotInfo info, IBuildContext sourceContext)
 		{
+			var mappingSchema = sourceContext.MappingSchema;
+			var builtSource   = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(info.SourceType), sourceContext);
+
 			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(info.SourceType, info.ResultType);
 			var whereMethod  = Methods.Queryable.Where .MakeGenericMethod(info.SourceType);
 			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(info.ResultType);
@@ -111,7 +115,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var projectionBody   = info.ResultSelector.GetBody(rowParam, Expression.Constant(name), column.GetBody(rowParam));
 				var projectionLambda = Expression.Lambda(projectionBody, rowParam);
 
-				var branchSource = info.Source;
+				var branchSource = accumulated == null ? builtSource : info.Source;
 
 				if (excludeNulls)
 				{
