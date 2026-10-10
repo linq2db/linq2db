@@ -44,6 +44,13 @@ namespace Tests.Linq
 			[Column(DataType = DataType.DateTime2)] public DateTimeOffset Dto { get; set; }
 		}
 
+		[Table]
+		sealed class PreciseRow
+		{
+			[PrimaryKey]                                                public int            Id  { get; set; }
+			[Column(DataType = DataType.DateTimeOffset, Precision = 7)] public DateTimeOffset Dto { get; set; }
+		}
+
 		static ZonedRow[] Rows(params DateTimeOffset[] values)
 			=> values.Select((v, i) => new ZonedRow { Id = i + 1, Dto = v }).ToArray();
 
@@ -463,6 +470,23 @@ namespace Tests.Linq
 			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddDays(1))).Single();
 
 			shifted.ShouldBe(stored.AddDays(1));
+		}
+
+		/// <summary>
+		/// A shift through the frame keeps every digit the column holds. The expectation is the round-tripped value,
+		/// so a provider that stores fewer digits is held only to what it stores.
+		/// </summary>
+		[Test]
+		public void ShiftKeepsTheColumnsPrecision([IncludeDataSources(false, ZoneReadingProviders)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[] { new PreciseRow { Id = 1, Dto = Value.AddTicks(1234567) } });
+
+			var stored  = table.Select(r => r.Dto).Single();
+			var shifted = table.Select(r => Sql.AsSql(r.Dto.AddDays(1))).Single();
+
+			// Ticks rather than the value, which prints to the second and would show two equal-looking values.
+			shifted.UtcTicks.ShouldBe(stored.AddDays(1).UtcTicks);
 		}
 
 		#endregion
