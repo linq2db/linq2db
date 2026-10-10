@@ -781,6 +781,28 @@ namespace Tests.Linq
 			result[1].Cells["SumY2010"].ShouldBe(20);
 		}
 
+		/// <summary>An empty cell reads what its aggregate yields over no rows - for a count that is 0, not null.</summary>
+		[Test]
+		public void AnEmptyCountCellReadsZero([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(StrictSales.Data);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new { g.Key, Cells = p.Cell(rows => rows.Count(), Year) })
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Cells["Y2000"].ShouldBe(1);
+			result[0].Cells["Y2010"].ShouldBe(0);
+			result[1].Cells["Y2000"].ShouldBe(0);
+			result[1].Cells["Y2010"].ShouldBe(1);
+		}
+
 		#endregion
 
 		#region The production pivot from PR #5708

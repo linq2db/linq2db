@@ -59,11 +59,15 @@ namespace LinqToDB
 		/// <summary>
 		/// Adds a cell computed by an aggregate over the source rows carrying the pivoted value - <c>SUM</c>,
 		/// <c>MAX</c>, a distinct count, or anything else the provider can translate over a grouping. A cell no row
-		/// matches reads <see langword="null"/>.
+		/// matches reads what the aggregate yields over no rows: <see langword="null"/> rather than
+		/// <c>default(TCell)</c> for <c>SUM</c>, <c>MIN</c>, <c>MAX</c> and <c>AVG</c>, but <c>0</c> for a count.
 		/// </summary>
 		/// <typeparam name="TCell">Aggregate result type.</typeparam>
 		/// <param name="aggregate">Aggregate over the matching rows.</param>
-		/// <param name="name">Names the generated column for a pivoted value. Required when a pivot declares more than one cell.</param>
+		/// <param name="name">
+		/// Names the generated column for a pivoted value; defaults to the value's invariant string form. Required
+		/// when a pivot declares more than one cell.
+		/// </param>
 		/// <returns>The cell set with <paramref name="aggregate"/> added.</returns>
 		public PivotCells<TSource, TFor> Cell<TCell>(Expression<Func<IEnumerable<TSource>, TCell>> aggregate, Func<TFor, string>? name = null)
 		{
