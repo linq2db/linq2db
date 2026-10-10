@@ -30,7 +30,7 @@ static async Task Main(string[] args)
         {
             // Access token, headers, transports.
             //
-            options.ConfigureHttpConnection = http => http.AccessTokenProvider = GetAccessTokenAsync;
+            // options.ConfigureHttpConnection = http => http.AccessTokenProvider = GetAccessTokenAsync;
         });
 
     var app = builder.Build();

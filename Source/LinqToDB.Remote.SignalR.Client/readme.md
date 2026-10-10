@@ -26,6 +26,7 @@ does not reconnect) starts it again. `InitSignalRAsync<T>()` does the same up fr
 With your own `HubConnection`:
 
 ```csharp
+// .NET 8+; on .NET Framework / .NET Standard HubConnection is not IAsyncDisposable: call DisposeAsync() yourself.
 await using var connection = new HubConnectionBuilder().WithUrl(hubUrl).Build();
 await connection.StartAsync();
 

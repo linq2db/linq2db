@@ -14,12 +14,18 @@ namespace SignalRClient
 		{
 			var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-			// Add linq2db Signal/R service.
+			// Add linq2db Signal/R service. All contexts share one connection, which starts with the first query
+			// and is started again by the next query after it was lost.
 			//
 			builder.Services.AddLinqToDBSignalRDataContext<IDemoDataModel>(
-				builder.HostEnvironment.BaseAddress,
-				//"/hub/linq2db",
-				client => new DemoClientData(client));
+				new Uri(new Uri(builder.HostEnvironment.BaseAddress), "/hub/linq2db"),
+				client => new DemoClientData(client),
+				options =>
+				{
+					// Access token, headers, transports.
+					//
+					// options.ConfigureHttpConnection = http => http.AccessTokenProvider = GetAccessTokenAsync;
+				});
 
 			var app = builder.Build();
 
