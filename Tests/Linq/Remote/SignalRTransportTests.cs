@@ -20,6 +20,7 @@ using LinqToDB.Remote.SignalR;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Data.Sqlite;
@@ -39,6 +40,7 @@ using System.Text.Encodings.Web;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Hosting;
 #endif
@@ -1528,7 +1530,7 @@ namespace Tests.Remote
 			readonly IHost _host;
 #endif
 
-			TestHost(int port,
+			TestHost(string hostName, int port,
 #if NETFRAMEWORK
 				IWebHost host
 #else
@@ -1536,12 +1538,15 @@ namespace Tests.Remote
 #endif
 				)
 			{
-				Port  = port;
-				_host = host;
+				_hostName = hostName;
+				Port      = port;
+				_host     = host;
 			}
 
+			readonly string _hostName;
+
 			public int    Port   { get; }
-			public string HubUrl => $"http://localhost:{Port}{HubPath}";
+			public string HubUrl => $"http://{_hostName}:{Port}{HubPath}";
 
 			public static int GetFreePort()
 			{
@@ -1566,8 +1571,10 @@ namespace Tests.Remote
 				bool                        authentication = false)
 				where THub : Hub
 			{
-				var actualPort = port ?? GetFreePort();
-				var url        = $"http://localhost:{actualPort}";
+				// Without a port the server binds a free one itself: a port found free beforehand may be taken by
+				// another test in between. Kestrel binds port 0 on an IP address only, not on localhost.
+				var hostName = port == null ? "127.0.0.1" : "localhost";
+				var url      = $"http://{hostName}:{port ?? 0}";
 
 #if NETFRAMEWORK
 				var host = WebHost.CreateDefaultBuilder()
@@ -1623,7 +1630,13 @@ namespace Tests.Remote
 
 				host.Start();
 
-				return new TestHost(actualPort, host);
+#if NETFRAMEWORK
+				var addresses = host.ServerFeatures.Get<IServerAddressesFeature>()!.Addresses;
+#else
+				var addresses = host.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()!.Addresses;
+#endif
+
+				return new TestHost(hostName, port ?? new Uri(addresses.First()).Port, host);
 			}
 
 			public async Task<HubConnection> ConnectAsync(string? accessToken = null, ILoggerProvider? logger = null)
