@@ -225,7 +225,10 @@ Answer (standard output): line 1 `protocol=<N>`, line 2 `status=<ok|not-found|un
 - No target is empty, contains a control character, or starts with `-`. Programs should still pass targets to other
   programs after `--`.
 - `credentials list`, the count shown by `credentials clear`, and `credentials clear` itself use only the `list`
-  records whose target starts with `linq2db/`; the client never erases any other target.
+  records whose target starts with `linq2db/`; the client never erases any other target. A `list` target under
+  `linq2db/` that `credentials set` would refuse (an empty, `.` or `..` segment) is ignored, with a note: a store could
+  resolve `linq2db/../x` outside `linq2db/`. A program must not print a value with a line break or another control
+  character (a user name written by someone else could otherwise forge records); it fails instead.
 
 ## 9. Verbs and answers
 

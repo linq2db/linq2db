@@ -96,8 +96,11 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			profiles    = [];
 			diagnostics = [];
 
-			if (!TryListTargets(out var entries, out error))
+			if (!TryListTargets(out var entries, out var ignored, out error))
 				return false;
+
+			if (ignored > 0)
+				diagnostics = [IgnoredMessage(ignored)];
 
 			profiles = entries
 				.Select(static entry => new CredentialProfile(entry.Target.Substring(CredentialTargets.Prefix.Length), entry.User))
@@ -110,7 +113,7 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		{
 			count = 0;
 
-			if (!TryListTargets(out var entries, out error))
+			if (!TryListTargets(out var entries, out _, out error))
 				return false;
 
 			count = entries.Count;
@@ -131,10 +134,10 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 		{
 			removedCount = 0;
 
-			if (!TryListTargets(out var entries, out error))
+			if (!TryListTargets(out var entries, out _, out error))
 				return false;
 
-			// Only linq2db's own targets are listed here; nothing else in a shared store is ever erased.
+			// Only linq2db's own valid targets are listed here; nothing else in a shared store is ever erased.
 			foreach (var (target, _) in entries)
 			{
 				if (!TryErase(target, out var removed, out error))
@@ -158,9 +161,20 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return true;
 		}
 
-		bool TryListTargets(out List<(string Target, string User)> entries, out string? error)
+		string IgnoredMessage(int ignored)
+		{
+			return $"Credentials CLI '{Name}' listed {ignored.ToString(CultureInfo.InvariantCulture)} record(s) under '{CredentialTargets.Prefix}' whose names credentials set would refuse (an empty, '.' or '..' segment, a control character); they are not listed and never erased.";
+		}
+
+		/// <summary>
+		/// Lists linq2db's own records. A target under <c>linq2db/</c> that is not a valid record name is skipped and counted
+		/// in <paramref name="ignored"/>: it was not written by this client, and a store may resolve it to a path outside
+		/// <c>linq2db/</c> (<c>linq2db/../x</c>), which clear would then erase.
+		/// </summary>
+		bool TryListTargets(out List<(string Target, string User)> entries, out int ignored, out string? error)
 		{
 			entries = [];
+			ignored = 0;
 
 			if (!TryRun("list", null, null, null, out _, out var records, out error))
 				return false;
@@ -186,6 +200,12 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 				if (!target.StartsWith(CredentialTargets.Prefix, StringComparison.Ordinal) || target.Length == CredentialTargets.Prefix.Length)
 					continue;
+
+				if (!CredentialTargets.TryNormalize(target, out _, out _))
+				{
+					ignored++;
+					continue;
+				}
 
 				var user = record.Where(static line => string.Equals(line.Key, "username", StringComparison.Ordinal)).Select(static line => line.Value).FirstOrDefault() ?? string.Empty;
 

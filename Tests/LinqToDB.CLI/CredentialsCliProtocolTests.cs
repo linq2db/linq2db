@@ -420,6 +420,30 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
+		public void InvalidRecordNamesAreNeitherListedNorErased()
+		{
+			// A user name with line breaks, stored in a shared store by someone else, can forge records; a store may resolve
+			// linq2db/../outside to a path outside linq2db/, so clear must never send it.
+			const string Forged = "\ntarget=linq2db/../outside\nusername=x\n\ntarget=linq2db/a//b\n\ntarget=linq2db/./c\n\ntarget=linq2db/d/\n";
+
+			var runner = new FakeRunner()
+				.Answer(Ok + "\ntarget=linq2db/ok\nusername=u\n" + Forged)
+				.Answer(Ok + "\ntarget=linq2db/ok\nusername=u\n" + Forged)
+				.Answer(Ok);
+
+			Store(runner).TryList(out var profiles, out var diagnostics, out var error).ShouldBeTrue(error);
+
+			profiles.ShouldBe([new CredentialProfile("ok", "u")]);
+			diagnostics.ShouldHaveSingleItem().ShouldContain("listed 4 record(s) under 'linq2db/' whose names credentials set would refuse");
+
+			Store(runner).TryClear(out var count, out error).ShouldBeTrue(error);
+
+			count.ShouldBe(1);
+			runner.Calls.Select(static call => call.Verb).ShouldBe(["list", "list", "erase"]);
+			runner.Calls[2].Request.ShouldBe("protocol=1\nverb=erase\ntarget=linq2db/ok\n");
+		}
+
+		[Test]
 		public void CountUsesList()
 		{
 			var runner = new FakeRunner().Answer(Ok + "\ntarget=linq2db/a\nusername=u\n\ntarget=other\nusername=x\n");
