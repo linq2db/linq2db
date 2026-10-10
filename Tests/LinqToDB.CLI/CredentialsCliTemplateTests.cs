@@ -28,7 +28,8 @@ namespace Tests.LinqToDB.CLI
 
 		// A fake secret-tool: items are directories under $FAKE_STATE/items with one file per attribute. "search --all"
 		// prints the item header and secret on stdout and the attributes on stderr, like the real tool; a "locked" file
-		// makes the keyring locked (no secret lines, lookup/store fail).
+		// makes the keyring locked (no secret lines, lookup/store fail). "search --unlock" unlocks it, as a user answering
+		// the unlock prompt does.
 		const string FakeSecretTool = """
 			#!/bin/sh
 			set -u
@@ -36,6 +37,7 @@ namespace Tests.LinqToDB.CLI
 			cmd=$1; shift
 			label=''
 			if [ "$cmd" = search ] && [ "${1-}" = --all ]; then shift; fi
+			if [ "$cmd" = search ] && [ "${1-}" = --unlock ]; then shift; rm -f "$FAKE_STATE/locked"; fi
 			case ${1-} in --label=*) label=${1#--label=}; shift ;; esac
 			ws=''; wt=''; wu=''; hs=0; ht=0; hu=0
 			while [ $# -ge 2 ]; do
@@ -288,6 +290,27 @@ namespace Tests.LinqToDB.CLI
 
 			cli.TryStore("b", "u", "p", out error).ShouldBeFalse();
 			error.ShouldNotBeNull().ShouldContain("failed with exit code 1");
+
+			// Nobody can answer an unlock prompt: none is raised.
+			ArgvLog.ShouldNotContain("--unlock");
+		}
+
+		[Test]
+		public void SecretToolLockedKeyringIsUnlockedWhenAUserCanAnswer()
+		{
+			// A login keyring stays locked after an automatic login until first use; in a terminal the unlock prompt is
+			// raised (the fake unlocks on --unlock, as a user answering it does).
+			var cli = CreateStore("keyring", interactive: true);
+
+			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+
+			File.WriteAllText(Path.Combine(_state, "locked"), string.Empty);
+
+			cli.TryRead("linq2db/a", out var user, out var password, out error).ShouldBeTrue(error);
+			user.    ShouldBe("u");
+			password.ShouldBe("p");
+
+			ArgvLog.ShouldContain("--unlock");
 		}
 
 		[Test]

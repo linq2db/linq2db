@@ -51,9 +51,14 @@ st() {
 # Searches our items. "secret-tool search --all" prints an item header ("[/n]") and "secret = ..." on stdout and
 # the attributes on stderr; a locked item has a header but no secret line. Our secrets never contain a line
 # break, so every unlocked item has exactly one secret line. Sets $found_attributes and $found_items; fails when
-# locked.
+# locked. When a user can answer, --unlock raises the keyring's unlock prompt (a locked login keyring after an
+# automatic login); otherwise a locked keyring fails at once.
 search() {
-	result=$(st search --all service linq2db-cli "$@" 2>&1) || fail 'secret-tool search failed'
+	if [ "${LINQ2DB_CREDENTIAL_INTERACTIVE-1}" = 0 ]; then
+		result=$(st search --all service linq2db-cli "$@" 2>&1) || fail 'secret-tool search failed'
+	else
+		result=$(st search --all --unlock service linq2db-cli "$@" 2>&1) || fail 'secret-tool search failed'
+	fi
 	headers=$(printf '%s\n' "$result" | LC_ALL=C grep -c '^\[/' || true)
 	secrets=$(printf '%s\n' "$result" | LC_ALL=C grep -c '^secret = ' || true)
 	[ "$headers" = "$secrets" ] || fail 'the keyring is locked'
