@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -606,6 +607,37 @@ namespace Tests.Linq
 			result[1].Cells["Y2010"].ShouldBe(15m);
 
 			result[0].Cells.ContainsKey("Y2020").ShouldBeFalse();
+		}
+
+		static Expression<Func<IEnumerable<Sales>, string?>> MaxNote() => rows => rows.Max(x => x.Note);
+
+		/// <summary>A cell aggregate built outside the projection - a captured local, or a helper's result.</summary>
+		[Test]
+		public void PivotsWithAPrebuiltAggregate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(Sales.Data);
+
+			Expression<Func<IEnumerable<Sales>, decimal?>> sum = rows => rows.Sum(x => x.Amount);
+
+			var result = t
+				.Pivot(x => x.Category, x => x.Year, new[] { 2000, 2010 },
+					(g, p) => new
+					{
+						g.Key,
+						Cells = p.Cell(sum,       y => "AMT_"  + Year(y))
+							.Cell(MaxNote(), y => "NOTE_" + Year(y)),
+					})
+				.ToList()
+				.OrderBy(r => r.Key, StringComparer.Ordinal)
+				.ToList();
+
+			result.Count.ShouldBe(2);
+
+			result[0].Cells["AMT_Y2000"].ShouldBe(10m);
+			result[0].Cells["NOTE_Y2010"].ShouldBe("a1");
+			result[1].Cells["AMT_Y2010"].ShouldBe(15m);
+			result[1].Cells["NOTE_Y2000"].ShouldBe("b0");
 		}
 
 		static T PassThrough<T>(T value) => value;

@@ -171,7 +171,7 @@ namespace LinqToDB
 				var call = calls[calls.Count - 1 - i];
 
 				templates[i] = new PivotCells<TSource, TFor>.Template(
-					call.Arguments[0].UnwrapLambda(),
+					call.Arguments[0].Unwrap() as LambdaExpression ?? call.Arguments[0].EvaluateExpression<LambdaExpression>()!,
 					// A cell no row matches must read null, not default(TCell).
 					!call.Method.GetGenericArguments()[0].IsNullableOrReferenceType,
 					call.Arguments[1].EvaluateExpression<Func<TFor, string>>());
