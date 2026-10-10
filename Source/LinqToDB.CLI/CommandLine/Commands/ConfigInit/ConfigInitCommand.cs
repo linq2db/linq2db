@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.CommandLine;
 using LinqToDB.CommandLine.Commands.Connection;
+using LinqToDB.CommandLine.Commands.Credentials;
 using LinqToDB.CommandLine.Commands.QueryExecution;
 using LinqToDB.CommandLine.Options;
 
@@ -285,6 +286,13 @@ namespace LinqToDB.CommandLine.Commands.ConfigInit
 				&& (!int.TryParse(values.MaxRows, NumberStyles.None, CultureInfo.InvariantCulture, out maxRows) || maxRows < 0))
 			{
 				environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.MaxRows.Name}' must be a non-negative integer row count.");
+				return false;
+			}
+
+			// The profile would be written, then refused by every command that loads it.
+			if (values.CredentialsCli != null && !CredentialStoreSelector.ValidateValue(values.CredentialsCli, out var credentialsCliError))
+			{
+				environment.Error.WriteLine($"Option '--{QueryExecutionCliOptions.CredentialsCli.Name}': {credentialsCliError}");
 				return false;
 			}
 

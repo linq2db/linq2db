@@ -46,6 +46,29 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 			return TrySelect(null, OsDefaultSource, null, OperatingSystem.IsWindows(), environment.GetEnvironmentVariable, out choice, out error);
 		}
 
+		/// <summary>
+		/// Checks a <c>credentialsCli</c> value before it is written to a configuration: it must not be blank, and a value
+		/// starting with '@' must be a reserved one. A value reserved for another OS is accepted, since a configuration can
+		/// be shared across machines; selecting it on the wrong OS reports that.
+		/// </summary>
+		public static bool ValidateValue(string value, out string? error)
+		{
+			if (string.IsNullOrWhiteSpace(value))
+			{
+				error = $"The credentials CLI value is empty: it names a store ({Local}, {CredentialManager}, {Keyring}, {Gpg}) or a program and its arguments.";
+				return false;
+			}
+
+			if (value.TrimStart(' ', '\t').StartsWith('@') && value.Trim() is not (Local or CredentialManager or Keyring or Gpg))
+			{
+				error = $"Unknown credential store '{value}'. Expected {Local}, {CredentialManager}, {Keyring}, {Gpg}, or a command line; write a program whose name starts with '@' with a path, for example ./@name.";
+				return false;
+			}
+
+			error = null;
+			return true;
+		}
+
 		/// <summary>Creates the selected store.</summary>
 		public static ICredentialStore Create(ICliEnvironment environment, CredentialStoreChoice choice)
 		{
