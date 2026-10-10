@@ -156,7 +156,7 @@ dotnet linq2db query --credentials-cli @gpg --credentials linq2db/project-a/prod
 
 `credentials set` prompts for the password. The prompt echoes `*` for each typed or pasted character so that a paste is visible; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. With `--config`, `--profile` selects the configuration profile (as for `query`): its store, and its `credentials` as the record to set or remove; `--credentials linq2db/<name>` names the record directly. `credentials list` returns record names and users but never passwords. `credentials remove` removes one record, and `credentials clear` removes all `linq2db/` records of the store after confirmation; use `--force` only for intentional non-interactive cleanup. The commands print the store they use on `stderr`.
 
-Breaking change in 6.6: `credentials --profile <name>` used to name the record `linq2db/<name>`; it now selects a configuration profile. Use `--credentials linq2db/<name>` for the old meaning.
+Breaking changes in 6.6: `credentials --profile <name>` used to name the record `linq2db/<name>`; it now selects a configuration profile. Use `--credentials linq2db/<name>` for the old meaning. `credentials list` now prints the full record name (`linq2db/<name>`) in a `RECORD` column; it used to print the name without the prefix in a `PROFILE` column.
 
 On Windows, Windows Credential Manager stores the real user/password payload behind a version marker with additional current-user DPAPI protection:
 

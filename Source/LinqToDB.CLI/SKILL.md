@@ -104,7 +104,7 @@ dotnet linq2db credentials cli init --store gpg --config .agents/linq2db-query.j
 ```
 
 - The store is `--credentials-cli`, else `credentialsCli` of the `--config` profile, else the default for the operating system; the command prints the store and why it was chosen on stderr.
-- `--profile` selects a profile of `--config` (as for `query`, default `default`) and requires `--config`; for `set` and `remove` the record is that profile's `credentials`, or `--credentials linq2db/<name>`. Before 6.6, `--profile` named the record; use `--credentials linq2db/<name>` for that.
+- `--profile` selects a profile of `--config` (as for `query`, default `default`) and requires `--config`; for `set` and `remove` the record is that profile's `credentials`, or `--credentials linq2db/<name>`. Before 6.6, `--profile` named the record; use `--credentials linq2db/<name>` for that. Before 6.6, `list` printed the name without the `linq2db/` prefix in a `PROFILE` column; it now prints the full record name in a `RECORD` column.
 - `set` prompts for and confirms the password. Typed and pasted characters are echoed as `*`; `Backspace` removes one character and `Esc` or `Ctrl+U` clears the entry. It creates or replaces the record.
 - `list` returns record names and users of one store; it never returns passwords.
 - `remove` removes one record.

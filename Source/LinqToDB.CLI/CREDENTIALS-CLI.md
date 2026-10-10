@@ -353,7 +353,8 @@ credentials cli init --store <keyring|gpg|local> [--output <file>] [--config <fi
   `linq2db/` records are managed.
 - `list` and `clear` work on one store; `clear` asks for confirmation unless `--force` is given.
 - Before version 6.6 `--profile` named the record (`--profile prod` meant `linq2db/prod`); use
-  `--credentials linq2db/<name>` for that now.
+  `--credentials linq2db/<name>` for that now. `list` printed the name without the `linq2db/` prefix in a `PROFILE`
+  column; it now prints the full record name in a `RECORD` column.
 
 ```sh
 dotnet linq2db credentials set --credentials linq2db/project-a/production --user app_reader
