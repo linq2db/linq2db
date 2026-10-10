@@ -1049,7 +1049,7 @@ namespace Tests.Linq
 		/// <remarks>
 		/// The part is taken from the epoch, which is negative there, and a truncating <c>%</c> carries the sign
 		/// into the answer. Asked over the wide column because it is the only one of the three that can hold such a
-		/// date everywhere - a ClickHouse <c>DateTime</c> starts at 1970.
+		/// date - a ClickHouse <c>DateTime</c> starts at 1970.
 		/// </remarks>
 		[Test]
 		[ActiveIssue(5965, Configuration = TestProvName.AllOracle, ErrorTypeName = "Shouldly.ShouldAssertException", ErrorMessage = "should be{0}500")]
