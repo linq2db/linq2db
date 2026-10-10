@@ -56,6 +56,32 @@ namespace Tests.Linq
 			(GrpcServerConnections.Accepted - before).ShouldBe(1);
 		}
 
+		// A context built from an address creates its channel once and keeps it for all of its queries: one
+		// connection per context, not one per query.
+		[Test]
+		public async Task ContextReusesItsChannel([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			if (!context.IsRemote()) Assert.Ignore("Skip non-remote context");
+
+			var address = GetServerAddress(context);
+
+			using var handler = CreateHandler();
+
+			var before = GrpcServerConnections.Accepted;
+
+			for (var i = 0; i < ContextCount; i++)
+			{
+				var db = new GrpcDataContext(address, new GrpcChannelOptions { HttpHandler = handler }, o => o.UseConfiguration(context.StripRemote()));
+
+				await using (db)
+					await RunQueries(db);
+
+				Shouldly.Should.Throw<ObjectDisposedException>(() => db.GetTable<Person>().ToList());
+			}
+
+			(GrpcServerConnections.Accepted - before).ShouldBe(ContextCount);
+		}
+
 		static async Task RunQueries(IDataContext db)
 		{
 			for (var i = 0; i < QueriesPerContext; i++)
