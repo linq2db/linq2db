@@ -15,9 +15,9 @@ using Shouldly;
 namespace Tests.LinqToDB.CLI
 {
 	/// <summary>
-	/// The scripts written by <c>credentials cli init --store keyring|gpg</c>, run by the real client against fake
-	/// <c>secret-tool</c> and <c>pass</c> executables that keep their items in files and record every argument vector
-	/// (POSIX only).
+	/// The scripts written by <c>credentials cli init --store keyring|gpg|vault</c>, run by the real client against fake
+	/// <c>secret-tool</c>, <c>pass</c> and <c>vault</c> executables that keep their items in files and record every
+	/// argument vector (POSIX only).
 	/// </summary>
 	[TestFixture]
 	public sealed class CredentialsCliTemplateTests
