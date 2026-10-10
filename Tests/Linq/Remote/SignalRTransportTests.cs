@@ -159,7 +159,7 @@ namespace Tests.Remote
 			(await service.WaitCancelledAsync(WaitLimit)).ShouldBeTrue("the server-side token did not fire on disconnect");
 
 			// No replay: the call fails, and the server ran it once.
-			(await CatchAsync(() => WithinLimit(call))).ShouldNotBeNull();
+			(await WithinLimit(CatchAsync(() => call))).ShouldNotBeNull();
 			service.Calls.ShouldBe(1);
 		}
 
@@ -451,7 +451,7 @@ namespace Tests.Remote
 			service.Behavior = static (query, _) => Task.FromResult(query);
 
 			holder.Cancel();
-			(await CatchAsync(() => WithinLimit(running))).ShouldBeAssignableTo<OperationCanceledException>();
+			(await WithinLimit(CatchAsync(() => running))).ShouldBeAssignableTo<OperationCanceledException>();
 
 			(await WithinLimit(client.ExecuteReaderAsync(Configuration, "third"))).ShouldBe("third");
 			service.Calls.ShouldBe(2);
@@ -485,7 +485,7 @@ namespace Tests.Remote
 			(await service.WaitStartedAsync(WaitLimit)).ShouldBeTrue();
 
 			await first.DisposeAsync();
-			_ = await CatchAsync(() => WithinLimit(call));
+			_ = await WithinLimit(CatchAsync(() => call));
 
 			release.SetResult(true);
 			(await service.WaitFinishedAsync(WaitLimit)).ShouldBeTrue();
@@ -725,7 +725,7 @@ namespace Tests.Remote
 			var hubConnection = await host.ConnectAsync();
 			await using var owner = Own(hubConnection);
 
-			return await CatchAsync(() => WithinLimit(((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteReaderAsync(Configuration, "query")));
+			return await WithinLimit(CatchAsync(() => ((ILinqService)new SignalRLinqServiceClient(hubConnection)).ExecuteReaderAsync(Configuration, "query")));
 		}
 
 		#endregion
