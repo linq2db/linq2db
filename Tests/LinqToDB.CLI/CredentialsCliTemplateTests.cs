@@ -101,9 +101,12 @@ namespace Tests.LinqToDB.CLI
 			esac
 			""";
 
-		// A fake vault CLI (kv get/put/list/delete and metadata delete): a secret at <mount>/<path> is the directory
-		// $FAKE_STATE/vault/<mount>/<path> with a ".secret" marker and one dot file per field. "kv put <path> -" reads the
-		// JSON object that the script writes. A "fail" file makes every request fail like a refused token.
+		// A fake vault CLI (KV version 2: kv get/put/list/delete, kv metadata get/delete): a secret at <mount>/<path> is the
+		// directory $FAKE_STATE/vault/<mount>/<path> with a ".secret" marker (the metadata) and one dot file per field of the
+		// latest version; "kv delete" removes the fields and leaves the metadata and a ".deleted" marker, like a soft
+		// delete. "kv put <path> -" reads the JSON object that the script writes. "kv list" prints a JSON array with
+		// encoding/json's escapes, or the contents of $FAKE_STATE/list.json when that exists. A "fail" file makes every
+		// request fail like a refused token.
 		const string FakeVault = """
 			#!/bin/sh
 			set -u
@@ -112,12 +115,12 @@ namespace Tests.LinqToDB.CLI
 			[ "$1" = kv ] || exit 1; shift
 			cmd=$1; shift
 			if [ "$cmd" = metadata ]; then cmd=metadata-$1; shift; fi
-			mount=''; field=''
+			mount=''; field=''; format=table
 			while [ $# -gt 0 ]; do
 				case $1 in
 					-mount=*)  mount=${1#-mount=} ;;
 					-field=*)  field=${1#-field=} ;;
-					-format=*) ;;
+					-format=*) format=${1#-format=} ;;
 					--) shift; break ;;
 					*) break ;;
 				esac
@@ -133,6 +136,7 @@ namespace Tests.LinqToDB.CLI
 			case $cmd in
 				get)
 					[ -f "$item/.secret" ] || { printf 'No value found at %s/data/%s\n' "$mount" "$path" >&2; exit 2; }
+					[ ! -f "$item/.deleted" ] || { printf 'No data found at %s/data/%s\n' "$mount" "$path" >&2; exit 2; }
 					[ -f "$item/.$field" ] || { printf 'Field "%s" not present in secret\n' "$field" >&2; exit 1; }
 					cat "$item/.$field"
 					;;
@@ -144,23 +148,37 @@ namespace Tests.LinqToDB.CLI
 					secret=${rest#*'","password":"'}; secret=${secret%'"}'}
 					unescape() { printf '%s' "$1" | sed 's/\\\(.\)/\1/g'; }
 					mkdir -p "$item"
-					unescape "$user" > "$item/.username"; unescape "$secret" > "$item/.password"; : > "$item/.secret"
+					unescape "$user" > "$item/.username"; unescape "$secret" > "$item/.password"; : > "$item/.secret"; rm -f "$item/.deleted"
 					printf '== Secret Path ==\n%s/data/%s\n' "$mount" "$path"
 					;;
 				list)
-					found=0
+					[ "$format" = json ] || { echo 'the fake lists only as JSON' >&2; exit 1; }
+					if [ -f "$FAKE_STATE/list.json" ]; then cat "$FAKE_STATE/list.json"; exit 0; fi
+					keys=''
 					for d in "$item"/*/; do
 						[ -d "$d" ] || continue
 						n=$(basename "$d")
-						[ ! -f "$d/.secret" ] || { [ $found = 1 ] || printf 'Keys\n----\n'; found=1; printf '%s\n' "$n"; }
-						if [ -n "$(find "$d" -mindepth 2 -name .secret)" ]; then
-							[ $found = 1 ] || printf 'Keys\n----\n'; found=1; printf '%s/\n' "$n"
-						fi
+						[ ! -f "$d/.secret" ] || keys="$keys$n
+			"
+						[ -z "$(find "$d" -mindepth 2 -name .secret)" ] || keys="$keys$n/
+			"
 					done
-					[ $found = 1 ] || { printf 'No value found at %s/metadata/%s\n' "$mount" "$path" >&2; exit 2; }
+					[ -n "$keys" ] || { echo '{}'; exit 2; }
+					printf '%s' "$keys" | sed 's/\\/\\\\/g; s/"/\\"/g; s/</\\u003c/g; s/>/\\u003e/g; s/&/\\u0026/g; s/^/  "/; s/$/",/; $s/,$//; 1s/^/[\
+			/; $s/$/\
+			]/'
+					echo
 					;;
-				metadata-delete|delete)
-					rm -f "$item/.secret" "$item/.username" "$item/.password"
+				metadata-get)
+					[ -f "$item/.secret" ] || { printf 'No value found at %s/metadata/%s\n' "$mount" "$path" >&2; exit 2; }
+					printf '== Metadata Path ==\n%s/metadata/%s\n' "$mount" "$path"
+					;;
+				delete)
+					[ ! -f "$item/.secret" ] || { rm -f "$item/.username" "$item/.password"; : > "$item/.deleted"; }
+					printf 'Success! Data deleted (if it existed) at: %s/data/%s\n' "$mount" "$path"
+					;;
+				metadata-delete)
+					rm -f "$item/.secret" "$item/.username" "$item/.password" "$item/.deleted"
 					while [ "$item" != "$root" ] && rmdir "$item" 2>/dev/null; do item=$(dirname "$item"); done
 					printf 'Success! Data deleted (if it existed) at: %s/metadata/%s\n' "$mount" "$path"
 					;;
@@ -558,6 +576,79 @@ namespace Tests.LinqToDB.CLI
 
 			cli.TryRead("linq2db/nouser", out _, out _, out error).ShouldBeFalse();
 			error.ShouldNotBeNull().ShouldContain("has no password field");
+		}
+
+		[Test]
+		public void VaultListKeepsKeysAsWritten()
+		{
+			// vault's table trims keys and splits them at some characters; its JSON keeps them, escapes included.
+			var cli   = CreateStore("vault");
+			var names = new[] { "a b", " lead", "x<y>&z\"q\\r♨" };
+
+			foreach (var name in names)
+				cli.TryStore(name, "u", "p", out var storeError).ShouldBeTrue(storeError);
+
+			cli.TryList(out var profiles, out _, out var error).ShouldBeTrue(error);
+			profiles.Select(static profile => profile.Name).ShouldBe(names, ignoreOrder: true);
+
+			cli.TryClear(out var count, out error).ShouldBeTrue(error);
+			count.ShouldBe(3);
+			Directory.Exists(Path.Combine(_state, "vault", "secret", "linq2db")).ShouldBeFalse();
+		}
+
+		[Test]
+		public void VaultSoftDeletedRecordIsListedAndErased()
+		{
+			// "vault kv delete" of the latest KV version 2 version leaves the metadata and the older, recoverable versions.
+			var cli = CreateStore("vault");
+
+			cli.TryStore("a", "u", "p", out var error).ShouldBeTrue(error);
+
+			var item = Path.Combine(_state, "vault", "secret", "linq2db", "a");
+			File.Delete(Path.Combine(item, ".username"));
+			File.Delete(Path.Combine(item, ".password"));
+			File.WriteAllText(Path.Combine(item, ".deleted"), string.Empty);
+
+			cli.TryRead("linq2db/a", out _, out _, out error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("was not found by credentials CLI");
+
+			cli.TryList(out var profiles, out _, out error).ShouldBeTrue(error);
+			profiles.ShouldBe([new CredentialProfile("a", string.Empty)]);
+
+			cli.TryRemove("a", out var removed, out error).ShouldBeTrue(error);
+			removed.ShouldBeTrue();
+			Directory.Exists(item).ShouldBeFalse();
+		}
+
+		[Test]
+		public void VaultUserNameWithLineBreaksCannotForgeRecords()
+		{
+			// Written by someone else with write access to the path: a list must not turn it into a record to erase.
+			var cli = CreateStore("vault");
+
+			cli.TryStore("evil", "u", "secret-value", out var error).ShouldBeTrue(error);
+			File.WriteAllText(Path.Combine(_state, "vault", "secret", "linq2db", "evil", ".username"), "x\n\ntarget=linq2db/../outside\nusername=y");
+
+			cli.TryList(out _, out _, out error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("the user name of linq2db/evil holds a control character");
+
+			cli.TryClear(out _, out error).ShouldBeFalse();
+			ArgvLog.ShouldNotContain("outside");
+
+			cli.TryRead("linq2db/evil", out _, out _, out error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("holds a control character");
+		}
+
+		[TestCase("[\n  \"a\\nb\"\n]",     TestName = "VaultKeyWithEscapedLineBreakIsRefused")]
+		[TestCase("[\n  \"a\\u0007b\"\n]", TestName = "VaultKeyWithEscapedControlCharacterIsRefused")]
+		[TestCase("[\n  \"a\u0007b\"\n]",   TestName = "VaultKeyWithRawControlCharacterIsRefused")]
+		[TestCase("[\n  \"a",                 TestName = "VaultListThatIsNotJsonIsRefused")]
+		public void VaultKeyThatCannotBeOneLineIsRefused(string json)
+		{
+			File.WriteAllText(Path.Combine(_state, "list.json"), json);
+
+			CreateStore("vault").TryList(out _, out _, out var error).ShouldBeFalse();
+			error.ShouldNotBeNull().ShouldContain("with a control character, or output that is not a JSON array of strings");
 		}
 
 		[Test]

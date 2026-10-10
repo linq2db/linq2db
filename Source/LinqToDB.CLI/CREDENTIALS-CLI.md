@@ -396,7 +396,9 @@ dotnet linq2db credentials cli init --store local --config .agents/linq2db-query
   `$LINQ2DB_VAULT_MOUNT` (default `secret`; KV version 1 or 2). `get` needs read access to the secret, `store` write
   access, `erase` delete access to its metadata (KV version 2: every version is removed), and `list` list access under
   `linq2db/`. The data goes to `vault kv put` on standard input, never in its arguments. A secret written by other
-  tooling may leave out `username`; its path must be in lower case, as `linq2db/` targets are (section 8).
+  tooling may leave out `username`; its path must be in lower case, as `linq2db/` targets are (section 8). A record
+  whose latest version was deleted (`vault kv delete`) is listed without a user, is not found by `get`, and is removed
+  with all its versions by `erase`. A user name or key with a control character makes `get` or `list` fail.
 - `--store local`: the built-in store of section 4; `init` creates the directory and the key at once, so problems show
   up now. It never replaces an existing key.
 - The script is written to `credentials-<store>.sh` in the credentials directory unless `--output`/`-o` names another

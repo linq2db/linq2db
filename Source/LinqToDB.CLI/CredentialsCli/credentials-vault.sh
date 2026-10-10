@@ -61,9 +61,84 @@ v_put() {
 	vault kv put -mount="$mount" -- "$1" - 2>"$errors"
 }
 
-# Whether the last vault command failed because the path holds no secret.
+# Whether the last vault command failed because the path holds no secret ("No data found": KV version 2 keeps the
+# metadata of a deleted or destroyed latest version).
 missing() {
-	LC_ALL=C grep -q '^No value found at ' "$errors"
+	LC_ALL=C grep -q '^No value found at \|^No data found at ' "$errors"
+}
+
+# Fails when a value holds a control character: the answer is line-based, and a line break in a user name stored by
+# someone else would forge records.
+check() {
+	case $2 in
+		*[[:cntrl:]]*) fail "$1 holds a control character" ;;
+	esac
+}
+
+# Prints the strings of vault's JSON output (an array of keys), one per line, decoding the escapes encoding/json
+# writes; fails on a string with a control character, which could not be one line.
+json_strings() {
+	LC_ALL=C awk '
+		function hex(h,    i, c, v) {
+			v = 0
+			for (i = 1; i <= 4; i++) {
+				c = index("0123456789abcdef", tolower(substr(h, i, 1)))
+				if (c == 0)
+					exit 2
+				v = v * 16 + c - 1
+			}
+			return v
+		}
+		function utf8(v) {
+			if (v < 128)
+				return sprintf("%c", v)
+			if (v < 2048)
+				return sprintf("%c%c", 192 + int(v / 64), 128 + v % 64)
+			return sprintf("%c%c%c", 224 + int(v / 4096), 128 + int(v / 64) % 64, 128 + v % 64)
+		}
+		{ text = text $0 "\n" }
+		END {
+			n = length(text)
+			i = 1
+			while (i <= n) {
+				if (substr(text, i, 1) != "\"") {
+					i++
+					continue
+				}
+				value = ""
+				i++
+				while (1) {
+					if (i > n)
+						exit 2
+					c = substr(text, i, 1)
+					if (c == "\"") {
+						i++
+						break
+					}
+					if (c == "\\") {
+						e = substr(text, i + 1, 1)
+						if (e == "u") {
+							v = hex(substr(text, i + 2, 4))
+							if (v < 32 || v == 127 || (v >= 128 && v < 160) || (v >= 55296 && v < 57344))
+								exit 3
+							value = value utf8(v)
+							i += 6
+							continue
+						}
+						if (e != "\"" && e != "\\" && e != "/")
+							exit 3
+						value = value e
+						i += 2
+						continue
+					}
+					if (c < " " || c == "\177")
+						exit 3
+					value = value c
+					i++
+				}
+				print value
+			}
+		}'
 }
 
 # Fails with vault's error on one line (the client shows only the first line of standard error).
@@ -94,9 +169,15 @@ json() {
 
 # Prints "target=" and "username=" lines for every secret under the folder $1 (ending in /), depth first.
 list_folder() {
-	keys=$(v kv list -format=table -mount="$mount" -- "$1") || { missing && return 0; vault_fail 'kv list'; }
-	# The table is "Keys", "----", then one key per line; a key ending in / is a folder.
-	printf '%s\n' "$keys" | LC_ALL=C sed '1,2d' | while IFS= read -r entry; do
+	# JSON, not the table: the table trims and splits keys. An empty or missing folder prints {} and exits 2.
+	if ! keys=$(v kv list -format=json -mount="$mount" -- "$1"); then
+		if [ "$keys" = '{}' ] || missing; then
+			return 0
+		fi
+		vault_fail 'kv list'
+	fi
+	entries=$(printf '%s\n' "$keys" | json_strings) || fail "vault kv list returned a key under $1 with a control character, or output that is not a JSON array of strings"
+	printf '%s\n' "$entries" | while IFS= read -r entry; do
 		[ -n "$entry" ] || continue
 		case $entry in
 			*/) list_folder "$1$entry" || exit 1 ;;
@@ -104,10 +185,11 @@ list_folder() {
 				user=''
 				rc=0
 				read_field "$1$entry" username || rc=$?
+				# A deleted latest version (KV version 2) has no data but still a record to erase: listed without a user.
 				case $rc in
 					0) user=$field_value ;;
-					1) continue ;;
 				esac
+				check "the user name of $1$entry" "$user"
 				printf '\ntarget=%s\nusername=%s\n' "$1$entry" "$user"
 				;;
 		esac
@@ -133,6 +215,8 @@ case $verb in
 			0) user=$field_value ;;
 			1) fail "the secret at $target in mount $mount was removed while it was read" ;;
 		esac
+		check "the user name of $target" "$user"
+		check "the password of $target" "$secret"
 		answer ok
 		printf 'username=%s\npassword=%s\n' "$user" "$secret"
 		;;
@@ -143,17 +227,26 @@ case $verb in
 		answer ok
 		;;
 	erase)
+		# KV version 2: the record exists while its metadata does, readable data or not (a deleted latest version keeps
+		# recoverable older ones); removing the metadata removes every version.
+		if v kv metadata get -mount="$mount" -- "$target" >/dev/null; then
+			v kv metadata delete -mount="$mount" -- "$target" >/dev/null || vault_fail 'kv metadata delete'
+			answer ok
+			exit 0
+		fi
+		if missing; then
+			answer not-found
+			exit 0
+		fi
+		LC_ALL=C grep -q 'Metadata not supported on KV Version 1' "$errors" || vault_fail 'kv metadata get'
+		# KV version 1: one value, removed by a plain delete.
 		rc=0
 		read_field "$target" password || rc=$?
 		if [ "$rc" = 1 ]; then
 			answer not-found
 			exit 0
 		fi
-		# Every version and the metadata (KV version 2); on version 1 this is a plain delete.
-		if ! v kv metadata delete -mount="$mount" -- "$target" >/dev/null; then
-			LC_ALL=C grep -q 'not supported\|is not a KV v2' "$errors" || vault_fail 'kv metadata delete'
-			v kv delete -mount="$mount" -- "$target" >/dev/null || vault_fail 'kv delete'
-		fi
+		v kv delete -mount="$mount" -- "$target" >/dev/null || vault_fail 'kv delete'
 		answer ok
 		;;
 	list)
