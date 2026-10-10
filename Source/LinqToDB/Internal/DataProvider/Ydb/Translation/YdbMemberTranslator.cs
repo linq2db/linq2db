@@ -757,6 +757,17 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 				var hasPrecision = precision is not (null or SqlValue { Value: 0 } or SqlValue { Value: 0L });
 
+				// the runtime twin of the no-op above, which bounds the integer digits ScaledDecimalType reserves
+				if (isDecimal && hasPrecision && precision is not SqlValue)
+				{
+					var maxPrecision = factory.Value(factory.GetDbDataType(precision!), valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE);
+
+					precision = factory.Condition(
+						factory.SearchCondition().AddGreater(precision!, maxPrecision, CompareNulls.LikeSql),
+						maxPrecision,
+						precision!);
+				}
+
 				// The scaled value needs p more integer digits than the source declares, and so does 10^p
 				// itself: Decimal(6,2) holds 9999.99, so neither 11.45 * 10^5 nor Decimal('100000', 6, 2)
 				// fits it. YDB answers an out-of-range Decimal with an empty optional rather than an error,
@@ -783,9 +794,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 			// valueType widened by the rounding digits, clamped to what YQL accepts. The source scale is never
 			// cut: dropping fractional digits corrupts every row, while running out of integer digits only
-			// fails values near the type's limit. A non-constant precision cannot be measured, so it gets
-			// every remaining digit as headroom. A negative precision shifts digits the other way, so it widens
-			// the scale instead.
+			// fails values near the type's limit. A non-constant precision is capped at the source scale, so it
+			// needs at most P integer digits and every remaining digit goes to scale, for a negative one. A
+			// negative constant precision shifts digits the other way, so it widens the scale instead.
 			static DbDataType ScaledDecimalType(DbDataType valueType, ISqlExpression precision)
 			{
 				var scale     = valueType.Scale ?? YdbMappingSchema.DEFAULT_DECIMAL_SCALE;
@@ -798,7 +809,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				};
 
 				if (p == null)
-					intDigits = YdbMappingSchema.MAX_DECIMAL_PRECISION;
+				{
+					intDigits += scale;
+					scale      = Math.Max(scale, YdbMappingSchema.MAX_DECIMAL_PRECISION - intDigits);
+				}
 				else if (p > 0)
 					intDigits += p.Value;
 				else

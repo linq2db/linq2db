@@ -492,6 +492,38 @@ namespace Tests.Linq
 			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1000m, 1000m, 2000m, -2000m, 4000m });
 		}
 
+		sealed class RoundNegativeDynamic
+		{
+			[PrimaryKey                      ] public int     Id { get; set; }
+			[Column(Precision = 6, Scale = 2)] public decimal D  { get; set; }
+			[Column                          ] public int     P  { get; set; }
+		}
+
+		// A negative precision that is not a constant must still get the scale 10^p needs.
+		[Test]
+		public void Round20([IncludeDataSources(true, TestProvName.AllYdb)] string context)
+		{
+			var data = new[]
+			{
+				new RoundNegativeDynamic { Id = 1, D =  1234.56m, P = -1 },
+				new RoundNegativeDynamic { Id = 2, D =  1249.60m, P = -2 },
+				new RoundNegativeDynamic { Id = 3, D =  1234.96m, P = -1 },
+				new RoundNegativeDynamic { Id = 4, D =  1225.00m, P = -1 },
+				new RoundNegativeDynamic { Id = 5, D =  1234.56m, P = -3 },
+				new RoundNegativeDynamic { Id = 6, D = -2500.00m, P = -3 },
+				new RoundNegativeDynamic { Id = 7, D =  4999.99m, P = -4 },
+				new RoundNegativeDynamic { Id = 8, D =  9999.99m, P =  3 },
+			};
+
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(data);
+
+			var result = t.OrderBy(r => r.Id).Select(r => new { Away = Sql.AsSql(Sql.Round(r.D, r.P)), Even = Sql.AsSql(Sql.RoundToEven(r.D, r.P)) }).ToArray();
+
+			result.Select(r => r.Away).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1230m, 1000m, -3000m, 0m, 9999.99m });
+			result.Select(r => r.Even).ShouldBe(new decimal?[] { 1230m, 1200m, 1230m, 1220m, 1000m, -2000m, 0m, 9999.99m });
+		}
+
 		[Test]
 		public void Sign([DataSources(TestProvName.AllYdb)] string context)
 		{
