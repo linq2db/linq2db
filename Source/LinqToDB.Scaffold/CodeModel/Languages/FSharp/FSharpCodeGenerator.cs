@@ -876,7 +876,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		/// <summary>
-		/// Renders a per-schema wrapper as an F# <c>module rec</c>. F# allows type definitions inside a module
+		/// Renders a per-schema wrapper as an F# <c>module</c>. F# allows type definitions inside a module
 		/// (unlike inside a class), so the schema's entity/result/context types stay isolated under the module -
 		/// avoiding name collisions between same-named tables in different schemas - while the schema's
 		/// extension methods (Find, functions) are collected into an <c>[&lt;Extension&gt;]</c> type inside it.
