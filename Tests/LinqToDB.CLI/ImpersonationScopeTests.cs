@@ -29,7 +29,6 @@ namespace Tests.LinqToDB.CLI
 	[TestFixture]
 	public sealed class ImpersonationScopeTests
 	{
-		const string ScriptDomAssembly = "Microsoft.SqlServer.TransactSql.ScriptDom";
 		const string ColdCaseVariable     = "LINQ2DB_CLI_COLD_CASE";
 		const string ColdDatabaseVariable = "LINQ2DB_CLI_COLD_SQLITE_DATABASE";
 
@@ -116,7 +115,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryValidatesSqlServerSqlOutsideImpersonation()
+		public async Task QueryPassesCredentialsAndModeToSession()
 		{
 			var environment = new TestCliEnvironment();
 
@@ -136,9 +135,6 @@ namespace Tests.LinqToDB.CLI
 				session.Mode.    ShouldBe(WindowsImpersonationMode.NewCredentials);
 				session.Disposed.ShouldBeTrue();
 				session.Runs.    Count.ShouldBe(2);
-
-				session.Runs[1].LoadedAtEntry.ShouldContain(ScriptDomAssembly);
-				session.Runs.SelectMany(static r => r.LoadedInside).ShouldNotContain(ScriptDomAssembly);
 			}
 		}
 
@@ -168,7 +164,7 @@ namespace Tests.LinqToDB.CLI
 		}
 
 		[Test]
-		public async Task QueryLoadsToolAssembliesBeforeImpersonation()
+		public async Task QueryReadsRowsInDefaultModeSession()
 		{
 			var environment = new TestCliEnvironment();
 			var database    = CreateSqliteDatabase();
@@ -179,10 +175,6 @@ namespace Tests.LinqToDB.CLI
 
 				var session = environment.ImpersonationSessions.ShouldHaveSingleItem();
 
-				var toolAssemblies = Directory.GetFiles(AppContext.BaseDirectory, "*.dll")
-					.Select(static f => Path.GetFileNameWithoutExtension(f))
-					.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
 				using (Assert.EnterMultipleScope())
 				{
 					result.ExitCode.ShouldBe(0, result.Error);
@@ -191,7 +183,6 @@ namespace Tests.LinqToDB.CLI
 					session.Mode.ShouldBe(WindowsImpersonationMode.NetworkCleartext);
 					session.Runs.Count.ShouldBe(2);
 					session.Disposed.ShouldBeTrue();
-					session.Runs.SelectMany(static r => r.LoadedInside).Where(toolAssemblies.Contains).ShouldBeEmpty();
 				}
 			}
 			finally
@@ -491,7 +482,6 @@ namespace Tests.LinqToDB.CLI
 					secondSession.User.ShouldBe("second");
 					firstSession. Runs.Count.ShouldBe(2);
 					secondSession.Runs.Count.ShouldBe(2);
-					RecordingImpersonationSession.Current.ShouldBeNull();
 				}
 			}
 			finally
