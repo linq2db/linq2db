@@ -33,7 +33,7 @@ namespace LinqToDB.CommandLine.Commands.QueryExecution
 		public static readonly CliOption SqlFile             = new StringCliOption("sql-file",              null, false, false, "path to file with single user-provided SQL query text to execute; supports %NAME% and ${NAME} environment variable expansion");
 
 		public static readonly CliOption Overwrite           = new BooleanCliOption("overwrite",   null, false, "replace existing output file", null, null, null, false, false);
-		public static readonly CliOption Impersonate         = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; configuration, SQL and output files use the original process account, and the tool's and provider's assemblies, native libraries and resources are loaded before anything runs as that user, while files the database client reads to connect or authenticate (passfiles, certificates) must be readable by the impersonated user", null, null, null, false, false);
+		public static readonly CliOption Impersonate         = new BooleanCliOption("impersonate", null, false, "on Windows, run database access under resolved user/password credentials; configuration, SQL and output files use the original process account, and the tool's and provider's assemblies, native libraries and resources are loaded before anything runs as that user, while files the database client reads to connect or authenticate (passfiles, certificates) must be readable by the impersonated user, as must the DB2/Informix provider folder, from which the IBM client loads plugins and reads its configuration while connecting", null, null, null, false, false);
 
 		public static readonly CliOption Output = new StringEnumCliOption(
 			"output",

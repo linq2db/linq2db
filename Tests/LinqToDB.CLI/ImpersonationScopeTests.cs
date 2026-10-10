@@ -337,10 +337,21 @@ namespace Tests.LinqToDB.CLI
 			// Native libraries shipped with the tool, the .NET runtime or an external provider. Those of the operating
 			// system (e.g. the Kerberos libraries the runtime's GSSAPI shim loads on Linux) are readable by every account.
 			//
-			var shippedDirectories = new List<string> { AppContext.BaseDirectory, RuntimeEnvironment.GetRuntimeDirectory() };
+			var shippedDirectories  = new List<string> { AppContext.BaseDirectory, RuntimeEnvironment.GetRuntimeDirectory() };
+			var readableDirectories = new List<string>();
 
 			if (_coldCases[coldCase].Contains("%DB2%"))
-				shippedDirectories.Add(Path.GetDirectoryName(Path.GetFullPath(db2Provider!))!);
+			{
+				var providerDirectory = Path.GetDirectoryName(Path.GetFullPath(db2Provider!))!;
+
+				shippedDirectories.Add(providerDirectory);
+
+				// The IBM native client loads its own plugins (e.g. the OS authentication plugin) from its clidriver
+				// folder while connecting, and reads its configuration and messages there; the impersonated user must
+				// be able to read that folder, so its libraries may load in the session.
+				//
+				readableDirectories.Add(Path.Combine(providerDirectory, "clidriver"));
+			}
 
 			using (Assert.EnterMultipleScope())
 			{
@@ -354,6 +365,7 @@ namespace Tests.LinqToDB.CLI
 				session.Runs.SelectMany(static r => r.LoadedInside).ShouldBeEmpty();
 				session.Runs.SelectMany(static r => r.NativeModulesLoadedInside)
 					.Where(m => shippedDirectories.Any(d => m.StartsWith(d, StringComparison.OrdinalIgnoreCase)))
+					.Where(m => !readableDirectories.Any(d => m.StartsWith(d, StringComparison.OrdinalIgnoreCase)))
 					.ShouldBeEmpty();
 
 				if (coldCase.StartsWith("SQLite", StringComparison.Ordinal))
