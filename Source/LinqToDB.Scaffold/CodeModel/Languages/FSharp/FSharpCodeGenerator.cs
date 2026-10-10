@@ -123,6 +123,10 @@ namespace LinqToDB.CodeModel
 					// directive like C#'s `#nullable enable` - the `| null` annotations are emitted inline; nothing here
 					break;
 				case PragmaType.DisableWarning:
+					// F# has no missing-xml-doc warning, so the suppression list can be empty
+					if (pragma.Parameters.Count == 0)
+						break;
+
 					WriteUnindented("#nowarn");
 					foreach (var warn in pragma.Parameters)
 					{

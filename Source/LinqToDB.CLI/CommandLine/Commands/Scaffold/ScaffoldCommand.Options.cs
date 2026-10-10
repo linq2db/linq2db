@@ -285,7 +285,8 @@ Customization using compiled assembly has several requirements:
 					null,
 					null,
 					_defaultOptions.CodeGeneration.SuppressMissingXmlDocWarnings,
-					_t4ModeOptions.CodeGeneration.SuppressMissingXmlDocWarnings);
+					_t4ModeOptions.CodeGeneration.SuppressMissingXmlDocWarnings)
+					{ Languages = TargetLanguages.CSharp };
 
 			/// <summary>
 			/// Auto-generated code marker option.
