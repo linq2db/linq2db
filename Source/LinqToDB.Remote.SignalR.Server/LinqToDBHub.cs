@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Channels;
@@ -134,6 +135,53 @@ namespace LinqToDB.Remote.SignalR
 		}
 
 		/// <summary>
+		/// Returns the server's configuration information to a client older than 6.6.0, which calls it as a plain
+		/// invocation. Such a call honours the hub's concurrency limits, and only a lost connection cancels it.
+		/// </summary>
+		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call GetInfoStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration)
+		{
+			return InvokeOperation((service, cancellationToken) => service.GetInfoAsync(configuration, cancellationToken));
+		}
+
+		/// <summary>
+		/// Executes a non-query command for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>).
+		/// </summary>
+		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteNonQueryStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public virtual Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
+		{
+			return InvokeOperation((service, cancellationToken) => service.ExecuteNonQueryAsync(configuration, queryData, cancellationToken));
+		}
+
+		/// <summary>
+		/// Executes a scalar query for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>).
+		/// </summary>
+		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteScalarStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public virtual Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
+		{
+			return InvokeOperation((service, cancellationToken) => service.ExecuteScalarAsync(configuration, queryData, cancellationToken));
+		}
+
+		/// <summary>
+		/// Executes a query for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>). The result is sent as one
+		/// message.
+		/// </summary>
+		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteReaderStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public virtual Task<string> ExecuteReaderAsync(string? configuration, string queryData)
+		{
+			return InvokeOperation((service, cancellationToken) => service.ExecuteReaderAsync(configuration, queryData, cancellationToken));
+		}
+
+		/// <summary>
+		/// Executes a batch of commands in a transaction for a client older than 6.6.0 (see <see cref="GetInfoAsync"/>).
+		/// </summary>
+		[Obsolete("Serves clients older than 6.6.0, which call it as a plain invocation; 6.6.0 and later clients call ExecuteBatchStream. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		public virtual Task<int> ExecuteBatchAsync(string? configuration, string queryData)
+		{
+			return InvokeOperation((service, cancellationToken) => service.ExecuteBatchAsync(configuration, queryData, cancellationToken));
+		}
+
+		/// <summary>
 		/// Returns the largest message, in bytes, this hub accepts from a client, or -1 when the server sets no limit
 		/// or cannot tell (the legacy .NET Framework / .NET Standard server). The client checks its requests against
 		/// it before sending: Signal/R closes the whole connection on an oversized message.
@@ -162,7 +210,19 @@ namespace LinqToDB.Remote.SignalR
 
 		ChannelReader<T> StartOperation<T>(Func<ILinqService,CancellationToken,Task<IReadOnlyList<T>>> operation)
 		{
-			// Everything that needs the hub is read now: the reader runs the operation after this method returns.
+			return new OperationChannelReader<T>(PrepareOperation(operation), Context.ConnectionAborted);
+		}
+
+		// A plain invocation of a client older than 6.6.0 carries no cancellation of its own: only a lost connection
+		// cancels it.
+		Task<TResult> InvokeOperation<TResult>(Func<ILinqService,CancellationToken,Task<TResult>> operation)
+		{
+			return PrepareOperation(operation)(Context.ConnectionAborted);
+		}
+
+		// Everything that needs the hub is read now: a stream runs the operation after its hub method has returned.
+		Func<CancellationToken,Task<TResult>> PrepareOperation<TResult>(Func<ILinqService,CancellationToken,Task<TResult>> operation)
+		{
 			var service    = LinqService;
 			var connection = GetConnectionState();
 			var options    = _options ?? connection.Options;
@@ -170,18 +230,16 @@ namespace LinqToDB.Remote.SignalR
 				? _globalLimiters.GetOrAdd((GetType(), max), static key => new SemaphoreSlim(key.MaxConcurrentCalls, key.MaxConcurrentCalls))
 				: null;
 
-			return new OperationChannelReader<T>(
-				cancellationToken => RunAsync(service, options, connection, global, operation, cancellationToken),
-				Context.ConnectionAborted);
+			return cancellationToken => RunAsync(service, options, connection, global, operation, cancellationToken);
 		}
 
-		static async Task<IReadOnlyList<T>> RunAsync<T>(
-			ILinqService                                              service,
-			LinqToDBHubOptions                                        options,
-			ConnectionState                                           connection,
-			SemaphoreSlim?                                            global,
-			Func<ILinqService,CancellationToken,Task<IReadOnlyList<T>>> operation,
-			CancellationToken                                         cancellationToken)
+		static async Task<TResult> RunAsync<TResult>(
+			ILinqService                                          service,
+			LinqToDBHubOptions                                    options,
+			ConnectionState                                       connection,
+			SemaphoreSlim?                                        global,
+			Func<ILinqService,CancellationToken,Task<TResult>>    operation,
+			CancellationToken                                     cancellationToken)
 		{
 			await connection.Calls.WaitAsync(cancellationToken).ConfigureAwait(false);
 

@@ -54,8 +54,9 @@ options to the base constructor to have them on every transport.
 `TransferInternalExceptionToClient` works on .NET 8+ servers. The legacy (.NET Framework / .NET Standard) Signal/R
 server drops error text unless `HubOptions.EnableDetailedErrors` is set, which exposes the errors of all hub methods.
 
-Client and server packages must both be 6.6.0 or later: the hub protocol changed in 6.6.0, and older clients
-are not supported.
+The hub protocol changed in 6.6.0. The hub still serves older clients through its obsolete `GetInfoAsync` /
+`Execute*Async` methods, with the same concurrency limits, but their calls are cancelled only by a lost connection and
+their results are sent as one message; update clients to 6.6.0 or later to get cancellation and chunked results.
 
 ## Other Transports
 

@@ -777,6 +777,151 @@ namespace Tests.Remote
 
 		#endregion
 
+		#region Clients older than 6.6.0
+
+		// A client older than 6.6.0 calls the hub's original methods by name, as plain invocations; a 6.6.0 server
+		// still serves it.
+		[Test]
+		public async Task OldClientRoundTrips()
+		{
+			using var database = new SqliteDatabase();
+			using var host     = TestHost.Start<SqliteHub>(services => services.AddSingleton(database));
+
+			var hubConnection = await host.ConnectAsync();
+
+			await using (Own(hubConnection))
+			{
+				(await WithinLimit(hubConnection.InvokeAsync<LinqServiceInfo>("GetInfoAsync", Configuration))).ShouldNotBeNull();
+
+				await using var db = new OldClientContext(hubConnection);
+
+				(await db.InsertAsync(new Item { Id = 1, Value = "one" })).ShouldBe(1);                     // ExecuteNonQuery
+				(await db.GetTable<Item>().CountAsync()).ShouldBe(1);                                         // ExecuteScalar
+				(await db.GetTable<Item>().ToListAsync()).Single().Value.ShouldBe("one");                     // ExecuteReader
+
+				db.BeginBatch();
+				await db.InsertAsync(new Item { Id = 2, Value = "two" });
+				await db.InsertAsync(new Item { Id = 3, Value = "three" });
+				await db.CommitBatchAsync();                                                                  // ExecuteBatch
+
+				(await db.GetTable<Item>().CountAsync()).ShouldBe(3);
+			}
+		}
+
+		// The global limit holds for the calls of old clients too.
+		[Test]
+		public async Task OldClientCallsHonourMaxConcurrentCalls()
+		{
+			var service = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(200) };
+			using var host = TestHost.Start<OldClientHub>(services =>
+			{
+				services.AddSingleton<ILinqService>(service);
+				services.Configure<LinqToDBHubOptions>(o =>
+				{
+					o.MaxConcurrentCallsPerConnection = 4;
+					o.MaxConcurrentCalls              = 1;
+				});
+			});
+
+			await RunConcurrentOldClientCallsAsync(host, connections: 3, callsPerConnection: 2);
+
+			service.MaxConcurrency.ShouldBe(1);
+			service.Calls.ShouldBe(6);
+		}
+
+#if !NETFRAMEWORK
+		// The per-connection limit holds for the calls of old clients too. (The legacy server runs the plain
+		// invocations of a connection one at a time anyway.)
+		[Test]
+		public async Task OldClientCallsHonourMaxConcurrentCallsPerConnection()
+		{
+			var service = new ScriptedLinqService { Behavior = ScriptedLinqService.Delay(200) };
+			using var host = TestHost.Start<OldClientHub>(
+				services =>
+				{
+					services.AddSingleton<ILinqService>(service);
+					services.Configure<LinqToDBHubOptions>(o => o.MaxConcurrentCallsPerConnection = 2);
+				},
+				hub => hub.MaximumParallelInvocationsPerClient = 8);
+
+			await RunConcurrentOldClientCallsAsync(host, connections: 1, callsPerConnection: 6);
+
+			service.MaxConcurrency.ShouldBe(2);
+			service.Calls.ShouldBe(6);
+		}
+#endif
+
+		static async Task RunConcurrentOldClientCallsAsync(TestHost host, int connections, int callsPerConnection)
+		{
+			var hubConnections = new List<HubConnection>();
+
+			try
+			{
+				for (var i = 0; i < connections; i++)
+					hubConnections.Add(await host.ConnectAsync());
+
+				await WithinLimit(Task.WhenAll(hubConnections.SelectMany(c => Enumerable.Range(0, callsPerConnection).Select(n =>
+					c.InvokeAsync<string>("ExecuteReaderAsync", Configuration, "query")))));
+			}
+			finally
+			{
+				foreach (var c in hubConnections)
+					await c.DisposeAsync();
+			}
+		}
+
+		// A hub type of its own: the global limit is shared by all hubs of one type in the process.
+		sealed class OldClientHub(ILinqService service, IOptions<LinqToDBHubOptions> options) : LinqToDBHub(options)
+		{
+			protected override ILinqService CreateLinqService()
+			{
+				return service;
+			}
+		}
+
+		// The remote context of a client older than 6.6.0: every call is a plain invocation of the method of the same name.
+		sealed class OldClientContext(HubConnection hubConnection) : RemoteDataContextBase(new DataOptions().UseConfiguration(Configuration))
+		{
+			protected override ILinqService GetClient()
+			{
+				return new OldClient(hubConnection);
+			}
+
+			protected override string ContextIDPrefix => "OldSignalR";
+
+			sealed class OldClient(HubConnection hubConnection) : ILinqService
+			{
+				public string? RemoteClientTag { get; set; } = "Signal/R";
+
+				public Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken = default)
+				{
+					return hubConnection.InvokeAsync<LinqServiceInfo>("GetInfoAsync", configuration, cancellationToken);
+				}
+
+				public Task<int> ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+				{
+					return hubConnection.InvokeAsync<int>("ExecuteNonQueryAsync", configuration, queryData, cancellationToken);
+				}
+
+				public Task<string?> ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+				{
+					return hubConnection.InvokeAsync<string?>("ExecuteScalarAsync", configuration, queryData, cancellationToken);
+				}
+
+				public Task<string> ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+				{
+					return hubConnection.InvokeAsync<string>("ExecuteReaderAsync", configuration, queryData, cancellationToken);
+				}
+
+				public Task<int> ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
+				{
+					return hubConnection.InvokeAsync<int>("ExecuteBatchAsync", configuration, queryData, cancellationToken);
+				}
+			}
+		}
+
+		#endregion
+
 		#region DI helper
 
 		[Test]

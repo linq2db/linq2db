@@ -1,9 +1,4 @@
 ﻿#nullable enable
-*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteBatchAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
-*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteNonQueryAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
-*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteReaderAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string!>!
-*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteScalarAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string?>!
-*REMOVED*virtual LinqToDB.Remote.SignalR.LinqToDBHub.GetInfoAsync(string? configuration) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
 LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteBatchStream(string? configuration, string! queryData) -> System.Threading.Channels.ChannelReader<int>!
 LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteNonQueryStream(string? configuration, string! queryData) -> System.Threading.Channels.ChannelReader<int>!
 LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteReaderStream(string? configuration, string! queryData) -> System.Threading.Channels.ChannelReader<string!>!
