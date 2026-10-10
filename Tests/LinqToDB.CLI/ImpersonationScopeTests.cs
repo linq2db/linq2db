@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -501,6 +502,40 @@ namespace Tests.LinqToDB.CLI
 			{
 				result.ExitCode.                  ShouldBe(0, result.Error);
 				environment.ImpersonationSessions.ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task QueryReportsFailedLogonBeforeValidation()
+		{
+			var environment = new TestCliEnvironment { StartImpersonationException = new Win32Exception(1326, "Windows impersonation logon failed.") };
+
+			var result = await RunCli(environment, "query", "--provider", "SQLite", "--connection-string", "Data Source=:memory:", "--user", "user", "--password", "wrong", "--impersonate", "--sql", "delete from Person");
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.                  ShouldBe(-3);
+				result.Error.                     ShouldContain("Windows impersonation logon failed.");
+				result.Error.                     ShouldNotContain("not read-only");
+				environment.ImpersonationSessions.ShouldBeEmpty();
+			}
+		}
+
+		[Test]
+		public async Task UnknownProviderDisposesSession()
+		{
+			var environment = new TestCliEnvironment();
+
+			var result = await RunCli(environment, "query", "--provider", "NoSuchProvider", "--connection-string", "Data Source=:memory:", "--user", "user", "--password", "secret", "--impersonate", "--sql", "select 1 as Value");
+
+			var session = environment.ImpersonationSessions.ShouldHaveSingleItem();
+
+			using (Assert.EnterMultipleScope())
+			{
+				result.ExitCode.   ShouldBe(-3);
+				result.Error.      ShouldContain("Cannot create database provider 'NoSuchProvider'");
+				session.Runs.Count.ShouldBe(1);
+				session.Disposed.  ShouldBeTrue();
 			}
 		}
 

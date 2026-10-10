@@ -114,11 +114,17 @@ namespace Tests.LinqToDB.CLI
 			return InputLines.TryDequeue(out var line) ? line : null;
 		}
 
+		/// <summary>Thrown by <see cref="StartImpersonation"/> instead of starting a session, to simulate a failed logon.</summary>
+		public Exception? StartImpersonationException { get; init; }
+
 		/// <summary>
 		/// Returns a session that records what each impersonated run saw, without changing identity.
 		/// </summary>
 		public IImpersonationSession StartImpersonation(string user, string password, WindowsImpersonationMode mode)
 		{
+			if (StartImpersonationException != null)
+				throw StartImpersonationException;
+
 			var session = new RecordingImpersonationSession(user, password, mode, _error.ToString);
 
 			lock (ImpersonationSessions)
