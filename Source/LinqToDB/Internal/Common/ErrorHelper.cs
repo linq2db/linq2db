@@ -27,6 +27,9 @@
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
 		public const string Error_LinqToDBQueryExpected            = "Linq To DB query expected";
 		public const string Error_EnumerationNotStarted            = "Enumeration not started.";
+		public const string Error_OutputQuery_EagerLoad            = "Eager loading over the output of InsertWithOutputQuery requires child records to be matched to the output by simple key comparisons. Materialize the output first (e.g. ToList()) and load the children from it.";
+		public const string Error_OutputQuery_NotRead              ="The output of InsertWithOutputQuery is not read by the query, so the insert would not be executed. Read the output in the query, or execute the insert separately.";
+		public const string Error_OutputQuery_NotSupported         ="Provider does not support using the output of a data-modifying statement (INSERT ... RETURNING/OUTPUT) as a query source. Execute the statement with InsertWithOutput and compose the returned records on the client instead.";
 
 		public const string Error_WindowFunctionsInSearchCondition                = "Window functions cannot be used in search condition.";
 		public const string Error_WindowFunction_PercentRank                      = "PERCENT_RANK is not supported by current provider.";

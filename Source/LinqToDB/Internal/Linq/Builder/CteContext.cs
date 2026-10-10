@@ -81,6 +81,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause.Body       = cteInnerQueryContext.SelectQuery;
+
+			if (cteInnerQueryContext is InsertBuilder.DataModificationOutputContext dataModificationContext)
+				CteClause.DataModification = dataModificationContext.Statement;
 			SelectQuery          = cteInnerQueryContext.SelectQuery;
 			SubQueryContext      = new SubQueryContext(cteInnerQueryContext);
 

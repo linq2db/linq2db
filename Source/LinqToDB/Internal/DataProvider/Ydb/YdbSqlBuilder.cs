@@ -365,6 +365,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				Indent++;
 
+				// a data-modifying CTE would render as a plain SELECT over the target table
+				if (cte.DataModification != null)
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
+
 				BuildCteBody(cte.Body!);
 				StringBuilder.AppendLine(";");
 

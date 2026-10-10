@@ -72,6 +72,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			statement = FinalizeInsert(statement);
+			FinalizeDataModificationCtes(statement);
 			statement = FinalizeSelect(statement);
 			statement = FixSetOperationValues(mappingSchema, statement);
 
@@ -82,6 +83,32 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Applies statement-level finalization to data-modifying statements nested in CTEs
+		/// (<see cref="CteClause.DataModification"/>), which are not reached by the top-level finalization,
+		/// and sets their output clause to the CTE body columns that remain after column optimization.
+		/// </summary>
+		void FinalizeDataModificationCtes(SqlStatement statement)
+		{
+			if (statement is not SqlStatementWithQueryBase { With.Clauses: { Count: > 0 } clauses })
+				return;
+
+			foreach (var cte in clauses)
+			{
+				if (cte.DataModification == null)
+					continue;
+
+				var insertStatement = (SqlInsertStatement)FinalizeInsert(cte.DataModification);
+
+				// CTE body columns are the output expressions over the Inserted anchor: they become the RETURNING/OUTPUT list.
+				// Column optimization keeps at least one body column, so the output clause is never empty.
+				insertStatement.Output          = new SqlOutputClause { OutputColumns = cte.Body!.Select.Columns.Select(static c => c.Expression).ToList() };
+				insertStatement.ParentStatement = statement;
+
+				cte.DataModification = insertStatement;
+			}
+		}
 
 		protected virtual SqlStatement FinalizeInsert(SqlStatement statement)
 		{
@@ -721,6 +748,7 @@ namespace LinqToDB.Internal.SqlProvider
 					_currentCteStack.Push(holder);
 				}
 
+				Visit(cteClause?.DataModification);
 				Visit(cteClause?.Body);
 
 				if (holder != null)
@@ -749,6 +777,9 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 			{
 				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+				if (!SqlProviderFlags.IsInsertOutputQuerySupported && foundCtes.Keys.Any(static c => c.DataModification != null))
+					throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotSupported);
+
 				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 

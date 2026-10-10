@@ -241,6 +241,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (_query.ErrorExpression == null)
 			{
+				CheckInsertOutputQueriesRendered();
+
 				foreach (var q in _query.Queries)
 				{
 					if (Tag?.Lines.Count > 0)
@@ -260,6 +262,61 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return (Query<T>)_query;
+		}
+
+		bool                 _insertOutputQueryCallsCollected;
+		HashSet<Expression>? _insertOutputQueryCalls;
+
+		/// <summary>
+		/// Distinct <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>
+		/// calls of the query expression, or <see langword="null"/> when there are none.
+		/// </summary>
+		HashSet<Expression>? InsertOutputQueryCalls
+		{
+			get
+			{
+				if (!_insertOutputQueryCallsCollected)
+				{
+					_insertOutputQueryCallsCollected = true;
+
+					Expression.Visit(this, static (builder, e) =>
+					{
+						if (e is MethodCallExpression { Method.Name: nameof(LinqExtensions.InsertWithOutputQuery) } mc && mc.Method.DeclaringType == typeof(LinqExtensions))
+							(builder._insertOutputQueryCalls ??= new(ExpressionEqualityComparer.Instance)).Add(mc);
+					});
+				}
+
+				return _insertOutputQueryCalls;
+			}
+		}
+
+		/// <summary>
+		/// Query contains a data-modifying CTE: its output must not be re-queried by eager loading.
+		/// </summary>
+		public bool HasInsertOutputQuery => InsertOutputQueryCalls != null;
+
+		/// <summary>
+		/// An insert of <see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, Expression{Func{TTarget}})"/>
+		/// runs only as a data-modifying CTE of the final SQL. A query that does not read its output never translates it
+		/// (or drops it during optimization), so the insert would silently not run: reject such queries instead.
+		/// </summary>
+		void CheckInsertOutputQueriesRendered()
+		{
+			if (InsertOutputQueryCalls is not { } calls)
+				return;
+
+			_query.HasDataModification = true;
+
+			var rendered = 0;
+
+			foreach (var queryInfo in _query.Queries)
+			{
+				if (queryInfo.Statement is SqlStatementWithQueryBase { With: { } with })
+					rendered += with.Clauses.Count(static c => c.DataModification != null);
+			}
+
+			if (rendered < calls.Count)
+				throw new LinqToDBException(ErrorHelper.Error_OutputQuery_NotRead);
 		}
 
 		bool BuildQuery<T>(

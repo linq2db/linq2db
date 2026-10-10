@@ -29,6 +29,11 @@ namespace LinqToDB.Internal.Linq
 
 		public IReadOnlyCollection<QueryInfo> GetQueries()    => Queries;
 		public bool                           IsFinalized     { get; internal set; }
+
+		/// <summary>
+		/// Query contains a data-modifying CTE (<see cref="LinqExtensions.InsertWithOutputQuery{TTarget}(ITable{TTarget}, System.Linq.Expressions.Expression{Func{TTarget}})"/>).
+		/// </summary>
+		internal bool HasDataModification { get; set; }
 		public SqlErrorExpression?            ErrorExpression { get; internal set; }
 
 		internal abstract void Init(IBuildContext parseContext);
@@ -228,6 +233,12 @@ namespace LinqToDB.Internal.Linq
 			// Do not start implicit transaction if there is no preambles
 			//
 			if (!IsAnyPreambles())
+				return null;
+
+			// The implicit transaction is disposed without commit: it would roll back
+			// the insert of a data-modifying CTE (InsertWithOutputQuery).
+			//
+			if (HasDataModification)
 				return null;
 
 			var dc = dataContext switch

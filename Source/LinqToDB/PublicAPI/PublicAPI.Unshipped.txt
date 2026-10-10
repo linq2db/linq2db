@@ -1,6 +1,13 @@
 ﻿#nullable enable
 *REMOVED*LinqToDB.Internal.SqlProvider.OptimizationContext.TransformationInfo.get -> LinqToDB.Internal.SqlQuery.Visitors.SqlQueryVisitor.IVisitorTransformationInfo!
+const LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_EagerLoad = "Eager loading over the output of InsertWithOutputQuery requires child records to be matched to the output by simple key comparisons. Materialize the output first (e.g. ToList()) and load the children from it." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotRead ="The output of InsertWithOutputQuery is not read by the query, so the insert would not be executed. Read the output in the query, or execute the insert separately." -> string!
+const LinqToDB.Internal.Common.ErrorHelper.Error_OutputQuery_NotSupported ="Provider does not support using the output of a data-modifying statement (INSERT ... RETURNING/OUTPUT) as a query source. Execute the statement with InsertWithOutput and compose the returned records on the client instead." -> string!
 const LinqToDB.Internal.Common.ErrorHelper.Error_ValueConverter_DivergentOperands = "Cannot combine '{0}' and '{1}' in the database: their value converters do not agree on what a stored value counts, so the two stored values are not commensurable and the result would be read through one of the conversions only. Combine them in .NET, or give both columns the same conversion." -> string!
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOutputQuerySupported.get -> bool
+LinqToDB.Internal.SqlProvider.SqlProviderFlags.IsInsertOutputQuerySupported.set -> void
+LinqToDB.Internal.SqlQuery.CteClause.DataModification.get -> LinqToDB.Internal.SqlQuery.SqlInsertStatement?
+LinqToDB.Internal.SqlQuery.CteClause.DataModification.set -> void
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Firebird.FirebirdSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Oracle.OracleSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
@@ -12,3 +19,5 @@ override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertV
 override LinqToDB.Internal.DataProvider.SqlServer.SqlServerSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.CanLowerIntervalShift.get -> bool
 override LinqToDB.Internal.DataProvider.Ydb.YdbSqlExpressionConvertVisitor.LowerTemporalArithmetic(LinqToDB.Internal.SqlQuery.SqlTemporalArithmeticExpression! element) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
+static LinqToDB.LinqExtensions.InsertWithOutputQuery<TSource, TTarget>(this System.Linq.IQueryable<TSource>! source, LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TSource, TTarget>!>! setter) -> System.Linq.IQueryable<TTarget>!
+static LinqToDB.LinqExtensions.InsertWithOutputQuery<TTarget>(this LinqToDB.ITable<TTarget>! target, System.Linq.Expressions.Expression<System.Func<TTarget>!>! setter) -> System.Linq.IQueryable<TTarget>!

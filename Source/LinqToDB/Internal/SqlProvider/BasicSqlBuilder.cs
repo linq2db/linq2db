@@ -573,6 +573,15 @@ namespace LinqToDB.Internal.SqlProvider
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
+		// Renders the data-modifying statement of a CTE (CteClause.DataModification). Its output clause is filled by
+		// BasicSqlOptimizer from the CTE body columns, so the statement renders like any INSERT ... RETURNING/OUTPUT.
+		void BuildDataModificationCteBody(SqlInsertStatement statement)
+		{
+			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
+			sqlBuilder.BuildSql(0, statement, StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
+			MergeSqlBuilderData(sqlBuilder);
+		}
+
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
 			if (!CteFirst && statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
@@ -824,7 +833,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 				Indent++;
 
-				BuildCteBody(cte.Body!);
+				if (cte.DataModification != null)
+					BuildDataModificationCteBody(cte.DataModification);
+				else
+					BuildCteBody(cte.Body!);
 
 				Indent--;
 
