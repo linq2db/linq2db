@@ -370,8 +370,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			protected override bool IsFilterSupported => false;
 		}
 
-		// FILTER (WHERE ...) is 9.4+; v95 is the lowest dialect entry the version detector maps a >= 9.4 server to,
-		// the same boundary PostgreSQL95WindowFunctionsMemberTranslator uses for the window form.
+		// FILTER (WHERE ...) is 9.4+; v95 is the lowest dialect the version detector assigns only to >= 9.4 servers (a real 9.4
+		// is detected as v93 and takes the emulation), the same boundary PostgreSQL95WindowFunctionsMemberTranslator uses.
 		protected class PostgreSQL95AggregateFunctionsMemberTranslator : PostgreSQLAggregateFunctionsMemberTranslator
 		{
 			protected override bool IsFilterSupported => true;
