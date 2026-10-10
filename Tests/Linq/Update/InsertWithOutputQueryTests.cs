@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -62,6 +63,19 @@ namespace Tests.xUpdate
 			[PrimaryKey, Identity]                     public int    Id             { get; set; }
 			[Column]                                   public int    EventId        { get; set; }
 			[Column(Length = 50, CanBeNull = false)]   public string Tag            { get; set; } = null!;
+		}
+
+		[Table("InsertOutputQuerySeq")]
+		sealed class SequenceTarget
+		{
+			[PrimaryKey, Identity, SequenceName("InsertOutputQuerySeq_Id_seq")] public int Id    { get; set; }
+			[Column]                                                            public int Value { get; set; }
+		}
+
+		[Table("oas_probe")]
+		sealed class ProbeTable
+		{
+			[Column("id"), PrimaryKey] public int Id { get; set; }
 		}
 
 		static SourceTable[] GetSourceData()
@@ -233,6 +247,186 @@ namespace Tests.xUpdate
 
 			var ex = Assert.Throws<LinqToDBException>(() => query.ToArray());
 			ex.Message.ShouldBe(LinqToDB.Internal.Common.ErrorHelper.Error_OutputAsSource_NotSupported);
+		}
+
+		[Test]
+		public void NotSupported_Remote([DataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetTable<SourceTable>()
+				.InsertWithOutputQuery(db.GetTable<TargetTable>(), s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			var ex = Assert.Throws<LinqToDBException>(() => query.ToArray());
+			ex.Message.ShouldContain(LinqToDB.Internal.Common.ErrorHelper.Error_OutputAsSource_NotSupported);
+		}
+
+		[Test]
+		public void SingleRecord_DefaultOutput([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var output = target
+				.InsertWithOutputQuery(() => new TargetTable { Id = 42, Value = 7, ValueStr = "single" })
+				.ToArray();
+
+			output.Length.ShouldBe(1);
+			output[0].Id.ShouldBe(42);
+			output[0].Value.ShouldBe(7);
+			output[0].ValueStr.ShouldBe("single");
+
+			target.Single().Id.ShouldBe(42);
+		}
+
+		[Test]
+		public void FromQuery_SequenceIdentity([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<SequenceTarget>();
+
+			var output = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new SequenceTarget { Value = s.Value })
+				.OrderBy(t => t.Id)
+				.ToArray();
+
+			output.Length.ShouldBe(3);
+			output.Select(o => o.Id).Distinct().Count().ShouldBe(3);
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void EagerLoadOverOutputInsertsOnce([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var input  = db.CreateLocalTable(new[]
+			{
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 1, Tag = "auth" },
+				new EventInput { PersistenceId = "actor-abc", SequenceNumber = 2, Tag = "profile" },
+				new EventInput { PersistenceId = "actor-xyz", SequenceNumber = 1, Tag = "ping" },
+			});
+			using var events = db.CreateLocalTable<EventRecord>();
+			using var lookup = db.CreateLocalTable(GetSourceData());
+
+			// children are keyed by the generated identity, so they match only if the
+			// eager-load query sees the same insert as the main query
+			var result = input
+				.InsertWithOutputQuery(events, i => new EventRecord { PersistenceId = i.PersistenceId, SequenceNumber = i.SequenceNumber })
+				.Select(e => new
+				{
+					e.Id,
+					Children = lookup.Where(s => s.Id == e.Id).Select(s => s.Id).ToList(),
+				})
+				.ToArray();
+
+			events.Count().ShouldBe(3);
+			result.Length.ShouldBe(3);
+			result.ShouldAllBe(r => r.Children.Count == 1 && r.Children[0] == r.Id);
+		}
+
+		[Test]
+		public void OutputInSubqueryPredicate([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var inserted = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			// the data-modifying CTE referenced only from a subquery must still be hoisted to the top-level WITH
+			var ids = source
+				.Where(s => inserted.Select(i => i.Id).Contains(s.Id))
+				.OrderBy(s => s.Id)
+				.Select(s => s.Id)
+				.ToArray();
+
+			ids.ShouldBe(new[] { 1, 2, 3 });
+			target.Count().ShouldBe(3);
+		}
+
+		[Test]
+		public void OutputFeedsUpdate([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var inserted = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			// WITH t AS (INSERT ... RETURNING ...) UPDATE ... WHERE EXISTS (SELECT ... FROM t)
+			var affected = source
+				.Where(s => inserted.Any(i => i.Id == s.Id))
+				.Set(s => s.ValueStr, "copied")
+				.Update();
+
+			affected.ShouldBe(3);
+			target.Count().ShouldBe(3);
+			source.Count(s => s.ValueStr == "copied").ShouldBe(3);
+		}
+
+		[Test]
+		public void UnreadOutputStillInserts([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable(GetSourceData());
+			using var target = db.CreateLocalTable<TargetTable>();
+
+			var inserted = source
+				.Where(s => s.Id <= 3)
+				.InsertWithOutputQuery(target, s => new TargetTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr });
+
+			// the output is referenced by the query but the column reading it is not projected
+			var ids = source
+				.Select(s => new { s.Id, Inserted = inserted.Count() })
+				.Select(x => x.Id)
+				.ToArray();
+
+			ids.Length.ShouldBe(10);
+			target.Count().ShouldBe(3);
+		}
+
+		// Guard test: keep SqlProviderFlags.IsOutputAsSourceSupported honest. It probes whether the provider accepts the
+		// data-modifying CTE that BasicSqlBuilder.BuildDataModificationCteBody renders and fails when reality diverges
+		// from the declared flag, signalling that the provider's flag (set in its DataProvider) needs updating.
+		[Test]
+		public void OutputAsSourceSurface([DataSources(false)] string context)
+		{
+			using var _  = new DisableBaseline("probes provider capability");
+			using var db = GetDataConnection(context);
+
+			var actual = ProbeOutputAsSource(db);
+
+			actual.ShouldBe(
+				db.DataProvider.SqlProviderFlags.IsOutputAsSourceSupported,
+				$"Data-modifying CTE support for '{context}' diverged from SqlProviderFlags.IsOutputAsSourceSupported; update the provider's flag.");
+		}
+
+		static bool ProbeOutputAsSource(DataConnection db)
+		{
+			// setup stays outside the try: a table-creation failure must surface as a test error rather than be
+			// swallowed into a "not supported" verdict, which would make the guard pass vacuously
+			using var t = db.CreateLocalTable<ProbeTable>();
+
+			var sb    = ((IDataContext)db).CreateSqlBuilder();
+			var table = sb.ConvertInline("oas_probe", LinqToDB.Internal.SqlProvider.ConvertType.NameToQueryTable);
+			var id    = sb.ConvertInline("id",        LinqToDB.Internal.SqlProvider.ConvertType.NameToQueryField);
+
+			try
+			{
+				var ids = db.Query<int>($"WITH t AS (INSERT INTO {table} ({id}) VALUES (1) RETURNING {id}) SELECT {id} FROM t").ToList();
+
+				return ids.Count == 1 && ids[0] == 1 && t.Count() == 1;
+			}
+			catch
+			{
+				return false;
+			}
 		}
 	}
 }
