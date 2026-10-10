@@ -1879,6 +1879,8 @@ namespace Tests.Linq
 		/// A literal set beside an aggregate over a coarse column in a set operation keeps its time part.
 		/// </summary>
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllInformix, ErrorTypeName = "IBM.Data.Db2.DB2Exception",
+			Details = "no-issue: the server rejects a datetime literal set beside a DATETIME YEAR TO DAY aggregate; master fails the same query on To_Date.")]
 		public void CoarseAggregateSetOperationKeepsLiteralTime([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
