@@ -54,7 +54,7 @@ namespace LinqToDB.Remote.Wcf
 			return Channel.ExecuteBatchAsync(configuration, queryData);
 		}
 
-		string? ILinqService.RemoteClientTag { get; set; } = "Wсf";
+		string? ILinqService.RemoteClientTag { get; set; } = "Wcf";
 
 		#endregion
 	}
