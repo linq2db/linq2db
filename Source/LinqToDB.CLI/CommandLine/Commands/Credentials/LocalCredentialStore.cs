@@ -333,14 +333,18 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 
 		/// <summary>
 		/// Takes the lock, waiting a bounded time for another process. Returns <see langword="null"/> without an error when
-		/// <paramref name="create"/> is <see langword="false"/> and the lock file does not exist.
+		/// <paramref name="create"/> is <see langword="false"/> and the lock file does not exist. Only a lock held by another
+		/// process is waited for; any other failure to open the lock file (a read-only or failing file system, a dangling
+		/// link) is reported at once.
 		/// </summary>
 		FileStream? AcquireLock(bool create, out string? error)
 		{
 			var options = new FileStreamOptions
 			{
 				Mode   = create ? FileMode.OpenOrCreate : FileMode.Open,
-				Access = FileAccess.ReadWrite,
+				// Opening an existing lock file only to lock it needs no write access, so a store on a read-only mount can
+				// still be read. The lock stays exclusive either way (FileShare.None; flock(LOCK_EX) on Unix).
+				Access = create ? FileAccess.ReadWrite : FileAccess.Read,
 				Share  = FileShare.None,
 			};
 
@@ -361,16 +365,41 @@ namespace LinqToDB.CommandLine.Commands.Credentials
 					error = null;
 					return null;
 				}
-				catch (IOException) when (DateTime.UtcNow < deadline)
+				catch (IOException ex) when (IsHeldByAnotherProcess(ex) && DateTime.UtcNow < deadline)
 				{
 					Thread.Sleep(50);
 				}
-				catch (IOException)
+				catch (IOException ex) when (IsHeldByAnotherProcess(ex))
 				{
 					error = $"Cannot lock {Name}: another linq2db-cli process held '{LockPath}' for more than {LockTimeout.TotalSeconds.ToString("0", CultureInfo.InvariantCulture)} seconds.";
 					return null;
 				}
+				catch (IOException ex)
+				{
+					error = $"Cannot lock {Name}: '{LockPath}' cannot be opened: {ex.Message}";
+					return null;
+				}
 			}
+		}
+
+		/// <summary>
+		/// Whether opening the lock file failed because another handle holds it: a sharing or lock violation on Windows,
+		/// <c>EWOULDBLOCK</c> from <c>flock</c> on Unix (.NET reports the raw errno as the HResult there).
+		/// </summary>
+		static bool IsHeldByAnotherProcess(IOException exception)
+		{
+			const int ErrorSharingViolation = unchecked((int)0x80070020);
+			const int ErrorLockViolation    = unchecked((int)0x80070021);
+			const int EWouldBlock           = 11;
+			const int BsdEWouldBlock        = 35;
+
+			if (exception is FileNotFoundException or DirectoryNotFoundException or PathTooLongException)
+				return false;
+
+			if (OperatingSystem.IsWindows())
+				return exception.HResult is ErrorSharingViolation or ErrorLockViolation;
+
+			return exception.HResult == (OperatingSystem.IsMacOS() || OperatingSystem.IsFreeBSD() ? BsdEWouldBlock : EWouldBlock);
 		}
 
 		/// <summary>Loads the entries (empty when there is no data file). Returns an error message on failure.</summary>
