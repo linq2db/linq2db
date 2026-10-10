@@ -133,7 +133,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
 				case DataType.Boolean    : StringBuilder.Append("BOOLEAN");                   return;
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
-				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
+				case DataType.DateTime2  :
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"datetime year to fraction({Math.Max(1, Math.Min(type.Precision ?? 5, 5))})");
+					return;
 				case DataType.Time       :
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Length ?? 5})");
 					return;
