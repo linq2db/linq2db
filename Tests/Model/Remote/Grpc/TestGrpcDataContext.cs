@@ -16,22 +16,17 @@ namespace Tests.Model.Remote.Grpc
 {
 	public class TestGrpcDataContext : GrpcDataContext, ITestDataContext
 	{
-		public TestGrpcDataContext(string address, Func<DataOptions, DataOptions>? optionBuilder = null)
-			: base(
-				address,
-				new GrpcChannelOptions
-				{
-					HttpClient = new HttpClient(
-#pragma warning disable CA2000 // Dispose objects before losing scope
+		// Shared by every test context: GrpcChannel does not dispose a caller-supplied HttpClient, so one
+		// per context kept its handler and HTTP/2 connection open until finalization.
 #pragma warning disable MA0039 // Do not write your own certificate validation method
-						new HttpClientHandler()
-						{
-							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
-						}),
+		static readonly HttpClient _httpClient = new(new HttpClientHandler()
+		{
+			ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+		});
 #pragma warning restore MA0039 // Do not write your own certificate validation method
-#pragma warning restore CA2000 // Dispose objects before losing scope
-				},
-				optionBuilder)
+
+		public TestGrpcDataContext(string address, Func<DataOptions, DataOptions>? optionBuilder = null)
+			: base(address, new GrpcChannelOptions { HttpClient = _httpClient }, optionBuilder)
 		{
 		}
 
